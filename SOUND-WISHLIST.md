@@ -81,8 +81,8 @@ zelf zitten (dan hoeft de engine niks te mixen).
 | `retaliation` | `retaliation.wav` | 1 | Terugslag door infanterie (staal-op-staal) | ✓ |
 | `retaliation_horse` | `retaliation_with_horse.wav` | 1 | Terugslag door een paard (hoeven) | ✓ |
 | `blood_splash` | `small_blood_splash*.wav` | 3 | Levend stuk overleeft een treffer | ✓ |
-| `charge_yell` | `charge_yell.wav` | 2-3 | Cavalerie begint een charge (strijdkreet) | ➕ |
-| `pawn_block` | `pawn_block.wav` | 1-2 | Schot geblokkeerd door een tussenpion (optioneel) | ➕ |
+| `charge_yell` | `charge_yell.wav` | 1 | Cavalerie begint een charge (strijdkreet) | ✓ |
+| `pawn_block` | `pawn_block.wav` | 2 | Schot geblokkeerd (bank klaar; nog geen event) | 🎚️ (klaar) |
 
 ## 7. Sterven per type
 
@@ -96,17 +96,17 @@ zelf zitten (dan hoeft de engine niks te mixen).
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `timer_tick` | `timer_tick.wav` | 1 | Laatste ~5 sec, per seconde (subtiele tik) | ➕ |
-| `timer_warning` | `timer_warning.wav` | 1 | ~3 sec resterend (urgenter) | ➕ |
+| `timer_tick` | `timer_tick.wav` | 1 | Laatste 5-4 sec, per seconde | ✓ |
+| `timer_warning` | `timer_warning.wav` | 1 | Laatste 3 sec (urgenter) | ✓ |
 | `timer_timeout` | `timer_timeout.wav` | 1 | Tijd om, spel neemt over | ➕ |
 
 ## 9. Uitkomst & mijlpalen
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `haven_score` | `haven_score.wav` | 1-2 | Pion bereikt de haven (1 van de 2 nodig) | ➕ |
-| `win_fanfare` | `win_fanfare.wav` | 1 | Jij wint (korte triomf-sting) | ➕ |
-| `lose_sting` | `lose_sting.wav` | 1 | Je verliest (aflopende mineur) | ➕ |
+| `haven_score` | `haven_score.wav` | 2 | Pion bereikt de haven (nog niet gewonnen) | ✓ |
+| `win_fanfare` | `win_fanfare.wav` | 1 | Jij wint (triomf-sting) | ✓ |
+| `lose_sting` | `lose_sting.wav` | 1 | Je verliest (aflopende mineur) | ✓ |
 | `wolf_step` | `wolf_step.wav` | 1-2 | Gratis Wolf-stap uitgevoerd (sluip/whoosh) | ➕ (optioneel) |
 
 ## 10. Sfeer / muziek (optioneel, laagste prioriteit)
@@ -180,17 +180,17 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `blood_splash` ⭐ | 3 | small wet blood splatter, non-lethal hit on a living soldier, short |
 | `retaliation_horse` ⭐ | 1 | warhorse rearing and kicking back in retaliation, hooves and whinny, short |
 | `retaliation` ⭐ | 1 | quick steel-on-steel counterstrike clang with a soldier grunt, short |
-| `charge_yell` | 3 | cavalry battle cry, men shouting a charge over galloping hooves, brief |
-| `pawn_block` | 2 | musket ball thudding into a thick wooden shield, blocked shot |
+| `charge_yell` ⭐ | 1 | cavalry battle cry, men shouting a charge over galloping hooves, brief |
+| `pawn_block` 🎚️ | 2 | musket ball thudding into a thick wooden shield, blocked shot |
 | `horse_die` ⭐ | 2 | warhorse falling and dying on a battlefield, heavy body thud, brief |
 | `inf_die` ⭐ | 4 | short soldier death cry, body and wooden musket clattering to the ground, black powder era |
 | `cannon_die` ⭐ | 2 | cannon carriage destroyed, splintering wood and cracking cast iron, short |
-| `timer_tick` | 1 | single soft antique pendulum clock tick, brass and wood, subtle |
-| `timer_warning` | 1 | faster tense antique clock tick, brass mechanism, single, urgent |
+| `timer_tick` ⭐ | 1 | single soft antique pendulum clock tick, brass and wood, subtle |
+| `timer_warning` ⭐ | 1 | faster tense antique clock tick, brass mechanism, single, urgent |
 | `timer_timeout` | 1 | dull brass bell toll, time is up, single somber strike |
-| `haven_score` | 2 | bright short brass hand bell flourish, objective reached, triumphant |
-| `win_fanfare` | 1 | short victorious period military brass fanfare with snare drum, triumphant, ~2 seconds |
-| `lose_sting` | 1 | short somber descending brass and low drum, defeat, minor key, 18th century |
+| `haven_score` ⭐ | 2 | bright short brass hand bell flourish, objective reached, triumphant |
+| `win_fanfare` ⭐ | 1 | short victorious period military brass fanfare with snare drum, triumphant, ~2 seconds |
+| `lose_sting` ⭐ | 1 | short somber descending brass and low drum, defeat, minor key, 18th century |
 | `wolf_step` | 2 | quick stealthy leather boot step and canvas whoosh, light sneak |
 | `music_menu` | 1 loop | calm looping menu music, soft period strings and light military snare drum, 18th century, seamless loop |
 | `music_battle` | 1 loop | subtle looping battle bed, marching snare drum, low period strings and distant brass, tense but soft, loop |

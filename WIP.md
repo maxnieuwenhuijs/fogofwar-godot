@@ -203,8 +203,13 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   `card_confirm` bij bevestigen, `card_stat_up`/`card_stat_down` op de +/− stat-knoppen
   (`card_view._adjust_stat`). **Flow**: `reveal` (trommelroffel) + `initiative` (bugel, 0.6s
   later) bij de onthulling (`_on_cards_revealed`), `phase_change` bij elke nieuwe
-  definitie-ronde (`_on_phase_changed`). **Opstellen**: `place_pawn` bij het neerzetten
-  van een pion. **Beurt**: `your_turn` bij het begin van de mensbeurt in de actiefase.
+  definitie-ronde (`_on_phase_changed`), `cycle_start` bij een nieuwe cyclus (vanaf 2,
+  `_on_cycle_started`). **Opstellen**: `place_pawn`. **Beurt**: `your_turn` (uit).
+  **Koppelen**: `card_deal` (uitdelen), `card_select` (tik), `link_snap` (vastklikken).
+  **Charge**: `charge_yell`. **Timer**: `timer_tick` (laatste 5s) / `timer_warning`
+  (laatste 3s) in `_process`. **Uitkomst**: `haven_score` (pion in haven, nog niet
+  gewonnen), `win_fanfare`/`lose_sting` bij `_on_game_over`. `pawn_block` staat klaar
+  in de bank maar heeft nog geen event (geblokkeerde schoten worden niet aangeboden).
   Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
   ElevenLabs-prompts staat in `SOUND-WISHLIST.md`. Draai `--import` na een verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"

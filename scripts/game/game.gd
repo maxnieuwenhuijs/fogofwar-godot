@@ -51,6 +51,7 @@ var _hp_bars: Dictionary = {}        # pawn_id -> {holder, blocks}
 var _tweening_pawns: Dictionary = {} # pawn_id -> true tijdens beweeg-animatie
 var _timer_active: bool = false
 var _timer_left: float = 0.0
+var _last_tick_second: int = -1      # laatst afgespeelde aftel-tik
 # Combat feel (Valheim-stijl "juice"): stagger + screen shake + hitstop + ragdoll.
 var _combat_feel: bool = true         # alles behalve shake
 var _screen_shake: bool = true        # apart uitzetbaar (motion sickness)
@@ -105,11 +106,17 @@ func _process(delta: float) -> void:
 			var st: GameState = GameSession.state
 			_top_label.text = "Cyclus %d · Ronde %d · %s · nog %ds" % [
 				st.cycle, st.round_number, _phase_label(st.phase), int(ceil(_timer_left))]
+			# Aftel-tik in de laatste 5 sec (urgenter in de laatste 3).
+			var sec_left: int = int(ceil(_timer_left))
+			if sec_left != _last_tick_second and sec_left >= 1 and sec_left <= 5:
+				_last_tick_second = sec_left
+				Audio.play("timer_warning" if sec_left <= 3 else "timer_tick")
 
 
 func _start_phase_timer(seconds: float) -> void:
 	_timer_active = true
 	_timer_left = seconds
+	_last_tick_second = -1  # aftel-tikken opnieuw laten beginnen
 
 
 func _stop_phase_timer() -> void:
@@ -895,6 +902,16 @@ func _end_wolf_step_mode() -> void:
 ## Sterf-geluid per type (nu alleen cavalerie: horse_die). Het pion-object blijft
 ## na eliminatie in state.pawns bestaan (alleen is_eliminated=true), dus het type
 ## is nog opvraagbaar.
+## Chime als een pion de doelhaven bereikt (maar de partij nog niet gewonnen is —
+## de winnende 2e pion krijgt de win-fanfare, niet deze chime).
+func _check_haven_score(pawn_id: int, coord: Vector2i) -> void:
+	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	if pawn == null or pawn.is_eliminated:
+		return
+	if Rules.is_haven_for_player(coord, pawn.owner_id) and Rules.check_win(GameSession.state) == -1:
+		Audio.play("haven_score", 0.25)
+
+
 ## Terugslag-geluid: als de terugslaande verdediger een paard is, hoor je het
 ## paard (hoefgetrappel/hinnik). Bij infanterie-terugslag dekt de melee-klap het al.
 func _retaliation_sound(defender_id: int, delay: float) -> void:
@@ -927,6 +944,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 	match String(action.get("type", "")):
 		"move":
 			_animate_move(action.pawn_id, action.from, action.target)
+			_check_haven_score(action.pawn_id, action.target)
 		"attack":
 			var attacker: PawnView = _pawn_views.get(action.attacker_id)
 			if attacker != null:
@@ -971,9 +989,11 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			if result.get("eliminated", false):
 				_death_sound(action.target_id, travel + 0.05)
 		"charge":
+			Audio.play("charge_yell")  # strijdkreet bij het aanrijden
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
 			if result.get("moved", false) or result.get("forced_move", false):
 				_animate_move(action.pawn_id, result.charge_from, end_pos)
+			_check_haven_score(action.pawn_id, end_pos)
 			var cav: PawnView = _pawn_views.get(action.pawn_id)
 			if cav != null and action.get("defender_id", -1) != -1:
 				cav.play_attack()
@@ -992,6 +1012,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 						_death_sound(action.pawn_id, 0.8)
 		"wolf_step":
 			_animate_move(action.pawn_id, action.from, action.target)
+			_check_haven_score(action.pawn_id, action.target)
 	_refresh_all()
 
 
@@ -1274,6 +1295,7 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> vo
 func _on_game_over(winner_id: int) -> void:
 	_clear_highlights()
 	_card_hand.visible = false
+	Audio.play("win_fanfare" if winner_id == _human_id else "lose_sting", 0.3)
 	_update_hud("%s wint!" % _player_name(winner_id))
 	_overlay.show_choice(
 		"%s wint!" % _player_name(winner_id),
