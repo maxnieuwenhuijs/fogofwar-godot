@@ -57,7 +57,9 @@ De volledige v4.1-regelset zit in de engine (`scripts/core/`):
   Artillerie-Speed is dus puur het aantal acties per cyclus.
 - **Factie-perks (HUISREGELS, juli 2026)**: Leeuw-kanonnen dracht 7 (`art_range_bonus`);
   Vos-cavalerie +1 Speed bij koppeling (`cav_speed_bonus`); Wolf-cavalerie springt óók
-  over VIJANDELIJKE infanterie (`cav_jump_infantry`; niet over vijandelijke cav/art).
+  over VIJANDELIJKE infanterie (`cav_jump_infantry`; niet over vijandelijke cav/art);
+  Muis +1 Speed op ELKE pion bij koppeling (`speed_bonus`, doctrine-breed buiten het
+  budget) — anders kruipt de budget-5-zwerm te traag over het bord (min stamina 2, typisch 3).
   Teksten (pro/con per doctrine) staan in `Constants.DOCTRINE_DATA`.
 - **Terugslag** (`_resolve_melee`, HUISREGEL type-afhankelijk): een ACTIEVE verdediger die
   een melee overleeft slaat terug op de aanvaller — infanterie −1, cavalerie −2,

@@ -61,10 +61,10 @@ const DOCTRINE_DATA: Dictionary = {
 	},
 	Doctrine.MUIS: {
 		"name": "Muis", "cards": 4, "budget": 5, "comp": [22, 0, 0],
-		"move_through_own": true, "hp_bonus": 0, "speed_max": 0,
+		"move_through_own": true, "hp_bonus": 0, "speed_max": 0, "speed_bonus": 1,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
-		"pro": "4 kaarten per ronde en beweegt door eigen pionnen (zwerm)",
+		"pro": "4 kaarten, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)",
 		"con": "Budget 5: stats max 3, geen cavalerie of kanonnen",
 	},
 	Doctrine.LEEUW: {

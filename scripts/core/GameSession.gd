@@ -161,10 +161,11 @@ func submit_link(player_id: int, card_id: int, pawn_id: int) -> bool:
 		error_occurred.emit(player_id, "Ongeldige pion")
 		return false
 	var doctrine: Dictionary = state.doctrine_data_of(player_id)
-	# Beer: +1 HP buiten het budget (v4.1 §6.4); Vos: cavalerie +1 Speed (perk).
-	var speed_bonus: int = 0
+	# Beer: +1 HP buiten het budget (v4.1 §6.4). Speed-bonus buiten het budget:
+	# Muis krijgt +1 op elke pion (zwerm-mobiliteit), Vos +1 op cavalerie.
+	var speed_bonus: int = int(doctrine.get("speed_bonus", 0))
 	if pawn.unit_type == Constants.UnitType.CAVALRY:
-		speed_bonus = int(doctrine.cav_speed_bonus)
+		speed_bonus += int(doctrine.cav_speed_bonus)
 	pawn.link_card(card, doctrine.hp_bonus, speed_bonus)
 	# Vos: de toewijzing is gedekt tot de pion schade toebrengt of ontvangt (§6.6).
 	pawn.card_revealed = not doctrine.hidden_link

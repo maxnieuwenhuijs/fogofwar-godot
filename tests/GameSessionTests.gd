@@ -244,6 +244,21 @@ func test_beer_link_gets_hp_bonus() -> void:
 			found_beer_bonus = true
 	assert_true(found_beer_bonus)
 
+func test_muis_link_gets_speed_bonus() -> void:
+	# Muis-perk: +1 Speed op elke pion buiten het budget (zwerm-mobiliteit).
+	GameSession.start_new_game_default(Constants.Doctrine.MUIS, Constants.Doctrine.MENS)
+	_define_for(Constants.PLAYER_1)
+	GameSession.submit_define_cards(Constants.PLAYER_2, _cards_for(5, 1, 1, 5, 1, 1, 5, 1, 1))
+	GameSession.acknowledge_reveal()
+	_link_all_until_phase_change(Phase.Type.SETUP_1_LINKING)
+	var found := false
+	for pawn in GameSession.state.pawns.values():
+		if pawn.owner_id == Constants.PLAYER_1 and pawn.is_active:
+			var card: Card = GameSession.state.all_cards[pawn.linked_card_id]
+			assert_eq(pawn.max_stamina, card.stamina + 1)
+			found = true
+	assert_true(found)
+
 func test_vos_links_hidden() -> void:
 	GameSession.start_new_game_default(Constants.Doctrine.VOS, Constants.Doctrine.MENS)
 	GameSession.submit_define_cards(Constants.PLAYER_1, _cards_for(3, 2, 2, 3, 2, 2, 3, 2, 2))
