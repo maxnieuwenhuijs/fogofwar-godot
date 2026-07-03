@@ -174,10 +174,12 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   musket/cannon bij afvuren, echo/whoosh kort erna, inslag-geluid getimed op de
   projectiel-reistijd; melee/charge → kill- vs. overleeft-klap. Haan-spannen
   (`musket_cock`) bij selectie van een infanterist die kan schieten.
-  **Voetstappen** (`Audio.play_footsteps(dist, dur)` in `_animate_move`): één stap
-  per gelopen vakje, sample cyclt 1→2→3→4→1… vanaf een willekeurige start-index per
-  beweging, pitch tikt per ronde-van-4 omhoog (5e stap = sample 1 hoger). Mute-hook:
-  `Audio.set_enabled(false)`. Draai `--import` na een verse checkout.
+  **Beweeggeluid per type** (`Audio.play_footsteps(dist, dur, category)` in
+  `_animate_move`): één klap per gelopen vakje — infanterie = `step` (voetstappen),
+  cavalerie = `horse_move` (hoeven), artillerie = `cannon_move` (wielen). Sample cyclt
+  door de varianten vanaf een willekeurige start-index per beweging, pitch tikt per
+  volle ronde omhoog. Mute-hook: `Audio.set_enabled(false)`. Draai `--import` na een
+  verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
   vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar
   z=0, blauw naar z=10 (naar de vijand). Draait naar de looprichting bij bewegen en naar het doel

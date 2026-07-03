@@ -1066,8 +1066,15 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> vo
 	_tweening_pawns[pawn_id] = true
 	var dist: int = absi(to_coord.x - from_coord.x) + absi(to_coord.y - from_coord.y)
 	var dur := clampf(0.13 * float(dist), 0.13, 0.45)
-	# Voetstap per gelopen vakje, verdeeld over de loop-animatie.
-	Audio.play_footsteps(dist, dur)
+	# Beweeggeluid per gelopen vakje, afhankelijk van het eenheidstype:
+	# infanterie = voetstappen, cavalerie = hoeven, artillerie = wielen.
+	var mover: Pawn = GameSession.state.pawns.get(pawn_id)
+	var move_sfx := "step"
+	if mover != null:
+		match mover.unit_type:
+			Constants.UnitType.CAVALRY: move_sfx = "horse_move"
+			Constants.UnitType.ARTILLERY: move_sfx = "cannon_move"
+	Audio.play_footsteps(dist, dur, move_sfx)
 	var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(pv, "position", end, dur)
 	tween.tween_callback(func() -> void:

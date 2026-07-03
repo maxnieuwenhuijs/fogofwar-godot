@@ -10,7 +10,8 @@ const POOL_SIZE := 10
 ## Categorie → bestandsnamen (zónder pad). Random keuze per afspeelverzoek.
 const BANK := {
 	"cannon_fire": ["cannon_heavy.wav", "cannon_heavy2.wav", "cannon_heavy3.wav"],
-	"cannon_air":  ["cannon_bal_flies.wav", "cannon_ball_flies2.wav", "cannon_ball_flies3.wav"],
+	"cannon_air":  ["cannon_bal_flies.wav", "cannon_ball_flies2.wav", "cannon_ball_flies3.wav",
+					"cannon_bal_flies4.wav", "cannon_bal_flies5.wav"],
 	"cannon_hit":  ["cannon_ball_hit.wav"],
 	"musket_fire": ["musket.wav", "musket_heavy_2.wav", "musket_heavy_3.wav"],
 	"musket_echo": ["musket_echo.wav", "musket_echo2.wav", "musket_echo3.wav",
@@ -20,6 +21,8 @@ const BANK := {
 	"melee_kill":  ["mellee_hit.wav", "mellee_hit2.wav", "mellee_hit4.wav"],
 	"melee_survive": ["mellee_hit_no_kill.wav"],
 	"step":        ["step1.wav", "step2.wav", "step3.wav", "step4.wav"],
+	"horse_move":  ["horse_move.wav", "horse_move2.wav"],
+	"cannon_move": ["cannon_move.wav", "cannon_move2.wav", "cannon_move3.wav", "cannon_move4.wav"],
 }
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
@@ -35,6 +38,8 @@ const CATEGORY_DB := {
 	"melee_kill": -1.0,
 	"melee_survive": -3.0,
 	"step": -7.0,
+	"horse_move": -6.0,
+	"cannon_move": -6.0,
 }
 
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]
@@ -86,21 +91,25 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	player.play()
 
 
-## Voetstappen over een beweging: één stap per gelopen vakje, gelijkmatig over
-## `duration` verdeeld. Sample cyclt 1→2→3→4→1…, beginnend op een willekeurige
-## index (nieuwe reeks); de pitch tikt per ronde-van-4 omhoog, dus de 5e stap
-## (= sample 1 opnieuw) klinkt nét anders dan de 1e.
-func play_footsteps(step_count: int, duration: float) -> void:
+## Beweeggeluid over een verplaatsing: één klap per gelopen vakje, gelijkmatig
+## over `duration` verdeeld. Sample cyclt door de varianten van `category`,
+## beginnend op een willekeurige index (nieuwe reeks); de pitch tikt per volledige
+## ronde omhoog, dus de eerste herhaling van een sample klinkt nét anders.
+## category: "step" (infanterie), "horse_move" (cavalerie), "cannon_move" (artillerie).
+func play_footsteps(step_count: int, duration: float, category: String = "step") -> void:
 	if not enabled or step_count <= 0:
 		return
-	var start := randi() % 4
+	var count: int = _streams.get(category, []).size()
+	if count == 0:
+		return
+	var start := randi() % count
 	var base_pitch := randf_range(0.92, 1.06)
 	for i in step_count:
-		var sample_idx := (start + i) % 4
-		var round := i / 4  # integer: elke 4 stappen een pitch-trapje hoger
+		var sample_idx := (start + i) % count
+		var round := i / count  # elke volle ronde een pitch-trapje hoger
 		var pitch := base_pitch + float(round) * 0.06
 		var t := duration * float(i + 1) / float(step_count)  # geluid bij het neerkomen
-		play("step", t, sample_idx, pitch)
+		play(category, t, sample_idx, pitch)
 
 
 func set_enabled(on: bool) -> void:
