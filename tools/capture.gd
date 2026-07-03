@@ -17,6 +17,18 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 
+	if "arena" in OS.get_cmdline_user_args():
+		# Meet-toernooi (géén training): speelt elke doctrine-matchup en print een
+		# winrate-matrix "wie wint tegen wie" met het huidige opgeslagen profiel.
+		# Gebruik: -- arena [potjes-per-matchup] [ai-level]  (default 20, medium)
+		var aargs := OS.get_cmdline_user_args()
+		var ai_idx := aargs.find("arena")
+		var per: int = int(aargs[ai_idx + 1]) if aargs.size() > ai_idx + 1 else 20
+		var lvl: String = String(aargs[ai_idx + 2]) if aargs.size() > ai_idx + 2 else "medium"
+		_run_arena(per, lvl)
+		get_tree().quit()
+		return
+
 	if "train" in OS.get_cmdline_user_args():
 		# Headless auto-trainer (CMA-lite), géén dashboard nodig.
 		# Gebruik: -- train [minuten] [populatie] [potjes-per-kandidaat] [factie]
@@ -782,6 +794,8 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 	var deadline: float = minutes * 60_000.0
 	var gen: int = 0
 	var adoptions: int = 0
+	# Matchup-tally: hoe vaak wint DEZE (getrainde) factie tegen elke tegenstander.
+	var matchup: Dictionary = {}
 	print("[TRAIN] Budget %.1f min · populatie %d · %d potjes per kandidaat · %d facties · PARALLEL (%d threads)" % [
 		minutes, pop, games, doctrines.size(), pop])
 	print("[TRAIN] Eén generatie = %d potjes; kandidaten spelen tegelijk op eigen threads..." % [
@@ -830,7 +844,13 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 			thread.start(_eval_games_threaded.bind(jobs))
 			threads.append(thread)
 		for j in pop:
-			candidates[j].fit = threads[j].wait_to_finish()
+			var res: Dictionary = threads[j].wait_to_finish()
+			candidates[j].fit = float(res.fit)
+			for od in res.tally:
+				if not matchup.has(od):
+					matchup[od] = {"w": 0.0, "g": 0}
+				matchup[od].w += res.tally[od].w
+				matchup[od].g += res.tally[od].g
 			print("[TRAIN]   gen %d · %s · kandidaat %d/%d: %.1f/%d punten · %.1f min" % [
 				gen, Constants.doctrine_name(d), j + 1, pop, float(candidates[j].fit), games,
 				float(Time.get_ticks_msec() - t0) / 60_000.0])
@@ -859,7 +879,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 			verify_threads.append(vthread)
 		var verify: float = 0.0
 		for vt in verify_threads:
-			verify += vt.wait_to_finish()
+			verify += float(vt.wait_to_finish().fit)
 		var adopted: bool = verify >= float(games) * 0.5 + 1.0
 		if adopted:
 			profile[d] = mean
@@ -883,6 +903,168 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 			verify, games, "GEADOPTEERD 💾" if adopted else "verworpen", float(sigma[d]), elapsed])
 	print("[TRAIN] Klaar: %d generaties, %d adopties in %.1f min. Profiel: res://data/ai_weights.json" % [
 		gen, adoptions, float(Time.get_ticks_msec() - t0) / 60_000.0])
+	# Matchup-overzicht: hoe deed de getrainde factie het tegen elke tegenstander?
+	# Printen én wegschrijven naar een per-factie bestand (parallel-veilig), zodat
+	# je na een nachtrun kunt meten en bijstellen.
+	var my_name: String = Constants.doctrine_name(faction) if faction >= 0 else "kampioen"
+	var lines: Array = []
+	lines.append("Fog of War — trainings-matchup voor %s" % my_name)
+	lines.append("Generaties: %d · adopties: %d · minuten: %.1f" % [
+		gen, adoptions, float(Time.get_ticks_msec() - t0) / 60_000.0])
+	lines.append("Winrate van %s tegen elke tegenstander-factie (alle trainingspotjes):" % my_name)
+	print("[TRAIN] Winrate van %s tegen elke tegenstander-factie (over alle trainingspotjes):" % my_name)
+	for od in Constants.DOCTRINE_DATA.keys():
+		if matchup.has(od) and matchup[od].g > 0:
+			var wr: float = 100.0 * float(matchup[od].w) / float(matchup[od].g)
+			var line := "  vs %-7s %5.1f%%  (%d potjes)" % [Constants.doctrine_name(od), wr, int(matchup[od].g)]
+			print("[TRAIN] " + line.strip_edges())
+			lines.append(line)
+	DirAccess.make_dir_recursive_absolute("res://data")
+	var fname := "res://data/matchup_%s.txt" % (my_name.to_lower() if faction >= 0 else "champion")
+	var f := FileAccess.open(fname, FileAccess.WRITE)
+	if f != null:
+		f.store_string("\n".join(lines) + "\n")
+	print("[TRAIN] Matchup-log opgeslagen → %s" % fname)
+
+
+# =========================================================================
+# Arena: "wie wint tegen wie" — winrate-matrix over alle doctrine-matchups
+# =========================================================================
+
+## Speelt elke (rij-doctrine vs kolom-doctrine) `per` keer met het huidige profiel,
+## kant gewisseld voor eerlijkheid. Print een winrate-matrix + een ranglijst en
+## schrijft alles naar data/arena_results.txt. Puur meten, geen training.
+func _run_arena(per: int, level: String) -> void:
+	var paths := {
+		"easy": "res://scripts/ai/AIEasy.gd", "medium": "res://scripts/ai/AIMedium.gd",
+		"hard": "res://scripts/ai/AIHard.gd", "ultra": "res://scripts/ai/AIUltra.gd",
+	}
+	var ai_script = load(paths.get(level, paths["medium"]))
+	var profile: Dictionary = AIController.load_profile()
+	if profile.is_empty():
+		profile = AIController.default_profile()
+		print("[ARENA] Geen opgeslagen profiel — meet met de defaults.")
+	else:
+		print("[ARENA] Meet met het opgeslagen per-factie-profiel.")
+	var doctrines: Array = Constants.DOCTRINE_DATA.keys()
+	var n := doctrines.size()
+	# win[i][j] = aantal keer dat rij-doctrine i wint van kolom-doctrine j.
+	var win: Array = []
+	var played: Array = []
+	for i in n:
+		win.append([]); played.append([])
+		for j in n:
+			win[i].append(0); played[i].append(0)
+	var wins_total := {}
+	var games_total := {}
+	for d in doctrines:
+		wins_total[d] = 0; games_total[d] = 0
+	var t0 := Time.get_ticks_msec()
+	# Alle potjes als losse jobs, daarna PARALLEL over een threadpool (64-cores-route).
+	var jobs: Array = []
+	for i in n:
+		for j in n:
+			for g in per:
+				jobs.append({
+					"i": i, "j": j, "i_is_p1": g % 2 == 0,
+					"wi": (profile[doctrines[i]] as Dictionary).duplicate(),
+					"wj": (profile[doctrines[j]] as Dictionary).duplicate(),
+					"di": int(doctrines[i]), "dj": int(doctrines[j]),
+				})
+	var workers: int = mini(16, jobs.size())
+	print("[ARENA] %d doctrines · %d potjes/richting · %d potjes totaal · %s · %d threads ..." % [
+		n, per, jobs.size(), level, workers])
+	# Verdeel round-robin over de workers.
+	var buckets: Array = []
+	for w in workers:
+		buckets.append([])
+	for idx in jobs.size():
+		buckets[idx % workers].append(jobs[idx])
+	var threads: Array = []
+	for w in workers:
+		var th := Thread.new()
+		th.start(_arena_games_threaded.bind(buckets[w], ai_script))
+		threads.append(th)
+	for th in threads:
+		for r in th.wait_to_finish():
+			var i: int = r.i
+			var j: int = r.j
+			played[i][j] += 1
+			games_total[doctrines[i]] += 1
+			games_total[doctrines[j]] += 1
+			if r.pts >= 1.0:
+				win[i][j] += 1
+				wins_total[doctrines[i]] += 1
+			elif r.pts <= 0.0:
+				wins_total[doctrines[j]] += 1
+	print("[ARENA]   alle potjes gespeeld (%.1f min)" % [float(Time.get_ticks_msec() - t0) / 60_000.0])
+
+	# --- Matrix opbouwen (rij wint % tegen kolom) ---
+	var lines: Array = []
+	lines.append("Fog of War — arena winrate-matrix (%s, %d potjes/richting)" % [level, per])
+	lines.append("Rij wint-%% tegen kolom. Spiegels (diagonaal) horen rond 50%%.")
+	lines.append("")
+	var header := "         "
+	for j in n:
+		header += "%-8s" % Constants.doctrine_name(doctrines[j]).substr(0, 7)
+	lines.append(header)
+	for i in n:
+		var row := "%-9s" % Constants.doctrine_name(doctrines[i])
+		for j in n:
+			var pct := 0.0
+			if played[i][j] > 0:
+				pct = 100.0 * float(win[i][j]) / float(played[i][j])
+			row += "%-8s" % ("%d%%" % int(round(pct)))
+		lines.append(row)
+	lines.append("")
+	# --- Ranglijst (algehele winrate over alle matchups) ---
+	var rank: Array = []
+	for d in doctrines:
+		var wr := 0.0
+		if games_total[d] > 0:
+			wr = 100.0 * float(wins_total[d]) / float(games_total[d])
+		rank.append({"name": Constants.doctrine_name(d), "wr": wr, "n": games_total[d]})
+	rank.sort_custom(func(a, b): return a.wr > b.wr)
+	lines.append("Ranglijst (algehele winrate):")
+	for r in rank:
+		lines.append("  %-7s %5.1f%%  (%d potjes)" % [r.name, r.wr, r.n])
+
+	var text := "\n".join(lines)
+	print("\n" + text + "\n")
+	DirAccess.make_dir_recursive_absolute("res://data")
+	var f := FileAccess.open("res://data/arena_results.txt", FileAccess.WRITE)
+	if f != null:
+		f.store_string(text + "\n")
+	print("[ARENA] Klaar in %.1f min → data/arena_results.txt" % [float(Time.get_ticks_msec() - t0) / 60_000.0])
+
+
+## Arena thread-werker: speelt een lijst potjes en geeft per potje {i, j, pts}
+## terug (pts vanuit rij-doctrine i: 1 = win, 0.5 = gelijk, 0 = verlies).
+func _arena_games_threaded(jobs: Array, ai_script) -> Array:
+	var out: Array = []
+	for job in jobs:
+		var ai_i = ai_script.new()
+		ai_i.weights = job.wi
+		var ai_j = ai_script.new()
+		ai_j.weights = job.wj
+		var a1 = ai_i if job.i_is_p1 else ai_j
+		var a2 = ai_j if job.i_is_p1 else ai_i
+		var d1: int = job.di if job.i_is_p1 else job.dj
+		var d2: int = job.dj if job.i_is_p1 else job.di
+		var runner := MatchRunner.new(a1, a2, d1, d2)
+		runner.max_steps = 600  # snelle tiebreak bij patstelling (meten, geen training)
+		while not runner.done:
+			runner.step()
+		var winner: int = runner.winner
+		runner.dispose()
+		var i_side: int = Constants.PLAYER_1 if job.i_is_p1 else Constants.PLAYER_2
+		var pts: float = 0.5
+		if winner == i_side:
+			pts = 1.0
+		elif winner != -1:
+			pts = 0.0
+		out.append({"i": job.i, "j": job.j, "pts": pts})
+	return out
 
 
 ## Diepe kopie van een profiel (doctrine -> weights-dict).
@@ -893,14 +1075,22 @@ func _copy_profile(profile: Dictionary) -> Dictionary:
 	return out
 
 
-## Thread-werker: speel een lijst potjes na elkaar en tel de punten.
+## Thread-werker: speel een lijst potjes en geef {fit, tally}. tally telt per
+## tegenstander-doctrine de gewonnen punten en potjes ("wie wint tegen wie").
 ## Alles wat de thread aanraakt is eigen state (elke match z'n eigen engine);
 ## de gedeelde gewichten-dicts worden alleen gelezen (en in _train_match gedupliceerd).
-func _eval_games_threaded(jobs: Array) -> float:
+func _eval_games_threaded(jobs: Array) -> Dictionary:
 	var fit: float = 0.0
+	var tally: Dictionary = {}
 	for job in jobs:
-		fit += _train_match(job.cand_w, job.cand_d, job.opp_w, job.opp_d, job.cand_is_p1)
-	return fit
+		var s: float = _train_match(job.cand_w, job.cand_d, job.opp_w, job.opp_d, job.cand_is_p1)
+		fit += s
+		var od: int = int(job.opp_d)
+		if not tally.has(od):
+			tally[od] = {"w": 0.0, "g": 0}
+		tally[od].w += s
+		tally[od].g += 1
+	return {"fit": fit, "tally": tally}
 
 
 ## Speel één headless potje; retour: 1.0 = kandidaat wint, 0.5 = gelijk, 0.0 = verlies.

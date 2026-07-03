@@ -292,6 +292,11 @@ hill-climbing self-play en toont het live:
   bijna nooit gelijk eindigen (anders geen leersignaal).
 - **Kracht-grafiek** (`TrainGraph`): kampioen vs baseline-gewichten (gestapelde eval-batch,
   `_start_eval`/`_finish_eval`) → stijgende lijn boven 50% = echt sterker geworden.
+- **Balansmeting opgeslagen (juli 2026)**: `arena.bat` (`capture.tscn -- arena [potjes]
+  [level]`) speelt alle 36 doctrine-richtingen parallel en schrijft een winrate-matrix
+  "wie wint tegen wie" + ranglijst naar `data/arena_results.txt` (MatchRunner.max_steps=600
+  voor snelle metingen). De headless trainer schrijft per factie de winrate tegen elke
+  tegenstander naar `data/matchup_<factie>.txt`. Zo kun je na een run meten en bijstellen.
 - **Facties-curriculum + per-factie-profielen (juli 2026)**: de kampioen is een PROFIEL —
   per doctrine een eigen set van 31 gewichten: evaluatie (15) + opstelling (6:
   `art/cav/inf_front/center`, via `choose_placement`) + type-bewust koppelen (10:

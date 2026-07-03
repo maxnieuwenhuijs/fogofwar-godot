@@ -12,6 +12,9 @@ var ai2
 var done: bool = false
 var winner: int = -1
 var _guard: int = 0
+## Stap-limiet: bij overschrijding beslist de tiebreak. Lager = snellere metingen
+## (arena), hoger = zuiverder (training laat potjes verder uitspelen).
+var max_steps: int = 2500
 
 
 func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS) -> void:
@@ -34,7 +37,7 @@ func step() -> void:
 	if done:
 		return
 	_guard += 1
-	if _guard > 2500:
+	if _guard > max_steps:
 		# Patstelling → beslis op materiaal, dan haven-voortgang (trainings-signaal).
 		done = true
 		winner = _tiebreak()
