@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://c8pawnview001"]
+
+[ext_resource type="Script" uid="uid://wrvyx46lnimi" path="res://scripts/game/pawn_view.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pawn"]
+size = Vector3(0.5, 1.25, 0.5)
+
+[node name="PawnView" type="Node3D" unique_id=1967858798]
+script = ExtResource("1_script")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=1007733391]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
+size = Vector3(0.5, 1.25, 0.5)
+
+[node name="CSGSphere3D" type="CSGSphere3D" parent="CSGBox3D" unique_id=980397764]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.73998725, 0)
+operation = 2
+radius = 0.3
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1088157460]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=497196435]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
+shape = SubResource("BoxShape3D_pawn")
+
+[node name="Label3D" type="Label3D" parent="." unique_id=1832021947]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+billboard = 1
+font_size = 48
+outline_size = 8

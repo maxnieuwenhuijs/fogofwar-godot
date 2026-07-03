@@ -1,0 +1,343 @@
+# Fog of War — Work In Progress & Context
+
+> Levend document. Bijgewerkt terwijl we bouwen. Laatste grote update: mens-vs-AI
+> volledig speelbaar, met slimme kaarten, health/stamina/attack-blokjes, animaties
+> en projectie-picking.
+
+---
+
+## 1. Wat is dit
+
+2-speler tactisch **3D**-bordspel, **Godot 4.7** (Forward+, Jolt Physics, D3D12),
+portrait 1080×1920. Je speelt (rood = speler 1) tegen een AI (blauw = speler 2).
+
+- **Spelregels: `spelregels-v4.1.md` is de geldende regelset** (eenheidstypes Infanterie/
+  Cavalerie/Artillerie, vuurlijnen, terugslag, 6 doctrines, vrije opstelling, initiatief-bod).
+  `game_description.md` (v1) is het basisdocument waarop v4.1 voortbouwt.
+  **De engine implementeert v4.1 volledig** (zie §2b); resterende UI-gaten in §9.
+- Opgeruimd (juli 2026): `GAME_LOGIC_OVERVIEW.md` (oude 2D/server-implementatie) is
+  verwijderd; de `README.md` is herschreven naar de huidige 3D-realiteit.
+- De volledige, geteste engine + AI is geport uit het oude project
+  `C:\Users\maxni\FOGOFWAR GODOT` (dat was 2D). Hier bouwen we de 3D-presentatie erop.
+
+## 2. Huidige status — SPEELBAAR
+
+Volledige mens-vs-AI loop werkt end-to-end:
+
+1. **Difficulty-menu** bij start: Easy / Medium / Hard → **doctrine-keuze** (6 doctrines;
+   de AI kiest blind willekeurig) → **opstelling** (standaard-opstelling bevestigen).
+2. **Definieer** je kaarten via de waaier (aantal × budget volgt je doctrine, zie §5).
+3. **Onthulling**: scherm toont bod-percentages + aanval/speed en wie begint
+   (deterministisch — geen RPS meer).
+4. **Koppelen** (interactief): tik een kaart onderaan → je pionnen lichten op → tik een pion.
+   AI koppelt automatisch op zijn beurt (staartkoppelen bij ongelijke aantallen).
+5. Herhaalt 3 rondes.
+6. **Actiefase**: pion selecteren → groen = bewegen, rood = melee/charge, oranje = schot.
+   Wolf-doctrine: na melee cyaan vakken = gratis stap (rechtermuis = overslaan). AI reageert.
+7. **Win** → eindscherm met "Nieuw spel".
+
+Engine bewaakt alle regels. **364 test-asserts groen** (`res://tests/TestScene.tscn`).
+
+## 2b. Regels v4.1 — GEÏMPLEMENTEERD (engine + AI + UI)
+
+De volledige v4.1-regelset zit in de engine (`scripts/core/`):
+
+- **Eenheidstypes** op Pawn (`unit_type`): Infanterie / Cavalerie / Artillerie; letter op de
+  pion (`PawnView.set_unit_type`) + andere blokvorm (cavalerie hoog, artillerie plat/breed).
+- **Opmaakbare stamina (HUISREGEL, wijkt af van v4.1 §3.3/§4.4)**: stamina is de
+  actievoorraad van de cyclus — stap = 1, melee/schot = 1, charge = stappen + 1
+  (`Pawn.spend_stamina`). Een pion mag meerdere beurten handelen tot de voorraad op is.
+  Terugslag en de Wolf-stap zijn gratis.
+- **Acties per type** (`Rules`): infanterie beweeg/melee/schot (afstand exact 2, tussenvak
+  leeg, schade Attack−1, `get_valid_shot_targets`); cavalerie charge (`apply_charge`,
+  bewegen + optionele melee, minstens 1 stap óf aanval, kosten stappen+1) en **springt
+  ALTIJD over eigen pionnen heen** (HUISREGEL; gepasseerde vakken tellen als stappen);
+  artillerie **1 ding per beurt** (1 stap óf 1 schot) met **vaste dracht 6** (HUISREGEL,
+  `Constants.ARTILLERY_RANGE`; v4.1 zei dracht = Speed), volle Attack, dode zone op 1.
+  Artillerie-Speed is dus puur het aantal acties per cyclus.
+- **Factie-perks (HUISREGELS, juli 2026)**: Leeuw-kanonnen dracht 7 (`art_range_bonus`);
+  Vos-cavalerie +1 Speed bij koppeling (`cav_speed_bonus`); Wolf-cavalerie springt óók
+  over VIJANDELIJKE infanterie (`cav_jump_infantry`; niet over vijandelijke cav/art).
+  Teksten (pro/con per doctrine) staan in `Constants.DOCTRINE_DATA`.
+- **Terugslag** (`_resolve_melee`, HUISREGEL type-afhankelijk): een ACTIEVE verdediger die
+  een melee overleeft slaat terug op de aanvaller — infanterie −1, cavalerie −2,
+  artillerie −0 (`Constants.RETALIATION_DAMAGE`). Geen terugslag bij dood, tegen
+  beschietingen, of van inactieve pionnen.
+- **Vuurregels**: vuur raakt óók inactieve pionnen; elke tussenliggende pion blokkeert;
+  vuur wint geen terrein (geen forced move); melee-eliminatie → verplichte verplaatsing.
+- **Vrije opstelling**: `Phase.Type.PLACEMENT` + `submit_placement`; `default_placement()`
+  per doctrine (artillerie vóór op flank/centrum, cavalerie achter). RPS is weg —
+  initiatief is deterministisch: **bod-percentage** (`Rules.compute_bid`, §4.3-B) →
+  Speed-bod → C1/R1: P1, anders vorige initiatiefhouder.
+- **Doctrines** (`Constants.DOCTRINE_DATA`, per speler in `state.doctrines`): Mens 3×7,
+  Muis 4×5 (22 inf, doorbewegen door eigen pionnen), Leeuw 2×9 (18 pionnen 6/10/2),
+  Beer (+1 HP bij koppeling buiten budget, Speed max 3 bij definitie), Wolf (gratis stap
+  na elke melee; `pending_wolf_step_pawn` + `submit_wolf_step`/`skip_wolf_step`),
+  Vos (gedekt koppelen: `pawn.card_revealed=false` tot schade geven/krijgen).
+- **Koppelen**: staartkoppelen bij ongelijke kaartaantallen; kaarten zonder geldige pion
+  vervallen; initiatiefhouder zonder koppelwerk → beurt direct naar de ander (bugfix).
+- **AI**: `enumerate_actions` met schoten + charges, `choose_placement`, `choose_wolf_step`,
+  budget-bewuste `generate_cards` (respecteert doctrine-budget + Beer-speedcap).
+- **UI/driver**: doctrine-keuzemenu (AI kiest blind willekeurig), opstelling-overlay,
+  kaart-UI met dynamisch budget/aantal (`CardHand.configure`), targeting: rood = melee/
+  charge, oranje = schot, groen = bewegen; wolf-stap = cyaan vakken klikken (rechts =
+  overslaan); bod als percentage in het onthul-scherm.
+- **Sims per doctrine**: `capture.tscn -- sim <ai1> <ai2> [doctrine1] [doctrine2]`
+  (bv. `sim medium hard muis leeuw`). Alle 6 doctrines spelen uit met winnaars via
+  beide wincondities.
+
+## 3. Architectuur (3 lagen)
+
+```
+Laag 3  Driver          scripts/game/game.gd  — koppelt GameSession aan het 3D-bord,
+                        input, AI-beurten, overlays, animaties, indicatoren.
+Laag 2  Presentatie     Board.tscn (bord+camera), pawn_view, card_hand/card_view, overlay.
+Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, GameSession.
+        AI              scripts/ai/    — AIController + AIEasy/AIMedium/AIHard.
+```
+
+- **Autoloads** (project.godot): `Constants` (`scripts/core/constants.gd`) en `GameSession`.
+- `Constants` is gemerged: engine-constanten + compat-enums (`Team`, `UiPhase`) +
+  `STAT_TOTAL`/`MIN_STAT` voor de kaart-UI.
+- Engine-`Card` (id/owner) ≠ UI-`CardData` (edit-model in de waaier). Ze bestaan naast elkaar;
+  bij `submit_define_cards` geeft de UI dicts `{hp,stamina,attack}` door.
+
+## 4. Belangrijke bestanden
+
+| Bestand | Rol |
+|---|---|
+| `scripts/game/game.gd` | **Driver** — alle glue: flow, input, AI, overlays, animatie, blokjes |
+| `Board.tscn` | Volledig 11×11 bord (node "Board", incl. Camera3D + light + havens) |
+| `scenes/game/pawn_view.tscn/.gd` | Pion: speelstuk/model + ring + facing. `@export model_scene` = karaktermodel (.glb met AnimationPlayer); anders het type-speelstuk. `play_walk/attack/idle/die`, `face_dir` |
+| `scenes/game/pieces/*.tscn` | **Speelstukken per type** (CSG): infanterist (romp+geweer), cavalerie (paardenkop), artillerie (kanon+wielen). Delen in groep `team_tint` krijgen de teamkleur + status (select/hover/dim) via `PawnView._update_material`; letter I/C/A op het Label3D erboven |
+| `scenes/ui/card_hand.tscn/.gd` | Waaier: definieer + interactief koppelen |
+| `scenes/ui/card_view.tscn/.gd` | Losse kaart: slimme +/− stat-herverdeling, tap-select |
+| `scenes/ui/overlay.tscn/.gd` | Herbruikbaar modaal keuzescherm (difficulty/doctrine/reveal/eind) |
+| `scripts/ui/instructions.gd` | **Speluitleg-tabscherm** (simpele taal): Het spel / Beurten / Eenheden / Vechten / Facties (facties-tab uit `DOCTRINE_DATA` gegenereerd). Altijd bereikbaar via de "?"-knop rechtsboven (`game._build_help_button`; pauzeert de fase-timer) en via de Speluitleg-knoppen in de menu's |
+| `scripts/core/*` | Headless engine (geport, getest) |
+| `scripts/ai/*` | AIController + Easy/Medium/Hard |
+| `tests/*` | Testrunner + Rules/GameSession/AI/Card tests (156) |
+| `tools/capture.*` | Screenshot/test-harness via CLI (zie §7) |
+
+## 5. Gameplay-details & beslissingen
+
+- **Slimme kaarten**: starten op 3/2/2 (7 al verdeeld). `+stat` haalt 1 weg bij de grootste
+  andere stat (>1); `−stat` geeft 1 aan de kleinste andere. Totaal blijft altijd 7, elke
+  stat 1..5. ("Punten over"-label verborgen; Bevestigen altijd geldig.)
+- **Melee met terugslag (v4.1)**: de verdediger krijgt de volle Attack; overleeft een
+  ACTIEVE INFANTERIST de melee, dan krijgt de aanvaller exact 1 schade terug
+  (`Rules._resolve_melee`, test `test_retaliation_when_active_infantry_survives`).
+  Bij eliminatie moet de aanvaller direct naar het vrijgekomen vak (alleen melee).
+- **Stamina is opmaakbaar** (huisregel): een pion kan in meerdere beurten handelen —
+  bv. 2 stappen lopen, later nog eens slaan — tot de stamina op is. Een aanval kost 1.
+  De cyclus eindigt zodra niemand nog stamina + een geldige actie heeft.
+- **Opstelling**: rood (P1) op rijen z=9,10; blauw (P2) op z=0,1. Havens: P1-doel z=0, P2-doel z=10.
+- **Koppelen v-model**: één kaart per beurt, initiatief-winnaar begint, beurten wisselen.
+  Auto-koppelaar (AI + fallback) kiest pion met "ademruimte" (niet ingeklemd).
+- **Indicatoren boven pion** (3×5 blokjes, projectie via `camera.unproject_position`):
+  rij 0 = HP groen, rij 1 = stamina lichtblauw, rij 2 = attack oranje, leeg = zwart.
+  Blokjes staan áchter de kaarten (z-index) en dicht bij de pion (y+1.55).
+- **Gedimde pionnen**: eigen pionnen die tijdens jouw actiebeurt niet kunnen (0 stamina/ingeklemd).
+- **Hover-highlight**: pion licht geel op onder de muis (bij koppelen: alleen eigen ongekoppelde).
+- **Beweeg-animatie**: pion glijdt (`_animate_move`, tween); `_tweening_pawns` voorkomt dat
+  `_refresh_all` de positie overschrijft tijdens de animatie.
+- **Pauze** (0.9s) na de laatste koppeling vóór de nieuwe definieer-ronde.
+- **Stamina-kosten op tiles**: geselecteerde pion toont op elke groene zet-tile klein de
+  stap-/stamina-kosten (`_highlight_move_tiles` met een Label3D per tile = pad-lengte).
+- **Koppel-animatie**: pion springt kort omhoog + ring glim-flits (`_animate_link` +
+  `PawnView.flash_ring`), voor beide spelers.
+- **Treffer-feedback**: minivertraging → witte flits op de geraakte pion
+  (`PawnView.flash_hit`) + opstijgend rood schade-label ("-2") dat vervaagt
+  (`game._hit_feedback`/`_spawn_damage_float`); bij terugslag krijgt de aanvaller
+  even later zijn eigen "-1". Charge-feedback wacht op de aanrij-animatie.
+- **Schiet-VFX (prototype)**: `_fire_projectile` — kanonskogel (groot, donker, met
+  boogje) vs infanterie-tracer (klein, fel, strak), muzzle flash met OmniLight-puls
+  (`_muzzle_flash`) en low-poly rookwolkjes bij loop én inslag (`_spawn_smoke`).
+  De treffer-feedback wacht op de projectiel-reistijd. Bekende quirk: een dodelijk
+  geraakt doelwit verdwijnt al bij vertrek van het projectiel (refresh), niet bij
+  de inslag — acceptabel voor het prototype.
+- **Charge-kosten in de UI**: alleen betaalbare charges (stappen + 1 ≤ stamina) worden
+  rood gemarkeerd (`_compute_charge_targets`) — anders "blijft het paard staan" (bugfix).
+- **Beurt-timer (20s) in ALLE fases** (`PHASE_TIME_LIMIT`, countdown in de HUD-topbalk).
+  Bij 0: opstellen → standaard-opstelling (`_cancel_manual_placement`); definiëren →
+  auto-bevestigd; koppelen → auto-afgemaakt (`_auto_link_human`); actiefase (mensbeurt) →
+  het spel kiest greedy een zet (`_auto_action_human`, AIMedium-motor; pending Wolf-stap
+  wordt overgeslagen). Timer stopt tijdens AI-beurten en pauzeert bij de "?"-uitleg.
+- **Geen type-letters meer** boven de pionnen — de speelstuk-modellen tonen het type
+  (`PawnView.set_unit_type` zet het Label3D leeg).
+- **Geluid (SFX)**: autoload `Audio` (`scripts/core/audio_manager.gd`) met een pool van
+  AudioStreamPlayers; `Audio.play(categorie, delay)` kiest een willekeurige variant uit
+  `sounds/` (categorieën: cannon_fire/air/hit, musket_fire/echo/hit/cock, melee_kill/survive)
+  met subtiele pitch-variatie + per-categorie volume. Alle bronbestanden zijn **WAV**
+  (mp3's verwijderd — WAV = nul decode-latency + geen encoder-padding, past bij de op
+  reistijd getimede inslaggeluiden). Gehaakt in `game._on_action_performed`: schot →
+  musket/cannon bij afvuren, echo/whoosh kort erna, inslag-geluid getimed op de
+  projectiel-reistijd; melee/charge → kill- vs. overleeft-klap. Haan-spannen
+  (`musket_cock`) bij selectie van een infanterist die kan schieten.
+  **Voetstappen** (`Audio.play_footsteps(dist, dur)` in `_animate_move`): één stap
+  per gelopen vakje, sample cyclt 1→2→3→4→1… vanaf een willekeurige start-index per
+  beweging, pitch tikt per ronde-van-4 omhoog (5e stap = sample 1 hoger). Mute-hook:
+  `Audio.set_enabled(false)`. Draai `--import` na een verse checkout.
+- **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
+  vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar
+  z=0, blauw naar z=10 (naar de vijand). Draait naar de looprichting bij bewegen en naar het doel
+  bij aanvallen. Bedoeld als basis voor het latere karaktermodel (blik-/loop-animatie).
+
+## 6. Opgeloste bugs / valkuilen (niet opnieuw intrappen)
+
+- **Picking-bug (Jolt)**: pion-collider was `StaticBody3D`; Jolt updatet static collision NIET
+  bij verplaatsen → raycast vond verplaatste pion niet → "kan niet opnieuw selecteren".
+  **Definitieve fix**: geen physics meer voor picking. `_raycast_pawn` en `_pick_move_tile`
+  projecteren wereldposities naar het scherm en pakken de dichtstbijzijnde (pion 44px, tegel 52px).
+- **Overlappende waaier-kaarten** maakten +/− onklikbaar (buurkaart ving de klik) → genoeg
+  spreiding + kaart springt naar voren op hover.
+- **`_pawns_root.reparent(_board)`** met keep_global_transform gaf 5-vakjes offset → gebruik
+  `reparent(_board, false)`.
+- **Pion-positie** = tile-midden op hele coördinaten (`tile_position`), niet `gx+0.5`.
+- **Autoload-enum als type**: `var x: Constants.Team` faalt (autoload is instance) → gebruik `int`.
+- **`class_name` niet in CLI-cache** bij verse run → `var _overlay` untyped houden.
+
+## 7. Runnen, testen, screenshots
+
+- **Godot exe**: `C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe`
+  (de .exe zit ín een gelijknamige map). GODOT_PATH user-env staat hierop.
+- **Spelen**: open project in Godot, F5 (main scene = `scenes/game/game.tscn`).
+- **Tests**: `res://tests/TestScene.tscn` (F6 in editor, of headless CLI). Nu 156 groen.
+- **CLI-workflow** (geen live editor nodig): `tools/capture.tscn` instancet game.tscn en
+  saved een viewport-PNG. Run: `& $godot --path <proj> res://tools/capture.tscn -- <modus>`.
+  Modi: (geen)=menu, `define`, `reveal`, `rps`, `link`, `play` (auto tot actiefase),
+  `carddist` (test stat-herverdeling), `reselect`/`picktest` (picking na zet),
+  `benchhard` (AI-timing), `click`. Output: `_shot*.png` in de projectroot.
+
+## 8. AI
+
+- Interface: `generate_cards`, `choose_rps`, `choose_link`, `choose_action`.
+- **Gedeelde zero-sum evaluatie** (`AIController.evaluate(state, me)`): pionnen-in-haven ×6000,
+  niet-lineaire nabijheid van de 2 dichtstbijzijnde pionnen naar BEIDE havens (= aanval +
+  verdediging), bewaking van winvakjes ±320, materiaal ±32, HP ±3. `AIController` biedt ook
+  `enumerate_actions` / `simulate` / `best_greedy_action`.
+- **Easy**: greedy op eval, maar kiest willekeurig uit de top-3 (maakt fouten).
+- **Medium**: 1-ply greedy op de eval.
+- **Hard**: negamax diepte 3 + beam (14/8) op de zero-sum eval. ~400ms/zet.
+- **Ultra (god mode)**: `AIUltra.gd` — iterative-deepening negamax tot diepte 5,
+  beam 20/10, denktijd-budget `time_budget_ms` (2200ms) per zet; move-ordering
+  hergebruikt de beste zet van de vorige diepte. Bench: `capture.tscn -- benchultra`.
+  Alle niveaus delen dezelfde (geleerde) gewichten — het verschil is de zoekdiepte.
+- Slimme kaarten + koppeling gedeeld: renner/slager/anker, koppel hoogste stamina op de pion
+  het dichtst bij de eigen doelhaven.
+- **Meten**: `capture.tscn -- sim <p1> <p2>` (AI vs AI, puur engine). `-- benchhard` voor timing.
+- Historie: was "dom in alle standen" (mens won ~3 zetten). Bugs: AI verdedigde de verkeerde
+  haven; Hard's negamax evalueerde vanuit vaste i.p.v. side-to-move perspectief. Nu: Hard>Medium>Easy,
+  geen triviale haven-rush meer.
+- **Instelbare gewichten**: `AIController.weights` (Dictionary, `default_weights()`), gebruikt in
+  `evaluate`. Kunnen opgeslagen/geladen (`save_weights`/`load_weights` → `user://ai_weights.json`).
+  Het spel laadt geleerde gewichten in `_setup_ai`.
+
+## 8b. AI Trainer (self-play dashboard)
+
+`scenes/training/Trainer.tscn` (via het difficulty-menu "AI Trainer bekijken", of F6). Draait
+hill-climbing self-play en toont het live:
+- **4 potjes tegelijk** (`MatchRunner` = losse GameSession-engine per potje, stap voor stap;
+  `MiniBoard` tekent elke GameState top-down).
+- **Spreektaal-narratie** (RichTextLabel): welke gewicht-aanpassing geprobeerd wordt en of de
+  uitdager wint → nieuwe kampioen.
+- **Stats** (generatie, verbeteringen, kampioen-gewichten) + snelheidsregelaar (stappen/frame) +
+  pauze + "Bewaar kampioen".
+- **Auto-opslaan**: bij elke kampioen-verbetering schrijft 'ie naar **`res://data/ai_weights.json`**
+  (in het project → commit-baar + met de hand aan te passen). Het spel laadt dit in `_setup_ai`
+  (gemerged over `default_weights()`, dus robuust). Verwijder het bestand = terug naar de defaults.
+- Patstellingen eindigen na 2500 stappen met een materiaal/haven-tiebreak (`MatchRunner._tiebreak`)
+  zodat de trainer signaal krijgt en sneller verbetert.
+- Training gebruikt Medium (snel); geleerde gewichten helpen ook Hard (gedeelde eval).
+- **Pool van oude kampioenen** (`_pool`, incl. baseline): de uitdager speelt tegen een mix →
+  geen overfit op één stijl. `GAMES_PER_GEN=8` (balans snelheid/betrouwbaarheid; 4 borden = steekproef).
+  Adoptie alleen bij **marge** `ADOPT_MARGIN=2` (uitdager ≥2 potjes verschil → geen geluk).
+- **Tiebreak** (`MatchRunner._tiebreak`): materiaal → haven → haven-nabijheid, zodat patstellingen
+  bijna nooit gelijk eindigen (anders geen leersignaal).
+- **Kracht-grafiek** (`TrainGraph`): kampioen vs baseline-gewichten (gestapelde eval-batch,
+  `_start_eval`/`_finish_eval`) → stijgende lijn boven 50% = echt sterker geworden.
+- **Facties-curriculum + per-factie-profielen (juli 2026)**: de kampioen is een PROFIEL —
+  per doctrine een eigen set van 31 gewichten: evaluatie (15) + opstelling (6:
+  `art/cav/inf_front/center`, via `choose_placement`) + type-bewust koppelen (10:
+  `aff_<type>_<stat>` + `link_advance`). Elke generatie muteert één factie; de uitdager
+  speelt die factie (signaal!), de tegenstander krijgt een willekeurige factie. De
+  kracht-grafiek meet op een vaste rotatie van 4 matchups. Opslag:
+  `AIController.save_profile`/`load_profile` → `data/ai_weights.json` (per-doctrine;
+  oud plat formaat wordt herkend). Het spel laadt de set van de AI-doctrine (`_setup_ai`).
+  Mini-borden tonen types: ● soldaat, ▲ paard (punt naar de vijand), ▮ kanon + legenda.
+- **"Train de AI"-knop = `train_ai.bat`** (projectroot): dubbelklik = 60 min headless
+  CMA-lite-training zonder dashboard (`train_ai_nacht.bat` = 8 uur). Ctrl+C mag altijd —
+  elke adoptie is al opgeslagen. CLI: `capture.tscn -- train [minuten] [pop] [games] [factie]`.
+  Kandidaten spelen parallel (1 thread per kandidaat; MEER threads bleek averechts —
+  allocator-contentie). Tegenstander-pool tegen rondjes draaien (potje 0 = baseline,
+  1 = kampioen, rest = oude kampioenen). Mutatie/recombinatie zijn TEKEN-behoudend
+  (bugfix: negatieve flankvoorkeuren werden naar +0.01 geklemd).
+- **64-cores-route: `train_ai_parallel.bat`** — start 6 processen, één per factie; elk
+  schrijft een eigen override (`data/ai_weights_f<d>.json`), `AIController.load_profile`
+  merget die automatisch over het hoofdbestand (geen schrijfconflicten). Inspectie van
+  het actieve profiel: `capture.tscn -- showweights`. Het dashboard (`Trainer.tscn`)
+  blijft voor live meekijken (hill-climbing).
+- Zie `AI_TRAINING_PLAN.md` voor de bredere roadmap (dit is Fase A+B).
+
+## 9. TODO / volgende stappen
+
+- [x] ~~REGELS v4.1 IN DE ENGINE~~ — **gedaan**, zie §2b. Resterende v4.1-gaten:
+  - [x] **Vrije opstelling UI**: gedaan — "Zelf opstellen" in het opstellingsmenu:
+        plaats het schaarste type eerst (kanonnen → paarden, klik op cyaan gemarkeerde
+        thuisvakken, rechtermuis = ongedaan); infanterie vult automatisch aan (voorste
+        rij, centrum eerst). Previews via losse PawnViews; engine-validatie bij submit.
+        **Ghost-voorvertoning**: een semi-doorzichtig stuk van het huidige type volgt
+        de muis over de vrije vakken (`_update_placement_ghost(_type)`; transparant
+        teammateriaal op alle CSG-delen, schaduw uit).
+        AI's plaatsen zichzelf via `choose_placement` (ook in sims/Trainer).
+        Test: `capture.tscn -- placetest`. Doctrines met lege vakken (Leeuw) laten de
+        rest van de thuisrijen automatisch leeg.
+  - [ ] **Vos-informatie echt verbergen**: `pawn.card_revealed` wordt bijgehouden, maar
+        de UI toont de stat-blokjes van ALLE actieve pionnen en de AI leest de volledige
+        state (vals spelen). Voor mens-vs-AI met een Vos-AI zou de UI vijandelijke
+        gedekte stats moeten maskeren; de AI-kant vergt een info-set-model.
+  - [ ] **Engine-flags `vuurRaaktInactief`/`vuurGeblokkeerd`** (balansknop §8 v4.1):
+        nu hard aan/aan volgens spec; als flags inbouwen zodra het selfplay-harnas
+        het boogvuur-alternatief (uit/uit) moet kunnen meten.
+  - [ ] **AI-eval verfijnen voor v4.1**: `_is_killable` kent alleen melee-dreiging
+        (geen schoten/charges); artillerie-posities (schootsveld) worden niet gewogen;
+        koppel-strategie is nog type-blind (kaart × type is juist de v4.1-kern).
+  - [ ] **Playtest-agenda §8 van de regels** draaien via sims/Trainer per matchup
+        (21 matchups); meet vooral standoff/verlamming en de 1/5/1-oogstmachine.
+- [ ] **AI verder tunen / trainen** — nog te makkelijk te verslaan (§8). Zie **`AI_TRAINING_PLAN.md`**
+      voor het gefaseerde bouwplan: self-play infrastructuur → eval-gewichten tunen via self-play
+      (aanbevolen start) → MCTS → deep-RL (godot_rl_agents). Snelle korte-termijn-ideeën: diepere
+      search voor Hard, mens-rush zwaarder straffen, betere koppel-strategie.
+- [ ] **Karaktermodel** — de blokjes zijn vervangen door gestileerde CSG-speelstukken per
+      type (`scenes/game/pieces/`); echte geanimeerde modellen (.glb via `model_scene`,
+      kijk-/loop-/aanval-animaties op `face_dir`) blijven een latere upgrade.
+- [ ] **Aanval-animatie** (hit-flash / bounce / screen shake bij een treffer).
+- [ ] "AI denkt…"-feedback duidelijker maken (nu vrijwel instant).
+- [ ] Geluid + eventueel echte sprites (i.p.v. gekleurde blokken).
+- [ ] Camera-/board-thema polijsten (tile-kleuren, WorldEnvironment/ambient).
+- [x] ~~`main.tscn` opschonen en README updaten naar 3D-realiteit~~ — gedaan: main.tscn
+      bestond al niet meer, README herschreven, GAME_LOGIC_OVERVIEW.md verwijderd,
+      `_shot*.png` opgeruimd + in .gitignore.
+- [ ] **ONLINE PLAYTESTEN — volledig plan in `ONLINE-PLAYTEST-PLAN.md`** (juli 2026):
+      Fase 0 (offline voorwerk: reveal-UI met tegenstander-kaarten, camera-flip voor P2,
+      submit_doctrine/submit_resign/cycluslimiet in de engine, per-speler view-filter +
+      snapshot-serializer, Vos-"?"-UI, touch-knoppen, web-export-spike) → Fase 1
+      (WebSocket + JSON, headless server op de DO-droplet, rooms = GameSession-instanties,
+      device-token reconnect) → Fase 2 (lobby-lite, quick-match, playtest-telemetrie
+      gekoppeld aan spelregels §8, feedback-knop, server-AI max Medium) → Fase 3
+      (Glicko-2 + SQLite, leaderboard, matchmaking, seizoenen, rematch) → Fase 4
+      (dichttimmeren: leak-canary, replay-verificatie). Schatting Fase 0+1: 60-90 uur.
+- [ ] Export-presets (Android AAB, Web, iOS) — later.
+
+## 10. Open ontwerpvragen (wachten op keuze)
+
+Beantwoord door `spelregels-v4.1.md` en de implementatie:
+
+- **Tiebreak-methode**: opgelost — RPS is verwijderd; deterministisch bod → Speed-bod →
+  C1/R1: P1, anders vorige initiatiefhouder (`Rules.compute_initiative`). De RPS-fases
+  staan nog ongebruikt in `Phase.Type` (opruimen mag).
+- **Wederzijdse aanvalsschade**: opgelost — terugslag (§3.1 v4.1), geïmplementeerd.
+- **Start-verdeling kaarten**: opgelost — `CardData.reset_stats()` verdeelt het
+  doctrinebudget (7→3/2/2, 5→2/2/1, 9→3/3/3; Beer-speedcap → overschot naar HP).
+- **Balansknoppen v4.1 §8**: bewust nog níét in de regels (standbeeld-drempel, cumulatieve
+  havenscore, per-stat cap, …) — beslissen via selfplay/playtests, agenda staat in de regels.

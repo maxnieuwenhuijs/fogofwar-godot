@@ -1,0 +1,750 @@
+[gd_scene format=3 uid="uid://bcr40k0m25t0k"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4nv4r"]
+albedo_color = Color(0.010688732, 0.029790914, 0.6219675, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vs73w"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ipw6i"]
+albedo_color = Color(0.15433852, 0.15433852, 0.15433852, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gql0w"]
+albedo_color = Color(0.4368612, 0.08711798, 0.093458705, 1)
+
+[node name="Board" type="Node3D" unique_id=1944186346]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -5)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1671274236]
+transform = Transform3D(0.9547695, 0.29711568, 0.011725552, -0.18961099, 0.5779836, 0.7937144, 0.22904778, -0.76003754, 0.6081776, 7.4264317, 30.079626, 21.421629)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=885223946]
+transform = Transform3D(0.9396926, 0.2513556, -0.23194425, 0, 0.67815965, 0.7349146, 0.34202012, -0.69059384, 0.6372616, 3.185, 5, 9.84)
+projection = 1
+current = true
+size = 25.503
+near = 0.001
+
+[node name="Tiles" type="Node3D" parent="." unique_id=777209934]
+
+[node name="tile1" type="CSGBox3D" parent="Tiles" unique_id=1713970939]
+material_override = SubResource("StandardMaterial3D_4nv4r")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile2" type="CSGBox3D" parent="Tiles" unique_id=14434729]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile3" type="CSGBox3D" parent="Tiles" unique_id=1690251377]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile4" type="CSGBox3D" parent="Tiles" unique_id=187135421]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile5" type="CSGBox3D" parent="Tiles" unique_id=1246896218]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+material_override = SubResource("StandardMaterial3D_4nv4r")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile6" type="CSGBox3D" parent="Tiles" unique_id=1320650452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+material_override = SubResource("StandardMaterial3D_4nv4r")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile7" type="CSGBox3D" parent="Tiles" unique_id=1672235921]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+material_override = SubResource("StandardMaterial3D_4nv4r")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile8" type="CSGBox3D" parent="Tiles" unique_id=1077004306]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 0)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile9" type="CSGBox3D" parent="Tiles" unique_id=293470125]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile10" type="CSGBox3D" parent="Tiles" unique_id=1223503823]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile11" type="CSGBox3D" parent="Tiles" unique_id=2029895728]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
+material_override = SubResource("StandardMaterial3D_4nv4r")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile12" type="CSGBox3D" parent="Tiles" unique_id=1115512170]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile13" type="CSGBox3D" parent="Tiles" unique_id=1706888711]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile14" type="CSGBox3D" parent="Tiles" unique_id=11687717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 1)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile15" type="CSGBox3D" parent="Tiles" unique_id=429642362]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 1)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile16" type="CSGBox3D" parent="Tiles" unique_id=1992882445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 1)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile17" type="CSGBox3D" parent="Tiles" unique_id=1082349748]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 1)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile18" type="CSGBox3D" parent="Tiles" unique_id=1688147045]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 1)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile19" type="CSGBox3D" parent="Tiles" unique_id=2136460791]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 1)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile20" type="CSGBox3D" parent="Tiles" unique_id=1822459212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 1)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile21" type="CSGBox3D" parent="Tiles" unique_id=939680039]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 1)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile22" type="CSGBox3D" parent="Tiles" unique_id=1597549855]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 1)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile23" type="CSGBox3D" parent="Tiles" unique_id=1810947505]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile24" type="CSGBox3D" parent="Tiles" unique_id=1817316228]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile25" type="CSGBox3D" parent="Tiles" unique_id=823492668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 2)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile26" type="CSGBox3D" parent="Tiles" unique_id=757378010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 2)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile27" type="CSGBox3D" parent="Tiles" unique_id=1176784023]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 2)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile28" type="CSGBox3D" parent="Tiles" unique_id=1903604745]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 2)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile29" type="CSGBox3D" parent="Tiles" unique_id=416403405]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 2)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile30" type="CSGBox3D" parent="Tiles" unique_id=631833304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 2)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile31" type="CSGBox3D" parent="Tiles" unique_id=530120048]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 2)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile32" type="CSGBox3D" parent="Tiles" unique_id=1164421378]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 2)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile33" type="CSGBox3D" parent="Tiles" unique_id=1903630942]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 2)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile34" type="CSGBox3D" parent="Tiles" unique_id=1660109579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile35" type="CSGBox3D" parent="Tiles" unique_id=1715145448]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 3)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile36" type="CSGBox3D" parent="Tiles" unique_id=859601374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 3)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile37" type="CSGBox3D" parent="Tiles" unique_id=1139830232]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 3)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile38" type="CSGBox3D" parent="Tiles" unique_id=254250259]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 3)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile39" type="CSGBox3D" parent="Tiles" unique_id=1479732748]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile40" type="CSGBox3D" parent="Tiles" unique_id=571124516]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 3)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile41" type="CSGBox3D" parent="Tiles" unique_id=204269233]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 3)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile42" type="CSGBox3D" parent="Tiles" unique_id=1412044667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 3)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile43" type="CSGBox3D" parent="Tiles" unique_id=1724582914]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 3)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile44" type="CSGBox3D" parent="Tiles" unique_id=2029749092]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 3)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile45" type="CSGBox3D" parent="Tiles" unique_id=1028928279]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile46" type="CSGBox3D" parent="Tiles" unique_id=485664440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 4)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile47" type="CSGBox3D" parent="Tiles" unique_id=1394657963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 4)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile48" type="CSGBox3D" parent="Tiles" unique_id=1312654049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 4)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile49" type="CSGBox3D" parent="Tiles" unique_id=876605498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 4)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile50" type="CSGBox3D" parent="Tiles" unique_id=1846114001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 4)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile51" type="CSGBox3D" parent="Tiles" unique_id=259034515]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 4)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile52" type="CSGBox3D" parent="Tiles" unique_id=1695706446]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 4)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile53" type="CSGBox3D" parent="Tiles" unique_id=949792214]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile54" type="CSGBox3D" parent="Tiles" unique_id=1060052234]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 4)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile55" type="CSGBox3D" parent="Tiles" unique_id=1249736781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 4)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile56" type="CSGBox3D" parent="Tiles" unique_id=1720885814]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile57" type="CSGBox3D" parent="Tiles" unique_id=950392288]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 5)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile58" type="CSGBox3D" parent="Tiles" unique_id=822039289]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile59" type="CSGBox3D" parent="Tiles" unique_id=1241688841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 5)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile60" type="CSGBox3D" parent="Tiles" unique_id=1290680428]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 5)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile61" type="CSGBox3D" parent="Tiles" unique_id=928188087]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 5)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile62" type="CSGBox3D" parent="Tiles" unique_id=2029908647]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 5)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile63" type="CSGBox3D" parent="Tiles" unique_id=1058385462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 5)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile64" type="CSGBox3D" parent="Tiles" unique_id=988571694]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 5)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile65" type="CSGBox3D" parent="Tiles" unique_id=802505013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 5)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile66" type="CSGBox3D" parent="Tiles" unique_id=1675640296]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 5)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile67" type="CSGBox3D" parent="Tiles" unique_id=1746023236]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile68" type="CSGBox3D" parent="Tiles" unique_id=1266100781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 6)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile69" type="CSGBox3D" parent="Tiles" unique_id=2003072569]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 6)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile70" type="CSGBox3D" parent="Tiles" unique_id=842454014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 6)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile71" type="CSGBox3D" parent="Tiles" unique_id=607892954]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile72" type="CSGBox3D" parent="Tiles" unique_id=1211144375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 6)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile73" type="CSGBox3D" parent="Tiles" unique_id=1763654319]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 6)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile74" type="CSGBox3D" parent="Tiles" unique_id=1838153266]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 6)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile75" type="CSGBox3D" parent="Tiles" unique_id=1385283321]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 6)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile76" type="CSGBox3D" parent="Tiles" unique_id=591897795]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 6)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile77" type="CSGBox3D" parent="Tiles" unique_id=1655315667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 6)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile89" type="CSGBox3D" parent="Tiles" unique_id=715379337]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile90" type="CSGBox3D" parent="Tiles" unique_id=307626352]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 8)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile91" type="CSGBox3D" parent="Tiles" unique_id=1994711119]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 8)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile92" type="CSGBox3D" parent="Tiles" unique_id=2093887001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 8)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile93" type="CSGBox3D" parent="Tiles" unique_id=1189801963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 8)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile94" type="CSGBox3D" parent="Tiles" unique_id=281224113]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 8)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile95" type="CSGBox3D" parent="Tiles" unique_id=719512503]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 8)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile96" type="CSGBox3D" parent="Tiles" unique_id=94623142]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 8)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile97" type="CSGBox3D" parent="Tiles" unique_id=1675954224]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 8)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile98" type="CSGBox3D" parent="Tiles" unique_id=1223949566]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 8)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile99" type="CSGBox3D" parent="Tiles" unique_id=1645468355]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 8)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile100" type="CSGBox3D" parent="Tiles" unique_id=1812605274]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
+material_override = SubResource("StandardMaterial3D_vs73w")
+size = Vector3(1, 0.1, 1)
+
+[node name="tile101" type="CSGBox3D" parent="Tiles" unique_id=1595447306]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 9)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile102" type="CSGBox3D" parent="Tiles" unique_id=1076388462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 9)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile103" type="CSGBox3D" parent="Tiles" unique_id=1861002272]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 9)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile104" type="CSGBox3D" parent="Tiles" unique_id=314896473]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 9)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile105" type="CSGBox3D" parent="Tiles" unique_id=386736134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 9)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile106" type="CSGBox3D" parent="Tiles" unique_id=1665712173]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 9)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile107" type="CSGBox3D" parent="Tiles" unique_id=1802666487]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 9)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile108" type="CSGBox3D" parent="Tiles" unique_id=474822005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 9)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile109" type="CSGBox3D" parent="Tiles" unique_id=1064696006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 9)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile110" type="CSGBox3D" parent="Tiles" unique_id=1713632534]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 9)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile111" type="CSGBox3D" parent="Tiles" unique_id=637289401]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
+material_override = SubResource("StandardMaterial3D_gql0w")
+size = Vector3(1, 0.1, 1)
+
+[node name="tile112" type="CSGBox3D" parent="Tiles" unique_id=358268030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 10)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile113" type="CSGBox3D" parent="Tiles" unique_id=997880255]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 10)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile114" type="CSGBox3D" parent="Tiles" unique_id=1520581930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 10)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile115" type="CSGBox3D" parent="Tiles" unique_id=55938573]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 10)
+material_override = SubResource("StandardMaterial3D_gql0w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile116" type="CSGBox3D" parent="Tiles" unique_id=1673974133]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 10)
+material_override = SubResource("StandardMaterial3D_gql0w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile117" type="CSGBox3D" parent="Tiles" unique_id=156395750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 10)
+material_override = SubResource("StandardMaterial3D_gql0w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile118" type="CSGBox3D" parent="Tiles" unique_id=1485241336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 10)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile119" type="CSGBox3D" parent="Tiles" unique_id=1134895659]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 10)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile120" type="CSGBox3D" parent="Tiles" unique_id=1095925433]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 10)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile121" type="CSGBox3D" parent="Tiles" unique_id=748887399]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+material_override = SubResource("StandardMaterial3D_gql0w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile78" type="CSGBox3D" parent="Tiles" unique_id=306505958]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile79" type="CSGBox3D" parent="Tiles" unique_id=813524089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 7)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile80" type="CSGBox3D" parent="Tiles" unique_id=138454150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 7)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile81" type="CSGBox3D" parent="Tiles" unique_id=610031021]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 7)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile82" type="CSGBox3D" parent="Tiles" unique_id=687730842]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 7)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile83" type="CSGBox3D" parent="Tiles" unique_id=1908288449]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 7)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile84" type="CSGBox3D" parent="Tiles" unique_id=1979143204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 7)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile85" type="CSGBox3D" parent="Tiles" unique_id=562001193]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 7)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile86" type="CSGBox3D" parent="Tiles" unique_id=42218134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 7)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile87" type="CSGBox3D" parent="Tiles" unique_id=1408516642]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 7)
+material_override = SubResource("StandardMaterial3D_ipw6i")
+use_collision = true
+size = Vector3(1, 0.1, 1)
+
+[node name="tile88" type="CSGBox3D" parent="Tiles" unique_id=1626894150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 7)
+material_override = SubResource("StandardMaterial3D_vs73w")
+use_collision = true
+size = Vector3(1, 0.1, 1)

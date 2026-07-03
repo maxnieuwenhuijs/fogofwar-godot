@@ -1,0 +1,7 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Test-screenshots van tools/capture.tscn (regenereren vanzelf)
+_shot*.png
+_shot*.png.import

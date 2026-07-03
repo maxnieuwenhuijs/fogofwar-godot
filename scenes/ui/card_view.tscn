@@ -1,0 +1,233 @@
+[gd_scene format=3 uid="uid://c8cardview001"]
+
+[ext_resource type="Script" uid="uid://b103erlb0yqji" path="res://scripts/ui/card_view.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="card_bg"]
+bg_color = Color(0.13, 0.15, 0.21, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.48, 0.66, 0.85)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 12
+shadow_offset = Vector2(0, 7)
+
+[sub_resource type="StyleBoxFlat" id="titlebar"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(0.2, 0.23, 0.32, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="btn"]
+bg_color = Color(0.26, 0.29, 0.4, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+bg_color = Color(0.34, 0.38, 0.52, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="CardView" type="PanelContainer" unique_id=805419040]
+custom_minimum_size = Vector2(300, 430)
+offset_right = 300.0
+offset_bottom = 430.0
+theme_override_styles/panel = SubResource("card_bg")
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1145284583]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=847724719]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleBar" type="PanelContainer" parent="Margin/VBox" unique_id=1404315326]
+layout_mode = 2
+theme_override_styles/panel = SubResource("titlebar")
+
+[node name="Title" type="Label" parent="Margin/VBox/TitleBar" unique_id=1218789171]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Kaart 1"
+horizontal_alignment = 1
+
+[node name="StatRows" type="VBoxContainer" parent="Margin/VBox" unique_id=71534826]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="HpRow" type="HBoxContainer" parent="Margin/VBox/StatRows" unique_id=1730868626]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Name" type="Label" parent="Margin/VBox/StatRows/HpRow" unique_id=2074572977]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.86, 0.5, 1)
+theme_override_font_sizes/font_size = 22
+text = "HP"
+vertical_alignment = 1
+
+[node name="HpMinus" type="Button" parent="Margin/VBox/StatRows/HpRow" unique_id=1833652787]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "−"
+
+[node name="HpValue" type="Label" parent="Margin/VBox/StatRows/HpRow" unique_id=2085569732]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.86, 0.5, 1)
+theme_override_font_sizes/font_size = 44
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HpPlus" type="Button" parent="Margin/VBox/StatRows/HpRow" unique_id=670259913]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "+"
+
+[node name="StaRow" type="HBoxContainer" parent="Margin/VBox/StatRows" unique_id=1633168775]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Name" type="Label" parent="Margin/VBox/StatRows/StaRow" unique_id=1546998108]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.66, 0.98, 1)
+theme_override_font_sizes/font_size = 22
+text = "STAMINA"
+vertical_alignment = 1
+
+[node name="StaMinus" type="Button" parent="Margin/VBox/StatRows/StaRow" unique_id=1522387169]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "−"
+
+[node name="StaValue" type="Label" parent="Margin/VBox/StatRows/StaRow" unique_id=1609620748]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.66, 0.98, 1)
+theme_override_font_sizes/font_size = 44
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StaPlus" type="Button" parent="Margin/VBox/StatRows/StaRow" unique_id=1545611518]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "+"
+
+[node name="AtkRow" type="HBoxContainer" parent="Margin/VBox/StatRows" unique_id=1365235316]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Name" type="Label" parent="Margin/VBox/StatRows/AtkRow" unique_id=845575542]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.56, 0.3, 1)
+theme_override_font_sizes/font_size = 22
+text = "AANVAL"
+vertical_alignment = 1
+
+[node name="AtkMinus" type="Button" parent="Margin/VBox/StatRows/AtkRow" unique_id=635547240]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "−"
+
+[node name="AtkValue" type="Label" parent="Margin/VBox/StatRows/AtkRow" unique_id=1353561871]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.56, 0.3, 1)
+theme_override_font_sizes/font_size = 44
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AtkPlus" type="Button" parent="Margin/VBox/StatRows/AtkRow" unique_id=268581989]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn")
+theme_override_styles/hover = SubResource("btn_hover")
+text = "+"
+
+[node name="PoolLabel" type="Label" parent="Margin/VBox" unique_id=1104215202]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.78, 0.85, 1)
+theme_override_font_sizes/font_size = 22
+text = "Punten over: 4"
+horizontal_alignment = 1
+
+[node name="LinkedLabel" type="Label" parent="Margin/VBox" unique_id=1475899069]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.9, 0.6, 1)
+text = "Gekoppeld"
+horizontal_alignment = 1
+
+[node name="TapArea" type="Button" parent="." unique_id=1426578042]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+flat = true
+
+[connection signal="pressed" from="Margin/VBox/StatRows/HpRow/HpMinus" to="." method="_on_hp_minus_pressed"]
+[connection signal="pressed" from="Margin/VBox/StatRows/HpRow/HpPlus" to="." method="_on_hp_plus_pressed"]
+[connection signal="pressed" from="Margin/VBox/StatRows/StaRow/StaMinus" to="." method="_on_sta_minus_pressed"]
+[connection signal="pressed" from="Margin/VBox/StatRows/StaRow/StaPlus" to="." method="_on_sta_plus_pressed"]
+[connection signal="pressed" from="Margin/VBox/StatRows/AtkRow/AtkMinus" to="." method="_on_atk_minus_pressed"]
+[connection signal="pressed" from="Margin/VBox/StatRows/AtkRow/AtkPlus" to="." method="_on_atk_plus_pressed"]

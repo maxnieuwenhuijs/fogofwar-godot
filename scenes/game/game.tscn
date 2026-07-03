@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3 uid="uid://c8game00001"]
+
+[ext_resource type="Script" path="res://scripts/game/game.gd" id="1_game"]
+[ext_resource type="PackedScene" uid="uid://c8cardhand001" path="res://scenes/ui/card_hand.tscn" id="2_hand"]
+
+[node name="Game" type="Node"]
+script = ExtResource("1_game")
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Pawns" type="Node3D" parent="World"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="TopLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 24.0
+offset_right = 1060.0
+offset_bottom = 70.0
+theme_override_font_sizes/font_size = 34
+text = "Fog of War"
+horizontal_alignment = 1
+
+[node name="PromptLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 74.0
+offset_right = 1060.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.8, 0.84, 0.92, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 1
+
+[node name="CountLabel" type="RichTextLabel" parent="UI"]
+offset_left = 20.0
+offset_top = 116.0
+offset_right = 640.0
+offset_bottom = 156.0
+bbcode_enabled = true
+scroll_active = false
+theme_override_font_sizes/normal_font_size = 28
+
+[node name="CardHand" parent="UI" instance=ExtResource("2_hand")]

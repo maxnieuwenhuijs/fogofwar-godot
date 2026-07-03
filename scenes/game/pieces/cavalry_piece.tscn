@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StandardMaterial3D" id="mat_mane"]
+albedo_color = Color(0.14, 0.12, 0.11, 1)
+roughness = 0.8
+
+[node name="CavalryPiece" type="Node3D"]
+
+[node name="Base" type="CSGCylinder3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+radius = 0.28
+height = 0.08
+
+[node name="Body" type="CSGBox3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33, 0.05)
+size = Vector3(0.34, 0.5, 0.55)
+
+[node name="Neck" type="CSGBox3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 0.96593, 0.25882, 0, -0.25882, 0.96593, 0, 0.72, -0.08)
+size = Vector3(0.26, 0.55, 0.3)
+
+[node name="Head" type="CSGBox3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -0.3)
+size = Vector3(0.22, 0.2, 0.42)
+
+[node name="Ears" type="CSGBox3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.14, -0.14)
+size = Vector3(0.16, 0.12, 0.1)
+
+[node name="Mane" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.96593, 0.25882, 0, -0.25882, 0.96593, 0, 0.8, 0.09)
+size = Vector3(0.08, 0.55, 0.12)
+material_override = SubResource("mat_mane")

@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StandardMaterial3D" id="mat_rifle"]
+albedo_color = Color(0.16, 0.15, 0.14, 1)
+roughness = 0.6
+
+[node name="InfantryPiece" type="Node3D"]
+
+[node name="Base" type="CSGCylinder3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+radius = 0.28
+height = 0.08
+
+[node name="Body" type="CSGCylinder3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0)
+radius = 0.19
+height = 0.62
+
+[node name="Shoulders" type="CSGSphere3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 0.55, 0, 0, 0, 1, 0, 0.72, 0)
+radius = 0.21
+
+[node name="Head" type="CSGSphere3D" parent="." groups=["team_tint"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+radius = 0.15
+
+[node name="Rifle" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.96593, 0.25882, 0, -0.25882, 0.96593, 0.23, 0.55, -0.02)
+size = Vector3(0.05, 0.9, 0.05)
+material_override = SubResource("mat_rifle")
