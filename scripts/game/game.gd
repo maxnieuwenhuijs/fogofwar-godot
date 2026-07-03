@@ -655,9 +655,9 @@ func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int, 
 	var title := "%s begint met koppelen" % _player_name(initiative_winner)
 	var accent := _player_color(initiative_winner)
 	_update_hud("Onthulling")
-	# Trommelroffel bij de onthulling → korte bugel voor wie het initiatief pakt.
+	# Trommelroffel bij de onthulling. (initiative-bugel staat nu uit.)
 	Audio.play("reveal")
-	Audio.play("initiative", 0.6)
+	# Audio.play("initiative", 0.6)
 	_overlay.show_choice(title, body, ["Doorgaan"], func(_i: int) -> void: _continue_after_reveal(), accent)
 
 
@@ -816,7 +816,7 @@ func _on_turn_changed(player_id: int) -> void:
 		else:
 			# Beurt-timer voor de mens: tijd om → het spel kiest een zet.
 			_start_phase_timer(PHASE_TIME_LIMIT)
-			Audio.play("your_turn")
+			# Audio.play("your_turn")  # staat nu uit
 			_set_turn_prompt("Jouw beurt — kies een pion", player_id)
 
 
