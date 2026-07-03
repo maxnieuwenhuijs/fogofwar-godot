@@ -40,6 +40,10 @@ const BANK := {
 	"phase_change": ["phase_change.wav", "phase_change2.wav"],
 	"place_pawn":  ["place_pawn.wav", "place_pawn2.wav", "place_pawn3.wav", "place_pawn4.wav"],
 	"your_turn":   ["your_turn.wav"],
+	"cannon_select": ["cannon_select.wav", "cannon_select2.wav", "cannon_select3.wav"],
+	"inf_select":  ["inf_select.wav", "inf_select2.wav", "inf_select3.wav"],
+	"cannon_fuse": ["canvas_cannon_fuse.wav", "canvas_cannon_fuse2.wav"],
+	"deselect":    ["deselect.wav"],
 }
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
@@ -74,6 +78,10 @@ const CATEGORY_DB := {
 	"phase_change": -5.0,
 	"place_pawn": -5.0,
 	"your_turn": -6.0,
+	"cannon_select": -5.0,
+	"inf_select": -5.0,
+	"cannon_fuse": -4.0,
+	"deselect": -7.0,
 }
 
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]

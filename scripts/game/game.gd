@@ -935,6 +935,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			var travel: float = _fire_projectile(result.attacker_from_pos, result.defender_pos, shooter_type)
 			# Geluid: afvuren nu, inslag bij aankomst van het projectiel.
 			if shooter_type == Constants.UnitType.ARTILLERY:
+				Audio.play("cannon_fuse")  # lont-sis, samen met de knal
 				Audio.play("cannon_fire")
 				Audio.play("cannon_air", 0.04)
 				Audio.play("cannon_hit", travel)
@@ -1366,6 +1367,8 @@ func _update_piece_counts() -> void:
 
 
 func _deselect() -> void:
+	if _selected_pawn_id >= 0:
+		Audio.play("deselect")
 	_selected_pawn_id = -1
 	_valid_moves = []
 	_valid_attacks = []
@@ -1390,12 +1393,18 @@ func _select_pawn(pawn_id: int) -> void:
 	_selected_pawn_id = pawn_id
 	_clear_highlights()
 	var pawn: Pawn = state.pawns.get(pawn_id)
-	# Sfeer bij selectie: haan spannen (infanterie die kan schieten) / paard (cavalerie).
-	if pawn.unit_type == Constants.UnitType.INFANTRY \
-			and not Rules.get_valid_shot_targets(state, pawn_id).is_empty():
-		Audio.play("musket_cock")
-	elif pawn.unit_type == Constants.UnitType.CAVALRY:
-		Audio.play("horse_select")
+	# Sfeer bij selectie, per type.
+	match pawn.unit_type:
+		Constants.UnitType.INFANTRY:
+			# Haan spannen als hij kan schieten, anders het gewone aanleggen.
+			if not Rules.get_valid_shot_targets(state, pawn_id).is_empty():
+				Audio.play("musket_cock")
+			else:
+				Audio.play("inf_select")
+		Constants.UnitType.CAVALRY:
+			Audio.play("horse_select")
+		Constants.UnitType.ARTILLERY:
+			Audio.play("cannon_select")
 	var move_paths: Dictionary = Rules.get_valid_move_paths(state, pawn_id)
 	_valid_moves = move_paths.keys()
 	_highlight_move_tiles(move_paths)

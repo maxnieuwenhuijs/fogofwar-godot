@@ -134,34 +134,36 @@ Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:
 > **Géén** digitale, elektronische of synth-geluiden — ook de menu-UI niet. Elke prompt
 > hieronder eindigt daarom bewust op materiaal + tijdperk.
 
-Alle prompts in één tabel (⭐ = heb je al, voor het bijgenereren van varianten):
+Alle prompts in één tabel (⭐ = zit in het spel · "(uit)" = bestand er maar
+tijdelijk gedempt · geen ster = nog te maken):
 
 | Categorie | # var | ElevenLabs prompt (EN) |
 |---|---|---|
 | `ui_click` ⭐ | 3 | single soft wooden button press, muted tap on oak, no reverb, dry |
-| `ui_back` | 2 | small wooden drawer sliding shut, soft low knock, aged oak |
-| `ui_hover` | 2 | faint short parchment rustle, very quiet, dry |
-| `ui_error` | 2 | dull hollow wooden thunk, muffled negative knock, no tone |
-| `ui_toggle` | 1 | small brass latch flipping, crisp metal click, antique fitting |
-| `ui_open` | 1 | rolled parchment unfurling with a soft wooden case lid opening, short |
-| `card_stat_up` | 3 | small brass weight set on a balance scale, short bright metallic tick, rising |
-| `card_stat_down` | 3 | small brass weight lifted off a balance scale, short dull metallic tick, falling |
-| `card_confirm` | 2 | thick parchment card slapped onto a wooden table, wax seal press, firm |
+| `ui_back` ⭐ | 2 | small wooden drawer sliding shut, soft low knock, aged oak |
+| `ui_hover` ⭐ | 2 | faint short parchment rustle, very quiet, dry |
+| `ui_error` ⭐ | 2 | dull hollow wooden thunk, muffled negative knock, no tone |
+| `ui_toggle` ⭐ | 1 | small brass latch flipping, crisp metal click, antique fitting |
+| `ui_open` ⭐ | 1 | rolled parchment unfurling with a soft wooden case lid opening, short |
+| `card_stat_up` ⭐ | 3 | small brass weight set on a balance scale, short bright metallic tick, rising |
+| `card_stat_down` ⭐ | 3 | small brass weight lifted off a balance scale, short dull metallic tick, falling |
+| `card_confirm` ⭐ | 2 | thick parchment card slapped onto a wooden table, wax seal press, firm |
 | `card_deal` | 4 | single stiff parchment card dealt off a stack onto oak, quick flick |
 | `card_select` | 3 | parchment card lifted off a wooden table, soft paper scrape |
 | `link_snap` | 3 | brass buckle and iron latch snapping shut, firm metallic lock-in, short |
-| `reveal` | 2 | short military field snare drum roll, black powder era, tension release, brief |
-| `initiative` | 1 | single bright brass bugle note, short call to attention, 18th century |
-| `phase_change` | 2 | soft wooden fife and light snare tap transition, brief, period military |
+| `reveal` ⭐ | 2 | short military field snare drum roll, black powder era, tension release, brief |
+| `initiative` ⭐ (uit) | 1 | single bright brass bugle note, short call to attention, 18th century |
+| `phase_change` ⭐ | 2 | soft wooden fife and light snare tap transition, brief, period military |
 | `cycle_start` | 1 | brass horn call with a bass drum hit, new campaign round, short fanfare |
-| `your_turn` | 1 | single small brass hand bell chime, gentle notification, dry |
-| `place_pawn` | 4 | carved wooden game piece set firmly on a wooden board, dull hollow thud |
+| `your_turn` ⭐ (uit) | 1 | single small brass hand bell chime, gentle notification, dry |
+| `place_pawn` ⭐ | 4 | carved wooden game piece set firmly on a wooden board, dull hollow thud |
 | `place_undo` | 2 | wooden game piece lifted off a wooden board, soft scrape and pick up |
 | `musket_cock` ⭐ | 2 | flintlock musket hammer cocking back, crisp double metal click, 18th century |
 | `horse_select` ⭐ | 3 | warhorse snorting and shifting, bridle and leather tack jingle, brief |
-| `cannon_select` | 2 | heavy cast iron cannon barrel creaking on a wooden carriage, brass fitting clank, short |
-| `inf_select` | 2 | soldier shouldering a wooden musket, canvas and leather strap rustle, short |
-| `deselect` | 1 | soft low wooden tap, gentle release, dry |
+| `cannon_select` ⭐ | 3 | heavy cast iron cannon barrel creaking on a wooden carriage, brass fitting clank, short |
+| `cannon_fuse` ⭐ | 2 | cannon fuse hissing and sputtering, black powder wick burning, short |
+| `inf_select` ⭐ | 3 | soldier shouldering a wooden musket, canvas and leather strap rustle, short |
+| `deselect` ⭐ | 1 | soft low wooden tap, gentle release, dry |
 | `step` ⭐ | 4 | single boot step on dry earth, leather sole, marching infantry, dry |
 | `horse_move` ⭐ | 2 | warhorse galloping a few steps on soil, hooves and tack, brief |
 | `cannon_move` ⭐ | 4 | heavy cannon wheels rolling one turn on dirt, creaking wood and iron, short |
@@ -172,13 +174,13 @@ Alle prompts in één tabel (⭐ = heb je al, voor het bijgenereren van variante
 | `cannon_air` ⭐ | 4 | cast iron cannonball whistling through the air, low ominous whoosh |
 | `cannon_hit` ⭐ | 3 | heavy cast iron cannonball impact, wood splinter and dirt burst |
 | `melee_kill` ⭐ | 3 | bayonet and sabre killing blow, steel stab and body fall, 18th century |
-| `melee_survive` | 3 | bayonet and sabre steel parry clang, blade blocked, no kill, 18th century |
+| `melee_survive` ⭐ | 3 | bayonet and sabre steel parry clang, blade blocked, no kill, 18th century |
 | `retaliation` | 2 | quick steel-on-steel counterstrike clang with a soldier grunt, short |
 | `charge_yell` | 3 | cavalry battle cry, men shouting a charge over galloping hooves, brief |
 | `pawn_block` | 2 | musket ball thudding into a thick wooden shield, blocked shot |
 | `horse_die` ⭐ | 2 | warhorse falling and dying on a battlefield, heavy body thud, brief |
 | `inf_die` | 4 | short soldier death cry, body and wooden musket clattering to the ground, black powder era |
-| `cannon_die` | 2 | cannon carriage destroyed, splintering wood and cracking cast iron, short |
+| `cannon_die` ⭐ | 2 | cannon carriage destroyed, splintering wood and cracking cast iron, short |
 | `timer_tick` | 1 | single soft antique pendulum clock tick, brass and wood, subtle |
 | `timer_warning` | 1 | faster tense antique clock tick, brass mechanism, single, urgent |
 | `timer_timeout` | 1 | dull brass bell toll, time is up, single somber strike |

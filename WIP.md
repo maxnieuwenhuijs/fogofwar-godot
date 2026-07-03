@@ -190,7 +190,9 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   random start, pitch per volle ronde omhoog); cavalerie = **één** `horse_move`-galopclip
   per beweging (bevat zelf al meerdere hoefslagen). NB: loop-duur schaalt met afstand
   (0.13s/vak, max 0.45s). **Selectie**: `musket_cock` (infanterie die kan schieten) /
-  `horse_select` (cavalerie). **Sterven** (`_death_sound`): `horse_die` (cavalerie) /
+  `horse_select` (cavalerie), `inf_select` (infanterie zonder schot), `cannon_select`
+  (artillerie); `deselect` bij loslaten. Kanonschot krijgt ook `cannon_fuse` (lont-sis)
+  bovenop `cannon_fire`. **Sterven** (`_death_sound`): `horse_die` (cavalerie) /
   `cannon_die` (artillerie, `cannon_destroyed.wav`), ook bij dood door terugslag.
   **UI**: `ui_click` (3 var) op knoppen/koppel-tap, `ui_hover` op overlay-knoppen,
   `ui_open` bij openen van overlay/uitleg, `ui_back` bij sluiten uitleg, `ui_toggle`
