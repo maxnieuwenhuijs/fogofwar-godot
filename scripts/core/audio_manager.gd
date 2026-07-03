@@ -38,6 +38,8 @@ const BANK := {
 	"reveal":      ["reveal.wav", "reveal2.wav"],
 	"initiative":  ["initiative.wav"],
 	"phase_change": ["phase_change.wav", "phase_change2.wav"],
+	"place_pawn":  ["place_pawn.wav", "place_pawn2.wav", "place_pawn3.wav", "place_pawn4.wav"],
+	"your_turn":   ["your_turn.wav"],
 }
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
@@ -70,6 +72,8 @@ const CATEGORY_DB := {
 	"reveal": -3.0,
 	"initiative": -3.0,
 	"phase_change": -5.0,
+	"place_pawn": -5.0,
+	"your_turn": -6.0,
 }
 
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]

@@ -198,7 +198,9 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   `card_confirm` bij bevestigen, `card_stat_up`/`card_stat_down` op de +/− stat-knoppen
   (`card_view._adjust_stat`). **Flow**: `reveal` (trommelroffel) + `initiative` (bugel, 0.6s
   later) bij de onthulling (`_on_cards_revealed`), `phase_change` bij elke nieuwe
-  definitie-ronde (`_on_phase_changed`). Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
+  definitie-ronde (`_on_phase_changed`). **Opstellen**: `place_pawn` bij het neerzetten
+  van een pion. **Beurt**: `your_turn` bij het begin van de mensbeurt in de actiefase.
+  Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
   ElevenLabs-prompts staat in `SOUND-WISHLIST.md`. Draai `--import` na een verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
   vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar

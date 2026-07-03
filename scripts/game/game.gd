@@ -417,6 +417,7 @@ func _on_placement_tile_clicked(coord: Vector2i) -> void:
 	if step.is_empty():
 		return
 	_placement_placed.append({"type": int(step.type), "pos": coord})
+	Audio.play("place_pawn")
 	_spawn_placement_preview(int(step.type), coord)
 	if _placement_ghost != null:
 		_placement_ghost.visible = false  # tot de volgende muisbeweging
@@ -815,6 +816,7 @@ func _on_turn_changed(player_id: int) -> void:
 		else:
 			# Beurt-timer voor de mens: tijd om → het spel kiest een zet.
 			_start_phase_timer(PHASE_TIME_LIMIT)
+			Audio.play("your_turn")
 			_set_turn_prompt("Jouw beurt — kies een pion", player_id)
 
 
