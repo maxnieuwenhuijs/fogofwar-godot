@@ -983,8 +983,10 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int) 
 	var is_cannon: bool = unit_type == Constants.UnitType.ARTILLERY
 	var muzzle: Vector3 = start + flat_dir * 0.35 + Vector3(0.0, 0.55 if is_cannon else 0.85, 0.0)
 	var target: Vector3 = end + Vector3(0.0, 0.55, 0.0)
-	# Kanon vliegt sneller (keihard), infanterie iets rustiger.
-	var dur: float = clampf((0.035 if is_cannon else 0.06) * (end - start).length(), 0.1, 0.4)
+	# Kanon vliegt razendsnel (keihard), infanterie iets rustiger.
+	var dist_len: float = (end - start).length()
+	var dur: float = clampf(0.016 * dist_len, 0.05, 0.22) if is_cannon \
+		else clampf(0.06 * dist_len, 0.1, 0.4)
 
 	var proj := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
