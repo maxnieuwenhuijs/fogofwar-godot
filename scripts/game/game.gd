@@ -973,8 +973,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 
 # --- Schiet-VFX (prototype, low-poly): projectiel + muzzle flash + rook --------
 
-## Vuur een projectiel af van vak naar vak. Kanon: grote donkere kogel met een
-## boogje; infanterie: klein fel tracer-bolletje, strak en snel.
+## Vuur een projectiel af van vak naar vak. Kanon: snelle rechte kogel-streep,
+## keihard rechtdoor; infanterie: klein fel tracer-bolletje, strak en snel.
 ## Retour: de reistijd, zodat de treffer-feedback op de inslag kan wachten.
 func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int) -> float:
 	var start: Vector3 = tile_position(from_coord.x, from_coord.y)
@@ -983,7 +983,8 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int) 
 	var is_cannon: bool = unit_type == Constants.UnitType.ARTILLERY
 	var muzzle: Vector3 = start + flat_dir * 0.35 + Vector3(0.0, 0.55 if is_cannon else 0.85, 0.0)
 	var target: Vector3 = end + Vector3(0.0, 0.55, 0.0)
-	var dur: float = clampf(0.06 * (end - start).length(), 0.12, 0.45)
+	# Kanon vliegt sneller (keihard), infanterie iets rustiger.
+	var dur: float = clampf((0.035 if is_cannon else 0.06) * (end - start).length(), 0.1, 0.4)
 
 	var proj := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
@@ -1004,10 +1005,13 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int) 
 	proj.position = muzzle
 	_board.add_child(proj)
 
-	# Kanonskogel krijgt een klein boogje; infanterie schiet strak.
-	var arc: float = 0.6 if is_cannon else 0.0
+	# Kanonskogel: rek de bol uit langs de vliegrichting → een strakke streep,
+	# keihard rechtdoor (geen boog). Infanterie blijft een rond tracer-bolletje.
+	if is_cannon and muzzle.distance_to(target) > 0.01:
+		proj.look_at_from_position(muzzle, target, Vector3.UP)
+		proj.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
 	var tween := create_tween()
-	tween.tween_method(func(t: float) -> void: proj.position = muzzle.lerp(target, t) + Vector3.UP * (arc * 4.0 * t * (1.0 - t)), 0.0, 1.0, dur)
+	tween.tween_method(func(t: float) -> void: proj.position = muzzle.lerp(target, t), 0.0, 1.0, dur)
 	tween.tween_callback(proj.queue_free)
 
 	_muzzle_flash(muzzle, is_cannon)
