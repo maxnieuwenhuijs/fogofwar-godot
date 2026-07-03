@@ -179,10 +179,14 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   random start, pitch per volle ronde omhoog); cavalerie = **één** `horse_move`-galopclip
   per beweging (bevat zelf al meerdere hoefslagen). NB: loop-duur schaalt met afstand
   (0.13s/vak, max 0.45s). **Selectie**: `musket_cock` (infanterie die kan schieten) /
-  `horse_select` (cavalerie). **Sterven**: `horse_die` (`_death_sound`, alleen cavalerie,
-  ook bij dood door terugslag). **UI-klik**: `ui_click` op overlay-knoppen
-  (`overlay._pick`) en de kaart-UI (bevestigen + koppel-tap). Mute-hook:
-  `Audio.set_enabled(false)`. Draai `--import` na een verse checkout.
+  `horse_select` (cavalerie). **Sterven** (`_death_sound`): `horse_die` (cavalerie) /
+  `cannon_die` (artillerie, `cannon_destroyed.wav`), ook bij dood door terugslag.
+  **UI**: `ui_click` (3 var) op knoppen/koppel-tap, `ui_hover` op overlay-knoppen,
+  `ui_open` bij openen van overlay/uitleg, `ui_back` bij sluiten uitleg, `ui_toggle`
+  bij tab-wissel, `ui_error` bij een pion die niet kan handelen. **Kaart-UI**:
+  `card_confirm` bij bevestigen, `card_stat_up`/`card_stat_down` op de +/− stat-knoppen
+  (`card_view._adjust_stat`). Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
+  ElevenLabs-prompts staat in `SOUND-WISHLIST.md`. Draai `--import` na een verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
   vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar
   z=0, blauw naar z=10 (naar de vijand). Draait naar de looprichting bij bewegen en naar het doel

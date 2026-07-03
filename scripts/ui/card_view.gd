@@ -120,6 +120,7 @@ func _adjust_stat(field: StringName, delta: int) -> void:
 			data.set(receiver, int(data.get(receiver)) + 1)
 			changed = true
 	if changed:
+		Audio.play("card_stat_up" if delta > 0 else "card_stat_down")
 		_refresh()
 		stats_changed.emit()
 

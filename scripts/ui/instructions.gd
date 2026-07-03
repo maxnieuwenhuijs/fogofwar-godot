@@ -68,7 +68,9 @@ func _ready() -> void:
 		b.add_theme_font_size_override("font_size", 26)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var idx := i
-		b.pressed.connect(func() -> void: _select_tab(idx))
+		b.pressed.connect(func() -> void:
+			Audio.play("ui_toggle")
+			_select_tab(idx))
 		tab_row.add_child(b)
 		_tab_buttons.append(b)
 
@@ -100,12 +102,14 @@ func _ready() -> void:
 ## (bv. om het menu waar je vandaan kwam terug te tonen).
 func open(back: Callable = Callable()) -> void:
 	_back = back
+	Audio.play("ui_open")
 	visible = true
 	move_to_front()
 	_select_tab(0)
 
 
 func _close() -> void:
+	Audio.play("ui_back")
 	visible = false
 	closed.emit()
 	if _back.is_valid():

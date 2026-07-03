@@ -174,7 +174,7 @@ func _on_card_stats_changed() -> void:
 func _on_confirm_pressed() -> void:
 	if not _all_cards_valid():
 		return
-	Audio.play("ui_click")
+	Audio.play("card_confirm")
 	var card_data: Array[CardData] = []
 	for card in _cards:
 		card_data.append(card.data)

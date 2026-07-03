@@ -866,8 +866,11 @@ func _end_wolf_step_mode() -> void:
 ## is nog opvraagbaar.
 func _death_sound(pawn_id: int, delay: float) -> void:
 	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
-	if pawn != null and pawn.unit_type == Constants.UnitType.CAVALRY:
-		Audio.play("horse_die", delay)
+	if pawn == null:
+		return
+	match pawn.unit_type:
+		Constants.UnitType.CAVALRY: Audio.play("horse_die", delay)
+		Constants.UnitType.ARTILLERY: Audio.play("cannon_die", delay)
 
 
 func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
@@ -1231,6 +1234,7 @@ func _on_tile_clicked(coord: Vector2i) -> void:
 func _select_pawn(pawn_id: int) -> void:
 	var state: GameState = GameSession.state
 	if not Rules.can_pawn_act(state, pawn_id):
+		Audio.play("ui_error")
 		_update_hud("Die pion kan niet handelen")
 		return
 	_selected_pawn_id = pawn_id

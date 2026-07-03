@@ -12,6 +12,8 @@ var _cb: Callable = Callable()
 ## accent kleurt de titel (bv. de kleur van de winnaar).
 ## body_left: lange uitlegteksten links uitlijnen en breder laten wrappen.
 func show_choice(title: String, body: String, options: Array, cb: Callable = Callable(), accent: Color = Color.WHITE, body_left: bool = false) -> void:
+	if not visible:
+		Audio.play("ui_open")
 	visible = true
 	_title.text = title
 	_title.add_theme_color_override("font_color", accent)
@@ -31,6 +33,7 @@ func show_choice(title: String, body: String, options: Array, cb: Callable = Cal
 		button.add_theme_font_size_override("font_size", 26)
 		var idx := i
 		button.pressed.connect(func() -> void: _pick(idx))
+		button.mouse_entered.connect(func() -> void: Audio.play("ui_hover"))
 		_buttons.add_child(button)
 	_cb = cb
 

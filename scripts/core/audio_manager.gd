@@ -25,7 +25,16 @@ const BANK := {
 	"cannon_move": ["cannon_move.wav", "cannon_move2.wav", "cannon_move3.wav", "cannon_move4.wav"],
 	"horse_select": ["horse_select.wav", "horse_select2.wav", "horse_select3.wav"],
 	"horse_die":   ["horse_die.wav", "horse_die2.wav"],
-	"ui_click":    ["ui_click.wav"],
+	"cannon_die":  ["cannon_destroyed.wav"],
+	"ui_click":    ["ui_click.wav", "ui_click2.wav", "ui_click3.wav"],
+	"ui_back":     ["ui_back.wav", "ui_back2.wav"],
+	"ui_hover":    ["ui_hover.wav"],
+	"ui_error":    ["ui_error.wav"],
+	"ui_open":     ["ui_open.wav"],
+	"ui_toggle":   ["ui_toggle.wav"],
+	"card_confirm": ["card_confirm.wav", "card_confirm2.wav"],
+	"card_stat_up": ["card_stat_up.wav", "card_stat_up2.wav", "card_stat_up3.wav"],
+	"card_stat_down": ["card_stat_down.wav", "card_stat_down2.wav", "card_stat_down3.wav"],
 }
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
@@ -45,7 +54,16 @@ const CATEGORY_DB := {
 	"cannon_move": -6.0,
 	"horse_select": -5.0,
 	"horse_die": -2.0,
+	"cannon_die": -2.0,
 	"ui_click": -6.0,
+	"ui_back": -6.0,
+	"ui_hover": -12.0,
+	"ui_error": -5.0,
+	"ui_open": -7.0,
+	"ui_toggle": -6.0,
+	"card_confirm": -4.0,
+	"card_stat_up": -7.0,
+	"card_stat_down": -7.0,
 }
 
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]
