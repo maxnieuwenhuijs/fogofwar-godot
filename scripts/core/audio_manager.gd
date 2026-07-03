@@ -35,6 +35,9 @@ const BANK := {
 	"card_confirm": ["card_confirm.wav", "card_confirm2.wav"],
 	"card_stat_up": ["card_stat_up.wav", "card_stat_up2.wav", "card_stat_up3.wav"],
 	"card_stat_down": ["card_stat_down.wav", "card_stat_down2.wav", "card_stat_down3.wav"],
+	"reveal":      ["reveal.wav", "reveal2.wav"],
+	"initiative":  ["initiative.wav"],
+	"phase_change": ["phase_change.wav", "phase_change2.wav"],
 }
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
@@ -64,6 +67,9 @@ const CATEGORY_DB := {
 	"card_confirm": -4.0,
 	"card_stat_up": -7.0,
 	"card_stat_down": -7.0,
+	"reveal": -3.0,
+	"initiative": -3.0,
+	"phase_change": -5.0,
 }
 
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]

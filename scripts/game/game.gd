@@ -654,6 +654,9 @@ func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int, 
 	var title := "%s begint met koppelen" % _player_name(initiative_winner)
 	var accent := _player_color(initiative_winner)
 	_update_hud("Onthulling")
+	# Trommelroffel bij de onthulling → korte bugel voor wie het initiatief pakt.
+	Audio.play("reveal")
+	Audio.play("initiative", 0.6)
 	_overlay.show_choice(title, body, ["Doorgaan"], func(_i: int) -> void: _continue_after_reveal(), accent)
 
 
@@ -775,6 +778,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			_refresh_all()
 			_update_hud("Ronde afgerond")
 			await get_tree().create_timer(0.9).timeout
+		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
 		var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
 		_card_hand.configure(int(doctrine.cards), int(doctrine.budget), int(doctrine.speed_max))
 		_card_hand.open_for_define()

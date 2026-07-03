@@ -196,7 +196,9 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   `ui_open` bij openen van overlay/uitleg, `ui_back` bij sluiten uitleg, `ui_toggle`
   bij tab-wissel, `ui_error` bij een pion die niet kan handelen. **Kaart-UI**:
   `card_confirm` bij bevestigen, `card_stat_up`/`card_stat_down` op de +/− stat-knoppen
-  (`card_view._adjust_stat`). Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
+  (`card_view._adjust_stat`). **Flow**: `reveal` (trommelroffel) + `initiative` (bugel, 0.6s
+  later) bij de onthulling (`_on_cards_revealed`), `phase_change` bij elke nieuwe
+  definitie-ronde (`_on_phase_changed`). Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
   ElevenLabs-prompts staat in `SOUND-WISHLIST.md`. Draai `--import` na een verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
   vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar
