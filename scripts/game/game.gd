@@ -887,11 +887,20 @@ func _end_wolf_step_mode() -> void:
 ## Sterf-geluid per type (nu alleen cavalerie: horse_die). Het pion-object blijft
 ## na eliminatie in state.pawns bestaan (alleen is_eliminated=true), dus het type
 ## is nog opvraagbaar.
+## Terugslag-geluid: als de terugslaande verdediger een paard is, hoor je het
+## paard (hoefgetrappel/hinnik). Bij infanterie-terugslag dekt de melee-klap het al.
+func _retaliation_sound(defender_id: int, delay: float) -> void:
+	var def: Pawn = GameSession.state.pawns.get(defender_id)
+	if def != null and def.unit_type == Constants.UnitType.CAVALRY:
+		Audio.play("retaliation_horse", delay)
+
+
 func _death_sound(pawn_id: int, delay: float) -> void:
 	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 	if pawn == null:
 		return
 	match pawn.unit_type:
+		Constants.UnitType.INFANTRY: Audio.play("inf_die", delay)
 		Constants.UnitType.CAVALRY: Audio.play("horse_die", delay)
 		Constants.UnitType.ARTILLERY: Audio.play("cannon_die", delay)
 
@@ -922,6 +931,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				# Terugslag: de aanvaller krijgt even later zelf schade te zien.
 				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), 0.45,
 					result.defender_pos, result.get("attacker_eliminated", false), 0.5)
+				_retaliation_sound(action.defender_id, 0.45)
 				if result.get("attacker_eliminated", false):
 					_death_sound(action.attacker_id, 0.5)
 		"shot":
@@ -965,6 +975,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				if result.get("retaliation", false):
 					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), 0.75,
 						result.defender_pos, result.get("attacker_eliminated", false), 0.5)
+					_retaliation_sound(action.defender_id, 0.75)
 					if result.get("attacker_eliminated", false):
 						_death_sound(action.pawn_id, 0.8)
 		"wolf_step":
@@ -1107,6 +1118,10 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 		if pv != null and pv.visible:
 			pv.flash_hit()
 			pv.stagger(world_dir)
+		# Bloedspat als een levend stuk (infanterie/cavalerie) de klap overleeft.
+		var hit_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+		if hit_pawn != null and hit_pawn.unit_type != Constants.UnitType.ARTILLERY:
+			Audio.play("blood_splash")
 	if damage > 0:
 		_spawn_damage_float(coord, "-%d" % damage)
 

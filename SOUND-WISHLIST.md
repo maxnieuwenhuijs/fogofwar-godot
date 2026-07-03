@@ -175,11 +175,13 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `cannon_hit` ⭐ | 3 | heavy cast iron cannonball impact, wood splinter and dirt burst |
 | `melee_kill` ⭐ | 3 | bayonet and sabre killing blow, steel stab and body fall, 18th century |
 | `melee_survive` ⭐ | 3 | bayonet and sabre steel parry clang, blade blocked, no kill, 18th century |
+| `blood_splash` ⭐ | 3 | small wet blood splatter, non-lethal hit on a living soldier, short |
+| `retaliation_horse` ⭐ | 1 | warhorse rearing and kicking back in retaliation, hooves and whinny, short |
 | `retaliation` | 2 | quick steel-on-steel counterstrike clang with a soldier grunt, short |
 | `charge_yell` | 3 | cavalry battle cry, men shouting a charge over galloping hooves, brief |
 | `pawn_block` | 2 | musket ball thudding into a thick wooden shield, blocked shot |
 | `horse_die` ⭐ | 2 | warhorse falling and dying on a battlefield, heavy body thud, brief |
-| `inf_die` | 4 | short soldier death cry, body and wooden musket clattering to the ground, black powder era |
+| `inf_die` ⭐ | 4 | short soldier death cry, body and wooden musket clattering to the ground, black powder era |
 | `cannon_die` ⭐ | 2 | cannon carriage destroyed, splintering wood and cracking cast iron, short |
 | `timer_tick` | 1 | single soft antique pendulum clock tick, brass and wood, subtle |
 | `timer_warning` | 1 | faster tense antique clock tick, brass mechanism, single, urgent |
