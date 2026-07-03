@@ -120,91 +120,98 @@ zelf zitten (dan hoeft de engine niks te mixen).
 ## ElevenLabs SFX-prompts (kopieer-klaar)
 
 Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:
-- **Engels** werkt het best; benoem het **materiaal** en het **karakter** (kort, dof, metaal, hout).
+- **Engels** werkt het best; benoem het **materiaal** en het **karakter** (kort, dof, ...).
 - **Duration kort** houden (UI: 0.2-0.5s, klappen/schoten: 0.4-1s, fanfare: 1.5-3s).
 - **Prompt influence hoog** (~80-100%) voor strak, voorspelbaar resultaat.
 - Voor varianten: **genereer 3-5×** met dezelfde prompt en pak de beste — dat is
   precies waarvoor de categorieën meerdere bestanden hebben.
-- Setting: musket/kanon = **18e-eeuws zwartkruit**; UI = **clean, minimal, board game**.
 
-**Interface**
-```
-ui_click    — minimal soft UI click, short muted tap, clean board game menu
-ui_back     — soft low UI back button, gentle downward click
-ui_hover    — very short subtle UI hover tick, faint
-ui_error    — dull soft error buzz, muted negative UI blip
-ui_toggle   — small crisp toggle switch click
-ui_open     — soft paper whoosh, panel sliding open, short
-```
+> **Stijlregel — 18e/19e-eeuws, diegetisch.** ÁLLE geluiden komen uit die wereld:
+> **hout** (spelstukken, musketkolf, affuit, tafel, kist), **smeedijzer / messing /
+> koper** (kanonloop, bajonet, sabel, gesp, mechaniek, klok, bel), **zwartkruit**
+> (schoten, ontbranding), **canvas / leer / wol** (uniform, tas, laarzen),
+> **perkament / papier** (kaarten, bevelen), **munten / messing gewichten** (tellers).
+> **Géén** digitale, elektronische of synth-geluiden — ook de menu-UI niet. Elke prompt
+> hieronder eindigt daarom bewust op materiaal + tijdperk.
 
-**Kaarten**
+**Interface** — geen synth; houten knoppen, messing beslag, perkament
 ```
-card_stat_up   — short rising digital blip, playful stat increase, clean
-card_stat_down — short falling digital blip, stat decrease, clean
-card_confirm   — firm paper card slap on table, confident confirm
-card_deal      — single playing card dealt, quick paper flick
-card_select    — light paper card pick up, soft tap
-link_snap      — magical snap lock-in, short power-up shimmer with a click
+ui_click    — single soft wooden button press, muted tap on oak, no reverb, dry
+ui_back     — small wooden drawer sliding shut, soft low knock, aged oak
+ui_hover    — faint short parchment rustle, very quiet, dry
+ui_error    — dull hollow wooden thunk, muffled negative knock, no tone
+ui_toggle   — small brass latch flipping, crisp metal click, antique fitting
+ui_open     — rolled parchment unfurling with a soft wooden case lid opening, short
 ```
 
-**Onthulling & flow**
+**Kaarten** — perkament, was, messing gewichten
 ```
-reveal       — short military snare drum roll reveal, tension release, brief
-initiative   — single bright bugle note, short call to attention
-phase_change — soft transitional swell, gentle woodwind, brief
-cycle_start  — short military horn call and drum hit, new round fanfare
-your_turn    — soft single bell chime, gentle notification
-```
-
-**Opstellen**
-```
-place_pawn — wooden game piece placed on board, soft dull thud
-place_undo — reverse soft wooden pickup, quick lift off board
+card_stat_up   — small brass weight set on a balance scale, short bright metallic tick, rising
+card_stat_down — small brass weight lifted off a balance scale, short dull metallic tick, falling
+card_confirm   — thick parchment card slapped onto a wooden table, wax seal press, firm
+card_deal      — single stiff parchment card dealt off a stack onto oak, quick flick
+card_select    — parchment card lifted off a wooden table, soft paper scrape
+link_snap      — brass buckle and iron latch snapping shut, firm metallic lock-in, short
 ```
 
-**Selectie**
+**Onthulling & flow** — militaire trom, koperen hoorn/bugel, tinnen bel
 ```
-cannon_select — heavy metal cannon creak, iron aiming clank, short
-inf_select    — soldier shoulders musket, cloth and wood rustle, short
-deselect      — soft low deselect blip, gentle
-```
-
-**Gevecht (extra bij het bestaande)**
-```
-musket_hit_var  — musket ball impact, flesh and dust thud, 18th century
-cannon_hit_var  — heavy cannonball impact, wood splinter and dirt burst
-melee_survive_var — bayonet clash blocked, metal parry clang, no kill
-retaliation     — quick metal clang counterstrike with a grunt, short
-charge_yell     — cavalry battle cry, men shouting charge, brief
-pawn_block      — musket ball thuds into wooden shield, blocked shot
+reveal       — short military field snare drum roll, black powder era, tension release, brief
+initiative   — single bright brass bugle note, short call to attention, 18th century
+phase_change — soft wooden fife and light snare tap transition, brief, period military
+cycle_start  — brass horn call with a bass drum hit, new campaign round, short fanfare
+your_turn    — single small brass hand bell chime, gentle notification, dry
 ```
 
-**Sterven**
+**Opstellen** — houten stuk op houten bord
 ```
-inf_die    — short soldier death cry and body fall, 18th century, brief
-cannon_die — cannon destroyed, wood and metal splinter crash, short
-```
-
-**Timer**
-```
-timer_tick    — single soft clock tick, subtle
-timer_warning — urgent low clock tick, slight tension, single
-timer_timeout — soft buzzer, times up, gentle negative
+place_pawn — carved wooden game piece set firmly on a wooden board, dull hollow thud
+place_undo — wooden game piece lifted off a wooden board, soft scrape and pick up
 ```
 
-**Uitkomst**
+**Selectie** — hout, ijzer, canvas/leer
 ```
-haven_score  — bright short triumphant chime, objective reached
-win_fanfare  — short victorious military brass fanfare, triumphant, 2 seconds
-lose_sting   — short somber descending brass, defeat, minor key
-wolf_step    — quick stealthy cloth whoosh, light sneaky step
+cannon_select — heavy cast iron cannon barrel creaking on a wooden carriage, brass fitting clank, short
+inf_select    — soldier shouldering a wooden musket, canvas and leather strap rustle, short
+deselect      — soft low wooden tap, gentle release, dry
 ```
 
-**Muziek/ambient (langer; genereer of componeer als OGG-loop)**
+**Gevecht (extra bij het bestaande)** — zwartkruit, staal, gietijzer, hout
 ```
-music_menu    — calm looping menu music, soft strings and light military drum, seamless loop
-music_battle  — subtle looping battle bed, marching snare and low strings, tense but soft, loop
-ambient_field — quiet open battlefield wind and distant field ambience, seamless loop
+musket_hit_var    — musket ball impact, wet flesh and dust thud, black powder era
+cannon_hit_var    — heavy cast iron cannonball impact, wood splinter and dirt burst
+melee_survive_var — bayonet and sabre steel parry clang, blade blocked, no kill, 18th century
+retaliation       — quick steel-on-steel counterstrike clang with a soldier grunt, short
+charge_yell       — cavalry battle cry, men shouting a charge over galloping hooves, brief
+pawn_block        — musket ball thudding into a thick wooden shield, blocked shot
+```
+
+**Sterven** — soldaat, hout+ijzer
+```
+inf_die    — short soldier death cry, body and wooden musket clattering to the ground, black powder era
+cannon_die — cannon carriage destroyed, splintering wood and cracking cast iron, short
+```
+
+**Timer** — antiek uurwerk, koperen bel
+```
+timer_tick    — single soft antique pendulum clock tick, brass and wood, subtle
+timer_warning — faster tense antique clock tick, brass mechanism, single, urgent
+timer_timeout — dull brass bell toll, times up, single somber strike
+```
+
+**Uitkomst** — koperen fanfare, trom
+```
+haven_score  — bright short brass hand bell flourish, objective reached, triumphant
+win_fanfare  — short victorious period military brass fanfare with snare drum, triumphant, ~2 seconds
+lose_sting   — short somber descending brass and low drum, defeat, minor key, 18th century
+wolf_step    — quick stealthy leather boot step and canvas whoosh, light sneak
+```
+
+**Muziek/ambient (langer; genereer of componeer als OGG-loop)** — periode-instrumenten
+```
+music_menu    — calm looping menu music, soft period strings and light military snare drum, 18th century, seamless loop
+music_battle  — subtle looping battle bed, marching snare drum, low period strings and distant brass, tense but soft, loop
+ambient_field — quiet open battlefield wind, distant black powder rumble and field ambience, seamless loop
 ```
 
 ---
