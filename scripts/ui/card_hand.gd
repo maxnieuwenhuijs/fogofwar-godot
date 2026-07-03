@@ -124,6 +124,9 @@ func open_for_define() -> void:
 	visible = true
 	_set_phase(Constants.UiPhase.DEFINE)
 	_layout_fan(false)
+	# Kaarten "uitdelen": per kaart een korte deal-klap met oplopende delay.
+	for i in _cards.size():
+		Audio.play("card_deal", 0.08 * float(i))
 
 
 func _set_phase(new_phase: int) -> void:
@@ -208,7 +211,7 @@ func _on_card_tapped(card: CardView) -> void:
 	if index < 0:
 		return
 	_selected_index = index
-	Audio.play("ui_click")
+	Audio.play("card_select")
 	for i in _cards.size():
 		_cards[i].set_selected_visual(i == index)
 	card_picked.emit(index)

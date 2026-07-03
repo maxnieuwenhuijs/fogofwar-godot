@@ -514,7 +514,14 @@ func _connect_session_signals() -> void:
 	GameSession.wolf_step_pending.connect(_on_wolf_step_pending)
 	GameSession.turn_changed.connect(_on_turn_changed)
 	GameSession.action_performed.connect(_on_action_performed)
+	GameSession.cycle_started.connect(_on_cycle_started)
 	GameSession.game_over.connect(_on_game_over)
+
+
+## Hoornstoot bij een nieuwe cyclus (niet de allereerste — daar loopt de setup al).
+func _on_cycle_started(cycle_number: int) -> void:
+	if cycle_number >= 2:
+		Audio.play("cycle_start")
 
 
 func _index_tiles() -> void:
@@ -728,6 +735,7 @@ func _auto_link(player_id: int) -> void:
 
 ## Korte koppel-animatie: pion springt even omhoog + glim-flits.
 func _animate_link(pawn_id: int) -> void:
+	Audio.play("link_snap")  # kaart klikt vast op de pion
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
@@ -891,8 +899,12 @@ func _end_wolf_step_mode() -> void:
 ## paard (hoefgetrappel/hinnik). Bij infanterie-terugslag dekt de melee-klap het al.
 func _retaliation_sound(defender_id: int, delay: float) -> void:
 	var def: Pawn = GameSession.state.pawns.get(defender_id)
-	if def != null and def.unit_type == Constants.UnitType.CAVALRY:
-		Audio.play("retaliation_horse", delay)
+	if def == null:
+		return
+	if def.unit_type == Constants.UnitType.CAVALRY:
+		Audio.play("retaliation_horse", delay)  # paard trapt terug
+	else:
+		Audio.play("retaliation", delay)  # infanterie: staal-op-staal counter
 
 
 func _death_sound(pawn_id: int, delay: float) -> void:

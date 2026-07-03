@@ -18,39 +18,39 @@ zelf zitten (dan hoeft de engine niks te mixen).
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `ui_click` | `ui_click.wav` | 2-3 | Elke menuknop, kaart-tap, bevestigen | ✓ 🎚️ (nu 1) |
-| `ui_back` | `ui_back.wav` | 1-2 | Terug/annuleren/sluiten (zachter, lager dan click) | ➕ |
-| `ui_hover` | `ui_hover.wav` | 1-2 | Muis over een knop/pion (héél subtiel, kort tikje) | ➕ |
-| `ui_error` | `ui_error.wav` | 1-2 | Ongeldige actie / geweigerde zet ("dof" buzz) | ➕ |
-| `ui_toggle` | `ui_toggle.wav` | 1 | Speluitleg-tab wisselen, mute aan/uit | ➕ |
-| `ui_open` | `ui_open.wav` | 1 | Overlay/scherm opent (whoosh/opdoeken) | ➕ |
+| `ui_click` | `ui_click.wav` | 3 | Elke menuknop, koppel-tap | ✓ |
+| `ui_back` | `ui_back.wav` | 2 | Uitleg sluiten | ✓ |
+| `ui_hover` | `ui_hover.wav` | 1 | Muis over een menuknop | ✓ |
+| `ui_error` | `ui_error.wav` | 1 | Pion die niet kan handelen | ✓ |
+| `ui_toggle` | `ui_toggle.wav` | 1 | Speluitleg-tab wisselen | ✓ |
+| `ui_open` | `ui_open.wav` | 2 | Overlay/uitleg opent | ✓ |
 
 ## 2. Kaarten definiëren & koppelen
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `card_stat_up` | `card_stat_up.wav` | 2-3 | + op een stat (korte, oplopende blip) | ➕ |
-| `card_stat_down` | `card_stat_down.wav` | 2-3 | − op een stat (aflopende blip) | ➕ |
-| `card_confirm` | `card_confirm.wav` | 1-2 | Kaarten bevestigd (papier/klap) | ➕ (nu `ui_click`) |
-| `card_deal` | `card_deal.wav` | 3-4 | Kaart verschijnt/legt neer in de waaier | ➕ |
-| `card_select` | `card_select.wav` | 2-3 | Kaart aantikken bij het koppelen | ➕ (nu `ui_click`) |
-| `link_snap` | `link_snap.wav` | 2-3 | Kaart koppelt aan een pion (klik-vast, "power-up") | ➕ |
+| `card_stat_up` | `card_stat_up.wav` | 3 | + op een stat (oplopend messing gewicht) | ✓ |
+| `card_stat_down` | `card_stat_down.wav` | 3 | − op een stat (aflopend) | ✓ |
+| `card_confirm` | `card_confirm.wav` | 2 | Kaarten bevestigd | ✓ |
+| `card_deal` | `card_deal2.wav` | 2 | Kaarten uitgedeeld in de waaier | ✓ |
+| `card_select` | `card_select.wav` | 3 | Kaart aantikken bij het koppelen | ✓ |
+| `link_snap` | `link_snap.wav` | 3 | Kaart koppelt aan een pion (klik-vast) | ✓ |
 
 ## 3. Onthulling & fase-flow
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `reveal` | `reveal.wav` | 1-2 | Kaarten van beide spelers onthuld (fanfare-tikje / trommel) | ➕ |
-| `initiative` | `initiative.wav` | 1 | Wie het initiatief pakt (kort signaal) | ➕ |
-| `phase_change` | `phase_change.wav` | 1-2 | Nieuwe ronde/fase begint (zachte overgang) | ➕ |
-| `cycle_start` | `cycle_start.wav` | 1 | Nieuwe cyclus (trommelroffel / hoornstoot) | ➕ |
-| `your_turn` | `your_turn.wav` | 1 | Jouw beurt begint in de actiefase (subtiele bel) | ➕ |
+| `reveal` | `reveal.wav` | 2 | Kaarten onthuld (trommelroffel) | ✓ |
+| `initiative` | `initiative.wav` | 1 | Wie het initiatief pakt | ✓ (uit) |
+| `phase_change` | `phase_change.wav` | 2 | Nieuwe definitie-ronde | ✓ |
+| `cycle_start` | `cycle_start.wav` | 1 | Nieuwe cyclus (hoornstoot, vanaf cyclus 2) | ✓ |
+| `your_turn` | `your_turn.wav` | 1 | Jouw beurt in de actiefase | ✓ (uit) |
 
 ## 4. Opstellen
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `place_pawn` | `place_pawn.wav` | 3-4 | Pion neerzetten op een vak (doffe "tik"/plof) | ➕ |
+| `place_pawn` | `place_pawn.wav` | 4 | Pion neerzetten op een vak | ✓ |
 | `place_undo` | `place_undo.wav` | 1-2 | Ongedaan maken (omgekeerde plof) | ➕ |
 
 ## 5. Selectie & beweging per type (deels aanwezig)
@@ -59,9 +59,9 @@ zelf zitten (dan hoeft de engine niks te mixen).
 |---|---|---|---|---|
 | `musket_cock` | `cockhammer.wav` | 1-2 | Infanterie geselecteerd die kan schieten | ✓ 🎚️ |
 | `horse_select` | `horse_select*.wav` | 3 | Cavalerie geselecteerd | ✓ |
-| `cannon_select` | `cannon_select.wav` | 1-2 | Artillerie geselecteerd (metaal/richten) | ➕ |
-| `inf_select` | `inf_select.wav` | 1-2 | Infanterie zónder schot geselecteerd (nu stil) | ➕ |
-| `deselect` | `deselect.wav` | 1 | Pion deselecteren (rechtermuis) | ➕ |
+| `cannon_select` | `cannon_select.wav` | 3 | Artillerie geselecteerd | ✓ |
+| `inf_select` | `inf_select.wav` | 3 | Infanterie zónder schot geselecteerd | ✓ |
+| `deselect` | `deselect.wav` | 1 | Pion deselecteren | ✓ |
 | `step` | `step1-4.wav` | 4 | Infanterie loopt (1 per vakje, cyclt + pitch) | ✓ |
 | `horse_move` | `horse_move*.wav` | 2 | Cavalerie beweegt (1 galopclip per zet) | ✓ 🎚️ |
 | `cannon_move` | `cannon_move*.wav` | 4 | Artillerie rolt (1 per vakje) | ✓ |
@@ -78,7 +78,9 @@ zelf zitten (dan hoeft de engine niks te mixen).
 | `cannon_hit` | `cannon_ball_hit.wav` | 2-3 | Kanonskogel inslag | ✓ 🎚️ (nu 1) |
 | `melee_kill` | `mellee_hit*.wav` | 3 | Melee doodt het doelwit | ✓ |
 | `melee_survive` | `mellee_hit_no_kill.wav` | 2-3 | Doelwit overleeft de klap | ✓ 🎚️ (nu 1) |
-| `retaliation` | `retaliation.wav` | 2 | Terugslag raakt de aanvaller (metaal-clang/kreet) | ➕ |
+| `retaliation` | `retaliation.wav` | 1 | Terugslag door infanterie (staal-op-staal) | ✓ |
+| `retaliation_horse` | `retaliation_with_horse.wav` | 1 | Terugslag door een paard (hoeven) | ✓ |
+| `blood_splash` | `small_blood_splash*.wav` | 3 | Levend stuk overleeft een treffer | ✓ |
 | `charge_yell` | `charge_yell.wav` | 2-3 | Cavalerie begint een charge (strijdkreet) | ➕ |
 | `pawn_block` | `pawn_block.wav` | 1-2 | Schot geblokkeerd door een tussenpion (optioneel) | ➕ |
 
@@ -87,8 +89,8 @@ zelf zitten (dan hoeft de engine niks te mixen).
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
 | `horse_die` | `horse_die*.wav` | 2 | Cavalerie sneuvelt | ✓ |
-| `inf_die` | `inf_die*.wav` | 3-4 | Infanterie sneuvelt (korte kreet/val) | ➕ |
-| `cannon_die` | `cannon_die*.wav` | 2 | Kanon vernietigd (hout/metaal-splinter) | ➕ |
+| `inf_die` | `inf_die*.wav` | 4 | Infanterie sneuvelt | ✓ |
+| `cannon_die` | `cannon_destroyed.wav` | 1 | Kanon vernietigd | ✓ |
 
 ## 8. Beurt-timer
 
@@ -148,13 +150,13 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `card_stat_up` ⭐ | 3 | small brass weight set on a balance scale, short bright metallic tick, rising |
 | `card_stat_down` ⭐ | 3 | small brass weight lifted off a balance scale, short dull metallic tick, falling |
 | `card_confirm` ⭐ | 2 | thick parchment card slapped onto a wooden table, wax seal press, firm |
-| `card_deal` | 4 | single stiff parchment card dealt off a stack onto oak, quick flick |
-| `card_select` | 3 | parchment card lifted off a wooden table, soft paper scrape |
-| `link_snap` | 3 | brass buckle and iron latch snapping shut, firm metallic lock-in, short |
+| `card_deal` ⭐ | 2 | single stiff parchment card dealt off a stack onto oak, quick flick |
+| `card_select` ⭐ | 3 | parchment card lifted off a wooden table, soft paper scrape |
+| `link_snap` ⭐ | 3 | brass buckle and iron latch snapping shut, firm metallic lock-in, short |
 | `reveal` ⭐ | 2 | short military field snare drum roll, black powder era, tension release, brief |
 | `initiative` ⭐ (uit) | 1 | single bright brass bugle note, short call to attention, 18th century |
 | `phase_change` ⭐ | 2 | soft wooden fife and light snare tap transition, brief, period military |
-| `cycle_start` | 1 | brass horn call with a bass drum hit, new campaign round, short fanfare |
+| `cycle_start` ⭐ | 1 | brass horn call with a bass drum hit, new campaign round, short fanfare |
 | `your_turn` ⭐ (uit) | 1 | single small brass hand bell chime, gentle notification, dry |
 | `place_pawn` ⭐ | 4 | carved wooden game piece set firmly on a wooden board, dull hollow thud |
 | `place_undo` | 2 | wooden game piece lifted off a wooden board, soft scrape and pick up |
@@ -177,7 +179,7 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `melee_survive` ⭐ | 3 | bayonet and sabre steel parry clang, blade blocked, no kill, 18th century |
 | `blood_splash` ⭐ | 3 | small wet blood splatter, non-lethal hit on a living soldier, short |
 | `retaliation_horse` ⭐ | 1 | warhorse rearing and kicking back in retaliation, hooves and whinny, short |
-| `retaliation` | 2 | quick steel-on-steel counterstrike clang with a soldier grunt, short |
+| `retaliation` ⭐ | 1 | quick steel-on-steel counterstrike clang with a soldier grunt, short |
 | `charge_yell` | 3 | cavalry battle cry, men shouting a charge over galloping hooves, brief |
 | `pawn_block` | 2 | musket ball thudding into a thick wooden shield, blocked shot |
 | `horse_die` ⭐ | 2 | warhorse falling and dying on a battlefield, heavy body thud, brief |
