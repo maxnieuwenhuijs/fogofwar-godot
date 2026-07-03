@@ -51,6 +51,13 @@ var _hp_bars: Dictionary = {}        # pawn_id -> {holder, blocks}
 var _tweening_pawns: Dictionary = {} # pawn_id -> true tijdens beweeg-animatie
 var _timer_active: bool = false
 var _timer_left: float = 0.0
+# Combat feel (Valheim-stijl "juice"): stagger + screen shake + hitstop + ragdoll.
+var _combat_feel: bool = true         # alles behalve shake
+var _screen_shake: bool = true        # apart uitzetbaar (motion sickness)
+var _shake_amt: float = 0.0
+var _cam_base: Vector3 = Vector3.ZERO
+var _in_hitstop: bool = false
+var _dying_views: Dictionary = {}     # pawn_id -> true zolang de ragdoll speelt
 var _auto_link_human: bool = false   # koppelen automatisch afmaken na timeout
 
 const PHASE_TIME_LIMIT := 20.0
@@ -65,6 +72,7 @@ func _ready() -> void:
 	_world.move_child(_board, 0)
 	_pawns_root.reparent(_board, false)
 	_camera = _board.get_node("Camera3D") as Camera3D
+	_cam_base = _camera.position  # rustpositie voor de screen shake
 	_index_tiles()
 	_connect_session_signals()
 	_card_hand.define_confirmed.connect(_on_define_confirmed)
@@ -86,6 +94,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_screen_shake(delta)
 	_update_health_bars()
 	if _timer_active:
 		_timer_left -= delta
@@ -266,6 +275,12 @@ func _on_doctrine_choice(index: int) -> void:
 
 func _start_match(difficulty: int) -> void:
 	_overlay.hide()
+	# Combat-feel-state resetten (voor het geval een vorige partij midden in een
+	# hitstop/ragdoll eindigde).
+	Engine.time_scale = 1.0
+	_in_hitstop = false
+	_shake_amt = 0.0
+	_dying_views.clear()
 	ai_difficulty = difficulty
 	_setup_ai()
 	GameSession.start_new_game(_human_doctrine, _ai_doctrine)
@@ -605,7 +620,9 @@ func _refresh_all() -> void:
 		var pv: PawnView = _pawn_views[pid]
 		var pawn: Pawn = state.pawns.get(pid)
 		if pawn == null or pawn.is_eliminated:
-			pv.visible = false
+			# Ragdoll bezig? Laat 'm staan; _kill_view ruimt hem op na de animatie.
+			if not _dying_views.has(pid):
+				pv.visible = false
 			continue
 		pv.visible = true
 		if not _tweening_pawns.has(pid):
@@ -891,12 +908,14 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			if result.get("forced_move", false):
 				_animate_move(action.attacker_id, result.attacker_from_pos, result.defender_pos)
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive")
+			_hit_feedback(action.defender_id, result.defender_pos, result.damage, 0.12,
+				result.attacker_from_pos, result.get("eliminated", false), 0.7)
 			if result.get("eliminated", false):
 				_death_sound(action.defender_id, 0.12)
-			_hit_feedback(action.defender_id, result.defender_pos, result.damage)
 			if result.get("retaliation", false):
 				# Terugslag: de aanvaller krijgt even later zelf schade te zien.
-				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), 0.45)
+				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), 0.45,
+					result.defender_pos, result.get("attacker_eliminated", false), 0.5)
 				if result.get("attacker_eliminated", false):
 					_death_sound(action.attacker_id, 0.5)
 		"shot":
@@ -917,9 +936,11 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				Audio.play("musket_fire")
 				Audio.play("musket_echo", 0.18)
 				Audio.play("musket_hit", travel)
+			var shot_strength := 1.4 if shooter_type == Constants.UnitType.ARTILLERY else 0.75
+			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03,
+				result.attacker_from_pos, result.get("eliminated", false), shot_strength)
 			if result.get("eliminated", false):
 				_death_sound(action.target_id, travel + 0.05)
-			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03)
 		"charge":
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
 			if result.get("moved", false) or result.get("forced_move", false):
@@ -930,11 +951,13 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			if action.get("defender_id", -1) != -1:
 				# Na de aanrij-animatie: klap op het doelwit, evt. terugslag op het paard.
 				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", 0.4)
+				_hit_feedback(action.defender_id, result.defender_pos, result.damage, 0.4,
+					result.charge_from, result.get("eliminated", false), 0.85)
 				if result.get("eliminated", false):
 					_death_sound(action.defender_id, 0.5)
-				_hit_feedback(action.defender_id, result.defender_pos, result.damage, 0.4)
 				if result.get("retaliation", false):
-					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), 0.75)
+					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), 0.75,
+						result.defender_pos, result.get("attacker_eliminated", false), 0.5)
 					if result.get("attacker_eliminated", false):
 						_death_sound(action.pawn_id, 0.8)
 		"wolf_step":
@@ -1046,16 +1069,119 @@ func _spawn_smoke(pos: Vector3, count: int, size: float) -> void:
 		tween.chain().tween_callback(puff.queue_free)
 
 
-## Treffer-feedback: minivertraging → witte flits op de geraakte pion +
-## opstijgend schade-label ("-2") dat vervaagt.
-func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.12) -> void:
-	if damage <= 0:
+## Treffer-feedback (de "Hit"-fase). Op het inslagmoment (na `delay`): witte flits,
+## stagger/knockback, vonken, screen shake, hitstop en een opstijgend "-N"-label.
+## Bij `killed` een lichte ragdoll i.p.v. de flits.
+## `from_coord` bepaalt de knockback-richting (weg van de aanvaller).
+func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.12,
+		from_coord: Vector2i = Vector2i(-1, -1), killed: bool = false, strength: float = 0.7) -> void:
+	# Synchroon markeren zodat _refresh_all de stervende pion laat staan.
+	if killed:
+		_dying_views[pawn_id] = true
+	if damage <= 0 and not killed:
 		return
-	await get_tree().create_timer(delay).timeout
+	var world_dir := _knockback_dir(from_coord, coord)
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+	var s: float = strength + (0.4 if killed else 0.0)
+	_spawn_sparks(tile_position(coord.x, coord.y) + Vector3(0.0, 0.6, 0.0), s)
+	_shake(s)
+	_hitstop(0.03 + 0.03 * clampf(s, 0.0, 1.6))
+	if killed:
+		_kill_view(pawn_id, world_dir)
+	else:
+		var pv: PawnView = _pawn_views.get(pawn_id)
+		if pv != null and pv.visible:
+			pv.flash_hit()
+			pv.stagger(world_dir)
+	if damage > 0:
+		_spawn_damage_float(coord, "-%d" % damage)
+
+
+## Wereld-richting van aanvaller → doelwit (voor knockback/stagger/topple).
+func _knockback_dir(from_coord: Vector2i, to_coord: Vector2i) -> Vector3:
+	if from_coord.x < 0 or from_coord == to_coord:
+		return Vector3.ZERO
+	var a := tile_position(from_coord.x, from_coord.y)
+	var b := tile_position(to_coord.x, to_coord.y)
+	return (b - a)
+
+
+## Start de ragdoll van een geëlimineerde pion en haal 'm uit de view-map,
+## zodat _refresh_all/_update_health_bars hem verder met rust laten.
+func _kill_view(pawn_id: int, world_dir: Vector3) -> void:
+	_dying_views.erase(pawn_id)
 	var pv: PawnView = _pawn_views.get(pawn_id)
-	if pv != null and pv.visible:
-		pv.flash_hit()
-	_spawn_damage_float(coord, "-%d" % damage)
+	if pv == null:
+		return
+	_pawn_views.erase(pawn_id)
+	if pv.visible:
+		pv.play_death(world_dir)  # ruimt zichzelf op (queue_free)
+	else:
+		pv.queue_free()
+
+
+## Korte vonken-/stofexplosie op het inslagpunt.
+func _spawn_sparks(pos: Vector3, strength: float) -> void:
+	if not _combat_feel:
+		return
+	var n: int = int(clampf(6.0 * strength, 3.0, 12.0))
+	for i in n:
+		var spark := MeshInstance3D.new()
+		var mesh := SphereMesh.new()
+		mesh.radial_segments = 6
+		mesh.rings = 3
+		var r := randf_range(0.02, 0.05)
+		mesh.radius = r
+		mesh.height = r * 2.0
+		spark.mesh = mesh
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.85, 0.4)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.8, 0.3)
+		mat.emission_energy_multiplier = 2.0
+		spark.material_override = mat
+		spark.position = pos
+		_board.add_child(spark)
+		var dir := Vector3(randf_range(-1, 1), randf_range(0.3, 1.2), randf_range(-1, 1)).normalized()
+		var dist := randf_range(0.3, 0.7) * maxf(strength, 0.4)
+		var life := randf_range(0.25, 0.45)
+		var tw := create_tween().set_parallel()
+		tw.tween_property(spark, "position", pos + dir * dist, life).set_ease(Tween.EASE_OUT)
+		tw.tween_property(mat, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(spark.queue_free)
+
+
+## Screen shake aanzwengelen (schaalt met impact). Uitzetbaar (motion sickness).
+func _shake(strength: float) -> void:
+	if not _combat_feel or not _screen_shake:
+		return
+	_shake_amt = maxf(_shake_amt, 0.08 * clampf(strength, 0.2, 1.6))
+
+
+func _update_screen_shake(delta: float) -> void:
+	if _camera == null:
+		return
+	if _shake_amt > 0.001:
+		var off := Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), 0.0) * _shake_amt
+		_camera.position = _cam_base + off
+		_shake_amt *= exp(-delta * 14.0)  # snel uitdempen (~0.2s)
+	elif _camera.position != _cam_base:
+		_camera.position = _cam_base
+		_shake_amt = 0.0
+
+
+## Hitstop: bevries het beeld heel kort (Valheim/Street Fighter). De timer negeert
+## de time_scale zodat de freeze een vaste real-time duur heeft.
+func _hitstop(secs: float) -> void:
+	if not _combat_feel or _in_hitstop or secs <= 0.0:
+		return
+	_in_hitstop = true
+	Engine.time_scale = 0.05
+	await get_tree().create_timer(secs, true, false, true).timeout
+	Engine.time_scale = 1.0
+	_in_hitstop = false
 
 
 func _spawn_damage_float(coord: Vector2i, text: String, color: Color = Color(1.0, 0.32, 0.26)) -> void:
@@ -1120,6 +1246,18 @@ func _on_game_over(winner_id: int) -> void:
 # --- Human input (actiefase) -------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo:
+		match (event as InputEventKey).keycode:
+			KEY_K:  # screen shake aan/uit (motion sickness)
+				_screen_shake = not _screen_shake
+				_update_hud("Screen shake: %s" % ("aan" if _screen_shake else "uit"))
+			KEY_J:  # alle combat-feel (stagger/hitstop/vonken/ragdoll) aan/uit
+				_combat_feel = not _combat_feel
+				_update_hud("Combat feel: %s" % ("aan" if _combat_feel else "uit"))
+			KEY_M:  # geluid dempen
+				Audio.set_enabled(not Audio.enabled)
+				_update_hud("Geluid: %s" % ("aan" if Audio.enabled else "uit"))
+		return
 	if event is InputEventMouseMotion:
 		if _placement_mode:
 			_update_placement_ghost((event as InputEventMouseMotion).position)

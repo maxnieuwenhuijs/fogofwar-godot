@@ -150,6 +150,17 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   (`PawnView.flash_hit`) + opstijgend rood schade-label ("-2") dat vervaagt
   (`game._hit_feedback`/`_spawn_damage_float`); bij terugslag krijgt de aanvaller
   even later zijn eigen "-1". Charge-feedback wacht op de aanrij-animatie.
+- **Combat feel ("Hit"-fase, Valheim-stijl)** — op het inslagmoment via `_hit_feedback`:
+  witte flits (`PawnView.flash_hit`), **stagger/knockback** (`PawnView.stagger`),
+  **vonken-/stofexplosie** (`_spawn_sparks`), **screen shake** (`_shake`/`_update_screen_shake`,
+  dempt in ~0.2s, schaalt met impact) en **hitstop** (`_hitstop`: `Engine.time_scale`-dip
+  met ignore_time_scale-timer). Impact schaalt per type (kanon > infanterieschot > melee;
+  kills sterker). **Lichte ragdoll** bij dood (`PawnView.play_death`): omvallen in de
+  knockback-richting + wegzinken + self-free; `_dying_views` + `_kill_view` zorgen dat
+  `_refresh_all` de stervende pion niet meteen verbergt. Toetsen: **K** = screen shake aan/uit
+  (motion sickness), **J** = alle combat-feel aan/uit, **M** = geluid dempen.
+  Nog te doen (anticipation-fase): aim→shoot/charge-opbouw-animaties op de modellen
+  (`play_attack`-hooks staan klaar).
 - **Schiet-VFX (prototype)**: `_fire_projectile` — kanonskogel (groot, donker, met
   boogje) vs infanterie-tracer (klein, fel, strak), muzzle flash met OmniLight-puls
   (`_muzzle_flash`) en low-poly rookwolkjes bij loop én inslag (`_spawn_smoke`).

@@ -233,6 +233,7 @@ func _tab_combat() -> String:
 		"• Schieten verovert nooit een vak; alleen lopen en slaan winnen terrein.",
 		"",
 		"[b]Tip[/b]: rechtermuisklik = pion deselecteren.",
+		"[b]Toetsen[/b]: K = schermtrilling aan/uit · J = alle klap-effecten aan/uit · M = geluid dempen.",
 	])
 
 

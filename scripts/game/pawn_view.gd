@@ -142,6 +142,54 @@ func _play(anim_name: String) -> void:
 		_anim.play(anim_name)
 
 
+# --- Combat feel: stagger (knockback) + lichte ragdoll bij dood ---------------
+
+## Korte "wankel"-schok: de pion schiet even terug in `world_dir` en herstelt.
+## Geeft gewicht aan een niet-dodelijke treffer (Valheim-stijl stagger).
+func stagger(world_dir: Vector3) -> void:
+	var dir := world_dir
+	dir.y = 0.0
+	if dir.length() < 0.01:
+		dir = Vector3(0, 0, 1)
+	dir = dir.normalized()
+	var base := position
+	var tw := create_tween()
+	tw.tween_property(self, "position", base + dir * 0.16, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "position", base, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Lichte ragdoll: de pion valt om in de knockback-richting, glijdt een stukje
+## door en zinkt daarna in de grond weg. Ruimt zichzelf op (queue_free) aan het
+## eind. Geen echte physics — een goedkope, voorspelbare "topple".
+func play_death(world_dir: Vector3) -> void:
+	_ring.visible = false
+	set_hovered(false)
+	play_die()  # echte model-anim indien aanwezig
+	var dir := world_dir
+	dir.y = 0.0
+	if dir.length() < 0.01:
+		dir = Vector3(0, 0, 1)
+	dir = dir.normalized()
+	# Kantel-as staat loodrecht op de valrichting (omvallen "voorover").
+	var axis := Vector3.UP.cross(dir).normalized()
+	if axis.length() < 0.01:
+		axis = Vector3(1, 0, 0)
+	var start_basis := transform.basis
+	var start_pos := position
+	var tw := create_tween().set_parallel(true)
+	# Omvallen (~100°) in ~0.35s.
+	tw.tween_method(
+		func(ang: float) -> void: transform.basis = start_basis.rotated(axis, ang),
+		0.0, deg_to_rad(100.0), 0.35).set_ease(Tween.EASE_IN)
+	# Doorglijden + kleine stuiter omhoog en neer.
+	tw.tween_property(self, "position", start_pos + dir * 0.5 + Vector3(0, 0.2, 0), 0.18) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# Daarna wegzinken door het bord en verdwijnen.
+	tw.chain().tween_interval(0.25)
+	tw.chain().tween_property(self, "position:y", start_pos.y - 1.2, 0.35).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(queue_free)
+
+
 func _on_anim_finished(anim_name: String) -> void:
 	# Eenmalige animaties (aanval) keren terug naar idle; lopen stuurt game.gd zelf.
 	if anim_name == anim_attack:
