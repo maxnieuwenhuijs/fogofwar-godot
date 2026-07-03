@@ -174,11 +174,11 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   musket/cannon bij afvuren, echo/whoosh kort erna, inslag-geluid getimed op de
   projectiel-reistijd; melee/charge → kill- vs. overleeft-klap. Haan-spannen
   (`musket_cock`) bij selectie van een infanterist die kan schieten.
-  **Beweeggeluid per type** (`Audio.play_footsteps(dist, dur, category)` in
-  `_animate_move`): één klap per gelopen vakje — infanterie = `step` (voetstappen),
-  cavalerie = `horse_move` (hoeven), artillerie = `cannon_move` (wielen). Sample cyclt
-  door de varianten vanaf een willekeurige start-index per beweging, pitch tikt per
-  volle ronde omhoog. **Selectie**: `musket_cock` (infanterie die kan schieten) /
+  **Beweeggeluid per type** (in `_animate_move`): infanterie = `step` en artillerie =
+  `cannon_move` via `play_footsteps` (één klap per gelopen vakje, sample cyclt vanaf
+  random start, pitch per volle ronde omhoog); cavalerie = **één** `horse_move`-galopclip
+  per beweging (bevat zelf al meerdere hoefslagen). NB: loop-duur schaalt met afstand
+  (0.13s/vak, max 0.45s). **Selectie**: `musket_cock` (infanterie die kan schieten) /
   `horse_select` (cavalerie). **Sterven**: `horse_die` (`_death_sound`, alleen cavalerie,
   ook bij dood door terugslag). **UI-klik**: `ui_click` op overlay-knoppen
   (`overlay._pick`) en de kaart-UI (bevestigen + koppel-tap). Mute-hook:
