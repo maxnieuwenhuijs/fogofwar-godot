@@ -117,6 +117,98 @@ zelf zitten (dan hoeft de engine niks te mixen).
 
 ---
 
+## ElevenLabs SFX-prompts (kopieer-klaar)
+
+Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:
+- **Engels** werkt het best; benoem het **materiaal** en het **karakter** (kort, dof, metaal, hout).
+- **Duration kort** houden (UI: 0.2-0.5s, klappen/schoten: 0.4-1s, fanfare: 1.5-3s).
+- **Prompt influence hoog** (~80-100%) voor strak, voorspelbaar resultaat.
+- Voor varianten: **genereer 3-5×** met dezelfde prompt en pak de beste — dat is
+  precies waarvoor de categorieën meerdere bestanden hebben.
+- Setting: musket/kanon = **18e-eeuws zwartkruit**; UI = **clean, minimal, board game**.
+
+**Interface**
+```
+ui_click    — minimal soft UI click, short muted tap, clean board game menu
+ui_back     — soft low UI back button, gentle downward click
+ui_hover    — very short subtle UI hover tick, faint
+ui_error    — dull soft error buzz, muted negative UI blip
+ui_toggle   — small crisp toggle switch click
+ui_open     — soft paper whoosh, panel sliding open, short
+```
+
+**Kaarten**
+```
+card_stat_up   — short rising digital blip, playful stat increase, clean
+card_stat_down — short falling digital blip, stat decrease, clean
+card_confirm   — firm paper card slap on table, confident confirm
+card_deal      — single playing card dealt, quick paper flick
+card_select    — light paper card pick up, soft tap
+link_snap      — magical snap lock-in, short power-up shimmer with a click
+```
+
+**Onthulling & flow**
+```
+reveal       — short military snare drum roll reveal, tension release, brief
+initiative   — single bright bugle note, short call to attention
+phase_change — soft transitional swell, gentle woodwind, brief
+cycle_start  — short military horn call and drum hit, new round fanfare
+your_turn    — soft single bell chime, gentle notification
+```
+
+**Opstellen**
+```
+place_pawn — wooden game piece placed on board, soft dull thud
+place_undo — reverse soft wooden pickup, quick lift off board
+```
+
+**Selectie**
+```
+cannon_select — heavy metal cannon creak, iron aiming clank, short
+inf_select    — soldier shoulders musket, cloth and wood rustle, short
+deselect      — soft low deselect blip, gentle
+```
+
+**Gevecht (extra bij het bestaande)**
+```
+musket_hit_var  — musket ball impact, flesh and dust thud, 18th century
+cannon_hit_var  — heavy cannonball impact, wood splinter and dirt burst
+melee_survive_var — bayonet clash blocked, metal parry clang, no kill
+retaliation     — quick metal clang counterstrike with a grunt, short
+charge_yell     — cavalry battle cry, men shouting charge, brief
+pawn_block      — musket ball thuds into wooden shield, blocked shot
+```
+
+**Sterven**
+```
+inf_die    — short soldier death cry and body fall, 18th century, brief
+cannon_die — cannon destroyed, wood and metal splinter crash, short
+```
+
+**Timer**
+```
+timer_tick    — single soft clock tick, subtle
+timer_warning — urgent low clock tick, slight tension, single
+timer_timeout — soft buzzer, times up, gentle negative
+```
+
+**Uitkomst**
+```
+haven_score  — bright short triumphant chime, objective reached
+win_fanfare  — short victorious military brass fanfare, triumphant, 2 seconds
+lose_sting   — short somber descending brass, defeat, minor key
+wolf_step    — quick stealthy cloth whoosh, light sneaky step
+```
+
+**Muziek/ambient (langer; genereer of componeer als OGG-loop)**
+```
+music_menu    — calm looping menu music, soft strings and light military drum, seamless loop
+music_battle  — subtle looping battle bed, marching snare and low strings, tense but soft, loop
+ambient_field — quiet open battlefield wind and distant field ambience, seamless loop
+```
+
+---
+
 ## Prioriteit (mijn advies)
 
 1. **Levendigheid nu, goedkoop:** extra varianten voor de losse 1-samples
