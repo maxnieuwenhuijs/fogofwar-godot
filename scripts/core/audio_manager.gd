@@ -10,7 +10,7 @@ const POOL_SIZE := 10
 ## Categorie → bestandsnamen (zónder pad). Random keuze per afspeelverzoek.
 const BANK := {
 	"cannon_fire": ["cannon_heavy.wav", "cannon_heavy2.wav", "cannon_heavy3.wav"],
-	"cannon_air":  ["cannon_bal_flies.wav", "cannon_ball_flies2.wav", "cannon_ball_flies3.wav",
+	"cannon_air":  ["cannon_bal_flies.wav", "cannon_ball_flies3.wav",
 					"cannon_bal_flies4.wav", "cannon_bal_flies5.wav"],
 	"cannon_hit":  ["cannon_ball_hit.wav"],
 	"musket_fire": ["musket.wav", "musket_heavy_2.wav", "musket_heavy_3.wav"],
