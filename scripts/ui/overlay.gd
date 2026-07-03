@@ -36,6 +36,7 @@ func show_choice(title: String, body: String, options: Array, cb: Callable = Cal
 
 
 func _pick(index: int) -> void:
+	Audio.play("ui_click")
 	visible = false
 	if _cb.is_valid():
 		_cb.call(index)

@@ -23,6 +23,9 @@ const BANK := {
 	"step":        ["step1.wav", "step2.wav", "step3.wav", "step4.wav"],
 	"horse_move":  ["horse_move.wav", "horse_move2.wav"],
 	"cannon_move": ["cannon_move.wav", "cannon_move2.wav", "cannon_move3.wav", "cannon_move4.wav"],
+	"horse_select": ["horse_select.wav", "horse_select2.wav", "horse_select3.wav"],
+	"horse_die":   ["horse_die.wav", "horse_die2.wav"],
+	"ui_click":    ["ui_click.wav"],
 }
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
@@ -40,6 +43,9 @@ const CATEGORY_DB := {
 	"step": -7.0,
 	"horse_move": -6.0,
 	"cannon_move": -6.0,
+	"horse_select": -5.0,
+	"horse_die": -2.0,
+	"ui_click": -6.0,
 }
 
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]

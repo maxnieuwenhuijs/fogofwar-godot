@@ -178,8 +178,11 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   `_animate_move`): één klap per gelopen vakje — infanterie = `step` (voetstappen),
   cavalerie = `horse_move` (hoeven), artillerie = `cannon_move` (wielen). Sample cyclt
   door de varianten vanaf een willekeurige start-index per beweging, pitch tikt per
-  volle ronde omhoog. Mute-hook: `Audio.set_enabled(false)`. Draai `--import` na een
-  verse checkout.
+  volle ronde omhoog. **Selectie**: `musket_cock` (infanterie die kan schieten) /
+  `horse_select` (cavalerie). **Sterven**: `horse_die` (`_death_sound`, alleen cavalerie,
+  ook bij dood door terugslag). **UI-klik**: `ui_click` op overlay-knoppen
+  (`overlay._pick`) en de kaart-UI (bevestigen + koppel-tap). Mute-hook:
+  `Audio.set_enabled(false)`. Draai `--import` na een verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
   vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar
   z=0, blauw naar z=10 (naar de vijand). Draait naar de looprichting bij bewegen en naar het doel

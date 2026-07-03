@@ -861,6 +861,15 @@ func _end_wolf_step_mode() -> void:
 	_clear_highlights()
 
 
+## Sterf-geluid per type (nu alleen cavalerie: horse_die). Het pion-object blijft
+## na eliminatie in state.pawns bestaan (alleen is_eliminated=true), dus het type
+## is nog opvraagbaar.
+func _death_sound(pawn_id: int, delay: float) -> void:
+	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	if pawn != null and pawn.unit_type == Constants.UnitType.CAVALRY:
+		Audio.play("horse_die", delay)
+
+
 func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 	_selected_pawn_id = -1
 	_valid_moves = []
@@ -879,10 +888,14 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			if result.get("forced_move", false):
 				_animate_move(action.attacker_id, result.attacker_from_pos, result.defender_pos)
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive")
+			if result.get("eliminated", false):
+				_death_sound(action.defender_id, 0.12)
 			_hit_feedback(action.defender_id, result.defender_pos, result.damage)
 			if result.get("retaliation", false):
 				# Terugslag: de aanvaller krijgt even later zelf schade te zien.
 				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), 0.45)
+				if result.get("attacker_eliminated", false):
+					_death_sound(action.attacker_id, 0.5)
 		"shot":
 			var shooter: PawnView = _pawn_views.get(action.shooter_id)
 			if shooter != null:
@@ -901,6 +914,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				Audio.play("musket_fire")
 				Audio.play("musket_echo", 0.18)
 				Audio.play("musket_hit", travel)
+			if result.get("eliminated", false):
+				_death_sound(action.target_id, travel + 0.05)
 			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03)
 		"charge":
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
@@ -912,9 +927,13 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			if action.get("defender_id", -1) != -1:
 				# Na de aanrij-animatie: klap op het doelwit, evt. terugslag op het paard.
 				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", 0.4)
+				if result.get("eliminated", false):
+					_death_sound(action.defender_id, 0.5)
 				_hit_feedback(action.defender_id, result.defender_pos, result.damage, 0.4)
 				if result.get("retaliation", false):
 					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), 0.75)
+					if result.get("attacker_eliminated", false):
+						_death_sound(action.pawn_id, 0.8)
 		"wolf_step":
 			_animate_move(action.pawn_id, action.from, action.target)
 	_refresh_all()
@@ -1217,10 +1236,12 @@ func _select_pawn(pawn_id: int) -> void:
 	_selected_pawn_id = pawn_id
 	_clear_highlights()
 	var pawn: Pawn = state.pawns.get(pawn_id)
-	# Sfeer: haan spannen als je een infanterist selecteert die kan schieten.
+	# Sfeer bij selectie: haan spannen (infanterie die kan schieten) / paard (cavalerie).
 	if pawn.unit_type == Constants.UnitType.INFANTRY \
 			and not Rules.get_valid_shot_targets(state, pawn_id).is_empty():
 		Audio.play("musket_cock")
+	elif pawn.unit_type == Constants.UnitType.CAVALRY:
+		Audio.play("horse_select")
 	var move_paths: Dictionary = Rules.get_valid_move_paths(state, pawn_id)
 	_valid_moves = move_paths.keys()
 	_highlight_move_tiles(move_paths)

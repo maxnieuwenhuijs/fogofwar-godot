@@ -174,6 +174,7 @@ func _on_card_stats_changed() -> void:
 func _on_confirm_pressed() -> void:
 	if not _all_cards_valid():
 		return
+	Audio.play("ui_click")
 	var card_data: Array[CardData] = []
 	for card in _cards:
 		card_data.append(card.data)
@@ -207,6 +208,7 @@ func _on_card_tapped(card: CardView) -> void:
 	if index < 0:
 		return
 	_selected_index = index
+	Audio.play("ui_click")
 	for i in _cards.size():
 		_cards[i].set_selected_visual(i == index)
 	card_picked.emit(index)
