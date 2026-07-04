@@ -312,8 +312,13 @@ hill-climbing self-play en toont het live:
   gedegenereerde grootte-ordes (bv. Leeuw `hp`=112k vs `haven`=63; Beer `haven`=1.2M,
   `cav_value`=846k) — multiplicatieve mutatie + hoge adoptiegraad laat de schaal
   exploderen. De eval is relatief dus het "werkt", maar de onderlinge ratio's zijn
-  extreem gedrift. Volgende trainer-iteratie: her-normaliseren na adoptie (bv. delen
-  door geometrisch gemiddelde) + strakkere verify-gate (ook tegen baseline).
+  extreem gedrift. **→ Opgelost in trainer v2** (zelfde dag): (1) schaal-anker
+  `AIController.renormalize_weights()` na elke recombinatie én bij het laden
+  (gedrag-neutraal, eval is lineair); (2) dubbele verify-gate — 2×games, helft vs
+  kampioen, helft vs vaste baseline, marge op totaal én geen verlies per helft
+  (oude gate liet ~34% ruis door); (3) gepaarde vergelijking — alle kandidaten spelen
+  hetzelfde tegenstander-schema met gebalanceerde facties; (4) sigma-cap 0.35 +
+  stap-limiet 900 per trainingspotje. Zie AI_TRAINING_PLAN.md "Robuustheid v2".
 - **Facties-curriculum + per-factie-profielen (juli 2026)**: de kampioen is een PROFIEL —
   per doctrine een eigen set van 31 gewichten: evaluatie (15) + opstelling (6:
   `art/cav/inf_front/center`, via `choose_placement`) + type-bewust koppelen (10:

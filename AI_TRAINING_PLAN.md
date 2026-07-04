@@ -102,10 +102,25 @@ die gaan we optimaliseren door potjes te spelen en de beste te selecteren. **Gee
      spreektaal-narratie. Leuk om te volgen, leert langzaam.
    - **CMA-lite** (headless, `train_ai.bat` / `capture.tscn -- train [min] [pop] [games]`):
      populatie van kandidaten (ALLE gewichten log-normaal verstoord), fitness over potjes,
-     recombinatie (meetkundig gemiddelde top-helft), verificatie tegen de kampioen vóór
-     adoptie, en zelf-aanpassende stapgrootte per factie (groter bij succes, kleiner bij
-     falen). Meerdere mutaties tegelijk en tóch zuiver: de hele kandidaat wordt beoordeeld,
+     recombinatie (meetkundig gemiddelde top-helft), verificatie vóór adoptie, en
+     zelf-aanpassende stapgrootte per factie (groter bij succes, kleiner bij falen).
+     Meerdere mutaties tegelijk en tóch zuiver: de hele kandidaat wordt beoordeeld,
      en alles blijft binnen de ene factie-set die de kandidaat ook echt speelt.
+   - **Robuustheid v2 (na de nachtrun-analyse juli 2026)**:
+     1. *Schaal-anker*: `AIController.renormalize_weights()` pint na elke recombinatie
+        (én bij het laden) het geometrisch gemiddelde van |w| op de baseline-schaal.
+        De eval is een lineaire som, dus dit is gedrag-neutraal — maar het stopt de
+        exponentiële schaal-drift (Beer `haven`=1.2M, Leeuw `hp`=112k) die mutaties
+        zinloos maakte.
+     2. *Dubbele verify-gate*: 2×games potjes, helft tegen de kampioen en helft tegen
+        de VASTE baseline; adoptie eist marge op het totaal (≥ 50% + 2) én geen verlies
+        op een van beide helften. De oude gate (4/6 alleen tegen de kampioen) liet ~34%
+        pure ruis door → 90-127 schijn-adopties per nacht.
+     3. *Gepaarde vergelijking*: alle kandidaten van een generatie spelen exact hetzelfde
+        tegenstander-schema (zelfde profiel, factie en kant per potje-index), met
+        gebalanceerde tegenstander-facties — fitnessverschil = gewichten, niet loting.
+     4. *Sigma-cap* 0.5 → 0.35 en *stap-limiet* 900 per trainingspotje (patstellingen
+        kostten tot 2500 stappen; de tiebreak materiaal→haven geeft hetzelfde signaal).
    - **Volwaardige CMA-ES via Python** blijft de vervolg-optie als CMA-lite plafonneert
      (het `cma`-package rond de headless CLI-sim).
 3. **Fitness** = winrate uit Fase A's match-evaluator (bv. 50-100 potjes per evaluatie, kant gewisseld).

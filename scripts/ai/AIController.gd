@@ -20,6 +20,31 @@ static func default_profile() -> Dictionary:
 		profile[int(doctrine)] = default_weights()
 	return profile
 
+
+## Her-normaliseer een gewichtenset naar de schaal van een referentieset.
+## De evaluatie is een lineaire som (score = Σ w·f), dus alle gewichten met
+## dezelfde factor schalen verandert het GEDRAG niet — maar zonder dit anker
+## laat multiplicatieve mutatie de schaal exponentieel wegdrijven (nachtrun
+## juli 2026: Beer haven=1.2M, Leeuw hp=112k). We pinnen het geometrisch
+## gemiddelde van |w| op dat van de referentie; tekens en ratio's blijven exact.
+static func renormalize_weights(w: Dictionary, ref: Dictionary) -> Dictionary:
+	var log_sum_w: float = 0.0
+	var log_sum_ref: float = 0.0
+	var n: int = 0
+	for k in w:
+		if not ref.has(k):
+			continue
+		log_sum_w += log(maxf(1e-9, absf(float(w[k]))))
+		log_sum_ref += log(maxf(1e-9, absf(float(ref[k]))))
+		n += 1
+	if n == 0:
+		return w.duplicate()
+	var factor: float = exp((log_sum_ref - log_sum_w) / float(n))
+	var out: Dictionary = {}
+	for k in w:
+		out[k] = float(w[k]) * factor
+	return out
+
 static func save_profile(profile: Dictionary) -> void:
 	DirAccess.make_dir_recursive_absolute("res://data")
 	var out: Dictionary = {}

@@ -782,6 +782,12 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 		print("[TRAIN] Dit proces traint alléén de %s (override: %s)." % [
 			Constants.doctrine_name(faction), AIController.override_path(faction)])
 	var baseline: Dictionary = AIController.default_profile()
+	# Schaal-anker: eerdere runs lieten de grootte-ordes exploderen (Beer haven=1.2M,
+	# Leeuw hp=112k) — gedrag-neutraal (lineaire eval), maar mutaties worden zinloos
+	# en floats lopen ooit vol. Terugpinnen op de baseline-schaal wijzigt géén beslissing.
+	for dk in profile:
+		if baseline.has(dk):
+			profile[dk] = AIController.renormalize_weights(profile[dk], baseline[dk])
 	var doctrines: Array = Constants.DOCTRINE_DATA.keys()
 	# Tegenstander-pool tegen rondjes draaien (steen-papier-schaar in zelf-spel):
 	# [0] = baseline (vast ijkpunt), daarna de recente kampioenen.
@@ -798,8 +804,8 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 	var matchup: Dictionary = {}
 	print("[TRAIN] Budget %.1f min · populatie %d · %d potjes per kandidaat · %d facties · PARALLEL (%d threads)" % [
 		minutes, pop, games, doctrines.size(), pop])
-	print("[TRAIN] Eén generatie = %d potjes; kandidaten spelen tegelijk op eigen threads..." % [
-		pop * games + games])
+	print("[TRAIN] Eén generatie = %d potjes (kandidaten + dubbele verificatie); parallel op eigen threads..." % [
+		pop * games + games * 2])
 	while Time.get_ticks_msec() - t0 < deadline:
 		gen += 1
 		var d: int = faction if faction >= 0 else doctrines[(gen - 1) % doctrines.size()]
@@ -816,29 +822,38 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 					scaled = 0.01 if scaled >= 0.0 else -0.01
 				w[k] = scaled
 			candidates.append({"w": w, "fit": 0.0})
-		# 2) Fitness PARALLEL: één thread per kandidaat (pop threads tegelijk).
-		#    Meer threads (per potje) bleek AVERECHTS: te veel GDScript-threads
-		#    vechten om de allocator en maken het 4× trager. pop (6) is de sweet spot.
-		#    (Loting van tegenstanders gebeurt hier op de hoofdthread — randi is
-		#    niet thread-safe; de threads zelf gebruiken geen RNG.)
+		# 2) GEDEELD tegenstander-schema: elke kandidaat speelt exact dezelfde
+		#    reeks (zelfde tegenstander, factie én kant per potje-index). Zo is
+		#    het fitness-verschil tussen kandidaten puur de gewichten, niet de
+		#    loting (gepaarde vergelijking → veel minder ruis per generatie).
+		#    Tegenstander-facties gebalanceerd (geschud rondje) i.p.v. willekeurig.
+		var doc_order: Array = doctrines.duplicate()
+		doc_order.shuffle()
+		var schedule: Array = []
+		for g in games:
+			# Potje 0: vast ijkpunt (baseline); potje 1: de huidige kampioen;
+			# de rest: een willekeurige oude kampioen uit de pool.
+			var opp_profile: Dictionary
+			if g == 0:
+				opp_profile = baseline
+			elif g == 1:
+				opp_profile = profile
+			else:
+				opp_profile = pool[randi() % pool.size()]
+			var opp_d: int = doc_order[g % doc_order.size()]
+			schedule.append({"opp_w": opp_profile[opp_d], "opp_d": opp_d, "cand_is_p1": g % 2 == 0})
+		# Fitness PARALLEL: één thread per kandidaat (pop threads tegelijk).
+		# Meer threads (per potje) bleek AVERECHTS: te veel GDScript-threads
+		# vechten om de allocator en maken het 4× trager. pop (6) is de sweet spot.
+		# (Loting gebeurt op de hoofdthread — randi is niet thread-safe.)
 		var threads: Array = []
 		for j in pop:
 			var jobs: Array = []
 			for g in games:
-				# Potje 0: vast ijkpunt (baseline); potje 1: de huidige kampioen;
-				# de rest: een willekeurige oude kampioen uit de pool.
-				var opp_profile: Dictionary
-				if g == 0:
-					opp_profile = baseline
-				elif g == 1:
-					opp_profile = profile
-				else:
-					opp_profile = pool[randi() % pool.size()]
-				var opp_d: int = doctrines[randi() % doctrines.size()]
 				jobs.append({
 					"cand_w": candidates[j].w, "cand_d": d,
-					"opp_w": opp_profile[opp_d], "opp_d": opp_d,
-					"cand_is_p1": g % 2 == 0,
+					"opp_w": schedule[g].opp_w, "opp_d": schedule[g].opp_d,
+					"cand_is_p1": schedule[g].cand_is_p1,
 				})
 			var thread := Thread.new()
 			thread.start(_eval_games_threaded.bind(jobs))
@@ -865,26 +880,28 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 			for j in mu:
 				log_sum += log(maxf(0.01, absf(float(candidates[j].w[k]))))
 			mean[k] = sign_ref * exp(log_sum / float(mu))
-		# 4) Verificatie (ook parallel): de recombinatie moet de kampioen echt verslaan.
-		var verify_threads: Array = []
-		for g in games:
-			var opp_d2: int = doctrines[randi() % doctrines.size()]
-			var vjobs: Array = [{
-				"cand_w": mean, "cand_d": d,
-				"opp_w": profile[opp_d2], "opp_d": opp_d2,
-				"cand_is_p1": g % 2 == 0,
-			}]
-			var vthread := Thread.new()
-			vthread.start(_eval_games_threaded.bind(vjobs))
-			verify_threads.append(vthread)
-		var verify: float = 0.0
-		for vt in verify_threads:
-			verify += float(vt.wait_to_finish().fit)
-		var adopted: bool = verify >= float(games) * 0.5 + 1.0
+		# Her-normaliseren vóór verificatie: precies wat we zouden opslaan wordt
+		# getest. Pint de schaal op de baseline; ratio's/tekens blijven exact.
+		mean = AIController.renormalize_weights(mean, baseline[d])
+		# 4) Verificatie-gate (parallel): 2×games potjes — de HELFT tegen de
+		#    kampioen, de HELFT tegen de vaste baseline (anders kun je overfitten
+		#    op je eigen stijl en absoluut zwakker worden zonder dat de gate het
+		#    ziet). Tegenstander-facties round-robin i.p.v. loting. Adoptie eist
+		#    marge op het totaal ÉN geen verlies tegen een van beide helften —
+		#    de oude gate (4/6 tegen alleen de kampioen) liet ~34% pure ruis door,
+		#    vandaar 90-127 'adopties' met gedrifte gewichten in de nachtrun.
+		# Twee rondes van `games` threads (12 tegelijk = allocator-contention).
+		var n_verify: int = games * 2
+		var verify_champ: float = _verify_round(mean, d, profile, doctrines, games)
+		var verify_base: float = _verify_round(mean, d, baseline, doctrines, games)
+		var verify: float = verify_champ + verify_base
+		var half: float = float(games) * 0.5
+		var adopted: bool = verify >= float(n_verify) * 0.5 + 2.0 \
+			and verify_champ >= half and verify_base >= half
 		if adopted:
 			profile[d] = mean
 			adoptions += 1
-			sigma[d] = minf(0.5, float(sigma[d]) * 1.15)
+			sigma[d] = minf(0.35, float(sigma[d]) * 1.15)
 			if faction >= 0:
 				# Parallel-modus: alleen het eigen factie-bestand schrijven,
 				# zodat processen elkaars werk niet overschrijven.
@@ -898,9 +915,10 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 		else:
 			sigma[d] = maxf(0.06, float(sigma[d]) * 0.85)
 		var elapsed: float = float(Time.get_ticks_msec() - t0) / 60_000.0
-		print("[TRAIN] gen %d · %s · beste kandidaat %.1f/%d · verificatie %.1f/%d → %s · sigma %.2f · %.1f min" % [
+		print("[TRAIN] gen %d · %s · beste kandidaat %.1f/%d · verificatie %.1f/%d (kampioen %.1f + baseline %.1f) → %s · sigma %.2f · %.1f min" % [
 			gen, Constants.doctrine_name(d), float(candidates[0].fit), games,
-			verify, games, "GEADOPTEERD 💾" if adopted else "verworpen", float(sigma[d]), elapsed])
+			verify, n_verify, verify_champ, verify_base,
+			"GEADOPTEERD 💾" if adopted else "verworpen", float(sigma[d]), elapsed])
 	print("[TRAIN] Klaar: %d generaties, %d adopties in %.1f min. Profiel: res://data/ai_weights.json" % [
 		gen, adoptions, float(Time.get_ticks_msec() - t0) / 60_000.0])
 	# Matchup-overzicht: hoe deed de getrainde factie het tegen elke tegenstander?
@@ -1038,6 +1056,28 @@ func _run_arena(per: int, level: String) -> void:
 	print("[ARENA] Klaar in %.1f min → data/arena_results.txt" % [float(Time.get_ticks_msec() - t0) / 60_000.0])
 
 
+## Eén verificatieronde: `games` potjes parallel (1 thread per potje) van de
+## uitdager-gewichten tegen één tegenstander-profiel; tegenstander-facties
+## round-robin, kant om en om. Retour: behaalde punten (win=1, gelijk=0.5).
+func _verify_round(cand_w: Dictionary, cand_d: int, opp_profile: Dictionary,
+		doctrines: Array, games: int) -> float:
+	var threads: Array = []
+	for g in games:
+		var opp_d: int = doctrines[g % doctrines.size()]
+		var vjobs: Array = [{
+			"cand_w": cand_w, "cand_d": cand_d,
+			"opp_w": opp_profile[opp_d], "opp_d": opp_d,
+			"cand_is_p1": g % 2 == 0,
+		}]
+		var thread := Thread.new()
+		thread.start(_eval_games_threaded.bind(vjobs))
+		threads.append(thread)
+	var pts: float = 0.0
+	for t in threads:
+		pts += float(t.wait_to_finish().fit)
+	return pts
+
+
 ## Arena thread-werker: speelt een lijst potjes en geeft per potje {i, j, pts}
 ## terug (pts vanuit rij-doctrine i: 1 = win, 0.5 = gelijk, 0 = verlies).
 func _arena_games_threaded(jobs: Array, ai_script) -> Array:
@@ -1104,6 +1144,9 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	var d1: int = cand_d if cand_is_p1 else opp_d
 	var d2: int = opp_d if cand_is_p1 else cand_d
 	var runner := MatchRunner.new(a1, a2, d1, d2)
+	# Patstellingen kosten anders tot 2500 stappen per potje; echte partijen zijn
+	# rond ~350 klaar. De tiebreak (materiaal → haven) geeft hetzelfde leersignaal.
+	runner.max_steps = 900
 	while not runner.done:
 		runner.step()
 	var winner: int = runner.winner
