@@ -89,139 +89,137 @@ HP-blokjes en het kaartpaneel geven de exacte cijfers.
 
 ---
 
-## 3. Ontwerp per factie
+## 3. Generatie-prompts per factie (Engels)
 
-Elke factie = één diersoort + één stijl. Composities: Mens 13/6/3 ·
+Elke factie = één diersoort, allemaal in hetzelfde **weathered, strictly dark
+grey Napoleonic**-thema (de teamkleur komt van het rood/blauwe sokkeltje, dus
+de uniformen blijven strikt donkergrijs). Composities: Mens 13/6/3 ·
 Muis 22/0/0 · Leeuw 6/10/2 · Beer 16/3/3 · Wolf 11/8/3 · Vos 13/6/3.
 
-### Muis — geïmproviseerd leger (alleen infanterie: 5 modellen)
+**Prompt-opbouw** (template): `Single character, <bouw> anthropomorphic
+<dier>, A-pose. Gritty realistic AAA-game concept art, highly detailed.
+Wearing a weathered, strictly dark grey Napoleonic military uniform and
+<hoofddeksel>, <uitrusting>. Clean neutral studio background, single figure
+only, no text.`
 
-Kleine knagers met huis-tuin-en-keuken-uitrusting: vingerhoed als helm,
-naald als degen, kurk als schild. Kleur: grijsbruin + rood sjaaltje.
+- **A-pose** is bewust: nodig voor rigging/animatie. Het archetype zit in de
+  **bouw** (thin lean / heavyset / broad-shouldered muscular); de houding uit
+  §1 komt later via de idle-animatie.
+- Cavalerie: `mounted on a <paard>, neutral riding pose` i.p.v. A-pose.
+- Artillerie: `Single prop` (kanon zonder bemanning), `single object only`.
 
-| Bestand | Suggestie |
+### Muis (alleen infanterie: 5 prompts)
+
+| Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | rechtopstaande muis, nieuwsgierig om zich heen kijkend, pootjes ineen |
-| `infanterie_spd` | **dunne schichtige muis**: gestrekt, laag, grote oren plat naar achteren, staart recht achteruit, mid-sprint |
-| `infanterie_hp` | mollige muis, vingerhoed-helm diep over de oren, kurken schild, breed neergeplant |
-| `infanterie_atk` | gespierde muis (brede borst), naald-rapier vooruit, tandjes ontbloot |
-| `infanterie_mix` | nette muis-soldaat met knapzakje en speldje-bajonet geschouderd |
+| `infanterie_basis` | Single character, average build anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset round-bodied anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, carrying a musket with fixed bayonet. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
 
-### Mens — Napoleontische linie (15 modellen)
+### Mens (15 prompts)
 
-Klassieke 18e/19e-eeuwse soldaten. Kleur: blauwgrijs uniform, messing knopen.
-
-| Bestand | Suggestie |
+| Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | musketier in rust, geweer geschouderd, tricorne |
-| `infanterie_spd` | voltigeur/verkenner: dun, korte jas, vooroverleunende looppas |
-| `infanterie_hp` | grenadier: berenmuts, dikke overjas, borstplaat, breed en laag |
-| `infanterie_atk` | stormsoldaat: brede schouders, bajonet gestrekt naar voren, uitvalspas |
-| `infanterie_mix` | linie-infanterist in aanslag |
-| `cavalerie_basis` | dragonder op stilstaand paard |
-| `cavalerie_spd` | huzaar op slank renpaard, laag in het zadel, dolman wappert |
-| `cavalerie_hp` | kurassier: borstkuras, zwaar breed paard, stapvoets |
-| `cavalerie_atk` | lansier: gevelde lans, paard in galop-uitval, gespierd |
-| `cavalerie_mix` | dragonder met sabel geschouderd |
-| `artillerie_basis` | veldkanon op houten affuit + kanonnier ernaast |
-| `artillerie_spd` | rijdende artillerie: klein licht stuk, grote dunne wielen |
-| `artillerie_hp` | vestingstuk: korte dikke loop, zware lage affuit, zandzakken |
-| `artillerie_atk` | houwitser: extra lange dikke loop, dreigend omhoog |
-| `artillerie_mix` | standaard veldstuk |
+| `infanterie_basis` | Single character, average build human soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean human skirmisher, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey short Napoleonic jacket and dark grey shako, light field gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset human grenadier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass and tall dark grey bearskin cap. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular human soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, carrying a musket with fixed bayonet. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build human line infantryman, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, average build human dragoon mounted on a standing horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic cavalry uniform and dark grey helmet, unarmed. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_spd` | Single character, thin lean human hussar mounted on a slender racing horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic hussar uniform with dark grey fur-trimmed pelisse and shako. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_hp` | Single character, heavyset human cuirassier mounted on a heavy broad draft horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform with a dark steel cuirass and crested helmet. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_atk` | Single character, broad-shouldered muscular human lancer mounted on a muscular warhorse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform and dark grey czapka, holding an upright lance. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_mix` | Single character, average build human dragoon mounted on a horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic cavalry uniform and dark grey helmet, sabre sheathed at the hip. Clean neutral studio background, single figure only, no text. |
+| `artillerie_basis` | Single prop, Napoleonic field cannon on a weathered dark wooden gun carriage with two spoked wheels. Gritty realistic AAA-game concept art, highly detailed, dark iron barrel. Clean neutral studio background, single object only, no text. |
+| `artillerie_spd` | Single prop, light Napoleonic horse-artillery cannon with a slender barrel on a weathered dark wooden carriage with large thin spoked wheels. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_hp` | Single prop, short thick Napoleonic fortress mortar on a heavy low weathered wooden block carriage, sandbags at the base. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
+| `artillerie_atk` | Single prop, long-barreled heavy Napoleonic siege cannon on a reinforced weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed, dark iron barrel. Clean neutral studio background, single object only, no text. |
+| `artillerie_mix` | Single prop, Napoleonic field cannon on a weathered dark wooden carriage, stacked cannonballs beside the wheel. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 
-### Leeuw — koninklijke garde (15 modellen)
+### Leeuw (15 prompts)
 
-Majestueus en zwaar: goud op rood, manen als uniformkraag. Alles net wat
-groter en rijker versierd dan de Mens (budget 9!).
-
-| Bestand | Suggestie |
+| Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | garde-leeuw rechtop, manen als kraag, hellebaard rustend |
-| `infanterie_spd` | jonge leeuwin: slank, sluippas, geen bepakking |
-| `infanterie_hp` | brede leeuw met vergulde borstplaat, laag zwaartepunt |
-| `infanterie_atk` | gespierde leeuw: klauwen uit, bek open, sabel geheven |
-| `infanterie_mix` | garde-leeuw in het gelid |
-| `cavalerie_basis` | leeuw op strijdros met rood dekkleed |
-| `cavalerie_spd` | leeuwin op renpaard, gestrekte galop |
-| `cavalerie_hp` | gepantserde leeuw op zwaar paard met kopplaat |
-| `cavalerie_atk` | leeuw met gevelde sabel, paard steigert |
-| `cavalerie_mix` | garde-ruiter |
-| `artillerie_basis` | verguld belegeringskanon (denk: dracht 7-perk → lange loop) |
-| `artillerie_spd` | lichter vergulde veldslang, dunne lange loop |
-| `artillerie_hp` | massief bronzen bombarde, kort en dik |
-| `artillerie_atk` | dubbel-verguld monsterkanon, extra lange loop, brede affuit |
-| `artillerie_mix` | koninklijk veldstuk |
+| `infanterie_basis` | Single character, average build anthropomorphic lion with a thick mane, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic officer's uniform with dark grey epaulettes and tall plumed shako, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean anthropomorphic lioness, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey short Napoleonic jacket and dark grey shako, light gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset anthropomorphic lion with a thick mane, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass and bearskin cap. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic lion with a wild mane, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform and plumed shako, carrying a heavy sabre. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic lion guard, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, average build anthropomorphic lion mounted on a standing warhorse with dark grey caparison, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic cavalry uniform, unarmed. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_spd` | Single character, thin lean anthropomorphic lioness mounted on a slender racing horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic hussar uniform and shako. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_hp` | Single character, heavyset anthropomorphic lion mounted on a heavy armored draft horse with dark steel chamfron, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform with dark steel cuirass. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_atk` | Single character, broad-shouldered muscular anthropomorphic lion mounted on a muscular warhorse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform, holding a heavy sabre upright. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_mix` | Single character, average build anthropomorphic lion mounted on a horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic cavalry uniform, sabre sheathed. Clean neutral studio background, single figure only, no text. |
+| `artillerie_basis` | Single prop, long-barreled Napoleonic siege cannon on an ornate weathered dark wooden gun carriage with pewter detailing. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
+| `artillerie_spd` | Single prop, light long slender Napoleonic culverin cannon on a weathered dark wooden carriage with large thin wheels, pewter detailing. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_hp` | Single prop, massive short thick Napoleonic bombard on a heavy low weathered wooden carriage, pewter detailing. Gritty realistic AAA-game concept art, highly detailed, dark bronze. Clean neutral studio background, single object only, no text. |
+| `artillerie_atk` | Single prop, extra long-barreled heavy Napoleonic siege cannon on a wide reinforced weathered dark wooden carriage, pewter detailing. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_mix` | Single prop, ornate Napoleonic field cannon on a weathered dark wooden carriage with pewter detailing. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 
-### Beer — log winterleger (15 modellen)
+### Beer (15 prompts)
 
-Zwaar, traag, onverwoestbaar (HP-bonus + Speed-cap): hout en ijzer,
-bontmutsen, sneeuw-thema. Kleur: donkerbruin + ijzergrijs.
-
-| Bestand | Suggestie |
+| Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | zittende beer met bontmuts, musket over de knieën |
-| `infanterie_spd` | (zeldzaam: alleen 2/3/2) lichtere bruine beer, verrassend lichtvoetig op de tenen |
-| `infanterie_hp` | massieve grizzly: ijzeren borstplaat, armen wijd, als een muur |
-| `infanterie_atk` | beer op achterpoten met strijdbijl, brede schouders, brullend |
-| `infanterie_mix` | berensoldaat stapvoets met geschouderd musket |
-| `cavalerie_basis` | beer op zwaar trekpaard |
-| `cavalerie_spd` | beer op ietwat vlotter paard, nog steeds log |
-| `cavalerie_hp` | beer + paard beide bepantserd, schildpad-achtig |
-| `cavalerie_atk` | beer met knots, paard in zware charge |
-| `cavalerie_mix` | beren-ruiter |
-| `artillerie_basis` | fort-mortier: kort, dik, houten blokken-affuit |
-| `artillerie_spd` | slee-kanon (getrokken licht stuk) |
-| `artillerie_hp` | belegeringsmortier half ingegraven achter zandzakken |
-| `artillerie_atk` | dubbele mortier, brede bek |
-| `artillerie_mix` | winterveldstuk |
+| `infanterie_basis` | Single character, average build anthropomorphic bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and dark grey fur cap, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean anthropomorphic brown bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey short Napoleonic jacket and dark grey fur cap, light gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, massive heavyset anthropomorphic grizzly bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a heavy dark iron breastplate and fur cap. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform and dark grey fur cap, carrying a large battle axe. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic bear soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and fur cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, average build anthropomorphic bear mounted on a heavy standing draft horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic cavalry greatcoat and fur cap, unarmed. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_spd` | Single character, thin lean anthropomorphic bear mounted on a sturdy trotting horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey short Napoleonic jacket and fur cap. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_hp` | Single character, massive heavyset anthropomorphic bear mounted on a heavily armored draft horse, both wearing dark iron plating, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed, weathered strictly dark grey Napoleonic gear. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_atk` | Single character, broad-shouldered muscular anthropomorphic bear mounted on a muscular heavy warhorse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform and fur cap, carrying a heavy club. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_mix` | Single character, average build anthropomorphic bear mounted on a draft horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic cavalry greatcoat and fur cap. Clean neutral studio background, single figure only, no text. |
+| `artillerie_basis` | Single prop, short thick Napoleonic fortress mortar on a weathered dark wooden block carriage. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
+| `artillerie_spd` | Single prop, light Napoleonic cannon mounted on a weathered wooden sled carriage. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
+| `artillerie_hp` | Single prop, heavy Napoleonic siege mortar dug in behind sandbags on a massive low weathered wooden carriage. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
+| `artillerie_atk` | Single prop, wide-mouthed double Napoleonic mortar on a reinforced weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
+| `artillerie_mix` | Single prop, Napoleonic winter field cannon on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed, dark iron. Clean neutral studio background, single object only, no text. |
 
-### Wolf — guerrilla-roedel (15 modellen)
+### Wolf (15 prompts)
 
-Sluipend en opportunistisch (wolf-stap + springt over vijandelijke infanterie):
-grijs, gehavende mantels, buitgemaakte spullen. Kleur: leigrijs + gifgroen accent.
-
-| Bestand | Suggestie |
+| Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | wolf laag bij de grond, oren gespitst, loerend |
-| `infanterie_spd` | magere prairiewolf: gestrekt, bijna liggend in de sprint |
-| `infanterie_hp` | dikke winterwolf met dubbele vacht en gestolen borstplaat |
-| `infanterie_atk` | grommende wolf met hakmes, hoge brede schoft, tanden ontbloot |
-| `infanterie_mix` | roedel-wolf in draf |
-| `cavalerie_basis` | wolf-ruiter op gedrongen paard (de springer!) |
-| `cavalerie_spd` | wolf op licht steppenpaard, laag over de hals |
-| `cavalerie_hp` | wolf met buitgemaakt kuras op stevig paard |
-| `cavalerie_atk` | wolf-ruiter mid-sprong met geheven kling — dé perk-pose |
-| `cavalerie_mix` | roedel-ruiter |
-| `artillerie_basis` | buitgemaakt kanon, touwen en jute er nog omheen |
-| `artillerie_spd` | licht bergkanon, uit elkaar te nemen |
-| `artillerie_hp` | kanon achter geïmproviseerde barricade |
-| `artillerie_atk` | dubbel buit-kanon, extra kruitvaten ernaast |
-| `artillerie_mix` | roedel-veldstuk |
+| `infanterie_basis` | Single character, average build anthropomorphic wolf, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic military uniform and dark grey forage cap, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean gaunt anthropomorphic wolf, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey short Napoleonic jacket and forage cap, minimal gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset thick-furred anthropomorphic winter wolf, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic greatcoat with a scavenged dark steel breastplate. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic wolf with bared teeth, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic uniform, carrying a heavy cleaver. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic wolf soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic uniform and forage cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, average build anthropomorphic wolf mounted on a compact sturdy horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic cavalry uniform, unarmed. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_spd` | Single character, thin lean anthropomorphic wolf mounted on a light steppe horse, neutral riding pose low over the neck. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic uniform. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_hp` | Single character, heavyset anthropomorphic wolf with a scavenged dark steel cuirass mounted on a sturdy horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed, tattered strictly dark grey Napoleonic gear. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_atk` | Single character, broad-shouldered muscular anthropomorphic wolf mounted on a muscular horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic uniform, holding a raised curved blade. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_mix` | Single character, average build anthropomorphic wolf mounted on a horse, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a tattered, weathered, strictly dark grey Napoleonic cavalry uniform. Clean neutral studio background, single figure only, no text. |
+| `artillerie_basis` | Single prop, scavenged Napoleonic field cannon on a weathered dark wooden carriage, ropes and burlap sacks still tied around it. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_spd` | Single prop, light Napoleonic mountain cannon, disassemblable, on a small weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_hp` | Single prop, Napoleonic cannon behind an improvised barricade of crates and sandbags on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_atk` | Single prop, heavy scavenged Napoleonic cannon with extra powder kegs strapped to the weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_mix` | Single prop, scavenged Napoleonic field cannon on a patched weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 
-### Vos — het maskerade-leger (15 modellen)
+### Vos (15 prompts)
 
-Elegant en geheimzinnig (verborgen koppelingen!): capes en mantels die de
-uitrusting verhullen. Kleur: roestrood + nachtblauwe cape. **Belangrijk:
-álle varianten dragen de cape** — het verschil zit in bouw en houding, zodat
-het neutrale model geloofwaardig "elke kaart" kan zijn.
+**Belangrijk**: álle Vos-varianten dragen dezelfde donkergrijze cape — de bouw
+verschilt, de look blijft verhullend (past bij de verborgen koppelingen).
 
-| Bestand | Suggestie |
+| Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | vos rechtop, cape dicht, alleen de snuit zichtbaar — de pokerface |
-| `infanterie_spd` | slanke vos, cape strak om het lijf, lage sluippas |
-| `infanterie_hp` | vos met dikke wintervacht, maliënkolder glimt ónder de cape |
-| `infanterie_atk` | brede vos, cape half open: twee dolken zichtbaar, gedoken aanvalshouding |
-| `infanterie_mix` | vos-soldaat, cape over één schouder |
-| `cavalerie_basis` | vos-ruiter met wapperende cape (de +1 Speed-perk mag je voelen) |
-| `cavalerie_spd` | vos plat op een windhond-achtig paard, cape horizontaal |
-| `cavalerie_hp` | vos + paard onder één groot dekkleed, silhouet verhuld |
-| `cavalerie_atk` | vos-ruiter met getrokken sabel uit de cape |
-| `cavalerie_mix` | elegante ruiter |
-| `artillerie_basis` | kanon onder camouflagenetten, alleen de loop steekt uit |
-| `artillerie_spd` | licht stuk half onder dekzeil, klaar om te verkassen |
-| `artillerie_hp` | kanon in gegraven stelling met rieten manden |
-| `artillerie_atk` | ontmaskerd kanon: netten eraf getrokken, lange loop |
-| `artillerie_mix` | veldstuk met dekzeil |
+| `infanterie_basis` | Single character, average build anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform under a closed dark grey hooded cloak, only the muzzle visible, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform under a tight dark grey hooded cloak. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset thick-furred anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform with chainmail glinting under a dark grey hooded cloak. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform under a half-open dark grey hooded cloak revealing two daggers. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic fox soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform with a dark grey cloak over one shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, average build anthropomorphic fox mounted on a standing horse, neutral riding pose, dark grey cloak draped over the back. Gritty realistic AAA-game concept art, highly detailed, weathered strictly dark grey Napoleonic uniform. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_spd` | Single character, thin lean anthropomorphic fox mounted low on a slender sighthound-like racing horse, neutral riding pose, dark grey cloak streaming behind. Gritty realistic AAA-game concept art, highly detailed, weathered strictly dark grey Napoleonic uniform. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_hp` | Single character, heavyset anthropomorphic fox mounted on a sturdy horse, horse and rider draped under one large dark grey caparison cloth, neutral riding pose. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_atk` | Single character, broad-shouldered muscular anthropomorphic fox mounted on a muscular horse, neutral riding pose, drawing a sabre from under a dark grey cloak. Gritty realistic AAA-game concept art, highly detailed, weathered strictly dark grey Napoleonic uniform. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_mix` | Single character, average build anthropomorphic fox mounted on a horse, neutral riding pose, dark grey hooded cloak. Gritty realistic AAA-game concept art, highly detailed, weathered strictly dark grey Napoleonic uniform. Clean neutral studio background, single figure only, no text. |
+| `artillerie_basis` | Single prop, Napoleonic field cannon covered in dark grey camouflage netting, only the barrel protruding, on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_spd` | Single prop, light Napoleonic cannon half covered by a dark grey tarp, ready to move, on a weathered dark wooden carriage with thin wheels. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_hp` | Single prop, Napoleonic cannon in a dug-in emplacement with wicker gabion baskets, on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_atk` | Single prop, long-barreled Napoleonic cannon with dark grey camouflage netting pulled aside, on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
+| `artillerie_mix` | Single prop, Napoleonic field cannon with a folded dark grey tarp on the weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 
 ---
 
