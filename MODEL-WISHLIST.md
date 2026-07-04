@@ -112,7 +112,7 @@ only, no text.`
 
 | Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | Single character, average build anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infanterie_basis` ✓ | Single character, average build anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
 | `infanterie_spd` | Single character, thin lean anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako. Clean neutral studio background, single figure only, no text. |
 | `infanterie_hp` | Single character, heavyset round-bodied anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako. Clean neutral studio background, single figure only, no text. |
 | `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic mouse, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, carrying a musket with fixed bayonet. Clean neutral studio background, single figure only, no text. |
@@ -243,12 +243,16 @@ Volledige set: 80 bestanden, minus overgeslagen `mix` = 64.
 
 ## 5. Technische eisen per model
 
+**Maat, positie en richting worden automatisch genormaliseerd** (auto-fit in
+`PawnView`): het spel meet het model (bij skinned modellen via het skelet),
+schaalt het naar tegelmaat (infanterie ~0,9 · cavalerie ~1,1 · artillerie ~0,8
+hoog, voetafdruk binnen de tegel), zet de voeten op de grond, centreert het en
+draait het 180° — AI-generators leveren modellen die naar de kijker (+Z)
+kijken, de voorkant in het spel is −Z. Je hoeft dus níks op maat te maken.
+
 - **Formaat**: `.glb` (glTF-binair; mesh + materialen + evt. animaties in één bestand)
-- **Low-poly**: < 5.000 tris (er staan 44 stukken op het bord)
-- **Maat**: ~0,9 unit hoog (vakken zijn 1×1); cavalerie mag ~1,1; `hp`-varianten
-  breed maar binnen de tegel
-- **Origin**: voeten op y = 0, gecentreerd
-- **Kijkrichting**: neus naar **−Z** (de voorkant die `face_dir()` draait)
+- **Low-poly waar mogelijk**: er staan 44 stukken op het bord; hoge polycounts
+  werken, maar decimeren (bv. naar <10k tris) houdt het snel op zwakke hardware
 - **Teamkleur**: hoeft niet in het model — het spel zet automatisch een
   rood/blauw sokkeltje onder elk `.glb`-model
 - **Animaties (optioneel)**: `AnimationPlayer` met clips `idle` / `walk` /

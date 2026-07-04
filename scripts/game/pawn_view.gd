@@ -53,6 +53,7 @@ const ARCHETYPE_SCALE: Dictionary = {
 }
 
 var _piece: Node3D = null
+var _sokkel: CSGCylinder3D = null  # team-gekleurd voetstuk onder .glb-modellen
 var _tint_nodes: Array = []  # delen in groep "team_tint" → teamkleur/status
 var _unit_type: int = -1
 var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
@@ -342,7 +343,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	]
 	for path in candidates:
 		if ResourceLoader.exists(path):
-			_swap_piece(load(path))
+			_swap_piece(load(path), true)  # auto-fit: schaal/grond/180°
 			return
 	# Nog geen model-bestand: geometrisch stuk + archetype-silhouet.
 	if _piece == null:
@@ -356,13 +357,19 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 ## Vervang het huidige stuk door een nieuwe scene (geometrisch of .glb) en
 ## verzamel de team-kleurbare delen. GeometryInstance3D dekt zowel CSG-vormen
 ## (huidige stukken) als MeshInstance3D (geïmporteerde .glb-modellen).
-func _swap_piece(scene: PackedScene) -> void:
+## auto_fit: normaliseer een (AI-gegenereerd) model naar tegelmaat/richting.
+func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	if _piece != null:
 		_piece.queue_free()
 		_piece = null
+	if _sokkel != null:
+		_sokkel.queue_free()
+		_sokkel = null
 	_tint_nodes = []
 	_piece = scene.instantiate()
 	add_child(_piece)
+	if auto_fit:
+		_auto_fit_model(_piece)
 	# AnimationPlayer in het stuk aanhaken (bv. een .glb met idle/walk/attack/die).
 	# De geometrische stukken hebben er geen — dan blijft _anim gewoon null.
 	_anim = _find_anim_player(_piece)
@@ -374,15 +381,70 @@ func _swap_piece(scene: PackedScene) -> void:
 			_tint_nodes.append(node)
 	# Kale .glb-modellen hebben geen "team_tint"-groep (groepen zitten in .tscn's,
 	# niet in glTF) → automatisch een team-gekleurd sokkeltje eronder, zodat
-	# rood/blauw altijd te zien is (ook bij Muis-tegen-Muis).
+	# rood/blauw altijd te zien is (ook bij Muis-tegen-Muis). Als child van de
+	# PawnView zelf, zodat de auto-fit-schaal van het model hem niet verkleint.
 	if _tint_nodes.is_empty():
-		var sokkel := CSGCylinder3D.new()
-		sokkel.radius = 0.34
-		sokkel.height = 0.08
-		sokkel.position = Vector3(0.0, 0.04, 0.0)
-		_piece.add_child(sokkel)
-		_tint_nodes.append(sokkel)
+		_sokkel = CSGCylinder3D.new()
+		_sokkel.radius = 0.34
+		_sokkel.height = 0.08
+		_sokkel.position = Vector3(0.0, 0.04, 0.0)
+		add_child(_sokkel)
+		_tint_nodes.append(_sokkel)
 	# Placeholder-blokje + neusje verbergen; het stuk heeft zelf een voorkant (-Z).
 	_mesh.visible = false
 	_marker.visible = false
 	_update_material()
+
+
+## Normaliseer een geïmporteerd model naar bord-maat: meet de gezamenlijke AABB,
+## schaal uniform (hoogte ~0.9, voetafdruk binnen de tegel), zet de voeten op
+## y=0, centreer op de tegel en draai 180° — AI-generators leveren modellen die
+## naar de kijker (+Z) kijken, terwijl onze voorkant -Z is (face_dir).
+func _auto_fit_model(root: Node3D) -> void:
+	var aabb := _combined_aabb(root)
+	if aabb.size.y <= 0.0001:
+		return
+	var target_h: float = 1.1 if _unit_type == 1 else (0.8 if _unit_type == 2 else 0.9)
+	var footprint: float = maxf(aabb.size.x, aabb.size.z)
+	var s: float = target_h / aabb.size.y
+	if footprint > 0.0001:
+		s = minf(s, 0.95 / footprint)  # armen/loop mogen de buur-tegel niet in
+	root.scale = Vector3(s, s, s)
+	root.rotation.y = PI
+	# Na rotatie om Y (x,z → -x,-z): centreer het AABB-midden op de tegel en
+	# zet de onderkant op de grond.
+	var center := aabb.get_center()
+	root.position = Vector3(s * center.x, -s * aabb.position.y, s * center.z)
+
+
+## Gezamenlijke AABB van alle zichtbare delen, in de lokale ruimte van root.
+## Skinned modellen (AI-generators): mesh-AABB's staan in bind-ruimte en zeggen
+## niks over de gerenderde maat (skelet schaalt ze op) → meet dan via de
+## bot-posities van het skelet, die staan wél in echte ruimte.
+func _combined_aabb(root: Node3D) -> AABB:
+	var inv: Transform3D = root.global_transform.affine_inverse()
+	var skels: Array = root.find_children("*", "Skeleton3D", true, false)
+	if not skels.is_empty():
+		var result := AABB()
+		var first := true
+		for sk in skels:
+			var xf: Transform3D = inv * (sk as Skeleton3D).global_transform
+			for i in (sk as Skeleton3D).get_bone_count():
+				var p: Vector3 = (xf * (sk as Skeleton3D).get_bone_global_pose(i)).origin
+				if first:
+					result = AABB(p, Vector3.ZERO)
+					first = false
+				else:
+					result = result.expand(p)
+		# Botten liggen ín het lichaam (huid/hoed steekt uit) → kleine marge.
+		return result.grow(result.size.y * 0.05)
+	var result2 := AABB()
+	var first2 := true
+	for vi in root.find_children("*", "VisualInstance3D", true, false):
+		var ab: AABB = (inv * (vi as VisualInstance3D).global_transform) * (vi as VisualInstance3D).get_aabb()
+		if first2:
+			result2 = ab
+			first2 = false
+		else:
+			result2 = result2.merge(ab)
+	return result2

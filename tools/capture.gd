@@ -697,10 +697,19 @@ func _ready() -> void:
 		print("[LINK] fase=%s beurt=%d" % [Phase.to_string_phase(GameSession.state.phase), GameSession.state.current_player])
 		out = "res://_shot_link.png"
 	elif "play" in args:
+		# `-- play [factie]` — bv. `play muis` om karaktermodellen te bekijken.
+		var fnames := {"mens": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS}
+		for fname in fnames:
+			if fname in args:
+				game._human_doctrine = fnames[fname]
+				game._ai_doctrine = fnames[fname]
 		var hand: CardHand = game.get_node("UI/CardHand")
 		var steps := 0
+		# Muis heeft 4 kaarten per ronde (24 koppelingen) → ruimere stap-limiet.
 		while GameSession.state.phase != Phase.Type.ACTION \
-				and GameSession.state.phase != Phase.Type.GAME_OVER and steps < 300:
+				and GameSession.state.phase != Phase.Type.GAME_OVER and steps < 700:
 			steps += 1
 			var st: GameState = GameSession.state
 			if st.phase == Phase.Type.PRE_GAME:
@@ -710,10 +719,12 @@ func _ready() -> void:
 			elif Phase.is_reveal(st.phase):
 				game._continue_after_reveal()
 			elif Phase.is_define(st.phase) and st.cards_defined[1].size() == 0:
+				# Stats passend binnen het doctrine-budget (Muis 5, Leeuw 9, rest 7).
+				var bud: int = int(GameSession.state.doctrine_data_of(1).budget)
 				for c in hand.get_card_views():
-					c.data.hp = 3
-					c.data.stamina = 2
-					c.data.attack = 2
+					c.data.hp = 1
+					c.data.stamina = mini(bud - 2, 3)
+					c.data.attack = bud - 1 - mini(bud - 2, 3)
 					c._refresh()
 				hand._on_confirm_pressed()
 			elif Phase.is_linking(st.phase) and st.current_player == 1:
