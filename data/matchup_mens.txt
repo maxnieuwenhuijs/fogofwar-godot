@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Mens
-Generaties: 117 · adopties: 3 · minuten: 482.6
+Generaties: 168 · adopties: 71 · minuten: 481.6
 Winrate van Mens tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Mens     62.2%  (693 potjes)
-  vs Muis     99.6%  (684 potjes)
-  vs Leeuw    25.5%  (668 potjes)
-  vs Beer     34.8%  (754 potjes)
-  vs Wolf     58.1%  (689 potjes)
-  vs Vos      40.7%  (724 potjes)
+  vs Mens     58.1%  (1008 potjes)
+  vs Muis     98.6%  (1008 potjes)
+  vs Leeuw    14.4%  (1008 potjes)
+  vs Beer     25.4%  (1008 potjes)
+  vs Wolf     67.7%  (1008 potjes)
+  vs Vos      24.8%  (1008 potjes)

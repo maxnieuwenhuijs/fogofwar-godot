@@ -363,6 +363,12 @@ func _swap_piece(scene: PackedScene) -> void:
 	_tint_nodes = []
 	_piece = scene.instantiate()
 	add_child(_piece)
+	# AnimationPlayer in het stuk aanhaken (bv. een .glb met idle/walk/attack/die).
+	# De geometrische stukken hebben er geen — dan blijft _anim gewoon null.
+	_anim = _find_anim_player(_piece)
+	if _anim != null:
+		_anim.animation_finished.connect(_on_anim_finished)
+		play_idle()
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
