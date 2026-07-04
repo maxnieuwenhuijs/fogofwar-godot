@@ -163,6 +163,20 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   (motion sickness), **J** = alle combat-feel aan/uit, **M** = geluid dempen.
   Nog te doen (anticipation-fase): aim→shoot/charge-opbouw-animaties op de modellen
   (`play_attack`-hooks staan klaar).
+- **Karaktermodellen per factie + kaart-archetype (juli 2026)**: elke pion toont
+  na koppeling een karakter op basis van de dominante kaart-stat
+  (`Constants.card_archetype`: spd/hp/atk/mix; 1/5/1 = "dunne schichtige muis").
+  `PawnView.set_character(doctrine, type, card)` zoekt
+  `assets/models/<factie>/<type>_<archetype>.glb` met fallback-keten archetype →
+  `_basis` → geometrisch stuk met archetype-silhouet (ARCHETYPE_SCALE: dun/hoog,
+  breed, groot). Kale .glb's krijgen automatisch een team-gekleurd sokkeltje
+  (groepen zitten niet in glTF); tint-verzameling verbreed naar GeometryInstance3D
+  (CSG + MeshInstance3D). Verborgen Vos-koppelingen blijven neutraal voor de
+  tegenstander tot onthulling (archetype zou de kaart verraden); eigen pionnen
+  tonen hun karakter altijd. Opstellings-preview toont het factie-basismodel.
+  Modellen droppen = klaar (geen code): zie **MODEL-WISHLIST.md** (16 basis-modellen
+  = prio 1, 64-80 voor de volledige set; eisen: .glb, <5k tris, voeten y=0,
+  neus -Z, ~0.9 hoog, optioneel AnimationPlayer idle/walk/attack/die).
 - **Schiet-VFX (prototype)**: `_fire_projectile` — kanonskogel (groot, donker, met
   boogje) vs infanterie-tracer (klein, fel, strak), muzzle flash met OmniLight-puls
   (`_muzzle_flash`) en low-poly rookwolkjes bij loop én inslag (`_spawn_smoke`).

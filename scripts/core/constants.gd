@@ -134,6 +134,21 @@ func unit_type_name(unit_type: int) -> String:
 		UnitType.ARTILLERY: return "Artillerie"
 	return "?"
 
+## Karakter-archetype van een kaart: de dominante stat bepaalt de look van het
+## 3D-model dat na koppeling verschijnt (zie MODEL-WISHLIST.md).
+##   "spd" = dun/schichtig (Speed dominant, bv. Muis 1/5/1)
+##   "hp"  = fors/gepantserd (HP dominant)
+##   "atk" = bewapend/agressief (Aanval dominant)
+##   "mix" = allrounder (geen strikt dominante stat)
+func card_archetype(hp: int, stamina: int, attack: int) -> String:
+	if hp > stamina and hp > attack:
+		return "hp"
+	if stamina > hp and stamina > attack:
+		return "spd"
+	if attack > hp and attack > stamina:
+		return "atk"
+	return "mix"
+
 func unit_type_letter(unit_type: int) -> String:
 	match unit_type:
 		UnitType.INFANTRY: return "I"

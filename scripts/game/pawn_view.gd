@@ -34,8 +34,27 @@ const PIECE_SCENES: Dictionary = {
 	1: preload("res://scenes/game/pieces/cavalry_piece.tscn"),
 	2: preload("res://scenes/game/pieces/artillery_piece.tscn"),
 }
+
+## Karaktermodellen per factie/type/archetype (zie MODEL-WISHLIST.md):
+##   assets/models/<factie>/<type>_<archetype>.glb   bv. muis/infanterie_spd.glb
+##   assets/models/<factie>/<type>_basis.glb         neutraal / ongekoppeld
+## Fallback-keten: exact archetype → basis van dat type → geometrisch stuk
+## (PIECE_SCENES) met een archetype-silhouet als placeholder.
+const MODELS_DIR := "res://assets/models/"
+## Placeholder-silhouet zolang het .glb ontbreekt: dun/hoog = snel, breed = taai,
+## groter = aanvallend. Verdwijnt vanzelf zodra het echte model er is.
+const ARCHETYPE_SCALE: Dictionary = {
+	"spd": Vector3(0.78, 1.12, 0.78),
+	"hp": Vector3(1.2, 0.92, 1.2),
+	"atk": Vector3(1.08, 1.08, 1.08),
+	"mix": Vector3.ONE,
+	"basis": Vector3.ONE,
+}
+
 var _piece: Node3D = null
-var _tint_nodes: Array = []  # CSG-delen in groep "team_tint" → teamkleur/status
+var _tint_nodes: Array = []  # delen in groep "team_tint" → teamkleur/status
+var _unit_type: int = -1
+var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
@@ -288,21 +307,74 @@ func set_stats_label(_active: bool, _hp: int, _stamina: int) -> void:
 ## (soldaat/paard/kanon), dus geen letter meer erboven.
 func set_unit_type(unit_type: int) -> void:
 	_label.text = ""
+	_unit_type = unit_type
 	if _model != null:
 		return  # echt karaktermodel (model_scene): niets extra's nodig
-	if _piece != null:
-		_piece.queue_free()
-		_piece = null
-		_tint_nodes = []
 	var scene: PackedScene = PIECE_SCENES.get(unit_type)
 	if scene == null:
 		return
+	_swap_piece(scene)
+
+
+## Karaktermodel op basis van factie + type + gekoppelde kaart (null = neutraal).
+## De dominante stat van de kaart bepaalt het archetype: een Muis-kaart 1/5/1
+## wordt bv. `muis/infanterie_spd.glb` (dunne schichtige muis). Ontbreekt het
+## bestand, dan valt dit terug op `_basis.glb` en anders op het geometrische
+## stuk met een subtiel archetype-silhouet. Aanroepen mag elke refresh
+## (idempotent via _char_key).
+func set_character(doctrine: int, unit_type: int, card) -> void:
+	if _model != null:
+		return
+	var arch: String = "basis"
+	if card != null:
+		arch = Constants.card_archetype(card.hp, card.stamina, card.attack)
+	var key := "%d:%d:%s" % [doctrine, unit_type, arch]
+	if key == _char_key:
+		return
+	_char_key = key
+	_unit_type = unit_type
+	var fac: String = Constants.doctrine_name(doctrine).to_lower()
+	var tname: String = Constants.unit_type_name(unit_type).to_lower()
+	var candidates: Array = [
+		"%s%s/%s_%s.glb" % [MODELS_DIR, fac, tname, arch],
+		"%s%s/%s_basis.glb" % [MODELS_DIR, fac, tname],
+	]
+	for path in candidates:
+		if ResourceLoader.exists(path):
+			_swap_piece(load(path))
+			return
+	# Nog geen model-bestand: geometrisch stuk + archetype-silhouet.
+	if _piece == null:
+		var scene: PackedScene = PIECE_SCENES.get(unit_type)
+		if scene != null:
+			_swap_piece(scene)
+	if _piece != null:
+		_piece.scale = ARCHETYPE_SCALE.get(arch, Vector3.ONE)
+
+
+## Vervang het huidige stuk door een nieuwe scene (geometrisch of .glb) en
+## verzamel de team-kleurbare delen. GeometryInstance3D dekt zowel CSG-vormen
+## (huidige stukken) als MeshInstance3D (geïmporteerde .glb-modellen).
+func _swap_piece(scene: PackedScene) -> void:
+	if _piece != null:
+		_piece.queue_free()
+		_piece = null
+	_tint_nodes = []
 	_piece = scene.instantiate()
 	add_child(_piece)
-	# Team-kleurbare delen verzamelen (groep "team_tint" in de stuk-scene).
-	for node in _piece.find_children("*", "CSGShape3D", true, false):
+	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
+	# Kale .glb-modellen hebben geen "team_tint"-groep (groepen zitten in .tscn's,
+	# niet in glTF) → automatisch een team-gekleurd sokkeltje eronder, zodat
+	# rood/blauw altijd te zien is (ook bij Muis-tegen-Muis).
+	if _tint_nodes.is_empty():
+		var sokkel := CSGCylinder3D.new()
+		sokkel.radius = 0.34
+		sokkel.height = 0.08
+		sokkel.position = Vector3(0.0, 0.04, 0.0)
+		_piece.add_child(sokkel)
+		_tint_nodes.append(sokkel)
 	# Placeholder-blokje + neusje verbergen; het stuk heeft zelf een voorkant (-Z).
 	_mesh.visible = false
 	_marker.visible = false

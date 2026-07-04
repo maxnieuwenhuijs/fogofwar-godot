@@ -37,3 +37,19 @@ func test_beer_speed_cap() -> void:
 	assert_false(Card.is_valid_stats(2, 4, 1, 7, 3))
 	assert_true(Card.is_valid_stats(3, 3, 1, 7, 3))
 	assert_true(Card.is_valid_stats(5, 1, 1, 7, 3))
+
+func test_card_archetype_dominante_stat() -> void:
+	# Dominante stat bepaalt het karaktermodel-archetype (MODEL-WISHLIST.md).
+	assert_eq(Constants.card_archetype(1, 5, 1), "spd")  # dunne schichtige muis
+	assert_eq(Constants.card_archetype(5, 1, 1), "hp")
+	assert_eq(Constants.card_archetype(1, 1, 5), "atk")
+	assert_eq(Constants.card_archetype(3, 2, 2), "hp")
+	assert_eq(Constants.card_archetype(2, 3, 2), "spd")
+	assert_eq(Constants.card_archetype(2, 2, 3), "atk")
+
+func test_card_archetype_gelijkspel_is_mix() -> void:
+	# Geen strikt dominante stat → allrounder.
+	assert_eq(Constants.card_archetype(3, 3, 1), "mix")
+	assert_eq(Constants.card_archetype(3, 1, 3), "mix")
+	assert_eq(Constants.card_archetype(1, 3, 3), "mix")
+	assert_eq(Constants.card_archetype(3, 3, 3), "mix")

@@ -464,6 +464,8 @@ func _spawn_placement_preview(unit_type: int, coord: Vector2i) -> void:
 	_pawns_root.add_child(pv)
 	pv.face_dir(Vector2i(0, -1) if _human_id == Constants.PLAYER_1 else Vector2i(0, 1))
 	pv.set_unit_type(unit_type)
+	# Neutraal factie-model (basis) als dat bestaat; kaarten zijn er nog niet.
+	pv.set_character(GameSession.state.doctrine_of(_human_id), unit_type, null)
 	_placement_previews[coord] = pv
 
 
@@ -653,6 +655,13 @@ func _refresh_all() -> void:
 		pv.visible = true
 		if not _tweening_pawns.has(pid):
 			pv.position = tile_position(pawn.position.x, pawn.position.y) + Vector3(0.0, PAWN_Y, 0.0)
+		# Karaktermodel op basis van de gekoppelde kaart. Verborgen Vos-koppelingen
+		# blijven neutraal voor de tegenstander (het archetype zou de kaart verraden);
+		# je eigen pionnen tonen hun karakter altijd.
+		var card: Card = null
+		if pawn.linked_card_id >= 0 and (pawn.card_revealed or pawn.owner_id == _human_id):
+			card = state.all_cards.get(pawn.linked_card_id)
+		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		var human_action := state.phase == Phase.Type.ACTION and state.current_player == _human_id \
 				and pawn.owner_id == _human_id and pawn.is_active
