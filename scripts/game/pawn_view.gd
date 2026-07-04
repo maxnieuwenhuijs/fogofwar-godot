@@ -41,12 +41,13 @@ const PIECE_SCENES: Dictionary = {
 ## Fallback-keten: exact archetype → basis van dat type → geometrisch stuk
 ## (PIECE_SCENES) met een archetype-silhouet als placeholder.
 const MODELS_DIR := "res://assets/models/"
-## Placeholder-silhouet zolang het .glb ontbreekt: dun/hoog = snel, breed = taai,
-## groter = aanvallend. Verdwijnt vanzelf zodra het echte model er is.
+## Placeholder-silhouet zolang het .glb ontbreekt, in de visuele taal van
+## MODEL-WISHLIST.md: dun/gestrekt = snel, laag/rond = taai, breed/gespierd =
+## aanvallend. Verdwijnt vanzelf zodra het echte model er is.
 const ARCHETYPE_SCALE: Dictionary = {
-	"spd": Vector3(0.78, 1.12, 0.78),
-	"hp": Vector3(1.2, 0.92, 1.2),
-	"atk": Vector3(1.08, 1.08, 1.08),
+	"spd": Vector3(0.78, 1.14, 0.78),   # dun en hoog: schichtig, licht
+	"hp": Vector3(1.22, 0.88, 1.22),    # laag en rond: massa, pantser
+	"atk": Vector3(1.14, 1.04, 1.14),   # breed en iets hoger: gespierd, dreigend
 	"mix": Vector3.ONE,
 	"basis": Vector3.ONE,
 }
