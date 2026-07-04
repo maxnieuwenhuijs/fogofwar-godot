@@ -251,8 +251,11 @@ draait het 180° — AI-generators leveren modellen die naar de kijker (+Z)
 kijken, de voorkant in het spel is −Z. Je hoeft dus níks op maat te maken.
 
 - **Formaat**: `.glb` (glTF-binair; mesh + materialen + evt. animaties in één bestand)
-- **Low-poly waar mogelijk**: er staan 44 stukken op het bord; hoge polycounts
-  werken, maar decimeren (bv. naar <10k tris) houdt het snel op zwakke hardware
+- **Polycount (mobiel is het doel)**: **3.000-8.000 tris per stuk** — zet de
+  target-polycount/decimate-optie van de generator hierop bij het exporteren.
+  Textures **1024 max** (512 mag), **1 materiaal per model**, skelet **<50 botten**.
+  Rekensom: mid-range telefoon ≈ 300-500k tris/frame; 44 stukken × 8k ≈ 350k = past.
+  Zelfde look (detail zit in de texture), ~10× kleinere bestanden.
 - **Teamkleur**: hoeft niet in het model — het spel zet automatisch een
   rood/blauw sokkeltje onder elk `.glb`-model
 - **Animaties (optioneel)**: `AnimationPlayer` met clips `idle` / `walk` /
