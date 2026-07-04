@@ -114,10 +114,29 @@ const CATEGORY_DB := {
 	"deselect": -7.0,
 }
 
+## Muziek/ambience: lange loops in res://music/ (QOA-gecomprimeerde WAV).
+## Geen naadloze loop nodig: bij `finished` start een willekeurige volgende
+## variant → natuurlijke afwisseling (bv. veld → veld met regen).
+const MUSIC_DIR := "res://music/"
+const MUSIC_BANK := {
+	"music_battle": ["music_battle.wav", "music_battle2.wav"],
+	"ambient_field": ["ambient_field.wav", "ambient_field2.wav", "ambient_field_rain.wav"],
+}
+const MUSIC_DB := {
+	"music_battle": -16.0,
+	"ambient_field": -20.0,
+}
+
 var _streams: Dictionary = {}       # categorie -> Array[AudioStream]
+var _music_streams: Dictionary = {} # lazy-cache: categorie -> Array[AudioStream]
 var _pool: Array[AudioStreamPlayer] = []
 var _next: int = 0
 var enabled: bool = true
+
+var _music_player: AudioStreamPlayer    # muzieklaag (in-game bed)
+var _ambient_player: AudioStreamPlayer  # ambience-laag (wind/veld)
+var _music_cat: String = ""
+var _ambient_cat: String = ""
 
 
 func _ready() -> void:
@@ -135,6 +154,14 @@ func _ready() -> void:
 		player.bus = "Master"
 		add_child(player)
 		_pool.append(player)
+	_music_player = AudioStreamPlayer.new()
+	_music_player.bus = "Master"
+	_music_player.finished.connect(func() -> void: _loop_layer(_music_player, _music_cat))
+	add_child(_music_player)
+	_ambient_player = AudioStreamPlayer.new()
+	_ambient_player.bus = "Master"
+	_ambient_player.finished.connect(func() -> void: _loop_layer(_ambient_player, _ambient_cat))
+	add_child(_ambient_player)
 
 
 ## Speel een geluid uit een categorie.
@@ -186,3 +213,66 @@ func play_footsteps(step_count: int, duration: float, category: String = "step")
 
 func set_enabled(on: bool) -> void:
 	enabled = on
+	# Mute pauzeert ook de muziek-/ambience-lagen (positie blijft staan).
+	if _music_player != null:
+		_music_player.stream_paused = not on
+	if _ambient_player != null:
+		_ambient_player.stream_paused = not on
+
+
+# --- Muziek & ambience (lange loops) -----------------------------------------
+
+## Start de muzieklaag met een categorie uit MUSIC_BANK (lazy geladen).
+## Herstart niet als die categorie al speelt.
+func play_music(category: String) -> void:
+	if _music_cat == category and _music_player.playing:
+		return
+	_music_cat = category
+	_start_layer(_music_player, category)
+
+
+## Start de ambience-laag (zelfde gedrag als play_music, eigen speler).
+func play_ambient(category: String) -> void:
+	if _ambient_cat == category and _ambient_player.playing:
+		return
+	_ambient_cat = category
+	_start_layer(_ambient_player, category)
+
+
+func stop_music() -> void:
+	_music_cat = ""
+	_music_player.stop()
+
+
+func stop_ambient() -> void:
+	_ambient_cat = ""
+	_ambient_player.stop()
+
+
+func _start_layer(player: AudioStreamPlayer, category: String) -> void:
+	var variants: Array = _music_variants(category)
+	if variants.is_empty():
+		return
+	player.stream = variants[randi() % variants.size()]
+	player.volume_db = master_db + float(MUSIC_DB.get(category, -16.0))
+	player.stream_paused = not enabled
+	player.play()
+
+
+## Track afgelopen → willekeurige volgende variant van dezelfde categorie.
+func _loop_layer(player: AudioStreamPlayer, category: String) -> void:
+	if category != "":
+		_start_layer(player, category)
+
+
+func _music_variants(category: String) -> Array:
+	if not _music_streams.has(category):
+		var loaded: Array = []
+		for filename in MUSIC_BANK.get(category, []):
+			var stream := load(MUSIC_DIR + filename)
+			if stream != null:
+				loaded.append(stream)
+			else:
+				push_warning("Audio: kon %s niet laden" % filename)
+		_music_streams[category] = loaded
+	return _music_streams[category]

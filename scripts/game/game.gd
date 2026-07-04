@@ -52,6 +52,7 @@ var _tweening_pawns: Dictionary = {} # pawn_id -> true tijdens beweeg-animatie
 var _timer_active: bool = false
 var _timer_left: float = 0.0
 var _last_tick_second: int = -1      # laatst afgespeelde aftel-tik
+var _tick_accum: float = 0.0         # tempo-teller voor de snelle eind-tikken
 # Combat feel (Valheim-stijl "juice"): stagger + screen shake + hitstop + ragdoll.
 var _combat_feel: bool = true         # alles behalve shake
 var _screen_shake: bool = true        # apart uitzetbaar (motion sickness)
@@ -74,6 +75,7 @@ func _ready() -> void:
 	_pawns_root.reparent(_board, false)
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
+	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
 	_index_tiles()
 	_connect_session_signals()
 	_card_hand.define_confirmed.connect(_on_define_confirmed)
@@ -106,11 +108,19 @@ func _process(delta: float) -> void:
 			var st: GameState = GameSession.state
 			_top_label.text = "Cyclus %d · Ronde %d · %s · nog %ds" % [
 				st.cycle, st.round_number, _phase_label(st.phase), int(ceil(_timer_left))]
-			# Aftel-tik in de laatste 5 sec (urgenter in de laatste 3).
+			# Aftel-tik in de laatste 5 sec; de laatste 3 sec tikt dezelfde klok
+			# op dubbel tempo en iets hoger — versnelling i.p.v. een apart geluid.
 			var sec_left: int = int(ceil(_timer_left))
-			if sec_left != _last_tick_second and sec_left >= 1 and sec_left <= 5:
-				_last_tick_second = sec_left
-				Audio.play("timer_warning" if sec_left <= 3 else "timer_tick")
+			if sec_left > 3:
+				_tick_accum = 0.5  # zodat de snelle reeks direct start bij 3 sec
+				if sec_left <= 5 and sec_left != _last_tick_second:
+					_last_tick_second = sec_left
+					Audio.play("timer_tick")
+			else:
+				_tick_accum += delta
+				if _tick_accum >= 0.5:
+					_tick_accum -= 0.5
+					Audio.play("timer_tick", 0.0, -1, 1.12)
 
 
 func _start_phase_timer(seconds: float) -> void:
@@ -288,6 +298,7 @@ func _start_match(difficulty: int) -> void:
 	_in_hitstop = false
 	_shake_amt = 0.0
 	_dying_views.clear()
+	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
 	ai_difficulty = difficulty
 	_setup_ai()
 	GameSession.start_new_game(_human_doctrine, _ai_doctrine)
@@ -1295,6 +1306,7 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> vo
 func _on_game_over(winner_id: int) -> void:
 	_clear_highlights()
 	_card_hand.visible = false
+	Audio.stop_music()  # sting krijgt de ruimte; ambience loopt door
 	Audio.play("win_fanfare" if winner_id == _human_id else "lose_sting", 0.3)
 	_update_hud("%s wint!" % _player_name(winner_id))
 	_overlay.show_choice(

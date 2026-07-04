@@ -208,12 +208,19 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   definitie-ronde (`_on_phase_changed`), `cycle_start` bij een nieuwe cyclus (vanaf 2,
   `_on_cycle_started`). **Opstellen**: `place_pawn`. **Beurt**: `your_turn` (uit).
   **Koppelen**: `card_deal` (uitdelen), `card_select` (tik), `link_snap` (vastklikken).
-  **Charge**: `charge_yell`. **Timer**: `timer_tick` (laatste 5s) / `timer_warning`
-  (laatste 3s) in `_process`. **Uitkomst**: `haven_score` (pion in haven, nog niet
-  gewonnen), `win_fanfare`/`lose_sting` bij `_on_game_over`. `pawn_block` staat klaar
-  in de bank maar heeft nog geen event (geblokkeerde schoten worden niet aangeboden).
-  Mute-hook: `Audio.set_enabled(false)`. De verlanglijst met
-  ElevenLabs-prompts staat in `SOUND-WISHLIST.md`. Draai `--import` na een verse checkout.
+  **Charge**: `charge_yell`. **Timer**: `timer_tick` per seconde in de laatste 5 sec;
+  de laatste 3 sec dezelfde tik op dubbel tempo + pitch 1.12 (`_tick_accum`) —
+  `timer_warning` vervallen (bestand blijft). **Uitkomst**: `haven_score` (pion in
+  haven, nog niet gewonnen), `win_fanfare`/`lose_sting` bij `_on_game_over`.
+  `pawn_block` staat klaar in de bank maar heeft nog geen event.
+  **Muziek & ambience** (`music/`, QOA-import 34→6,7 MB per track): aparte loop-lagen
+  in de Audio-autoload (`play_music`/`play_ambient`/`stop_music`, `MUSIC_BANK`, lazy
+  load; track klaar → willekeurige volgende variant). `ambient_field` (3 var, incl.
+  regen, -20 dB) start bij `_ready` en loopt onder menu én spel; `music_battle`
+  (2 var, -16 dB) start bij `_start_match` en stopt bij game-over zodat de sting
+  ruimte krijgt. Mute (M) pauzeert ook de muzieklagen (`set_enabled` → `stream_paused`).
+  De verlanglijst met ElevenLabs-prompts staat in `SOUND-WISHLIST.md`.
+  Draai `--import` na een verse checkout.
 - **Kijkrichting (facing)**: elke pion heeft een facing (Y-rotatie) + zichtbaar wit "neusje"
   vooraan (`PawnView._build_front_marker` + `face_dir(dir)`, front = -Z). Start: rood kijkt naar
   z=0, blauw naar z=10 (naar de vijand). Draait naar de looprichting bij bewegen en naar het doel

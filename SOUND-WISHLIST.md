@@ -96,8 +96,8 @@ zelf zitten (dan hoeft de engine niks te mixen).
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `timer_tick` | `timer_tick.wav` | 1 | Laatste 5-4 sec, per seconde | ✓ |
-| `timer_warning` | `timer_warning.wav` | 1 | Laatste 3 sec (urgenter) | ✓ |
+| `timer_tick` | `timer_tick.wav` | 1 | Laatste 5-4 sec per seconde; laatste 3 sec dubbel tempo + hoger | ✓ |
+| `timer_warning` | `timer_warning.wav` | 1 | Vervangen door versnelde `timer_tick` | ✓ (uit) |
 | `timer_timeout` | `timer_timeout.wav` | 1 | Tijd om, spel neemt over | ➕ |
 
 ## 9. Uitkomst & mijlpalen
@@ -113,9 +113,13 @@ zelf zitten (dan hoeft de engine niks te mixen).
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `music_menu` | `music_menu.ogg` | 1 loop | Hoofdmenu (rustig, **OGG** i.p.v. WAV: lang bestand) | ➕ |
-| `music_battle` | `music_battle.ogg` | 1 loop | In-game bed (zacht, marcherend) | ➕ |
-| `ambient_field` | `ambient_field.ogg` | 1 loop | Wind/veld onder het spel (heel zacht) | ➕ |
+| `music_menu` | `music_menu.wav` | 1 loop | Hoofdmenu (rustig) | ➕ |
+| `music_battle` | `music/music_battle*.wav` | 2 | In-game bed vanaf matchstart; track klaar → willekeurige volgende | ✓ |
+| `ambient_field` | `music/ambient_field*.wav` | 3 | Veld-ambience onder menu én spel (incl. regen-variant) | ✓ |
+
+Lange loops staan in `music/` (niet `sounds/`) en worden met **QOA-compressie**
+geïmporteerd (34 MB WAV → ~6,7 MB in het spel). Geen naadloze loop nodig: als een
+track afloopt start automatisch een willekeurige volgende variant.
 
 ---
 
@@ -186,15 +190,15 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `inf_die` ⭐ | 4 | short soldier death cry, body and wooden musket clattering to the ground, black powder era |
 | `cannon_die` ⭐ | 2 | cannon carriage destroyed, splintering wood and cracking cast iron, short |
 | `timer_tick` ⭐ | 1 | single soft antique pendulum clock tick, brass and wood, subtle |
-| `timer_warning` ⭐ | 1 | faster tense antique clock tick, brass mechanism, single, urgent |
+| `timer_warning` ⭐ (uit) | 1 | faster tense antique clock tick, brass mechanism, single, urgent |
 | `timer_timeout` | 1 | dull brass bell toll, time is up, single somber strike |
 | `haven_score` ⭐ | 2 | bright short brass hand bell flourish, objective reached, triumphant |
 | `win_fanfare` ⭐ | 1 | short victorious period military brass fanfare with snare drum, triumphant, ~2 seconds |
 | `lose_sting` ⭐ | 1 | short somber descending brass and low drum, defeat, minor key, 18th century |
 | `wolf_step` | 2 | quick stealthy leather boot step and canvas whoosh, light sneak |
 | `music_menu` | 1 loop | calm looping menu music, soft period strings and light military snare drum, 18th century, seamless loop |
-| `music_battle` | 1 loop | subtle looping battle bed, marching snare drum, low period strings and distant brass, tense but soft, loop |
-| `ambient_field` | 1 loop | quiet open battlefield wind, distant black powder rumble and field ambience, seamless loop |
+| `music_battle` ⭐ | 2 | subtle looping battle bed, marching snare drum, low period strings and distant brass, tense but soft, loop |
+| `ambient_field` ⭐ | 3 | quiet open battlefield wind, distant black powder rumble and field ambience, seamless loop |
 
 ---
 
