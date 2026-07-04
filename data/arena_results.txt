@@ -1,0 +1,18 @@
+Fog of War — arena winrate-matrix (medium, 1 potjes/richting)
+Rij wint-%% tegen kolom. Spiegels (diagonaal) horen rond 50%%.
+
+         Mens    Muis    Leeuw   Beer    Wolf    Vos     
+Mens     0%      100%    0%      0%      0%      0%      
+Muis     0%      100%    0%      0%      100%    0%      
+Leeuw    100%    100%    0%      100%    100%    0%      
+Beer     100%    100%    100%    0%      100%    0%      
+Wolf     100%    100%    0%      0%      100%    0%      
+Vos      100%    100%    100%    100%    100%    0%      
+
+Ranglijst (algehele winrate):
+  Vos      91.7%  (12 potjes)
+  Leeuw    66.7%  (12 potjes)
+  Beer     66.7%  (12 potjes)
+  Wolf     33.3%  (12 potjes)
+  Mens     25.0%  (12 potjes)
+  Muis     16.7%  (12 potjes)

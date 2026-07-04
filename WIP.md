@@ -297,6 +297,16 @@ hill-climbing self-play en toont het live:
   "wie wint tegen wie" + ranglijst naar `data/arena_results.txt` (MatchRunner.max_steps=600
   voor snelle metingen). De headless trainer schrijft per factie de winrate tegen elke
   tegenstander naar `data/matchup_<factie>.txt`. Zo kun je na een run meten en bijstellen.
+- **Nachtrun 8u × 6 processen (juli 2026) — balansbeeld uit `data/matchup_*.txt`**:
+  Leeuw dominant (90-99% tegen alles, 61% vs Beer), Vos sterk all-round (127 adopties
+  in 151 gens), Beer sterk, Wolf middenmoot (~25% tegen de top-3), Mens zwak,
+  **Muis kapot: 3-14% tegen alles, 1 adoptie in 80 gens** — ondanks de +1 Speed-perk.
+  Kanttekening bij de getrainde gewichten: Leeuw/Beer/Vos hebben na 90+ adopties
+  gedegenereerde grootte-ordes (bv. Leeuw `hp`=112k vs `haven`=63; Beer `haven`=1.2M,
+  `cav_value`=846k) — multiplicatieve mutatie + hoge adoptiegraad laat de schaal
+  exploderen. De eval is relatief dus het "werkt", maar de onderlinge ratio's zijn
+  extreem gedrift. Volgende trainer-iteratie: her-normaliseren na adoptie (bv. delen
+  door geometrisch gemiddelde) + strakkere verify-gate (ook tegen baseline).
 - **Facties-curriculum + per-factie-profielen (juli 2026)**: de kampioen is een PROFIEL —
   per doctrine een eigen set van 31 gewichten: evaluatie (15) + opstelling (6:
   `art/cav/inf_front/center`, via `choose_placement`) + type-bewust koppelen (10:
