@@ -58,6 +58,31 @@ var _tint_nodes: Array = []  # delen in groep "team_tint" → teamkleur/status
 var _unit_type: int = -1
 var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
 var _variant_cache: Dictionary = {}  # basisclip -> [volledige variant-namen]
+var _tune_key: String = ""   # "muis/infanterie_basis" — sleutel in model_tuning.json
+
+## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
+## { "muis/infanterie_basis": {"scale": 1.15, "y": 0.02}, ... }
+## Wordt bovenop de auto-fit toegepast. Sleutel volgt het BESTAND dat geladen is
+## (dus een archetype dat op _basis terugvalt, gebruikt de _basis-tuning).
+const TUNING_PATH := "res://assets/models/model_tuning.json"
+static var _tuning: Dictionary = {}
+static var _tuning_loaded: bool = false
+
+
+static func model_tuning() -> Dictionary:
+	if not _tuning_loaded:
+		_tuning_loaded = true
+		if FileAccess.file_exists(TUNING_PATH):
+			var f := FileAccess.open(TUNING_PATH, FileAccess.READ)
+			if f != null:
+				var parsed = JSON.parse_string(f.get_as_text())
+				if parsed is Dictionary:
+					_tuning = parsed
+	return _tuning
+
+
+static func set_model_tuning(key: String, data: Dictionary) -> void:
+	model_tuning()[key] = data
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
@@ -382,6 +407,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	]
 	for path in candidates:
 		if ResourceLoader.exists(path):
+			_tune_key = "%s/%s" % [fac, String(path).get_file().get_basename()]
 			_swap_piece(load(path), true)  # auto-fit: schaal/grond/180°
 			return
 	# Nog geen model-bestand: geometrisch stuk + archetype-silhouet.
@@ -456,6 +482,13 @@ func _auto_fit_model(root: Node3D) -> void:
 	# zet de onderkant op de grond.
 	var center := aabb.get_center()
 	root.position = Vector3(s * center.x, -s * aabb.position.y, s * center.z)
+	# Handmatige correctie uit de Model-tuner bovenop de auto-fit.
+	var t: Dictionary = model_tuning().get(_tune_key, {})
+	if not t.is_empty():
+		var extra: float = float(t.get("scale", 1.0))
+		root.scale *= extra
+		root.position *= extra  # grond/centrering schalen mee
+		root.position.y += float(t.get("y", 0.0))
 
 
 ## Gezamenlijke AABB van alle zichtbare delen, in de lokale ruimte van root.

@@ -1,0 +1,242 @@
+extends Node3D
+
+## Model-tuner: meet per factie/type/archetype in hoe groot een karaktermodel
+## op het bord staat, met sliders voor schaal en hoogte. "Opslaan" schrijft
+## naar assets/models/model_tuning.json; het spel past die correcties daarna
+## automatisch toe (PawnView._auto_fit_model). Te openen via het hoofdmenu.
+
+const PAWN_SCENE := preload("res://scenes/game/pawn_view.tscn")
+const SAVE_PATH := "res://assets/models/model_tuning.json"
+
+const ARCHS: Array = ["basis", "spd", "hp", "atk", "mix"]
+## Kaart-stats die het gewenste archetype forceren (dominante stat).
+const ARCH_CARDS: Dictionary = {
+	"spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1],
+}
+
+var _pawn: PawnView = null
+var _ref: PawnView = null
+var _fac_btn: OptionButton
+var _type_btn: OptionButton
+var _arch_btn: OptionButton
+var _scale_slider: HSlider
+var _y_slider: HSlider
+var _info: Label
+
+var _updating := false  # geen slider-events tijdens het her-instellen
+
+
+func _ready() -> void:
+	_build_world()
+	_build_ui()
+	_reload_pawns()
+	if "shot" in OS.get_cmdline_user_args():
+		await get_tree().create_timer(1.4).timeout
+		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
+		get_tree().quit()
+
+
+# --- Wereld: tegels, licht, camera --------------------------------------------
+
+func _build_world() -> void:
+	for x in range(-2, 3):
+		for z in range(-1, 2):
+			var tile := MeshInstance3D.new()
+			var mesh := BoxMesh.new()
+			mesh.size = Vector3(1.0, 0.1, 1.0)
+			tile.mesh = mesh
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(0.92, 0.92, 0.9) if (x + z) % 2 == 0 else Color(0.18, 0.18, 0.2)
+			tile.material_override = mat
+			tile.position = Vector3(float(x), -0.05, float(z))
+			add_child(tile)
+	var light := DirectionalLight3D.new()
+	light.rotation_degrees = Vector3(-55.0, -30.0, 0.0)
+	light.light_energy = 1.2
+	add_child(light)
+	var env := WorldEnvironment.new()
+	var e := Environment.new()
+	e.background_mode = Environment.BG_COLOR
+	e.background_color = Color(0.25, 0.26, 0.28)
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.8, 0.8, 0.85)
+	e.ambient_light_energy = 0.7
+	env.environment = e
+	add_child(env)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0.0, 1.6, 2.6)
+	add_child(cam)
+	cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
+	cam.current = true
+
+
+# --- UI -------------------------------------------------------------------------
+
+func _build_ui() -> void:
+	var ui := CanvasLayer.new()
+	add_child(ui)
+	var panel := PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	panel.offset_top = -230.0
+	ui.add_child(panel)
+	var box := VBoxContainer.new()
+	panel.add_child(box)
+
+	var row1 := HBoxContainer.new()
+	box.add_child(row1)
+	_fac_btn = OptionButton.new()
+	for d in Constants.DOCTRINE_DATA.keys():
+		_fac_btn.add_item(Constants.doctrine_name(d), int(d))
+	_fac_btn.select(1)  # Muis heeft het eerste model
+	row1.add_child(_fac_btn)
+	_type_btn = OptionButton.new()
+	for tp in [0, 1, 2]:
+		_type_btn.add_item(Constants.unit_type_name(tp), tp)
+	row1.add_child(_type_btn)
+	_arch_btn = OptionButton.new()
+	for a in ARCHS:
+		_arch_btn.add_item(a)
+	row1.add_child(_arch_btn)
+	for b in [_fac_btn, _type_btn, _arch_btn]:
+		(b as OptionButton).item_selected.connect(func(_i: int) -> void: _reload_pawns())
+
+	var row2 := HBoxContainer.new()
+	box.add_child(row2)
+	row2.add_child(_make_label("Schaal"))
+	_scale_slider = HSlider.new()
+	_scale_slider.min_value = 0.4
+	_scale_slider.max_value = 2.5
+	_scale_slider.step = 0.01
+	_scale_slider.value = 1.0
+	_scale_slider.custom_minimum_size = Vector2(340, 0)
+	_scale_slider.value_changed.connect(_on_tuning_changed)
+	row2.add_child(_scale_slider)
+	row2.add_child(_make_label("  Hoogte"))
+	_y_slider = HSlider.new()
+	_y_slider.min_value = -0.4
+	_y_slider.max_value = 0.4
+	_y_slider.step = 0.005
+	_y_slider.value = 0.0
+	_y_slider.custom_minimum_size = Vector2(240, 0)
+	_y_slider.value_changed.connect(_on_tuning_changed)
+	row2.add_child(_y_slider)
+
+	var row3 := HBoxContainer.new()
+	box.add_child(row3)
+	for clip in ["idle", "walk", "attack", "die"]:
+		var btn := Button.new()
+		btn.text = clip
+		btn.pressed.connect(_on_clip.bind(clip))
+		row3.add_child(btn)
+	var save_btn := Button.new()
+	save_btn.text = "  OPSLAAN  "
+	save_btn.pressed.connect(_save)
+	row3.add_child(save_btn)
+	var back_btn := Button.new()
+	back_btn.text = "Terug naar het spel"
+	back_btn.pressed.connect(func() -> void:
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
+	row3.add_child(back_btn)
+
+	_info = Label.new()
+	box.add_child(_info)
+
+
+func _make_label(text: String) -> Label:
+	var l := Label.new()
+	l.text = text
+	return l
+
+
+# --- Model laden / bijstellen ---------------------------------------------------
+
+func _current_card() -> Card:
+	var arch: String = ARCHS[_arch_btn.selected]
+	if not ARCH_CARDS.has(arch):
+		return null
+	var s: Array = ARCH_CARDS[arch]
+	return Card.new(0, 0, 0, int(s[0]), int(s[1]), int(s[2]))
+
+
+func _reload_pawns() -> void:
+	if _pawn != null:
+		_pawn.queue_free()
+	if _ref != null:
+		_ref.queue_free()
+	var doctrine: int = _fac_btn.get_selected_id()
+	var unit_type: int = _type_btn.get_selected_id()
+	# Referentie: het geometrische stuk op de linker tegel (maatvergelijking).
+	_ref = PAWN_SCENE.instantiate()
+	_ref.team = Constants.Team.RED
+	_ref.position = Vector3(-1.0, 0.05, 0.0)
+	add_child(_ref)
+	_ref.face_dir(Vector2i(0, 1))
+	_ref.set_unit_type(unit_type)
+	# Het echte model in het midden, via exact dezelfde route als in het spel.
+	_pawn = PAWN_SCENE.instantiate()
+	_pawn.team = Constants.Team.BLUE
+	_pawn.position = Vector3(0.0, 0.05, 0.0)
+	add_child(_pawn)
+	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera
+	_pawn.set_unit_type(unit_type)
+	_pawn.set_character(doctrine, unit_type, _current_card())
+	# Sliders op de opgeslagen waarden zetten (zonder events af te vuren).
+	_updating = true
+	var t: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {})
+	_scale_slider.value = float(t.get("scale", 1.0))
+	_y_slider.value = float(t.get("y", 0.0))
+	_updating = false
+	_refresh_info()
+
+
+func _on_tuning_changed(_v: float) -> void:
+	if _updating or _pawn == null:
+		return
+	if _pawn._tune_key == "":
+		_refresh_info()
+		return
+	PawnView.set_model_tuning(_pawn._tune_key, {
+		"scale": snappedf(_scale_slider.value, 0.01),
+		"y": snappedf(_y_slider.value, 0.005),
+	})
+	# Herladen zodat de auto-fit + correctie exact zo draait als in het spel.
+	var doctrine: int = _fac_btn.get_selected_id()
+	var unit_type: int = _type_btn.get_selected_id()
+	_pawn.queue_free()
+	_pawn = PAWN_SCENE.instantiate()
+	_pawn.team = Constants.Team.BLUE
+	_pawn.position = Vector3(0.0, 0.05, 0.0)
+	add_child(_pawn)
+	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera
+	_pawn.set_unit_type(unit_type)
+	_pawn.set_character(doctrine, unit_type, _current_card())
+	_refresh_info()
+
+
+func _on_clip(clip: String) -> void:
+	if _pawn == null:
+		return
+	match clip:
+		"idle": _pawn.play_idle()
+		"walk": _pawn.play_walk()
+		"attack": _pawn.play_attack()
+		"die": _pawn.play_die()
+
+
+func _refresh_info() -> void:
+	if _pawn == null:
+		return
+	if _pawn._tune_key == "":
+		_info.text = "Geen .glb gevonden voor deze combinatie — placeholder-stuk. Drop eerst een model (zie MODEL-WISHLIST.md)."
+	else:
+		_info.text = "%s  ·  schaal %.2f  ·  hoogte %+.3f   (links = referentiestuk; OPSLAAN schrijft model_tuning.json)" % [
+			_pawn._tune_key, _scale_slider.value, _y_slider.value]
+
+
+func _save() -> void:
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f == null:
+		_info.text = "OPSLAAN MISLUKT: kan %s niet schrijven" % SAVE_PATH
+		return
+	f.store_string(JSON.stringify(PawnView.model_tuning(), "\t") + "\n")
+	_info.text = "Opgeslagen → %s (geldt direct in het spel)" % SAVE_PATH

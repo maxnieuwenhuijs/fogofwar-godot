@@ -227,7 +227,37 @@ verschilt, de look blijft verhullend (past bij de verborgen koppelingen).
 
 ---
 
-## 4. Bestandsconventie & fallback
+## 4. De pipeline per karakter (Mixamo) + Model-tuner
+
+1. **Genereer** het model (Laag Poly, target ~1.000) en download als `.glb`.
+2. **Blender (alleen doorgeefluik)**: importeer de glb → File → Export → **FBX**
+   met Path Mode **Copy** + het **embed-doosje** aan (texture zit dan ín de FBX).
+3. **Upload naar Mixamo**: statisch model in **A- of T-pose, zónder botten** —
+   Mixamo rigt zelf (markers op kin/polsen/ellebogen/knieën/kruis zetten).
+4. **Download de clips** — FBX Binary, 30 fps, **With Skin**, en let op dat je
+   éigen karakter de animatie voordoet in de viewer:
+
+| Clip in het spel | Mixamo-zoekterm | Aantal |
+|---|---|---|
+| `idle` (+ `idle2`, `idle3`…) | Rifle Idle | 1-3 varianten |
+| `walk` (+ `walk2`…) | Walk With Rifle — **"In Place" aanvinken!** | 1-3 varianten |
+| `attack` | Firing Rifle (enkel schot, staand) | 1 |
+| `die` (+ `die2`…) | Rifle Death / Death From The Front | 1-2 varianten |
+| `aim` (voor later: aanleg-fase) | Rifle Down To Aim | optioneel |
+
+5. **Laat alles in Downloads staan** en geef door welk bestand welk archetype
+   is — het merge-script bouwt er één `.glb` van met alle clips (varianten
+   worden in het spel willekeurig gekozen, met desync zodat de zwerm nooit
+   synchroon beweegt).
+6. **Model-tuner** (hoofdmenu → "Model-tuner"): kies factie/type/archetype,
+   stel met de sliders **schaal en hoogte** af naast het referentiestuk,
+   bekijk de clips met de knoppen, en klik **OPSLAAN** → schrijft
+   `assets/models/model_tuning.json`, die het spel altijd toepast bovenop de
+   auto-fit. (Dat bestand mee-committen.)
+
+Cavalerie (ruiter te paard) kan Mixamo níét riggen — die pipeline volgt apart.
+
+## 4b. Bestandsconventie & fallback
 
 ```
 assets/models/<factie>/<type>_<archetype>.glb

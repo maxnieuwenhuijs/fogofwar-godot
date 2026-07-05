@@ -178,6 +178,18 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   = prio 1, 64-80 voor de volledige set; eisen: .glb, MAX 1.000 tris (low-poly
   stijl, besluit juli 2026), voeten y=0,
   neus -Z, ~0.9 hoog, optioneel AnimationPlayer idle/walk/attack/die).
+- **Model-tuner (juli 2026)**: hoofdmenu → "Model-tuner"
+  (`scenes/tools/ModelTuner.tscn`) — per factie/type/archetype schaal- en
+  hoogte-sliders naast een referentiestuk, clip-preview-knoppen, OPSLAAN →
+  `assets/models/model_tuning.json`. PawnView past die correcties toe bovenop
+  de auto-fit (`model_tuning()`/`_tune_key`, sleutel volgt het geladen bestand
+  incl. basis-fallback). Screenshot-hook: scene draaien met `-- shot`.
+- **Animatie-varianten (juli 2026)**: `_play_variant`/`_variants_of` — clips met
+  volgnummer (`idle2`, `walk3`, `die2`) worden willekeurig gekozen per
+  afspeelmoment, idle/walk starten op een random punt in de clip (desync: de
+  zwerm beweegt nooit synchroon). Muis-basis-glb heeft 9 clips (3 idle, 3 walk,
+  attack, 2 death), samengesteld via het headless Blender-merge-script
+  (scratchpad `merge_mouse*.py`; herbruikbaar per karakter).
 - **Schiet-VFX (prototype)**: `_fire_projectile` — kanonskogel (groot, donker, met
   boogje) vs infanterie-tracer (klein, fel, strak), muzzle flash met OmniLight-puls
   (`_muzzle_flash`) en low-poly rookwolkjes bij loop én inslag (`_spawn_smoke`).

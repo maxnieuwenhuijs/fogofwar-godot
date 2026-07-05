@@ -208,7 +208,7 @@ func _show_difficulty_menu() -> void:
 	_overlay.show_choice(
 		"Kies je tegenstander",
 		"Tegen welke AI wil je oefenen?",
-		["Easy", "Medium", "Hard", "Ultra — god mode", "Speluitleg", "AI Trainer bekijken"],
+		["Easy", "Medium", "Hard", "Ultra — god mode", "Speluitleg", "AI Trainer bekijken", "Model-tuner"],
 		_on_menu_choice,
 	)
 
@@ -216,8 +216,10 @@ func _show_difficulty_menu() -> void:
 func _on_menu_choice(index: int) -> void:
 	if index == 4:
 		_show_rules_overlay(func() -> void: _show_difficulty_menu())
-	elif index >= 5:
+	elif index == 5:
 		get_tree().change_scene_to_file("res://scenes/training/Trainer.tscn")
+	elif index >= 6:
+		get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
 	else:
 		ai_difficulty = index
 		_show_doctrine_menu()
