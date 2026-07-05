@@ -175,7 +175,8 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   tegenstander tot onthulling (archetype zou de kaart verraden); eigen pionnen
   tonen hun karakter altijd. Opstellings-preview toont het factie-basismodel.
   Modellen droppen = klaar (geen code): zie **MODEL-WISHLIST.md** (16 basis-modellen
-  = prio 1, 64-80 voor de volledige set; eisen: .glb, <5k tris, voeten y=0,
+  = prio 1, 64-80 voor de volledige set; eisen: .glb, MAX 1.000 tris (low-poly
+  stijl, besluit juli 2026), voeten y=0,
   neus -Z, ~0.9 hoog, optioneel AnimationPlayer idle/walk/attack/die).
 - **Schiet-VFX (prototype)**: `_fire_projectile` — kanonskogel (groot, donker, met
   boogje) vs infanterie-tracer (klein, fel, strak), muzzle flash met OmniLight-puls
