@@ -26,7 +26,7 @@ const ARTILLERY_MOVE: int = 1        # artillerie beweegt max 1 stap per beurt
 # verdediger een melee overleeft (huisregel: type-afhankelijk).
 const RETALIATION_DAMAGE: Dictionary = {
 	UnitType.INFANTRY: 1,
-	UnitType.CAVALRY: 2,   # paarden slaan hard terug
+	UnitType.CAVALRY: 2,   # beesten (cavalerie) slaan hard terug
 	UnitType.ARTILLERY: 0, # kanonnen zijn weerloos in melee
 }
 

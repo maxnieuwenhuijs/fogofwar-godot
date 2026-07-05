@@ -152,12 +152,12 @@ func _tab_game() -> String:
 		"[b]Het belangrijkste idee[/b]",
 		"Je pionnen kunnen pas iets als ze een [b]kaart[/b] hebben. Een pion zonder kaart \"slaapt\": hij kan niks en gaat dood aan één klap of één schot.",
 		"",
-		"Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het paard en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán.",
+		"Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het beest (groot, op vier poten) en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán.",
 		"",
 		"[b]Boven elke actieve pion[/b] zie je blokjes: groen = leven (HP), blauw = energie (Speed), oranje = aanvalskracht.",
 		"",
 		"[b]Opstellen[/b]",
-		"Vóór de slag zet je je leger neer op je twee eigen rijen: eerst je kanonnen, dan je paarden (klik een vak; rechtermuis = ongedaan). De soldaten vullen de rest automatisch aan. Liever snel? Kies de standaard-opstelling.",
+		"Vóór de slag zet je je leger neer op je twee eigen rijen: eerst je kanonnen, dan je beesten (klik een vak; rechtermuis = ongedaan). De soldaten vullen de rest automatisch aan. Liever snel? Kies de standaard-opstelling.",
 	])
 
 
@@ -178,7 +178,7 @@ func _tab_turns() -> String:
 		"Om de beurt doe je [b]één actie[/b] met één pion. Speed is de energie van je pion:",
 		"• een stap lopen kost 1",
 		"• slaan of schieten kost 1",
-		"• charge (paard) kost stappen + 1",
+		"• charge (beest) kost stappen + 1",
 		"Een pion mag later in de cyclus wéér, zolang hij energie heeft.",
 		"",
 		"[b]5. Nieuwe cyclus[/b]",
@@ -197,7 +197,7 @@ func _tab_units() -> String:
 		"• Of schiet op [b]precies 2 vakken[/b] afstand (schade = Aanval − 1, dus met Aanval 1 kan hij niet schieten).",
 		"• Sterk in de verdediging: wie hem slaat en niet doodt, krijgt zelf −1.",
 		"",
-		"[b]Paard (cavalerie)[/b]",
+		"[b]Beest (cavalerie)[/b]",
 		"• [b]Charge[/b]: lopen én slaan in één beurt — klik gewoon een rode vijand aan, ook verderop.",
 		"• Springt over je [b]eigen[/b] pionnen heen.",
 		"• Doodt hij zijn doelwit, dan schuift hij het vrije vak in: zo wint hij terrein.",
@@ -215,7 +215,7 @@ func _tab_combat() -> String:
 	return "\n".join([
 		"[b]De kleuren op het bord[/b]",
 		"• [color=#55dd66]Groen[/color] = daar kun je lopen (het cijfer = energie-kosten)",
-		"• [color=#f04545]Rood[/color] = die vijand kun je slaan (of charge met het paard)",
+		"• [color=#f04545]Rood[/color] = die vijand kun je slaan (of charge met het beest)",
 		"• [color=#ffb054]Oranje[/color] = die vijand kun je beschieten (vaag oranje = je vuurlijn)",
 		"• [color=#66dddd]Cyaan[/color] = gratis Wolf-stap na een melee",
 		"",
@@ -224,7 +224,7 @@ func _tab_combat() -> String:
 		"",
 		"[b]Terugslag[/b]",
 		"Overleeft de verdediger jouw klap, dan slaat hij terug:",
-		"• soldaat: [b]−1[/b]    • paard: [b]−2[/b]    • kanon: [b]−0[/b] (weerloos)",
+		"• soldaat: [b]−1[/b]    • beest: [b]−2[/b]    • kanon: [b]−0[/b] (weerloos)",
 		"Slapende pionnen slaan nooit terug. Schieten krijgt nooit terugslag.",
 		"",
 		"[b]Schieten[/b]",
@@ -240,7 +240,7 @@ func _tab_combat() -> String:
 func _tab_factions() -> String:
 	var lines: Array = [
 		"[b]Kies vóór de partij een factie (doctrine). Die bepaalt je leger en je speciale kracht.[/b]",
-		"Samenstelling = soldaten / paarden / kanonnen.",
+		"Samenstelling = soldaten / beesten / kanonnen.",
 		"",
 	]
 	for doctrine in Constants.DOCTRINE_DATA.keys():
@@ -250,5 +250,5 @@ func _tab_factions() -> String:
 		lines.append("[color=#7fdd7f]✚ %s[/color]" % d.pro)
 		lines.append("[color=#ee8877]✖ %s[/color]" % d.con)
 		lines.append("")
-	lines.append("[b]Balans-driehoek[/b]: kanonnen > soldaten (dracht), soldaten > paarden (terugslag −1 en goedkoop), paarden > kanonnen (dode zone induiken en slaan).")
+	lines.append("[b]Balans-driehoek[/b]: kanonnen > soldaten (dracht), soldaten > beesten (terugslag −1 en goedkoop), beesten > kanonnen (dode zone induiken en slaan).")
 	return "\n".join(lines)

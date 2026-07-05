@@ -37,9 +37,18 @@ FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijn
    Kop/Hoed/Staart, gaten dichten, Origin to Center of Mass); Claude bouwt het
    uit-elkaar-klap-systeem met gradatie per wapentype (musket-kill = hoed + 1 deel,
    kanon = alles, melee = omvaller).
-5. **Cavalerie**: v1 = statisch ruiter+paard-model uit de prompts; v2 = geanimeerd
-   Quaternius-paard (CC0, heeft walk/gallop) + statische ruiter op zadel-bot.
-   Mixamo kan géén dieren. Artillerie = statische props, makkelijkst.
+5. **Cavalerie = BIG BRO (pivot 6 juli, besluit Max)**: géén paarden/ruiters —
+   elke factie is een dierenfamilie: infanterie = klein antropomorf familielid
+   (2 benen, Mixamo zoals nu), cavalerie = groot familielid **op vier poten**
+   (muis→dikke rat, cheetah→leeuw, beer→grizzly, wolf→dire wolf, vos→reuzenvos).
+   Leeuw-infanterie wordt dus CHEETAH. Prompts herschreven in MODEL-WISHLIST §3.
+   Open besluiten: (a) **Mens vervangen door welk dier?** — kandidaten:
+   aap/gorilla (favoriet: uniek silhouet, allrounder-vibe), zwijn/everzwijn,
+   hond/mastiff (botst iets met Wolf); (b) **Muis-comp heeft geen cavalerie**
+   (22/0/0) — comp aanpassen (bv. 18/4/0) als de dikke rat het bord op moet →
+   balans hermeten met de arena. Viervoeter-animatie: Tripo quadruped-presets
+   of Quaternius CC0-dieren of statisch v1. UI zegt nu "beest" i.p.v. "paard";
+   cavalerie-audio (horse_*) later per familie vervangen (brul/piep/grom).
 6. **Aim/anticipation**: "Rifle Down To Aim"-clip als `aim` + projectiel/knal ~0.2s
    vertragen tot het vuur-frame.
 7. Open uit eerdere sessies: arena-run voor de Muis-balans (+1 Speed meten),
