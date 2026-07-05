@@ -13,6 +13,7 @@ extends Node3D
 @export var anim_idle: String = "idle"
 @export var anim_walk: String = "walk"
 @export var anim_attack: String = "attack"
+@export var anim_melee: String = "melee"
 @export var anim_die: String = "die"
 
 var _base_material: StandardMaterial3D
@@ -59,6 +60,7 @@ var _unit_type: int = -1
 var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
 var _variant_cache: Dictionary = {}  # basisclip -> [volledige variant-namen]
 var _tune_key: String = ""   # "muis/infanterie_basis" — sleutel in model_tuning.json
+var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
 ## { "muis/infanterie_basis": {"scale": 1.15, "y": 0.02}, ... }
@@ -180,6 +182,14 @@ func play_attack() -> void:
 	_play_variant(anim_attack)
 
 
+## Melee-klap: eigen clip als het model die heeft, anders de (schiet)attack.
+func play_melee() -> void:
+	if _anim != null and not _variants_of(anim_melee).is_empty():
+		_play_variant(anim_melee)
+	else:
+		_play_variant(anim_attack)
+
+
 func play_die() -> void:
 	_play_variant(anim_die)
 
@@ -252,6 +262,7 @@ func play_death(world_dir: Vector3) -> void:
 	if dir.length() < 0.01:
 		dir = Vector3(0, 0, 1)
 	dir = dir.normalized()
+	_fling_weapon(dir)  # musket vliegt uit de handen
 	# Kantel-as staat loodrecht op de valrichting (omvallen "voorover").
 	var axis := Vector3.UP.cross(dir).normalized()
 	if axis.length() < 0.01:
@@ -272,12 +283,40 @@ func play_death(world_dir: Vector3) -> void:
 	tw.chain().tween_callback(queue_free)
 
 
+## Het musket vliegt bij dood uit de handen: los van het skelet, boogje in de
+## knockback-richting, tollend neer, even blijven liggen en wegzinken.
+## Alleen tween_property's op het wapen zelf — de pion mag intussen ge-freed
+## worden zonder dat de tween op een dode callable klapt.
+func _fling_weapon(world_dir: Vector3) -> void:
+	if _weapon == null or not is_instance_valid(_weapon):
+		return
+	var w: Node3D = _weapon
+	_weapon = null
+	var scene_parent := get_parent()
+	if scene_parent == null:
+		return
+	var xf := w.global_transform
+	w.get_parent().remove_child(w)
+	scene_parent.add_child(w)
+	w.global_transform = xf
+	var land := Vector3(xf.origin.x, global_position.y, xf.origin.z) + world_dir * 0.65
+	var peak := xf.origin.lerp(land, 0.5) + Vector3.UP * 0.55
+	var spin := w.create_tween()
+	spin.tween_property(w, "rotation", w.rotation + Vector3(3.5, 1.7, 4.6), 0.95)
+	var arc := w.create_tween()
+	arc.tween_property(w, "global_position", peak, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	arc.tween_property(w, "global_position", land, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	arc.tween_interval(0.45)
+	arc.tween_property(w, "global_position:y", land.y - 0.7, 0.35).set_ease(Tween.EASE_IN)
+	arc.tween_callback(w.queue_free)
+
+
 func _on_anim_finished(anim_name: String) -> void:
 	# Eenmalige animaties (aanval) keren terug naar idle; lopen stuurt game.gd zelf.
 	# Voorvoegsel ("lib/attack") en variant-nummer ("attack2") strippen.
 	var n := String(anim_name)
 	n = n.get_slice("/", n.get_slice_count("/") - 1).rstrip("0123456789")
-	if n == anim_attack:
+	if n == anim_attack or n == anim_melee:
 		play_idle()
 
 
@@ -517,6 +556,7 @@ func _attach_weapon(fac: String) -> void:
 	var rot: Array = t.get("rot", [0.0, 0.0, 0.0])
 	prop.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2])) / maxf(parent_scale, 0.0001)
 	prop.rotation_degrees = Vector3(float(rot[0]), float(rot[1]), float(rot[2]))
+	_weapon = prop
 
 
 ## Normaliseer een geïmporteerd model naar bord-maat: meet de gezamenlijke AABB,

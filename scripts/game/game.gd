@@ -971,7 +971,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			var attacker: PawnView = _pawn_views.get(action.attacker_id)
 			if attacker != null:
 				attacker.face_dir(result.defender_pos - result.attacker_from_pos)
-				attacker.play_attack()
+				attacker.play_melee()
 			if result.get("forced_move", false):
 				_animate_move(action.attacker_id, result.attacker_from_pos, result.defender_pos)
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive")
@@ -1018,7 +1018,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			_check_haven_score(action.pawn_id, end_pos)
 			var cav: PawnView = _pawn_views.get(action.pawn_id)
 			if cav != null and action.get("defender_id", -1) != -1:
-				cav.play_attack()
+				cav.play_melee()
 			if action.get("defender_id", -1) != -1:
 				# Na de aanrij-animatie: klap op het doelwit, evt. terugslag op het paard.
 				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", 0.4)

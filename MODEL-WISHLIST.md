@@ -242,6 +242,7 @@ verschilt, de look blijft verhullend (past bij de verborgen koppelingen).
 | `idle` (+ `idle2`, `idle3`…) | Rifle Idle | 1-3 varianten |
 | `walk` (+ `walk2`…) | Walk With Rifle — **"In Place" aanvinken!** | 1-3 varianten |
 | `attack` | Firing Rifle (enkel schot, staand) | 1 |
+| `melee` (+ `melee2`…) | Standing Melee Attack / Rifle Butt (kolfstoot) | 1-2 — ontbreekt hij, dan gebruikt melee de attack-clip |
 | `die` (+ `die2`…) | Rifle Death / Death From The Front | 1-2 varianten |
 | `aim` (voor later: aanleg-fase) | Rifle Down To Aim | optioneel |
 
