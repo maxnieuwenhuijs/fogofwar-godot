@@ -148,6 +148,10 @@ func _build_ui() -> void:
 		btn.text = clip
 		btn.pressed.connect(_on_clip.bind(clip))
 		row3.add_child(btn)
+	var freeze_btn := Button.new()
+	freeze_btn.text = "stilzetten"
+	freeze_btn.pressed.connect(_freeze_pose)
+	row3.add_child(freeze_btn)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -231,6 +235,7 @@ func _reload_pawns() -> void:
 	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera
 	_pawn.set_unit_type(unit_type)
 	_pawn.set_character(doctrine, unit_type, _current_card())
+	_freeze_pose()
 	# Sliders op de opgeslagen waarden zetten (zonder events af te vuren).
 	_updating = true
 	var t: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {})
@@ -276,7 +281,23 @@ func _respawn_model() -> void:
 	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera
 	_pawn.set_unit_type(unit_type)
 	_pawn.set_character(doctrine, unit_type, _current_card())
+	_freeze_pose()
 	_refresh_info()
+
+
+## Vaste pose om tegen uit te lijnen: altijd de éérste idle-variant, bevroren
+## op een vast frame. Zonder dit kiest elke herlaad een willekeurige variant op
+## een willekeurig startpunt (het bord-desync-systeem) en verspringt de houding
+## bij elke tuning-wijziging.
+func _freeze_pose() -> void:
+	if _pawn == null or _pawn._anim == null:
+		return
+	var variants: Array = _pawn._variants_of(_pawn.anim_idle)
+	if variants.is_empty():
+		return
+	_pawn._anim.play(String(variants[0]))
+	_pawn._anim.seek(0.4, true)
+	_pawn._anim.pause()
 
 
 func _on_clip(clip: String) -> void:
