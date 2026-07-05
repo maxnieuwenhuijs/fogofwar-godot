@@ -159,8 +159,29 @@ func play_die() -> void:
 
 
 func _play(anim_name: String) -> void:
-	if _anim != null and _anim.has_animation(anim_name) and _anim.current_animation != anim_name:
-		_anim.play(anim_name)
+	if _anim == null:
+		return
+	var full := _resolve_anim(anim_name)
+	if full != "" and _anim.current_animation != full:
+		_anim.play(full, 0.2)  # korte crossfade tussen houdingen
+
+
+## Clipnaam → volledige naam incl. bibliotheek-voorvoegsel ("mixamo_com/idle").
+func _resolve_anim(anim_name: String) -> String:
+	if _anim.has_animation(anim_name):
+		return anim_name
+	for a in _anim.get_animation_list():
+		if String(a).ends_with("/" + anim_name):
+			return String(a)
+	return ""
+
+
+## Sta- en loopclips horen te herhalen (glTF-clips loopen niet vanzelf).
+func _make_loops() -> void:
+	for clip in [anim_idle, anim_walk]:
+		var full := _resolve_anim(clip)
+		if full != "":
+			_anim.get_animation(full).loop_mode = Animation.LOOP_LINEAR
 
 
 # --- Combat feel: stagger (knockback) + lichte ragdoll bij dood ---------------
@@ -213,7 +234,8 @@ func play_death(world_dir: Vector3) -> void:
 
 func _on_anim_finished(anim_name: String) -> void:
 	# Eenmalige animaties (aanval) keren terug naar idle; lopen stuurt game.gd zelf.
-	if anim_name == anim_attack:
+	# ends_with: geïmporteerde clips kunnen een bibliotheek-voorvoegsel dragen.
+	if String(anim_name).ends_with(anim_attack):
 		play_idle()
 
 
@@ -375,6 +397,7 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	_anim = _find_anim_player(_piece)
 	if _anim != null:
 		_anim.animation_finished.connect(_on_anim_finished)
+		_make_loops()
 		play_idle()
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
