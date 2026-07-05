@@ -296,7 +296,12 @@ kijken, de voorkant in het spel is −Z. Je hoeft dus níks op maat te maken.
 - Bij max 1.000 tris doet het **silhouet** het vorm-werk (zie §1): overdrijf de
   bouwverschillen tussen archetypes stevig, de texture vult de rest in.
 - **Teamkleur**: hoeft niet in het model — het spel zet automatisch een
-  rood/blauw sokkeltje onder elk `.glb`-model
+  rood/blauw sokkeltje onder elk `.glb`-model.
+  **Gepland (team-textures)**: leg optioneel `<basis>_team1.png` (rood leger) en
+  `<basis>_team2.png` (blauw leger) naast het model — recolors van de basis-texture
+  met rode/blauwe uniform-accenten. Het spel kiest dan per team de juiste albedo;
+  ontbreken de bestanden, dan blijft de basis-look + het sokkeltje. (Loader-kant
+  wordt gebouwd zodra de eerste recolor er is.)
 - **Animaties (optioneel)**: `AnimationPlayer` met clips `idle` / `walk` /
   `attack` / `die` wordt automatisch opgepakt (namen instelbaar op PawnView)
 - Na het droppen éénmalig importeren: editor openen of

@@ -6,6 +6,48 @@
 
 ---
 
+## ⏵ STAND VAN ZAKEN MODELLEN-PIPELINE + MORGEN VERDER (6 juli 2026)
+
+**De pipeline werkt end-to-end en is bewezen met de Muis-infanterie:**
+Meshy/Tripo-model (Laag Poly ~1k) → FBX met embedded texture → Mixamo auto-rig
++ rifle-clips (With Skin, 30fps) → `tools/blender_merge_character.py` (headless,
+maakt walk/idle automatisch in place) → glb met alle clips → auto-fit + Model-tuner
+(hoofdmenu) voor schaal/hoogte/x/z + musket schaal/pos/rot → `model_tuning.json`.
+Varianten (idle2, walk3, die2, melee2…) worden random per pion gekozen met desync.
+Musket hangt per factie aan de rechterhand (`<factie>/musket.glb`) en vliegt bij
+dood uit de handen. Melee/charge gebruiken de `melee`-clip (fallback: attack).
+
+**Waar we gebleven zijn (Max was mee bezig):** musket-origin verplaatsen naar de
+handgreep in Blender (Set Origin → 3D Cursor op de greep, loop recht langs een as,
+Apply Rotation) en her-exporteren als **musket.glb** (glTF bakt de texture in — de
+FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijnen
+(pose staat nu bevroren tijdens het tunen).
+
+**MORGEN / BINNENKORT:**
+1. **Musket afronden**: origin-fix + glb-export + uitlijnen + OPSLAAN (zie boven).
+2. **Team-textures (NIEUW, afgesproken 6 juli)**: per model optioneel
+   `<basis>_team1.png` (rood leger) en `<basis>_team2.png` (blauw leger) naast het
+   model — het spel legt dan per team de juiste albedo op de meshes; ontbreken ze,
+   dan blijft de huidige look + het gekleurde sokkeltje. Max levert de twee
+   recolors (uniform-accenten rood/blauw), Claude bouwt de loader-kant + tuner-preview.
+3. **Muis-archetypes afmaken** (spd/hp/atk via de pipeline) en dan de overige
+   facties-infanterie (mens/leeuw/beer/wolf/vos — prompts staan klaar in
+   MODEL-WISHLIST §3).
+4. **Gibs**: Max zaagt `infanterie_basis_gibs.glb` (Romp/ArmL/ArmR/BeenL/BeenR/
+   Kop/Hoed/Staart, gaten dichten, Origin to Center of Mass); Claude bouwt het
+   uit-elkaar-klap-systeem met gradatie per wapentype (musket-kill = hoed + 1 deel,
+   kanon = alles, melee = omvaller).
+5. **Cavalerie**: v1 = statisch ruiter+paard-model uit de prompts; v2 = geanimeerd
+   Quaternius-paard (CC0, heeft walk/gallop) + statische ruiter op zadel-bot.
+   Mixamo kan géén dieren. Artillerie = statische props, makkelijkst.
+6. **Aim/anticipation**: "Rifle Down To Aim"-clip als `aim` + projectiel/knal ~0.2s
+   vertragen tot het vuur-frame.
+7. Open uit eerdere sessies: arena-run voor de Muis-balans (+1 Speed meten),
+   trainer-nachtrun met v2-gates, online-playtest Fase 0, resterende sounds
+   (place_undo, timer_timeout, wolf_step, win/lose is er al, muziek-menu).
+
+---
+
 ## 1. Wat is dit
 
 2-speler tactisch **3D**-bordspel, **Godot 4.7** (Forward+, Jolt Physics, D3D12),
