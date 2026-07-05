@@ -509,12 +509,13 @@ func _attach_weapon(fac: String) -> void:
 	if longest > 0.0001 and parent_scale > 0.0001:
 		var factor := 0.55 / (longest * parent_scale)
 		prop.scale = Vector3(factor, factor, factor)
-	# Fijnafstelling uit de tuning (positie in hand-ruimte, rotatie in graden).
+	# Fijnafstelling uit de tuning: pos ≈ wereld-units langs de hand-assen
+	# (gecorrigeerd voor skelet-schaal), rotatie in graden.
 	var t: Dictionary = model_tuning().get("%s/musket" % fac, {})
 	prop.scale *= float(t.get("scale", 1.0))
 	var pos: Array = t.get("pos", [0.0, 0.0, 0.0])
 	var rot: Array = t.get("rot", [0.0, 0.0, 0.0])
-	prop.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
+	prop.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2])) / maxf(parent_scale, 0.0001)
 	prop.rotation_degrees = Vector3(float(rot[0]), float(rot[1]), float(rot[2]))
 
 

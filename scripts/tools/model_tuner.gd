@@ -21,6 +21,7 @@ var _type_btn: OptionButton
 var _arch_btn: OptionButton
 var _scale_slider: HSlider
 var _y_slider: HSlider
+var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
 var _info: Label
 
 var _updating := false  # geen slider-events tijdens het her-instellen
@@ -121,6 +122,18 @@ func _build_ui() -> void:
 	_y_slider.value_changed.connect(_on_tuning_changed)
 	row2.add_child(_y_slider)
 
+	# Musket-rij: schaal, positie (wereld-units langs de hand-assen), rotatie.
+	var roww := HBoxContainer.new()
+	box.add_child(roww)
+	roww.add_child(_make_label("Musket: schaal"))
+	_weapon_spins["scale"] = _make_spin(roww, 0.1, 3.0, 0.05, 1.0)
+	roww.add_child(_make_label(" pos"))
+	for k in ["px", "py", "pz"]:
+		_weapon_spins[k] = _make_spin(roww, -0.6, 0.6, 0.01, 0.0)
+	roww.add_child(_make_label(" rot°"))
+	for k in ["rx", "ry", "rz"]:
+		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0)
+
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
 	for clip in ["idle", "walk", "attack", "die"]:
@@ -146,6 +159,37 @@ func _make_label(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
 	return l
+
+
+func _make_spin(parent: Node, minv: float, maxv: float, step: float, def: float) -> SpinBox:
+	var s := SpinBox.new()
+	s.min_value = minv
+	s.max_value = maxv
+	s.step = step
+	s.value = def
+	s.value_changed.connect(_on_weapon_changed)
+	parent.add_child(s)
+	return s
+
+
+## Huidige factie-naam in kleine letters ("muis") — sleutels in model_tuning.json.
+func _fac_name() -> String:
+	return Constants.doctrine_name(_fac_btn.get_selected_id()).to_lower()
+
+
+func _on_weapon_changed(_v: float) -> void:
+	if _updating or _pawn == null:
+		return
+	PawnView.set_model_tuning("%s/musket" % _fac_name(), {
+		"scale": snappedf(_weapon_spins["scale"].value, 0.01),
+		"pos": [snappedf(_weapon_spins["px"].value, 0.01),
+			snappedf(_weapon_spins["py"].value, 0.01),
+			snappedf(_weapon_spins["pz"].value, 0.01)],
+		"rot": [snappedf(_weapon_spins["rx"].value, 1.0),
+			snappedf(_weapon_spins["ry"].value, 1.0),
+			snappedf(_weapon_spins["rz"].value, 1.0)],
+	})
+	_respawn_model()
 
 
 # --- Model laden / bijstellen ---------------------------------------------------
@@ -185,6 +229,13 @@ func _reload_pawns() -> void:
 	var t: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {})
 	_scale_slider.value = float(t.get("scale", 1.0))
 	_y_slider.value = float(t.get("y", 0.0))
+	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
+	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
+	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
+	var wrot: Array = w.get("rot", [0.0, 0.0, 0.0])
+	for i in 3:
+		_weapon_spins[["px", "py", "pz"][i]].value = float(wpos[i])
+		_weapon_spins[["rx", "ry", "rz"][i]].value = float(wrot[i])
 	_updating = false
 	_refresh_info()
 
@@ -199,7 +250,11 @@ func _on_tuning_changed(_v: float) -> void:
 		"scale": snappedf(_scale_slider.value, 0.01),
 		"y": snappedf(_y_slider.value, 0.005),
 	})
-	# Herladen zodat de auto-fit + correctie exact zo draait als in het spel.
+	_respawn_model()
+
+
+## Herlaad het model zodat auto-fit + tuning exact zo draaien als in het spel.
+func _respawn_model() -> void:
 	var doctrine: int = _fac_btn.get_selected_id()
 	var unit_type: int = _type_btn.get_selected_id()
 	_pawn.queue_free()
