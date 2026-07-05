@@ -57,6 +57,7 @@ var _sokkel: CSGCylinder3D = null  # team-gekleurd voetstuk onder .glb-modellen
 var _tint_nodes: Array = []  # delen in groep "team_tint" → teamkleur/status
 var _unit_type: int = -1
 var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
+var _variant_cache: Dictionary = {}  # basisclip -> [volledige variant-namen]
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
@@ -143,44 +144,58 @@ func _find_anim_player(node: Node) -> AnimationPlayer:
 
 
 func play_idle() -> void:
-	_play(anim_idle)
+	_play_variant(anim_idle, true)
 
 
 func play_walk() -> void:
-	_play(anim_walk)
+	_play_variant(anim_walk, true)
 
 
 func play_attack() -> void:
-	_play(anim_attack)
+	_play_variant(anim_attack)
 
 
 func play_die() -> void:
-	_play(anim_die)
+	_play_variant(anim_die)
 
 
-func _play(anim_name: String) -> void:
+## Speel een willekeurige variant van een basisclip: "walk" kiest uit
+## walk/walk2/walk3, "die" uit die/die2, enz. desync = start op een
+## willekeurig punt in de clip, zodat 22 muizen nooit synchroon ademen
+## of in de maat marcheren.
+func _play_variant(base: String, desync: bool = false) -> void:
 	if _anim == null:
 		return
-	var full := _resolve_anim(anim_name)
-	if full != "" and _anim.current_animation != full:
-		_anim.play(full, 0.2)  # korte crossfade tussen houdingen
+	var variants := _variants_of(base)
+	if variants.is_empty():
+		return
+	var full: String = variants[randi() % variants.size()]
+	if _anim.current_animation == full:
+		return
+	_anim.play(full, 0.2)  # korte crossfade tussen houdingen
+	if desync:
+		_anim.seek(randf() * _anim.get_animation(full).length, false)
 
 
-## Clipnaam → volledige naam incl. bibliotheek-voorvoegsel ("mixamo_com/idle").
-func _resolve_anim(anim_name: String) -> String:
-	if _anim.has_animation(anim_name):
-		return anim_name
+## Alle varianten van een basisnaam in het model: exact ("walk") of met
+## volgnummer ("walk2"), inclusief bibliotheek-voorvoegsel ("lib/walk2").
+func _variants_of(base: String) -> Array:
+	if _variant_cache.has(base):
+		return _variant_cache[base]
+	var out: Array = []
 	for a in _anim.get_animation_list():
-		if String(a).ends_with("/" + anim_name):
-			return String(a)
-	return ""
+		var n := String(a)
+		n = n.get_slice("/", n.get_slice_count("/") - 1)
+		if n == base or (n.begins_with(base) and n.substr(base.length()).is_valid_int()):
+			out.append(String(a))
+	_variant_cache[base] = out
+	return out
 
 
 ## Sta- en loopclips horen te herhalen (glTF-clips loopen niet vanzelf).
 func _make_loops() -> void:
-	for clip in [anim_idle, anim_walk]:
-		var full := _resolve_anim(clip)
-		if full != "":
+	for base in [anim_idle, anim_walk]:
+		for full in _variants_of(base):
 			_anim.get_animation(full).loop_mode = Animation.LOOP_LINEAR
 
 
@@ -234,8 +249,10 @@ func play_death(world_dir: Vector3) -> void:
 
 func _on_anim_finished(anim_name: String) -> void:
 	# Eenmalige animaties (aanval) keren terug naar idle; lopen stuurt game.gd zelf.
-	# ends_with: geïmporteerde clips kunnen een bibliotheek-voorvoegsel dragen.
-	if String(anim_name).ends_with(anim_attack):
+	# Voorvoegsel ("lib/attack") en variant-nummer ("attack2") strippen.
+	var n := String(anim_name)
+	n = n.get_slice("/", n.get_slice_count("/") - 1).rstrip("0123456789")
+	if n == anim_attack:
 		play_idle()
 
 
@@ -395,6 +412,7 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	# AnimationPlayer in het stuk aanhaken (bv. een .glb met idle/walk/attack/die).
 	# De geometrische stukken hebben er geen — dan blijft _anim gewoon null.
 	_anim = _find_anim_player(_piece)
+	_variant_cache = {}
 	if _anim != null:
 		_anim.animation_finished.connect(_on_anim_finished)
 		_make_loops()
