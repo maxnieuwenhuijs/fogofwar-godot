@@ -538,13 +538,14 @@ func _auto_fit_model(root: Node3D) -> void:
 	# zet de onderkant op de grond.
 	var center := aabb.get_center()
 	root.position = Vector3(s * center.x, -s * aabb.position.y, s * center.z)
-	# Handmatige correctie uit de Model-tuner bovenop de auto-fit.
+	# Handmatige correctie uit de Model-tuner bovenop de auto-fit. x/z schuiven
+	# het model binnen het vak (lokale ruimte, draait dus mee met de kijkrichting).
 	var t: Dictionary = model_tuning().get(_tune_key, {})
 	if not t.is_empty():
 		var extra: float = float(t.get("scale", 1.0))
 		root.scale *= extra
 		root.position *= extra  # grond/centrering schalen mee
-		root.position.y += float(t.get("y", 0.0))
+		root.position += Vector3(float(t.get("x", 0.0)), float(t.get("y", 0.0)), float(t.get("z", 0.0)))
 
 
 ## Gezamenlijke AABB van alle zichtbare delen, in de lokale ruimte van root.

@@ -21,6 +21,8 @@ var _type_btn: OptionButton
 var _arch_btn: OptionButton
 var _scale_slider: HSlider
 var _y_slider: HSlider
+var _x_spin: SpinBox
+var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
 var _info: Label
 
@@ -121,18 +123,23 @@ func _build_ui() -> void:
 	_y_slider.custom_minimum_size = Vector2(240, 0)
 	_y_slider.value_changed.connect(_on_tuning_changed)
 	row2.add_child(_y_slider)
+	# X/Z: het model binnen het vak schuiven (bv. als het uit het midden staat).
+	row2.add_child(_make_label("  X"))
+	_x_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
+	row2.add_child(_make_label(" Z"))
+	_z_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
 
 	# Musket-rij: schaal, positie (wereld-units langs de hand-assen), rotatie.
 	var roww := HBoxContainer.new()
 	box.add_child(roww)
 	roww.add_child(_make_label("Musket: schaal"))
-	_weapon_spins["scale"] = _make_spin(roww, 0.1, 3.0, 0.05, 1.0)
+	_weapon_spins["scale"] = _make_spin(roww, 0.1, 3.0, 0.05, 1.0, _on_weapon_changed)
 	roww.add_child(_make_label(" pos"))
 	for k in ["px", "py", "pz"]:
-		_weapon_spins[k] = _make_spin(roww, -0.6, 0.6, 0.01, 0.0)
+		_weapon_spins[k] = _make_spin(roww, -0.6, 0.6, 0.01, 0.0, _on_weapon_changed)
 	roww.add_child(_make_label(" rot°"))
 	for k in ["rx", "ry", "rz"]:
-		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0)
+		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
 
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
@@ -161,13 +168,13 @@ func _make_label(text: String) -> Label:
 	return l
 
 
-func _make_spin(parent: Node, minv: float, maxv: float, step: float, def: float) -> SpinBox:
+func _make_spin(parent: Node, minv: float, maxv: float, step: float, def: float, cb: Callable) -> SpinBox:
 	var s := SpinBox.new()
 	s.min_value = minv
 	s.max_value = maxv
 	s.step = step
 	s.value = def
-	s.value_changed.connect(_on_weapon_changed)
+	s.value_changed.connect(cb)
 	parent.add_child(s)
 	return s
 
@@ -229,6 +236,8 @@ func _reload_pawns() -> void:
 	var t: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {})
 	_scale_slider.value = float(t.get("scale", 1.0))
 	_y_slider.value = float(t.get("y", 0.0))
+	_x_spin.value = float(t.get("x", 0.0))
+	_z_spin.value = float(t.get("z", 0.0))
 	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
 	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
 	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
@@ -249,6 +258,8 @@ func _on_tuning_changed(_v: float) -> void:
 	PawnView.set_model_tuning(_pawn._tune_key, {
 		"scale": snappedf(_scale_slider.value, 0.01),
 		"y": snappedf(_y_slider.value, 0.005),
+		"x": snappedf(_x_spin.value, 0.01),
+		"z": snappedf(_z_spin.value, 0.01),
 	})
 	_respawn_model()
 
@@ -284,8 +295,8 @@ func _refresh_info() -> void:
 	if _pawn._tune_key == "":
 		_info.text = "Geen .glb gevonden voor deze combinatie — placeholder-stuk. Drop eerst een model (zie MODEL-WISHLIST.md)."
 	else:
-		_info.text = "%s  ·  schaal %.2f  ·  hoogte %+.3f   (links = referentiestuk; OPSLAAN schrijft model_tuning.json)" % [
-			_pawn._tune_key, _scale_slider.value, _y_slider.value]
+		_info.text = "%s  ·  schaal %.2f  ·  hoogte %+.3f  ·  x %+.2f  ·  z %+.2f   (links = referentiestuk; OPSLAAN schrijft model_tuning.json)" % [
+			_pawn._tune_key, _scale_slider.value, _y_slider.value, _x_spin.value, _z_spin.value]
 
 
 func _save() -> void:
