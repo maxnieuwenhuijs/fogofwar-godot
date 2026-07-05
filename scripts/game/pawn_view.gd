@@ -409,6 +409,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 		if ResourceLoader.exists(path):
 			_tune_key = "%s/%s" % [fac, String(path).get_file().get_basename()]
 			_swap_piece(load(path), true)  # auto-fit: schaal/grond/180°
+			_attach_weapon(fac)
 			return
 	# Nog geen model-bestand: geometrisch stuk + archetype-silhouet.
 	if _piece == null:
@@ -461,6 +462,60 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	_mesh.visible = false
 	_marker.visible = false
 	_update_material()
+
+
+## Wapen-prop (musket) aan de rechterhand van het karaktermodel. Conventie:
+## assets/models/<factie>/musket.glb of .fbx (statische mesh). De prop wordt
+## automatisch op musketlengte (~0.55 wereld-unit) geschaald; fijnafstelling
+## via model_tuning.json sleutel "<factie>/musket":
+##   {"scale": 1.0, "pos": [x,y,z], "rot": [graden x,y,z]}
+func _attach_weapon(fac: String) -> void:
+	if _unit_type != 0:
+		return  # v1: alleen infanterie draagt het musket
+	var path := ""
+	for ext in [".glb", ".fbx"]:
+		var p := "%s%s/musket%s" % [MODELS_DIR, fac, ext]
+		if ResourceLoader.exists(p):
+			path = p
+			break
+	if path == "":
+		return
+	var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return
+	var skel: Skeleton3D = skels[0]
+	var bone := -1
+	for cand in ["mixamorig:RightHand", "RightHand"]:
+		bone = skel.find_bone(cand)
+		if bone >= 0:
+			break
+	if bone < 0:
+		for i in skel.get_bone_count():
+			if String(skel.get_bone_name(i)).contains("RightHand"):
+				bone = i
+				break
+	if bone < 0:
+		return
+	var att := BoneAttachment3D.new()
+	skel.add_child(att)
+	att.bone_idx = bone
+	var prop: Node3D = (load(path) as PackedScene).instantiate()
+	att.add_child(prop)
+	# Auto-schaal: langste as van de prop → ~0.55 wereld-unit (musketlengte),
+	# gecorrigeerd voor alle ouder-schalen (skelet/auto-fit).
+	var ab := _combined_aabb(prop)
+	var longest: float = maxf(ab.size.x, maxf(ab.size.y, ab.size.z))
+	var parent_scale: float = prop.global_transform.basis.get_scale().x
+	if longest > 0.0001 and parent_scale > 0.0001:
+		var factor := 0.55 / (longest * parent_scale)
+		prop.scale = Vector3(factor, factor, factor)
+	# Fijnafstelling uit de tuning (positie in hand-ruimte, rotatie in graden).
+	var t: Dictionary = model_tuning().get("%s/musket" % fac, {})
+	prop.scale *= float(t.get("scale", 1.0))
+	var pos: Array = t.get("pos", [0.0, 0.0, 0.0])
+	var rot: Array = t.get("rot", [0.0, 0.0, 0.0])
+	prop.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2]))
+	prop.rotation_degrees = Vector3(float(rot[0]), float(rot[1]), float(rot[2]))
 
 
 ## Normaliseer een geïmporteerd model naar bord-maat: meet de gezamenlijke AABB,

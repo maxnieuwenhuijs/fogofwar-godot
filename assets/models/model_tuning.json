@@ -1,0 +1,11 @@
+{
+	"muis/infanterie_basis": {
+		"scale": 1.26,
+		"y": -0.4
+	},
+	"muis/musket": {
+		"scale": 1.0,
+		"pos": [0.0, 0.0, 0.0],
+		"rot": [90.0, 0.0, 0.0]
+	}
+}
