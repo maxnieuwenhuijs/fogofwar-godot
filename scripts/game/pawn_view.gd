@@ -251,15 +251,29 @@ func _play_variant(base: String, desync: bool = false) -> void:
 
 ## Alle varianten van een basisnaam in het model: exact ("walk") of met
 ## volgnummer ("walk2"), inclusief bibliotheek-voorvoegsel ("lib/walk2").
+## Synoniemen zoals clips uit Blender/Mixamo heten, zodat een model met
+## "fire" of "death1/death2" werkt zonder hernoemen of her-export.
+const ANIM_ALIASES: Dictionary = {
+	"attack": ["fire", "shoot"],
+	"die": ["death"],
+	"melee": ["punch", "stab"],
+}
+
+
 func _variants_of(base: String) -> Array:
 	if _variant_cache.has(base):
 		return _variant_cache[base]
+	var bases: Array = [base]
+	bases.append_array(ANIM_ALIASES.get(base, []))
 	var out: Array = []
 	for a in _anim.get_animation_list():
 		var n := String(a)
 		n = n.get_slice("/", n.get_slice_count("/") - 1)
-		if n == base or (n.begins_with(base) and n.substr(base.length()).is_valid_int()):
-			out.append(String(a))
+		for b in bases:
+			var bs := String(b)
+			if n == bs or (n.begins_with(bs) and n.substr(bs.length()).is_valid_int()):
+				out.append(String(a))
+				break
 	_variant_cache[base] = out
 	return out
 
@@ -315,7 +329,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	# en blijft het lijk in de eindpose van de animatie liggen.
 	if _anim != null and not _variants_of(anim_die).is_empty():
 		play_die()
-		_try_pop_hat(dir)  # alleen als de hoed een los mesh-object is
+		_shed_parts(dir)  # losse delen: hoed en/of één ledemaat kan eraf
 		_become_debris()
 		_spawn_blood(global_position + dir * 0.2, 3, 0.28, fx("death_blood_delay", 0.9))
 		return
@@ -537,48 +551,66 @@ func _flat_rotation(part: Node3D) -> Vector3:
 	return (Basis(Vector3.UP, yaw) * wobble * base).get_euler()
 
 
-## Heeft het LEVENDE model de hoed als los mesh-object (naam bevat "hat" —
-## in Blender losgeknipt met P → Selection), dan kan hij er bij een lichte
-## kill afwippen: echte hoed verbergen + gib-hoed wegslingeren. Zit de hoed
-## vast in de mesh, dan gebeurt er niets (geen dubbel hoedje).
-func _try_pop_hat(dir: Vector3) -> void:
-	if _piece == null or randf() > fx("hat_pop_chance", 0.55):
+## Lichte kill op een model met losse delen (hat/armL/armR/legL/legR als
+## eigen mesh-objecten): soms wipt de hoed eraf en soms vliegt er één
+## ledemaat af — de echte mesh verdwijnt en de gib-tegenhanger vliegt, dus
+## nooit dubbele delen. Modellen zonder losse delen: er gebeurt niets.
+func _shed_parts(dir: Vector3) -> void:
+	if _piece == null:
 		return
-	var hat_mesh: MeshInstance3D = null
-	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
-		if _is_hat(mi):
-			hat_mesh = mi
+	var live: Array = _piece.find_children("*", "MeshInstance3D", true, false)
+	if randf() < fx("hat_pop_chance", 0.55):
+		_shed_one(live, "hat", dir, fx("hat_fling_power", 1.5), fx("hat_fling_time", 1.8))
+	if randf() < fx("limb_shed_chance", 0.4):
+		var limbs: Array = ["arml", "armr", "legl", "legr"]
+		limbs.shuffle()
+		for limb in limbs:
+			if _shed_one(live, String(limb), dir, 0.9):
+				break
+
+
+## Verberg het levende deel (naam bevat part_name) en slinger de
+## gib-tegenhanger weg. false als het model dit deel niet los heeft.
+func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> bool:
+	var target: MeshInstance3D = null
+	for mi in live:
+		if String(mi.name).to_lower().contains(part_name):
+			target = mi
 			break
-	if hat_mesh == null:
-		return
-	hat_mesh.visible = false
-	_pop_hat(dir)
+	if target == null or not target.visible:
+		return false
+	if not _fling_single_gib(part_name, dir, violence, time_scale):
+		return false
+	target.visible = false
+	return true
 
 
-## Slingert het gib-hoedje weg (de rest van het gibs-bestand blijft verborgen).
-func _pop_hat(dir: Vector3) -> void:
+## Laad het gibs-bestand en slinger alléén het deel met deze naam weg;
+## de rest van de brokstukken blijft verborgen.
+func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> bool:
 	if _model_path == "" or _piece == null:
-		return
+		return false
 	var gibs_path := _model_path.get_basename() + "_gibs.glb"
 	if not ResourceLoader.exists(gibs_path):
-		return
+		return false
 	var scene_parent := get_parent()
 	if scene_parent == null:
-		return
+		return false
 	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
 	scene_parent.add_child(parts_root)
 	parts_root.global_transform = (_piece as Node3D).global_transform
-	var hat: Node3D = null
+	var chosen: Node3D = null
 	for part in parts_root.find_children("*", "MeshInstance3D", true, false):
-		if _is_hat(part) and hat == null:
-			hat = part as Node3D
+		if chosen == null and String(part.name).to_lower().contains(part_name):
+			chosen = part as Node3D
 		else:
 			(part as MeshInstance3D).visible = false
-	if hat == null:
+	if chosen == null:
 		parts_root.queue_free()
-		return
-	_fling_part(hat, dir, fx("hat_fling_power", 1.5), fx("hat_fling_time", 1.8))
+		return false
+	_fling_part(chosen, dir, violence, time_scale)
 	parts_root.add_to_group("battlefield_debris")
+	return true
 
 
 ## Eén brokstuk wegslingeren: boog in de klap-richting + radiale spreiding,

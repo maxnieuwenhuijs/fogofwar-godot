@@ -9,5 +9,6 @@
 	"gib_spin": 0.95,
 	"hat_fling_power": 0.8,
 	"hat_fling_time": 1.8,
-	"hat_pop_chance": 0.4
+	"hat_pop_chance": 0.4,
+	"limb_shed_chance": 0.4
 }
