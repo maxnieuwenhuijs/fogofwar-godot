@@ -107,9 +107,21 @@ static func fx(key: String, def: float) -> float:
 	return float(_fx.get(key, def))
 
 
-## Herlaad de effect-tuning (Model-tuner doet dit bij elke gib-test).
+## Herlaad de effect-tuning van schijf.
 static func reload_effects() -> void:
 	_fx_loaded = false
+
+
+## Zet één effect-waarde (Model-tuner: live draaiknopjes).
+static func set_fx(key: String, value: float) -> void:
+	fx(key, 0.0)  # zorgt dat het bestand geladen is
+	_fx[key] = value
+
+
+## Het volledige effect-dict (voor opslaan vanuit de Model-tuner).
+static func fx_all() -> Dictionary:
+	fx("", 0.0)
+	return _fx
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D

@@ -13,6 +13,17 @@ const ARCHS: Array = ["base", "spd", "hp", "atk", "mix"]
 const ARCH_CARDS: Dictionary = {
 	"spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1],
 }
+## Effect-knopjes (effects_tuning.json): label, bereik en standaardwaarde.
+const FX_DEFS: Array = [
+	{"key": "hat_fling_power", "label": "hoedkracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.5},
+	{"key": "hat_pop_chance", "label": "hoedkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.55},
+	{"key": "gib_fling_power", "label": "worpkracht", "min": 0.2, "max": 2.5, "step": 0.05, "def": 1.0},
+	{"key": "gib_spin", "label": "tolling", "min": 0.0, "max": 2.5, "step": 0.05, "def": 1.0},
+	{"key": "blood_extra_delay", "label": "bloed-wacht", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.4},
+	{"key": "blood_grow", "label": "bloed-groei", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "blood_size", "label": "bloed-maat", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "death_blood_delay", "label": "dood-bloed", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.9},
+]
 
 var _pawn: PawnView = null
 var _ref: PawnView = null
@@ -24,6 +35,7 @@ var _y_slider: HSlider
 var _x_spin: SpinBox
 var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
+var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _info: Label
 
 var _updating := false  # geen slider-events tijdens het her-instellen
@@ -88,7 +100,7 @@ func _build_ui() -> void:
 	add_child(ui)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -230.0
+	panel.offset_top = -330.0
 	ui.add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -148,6 +160,19 @@ func _build_ui() -> void:
 	roww.add_child(_make_label(" rot°"))
 	for k in ["rx", "ry", "rz"]:
 		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
+
+	# Effect-rijen: alle knopjes uit effects_tuning.json, live toegepast.
+	var fxrow: HBoxContainer = null
+	for i in FX_DEFS.size():
+		if i % 4 == 0:
+			fxrow = HBoxContainer.new()
+			box.add_child(fxrow)
+			fxrow.add_child(_make_label("Effect: " if i == 0 else "        "))
+		var d: Dictionary = FX_DEFS[i]
+		fxrow.add_child(_make_label(" %s" % d.label))
+		var spin := _make_spin(fxrow, float(d.min), float(d.max), float(d.step),
+			PawnView.fx(String(d.key), float(d.def)), _on_fx_changed)
+		_fx_spins[String(d.key)] = spin
 
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
@@ -321,10 +346,18 @@ func _freeze_pose() -> void:
 
 ## Test de dood-met-dismemberment op kanon- (1.4) of musket-kracht (0.75);
 ## daarna komt het model vanzelf terug.
+## De draaiknopjes zetten de waarden direct in het actieve effect-dict; de
+## eerstvolgende gib-test gebruikt ze meteen. OPSLAAN schrijft ze naar schijf.
+func _on_fx_changed(_v: float) -> void:
+	if _updating:
+		return
+	for key in _fx_spins:
+		PawnView.set_fx(String(key), snappedf((_fx_spins[key] as SpinBox).value, 0.001))
+
+
 func _on_gib_test(strength: float) -> void:
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
-	PawnView.reload_effects()  # effects_tuning.json live herladen per test
 	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength)
 	_pawn = null
 	var t := create_tween()
@@ -358,4 +391,7 @@ func _save() -> void:
 		_info.text = "OPSLAAN MISLUKT: kan %s niet schrijven" % SAVE_PATH
 		return
 	f.store_string(JSON.stringify(PawnView.model_tuning(), "\t") + "\n")
-	_info.text = "Opgeslagen → %s (geldt direct in het spel)" % SAVE_PATH
+	var f2 := FileAccess.open(PawnView.EFFECTS_PATH, FileAccess.WRITE)
+	if f2 != null:
+		f2.store_string(JSON.stringify(PawnView.fx_all(), "\t") + "\n")
+	_info.text = "Opgeslagen → model_tuning.json + effects_tuning.json (geldt direct in het spel)"
