@@ -34,6 +34,8 @@ var _type_btn: OptionButton
 var _arch_btn: OptionButton
 var _scale_slider: HSlider
 var _y_slider: HSlider
+var _scale_spin: SpinBox
+var _y_spin: SpinBox
 var _x_spin: SpinBox
 var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
@@ -73,7 +75,9 @@ func _build_world() -> void:
 			var mat := StandardMaterial3D.new()
 			mat.albedo_color = Color(0.92, 0.92, 0.9) if (x + z) % 2 == 0 else Color(0.18, 0.18, 0.2)
 			tile.material_override = mat
-			tile.position = Vector3(float(x), -0.05, float(z))
+			# Zelfde plaatsing als het echte bord: tegel gecentreerd op y=0
+			# (top op +0.05), zodat de pion-origin exact op de tegel-top staat.
+			tile.position = Vector3(float(x), 0.0, float(z))
 			add_child(tile)
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-55.0, -30.0, 0.0)
@@ -133,18 +137,20 @@ func _build_ui() -> void:
 	_scale_slider.max_value = 2.5
 	_scale_slider.step = 0.01
 	_scale_slider.value = 1.0
-	_scale_slider.custom_minimum_size = Vector2(340, 0)
-	_scale_slider.value_changed.connect(_on_tuning_changed)
+	_scale_slider.custom_minimum_size = Vector2(280, 0)
+	_scale_slider.value_changed.connect(_on_slider_paired.bind("scale"))
 	row2.add_child(_scale_slider)
+	_scale_spin = _make_spin(row2, 0.4, 2.5, 0.01, 1.0, _on_spin_paired.bind("scale"))
 	row2.add_child(_make_label("  Hoogte"))
 	_y_slider = HSlider.new()
 	_y_slider.min_value = -0.4
 	_y_slider.max_value = 0.4
 	_y_slider.step = 0.005
 	_y_slider.value = 0.0
-	_y_slider.custom_minimum_size = Vector2(240, 0)
-	_y_slider.value_changed.connect(_on_tuning_changed)
+	_y_slider.custom_minimum_size = Vector2(200, 0)
+	_y_slider.value_changed.connect(_on_slider_paired.bind("y"))
 	row2.add_child(_y_slider)
+	_y_spin = _make_spin(row2, -0.4, 0.4, 0.005, 0.0, _on_spin_paired.bind("y"))
 	# X/Z: het model binnen het vak schuiven (bv. als het uit het midden staat).
 	row2.add_child(_make_label("  X"))
 	_x_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
@@ -283,7 +289,9 @@ func _reload_pawns() -> void:
 	_updating = true
 	var t: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {})
 	_scale_slider.value = float(t.get("scale", 1.0))
+	_scale_spin.value = float(t.get("scale", 1.0))
 	_y_slider.value = float(t.get("y", 0.0))
+	_y_spin.value = float(t.get("y", 0.0))
 	_x_spin.value = float(t.get("x", 0.0))
 	_z_spin.value = float(t.get("z", 0.0))
 	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
@@ -295,6 +303,32 @@ func _reload_pawns() -> void:
 		_weapon_spins[["rx", "ry", "rz"][i]].value = float(wrot[i])
 	_updating = false
 	_refresh_info()
+
+
+## Slider bewogen → spin bijwerken, dan toepassen.
+func _on_slider_paired(v: float, key: String) -> void:
+	if _updating:
+		return
+	_updating = true
+	if key == "scale":
+		_scale_spin.value = v
+	else:
+		_y_spin.value = v
+	_updating = false
+	_on_tuning_changed(v)
+
+
+## Spin gewijzigd → slider bijwerken, dan toepassen.
+func _on_spin_paired(v: float, key: String) -> void:
+	if _updating:
+		return
+	_updating = true
+	if key == "scale":
+		_scale_slider.value = v
+	else:
+		_y_slider.value = v
+	_updating = false
+	_on_tuning_changed(v)
 
 
 func _on_tuning_changed(_v: float) -> void:

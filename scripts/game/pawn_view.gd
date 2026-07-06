@@ -903,13 +903,17 @@ func _auto_fit_model(root: Node3D) -> void:
 	var center := aabb.get_center()
 	root.position = Vector3(s * center.x, -s * aabb.position.y, s * center.z)
 	# Handmatige correctie uit de Model-tuner bovenop de auto-fit. x/z schuiven
-	# het model binnen het vak (lokale ruimte, draait dus mee met de kijkrichting).
+	# het model binnen het vak in TEGEL-ruimte: onafhankelijk van de kijkrichting,
+	# zodat rood en blauw (die tegengesteld kijken) én de tuner exact gelijk staan.
 	var t: Dictionary = model_tuning().get(_tune_key, {})
 	if not t.is_empty():
 		var extra: float = float(t.get("scale", 1.0))
 		root.scale *= extra
 		root.position *= extra  # grond/centrering schalen mee
-		root.position += Vector3(float(t.get("x", 0.0)), float(t.get("y", 0.0)), float(t.get("z", 0.0)))
+		# De PawnView is alleen om Y geroteerd (face_dir); compenseer die yaw zodat
+		# x = wereld-oost/west en z = wereld-noord/zuid blijven, wat je ook draait.
+		var xz := transform.basis.inverse() * Vector3(float(t.get("x", 0.0)), 0.0, float(t.get("z", 0.0)))
+		root.position += xz + Vector3(0.0, float(t.get("y", 0.0)), 0.0)
 
 
 ## Gezamenlijke AABB van alle zichtbare delen, in de lokale ruimte van root.
