@@ -365,8 +365,8 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		# druppels regenen neer en laten vlekken achter op het bord.
 		var mist := fx("blood_mist", 1.0)
 		if mist > 0.0:
-			_spawn_blood_mist(global_position + Vector3.UP * 0.45, mist)
-			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist))
+			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
+			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
 		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
 		_spawn_blood(global_position + dir * 0.25, 2, 0.25, 0.45)
 		return
@@ -447,7 +447,9 @@ func _become_debris() -> void:
 ## rond het inslagpunt. Ze verschijnen pas ná `delay` (als het stuk op de
 ## grond ligt) en lopen dan vol van een stipje naar volle grootte.
 ## Gaan mee in de debris-opruiming.
-func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, delay: float = 0.0) -> void:
+## grow_time > 0 = gesynchroniseerde poel (bloedspuit): geen extra wachttijd,
+## de poel groeit in precies die duur naar vol — timing matcht de straal.
+func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, delay: float = 0.0, grow_time: float = -1.0) -> void:
 	var parent := get_parent()
 	if parent == null:
 		return
@@ -492,10 +494,16 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 		disc.visible = false
 		disc.scale = Vector3(0.08, 1.0, 0.08)
 		var tw := disc.create_tween()
-		tw.tween_interval(delay + fx("blood_extra_delay", 0.4) + randf() * 0.3)
-		tw.tween_callback(disc.show)
-		tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9) * fx("blood_grow", 1.0)) \
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		if grow_time > 0.0:
+			tw.tween_interval(delay + randf() * 0.08)
+			tw.tween_callback(disc.show)
+			tw.tween_property(disc, "scale", Vector3.ONE, grow_time * randf_range(0.85, 1.0)) \
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		else:
+			tw.tween_interval(delay + fx("blood_extra_delay", 0.4) + randf() * 0.3)
+			tw.tween_callback(disc.show)
+			tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9) * fx("blood_grow", 1.0)) \
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 ## Gerichte bloedstraal: druppels spuiten kort achter elkaar in een kegel rond
@@ -537,17 +545,23 @@ func _spawn_blood_spurt(origin: Vector3, dir: Vector3, amount: int) -> void:
 		tw.tween_property(drop, "global_position", ground, randf_range(0.12, 0.22)) 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.parallel().tween_property(drop, "scale", Vector3(0.3, 0.3, 0.3), 0.3)
 		tw.tween_callback(drop.queue_free)
-	# Klein plasje waar de straal neerkomt.
-	_spawn_blood(Vector3(origin.x, global_position.y, origin.z) + base_dir * 0.3, 1, 0.05, 0.3)
+	# Plasje waar de straal neerkomt: begint bij de eerste druppels en is op
+	# zijn grootst precies wanneer de straal klaar is met neerkomen.
+	_spawn_blood(Vector3(origin.x, global_position.y, origin.z) + base_dir * 0.3, 1, 0.05, 0.18, 0.42)
 
 
 ## Grove bloedmist (kanon): halfdoorzichtige donkerrode flarden die uitzetten,
 ## opzij/omhoog driften en in ~0.7s vervagen. Puur visueel, ruimt zichzelf op.
 ## power = de "bloedmist"-knop (0 = uit).
-func _spawn_blood_mist(center: Vector3, power: float) -> void:
+func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 	var parent := get_parent()
 	if parent == null or power <= 0.0:
 		return
+	var blast := dir
+	blast.y = 0.0
+	if blast.length() < 0.01:
+		blast = Vector3(randf() - 0.5, 0.0, randf() - 0.5)
+	blast = blast.normalized()
 	var count := int(clampf(4.0 + 3.0 * power, 3.0, 12.0))
 	for i in count:
 		var puff := MeshInstance3D.new()
@@ -555,8 +569,8 @@ func _spawn_blood_mist(center: Vector3, power: float) -> void:
 		var r := randf_range(0.10, 0.22) * (0.7 + 0.3 * power)
 		m.radius = r
 		m.height = r * 2.0
-		m.radial_segments = 6
-		m.rings = 4
+		m.radial_segments = 12
+		m.rings = 6
 		puff.mesh = m
 		var mat := StandardMaterial3D.new()
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -565,9 +579,13 @@ func _spawn_blood_mist(center: Vector3, power: float) -> void:
 		puff.material_override = mat
 		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(puff)
-		puff.global_position = center + Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.3
+		# Wolk start rond het lijf maar al richting de blast, en drijft die
+		# kant verder op (van voren geraakt = mist blaast naar achteren).
+		puff.global_position = center + blast * randf_range(0.0, 0.35) \
+			+ Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.22
 		var life := randf_range(0.5, 0.9)
-		var drift := Vector3(randf() - 0.5, randf_range(0.15, 0.45), randf() - 0.5) * 0.5
+		var drift := blast * randf_range(0.35, 0.8) \
+			+ Vector3((randf() - 0.5) * 0.3, randf_range(0.15, 0.4), (randf() - 0.5) * 0.3)
 		var tw := puff.create_tween()
 		tw.set_parallel(true)
 		tw.tween_property(puff, "global_position", puff.global_position + drift, life)
@@ -581,7 +599,7 @@ func _spawn_blood_mist(center: Vector3, power: float) -> void:
 ## Rode bloedwolk: een pluim mini-bolletjes die naar buiten/omhoog spatten en
 ## dan naar de grond vallen en krimpen (kortstondig, ruimt zichzelf op). Voor
 ## de kanon-explosie (centrum) en het "bloeden" van weggerukte vlees-delen.
-func _spawn_blood_burst(center: Vector3, amount: int) -> void:
+func _spawn_blood_burst(center: Vector3, amount: int, dir: Vector3 = Vector3.ZERO) -> void:
 	var parent := get_parent()
 	if parent == null or amount <= 0:
 		return
@@ -603,6 +621,9 @@ func _spawn_blood_burst(center: Vector3, amount: int) -> void:
 		parent.add_child(drop)
 		drop.global_position = center
 		var out := Vector3(randf() - 0.5, randf() * 0.8, randf() - 0.5).normalized()
+		if dir != Vector3.ZERO:
+			# Blast-bias: de fontein spuit overwegend met de klap mee.
+			out = (dir.normalized() * 0.9 + out * 0.7).normalized()
 		var dist := randf_range(0.15, 0.55)
 		var apex := center + out * dist + Vector3.UP * randf_range(0.1, 0.4)
 		var ground := Vector3(apex.x, global_position.y + 0.02, apex.z)
