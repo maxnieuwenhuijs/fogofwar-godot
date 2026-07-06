@@ -34,10 +34,11 @@ func _ready() -> void:
 	_build_ui()
 	_reload_pawns()
 	if "gibshot" in OS.get_cmdline_user_args():
+		var gs_strength := 0.75 if "musket" in OS.get_cmdline_user_args() else 1.4
 		await get_tree().create_timer(1.0).timeout
 		if _pawn != null and is_instance_valid(_pawn):
-			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), 1.4)
-		await get_tree().create_timer(0.32).timeout
+			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), gs_strength)
+		await get_tree().create_timer(1.0 if gs_strength < 1.2 else 0.32).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_gibs.png")
 		get_tree().quit()
 	if "shot" in OS.get_cmdline_user_args():
