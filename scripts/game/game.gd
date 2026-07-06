@@ -1167,7 +1167,7 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 	_shake(s)
 	_hitstop(0.03 + 0.03 * clampf(s, 0.0, 1.6))
 	if killed:
-		_kill_view(pawn_id, world_dir)
+		_kill_view(pawn_id, world_dir, s)
 	else:
 		var pv: PawnView = _pawn_views.get(pawn_id)
 		if pv != null and pv.visible:
@@ -1192,14 +1192,14 @@ func _knockback_dir(from_coord: Vector2i, to_coord: Vector2i) -> Vector3:
 
 ## Start de ragdoll van een geëlimineerde pion en haal 'm uit de view-map,
 ## zodat _refresh_all/_update_health_bars hem verder met rust laten.
-func _kill_view(pawn_id: int, world_dir: Vector3) -> void:
+func _kill_view(pawn_id: int, world_dir: Vector3, strength: float = 0.7) -> void:
 	_dying_views.erase(pawn_id)
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
 	_pawn_views.erase(pawn_id)
 	if pv.visible:
-		pv.play_death(world_dir)  # ruimt zichzelf op (queue_free)
+		pv.play_death(world_dir, strength)  # ruimt zichzelf op (queue_free)
 	else:
 		pv.queue_free()
 

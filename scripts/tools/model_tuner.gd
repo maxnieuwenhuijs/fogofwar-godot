@@ -33,6 +33,13 @@ func _ready() -> void:
 	_build_world()
 	_build_ui()
 	_reload_pawns()
+	if "gibshot" in OS.get_cmdline_user_args():
+		await get_tree().create_timer(1.0).timeout
+		if _pawn != null and is_instance_valid(_pawn):
+			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), 1.4)
+		await get_tree().create_timer(0.32).timeout
+		get_viewport().get_texture().get_image().save_png("res://_shot_gibs.png")
+		get_tree().quit()
 	if "shot" in OS.get_cmdline_user_args():
 		await get_tree().create_timer(1.4).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
@@ -152,6 +159,10 @@ func _build_ui() -> void:
 	freeze_btn.text = "stilzetten"
 	freeze_btn.pressed.connect(_freeze_pose)
 	row3.add_child(freeze_btn)
+	var gib_btn := Button.new()
+	gib_btn.text = "gibs (kanon)"
+	gib_btn.pressed.connect(_on_gib_test)
+	row3.add_child(gib_btn)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -273,7 +284,8 @@ func _on_tuning_changed(_v: float) -> void:
 func _respawn_model() -> void:
 	var doctrine: int = _fac_btn.get_selected_id()
 	var unit_type: int = _type_btn.get_selected_id()
-	_pawn.queue_free()
+	if _pawn != null and is_instance_valid(_pawn):
+		_pawn.queue_free()
 	_pawn = PAWN_SCENE.instantiate()
 	_pawn.team = Constants.Team.BLUE
 	_pawn.position = Vector3(0.0, 0.05, 0.0)
@@ -298,6 +310,17 @@ func _freeze_pose() -> void:
 	_pawn._anim.play(String(variants[0]))
 	_pawn._anim.seek(0.4, true)
 	_pawn._anim.pause()
+
+
+## Test de dood-met-dismemberment (kanon-kracht); daarna komt het model terug.
+func _on_gib_test() -> void:
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), 1.4)
+	_pawn = null
+	var t := create_tween()
+	t.tween_interval(2.4)
+	t.tween_callback(_respawn_model)
 
 
 func _on_clip(clip: String) -> void:

@@ -59,7 +59,8 @@ var _tint_nodes: Array = []  # delen in groep "team_tint" → teamkleur/status
 var _unit_type: int = -1
 var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
 var _variant_cache: Dictionary = {}  # basisclip -> [volledige variant-namen]
-var _tune_key: String = ""   # "muis/infanterie_basis" — sleutel in model_tuning.json
+var _tune_key: String = ""   # "mouse/infantry_base" — sleutel in model_tuning.json
+var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb)
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
@@ -253,7 +254,9 @@ func stagger(world_dir: Vector3) -> void:
 ## Lichte ragdoll: de pion valt om in de knockback-richting, glijdt een stukje
 ## door en zinkt daarna in de grond weg. Ruimt zichzelf op (queue_free) aan het
 ## eind. Geen echte physics — een goedkope, voorspelbare "topple".
-func play_death(world_dir: Vector3) -> void:
+## strength = impact van de dodelijke klap (melee ~0.7, schot 0.75, kanon 1.4):
+## bepaalt het random dismemberment via _spawn_gibs (kanon = soms álles).
+func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	_ring.visible = false
 	set_hovered(false)
 	play_die()  # echte model-anim indien aanwezig
@@ -263,6 +266,11 @@ func play_death(world_dir: Vector3) -> void:
 		dir = Vector3(0, 0, 1)
 	dir = dir.normalized()
 	_fling_weapon(dir)  # musket vliegt uit de handen
+	if _spawn_gibs(dir, strength):
+		# Volledige gib: het lijf klapt uit elkaar — origineel meteen weg,
+		# alleen de brokstukken + het wegzinkende sokkeltje blijven.
+		if _piece != null:
+			_piece.visible = false
 	# Kantel-as staat loodrecht op de valrichting (omvallen "voorover").
 	var axis := Vector3.UP.cross(dir).normalized()
 	if axis.length() < 0.01:
@@ -309,6 +317,82 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	arc.tween_interval(0.45)
 	arc.tween_property(w, "global_position:y", land.y - 0.7, 0.35).set_ease(Tween.EASE_IN)
 	arc.tween_callback(w.queue_free)
+
+
+## Random dismemberment bij dood, in proportie met de klap (zie play_death).
+## Laadt <model>_gibs.glb: losse, statische delen (Hat/ArmL/ArmR/LegL/LegR/
+## Torso...). Kanon (strength >= 1.2): ~45% klapt ALLES uit elkaar, anders 2-4
+## delen. Musket/melee: ~40% geen delen (gewone omvaller), anders 1-2 — met
+## voorkeur voor het hoedje. Retour: true bij een volledige gib.
+func _spawn_gibs(dir: Vector3, strength: float) -> bool:
+	if _model_path == "" or _piece == null:
+		return false
+	var gibs_path := _model_path.get_basename() + "_gibs.glb"
+	if not ResourceLoader.exists(gibs_path):
+		return false
+	var scene_parent := get_parent()
+	if scene_parent == null:
+		return false
+	# Hoeveel delen? Proportioneel met de klap.
+	var full := false
+	var count := 0
+	if strength >= 1.2:
+		full = randf() < 0.45
+		count = 2 + randi() % 3
+	else:
+		if randf() < 0.4:
+			return false  # gewone omvaller
+		count = 1 if randf() < 0.65 else 2
+	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
+	scene_parent.add_child(parts_root)
+	# Zelfde maat/rotatie/plek als het getunede lijf.
+	parts_root.global_transform = (_piece as Node3D).global_transform
+	var parts: Array = parts_root.find_children("*", "MeshInstance3D", true, false)
+	if parts.is_empty():
+		parts_root.queue_free()
+		return false
+	var pool: Array = parts.duplicate()
+	pool.shuffle()
+	pool.sort_custom(func(a, b): return _is_hat(a) and not _is_hat(b))
+	var chosen: Array = parts if full else pool.slice(0, mini(count, parts.size()))
+	for part in parts:
+		if chosen.has(part):
+			_fling_part(part as Node3D, dir)
+		else:
+			(part as MeshInstance3D).visible = false
+	var cleanup := parts_root.create_tween()
+	cleanup.tween_interval(2.2)
+	cleanup.tween_callback(parts_root.queue_free)
+	return full
+
+
+func _is_hat(node: Node) -> bool:
+	return String(node.name).to_lower().contains("hat")
+
+
+## Eén brokstuk wegslingeren: boog in de klap-richting + radiale spreiding,
+## tollend, even blijven liggen, wegzinken. Alleen tweens op het deel zelf
+## (de pion mag intussen veilig ge-freed worden).
+func _fling_part(part: Node3D, dir: Vector3) -> void:
+	var radial := part.global_position - global_position
+	radial.y = 0.0
+	if radial.length() > 0.01:
+		radial = radial.normalized()
+	else:
+		radial = Vector3(randf() - 0.5, 0.0, randf() - 0.5).normalized()
+	var fling := dir * 0.7 + radial * 0.5 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.4
+	fling.y = 0.0
+	var from := part.global_position
+	var land := Vector3(from.x, global_position.y, from.z) + fling
+	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7)
+	var spin := part.create_tween()
+	spin.tween_property(part, "rotation", part.rotation + Vector3(
+		randf_range(-6.0, 6.0), randf_range(-4.0, 4.0), randf_range(-6.0, 6.0)), 1.0)
+	var arc := part.create_tween()
+	arc.tween_property(part, "global_position", peak, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	arc.tween_property(part, "global_position", land, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	arc.tween_interval(randf_range(0.35, 0.6))
+	arc.tween_property(part, "global_position:y", land.y - 0.7, 0.35).set_ease(Tween.EASE_IN)
 
 
 func _on_anim_finished(anim_name: String) -> void:
@@ -447,6 +531,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	for path in candidates:
 		if ResourceLoader.exists(path):
 			_tune_key = "%s/%s" % [fac, String(path).get_file().get_basename()]
+			_model_path = path
 			_swap_piece(load(path), true)  # auto-fit: schaal/grond/180°
 			_attach_weapon(fac)
 			return
