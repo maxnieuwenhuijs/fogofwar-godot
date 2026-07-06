@@ -87,6 +87,30 @@ static func model_tuning() -> Dictionary:
 static func set_model_tuning(key: String, data: Dictionary) -> void:
 	model_tuning()[key] = data
 
+
+## Effect-tuning (assets/models/effects_tuning.json): losse knopjes voor
+## gibs/bloed/hoedje. Ontbrekende sleutels vallen terug op de code-default.
+const EFFECTS_PATH := "res://assets/models/effects_tuning.json"
+static var _fx: Dictionary = {}
+static var _fx_loaded: bool = false
+
+
+static func fx(key: String, def: float) -> float:
+	if not _fx_loaded:
+		_fx_loaded = true
+		if FileAccess.file_exists(EFFECTS_PATH):
+			var f := FileAccess.open(EFFECTS_PATH, FileAccess.READ)
+			if f != null:
+				var parsed = JSON.parse_string(f.get_as_text())
+				if parsed is Dictionary:
+					_fx = parsed
+	return float(_fx.get(key, def))
+
+
+## Herlaad de effect-tuning (Model-tuner doet dit bij elke gib-test).
+static func reload_effects() -> void:
+	_fx_loaded = false
+
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
 
@@ -279,7 +303,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		play_die()
 		_try_pop_hat(dir)  # alleen als de hoed een los mesh-object is
 		_become_debris()
-		_spawn_blood(global_position + dir * 0.2, 3, 0.28, 0.9)
+		_spawn_blood(global_position + dir * 0.2, 3, 0.28, fx("death_blood_delay", 0.9))
 		return
 	# Fallback zonder die-clip (geometrische stukken): klassieke omvaller.
 	var axis := Vector3.UP.cross(dir).normalized()
@@ -356,7 +380,7 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 	for i in amount:
 		var disc := MeshInstance3D.new()
 		var m := CylinderMesh.new()
-		m.top_radius = randf_range(0.05, 0.14)
+		m.top_radius = randf_range(0.05, 0.14) * fx("blood_size", 1.0)
 		m.bottom_radius = m.top_radius
 		m.height = 0.004
 		disc.mesh = m
@@ -378,9 +402,9 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 		disc.visible = false
 		disc.scale = Vector3(0.08, 1.0, 0.08)
 		var tw := disc.create_tween()
-		tw.tween_interval(delay + randf() * 0.3)
+		tw.tween_interval(delay + fx("blood_extra_delay", 0.4) + randf() * 0.3)
 		tw.tween_callback(disc.show)
-		tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9)) \
+		tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9) * fx("blood_grow", 1.0)) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
@@ -460,7 +484,7 @@ func _flat_rotation(part: Node3D) -> Vector3:
 ## kill afwippen: echte hoed verbergen + gib-hoed wegslingeren. Zit de hoed
 ## vast in de mesh, dan gebeurt er niets (geen dubbel hoedje).
 func _try_pop_hat(dir: Vector3) -> void:
-	if _piece == null or randf() > 0.55:
+	if _piece == null or randf() > fx("hat_pop_chance", 0.55):
 		return
 	var hat_mesh: MeshInstance3D = null
 	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
@@ -495,7 +519,7 @@ func _pop_hat(dir: Vector3) -> void:
 	if hat == null:
 		parts_root.queue_free()
 		return
-	_fling_part(hat, dir, 0.5)
+	_fling_part(hat, dir, fx("hat_fling_power", 1.5))
 	parts_root.add_to_group("battlefield_debris")
 
 
@@ -509,7 +533,7 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 		radial = radial.normalized()
 	else:
 		radial = Vector3(randf() - 0.5, 0.0, randf() - 0.5).normalized()
-	var power := 0.5 + 0.85 * violence
+	var power := (0.5 + 0.85 * violence) * fx("gib_fling_power", 1.0)
 	var fling := (dir * 0.7 + radial * 0.5 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.4) * power
 	fling.y = 0.0
 	var from := part.global_position
@@ -520,7 +544,7 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	# Tollen alleen tíjdens de vlucht (stopt bij landen), en bescheiden:
 	# ~een kwart tot halve omwenteling om één overheersende as.
 	var euler := Vector3.ZERO
-	euler[randi() % 3] = randf_range(1.5, 3.0) * (0.4 + 0.6 * violence) * (1.0 if randf() < 0.5 else -1.0)
+	euler[randi() % 3] = randf_range(1.5, 3.0) * (0.4 + 0.6 * violence) * fx("gib_spin", 1.0) * (1.0 if randf() < 0.5 else -1.0)
 	euler += Vector3(randf_range(-0.35, 0.35), randf_range(-0.35, 0.35), randf_range(-0.35, 0.35))
 	var spin := part.create_tween()
 	spin.tween_property(part, "rotation", part.rotation + euler, t_up + t_down) \

@@ -324,6 +324,7 @@ func _freeze_pose() -> void:
 func _on_gib_test(strength: float) -> void:
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
+	PawnView.reload_effects()  # effects_tuning.json live herladen per test
 	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength)
 	_pawn = null
 	var t := create_tween()
