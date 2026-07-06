@@ -15,21 +15,21 @@ const ARCH_CARDS: Dictionary = {
 }
 ## Effect-knopjes (effects_tuning.json): label, bereik en standaardwaarde.
 const FX_DEFS: Array = [
-	{"key": "hat_fling_power", "label": "hoedkracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.5},
-	{"key": "hat_fling_time", "label": "hoedhangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.8},
-	{"key": "hat_pop_chance", "label": "hoedkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.55},
-	{"key": "limb_shed_chance", "label": "ledemaatkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.4},
-	{"key": "limb_fling_power", "label": "ledemaatkracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 0.9},
-	{"key": "limb_fling_time", "label": "ledemaathangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.0},
-	{"key": "gib_fling_power", "label": "worpkracht", "min": 0.2, "max": 2.5, "step": 0.05, "def": 1.0},
-	{"key": "gib_spin", "label": "tolling", "min": 0.0, "max": 2.5, "step": 0.05, "def": 1.0},
-	{"key": "blood_burst", "label": "bloedwolk", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
-	{"key": "blood_spurt", "label": "bloedspuit", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
-	{"key": "blood_mist", "label": "bloedmist", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
-	{"key": "blood_extra_delay", "label": "bloed-wacht", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.4},
-	{"key": "blood_grow", "label": "bloed-groei", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
-	{"key": "blood_size", "label": "bloed-maat", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
-	{"key": "death_blood_delay", "label": "dood-bloed", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.9},
+	{"key": "hat_fling_power", "label": "hoed-kracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.5},
+	{"key": "hat_fling_time", "label": "hoed-hangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.8},
+	{"key": "hat_pop_chance", "label": "hoed-kans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.55},
+	{"key": "limb_shed_chance", "label": "ledemaat-kans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.4},
+	{"key": "limb_fling_power", "label": "ledemaat-kracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 0.9},
+	{"key": "limb_fling_time", "label": "ledemaat-hangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.0},
+	{"key": "gib_fling_power", "label": "gib-worpkracht", "min": 0.2, "max": 2.5, "step": 0.05, "def": 1.0},
+	{"key": "gib_spin", "label": "gib-tolling", "min": 0.0, "max": 2.5, "step": 0.05, "def": 1.0},
+	{"key": "blood_burst", "label": "wond-druppels", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "blood_extra_delay", "label": "plas-wacht", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.4},
+	{"key": "blood_grow", "label": "plas-groei", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "blood_size", "label": "plas-maat", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
+	{"key": "death_blood_delay", "label": "lijkpoel-fallback", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.9},
 ]
 
 var _pawn: PawnView = null
@@ -240,8 +240,8 @@ func _build_ui() -> void:
 	_dp_spins["grow"] = _make_spin(rowd, 0.1, 3.0, 0.05, 0.7, _on_death_pool_changed)
 	rowd.add_child(_make_label(" maat"))
 	_dp_spins["size"] = _make_spin(rowd, 0.5, 5.0, 0.1, 2.4, _on_death_pool_changed)
-	rowd.add_child(_make_label(" afstand"))
-	_dp_spins["forward"] = _make_spin(rowd, -1.0, 1.0, 0.05, 0.2, _on_death_pool_changed)
+	rowd.add_child(_make_label(" torso-afstand"))
+	_dp_spins["torso"] = _make_spin(rowd, -1.0, 1.0, 0.05, 0.3, _on_death_pool_changed)
 	var dp_test := Button.new()
 	dp_test.text = "test dood-poel"
 	dp_test.pressed.connect(_on_death_pool_test)
@@ -395,7 +395,7 @@ func _load_death_pool_values() -> void:
 	_dp_spins["delay"].value = float(cfg.get("delay", 0.9))
 	_dp_spins["grow"].value = float(cfg.get("grow", 0.7))
 	_dp_spins["size"].value = float(cfg.get("size", 2.4))
-	_dp_spins["forward"].value = float(cfg.get("forward", 0.2))
+	_dp_spins["torso"].value = float(cfg.get("torso", cfg.get("forward", 0.3)))
 	_updating = false
 
 
@@ -408,7 +408,7 @@ func _on_death_pool_changed(_v: float) -> void:
 		"delay": snappedf(_dp_spins["delay"].value, 0.01),
 		"grow": snappedf(_dp_spins["grow"].value, 0.01),
 		"size": snappedf(_dp_spins["size"].value, 0.01),
-		"forward": snappedf(_dp_spins["forward"].value, 0.01),
+		"torso": snappedf(_dp_spins["torso"].value, 0.01),
 	}
 	PawnView.fx_all()["death_pools"] = pools
 

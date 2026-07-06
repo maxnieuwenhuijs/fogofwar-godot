@@ -1,5 +1,5 @@
 {
-	"_uitleg": "Effect-tuning voor doden/gibs/bloed. Pas aan en druk in de Model-tuner op een gibs-knop: het bestand wordt per test opnieuw ingelezen. Verwijder een regel = standaardwaarde uit de code.",
+	"_uitleg": "Effect-tuning voor doden/gibs/bloed. Stel af via de Model-tuner (hoofdmenu) en druk daar op OPSLAAN. Handmatig bewerken kan ook: herstart daarna het spel of de tuner. Regel weghalen = code-default.",
 	"blood_burst": 0.0,
 	"blood_extra_delay": 0.2,
 	"blood_grow": 1.0,
@@ -8,8 +8,18 @@
 	"blood_spurt": 1.0,
 	"death_blood_delay": 1.0,
 	"death_pools": {
-		"death1": {"delay": 1.0, "grow": 0.7, "size": 2.4, "forward": 0.25},
-		"death2": {"delay": 0.75, "grow": 0.6, "size": 2.4, "forward": 0.3}
+		"death1": {
+			"delay": 1.0,
+			"grow": 0.7,
+			"size": 2.4,
+			"torso": 0.35
+		},
+		"death2": {
+			"delay": 0.75,
+			"grow": 0.6,
+			"size": 2.4,
+			"torso": 0.3
+		}
 	},
 	"gib_fling_power": 0.85,
 	"gib_spin": 0.95,

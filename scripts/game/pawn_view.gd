@@ -403,7 +403,11 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		# "Dood-poel"). Zo valt de plas precies wanneer dít lijf ligt.
 		var base := clip.get_slice("/", clip.get_slice_count("/") - 1)
 		var cfg: Dictionary = fx_dict("death_pools").get(base, {})
-		_spawn_blood(global_position + dir * float(cfg.get("forward", 0.2)), 1, 0.03,
+		# torso-afstand: schuif de plas van de voeten (pion-origin) naar waar
+		# de ROMP van dit lijk ligt — in MODEL-richting (+ = achterover
+		# gevallen, - = voorover), dus onafhankelijk van de schot-richting.
+		var torso_off: float = float(cfg.get("torso", cfg.get("forward", 0.3)))
+		_spawn_blood(global_position + transform.basis.z * torso_off, 1, 0.03,
 			float(cfg.get("delay", fx("death_blood_delay", 0.9))),
 			float(cfg.get("grow", 0.7)),
 			float(cfg.get("size", 2.4)), "blood_pool")
