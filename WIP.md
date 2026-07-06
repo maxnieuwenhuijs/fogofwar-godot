@@ -6,62 +6,77 @@
 
 ---
 
-## ⏵ STAND VAN ZAKEN MODELLEN-PIPELINE + MORGEN VERDER (6 juli 2026)
+## ⏵ STAND VAN ZAKEN MODELLEN + GORE-SYSTEEM (bijgewerkt 6 juli 2026, avond)
 
-**De pipeline werkt end-to-end en is bewezen met de Muis-infanterie:**
-Meshy/Tripo-model (Laag Poly ~1k) → FBX met embedded texture → Mixamo auto-rig
-+ rifle-clips (With Skin, 30fps) → `tools/blender_merge_character.py` (headless,
-maakt walk/idle automatisch in place) → glb met alle clips → auto-fit + Model-tuner
-(hoofdmenu) voor schaal/hoogte/x/z + musket schaal/pos/rot → `model_tuning.json`.
-Varianten (idle2, walk3, die2, melee2…) worden random per pion gekozen met desync.
-Musket hangt per factie aan de rechterhand (`<factie>/musket.glb`) en vliegt bij
-dood uit de handen. Melee/charge gebruiken de `melee`-clip (fallback: attack).
+**De Muis-infanterie is 100% af en het complete gore/effect-systeem staat.**
+Pipeline bewezen end-to-end: Meshy/Tripo (Laag Poly ~1k) → Mixamo auto-rig →
+Blender (delen LOS houden!) → glb → auto-fit → Model-tuner. Alles hieronder werkt
+automatisch voor elk volgend model dat de conventies volgt.
 
-**Waar we gebleven zijn (Max was mee bezig):** musket-origin verplaatsen naar de
-handgreep in Blender (Set Origin → 3D Cursor op de greep, loop recht langs een as,
-Apply Rotation) en her-exporteren als **musket.glb** (glTF bakt de texture in — de
-FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijnen
-(pose staat nu bevroren tijdens het tunen).
+**Model-conventies (BELANGRIJK voor factie 2+):**
+- Levend model: `assets/models/<factie>/<type>_<archetype>.glb` met losse
+  geskinnede meshes `hat`/`armL`/`armR`/`legL`/`legR`/`tail`/`body` aan één
+  skelet (in Blender NIET joinen; P → Selection om te splitsen).
+- Gibs: `<model>_gibs.glb` met delen `Torso/ArmL/ArmR/LegL/LegR/Hat` (bebloede
+  stompjes door Max geschilderd).
+- Clips mogen `fire`/`death1`/`death2` heten (ANIM_ALIASES vertaalt naar
+  attack/die); varianten idle1-3/walk1-3 worden random gekozen met desync.
+- Verse Blender-export? Walk-clips hebben vaak weer root-motion → één keer
+  `tools/blender_merge_character.py --base <glb>` draaien (detrend), of In
+  Place-varianten in het blend-bestand zetten. `fix_mouse_clips.bat` is er
+  als vangnet maar meestal niet meer nodig (clips zitten in Max' blend).
 
-**MORGEN / BINNENKORT:**
-1. **Musket afronden**: origin-fix + glb-export + uitlijnen + OPSLAAN (zie boven).
-2. **Team-textures (NIEUW, afgesproken 6 juli)**: per model optioneel
-   `<basis>_team1.png` (rood leger) en `<basis>_team2.png` (blauw leger) naast het
-   model — het spel legt dan per team de juiste albedo op de meshes; ontbreken ze,
-   dan blijft de huidige look + het gekleurde sokkeltje. Max levert de twee
-   recolors (uniform-accenten rood/blauw), Claude bouwt de loader-kant + tuner-preview.
-3. **Muis-archetypes afmaken** (spd/hp/atk via de pipeline) en dan de overige
-   facties-infanterie (mens/leeuw/beer/wolf/vos — prompts staan klaar in
-   MODEL-WISHLIST §3).
-4. **Gibs**: Max zaagt `infantry_base_gibs.glb` (Torso/ArmL/ArmR/LegL/LegR/
-   Head/Hat/Tail, gaten dichten, Origin to Center of Mass); Claude bouwt het
-   uit-elkaar-klap-systeem met gradatie per wapentype (musket-kill = hoed + 1 deel,
-   kanon = alles, melee = omvaller).
-5. **Cavalerie = BIG BRO (pivot 6 juli, besluit Max)**: géén paarden/ruiters —
-   elke factie is een dierenfamilie: infanterie = klein antropomorf familielid
-   (2 benen, Mixamo zoals nu), cavalerie = groot familielid, óók antropomorf op twee benen
-   (muis→dikke rat, cheetah→leeuw, beer→grizzly, wolf→dire wolf, vos→reuzenvos).
-   Leeuw-infanterie wordt dus CHEETAH. Prompts herschreven in MODEL-WISHLIST §3.
-   BESLOTEN (6 juli): Mens = **Varken** (infanterie varken, big bro
-   everzwijn) — naam in DOCTRINE_DATA is al omgezet (enum blijft intern MENS,
-   modellenmap wordt `assets/models/pig/`, CLI accepteert mens én varken);
-   Beer-infanterie = **wasbeer** (big bro grizzly). BESLOTEN (6 juli): Wolf+Vos zijn samengevoegd
-   op het WOLF-slot (vos-infanterie + dire wolf big bro, wolf-perks blijven);
-   het VOS-slot heet nu **Krokodil** (hagedis-infanterie met camouflage-schubben
-   + krokodil big bro; erft de schutkleur-perk = geheime koppeling en cav +1
-   Speed). Enum blijft intern VOS; modellenmap wordt `assets/models/crocodile/`;
-   CLI accepteert vos en krokodil.
-   (b) **Muis-comp heeft geen cavalerie**
-   (22/0/0) — comp aanpassen (bv. 18/4/0) als de dikke rat het bord op moet →
-   balans hermeten met de arena. Big bros zijn tweebenig → zelfde
-   Mixamo-pipeline, maar met de melee-clipset (Idle/Walking/Melee Attack/Death,
-   geen musket). UI zegt nu "beest" i.p.v. "paard";
-   cavalerie-audio (horse_*) later per familie vervangen (brul/piep/grom).
-6. **Aim/anticipation**: "Rifle Down To Aim"-clip als `aim` + projectiel/knal ~0.2s
-   vertragen tot het vuur-frame.
-7. Open uit eerdere sessies: arena-run voor de Muis-balans (+1 Speed meten),
-   trainer-nachtrun met v2-gates, online-playtest Fase 0, resterende sounds
-   (place_undo, timer_timeout, wolf_step, win/lose is er al, muziek-menu).
+**Auto-fit (definitief opgelost 6 juli):** meet het skelet in het EERSTE
+IDLE-FRAME (niet de A-rustpose — dat was de oorzaak van zwevende/verschoven
+modellen), centreert horizontaal op het ZWAARTEPUNT van de lijf-botten
+(staart telt nergens mee), zolen op de grond via voet-botten. Handmatige
+x/z-tuning is model-ruimte (draait mee met facing). Tuner heeft debug-
+tegelrand + middenkruis + meetcijfers in de infobalk; capture-modus
+`-- align` print per pion de delta t.o.v. zijn tegel + top-down screenshot.
+Tuner-camera = bordcamera (orthograaf, zelfde hoek): WYSIWYG.
+
+**Dood-systeem (allemaal tunebaar via de Model-tuner, opslag in
+`assets/models/effects_tuning.json`):**
+- **Kanon (strength ≥1.2)**: lijf klapt uiteen in gibs, alles blast WEG van
+  het schot (dir dominant), per-deel ruis op kracht/hangtijd, delen landen
+  plat (dunste as omhoog), bloedmist-billboards (Max' `blood_mist*.png`) +
+  druppel-fontein met blast-bias; druppels laten splat-vlekken achter; elk
+  brokstuk krijgt EEN pool-plas exact onder zijn landingsplek (romp groot,
+  hoedje klein).
+- **Musket-schot**: death-animatie (random death1/death2) + borst-fontein
+  die 1-3x pompt (stoten volgen de zakkende torso, elk een eigen splat) +
+  OF hoedje eraf OF één ledemaat (echte mesh verdwijnt, gib vliegt, straal
+  uit het stomp-gat) + lijkpoel onder de TORSO (per death-clip instelbaar:
+  wacht/groei/maat/torso-afstand via de "Dood-poel"-rij + test-knop).
+- **Melee**: zelfde maar alleen ledemaat (nooit het hoedje) — kind-parameter
+  loopt van game.gd ("shot"/"melee") door play_death.
+- **Bloedtextures**: `assets/textures/blood/` — `blood_pool*` (plassen),
+  `splat*` (inslagen), `blood_mist*` (mist-billboards); automatisch opgepikt,
+  prefix bepaalt gebruik, map leeg = procedurele fallback.
+- Alles blijft liggen (groep `battlefield_debris`) tot de nieuwe cyclus;
+  tuner laat het ook liggen tot de volgende test.
+- Tuner-knoppen (stap 0.01, max 10): hoed-kracht/-hangtijd/-kans,
+  ledemaat-kans/-kracht/-hangtijd, gib-worpkracht, gib-tolling,
+  wond-druppels, spuit-straal, kanon-mist, druppel-duur/-maat/-vlekkans,
+  vlek-wacht/-groei, gib-poel-wacht/-groei, plas-wacht/-groei/-maat,
+  lijkpoel-fallback. Drie gib-testknoppen: kanon/musket/melee.
+
+**VOLGENDE STAPPEN:**
+1. **Team-textures**: per model `<basis>_team1.png`/`_team2.png` (rood/blauw
+   leger) — Max levert recolors, Claude bouwt loader + tuner-preview.
+   Urgent-ish: sokkel is weg, dus mirror-matches missen team-onderscheid.
+2. **Muis-archetypes** (spd/hp/atk) en dan de overige facties door de
+   pipeline (prompts klaar in MODEL-WISHLIST §3).
+3. **Cavalerie = BIG BRO** (besluiten 6 juli, zie MODEL-WISHLIST):
+   varken/everzwijn (MENS-slot), muis/dikke rat (comp 22/0/0 → moet cav
+   krijgen, bv. 18/4/0 + arena-hermeting), cheetah/leeuw, wasbeer/grizzly,
+   vos/dire wolf (WOLF-slot), hagedis/krokodil (VOS-slot). Big bros
+   tweebenig, Mixamo melee-clipset (Idle/Walking/Melee Attack/Death).
+4. **Aim/anticipation**: "Rifle Down To Aim" als `aim`-clip + projectiel/knal
+   ~0.2s vertragen tot het vuur-frame.
+5. Open: arena-run Muis-balans, trainer-nachtrun v2, online-playtest Fase 0,
+   resterende sounds (place_undo, timer_timeout, wolf_step, muziek-menu),
+   cavalerie-audio per familie (horse_* vervangen).
 
 ---
 

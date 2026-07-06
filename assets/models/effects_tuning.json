@@ -22,7 +22,7 @@
 		}
 	},
 	"drop_fall_time": 0.2,
-	"drop_size": 1.0,
+	"drop_size": 0.5,
 	"drop_stain_chance": 1.0,
 	"drop_stain_delay": 0.0,
 	"drop_stain_grow": 0.05,
