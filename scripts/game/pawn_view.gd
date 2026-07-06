@@ -351,7 +351,12 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		if _piece != null:
 			_piece.visible = false  # de brokstukken zíjn het lijk
 		_become_debris()
-		# Rode wolk in het midden op het moment van de knal.
+		# Grove bloedmist + druppel-fontein op het moment van de knal; de
+		# druppels regenen neer en laten vlekken achter op het bord.
+		var mist := fx("blood_mist", 1.0)
+		if mist > 0.0:
+			_spawn_blood_mist(global_position + Vector3.UP * 0.45, mist)
+			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist))
 		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
 		_spawn_blood(global_position + dir * 0.25, 2, 0.25, 0.45)
 		return
@@ -524,6 +529,43 @@ func _spawn_blood_spurt(origin: Vector3, dir: Vector3, amount: int) -> void:
 	_spawn_blood(Vector3(origin.x, global_position.y, origin.z) + base_dir * 0.3, 1, 0.05, 0.3)
 
 
+## Grove bloedmist (kanon): halfdoorzichtige donkerrode flarden die uitzetten,
+## opzij/omhoog driften en in ~0.7s vervagen. Puur visueel, ruimt zichzelf op.
+## power = de "bloedmist"-knop (0 = uit).
+func _spawn_blood_mist(center: Vector3, power: float) -> void:
+	var parent := get_parent()
+	if parent == null or power <= 0.0:
+		return
+	var count := int(clampf(4.0 + 3.0 * power, 3.0, 12.0))
+	for i in count:
+		var puff := MeshInstance3D.new()
+		var m := SphereMesh.new()
+		var r := randf_range(0.10, 0.22) * (0.7 + 0.3 * power)
+		m.radius = r
+		m.height = r * 2.0
+		m.radial_segments = 6
+		m.rings = 4
+		puff.mesh = m
+		var mat := StandardMaterial3D.new()
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.albedo_color = Color(randf_range(0.35, 0.55), 0.01, 0.02, randf_range(0.55, 0.75))
+		puff.material_override = mat
+		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(puff)
+		puff.global_position = center + Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.3
+		var life := randf_range(0.5, 0.9)
+		var drift := Vector3(randf() - 0.5, randf_range(0.15, 0.45), randf() - 0.5) * 0.5
+		var tw := puff.create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(puff, "global_position", puff.global_position + drift, life)
+		tw.tween_property(puff, "scale", Vector3.ONE * randf_range(2.2, 3.2), life) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life) \
+			.set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(puff.queue_free)
+
+
 ## Rode bloedwolk: een pluim mini-bolletjes die naar buiten/omhoog spatten en
 ## dan naar de grond vallen en krimpen (kortstondig, ruimt zichzelf op). Voor
 ## de kanon-explosie (centrum) en het "bloeden" van weggerukte vlees-delen.
@@ -557,6 +599,9 @@ func _spawn_blood_burst(center: Vector3, amount: int) -> void:
 		tw.tween_property(drop, "global_position", ground, randf_range(0.2, 0.32)) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.parallel().tween_property(drop, "scale", Vector3(0.25, 0.25, 0.25), 0.5)
+		# Een deel van de druppels laat een vlekje achter op de landingsplek.
+		if i % 3 == 0:
+			tw.tween_callback(_spawn_blood.bind(ground, 1, 0.03, 0.0))
 		tw.tween_callback(drop.queue_free)
 
 
