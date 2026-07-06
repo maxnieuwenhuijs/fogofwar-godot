@@ -518,15 +518,23 @@ func _flat_rotation(part: Node3D) -> Vector3:
 		var found: Array = part.find_children("*", "MeshInstance3D", true, false)
 		if not found.is_empty():
 			mi = found[0]
-	var x := 0.0
-	if mi != null:
-		var sz := mi.get_aabb().size
-		if sz.y >= sz.x and sz.y >= sz.z:
-			x = deg_to_rad(90.0)  # langste as is lokaal Y → kantelen = plat
-	return Vector3(
-		x + deg_to_rad(randf_range(-8.0, 8.0)),
-		randf() * TAU,
-		deg_to_rad(randf_range(-8.0, 8.0)))
+	var yaw := randf() * TAU
+	if mi == null:
+		return Vector3(0.0, yaw, 0.0)
+	# De DUNSTE lokale as moet verticaal komen te staan → het object ligt dan
+	# plat op zijn breedste vlak (romp op de rug, musket languit).
+	var sz := mi.get_aabb().size
+	var base := Basis()
+	if sz.y <= sz.x and sz.y <= sz.z:
+		base = Basis()  # y al de dunne as → ligt al plat
+	elif sz.x <= sz.z:
+		base = Basis(Vector3(0, 0, 1), deg_to_rad(90.0))  # x-as → omhoog
+	else:
+		base = Basis(Vector3(1, 0, 0), deg_to_rad(-90.0))  # z-as → omhoog
+	# Willekeurige yaw + klein kanteltje voor een natuurlijke ligging.
+	var wobble := Basis.from_euler(Vector3(
+		deg_to_rad(randf_range(-8.0, 8.0)), 0.0, deg_to_rad(randf_range(-8.0, 8.0))))
+	return (Basis(Vector3.UP, yaw) * wobble * base).get_euler()
 
 
 ## Heeft het LEVENDE model de hoed als los mesh-object (naam bevat "hat" —
@@ -586,7 +594,9 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	else:
 		radial = Vector3(randf() - 0.5, 0.0, randf() - 0.5).normalized()
 	var power := (0.5 + 0.85 * violence) * fx("gib_fling_power", 1.0)
-	var fling := (dir * 0.7 + radial * 0.5 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.4) * power
+	# Schot-richting domineert: alles knalt duidelijk WEG van de bron (schot van
+	# links → debris naar rechts). Radiale spreiding + ruis alleen voor variatie.
+	var fling := (dir * 1.15 + radial * 0.3 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.3) * power
 	fling.y = 0.0
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y, from.z) + fling
