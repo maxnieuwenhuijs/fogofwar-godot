@@ -284,6 +284,8 @@ func _on_tuning_changed(_v: float) -> void:
 func _respawn_model() -> void:
 	var doctrine: int = _fac_btn.get_selected_id()
 	var unit_type: int = _type_btn.get_selected_id()
+	for n in get_tree().get_nodes_in_group("battlefield_debris"):
+		n.queue_free()
 	if _pawn != null and is_instance_valid(_pawn):
 		_pawn.queue_free()
 	_pawn = PAWN_SCENE.instantiate()

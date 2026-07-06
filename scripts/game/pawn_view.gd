@@ -282,13 +282,17 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	tw.tween_method(
 		func(ang: float) -> void: transform.basis = start_basis.rotated(axis, ang),
 		0.0, deg_to_rad(100.0), 0.35).set_ease(Tween.EASE_IN)
-	# Doorglijden + kleine stuiter omhoog en neer.
-	tw.tween_property(self, "position", start_pos + dir * 0.5 + Vector3(0, 0.2, 0), 0.18) \
+	# Doorglijden met een hupje, en dan BLIJVEN LIGGEN tot de volgende cyclus
+	# (game._clear_debris ruimt op). Nét in het bord gedrukt = minder in de weg.
+	var rest := start_pos + dir * 0.55
+	rest.y = start_pos.y - 0.02
+	var slide := create_tween()
+	slide.tween_property(self, "position", start_pos + dir * 0.3 + Vector3(0, 0.18, 0), 0.16) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	# Daarna wegzinken door het bord en verdwijnen.
-	tw.chain().tween_interval(0.25)
-	tw.chain().tween_property(self, "position:y", start_pos.y - 1.2, 0.35).set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(queue_free)
+	slide.tween_property(self, "position", rest, 0.2) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_become_debris()
+	_spawn_blood(global_position + dir * 0.35, 6 if _piece != null and not _piece.visible else 3, 0.3)
 
 
 ## Het musket vliegt bij dood uit de handen: los van het skelet, boogje in de
@@ -314,9 +318,50 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	var arc := w.create_tween()
 	arc.tween_property(w, "global_position", peak, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	arc.tween_property(w, "global_position", land, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	arc.tween_interval(0.45)
-	arc.tween_property(w, "global_position:y", land.y - 0.7, 0.35).set_ease(Tween.EASE_IN)
-	arc.tween_callback(w.queue_free)
+	# Het musket blijft op het bord liggen (opruiming via battlefield_debris).
+	w.add_to_group("battlefield_debris")
+
+
+## Het lijk/brokstuk blijft op het bord tot de volgende definieerfase;
+## game._clear_debris() laat alles in de groep "battlefield_debris" wegzinken.
+func _become_debris() -> void:
+	add_to_group("battlefield_debris")
+	if _sokkel != null and is_instance_valid(_sokkel):
+		_sokkel.visible = false  # geen team-marker onder een lijk (leest als pion)
+	var area := get_node_or_null("Area3D")
+	if area is Area3D:
+		(area as Area3D).collision_layer = 0
+
+
+## Bloedspetters op het bord (roet bij artillerie): platte donkerrode schijfjes
+## rond het inslagpunt, plat op de tegel. Gaan mee in de debris-opruiming.
+func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25) -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	var ground_y := global_position.y - 0.035
+	var blood := _unit_type != 2  # kanonnen bloeden niet: roet/olie
+	for i in amount:
+		var disc := MeshInstance3D.new()
+		var m := CylinderMesh.new()
+		m.top_radius = randf_range(0.05, 0.14)
+		m.bottom_radius = m.top_radius
+		m.height = 0.004
+		disc.mesh = m
+		var mat := StandardMaterial3D.new()
+		if blood:
+			mat.albedo_color = Color(randf_range(0.32, 0.5), 0.02, 0.03)
+		else:
+			mat.albedo_color = Color(0.08, 0.08, 0.09)
+		mat.roughness = 0.4
+		disc.material_override = mat
+		parent.add_child(disc)
+		disc.add_to_group("battlefield_debris")
+		disc.global_position = Vector3(
+			world_center.x + randf_range(-spread, spread),
+			ground_y,
+			world_center.z + randf_range(-spread, spread))
+		disc.rotation.y = randf() * TAU
 
 
 ## Random dismemberment bij dood, in proportie met de klap (zie play_death).
@@ -360,9 +405,7 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 			_fling_part(part as Node3D, dir)
 		else:
 			(part as MeshInstance3D).visible = false
-	var cleanup := parts_root.create_tween()
-	cleanup.tween_interval(2.2)
-	cleanup.tween_callback(parts_root.queue_free)
+	parts_root.add_to_group("battlefield_debris")
 	return full
 
 
@@ -391,8 +434,8 @@ func _fling_part(part: Node3D, dir: Vector3) -> void:
 	var arc := part.create_tween()
 	arc.tween_property(part, "global_position", peak, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	arc.tween_property(part, "global_position", land, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	arc.tween_interval(randf_range(0.35, 0.6))
-	arc.tween_property(part, "global_position:y", land.y - 0.7, 0.35).set_ease(Tween.EASE_IN)
+	# Het deel blijft liggen waar het landt (opruiming via battlefield_debris).
+	_spawn_blood(land, 1, 0.08)
 
 
 func _on_anim_finished(anim_name: String) -> void:

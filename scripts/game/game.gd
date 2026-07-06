@@ -300,6 +300,7 @@ func _start_match(difficulty: int) -> void:
 	_in_hitstop = false
 	_shake_amt = 0.0
 	_dying_views.clear()
+	_clear_debris(true)  # slagveld van de vorige partij ruimen
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
 	ai_difficulty = difficulty
 	_setup_ai()
@@ -541,9 +542,28 @@ func _connect_session_signals() -> void:
 
 
 ## Hoornstoot bij een nieuwe cyclus (niet de allereerste — daar loopt de setup al).
+## En: het slagveld wordt geruimd — lijken, brokstukken en bloed zinken weg.
 func _on_cycle_started(cycle_number: int) -> void:
 	if cycle_number >= 2:
 		Audio.play("cycle_start")
+	_clear_debris()
+
+
+## Alles in de groep "battlefield_debris" (lijken, gibs, musketten, bloed)
+## opruimen. instant = zonder wegzink-animatie (bij een nieuwe match).
+func _clear_debris(instant: bool = false) -> void:
+	for n in get_tree().get_nodes_in_group("battlefield_debris"):
+		var n3 := n as Node3D
+		if n3 == null or not is_instance_valid(n3):
+			continue
+		n3.remove_from_group("battlefield_debris")
+		if instant:
+			n3.queue_free()
+		else:
+			var tw := n3.create_tween()
+			tw.tween_interval(randf() * 0.4)
+			tw.tween_property(n3, "position:y", n3.position.y - 1.3, 0.5).set_ease(Tween.EASE_IN)
+			tw.tween_callback(n3.queue_free)
 
 
 func _index_tiles() -> void:
