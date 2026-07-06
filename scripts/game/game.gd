@@ -1027,7 +1027,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				Audio.play("musket_hit", travel)
 			var shot_strength := 1.4 if shooter_type == Constants.UnitType.ARTILLERY else 0.75
 			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03,
-				result.attacker_from_pos, result.get("eliminated", false), shot_strength)
+				result.attacker_from_pos, result.get("eliminated", false), shot_strength, "shot")
 			if result.get("eliminated", false):
 				_death_sound(action.target_id, travel + 0.05)
 		"charge":
@@ -1173,7 +1173,8 @@ func _spawn_smoke(pos: Vector3, count: int, size: float) -> void:
 ## Bij `killed` een lichte ragdoll i.p.v. de flits.
 ## `from_coord` bepaalt de knockback-richting (weg van de aanvaller).
 func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.12,
-		from_coord: Vector2i = Vector2i(-1, -1), killed: bool = false, strength: float = 0.7) -> void:
+		from_coord: Vector2i = Vector2i(-1, -1), killed: bool = false, strength: float = 0.7,
+		kind: String = "melee") -> void:
 	# Synchroon markeren zodat _refresh_all de stervende pion laat staan.
 	if killed:
 		_dying_views[pawn_id] = true
@@ -1187,7 +1188,7 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 	_shake(s)
 	_hitstop(0.03 + 0.03 * clampf(s, 0.0, 1.6))
 	if killed:
-		_kill_view(pawn_id, world_dir, s)
+		_kill_view(pawn_id, world_dir, s, kind)
 	else:
 		var pv: PawnView = _pawn_views.get(pawn_id)
 		if pv != null and pv.visible:
@@ -1212,14 +1213,14 @@ func _knockback_dir(from_coord: Vector2i, to_coord: Vector2i) -> Vector3:
 
 ## Start de ragdoll van een geëlimineerde pion en haal 'm uit de view-map,
 ## zodat _refresh_all/_update_health_bars hem verder met rust laten.
-func _kill_view(pawn_id: int, world_dir: Vector3, strength: float = 0.7) -> void:
+func _kill_view(pawn_id: int, world_dir: Vector3, strength: float = 0.7, kind: String = "melee") -> void:
 	_dying_views.erase(pawn_id)
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
 	_pawn_views.erase(pawn_id)
 	if pv.visible:
-		pv.play_death(world_dir, strength)  # ruimt zichzelf op (queue_free)
+		pv.play_death(world_dir, strength, kind)  # blijft als debris liggen
 	else:
 		pv.queue_free()
 

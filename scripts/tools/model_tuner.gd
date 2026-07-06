@@ -54,10 +54,17 @@ func _ready() -> void:
 	_build_ui()
 	_reload_pawns()
 	if "gibshot" in OS.get_cmdline_user_args():
-		var gs_strength := 0.75 if "musket" in OS.get_cmdline_user_args() else 1.4
+		var gs_args := OS.get_cmdline_user_args()
+		var gs_strength := 1.4
+		var gs_kind := "shot"
+		if "musket" in gs_args:
+			gs_strength = 0.75
+		elif "melee" in gs_args:
+			gs_strength = 0.7
+			gs_kind = "melee"
 		await get_tree().create_timer(1.0).timeout
 		if _pawn != null and is_instance_valid(_pawn):
-			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), gs_strength)
+			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), gs_strength, gs_kind)
 		await get_tree().create_timer(1.0 if gs_strength < 1.2 else 0.32).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_gibs.png")
 		get_tree().quit()
@@ -208,12 +215,16 @@ func _build_ui() -> void:
 	row3.add_child(freeze_btn)
 	var gib_btn := Button.new()
 	gib_btn.text = "gibs (kanon)"
-	gib_btn.pressed.connect(_on_gib_test.bind(1.4))
+	gib_btn.pressed.connect(_on_gib_test.bind(1.4, "shot"))
 	row3.add_child(gib_btn)
 	var gib_btn2 := Button.new()
 	gib_btn2.text = "gibs (musket)"
-	gib_btn2.pressed.connect(_on_gib_test.bind(0.75))
+	gib_btn2.pressed.connect(_on_gib_test.bind(0.75, "shot"))
 	row3.add_child(gib_btn2)
+	var gib_btn3 := Button.new()
+	gib_btn3.text = "gibs (melee)"
+	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
+	row3.add_child(gib_btn3)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -405,14 +416,14 @@ func _on_fx_changed(_v: float) -> void:
 		PawnView.set_fx(String(key), snappedf((_fx_spins[key] as SpinBox).value, 0.001))
 
 
-func _on_gib_test(strength: float) -> void:
+func _on_gib_test(strength: float, kind: String = "shot") -> void:
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
 	PawnView.reload_effects()  # effects_tuning.json live herladen per test
 	# Vorige test-resten ruimen; het NIEUWE lijk laten we juist liggen.
 	for n in get_tree().get_nodes_in_group("battlefield_debris"):
 		n.queue_free()
-	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength)
+	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength, kind)
 	_pawn = null
 	# Levend model komt terug, maar de gibs/bloed/musket BLIJVEN liggen
 	# (net als op het echte bord tot de nieuwe cyclus).

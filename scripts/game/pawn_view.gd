@@ -306,7 +306,7 @@ func stagger(world_dir: Vector3) -> void:
 ## bepaalt hoe gewelddadig de delen wegvliegen. Zonder gibs-bestand (placeholder
 ## of factie zonder gezaagd model) valt de klassieke omvaller terug.
 ## strength: melee ~0.7, schot 0.75, kanon 1.4.
-func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
+func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee") -> void:
 	_ring.visible = false
 	set_hovered(false)
 	var dir := world_dir
@@ -331,7 +331,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		play_die()
 		# Bloed spuit uit de borst, in de richting van de klap mee.
 		_spawn_blood_spurt(global_position + Vector3.UP * 0.55, dir, int(10.0 * fx("blood_spurt", 1.0)))
-		_shed_parts(dir)  # losse delen: hoed en/of één ledemaat kan eraf
+		_shed_parts(dir, kind)  # losse delen: zie _shed_parts voor de regels
 		_become_debris()
 		_spawn_blood(global_position + dir * 0.2, 3, 0.28, fx("death_blood_delay", 0.9))
 		return
@@ -600,12 +600,16 @@ func _flat_rotation(part: Node3D) -> Vector3:
 ## eigen mesh-objecten): soms wipt de hoed eraf en soms vliegt er één
 ## ledemaat af — de echte mesh verdwijnt en de gib-tegenhanger vliegt, dus
 ## nooit dubbele delen. Modellen zonder losse delen: er gebeurt niets.
-func _shed_parts(dir: Vector3) -> void:
+func _shed_parts(dir: Vector3, kind: String = "melee") -> void:
 	if _piece == null:
 		return
 	var live: Array = _piece.find_children("*", "MeshInstance3D", true, false)
-	if randf() < fx("hat_pop_chance", 0.55):
-		_shed_one(live, "hat", dir, fx("hat_fling_power", 1.5), fx("hat_fling_time", 1.8))
+	# Musket-schot: OF het hoedje wipt eraf OF er vliegt een ledemaat af,
+	# nooit beide. Melee: alleen een ledemaat — een sabelhouw slaat geen
+	# hoedje van je hoofd.
+	if kind == "shot" and randf() < fx("hat_pop_chance", 0.55):
+		if _shed_one(live, "hat", dir, fx("hat_fling_power", 1.5), fx("hat_fling_time", 1.8)):
+			return
 	if randf() < fx("limb_shed_chance", 0.4):
 		# Het ledemaat laat pas even NA de klap los, terwijl het lijf al inzakt
 		# (en dus nooit exact tegelijk met het hoedje).
