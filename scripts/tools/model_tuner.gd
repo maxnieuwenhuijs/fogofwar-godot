@@ -90,6 +90,27 @@ func _build_world() -> void:
 			# (top op +0.05), zodat de pion-origin exact op de tegel-top staat.
 			tile.position = Vector3(float(x), 0.0, float(z))
 			add_child(tile)
+	# Debug-hulplijnen: rand + middenkruis van de modeltegel, net boven het
+	# oppervlak — zo zie je direct of het model echt gecentreerd staat.
+	var dbg := MeshInstance3D.new()
+	var im := ImmediateMesh.new()
+	var dm := StandardMaterial3D.new()
+	dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	dm.albedo_color = Color(1.0, 0.35, 0.2)
+	im.surface_begin(Mesh.PRIMITIVE_LINES, dm)
+	var ly := 0.052
+	var corners := [Vector3(-0.5, ly, -0.5), Vector3(0.5, ly, -0.5),
+		Vector3(0.5, ly, 0.5), Vector3(-0.5, ly, 0.5)]
+	for ci in 4:
+		im.surface_add_vertex(corners[ci])
+		im.surface_add_vertex(corners[(ci + 1) % 4])
+	im.surface_add_vertex(Vector3(-0.12, ly, 0.0))
+	im.surface_add_vertex(Vector3(0.12, ly, 0.0))
+	im.surface_add_vertex(Vector3(0.0, ly, -0.12))
+	im.surface_add_vertex(Vector3(0.0, ly, 0.12))
+	im.surface_end()
+	dbg.mesh = im
+	add_child(dbg)
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-55.0, -30.0, 0.0)
 	light.light_energy = 1.2
@@ -448,8 +469,15 @@ func _refresh_info() -> void:
 	if _pawn._tune_key == "":
 		_info.text = "Geen .glb gevonden voor deze combinatie — placeholder-stuk. Drop eerst een model (zie MODEL-WISHLIST.md)."
 	else:
-		_info.text = "%s  ·  schaal %.2f  ·  hoogte %+.3f  ·  x %+.2f  ·  z %+.2f   (links = referentiestuk; OPSLAAN schrijft model_tuning.json)" % [
-			_pawn._tune_key, _scale_slider.value, _y_slider.value, _x_spin.value, _z_spin.value]
+		var fit := ""
+		if not _pawn.last_fit.is_empty():
+			var lf: Dictionary = _pawn.last_fit
+			fit = "  ·  meting: %s h=%.2f voet=%.2f grond=%+.3f midden=(%+.2f, %+.2f) s=%.3f" % [
+				"botten" if lf.get("bones", false) else "AABB", float(lf.get("h", 0.0)),
+				float(lf.get("fp", 0.0)), float(lf.get("ground", 0.0)),
+				float(lf.get("cx", 0.0)), float(lf.get("cz", 0.0)), float(lf.get("s", 0.0))]
+		_info.text = "%s  ·  schaal %.2f  ·  hoogte %+.3f  ·  x %+.2f  ·  z %+.2f%s" % [
+			_pawn._tune_key, _scale_slider.value, _y_slider.value, _x_spin.value, _z_spin.value, fit]
 
 
 func _save() -> void:

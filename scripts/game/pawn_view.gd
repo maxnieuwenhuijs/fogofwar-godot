@@ -62,6 +62,7 @@ var _variant_cache: Dictionary = {}  # basisclip -> [volledige variant-namen]
 var _tune_key: String = ""   # "mouse/infantry_base" — sleutel in model_tuning.json
 var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb)
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
+var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
 ## { "muis/infanterie_basis": {"scale": 1.15, "y": 0.02}, ... }
@@ -122,6 +123,36 @@ static func set_fx(key: String, value: float) -> void:
 static func fx_all() -> Dictionary:
 	fx("", 0.0)
 	return _fx
+
+
+## Bloedspetter-textures: drop PNG's (met alpha) in assets/textures/blood/ en
+## de plassen gebruiken ze automatisch (willekeurige keuze per plas). Map leeg
+## = de simpele rode schijfjes. Export-veilig (.import/.remap remaps).
+const BLOOD_TEX_DIR := "res://assets/textures/blood/"
+static var _blood_textures: Array = []
+static var _blood_tex_loaded: bool = false
+
+
+static func _blood_texture() -> Texture2D:
+	if not _blood_tex_loaded:
+		_blood_tex_loaded = true
+		var seen: Dictionary = {}
+		var d := DirAccess.open(BLOOD_TEX_DIR)
+		if d != null:
+			for f in d.get_files():
+				var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
+				if not fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"]:
+					continue
+				if seen.has(fname):
+					continue
+				seen[fname] = true
+				if ResourceLoader.exists(BLOOD_TEX_DIR + fname):
+					var tex = load(BLOOD_TEX_DIR + fname)
+					if tex is Texture2D:
+						_blood_textures.append(tex)
+	if _blood_textures.is_empty():
+		return null
+	return _blood_textures[randi() % _blood_textures.size()]
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
@@ -409,23 +440,35 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 	var blood := _unit_type != 2  # kanonnen bloeden niet: roet/olie
 	for i in amount:
 		var disc := MeshInstance3D.new()
-		var m := CylinderMesh.new()
-		m.top_radius = randf_range(0.05, 0.14) * fx("blood_size", 1.0)
-		m.bottom_radius = m.top_radius
-		m.height = 0.004
-		disc.mesh = m
 		var mat := StandardMaterial3D.new()
-		if blood:
-			mat.albedo_color = Color(randf_range(0.32, 0.5), 0.02, 0.03)
+		var tex := _blood_texture()
+		if tex != null:
+			# Spetter-PNG op een plat vlak; donker getint bij roet (artillerie).
+			var pm := PlaneMesh.new()
+			var d := randf_range(0.14, 0.34) * fx("blood_size", 1.0)
+			pm.size = Vector2(d, d)
+			disc.mesh = pm
+			mat.albedo_texture = tex
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(1, 1, 1) if blood else Color(0.15, 0.15, 0.16)
 		else:
-			mat.albedo_color = Color(0.08, 0.08, 0.09)
+			var m := CylinderMesh.new()
+			m.top_radius = randf_range(0.05, 0.14) * fx("blood_size", 1.0)
+			m.bottom_radius = m.top_radius
+			m.height = 0.004
+			disc.mesh = m
+			if blood:
+				mat.albedo_color = Color(randf_range(0.32, 0.5), 0.02, 0.03)
+			else:
+				mat.albedo_color = Color(0.08, 0.08, 0.09)
 		mat.roughness = 0.4
 		disc.material_override = mat
+		disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(disc)
 		disc.add_to_group("battlefield_debris")
 		disc.global_position = Vector3(
 			world_center.x + randf_range(-spread, spread),
-			ground_y,
+			ground_y + 0.001 + randf() * 0.006,
 			world_center.z + randf_range(-spread, spread))
 		disc.rotation.y = randf() * TAU
 		# Vollopen: onzichtbaar tot het stuk ligt, dan uitvloeien.
@@ -907,14 +950,24 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	_tint_nodes = []
 	_piece = scene.instantiate()
 	add_child(_piece)
-	if auto_fit:
-		_auto_fit_model(_piece)
 	# AnimationPlayer in het stuk aanhaken (bv. een .glb met idle/walk/attack/die).
 	# De geometrische stukken hebben er geen — dan blijft _anim gewoon null.
 	_anim = _find_anim_player(_piece)
 	_variant_cache = {}
 	if _anim != null:
 		_anim.animation_finished.connect(_on_anim_finished)
+	if auto_fit:
+		# Meet in de houding die de speler ook ZIET: het eerste idle-frame.
+		# De rustpose (A-pose) van de generator wijkt daar soms fors van af —
+		# dan stond het model alleen in T-pose goed, en op het bord zwevend
+		# en uit het midden (de -0.4/x/z-compensaties van eerder).
+		if _anim != null:
+			var idles := _variants_of(anim_idle)
+			if not idles.is_empty():
+				_anim.play(idles[0])
+				_anim.seek(0.0, true)
+		_auto_fit_model(_piece)
+	if _anim != null:
 		_make_loops()
 		play_idle()
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
@@ -1010,6 +1063,8 @@ func _auto_fit_model(root: Node3D) -> void:
 	root.rotation.y = PI
 	# Na rotatie om Y (x,z → -x,-z): voeten-midden op de tegel, zolen op de grond.
 	root.position = Vector3(s * center.x, -s * ground_y, s * center.z)
+	last_fit = {"s": s, "h": top_y - ground_y, "fp": footprint, "ground": ground_y,
+		"cx": center.x, "cz": center.z, "bones": not m.is_empty()}
 	# Handmatige correctie uit de Model-tuner bovenop de auto-fit. x/z schuiven
 	# het model binnen het vak in TEGEL-ruimte: onafhankelijk van de kijkrichting,
 	# zodat rood en blauw (die tegengesteld kijken) én de tuner exact gelijk staan.
@@ -1018,14 +1073,15 @@ func _auto_fit_model(root: Node3D) -> void:
 		var extra: float = float(t.get("scale", 1.0))
 		root.scale *= extra
 		root.position *= extra  # grond/centrering schalen mee
-		# De PawnView is alleen om Y geroteerd (face_dir); compenseer die yaw zodat
-		# x = wereld-oost/west en z = wereld-noord/zuid blijven, wat je ook draait.
-		var xz := transform.basis.inverse() * Vector3(float(t.get("x", 0.0)), 0.0, float(t.get("z", 0.0)))
-		root.position += xz + Vector3(0.0, float(t.get("y", 0.0)), 0.0)
+		# x/z corrigeren de SCHEEFHEID van het model zelf (pose leunt naar een
+		# kant) en horen dus mee te draaien met de kijkrichting: zo staat het
+		# lijf voor rood en blauw identiek op de eigen tegel.
+		root.position += Vector3(float(t.get("x", 0.0)), float(t.get("y", 0.0)), float(t.get("z", 0.0)))
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):
-## - voeten/tenen: laagste punt = grond, gemiddelde x/z = waar het model "staat"
+## - zwaartepunt van alle lijf-botten = waar het model visueel "staat"
+## - voeten/tenen: laagste punt = grond
 ## - staart-botten worden overal genegeerd (vertekenen centrum, breedte en grond)
 ## Leeg dict als er geen skelet is; _auto_fit_model valt dan terug op de AABB.
 func _measure_bones(root: Node3D) -> Dictionary:
@@ -1033,32 +1089,33 @@ func _measure_bones(root: Node3D) -> Dictionary:
 	var feet: Array = []
 	var body_min := Vector3.INF
 	var body_max := -Vector3.INF
-	var found := false
+	var body_sum := Vector3.ZERO
+	var body_n := 0
 	for sk in root.find_children("*", "Skeleton3D", true, false):
+		(sk as Skeleton3D).force_update_all_bone_transforms()
 		var xf: Transform3D = inv * (sk as Skeleton3D).global_transform
 		for i in (sk as Skeleton3D).get_bone_count():
 			var bname := (sk as Skeleton3D).get_bone_name(i).to_lower()
 			if bname.contains("tail"):
 				continue
 			var p: Vector3 = (xf * (sk as Skeleton3D).get_bone_global_pose(i)).origin
-			found = true
 			body_min = body_min.min(p)
 			body_max = body_max.max(p)
+			body_sum += p
+			body_n += 1
 			if bname.contains("foot") or bname.contains("toe"):
 				feet.append(p)
-	if not found:
+	if body_n == 0:
 		return {}
-	var center := (body_min + body_max) * 0.5
+	# Horizontaal centreren op het ZWAARTEPUNT van de lijf-botten: een pose die
+	# leunt (rifle-idle) hangt anders visueel naast zijn tegel, ook al staan de
+	# voeten wiskundig exact in het midden — het oog beoordeelt op het lijf.
+	var center := body_sum / float(body_n)
 	var ground := body_min.y
 	if not feet.is_empty():
-		var c := Vector3.ZERO
 		ground = INF
 		for p in feet:
-			c += p
 			ground = minf(ground, p.y)
-		c /= feet.size()
-		center.x = c.x
-		center.z = c.z
 	return {
 		"ground": ground,
 		"top": body_max.y,
@@ -1078,6 +1135,7 @@ func _combined_aabb(root: Node3D) -> AABB:
 		var result := AABB()
 		var first := true
 		for sk in skels:
+			(sk as Skeleton3D).force_update_all_bone_transforms()
 			var xf: Transform3D = inv * (sk as Skeleton3D).global_transform
 			for i in (sk as Skeleton3D).get_bone_count():
 				var p: Vector3 = (xf * (sk as Skeleton3D).get_bone_global_pose(i)).origin

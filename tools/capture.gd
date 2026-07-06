@@ -751,6 +751,77 @@ func _ready() -> void:
 			steps,
 		])
 		out = "res://_shot_play.png"
+	elif "align" in args:
+		# `-- align` — uitlijn-diagnose: meet per pion het verschil tussen de
+		# wereldpositie van de PawnView en het centrum van zijn tegel, en maak
+		# een top-down screenshot (recht van boven = elke verschuiving is
+		# ondubbelzinnig zichtbaar, zonder camera-perspectief-verwarring).
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.MUIS
+		game._start_match(1)
+		await get_tree().create_timer(0.3).timeout
+		game._confirm_placement()
+		await get_tree().create_timer(0.6).timeout
+		var asum := Vector3.ZERO
+		var aworst := 0.0
+		var acount := 0
+		for pid in game._pawn_views:
+			var pv: PawnView = game._pawn_views[pid]
+			var pawn = GameSession.state.pawns.get(pid)
+			if pawn == null:
+				continue
+			var tile: Node3D = game._tiles.get(Vector2i(pawn.position.x, pawn.position.y))
+			if tile == null:
+				print("[ALIGN] pion %d: GEEN tegel voor (%d,%d)!" % [pid, pawn.position.x, pawn.position.y])
+				continue
+			var delta: Vector3 = pv.global_position - tile.global_position
+			delta.y = 0.0
+			asum += delta
+			acount += 1
+			aworst = maxf(aworst, delta.length())
+			if acount <= 6:
+				var px := 0.0
+				var pz := 0.0
+				if pv._piece != null:
+					px = pv._piece.position.x
+					pz = pv._piece.position.z
+				print("[ALIGN] pion %d op (%d,%d): delta=(%+.3f, %+.3f) piece_offset=(%+.3f, %+.3f)" % [
+					pid, pawn.position.x, pawn.position.y, delta.x, delta.z, px, pz])
+		print("[ALIGN] gemiddelde delta=(%+.4f, %+.4f) over %d pionnen · max=%.4f" % [
+			asum.x / maxf(float(acount), 1.0), asum.z / maxf(float(acount), 1.0), acount, aworst])
+		# Visueel zwaartepunt (botten) t.o.v. de tegel, per team — het oog
+		# beoordeelt op het LIJF, niet op de wiskundige pion-positie.
+		for team_id in [1, 2]:
+			var vsum := Vector3.ZERO
+			var vn := 0
+			for pid in game._pawn_views:
+				var pawn = GameSession.state.pawns.get(pid)
+				if pawn == null or pawn.owner_id != team_id:
+					continue
+				var pv: PawnView = game._pawn_views[pid]
+				if pv._piece == null:
+					continue
+				var tile: Node3D = game._tiles.get(Vector2i(pawn.position.x, pawn.position.y))
+				if tile == null:
+					continue
+				var mm: Dictionary = pv._measure_bones(pv._piece)
+				if mm.is_empty():
+					continue
+				var wc: Vector3 = (pv._piece as Node3D).global_transform * Vector3(
+					float(mm.center.x), 0.0, float(mm.center.z))
+				var vd := wc - tile.global_position
+				vsum += Vector3(vd.x, 0.0, vd.z)
+				vn += 1
+			if vn > 0:
+				print("[ALIGN] team %d: visueel voeten-centrum t.o.v. tegel = (%+.3f, %+.3f)" % [
+					team_id, vsum.x / float(vn), vsum.z / float(vn)])
+		var acam: Camera3D = game._camera
+		acam.projection = Camera3D.PROJECTION_ORTHOGONAL
+		acam.size = 21.0
+		acam.global_position = game._board.global_position + Vector3(5.0, 20.0, 5.0)
+		acam.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+		await get_tree().create_timer(0.25).timeout
+		out = "res://_shot_align.png"
 	elif "open" in args:
 		var hand: CardHand = game.get_node("UI/CardHand")
 		game._start_match(1)
