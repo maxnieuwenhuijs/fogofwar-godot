@@ -39,7 +39,7 @@ FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijn
    kanon = alles, melee = omvaller).
 5. **Cavalerie = BIG BRO (pivot 6 juli, besluit Max)**: géén paarden/ruiters —
    elke factie is een dierenfamilie: infanterie = klein antropomorf familielid
-   (2 benen, Mixamo zoals nu), cavalerie = groot familielid **op vier poten**
+   (2 benen, Mixamo zoals nu), cavalerie = groot familielid, óók antropomorf op twee benen
    (muis→dikke rat, cheetah→leeuw, beer→grizzly, wolf→dire wolf, vos→reuzenvos).
    Leeuw-infanterie wordt dus CHEETAH. Prompts herschreven in MODEL-WISHLIST §3.
    BESLOTEN (6 juli): Mens = **Varken** (infanterie varken, big bro
@@ -53,8 +53,9 @@ FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijn
    CLI accepteert vos en krokodil.
    (b) **Muis-comp heeft geen cavalerie**
    (22/0/0) — comp aanpassen (bv. 18/4/0) als de dikke rat het bord op moet →
-   balans hermeten met de arena. Viervoeter-animatie: Tripo quadruped-presets
-   of Quaternius CC0-dieren of statisch v1. UI zegt nu "beest" i.p.v. "paard";
+   balans hermeten met de arena. Big bros zijn tweebenig → zelfde
+   Mixamo-pipeline, maar met de melee-clipset (Idle/Walking/Melee Attack/Death,
+   geen musket). UI zegt nu "beest" i.p.v. "paard";
    cavalerie-audio (horse_*) later per familie vervangen (brul/piep/grom).
 6. **Aim/anticipation**: "Rifle Down To Aim"-clip als `aim` + projectiel/knal ~0.2s
    vertragen tot het vuur-frame.

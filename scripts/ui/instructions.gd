@@ -152,7 +152,7 @@ func _tab_game() -> String:
 		"[b]Het belangrijkste idee[/b]",
 		"Je pionnen kunnen pas iets als ze een [b]kaart[/b] hebben. Een pion zonder kaart \"slaapt\": hij kan niks en gaat dood aan één klap of één schot.",
 		"",
-		"Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het beest (groot, op vier poten) en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán.",
+		"Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het beest (de grote broer, kop groter dan de rest) en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán.",
 		"",
 		"[b]Boven elke actieve pion[/b] zie je blokjes: groen = leven (HP), blauw = energie (Speed), oranje = aanvalskracht.",
 		"",
