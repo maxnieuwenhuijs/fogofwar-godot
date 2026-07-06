@@ -27,6 +27,7 @@ const FX_DEFS: Array = [
 	{"key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "drop_fall_time", "label": "druppel-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"key": "drop_size", "label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "drop_stain_chance", "label": "druppel-vlekkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
 	{"key": "drop_stain_delay", "label": "vlek-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.05},
 	{"key": "drop_stain_grow", "label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},

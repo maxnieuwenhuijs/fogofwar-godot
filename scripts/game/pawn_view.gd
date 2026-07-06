@@ -560,7 +560,7 @@ func _spawn_blood_spurt(origin: Vector3, dir: Vector3, amount: int) -> void:
 	for i in amount:
 		var drop := MeshInstance3D.new()
 		var m := SphereMesh.new()
-		var r := randf_range(0.025, 0.06)
+		var r := randf_range(0.025, 0.06) * fx("drop_size", 1.0)
 		m.radius = r
 		m.height = r * 2.0
 		m.radial_segments = 5
@@ -676,7 +676,7 @@ func _spawn_blood_burst(center: Vector3, amount: int, dir: Vector3 = Vector3.ZER
 	for i in amount:
 		var drop := MeshInstance3D.new()
 		var m := SphereMesh.new()
-		var r := randf_range(0.03, 0.08)
+		var r := randf_range(0.03, 0.08) * fx("drop_size", 1.0)
 		m.radius = r
 		m.height = r * 2.0
 		m.radial_segments = 5
