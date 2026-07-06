@@ -329,6 +329,8 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	# en blijft het lijk in de eindpose van de animatie liggen.
 	if _anim != null and not _variants_of(anim_die).is_empty():
 		play_die()
+		# Bloed spuit uit de borst, in de richting van de klap mee.
+		_spawn_blood_spurt(global_position + Vector3.UP * 0.55, dir, int(10.0 * fx("blood_spurt", 1.0)))
 		_shed_parts(dir)  # losse delen: hoed en/of één ledemaat kan eraf
 		_become_debris()
 		_spawn_blood(global_position + dir * 0.2, 3, 0.28, fx("death_blood_delay", 0.9))
@@ -434,6 +436,49 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 		tw.tween_callback(disc.show)
 		tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9) * fx("blood_grow", 1.0)) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Gerichte bloedstraal: druppels spuiten kort achter elkaar in een kegel rond
+## dir uit de wond (borst bij een schot, stomp-gat bij een verloren ledemaat),
+## vallen in een boogje neer en verdwijnen. Laat één klein plasje achter.
+func _spawn_blood_spurt(origin: Vector3, dir: Vector3, amount: int) -> void:
+	var parent := get_parent()
+	if parent == null or amount <= 0:
+		return
+	var base_dir := dir
+	base_dir.y = 0.0
+	if base_dir.length() < 0.01:
+		base_dir = Vector3(randf() - 0.5, 0.0, randf() - 0.5)
+	base_dir = base_dir.normalized()
+	for i in amount:
+		var drop := MeshInstance3D.new()
+		var m := SphereMesh.new()
+		var r := randf_range(0.025, 0.06)
+		m.radius = r
+		m.height = r * 2.0
+		m.radial_segments = 5
+		m.rings = 3
+		drop.mesh = m
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(randf_range(0.35, 0.55), 0.02, 0.02)
+		drop.material_override = mat
+		parent.add_child(drop)
+		drop.global_position = origin
+		# Kegel rond de spuitrichting; druppels vertrekken vlak na elkaar,
+		# zodat het een straal is en geen wolk.
+		var v := (base_dir + Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.5).normalized()
+		var dist := randf_range(0.12, 0.45)
+		var apex := origin + v * dist * 0.6 + Vector3.UP * randf_range(0.02, 0.12)
+		var ground := origin + v * dist
+		ground.y = global_position.y + 0.02
+		var tw := drop.create_tween()
+		tw.tween_interval(float(i) * randf_range(0.008, 0.03))
+		tw.tween_property(drop, "global_position", apex, randf_range(0.08, 0.14)).set_ease(Tween.EASE_OUT)
+		tw.tween_property(drop, "global_position", ground, randf_range(0.12, 0.22)) 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(drop, "scale", Vector3(0.3, 0.3, 0.3), 0.3)
+		tw.tween_callback(drop.queue_free)
+	# Klein plasje waar de straal neerkomt.
+	_spawn_blood(Vector3(origin.x, global_position.y, origin.z) + base_dir * 0.3, 1, 0.05, 0.3)
 
 
 ## Rode bloedwolk: een pluim mini-bolletjes die naar buiten/omhoog spatten en
@@ -588,23 +633,29 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 			break
 	if target == null or not target.visible:
 		return false
-	if not _fling_single_gib(part_name, dir, violence, time_scale):
+	var start: Variant = _fling_single_gib(part_name, dir, violence, time_scale)
+	if start == null:
 		return false
 	target.visible = false
+	if not part_name.contains("hat"):
+		# Bloed spuit uit het gat waar het ledemaat zat, van het lijf af.
+		var out: Vector3 = (start as Vector3) - global_position
+		_spawn_blood_spurt(start as Vector3, out, int(7.0 * fx("blood_spurt", 1.0)))
 	return true
 
 
 ## Laad het gibs-bestand en slinger alléén het deel met deze naam weg;
-## de rest van de brokstukken blijft verborgen.
-func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> bool:
+## de rest blijft verborgen. Geeft de startpositie van het deel terug
+## (= de wond-plek op het lijf), of null als het deel niet bestaat.
+func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> Variant:
 	if _model_path == "" or _piece == null:
-		return false
+		return null
 	var gibs_path := _model_path.get_basename() + "_gibs.glb"
 	if not ResourceLoader.exists(gibs_path):
-		return false
+		return null
 	var scene_parent := get_parent()
 	if scene_parent == null:
-		return false
+		return null
 	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
 	scene_parent.add_child(parts_root)
 	parts_root.global_transform = (_piece as Node3D).global_transform
@@ -616,10 +667,11 @@ func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_sc
 			(part as MeshInstance3D).visible = false
 	if chosen == null:
 		parts_root.queue_free()
-		return false
+		return null
+	var start := chosen.global_position
 	_fling_part(chosen, dir, violence, time_scale)
 	parts_root.add_to_group("battlefield_debris")
-	return true
+	return start
 
 
 ## Eén brokstuk wegslingeren: boog in de klap-richting + radiale spreiding,
