@@ -1,11 +1,13 @@
 {
 	"_uitleg": "Effect-tuning voor doden/gibs/bloed. Pas aan en druk in de Model-tuner op een gibs-knop: het bestand wordt per test opnieuw ingelezen. Verwijder een regel = standaardwaarde uit de code.",
-	"blood_extra_delay": 0.85,
+	"blood_burst": 1.0,
+	"blood_extra_delay": 0.75,
 	"blood_grow": 1.0,
 	"blood_size": 1.3,
 	"death_blood_delay": 1.0,
-	"gib_fling_power": 0.95,
+	"gib_fling_power": 0.85,
 	"gib_spin": 0.95,
-	"hat_fling_power": 1.0,
-	"hat_pop_chance": 1.0
+	"hat_fling_power": 0.8,
+	"hat_fling_time": 1.8,
+	"hat_pop_chance": 0.4
 }

@@ -306,6 +306,8 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		if _piece != null:
 			_piece.visible = false  # de brokstukken zíjn het lijk
 		_become_debris()
+		# Rode wolk in het midden op het moment van de knal.
+		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
 		_spawn_blood(global_position + dir * 0.25, 2, 0.25, 0.45)
 		return
 	# Lichtere kill (musket/melee): het lijf blijft HEEL. Heeft het model een
@@ -418,6 +420,42 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 		tw.tween_callback(disc.show)
 		tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9) * fx("blood_grow", 1.0)) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Rode bloedwolk: een pluim mini-bolletjes die naar buiten/omhoog spatten en
+## dan naar de grond vallen en krimpen (kortstondig, ruimt zichzelf op). Voor
+## de kanon-explosie (centrum) en het "bloeden" van weggerukte vlees-delen.
+func _spawn_blood_burst(center: Vector3, amount: int) -> void:
+	var parent := get_parent()
+	if parent == null or amount <= 0:
+		return
+	for i in amount:
+		var drop := MeshInstance3D.new()
+		var m := SphereMesh.new()
+		var r := randf_range(0.03, 0.08)
+		m.radius = r
+		m.height = r * 2.0
+		m.radial_segments = 5
+		m.rings = 3
+		drop.mesh = m
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(randf_range(0.4, 0.6), 0.02, 0.02)
+		mat.emission_enabled = true
+		mat.emission = Color(0.5, 0.0, 0.0)
+		mat.emission_energy_multiplier = 0.3
+		drop.material_override = mat
+		parent.add_child(drop)
+		drop.global_position = center
+		var out := Vector3(randf() - 0.5, randf() * 0.8, randf() - 0.5).normalized()
+		var dist := randf_range(0.15, 0.55)
+		var apex := center + out * dist + Vector3.UP * randf_range(0.1, 0.4)
+		var ground := Vector3(apex.x, global_position.y - 0.03, apex.z)
+		var tw := drop.create_tween()
+		tw.tween_property(drop, "global_position", apex, 0.16).set_ease(Tween.EASE_OUT)
+		tw.tween_property(drop, "global_position", ground, randf_range(0.2, 0.32)) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(drop, "scale", Vector3(0.25, 0.25, 0.25), 0.5)
+		tw.tween_callback(drop.queue_free)
 
 
 ## Random dismemberment bij dood, in proportie met de klap (zie play_death).
@@ -553,6 +591,10 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y, from.z) + fling
 	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power * time_scale
+	# Bloeden: een vlees-deel (geen hoed/musket) spat druppels op het punt waar
+	# het van het lijf wordt gerukt.
+	if not _is_hat(part) and _blood_amount_for(part) > 0:
+		_spawn_blood_burst(from, int(4 * fx("blood_burst", 1.0)))
 	var t_up := randf_range(0.16, 0.24) * time_scale
 	var t_down := randf_range(0.16, 0.24) * time_scale
 	# Tollen alleen tíjdens de vlucht (stopt bij landen), en bescheiden:

@@ -20,6 +20,7 @@ const FX_DEFS: Array = [
 	{"key": "hat_pop_chance", "label": "hoedkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.55},
 	{"key": "gib_fling_power", "label": "worpkracht", "min": 0.2, "max": 2.5, "step": 0.05, "def": 1.0},
 	{"key": "gib_spin", "label": "tolling", "min": 0.0, "max": 2.5, "step": 0.05, "def": 1.0},
+	{"key": "blood_burst", "label": "bloedwolk", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
 	{"key": "blood_extra_delay", "label": "bloed-wacht", "min": 0.0, "max": 2.0, "step": 0.05, "def": 0.4},
 	{"key": "blood_grow", "label": "bloed-groei", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
 	{"key": "blood_size", "label": "bloed-maat", "min": 0.2, "max": 3.0, "step": 0.1, "def": 1.0},
