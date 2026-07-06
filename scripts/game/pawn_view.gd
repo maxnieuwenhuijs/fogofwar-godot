@@ -601,20 +601,36 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 	if blast.length() < 0.01:
 		blast = Vector3(randf() - 0.5, 0.0, randf() - 0.5)
 	blast = blast.normalized()
-	var count := int(clampf(4.0 + 3.0 * power, 3.0, 12.0))
+	# Met blood_mist*-textures in assets/textures/blood/: paar billboard-quads
+	# met echte wolkflarden (rijker beeld, minder nodig); anders de bol-flarden.
+	var mist_tex := _blood_texture("blood_mist")
+	var count := int(clampf(2.0 + 1.5 * power, 2.0, 6.0)) if mist_tex != null \
+		else int(clampf(4.0 + 3.0 * power, 3.0, 12.0))
 	for i in count:
 		var puff := MeshInstance3D.new()
-		var m := SphereMesh.new()
-		var r := randf_range(0.10, 0.22) * (0.7 + 0.3 * power)
-		m.radius = r
-		m.height = r * 2.0
-		m.radial_segments = 12
-		m.rings = 6
-		puff.mesh = m
 		var mat := StandardMaterial3D.new()
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = Color(randf_range(0.35, 0.55), 0.01, 0.02, randf_range(0.55, 0.75))
+		if mist_tex != null:
+			var q := QuadMesh.new()
+			var qs := randf_range(0.5, 0.85) * (0.7 + 0.3 * power)
+			q.size = Vector2(qs, qs)
+			puff.mesh = q
+			mat.albedo_texture = _blood_texture("blood_mist")
+			mat.albedo_color = Color(1, 1, 1, randf_range(0.8, 1.0))
+			mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			mat.billboard_keep_scale = true
+			if randf() < 0.5:
+				mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)  # gespiegeld = extra variatie
+		else:
+			var m := SphereMesh.new()
+			var r := randf_range(0.10, 0.22) * (0.7 + 0.3 * power)
+			m.radius = r
+			m.height = r * 2.0
+			m.radial_segments = 12
+			m.rings = 6
+			puff.mesh = m
+			mat.albedo_color = Color(randf_range(0.35, 0.55), 0.01, 0.02, randf_range(0.55, 0.75))
 		puff.material_override = mat
 		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(puff)
@@ -628,7 +644,8 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 		var tw := puff.create_tween()
 		tw.set_parallel(true)
 		tw.tween_property(puff, "global_position", puff.global_position + drift, life)
-		tw.tween_property(puff, "scale", Vector3.ONE * randf_range(2.2, 3.2), life) \
+		var groei := randf_range(1.7, 2.4) if mist_tex != null else randf_range(2.2, 3.2)
+		tw.tween_property(puff, "scale", Vector3.ONE * groei, life) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life) \
 			.set_ease(Tween.EASE_IN)
