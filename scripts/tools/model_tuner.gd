@@ -92,10 +92,19 @@ func _build_world() -> void:
 	e.ambient_light_energy = 0.7
 	env.environment = e
 	add_child(env)
+	# Zelfde camera-instelling als het echte bord (Board.tscn): ORTHOGRAAL en
+	# dezelfde kijkhoek, zodat de pion in de tuner op precies dezelfde schaal
+	# t.o.v. de tegels verschijnt als in het spel. Alleen ingezoomd (kleine size).
 	var cam := Camera3D.new()
-	cam.position = Vector3(0.0, 1.6, 2.6)
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	cam.size = 2.9
+	var b := Basis(
+		Vector3(0.9396926, 0.0, 0.34202012),
+		Vector3(0.2513556, 0.67815965, -0.69059384),
+		Vector3(-0.23194425, 0.7349146, 0.6372616))
+	var target := Vector3(0.0, 0.45, 0.0)
+	cam.transform = Transform3D(b, target + b.z * 8.0)
 	add_child(cam)
-	cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
 	cam.current = true
 
 
