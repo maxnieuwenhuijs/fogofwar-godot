@@ -265,13 +265,18 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		dir = Vector3(0, 0, 1)
 	dir = dir.normalized()
 	_fling_weapon(dir)  # musket vliegt uit de handen
-	if _spawn_gibs(dir, strength):
+	# Alleen kanon-kracht klapt het lijf volledig uiteen in zijn brokstukken.
+	if strength >= 1.2 and _spawn_gibs(dir, strength):
 		if _piece != null:
 			_piece.visible = false  # de brokstukken zíjn het lijk
 		_become_debris()
-		_spawn_blood(global_position + dir * 0.25, 3 + int(strength * 2.5), 0.3)
+		_spawn_blood(global_position + dir * 0.25, 6, 0.3)
 		return
-	# Fallback zonder gibs: klassieke omvaller die blijft liggen.
+	# Lichtere kill (musket/melee): het lijf blijft HEEL en valt om;
+	# soms wipt alleen het hoedje eraf.
+	if randf() < 0.45:
+		_pop_hat(dir)
+	# Klassieke omvaller die blijft liggen (ook de fallback zonder gibs-bestand).
 	play_die()  # echte model-anim indien aanwezig
 	var axis := Vector3.UP.cross(dir).normalized()
 	if axis.length() < 0.01:
@@ -376,11 +381,9 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	var scene_parent := get_parent()
 	if scene_parent == null:
 		return false
-	# Het lijf valt ALTIJD uiteen in zijn delen; de klap bepaalt hoe gewelddadig:
-	# kanon (1.4) slingert vrijwel alles ver weg, musket/melee laat het meeste
-	# ter plekke in elkaar zakken met hooguit een paar vliegende delen
-	# (het hoedje het eerst).
-	var violence := clampf((strength - 0.45) / 0.95, 0.18, 1.0)
+	# Volledige explosie (kanon): alle delen vliegen weg; een enkel deel
+	# brokkelt ter plekke neer voor variatie.
+	var violence := clampf(strength / 1.4, 0.5, 1.2)
 	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
 	scene_parent.add_child(parts_root)
 	# Zelfde maat/rotatie/plek als het getunede lijf.
@@ -389,23 +392,44 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	if parts.is_empty():
 		parts_root.queue_free()
 		return false
-	var pool: Array = parts.duplicate()
-	pool.shuffle()
-	pool.sort_custom(func(a, b): return _is_hat(a) and not _is_hat(b))
-	var i := 0
-	for part in pool:
-		var fly := randf() < violence or (i == 0 and randf() < 0.85)
-		if fly:
-			_fling_part(part as Node3D, dir, violence)
-		else:
+	for part in parts:
+		if randf() < 0.15:
 			_drop_part(part as Node3D)
-		i += 1
+		else:
+			_fling_part(part as Node3D, dir, violence)
 	parts_root.add_to_group("battlefield_debris")
 	return true
 
 
 func _is_hat(node: Node) -> bool:
 	return String(node.name).to_lower().contains("hat")
+
+
+## Lichte kill: alleen het hoedje wipt van het lijk; de rest van het
+## gibs-bestand blijft verborgen (het lijf zelf valt heel om).
+func _pop_hat(dir: Vector3) -> void:
+	if _model_path == "" or _piece == null:
+		return
+	var gibs_path := _model_path.get_basename() + "_gibs.glb"
+	if not ResourceLoader.exists(gibs_path):
+		return
+	var scene_parent := get_parent()
+	if scene_parent == null:
+		return
+	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
+	scene_parent.add_child(parts_root)
+	parts_root.global_transform = (_piece as Node3D).global_transform
+	var hat: Node3D = null
+	for part in parts_root.find_children("*", "MeshInstance3D", true, false):
+		if _is_hat(part) and hat == null:
+			hat = part as Node3D
+		else:
+			(part as MeshInstance3D).visible = false
+	if hat == null:
+		parts_root.queue_free()
+		return
+	_fling_part(hat, dir, 0.5)
+	parts_root.add_to_group("battlefield_debris")
 
 
 ## Eén brokstuk wegslingeren: boog in de klap-richting + radiale spreiding,
