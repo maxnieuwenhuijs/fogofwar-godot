@@ -277,6 +277,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	# en blijft het lijk in de eindpose van de animatie liggen.
 	if _anim != null and not _variants_of(anim_die).is_empty():
 		play_die()
+		_try_pop_hat(dir)  # alleen als de hoed een los mesh-object is
 		_become_debris()
 		_spawn_blood(global_position + dir * 0.2, 3, 0.28, 0.9)
 		return
@@ -454,9 +455,25 @@ func _flat_rotation(part: Node3D) -> Vector3:
 		deg_to_rad(randf_range(-8.0, 8.0)))
 
 
-## (Nu ongebruikt — gereserveerd voor als levende modellen losse delen krijgen:
-## dan kan het echte hoedje verborgen worden en wipt dit gib-hoedje eraf zonder
-## dubbel hoedje op het lijk.)
+## Heeft het LEVENDE model de hoed als los mesh-object (naam bevat "hat" —
+## in Blender losgeknipt met P → Selection), dan kan hij er bij een lichte
+## kill afwippen: echte hoed verbergen + gib-hoed wegslingeren. Zit de hoed
+## vast in de mesh, dan gebeurt er niets (geen dubbel hoedje).
+func _try_pop_hat(dir: Vector3) -> void:
+	if _piece == null or randf() > 0.55:
+		return
+	var hat_mesh: MeshInstance3D = null
+	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
+		if _is_hat(mi):
+			hat_mesh = mi
+			break
+	if hat_mesh == null:
+		return
+	hat_mesh.visible = false
+	_pop_hat(dir)
+
+
+## Slingert het gib-hoedje weg (de rest van het gibs-bestand blijft verborgen).
 func _pop_hat(dir: Vector3) -> void:
 	if _model_path == "" or _piece == null:
 		return
