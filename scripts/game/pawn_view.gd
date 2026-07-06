@@ -424,12 +424,19 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y, from.z) + fling
 	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power
+	var t_up := randf_range(0.2, 0.3)
+	var t_down := randf_range(0.2, 0.3)
+	# Tollen alleen tíjdens de vlucht (stopt bij landen), en bescheiden:
+	# ~een kwart tot halve omwenteling om één overheersende as.
+	var euler := Vector3.ZERO
+	euler[randi() % 3] = randf_range(1.5, 3.0) * (0.4 + 0.6 * violence) * (1.0 if randf() < 0.5 else -1.0)
+	euler += Vector3(randf_range(-0.35, 0.35), randf_range(-0.35, 0.35), randf_range(-0.35, 0.35))
 	var spin := part.create_tween()
-	spin.tween_property(part, "rotation", part.rotation + Vector3(
-		randf_range(-6.0, 6.0), randf_range(-4.0, 4.0), randf_range(-6.0, 6.0)), 1.0)
+	spin.tween_property(part, "rotation", part.rotation + euler, t_up + t_down) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var arc := part.create_tween()
-	arc.tween_property(part, "global_position", peak, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	arc.tween_property(part, "global_position", land, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	arc.tween_property(part, "global_position", peak, t_up).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Het deel blijft liggen waar het landt (opruiming via battlefield_debris).
 	_spawn_blood(land, 1, 0.08)
 
@@ -444,7 +451,8 @@ func _drop_part(part: Node3D) -> void:
 		from.z + randf_range(-0.08, 0.08))
 	var tumble := part.create_tween()
 	tumble.tween_property(part, "rotation", part.rotation + Vector3(
-		randf_range(-1.2, 1.2), randf_range(-0.8, 0.8), randf_range(-1.2, 1.2)), 0.3)
+		randf_range(-0.5, 0.5), randf_range(-0.3, 0.3), randf_range(-0.5, 0.5)), 0.22) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var drop := part.create_tween()
 	drop.tween_property(part, "global_position", land, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_spawn_blood(land, 1, 0.07)
