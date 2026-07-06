@@ -8,7 +8,7 @@ extends Node3D
 const PAWN_SCENE := preload("res://scenes/game/pawn_view.tscn")
 const SAVE_PATH := "res://assets/models/model_tuning.json"
 
-const ARCHS: Array = ["basis", "spd", "hp", "atk", "mix"]
+const ARCHS: Array = ["base", "spd", "hp", "atk", "mix"]
 ## Kaart-stats die het gewenste archetype forceren (dominante stat).
 const ARCH_CARDS: Dictionary = {
 	"spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1],
@@ -185,7 +185,7 @@ func _make_spin(parent: Node, minv: float, maxv: float, step: float, def: float,
 
 ## Huidige factie-naam in kleine letters ("muis") — sleutels in model_tuning.json.
 func _fac_name() -> String:
-	return Constants.doctrine_name(_fac_btn.get_selected_id()).to_lower()
+	return Constants.doctrine_folder(_fac_btn.get_selected_id())
 
 
 func _on_weapon_changed(_v: float) -> void:

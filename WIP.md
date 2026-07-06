@@ -33,8 +33,8 @@ FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijn
 3. **Muis-archetypes afmaken** (spd/hp/atk via de pipeline) en dan de overige
    facties-infanterie (mens/leeuw/beer/wolf/vos — prompts staan klaar in
    MODEL-WISHLIST §3).
-4. **Gibs**: Max zaagt `infanterie_basis_gibs.glb` (Romp/ArmL/ArmR/BeenL/BeenR/
-   Kop/Hoed/Staart, gaten dichten, Origin to Center of Mass); Claude bouwt het
+4. **Gibs**: Max zaagt `infantry_base_gibs.glb` (Torso/ArmL/ArmR/LegL/LegR/
+   Head/Hat/Tail, gaten dichten, Origin to Center of Mass); Claude bouwt het
    uit-elkaar-klap-systeem met gradatie per wapentype (musket-kill = hoed + 1 deel,
    kanon = alles, melee = omvaller).
 5. **Cavalerie = BIG BRO (pivot 6 juli, besluit Max)**: géén paarden/ruiters —
@@ -44,12 +44,12 @@ FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijn
    Leeuw-infanterie wordt dus CHEETAH. Prompts herschreven in MODEL-WISHLIST §3.
    BESLOTEN (6 juli): Mens = **Varken** (infanterie varken, big bro
    everzwijn) — naam in DOCTRINE_DATA is al omgezet (enum blijft intern MENS,
-   modellenmap wordt `assets/models/varken/`, CLI accepteert mens én varken);
+   modellenmap wordt `assets/models/pig/`, CLI accepteert mens én varken);
    Beer-infanterie = **wasbeer** (big bro grizzly). BESLOTEN (6 juli): Wolf+Vos zijn samengevoegd
    op het WOLF-slot (vos-infanterie + dire wolf big bro, wolf-perks blijven);
    het VOS-slot heet nu **Krokodil** (hagedis-infanterie met camouflage-schubben
    + krokodil big bro; erft de schutkleur-perk = geheime koppeling en cav +1
-   Speed). Enum blijft intern VOS; modellenmap wordt `assets/models/krokodil/`;
+   Speed). Enum blijft intern VOS; modellenmap wordt `assets/models/crocodile/`;
    CLI accepteert vos en krokodil.
    (b) **Muis-comp heeft geen cavalerie**
    (22/0/0) — comp aanpassen (bv. 18/4/0) als de dikke rat het bord op moet →
@@ -226,7 +226,7 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
   (`Constants.card_archetype`: spd/hp/atk/mix; 1/5/1 = "dunne schichtige muis").
   `PawnView.set_character(doctrine, type, card)` zoekt
   `assets/models/<factie>/<type>_<archetype>.glb` met fallback-keten archetype →
-  `_basis` → geometrisch stuk met archetype-silhouet (ARCHETYPE_SCALE: dun/hoog,
+  `_base` → geometrisch stuk met archetype-silhouet (ARCHETYPE_SCALE: dun/hoog,
   breed, groot). Kale .glb's krijgen automatisch een team-gekleurd sokkeltje
   (groepen zitten niet in glTF); tint-verzameling verbreed naar GeometryInstance3D
   (CSG + MeshInstance3D). Verborgen Vos-koppelingen blijven neutraal voor de

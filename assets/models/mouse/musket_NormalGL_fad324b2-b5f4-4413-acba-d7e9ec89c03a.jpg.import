@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://om2srr7jm5s8"
-path.s3tc="res://.godot/imported/musket_NormalGL_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg-351d40ee9b7ebb75fa5ad294e3e669b0.s3tc.ctex"
+path.s3tc="res://.godot/imported/musket_NormalGL_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg-bd3973e97def59fb80ede8e3fdb13169.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -14,8 +14,8 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/models/muis/musket_NormalGL_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg"
-dest_files=["res://.godot/imported/musket_NormalGL_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg-351d40ee9b7ebb75fa5ad294e3e669b0.s3tc.ctex"]
+source_file="res://assets/models/mouse/musket_NormalGL_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg"
+dest_files=["res://.godot/imported/musket_NormalGL_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg-bd3973e97def59fb80ede8e3fdb13169.s3tc.ctex"]
 
 [params]
 

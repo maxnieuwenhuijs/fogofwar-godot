@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://satbjk0jly3t"
-path.s3tc="res://.godot/imported/infanterie_basis_Color_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-2558371b5bbaad107cb8bb6ed045dc62.s3tc.ctex"
+uid="uid://0ynm4iibtgi"
+path.s3tc="res://.godot/imported/musket_Color_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg-0ed0f67769cbfe3d8170640bbf32af97.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "e97ae8b81b5722d8c6150671b3a0e687"
+"md5": "e7e03250a9c45214e248a21c7014edcd"
 }
 
 [deps]
 
-source_file="res://assets/models/muis/infanterie_basis_Color_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg"
-dest_files=["res://.godot/imported/infanterie_basis_Color_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-2558371b5bbaad107cb8bb6ed045dc62.s3tc.ctex"]
+source_file="res://assets/models/mouse/musket_Color_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg"
+dest_files=["res://.godot/imported/musket_Color_fad324b2-b5f4-4413-acba-d7e9ec89c03a.jpg-0ed0f67769cbfe3d8170640bbf32af97.s3tc.ctex"]
 
 [params]
 

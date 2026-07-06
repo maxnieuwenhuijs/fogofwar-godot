@@ -1,11 +1,11 @@
 {
-	"muis/infanterie_basis": {
+	"mouse/infantry_base": {
 		"scale": 1.0,
 		"x": -0.05,
 		"y": -0.39,
 		"z": 0.0
 	},
-	"muis/musket": {
+	"mouse/musket": {
 		"pos": [
 			0.02,
 			0.1,

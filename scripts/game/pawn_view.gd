@@ -36,10 +36,10 @@ const PIECE_SCENES: Dictionary = {
 	2: preload("res://scenes/game/pieces/artillery_piece.tscn"),
 }
 
-## Karaktermodellen per factie/type/archetype (zie MODEL-WISHLIST.md):
-##   assets/models/<factie>/<type>_<archetype>.glb   bv. muis/infanterie_spd.glb
-##   assets/models/<factie>/<type>_basis.glb         neutraal / ongekoppeld
-## Fallback-keten: exact archetype → basis van dat type → geometrisch stuk
+## Karaktermodellen per factie/type/archetype (zie MODEL-WISHLIST.md), Engelse
+## namen: assets/models/<factie>/<type>_<archetype>.glb
+##   bv. mouse/infantry_spd.glb · mouse/infantry_base.glb = neutraal/ongekoppeld
+## Fallback-keten: exact archetype → base van dat type → geometrisch stuk
 ## (PIECE_SCENES) met een archetype-silhouet als placeholder.
 const MODELS_DIR := "res://assets/models/"
 ## Placeholder-silhouet zolang het .glb ontbreekt, in de visuele taal van
@@ -50,7 +50,7 @@ const ARCHETYPE_SCALE: Dictionary = {
 	"hp": Vector3(1.22, 0.88, 1.22),    # laag en rond: massa, pantser
 	"atk": Vector3(1.14, 1.04, 1.14),   # breed en iets hoger: gespierd, dreigend
 	"mix": Vector3.ONE,
-	"basis": Vector3.ONE,
+	"base": Vector3.ONE,
 }
 
 var _piece: Node3D = null
@@ -430,7 +430,7 @@ func set_unit_type(unit_type: int) -> void:
 func set_character(doctrine: int, unit_type: int, card) -> void:
 	if _model != null:
 		return
-	var arch: String = "basis"
+	var arch: String = "base"
 	if card != null:
 		arch = Constants.card_archetype(card.hp, card.stamina, card.attack)
 	var key := "%d:%d:%s" % [doctrine, unit_type, arch]
@@ -438,11 +438,11 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 		return
 	_char_key = key
 	_unit_type = unit_type
-	var fac: String = Constants.doctrine_name(doctrine).to_lower()
-	var tname: String = Constants.unit_type_name(unit_type).to_lower()
+	var fac: String = Constants.doctrine_folder(doctrine)
+	var tname: String = Constants.unit_type_file(unit_type)
 	var candidates: Array = [
 		"%s%s/%s_%s.glb" % [MODELS_DIR, fac, tname, arch],
-		"%s%s/%s_basis.glb" % [MODELS_DIR, fac, tname],
+		"%s%s/%s_base.glb" % [MODELS_DIR, fac, tname],
 	]
 	for path in candidates:
 		if ResourceLoader.exists(path):

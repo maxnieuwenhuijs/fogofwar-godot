@@ -134,6 +134,25 @@ func unit_type_name(unit_type: int) -> String:
 		UnitType.ARTILLERY: return "Artillerie"
 	return "?"
 
+## Engelse namen voor de model-assets: assets/models/<doctrine_folder>/
+## <unit_type_file>_<archetype>.glb — bv. mouse/infantry_base.glb.
+func doctrine_folder(doctrine: int) -> String:
+	match doctrine:
+		Doctrine.MENS: return "pig"
+		Doctrine.MUIS: return "mouse"
+		Doctrine.LEEUW: return "lion"
+		Doctrine.BEER: return "bear"
+		Doctrine.WOLF: return "wolf"
+		Doctrine.VOS: return "crocodile"
+	return "pig"
+
+func unit_type_file(unit_type: int) -> String:
+	match unit_type:
+		UnitType.INFANTRY: return "infantry"
+		UnitType.CAVALRY: return "cavalry"
+		UnitType.ARTILLERY: return "artillery"
+	return "unknown"
+
 ## Karakter-archetype van een kaart: de dominante stat bepaalt de look van het
 ## 3D-model dat na koppeling verschijnt (zie MODEL-WISHLIST.md).
 ##   "spd" = dun/schichtig (Speed dominant, bv. Muis 1/5/1)

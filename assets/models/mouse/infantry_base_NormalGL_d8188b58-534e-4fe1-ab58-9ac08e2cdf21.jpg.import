@@ -2,24 +2,23 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cn330bjlbivcc"
-path.s3tc="res://.godot/imported/musket_0.png-ec4421a8d4aee3a08318841cc5c29412.s3tc.ctex"
+uid="uid://do6ngjull48q"
+path="res://.godot/imported/infantry_base_NormalGL_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-765c96bef54931aea15834d1f5e6bba1.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "e7e03250a9c45214e248a21c7014edcd"
+"md5": "4ca5b3f36fec8a7c85ed027b193332b6"
 }
 
 [deps]
 
-source_file="res://assets/models/muis/musket_0.png"
-dest_files=["res://.godot/imported/musket_0.png-ec4421a8d4aee3a08318841cc5c29412.s3tc.ctex"]
+source_file="res://assets/models/mouse/infantry_base_NormalGL_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg"
+dest_files=["res://.godot/imported/infantry_base_NormalGL_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-765c96bef54931aea15834d1f5e6bba1.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -41,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

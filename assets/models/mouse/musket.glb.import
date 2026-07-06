@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b0pht3swkfj4g"
-path="res://.godot/imported/infanterie_basis.glb-124a2ec50bdc2bc981bb86e863604eae.scn"
+uid="uid://cumjseey2v6sr"
+path="res://.godot/imported/musket.glb-a735a559b4b652e0f64fa4f262d28322.scn"
 
 [deps]
 
-source_file="res://assets/models/muis/infanterie_basis.glb"
-dest_files=["res://.godot/imported/infanterie_basis.glb-124a2ec50bdc2bc981bb86e863604eae.scn"]
+source_file="res://assets/models/mouse/musket.glb"
+dest_files=["res://.godot/imported/musket.glb-a735a559b4b652e0f64fa4f262d28322.scn"]
 
 [params]
 
