@@ -251,15 +251,14 @@ func stagger(world_dir: Vector3) -> void:
 	tw.tween_property(self, "position", base, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-## Lichte ragdoll: de pion valt om in de knockback-richting, glijdt een stukje
-## door en zinkt daarna in de grond weg. Ruimt zichzelf op (queue_free) aan het
-## eind. Geen echte physics — een goedkope, voorspelbare "topple".
-## strength = impact van de dodelijke klap (melee ~0.7, schot 0.75, kanon 1.4):
-## bepaalt het random dismemberment via _spawn_gibs (kanon = soms álles).
+## Dood: mét gibs-bestand valt het lijf ALTIJD uiteen in zijn brokstukken (het
+## origineel verdwijnt meteen — geen dubbel omvallend lichaam); de klap-sterkte
+## bepaalt hoe gewelddadig de delen wegvliegen. Zonder gibs-bestand (placeholder
+## of factie zonder gezaagd model) valt de klassieke omvaller terug.
+## strength: melee ~0.7, schot 0.75, kanon 1.4.
 func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	_ring.visible = false
 	set_hovered(false)
-	play_die()  # echte model-anim indien aanwezig
 	var dir := world_dir
 	dir.y = 0.0
 	if dir.length() < 0.01:
@@ -267,23 +266,22 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	dir = dir.normalized()
 	_fling_weapon(dir)  # musket vliegt uit de handen
 	if _spawn_gibs(dir, strength):
-		# Volledige gib: het lijf klapt uit elkaar — origineel meteen weg,
-		# alleen de brokstukken + het wegzinkende sokkeltje blijven.
 		if _piece != null:
-			_piece.visible = false
-	# Kantel-as staat loodrecht op de valrichting (omvallen "voorover").
+			_piece.visible = false  # de brokstukken zíjn het lijk
+		_become_debris()
+		_spawn_blood(global_position + dir * 0.25, 3 + int(strength * 2.5), 0.3)
+		return
+	# Fallback zonder gibs: klassieke omvaller die blijft liggen.
+	play_die()  # echte model-anim indien aanwezig
 	var axis := Vector3.UP.cross(dir).normalized()
 	if axis.length() < 0.01:
 		axis = Vector3(1, 0, 0)
 	var start_basis := transform.basis
 	var start_pos := position
-	var tw := create_tween().set_parallel(true)
-	# Omvallen (~100°) in ~0.35s.
+	var tw := create_tween()
 	tw.tween_method(
 		func(ang: float) -> void: transform.basis = start_basis.rotated(axis, ang),
 		0.0, deg_to_rad(100.0), 0.35).set_ease(Tween.EASE_IN)
-	# Doorglijden met een hupje, en dan BLIJVEN LIGGEN tot de volgende cyclus
-	# (game._clear_debris ruimt op). Nét in het bord gedrukt = minder in de weg.
 	var rest := start_pos + dir * 0.55
 	rest.y = start_pos.y - 0.02
 	var slide := create_tween()
@@ -292,7 +290,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	slide.tween_property(self, "position", rest, 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	_become_debris()
-	_spawn_blood(global_position + dir * 0.35, 6 if _piece != null and not _piece.visible else 3, 0.3)
+	_spawn_blood(global_position + dir * 0.35, 3, 0.3)
 
 
 ## Het musket vliegt bij dood uit de handen: los van het skelet, boogje in de
@@ -378,16 +376,11 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	var scene_parent := get_parent()
 	if scene_parent == null:
 		return false
-	# Hoeveel delen? Proportioneel met de klap.
-	var full := false
-	var count := 0
-	if strength >= 1.2:
-		full = randf() < 0.45
-		count = 2 + randi() % 3
-	else:
-		if randf() < 0.4:
-			return false  # gewone omvaller
-		count = 1 if randf() < 0.65 else 2
+	# Het lijf valt ALTIJD uiteen in zijn delen; de klap bepaalt hoe gewelddadig:
+	# kanon (1.4) slingert vrijwel alles ver weg, musket/melee laat het meeste
+	# ter plekke in elkaar zakken met hooguit een paar vliegende delen
+	# (het hoedje het eerst).
+	var violence := clampf((strength - 0.45) / 0.95, 0.18, 1.0)
 	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
 	scene_parent.add_child(parts_root)
 	# Zelfde maat/rotatie/plek als het getunede lijf.
@@ -399,14 +392,16 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	var pool: Array = parts.duplicate()
 	pool.shuffle()
 	pool.sort_custom(func(a, b): return _is_hat(a) and not _is_hat(b))
-	var chosen: Array = parts if full else pool.slice(0, mini(count, parts.size()))
-	for part in parts:
-		if chosen.has(part):
-			_fling_part(part as Node3D, dir)
+	var i := 0
+	for part in pool:
+		var fly := randf() < violence or (i == 0 and randf() < 0.85)
+		if fly:
+			_fling_part(part as Node3D, dir, violence)
 		else:
-			(part as MeshInstance3D).visible = false
+			_drop_part(part as Node3D)
+		i += 1
 	parts_root.add_to_group("battlefield_debris")
-	return full
+	return true
 
 
 func _is_hat(node: Node) -> bool:
@@ -414,20 +409,21 @@ func _is_hat(node: Node) -> bool:
 
 
 ## Eén brokstuk wegslingeren: boog in de klap-richting + radiale spreiding,
-## tollend, even blijven liggen, wegzinken. Alleen tweens op het deel zelf
-## (de pion mag intussen veilig ge-freed worden).
-func _fling_part(part: Node3D, dir: Vector3) -> void:
+## tollend neerkomen en blijven liggen. Alleen tweens op het deel zelf.
+## violence (0..1) schaalt de afstand en hoogte van de worp.
+func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	var radial := part.global_position - global_position
 	radial.y = 0.0
 	if radial.length() > 0.01:
 		radial = radial.normalized()
 	else:
 		radial = Vector3(randf() - 0.5, 0.0, randf() - 0.5).normalized()
-	var fling := dir * 0.7 + radial * 0.5 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.4
+	var power := 0.5 + 0.85 * violence
+	var fling := (dir * 0.7 + radial * 0.5 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.4) * power
 	fling.y = 0.0
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y, from.z) + fling
-	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7)
+	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power
 	var spin := part.create_tween()
 	spin.tween_property(part, "rotation", part.rotation + Vector3(
 		randf_range(-6.0, 6.0), randf_range(-4.0, 4.0), randf_range(-6.0, 6.0)), 1.0)
@@ -436,6 +432,22 @@ func _fling_part(part: Node3D, dir: Vector3) -> void:
 	arc.tween_property(part, "global_position", land, randf_range(0.2, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Het deel blijft liggen waar het landt (opruiming via battlefield_debris).
 	_spawn_blood(land, 1, 0.08)
+
+
+## Zacht in elkaar zakken: het deel ploft vrijwel ter plekke op de tegel met
+## een kleine kantel — het "lijk op de grond"-gedeelte van een lichte gib.
+func _drop_part(part: Node3D) -> void:
+	var from := part.global_position
+	var land := Vector3(
+		from.x + randf_range(-0.08, 0.08),
+		global_position.y - 0.02,
+		from.z + randf_range(-0.08, 0.08))
+	var tumble := part.create_tween()
+	tumble.tween_property(part, "rotation", part.rotation + Vector3(
+		randf_range(-1.2, 1.2), randf_range(-0.8, 0.8), randf_range(-1.2, 1.2)), 0.3)
+	var drop := part.create_tween()
+	drop.tween_property(part, "global_position", land, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_spawn_blood(land, 1, 0.07)
 
 
 func _on_anim_finished(anim_name: String) -> void:
@@ -614,17 +626,8 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
-	# Kale .glb-modellen hebben geen "team_tint"-groep (groepen zitten in .tscn's,
-	# niet in glTF) → automatisch een team-gekleurd sokkeltje eronder, zodat
-	# rood/blauw altijd te zien is (ook bij Muis-tegen-Muis). Als child van de
-	# PawnView zelf, zodat de auto-fit-schaal van het model hem niet verkleint.
-	if _tint_nodes.is_empty():
-		_sokkel = CSGCylinder3D.new()
-		_sokkel.radius = 0.34
-		_sokkel.height = 0.08
-		_sokkel.position = Vector3(0.0, 0.04, 0.0)
-		add_child(_sokkel)
-		_tint_nodes.append(_sokkel)
+	# Geen team-sokkel meer onder .glb-modellen (besluit 6 juli): het
+	# team-onderscheid komt straks van de _team1/_team2-textures.
 	# Placeholder-blokje + neusje verbergen; het stuk heeft zelf een voorkant (-Z).
 	_mesh.visible = false
 	_marker.visible = false
