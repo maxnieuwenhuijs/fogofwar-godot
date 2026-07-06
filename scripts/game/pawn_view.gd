@@ -330,7 +330,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		func(ang: float) -> void: transform.basis = start_basis.rotated(axis, ang),
 		0.0, deg_to_rad(100.0), 0.35).set_ease(Tween.EASE_IN)
 	var rest := start_pos + dir * 0.55
-	rest.y = start_pos.y - 0.02
+	rest.y = start_pos.y + 0.0
 	var slide := create_tween()
 	slide.tween_property(self, "position", start_pos + dir * 0.3 + Vector3(0, 0.18, 0), 0.16) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -356,7 +356,7 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	w.get_parent().remove_child(w)
 	scene_parent.add_child(w)
 	w.global_transform = xf
-	var land := Vector3(xf.origin.x, global_position.y, xf.origin.z) + world_dir * 0.65
+	var land := Vector3(xf.origin.x, global_position.y + 0.04, xf.origin.z) + world_dir * 0.65
 	var peak := xf.origin.lerp(land, 0.5) + Vector3.UP * 0.55
 	# Tollen alleen tijdens de vlucht; daarna snel plat op de grond.
 	var spin := w.create_tween()
@@ -389,7 +389,7 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 	var parent := get_parent()
 	if parent == null:
 		return
-	var ground_y := global_position.y - 0.035
+	var ground_y := global_position.y + 0.015
 	var blood := _unit_type != 2  # kanonnen bloeden niet: roet/olie
 	for i in amount:
 		var disc := MeshInstance3D.new()
@@ -449,7 +449,7 @@ func _spawn_blood_burst(center: Vector3, amount: int) -> void:
 		var out := Vector3(randf() - 0.5, randf() * 0.8, randf() - 0.5).normalized()
 		var dist := randf_range(0.15, 0.55)
 		var apex := center + out * dist + Vector3.UP * randf_range(0.1, 0.4)
-		var ground := Vector3(apex.x, global_position.y - 0.03, apex.z)
+		var ground := Vector3(apex.x, global_position.y + 0.02, apex.z)
 		var tw := drop.create_tween()
 		tw.tween_property(drop, "global_position", apex, 0.16).set_ease(Tween.EASE_OUT)
 		tw.tween_property(drop, "global_position", ground, randf_range(0.2, 0.32)) \
@@ -599,7 +599,7 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	var fling := (dir * 1.15 + radial * 0.3 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.3) * power
 	fling.y = 0.0
 	var from := part.global_position
-	var land := Vector3(from.x, global_position.y, from.z) + fling
+	var land := Vector3(from.x, global_position.y + 0.06, from.z) + fling
 	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power * time_scale
 	# Bloeden: een vlees-deel (geen hoed/musket) spat druppels op het punt waar
 	# het van het lijf wordt gerukt.
@@ -631,7 +631,7 @@ func _drop_part(part: Node3D) -> void:
 	var from := part.global_position
 	var land := Vector3(
 		from.x + randf_range(-0.08, 0.08),
-		global_position.y - 0.02,
+		global_position.y + 0.05,
 		from.z + randf_range(-0.08, 0.08))
 	var drop := part.create_tween()
 	drop.tween_property(part, "global_position", land, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
