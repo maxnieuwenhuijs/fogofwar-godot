@@ -634,17 +634,24 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 		puff.material_override = mat
 		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(puff)
-		# Wolk start rond het lijf maar al richting de blast, en drijft die
-		# kant verder op (van voren geraakt = mist blaast naar achteren).
-		puff.global_position = center + blast * randf_range(0.0, 0.35) \
-			+ Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.22
-		var life := randf_range(0.5, 0.9)
-		var drift := blast * randf_range(0.35, 0.8) \
-			+ Vector3((randf() - 0.5) * 0.3, randf_range(0.15, 0.4), (randf() - 0.5) * 0.3)
+		# DOORSCHOT: de mist begint aan de inslagkant (vlak voor het lijf) en
+		# wordt door de kogel meegesleurd — een uitwaaierende kegel die tot
+		# mist-dracht tegels achter het slachtoffer eindigt. Voorste flarden
+		# vertrekken eerst, verste flarden reiken het verst en leven langer.
+		var t := float(i) / maxf(float(count - 1), 1.0)
+		puff.global_position = center - blast * 0.25 + blast * (0.5 * t) \
+			+ Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.15
+		var reach: float = fx("mist_travel", 1.6)
+		var dist := (0.3 + reach * t) * randf_range(0.85, 1.15)
+		var drift := blast * dist \
+			+ Vector3((randf() - 0.5) * (0.15 + 0.5 * t), randf_range(0.1, 0.35), (randf() - 0.5) * (0.15 + 0.5 * t))
+		var life := randf_range(0.45, 0.7) + 0.3 * t
 		var tw := puff.create_tween()
+		tw.tween_interval(t * 0.07)
 		tw.set_parallel(true)
-		tw.tween_property(puff, "global_position", puff.global_position + drift, life)
-		var groei := randf_range(1.7, 2.4) if mist_tex != null else randf_range(2.2, 3.2)
+		tw.tween_property(puff, "global_position", puff.global_position + drift, life) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		var groei := (randf_range(1.7, 2.4) if mist_tex != null else randf_range(2.2, 3.2)) * (1.0 + 0.5 * t)
 		tw.tween_property(puff, "scale", Vector3.ONE * groei, life) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life) \
