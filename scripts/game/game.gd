@@ -657,7 +657,7 @@ func _refresh_all() -> void:
 		pv.visible = true
 		if not _tweening_pawns.has(pid):
 			pv.position = tile_position(pawn.position.x, pawn.position.y) + Vector3(0.0, PAWN_Y, 0.0)
-		# Karaktermodel op basis van de gekoppelde kaart. Verborgen Vos-koppelingen
+		# Karaktermodel op basis van de gekoppelde kaart. Verborgen koppelingen (Krokodil-perk)
 		# blijven neutraal voor de tegenstander (het archetype zou de kaart verraden);
 		# je eigen pionnen tonen hun karakter altijd.
 		var card: Card = null

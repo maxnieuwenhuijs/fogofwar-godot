@@ -5,8 +5,8 @@ juiste pad en hij verschijnt vanzelf — geen code nodig. Elke pion toont:
 
 1. **Ongekoppeld / opstelling** → het neutrale factie-model (`_basis`).
 2. **Gekoppeld aan een kaart** → het archetype-model van de dominante stat.
-3. **Verborgen Vos-koppeling** → tegenstander blijft het neutrale model zien
-   tot de kaart onthuld wordt (anders verraadt het model de kaart).
+3. **Verborgen Krokodil-koppeling** (hidden link-perk) → tegenstander blijft
+   het neutrale model zien tot de kaart onthuld wordt.
 
 Het archetype wordt bepaald door de kaart **zoals gedefinieerd** —
 factie-bonussen (Muis +1 Speed, Beer +1 HP) tellen niet mee.
@@ -24,7 +24,7 @@ niet het detail. Eén blik moet vertellen wat een pion kan.
 | `spd` | Speed | **Dun en gestrekt** | smal lijf, lange dunne ledematen, vooroverleunend alsof hij al rent, minimale bepakking, staart/jas wappert naar achteren |
 | `hp` | HP | **Laag, rond en zwaar** | dik/mollig of bepantserd, laag zwaartepunt, stevig neergeplant op brede poten, schild/borstplaat/dikke vacht |
 | `mix` | geen (gelijkspel) | **Standaard proporties** | de nette "linie-soldaat" van de factie, niets uitvergroot |
-| `basis` | geen kaart | **Neutraal, rustige pose** | zelfde als mix maar in rust (wapen geschouderd, zittend dier) — verraadt níks (belangrijk voor de Vos) |
+| `basis` | geen kaart | **Neutraal, rustige pose** | zelfde als mix maar in rust (wapen geschouderd, zittend dier) — verraadt níks (belangrijk voor de Krokodil) |
 
 Vuistregels:
 - Overdrijf: op 2 cm schermhoogte is 20% breder nauwelijks zichtbaar — denk 40%.
@@ -59,7 +59,7 @@ Formaat **HP / Speed / Aanval**. Archetype = strikt hoogste stat; gelijkspel = `
 | 2/1/2 | `mix` | standaard |
 | 1/2/2 | `mix` | standaard |
 
-### Budget 7 — Varken, Beer, Wolf, Vos (15 combinaties)
+### Budget 7 — Varken, Beer, Wolf, Krokodil (15 combinaties)
 
 | Kaart | Archetype | | Kaart | Archetype | | Kaart | Archetype |
 |---|---|---|---|---|---|---|---|
@@ -111,8 +111,8 @@ HP-blokjes en het kaartpaneel geven de exacte cijfers.
 | Varken (ex-Mens) | varken | **everzwijn** met slagtanden |
 | Leeuw | **cheetah** (slank, gevlekt, snel) | **leeuw** met volle manen |
 | Beer | **wasbeer** (gemaskerd gezicht) | massieve grizzly |
-| Wolf | wolf — VOORSTEL: jakhals (magerder, guerrilla-look) | reusachtige dire wolf |
-| Vos | vos — VOORSTEL: fennek (grote oren, klein) | reuzenvos op hoge poten (maned-wolf-silhouet -- past bij de +1 Speed-perk) |
+| Wolf (= Wolf+Vos samengevoegd) | **vos** (kleine broer van de wolf) | reusachtige **dire wolf** |
+| Krokodil (ex-Vos-slot, erft schutkleur-perk) | **hagedis** met camouflage-schubben | **krokodil** (laag, gepantserd, explosieve uitval = +1 Speed) |
 
 **Prompt-opbouw infanterie** (ongewijzigd): `Single character, <bouw>
 anthropomorphic <dier>, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey
@@ -208,15 +208,15 @@ later per familie.
 | `artillerie_atk` | Single prop, wide-mouthed double Napoleonic mortar on a reinforced weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, single object only, no text. |
 | `artillerie_mix` | Single prop, Napoleonic winter field cannon on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, single object only, no text. |
 
-### Wolf -- wolf-infanterie + dire wolf als big bro
+### Wolf -- vos-infanterie + dire wolf als big bro (Wolf+Vos samengevoegd)
 
 | Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | Single character, average build anthropomorphic wolf, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and dark grey forage cap, unarmed. Clean neutral studio background, single figure only, no text. |
-| `infanterie_spd` | Single character, thin lean gaunt anthropomorphic wolf, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered short military jacket and forage cap, minimal gear. Clean neutral studio background, single figure only, no text. |
-| `infanterie_hp` | Single character, heavyset thick-furred anthropomorphic winter wolf, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered greatcoat with a scavenged dark steel breastplate. Clean neutral studio background, single figure only, no text. |
-| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic wolf with bared teeth, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform, carrying a heavy cleaver. Clean neutral studio background, single figure only, no text. |
-| `infanterie_mix` | Single character, average build anthropomorphic wolf soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and forage cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `infanterie_basis` | Single character, average build anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and dark grey forage cap, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean gaunt anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered short military jacket and forage cap, minimal gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset thick-furred anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered greatcoat with a scavenged dark steel breastplate. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic fox with bared teeth, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform, carrying a heavy cleaver. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic fox soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and forage cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
 | `cavalerie_basis` | Single character, powerful giant dire wolf standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
 | `cavalerie_spd` | Single character, lean sleek giant dire wolf standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
 | `cavalerie_hp` | Single character, massive heavyset giant dire wolf standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single animal only, no text. |
@@ -228,23 +228,23 @@ later per familie.
 | `artillerie_atk` | Single prop, heavy scavenged Napoleonic cannon with extra powder kegs strapped to the weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 | `artillerie_mix` | Single prop, scavenged Napoleonic field cannon on a patched weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 
-### Vos -- vos-infanterie + reuzenvos als big bro
+### Krokodil -- hagedis-infanterie + krokodil als big bro (ex-Vos-slot)
 
-**Belangrijk**: alle Vos-varianten dragen dezelfde donkergrijze cape/caparison --
-de bouw verschilt, de look blijft verhullend (past bij de verborgen koppelingen).
+**Thema**: schutkleur en hinderlaag (past bij de geheime-koppeling-perk).
+Camouflage-patroon in de schubben; de artillerie zit onder netten en zeilen.
 
 | Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | Single character, average build anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform under a closed dark grey hooded cloak, only the muzzle visible, unarmed. Clean neutral studio background, single figure only, no text. |
-| `infanterie_spd` | Single character, thin lean anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform under a tight dark grey hooded cloak. Clean neutral studio background, single figure only, no text. |
-| `infanterie_hp` | Single character, heavyset thick-furred anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with chainmail glinting under a dark grey hooded cloak. Clean neutral studio background, single figure only, no text. |
-| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic fox, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform under a half-open dark grey hooded cloak revealing two daggers. Clean neutral studio background, single figure only, no text. |
-| `infanterie_mix` | Single character, average build anthropomorphic fox soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark grey cloak over one shoulder. Clean neutral studio background, single figure only, no text. |
-| `cavalerie_basis` | Single character, powerful long-legged giant fox with a maned-wolf silhouette standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps draped as a dark grey hooded caparison. Clean neutral studio background, single animal only, no text. |
-| `cavalerie_spd` | Single character, lean sleek long-legged giant fox with a maned-wolf silhouette standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps draped as a dark grey hooded caparison. Clean neutral studio background, single animal only, no text. |
-| `cavalerie_hp` | Single character, massive heavyset long-legged giant fox standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with dark steel armor plates hidden under the dark grey caparison. Clean neutral studio background, single animal only, no text. |
-| `cavalerie_atk` | Single character, hugely muscular battle-scarred long-legged giant fox standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with bared teeth, dark grey hooded caparison. Clean neutral studio background, single animal only, no text. |
-| `cavalerie_mix` | Single character, sturdy long-legged giant fox standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps draped as a dark grey hooded caparison. Clean neutral studio background, single animal only, no text. |
+| `infanterie_basis` | Single character, average build anthropomorphic lizard with camouflage-pattern scales, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform under a closed dark grey hooded cloak, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean anthropomorphic gecko-like lizard with camouflage-pattern scales, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey forage cap, light gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset anthropomorphic lizard with thick armored scutes and camouflage-pattern scales, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic lizard with camouflage-pattern scales, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform under a half-open dark grey hooded cloak revealing two daggers. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic lizard soldier with camouflage-pattern scales, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey forage cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, powerful crocodile with armored scutes standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps low stance. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_spd` | Single character, lean sleek crocodile standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps low stance. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_hp` | Single character, massive heavyset crocodile with thick armored scutes standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with dark steel armor plates over the harness, very low stance. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_atk` | Single character, hugely muscular battle-scarred crocodile standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with open jaws showing teeth. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_mix` | Single character, sturdy crocodile with armored scutes standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps low stance. Clean neutral studio background, single animal only, no text. |
 | `artillerie_basis` | Single prop, Napoleonic field cannon covered in dark grey camouflage netting, only the barrel protruding, on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 | `artillerie_spd` | Single prop, light Napoleonic cannon half covered by a dark grey tarp, ready to move, on a weathered dark wooden carriage with thin wheels. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 | `artillerie_hp` | Single prop, Napoleonic cannon in a dug-in emplacement with wicker gabion baskets, on a weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |

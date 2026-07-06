@@ -45,7 +45,7 @@ func _ready() -> void:
 		if targs.size() > ti + 4:
 			var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 				"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
-				"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS}
+				"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS, "krokodil": Constants.Doctrine.VOS}
 			faction = fnames.get(String(targs[ti + 4]).to_lower(), -1)
 		_run_training(minutes, pop, games, faction)
 		get_tree().quit()
@@ -424,7 +424,7 @@ func _ready() -> void:
 			"leeuw": Constants.Doctrine.LEEUW,
 			"beer": Constants.Doctrine.BEER,
 			"wolf": Constants.Doctrine.WOLF,
-			"vos": Constants.Doctrine.VOS,
+			"vos": Constants.Doctrine.VOS, "krokodil": Constants.Doctrine.VOS,
 		}
 		var n1: String = args[1] if args.size() > 1 else "medium"
 		var n2: String = args[2] if args.size() > 2 else "medium"
@@ -700,7 +700,7 @@ func _ready() -> void:
 		# `-- play [factie]` — bv. `play muis` om karaktermodellen te bekijken.
 		var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
-			"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS}
+			"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS, "krokodil": Constants.Doctrine.VOS}
 		for fname in fnames:
 			if fname in args:
 				game._human_doctrine = fnames[fname]

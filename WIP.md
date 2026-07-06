@@ -45,8 +45,12 @@ FBX-poging kwam wit uit). Daarna in de tuner rot terug naar 0 en opnieuw uitlijn
    BESLOTEN (6 juli): Mens = **Varken** (infanterie varken, big bro
    everzwijn) — naam in DOCTRINE_DATA is al omgezet (enum blijft intern MENS,
    modellenmap wordt `assets/models/varken/`, CLI accepteert mens én varken);
-   Beer-infanterie = **wasbeer** (big bro grizzly). NOG TE KIEZEN: Wolf-infanterie
-   (voorstel: jakhals) en Vos-infanterie (voorstel: fennek met grote oren).
+   Beer-infanterie = **wasbeer** (big bro grizzly). BESLOTEN (6 juli): Wolf+Vos zijn samengevoegd
+   op het WOLF-slot (vos-infanterie + dire wolf big bro, wolf-perks blijven);
+   het VOS-slot heet nu **Krokodil** (hagedis-infanterie met camouflage-schubben
+   + krokodil big bro; erft de schutkleur-perk = geheime koppeling en cav +1
+   Speed). Enum blijft intern VOS; modellenmap wordt `assets/models/krokodil/`;
+   CLI accepteert vos en krokodil.
    (b) **Muis-comp heeft geen cavalerie**
    (22/0/0) — comp aanpassen (bv. 18/4/0) als de dikke rat het bord op moet →
    balans hermeten met de arena. Viervoeter-animatie: Tripo quadruped-presets

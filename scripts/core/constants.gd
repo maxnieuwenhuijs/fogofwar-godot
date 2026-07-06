@@ -92,11 +92,11 @@ const DOCTRINE_DATA: Dictionary = {
 		"con": "Stap geldt niet na schoten; lichte samenstelling",
 	},
 	Doctrine.VOS: {
-		"name": "Vos", "cards": 3, "budget": 7, "comp": [13, 6, 3],
+		"name": "Krokodil", "cards": 3, "budget": 7, "comp": [13, 6, 3],
 		"move_through_own": false, "hp_bonus": 0, "speed_max": 0,
 		"wolf_step": false, "hidden_link": true,
 		"art_range_bonus": 0, "cav_speed_bonus": 1, "cav_jump_infantry": false,
-		"pro": "Koppeling geheim tot eerste schade (bluf) en cavalerie +1 Speed",
+		"pro": "Schutkleur: koppeling geheim tot eerste schade, en cavalerie +1 Speed (hinderlaag)",
 		"con": "Kaarten zelf zijn openbaar; standaard leger",
 	},
 }
