@@ -394,19 +394,25 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		if clip == "":
 			clip = die_variants[randi() % die_variants.size()]
 		_anim.play(clip, 0.2)
-		# Bloed spuit uit de borst, in de richting van de klap mee.
-		_spawn_blood_spurt(global_position + Vector3.UP * 0.55, dir, int(10.0 * fx("blood_spurt", 1.0)))
+		var base := clip.get_slice("/", clip.get_slice_count("/") - 1)
+		var cfg: Dictionary = fx_dict("death_pools").get(base, {})
+		# torso-afstand: van de voeten (pion-origin) naar waar de ROMP van dit
+		# lijk ligt — in MODEL-richting (+ = achterover, - = voorover), dus
+		# onafhankelijk van de schot-richting.
+		var torso_off: float = float(cfg.get("torso", cfg.get("forward", 0.3)))
+		# Bloedfontein uit de borst: 1-3 snelle stoten kort na elkaar, elk in
+		# een andere richting en steeds meer met de vallende torso mee; elke
+		# stoot laat zijn eigen spetter achter (via _spawn_blood_spurt).
+		var pulses := 1 + randi() % 3
+		for pi in pulses:
+			var ptw := create_tween()
+			ptw.tween_interval(0.04 + float(pi) * randf_range(0.12, 0.2))
+			ptw.tween_callback(_spurt_pulse.bind(pi, pulses, dir, torso_off))
 		_shed_parts(dir, kind)  # losse delen: zie _shed_parts voor de regels
 		_become_debris()
 		# Poel onder het lichaam — timing/groei/maat/plek per dood-clip
 		# instelbaar via effects_tuning.json -> death_pools (tuner-rij
 		# "Dood-poel"). Zo valt de plas precies wanneer dít lijf ligt.
-		var base := clip.get_slice("/", clip.get_slice_count("/") - 1)
-		var cfg: Dictionary = fx_dict("death_pools").get(base, {})
-		# torso-afstand: schuif de plas van de voeten (pion-origin) naar waar
-		# de ROMP van dit lijk ligt — in MODEL-richting (+ = achterover
-		# gevallen, - = voorover), dus onafhankelijk van de schot-richting.
-		var torso_off: float = float(cfg.get("torso", cfg.get("forward", 0.3)))
 		_spawn_blood(global_position + transform.basis.z * torso_off, 1, 0.03,
 			float(cfg.get("delay", fx("death_blood_delay", 0.9))),
 			float(cfg.get("grow", 0.7)),
@@ -627,6 +633,20 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life) \
 			.set_ease(Tween.EASE_IN)
 		tw.chain().tween_callback(puff.queue_free)
+
+
+## Eén stoot van de borst-fontein: de oorsprong zakt mee met het vallende
+## lijf richting de torso-plek, en elke stoot waaiert een andere kant op —
+## steeds meer met de val mee. Elke stoot laat via _spawn_blood_spurt zijn
+## eigen spetter achter.
+func _spurt_pulse(index: int, total: int, dir: Vector3, torso_off: float) -> void:
+	var t := 0.0 if total <= 1 else float(index) / float(total - 1)
+	var fall := transform.basis.z * torso_off
+	var origin := global_position + Vector3.UP * (0.55 - 0.22 * t) + fall * (0.6 * t)
+	var pdir := dir.rotated(Vector3.UP, randf_range(-0.6, 0.6))
+	if fall.length() > 0.01:
+		pdir = (pdir * (1.0 - 0.5 * t) + fall.normalized() * (0.4 + 0.5 * t)).normalized()
+	_spawn_blood_spurt(origin, pdir, int(10.0 * fx("blood_spurt", 1.0)))
 
 
 ## Rode bloedwolk: een pluim mini-bolletjes die naar buiten/omhoog spatten en
