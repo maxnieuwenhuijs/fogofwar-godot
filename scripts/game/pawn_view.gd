@@ -270,7 +270,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		if _piece != null:
 			_piece.visible = false  # de brokstukken zíjn het lijk
 		_become_debris()
-		_spawn_blood(global_position + dir * 0.25, 6, 0.3, 0.45)
+		_spawn_blood(global_position + dir * 0.25, 2, 0.25, 0.45)
 		return
 	# Lichtere kill (musket/melee): het lijf blijft HEEL en valt om;
 	# soms wipt alleen het hoedje eraf.
@@ -418,6 +418,18 @@ func _is_hat(node: Node) -> bool:
 	return String(node.name).to_lower().contains("hat")
 
 
+## Bloedhoeveelheid per brokstuk: de romp bloedt het meest, het hoedje bijna
+## niet, armen/benen weinig. (Het musket bloedt nooit: _fling_weapon spawnt
+## geen bloed.)
+func _blood_amount_for(part: Node3D) -> int:
+	var n := String(part.name).to_lower()
+	if n.contains("torso"):
+		return 4
+	if n.contains("hat"):
+		return 1 if randf() < 0.4 else 0
+	return 1
+
+
 ## Doelrotatie die een brokstuk/wapen plat op de grond legt: de langste
 ## lokale as van de mesh komt horizontaal, met een willekeurige draai en een
 ## klein kanteltje voor een natuurlijke ligging. Zo staat een romp of musket
@@ -497,7 +509,9 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Bij het landen snel plat op de grond draaien en blijven liggen.
 	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
-	_spawn_blood(land, 1, 0.08, t_up + t_down)
+	var blood_n := _blood_amount_for(part)
+	if blood_n > 0:
+		_spawn_blood(land, blood_n, 0.18 if blood_n >= 3 else 0.08, t_up + t_down)
 
 
 ## Zacht in elkaar zakken: het deel ploft vrijwel ter plekke op de tegel met
@@ -513,7 +527,9 @@ func _drop_part(part: Node3D) -> void:
 	# Meteen plat neerleggen.
 	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_spawn_blood(land, 1, 0.07, 0.2)
+	var blood_n := _blood_amount_for(part)
+	if blood_n > 0:
+		_spawn_blood(land, blood_n, 0.16 if blood_n >= 3 else 0.07, 0.2)
 
 
 func _on_anim_finished(anim_name: String) -> void:
