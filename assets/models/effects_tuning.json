@@ -2,10 +2,10 @@
 	"_uitleg": "Effect-tuning voor doden/gibs/bloed. Stel af via de Model-tuner (hoofdmenu) en druk daar op OPSLAAN. Handmatig bewerken kan ook: herstart daarna het spel of de tuner. Regel weghalen = code-default.",
 	"blood_burst": 0.0,
 	"blood_extra_delay": 0.2,
-	"blood_grow": 1.0,
-	"blood_mist": 1.0,
+	"blood_grow": 1.25,
+	"blood_mist": 2.2,
 	"blood_size": 1.3,
-	"blood_spurt": 1.0,
+	"blood_spurt": 3.0,
 	"death_blood_delay": 1.0,
 	"death_pools": {
 		"death1": {
@@ -21,11 +21,13 @@
 			"torso": -0.45
 		}
 	},
-	"drop_fall_time": 1.0,
-	"drop_stain_chance": 0.35,
-	"drop_stain_delay": 0.05,
-	"drop_stain_grow": 0.25,
+	"drop_fall_time": 0.22,
+	"drop_stain_chance": 1.0,
+	"drop_stain_delay": 0.0,
+	"drop_stain_grow": 0.15,
 	"gib_fling_power": 0.85,
+	"gib_pool_delay": 0.1,
+	"gib_pool_grow": 0.45,
 	"gib_spin": 0.95,
 	"hat_fling_power": 0.8,
 	"hat_fling_time": 1.8,

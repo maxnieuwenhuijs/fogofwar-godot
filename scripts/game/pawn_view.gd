@@ -918,8 +918,10 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Bij het landen snel plat op de grond draaien en blijven liggen.
 	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
-	# Eén poel per stuk, recht onder de landingsplek.
-	_spawn_blood(land, 1, 0.02, t_up + t_down, -1.0, _blood_size_for(part), "blood_pool")
+	# Eén poel per stuk, recht onder de landingsplek. Timing strak en
+	# tunebaar: gib-poel-wacht na het landen, volgroeid in gib-poel-groei.
+	_spawn_blood(land, 1, 0.02, t_up + t_down + fx("gib_pool_delay", 0.1),
+		fx("gib_pool_grow", 0.45), _blood_size_for(part), "blood_pool")
 
 
 ## Zacht in elkaar zakken: het deel ploft vrijwel ter plekke op de tegel met
@@ -935,8 +937,9 @@ func _drop_part(part: Node3D) -> void:
 	# Meteen plat neerleggen.
 	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	# Eén poel per stuk, recht onder de landingsplek.
-	_spawn_blood(land, 1, 0.02, 0.25, -1.0, _blood_size_for(part), "blood_pool")
+	# Eén poel per stuk, recht onder de landingsplek (zelfde timing-knoppen).
+	_spawn_blood(land, 1, 0.02, 0.25 + fx("gib_pool_delay", 0.1),
+		fx("gib_pool_grow", 0.45), _blood_size_for(part), "blood_pool")
 
 
 func _on_anim_finished(anim_name: String) -> void:
