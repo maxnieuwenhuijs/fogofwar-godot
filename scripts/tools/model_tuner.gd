@@ -16,6 +16,7 @@ const ARCH_CARDS: Dictionary = {
 ## Effect-knopjes (effects_tuning.json): label, bereik en standaardwaarde.
 const FX_DEFS: Array = [
 	{"key": "hat_fling_power", "label": "hoedkracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.5},
+	{"key": "hat_fling_time", "label": "hoedhangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.8},
 	{"key": "hat_pop_chance", "label": "hoedkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.55},
 	{"key": "gib_fling_power", "label": "worpkracht", "min": 0.2, "max": 2.5, "step": 0.05, "def": 1.0},
 	{"key": "gib_spin", "label": "tolling", "min": 0.0, "max": 2.5, "step": 0.05, "def": 1.0},

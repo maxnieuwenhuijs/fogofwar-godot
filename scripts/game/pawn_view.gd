@@ -531,14 +531,16 @@ func _pop_hat(dir: Vector3) -> void:
 	if hat == null:
 		parts_root.queue_free()
 		return
-	_fling_part(hat, dir, fx("hat_fling_power", 1.5))
+	_fling_part(hat, dir, fx("hat_fling_power", 1.5), fx("hat_fling_time", 1.8))
 	parts_root.add_to_group("battlefield_debris")
 
 
 ## Eén brokstuk wegslingeren: boog in de klap-richting + radiale spreiding,
 ## tollend neerkomen en blijven liggen. Alleen tweens op het deel zelf.
 ## violence (0..1) schaalt de afstand en hoogte van de worp.
-func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
+## time_scale rekt de vlucht- (en dus hang-)tijd op; het hoedje krijgt er meer
+## zodat hij zwevend wegtolt i.p.v. meteen neer te ploffen.
+func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: float = 1.0) -> void:
 	var radial := part.global_position - global_position
 	radial.y = 0.0
 	if radial.length() > 0.01:
@@ -550,9 +552,9 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	fling.y = 0.0
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y, from.z) + fling
-	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power
-	var t_up := randf_range(0.16, 0.24)
-	var t_down := randf_range(0.16, 0.24)
+	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power * time_scale
+	var t_up := randf_range(0.16, 0.24) * time_scale
+	var t_down := randf_range(0.16, 0.24) * time_scale
 	# Tollen alleen tíjdens de vlucht (stopt bij landen), en bescheiden:
 	# ~een kwart tot halve omwenteling om één overheersende as.
 	var euler := Vector3.ZERO
