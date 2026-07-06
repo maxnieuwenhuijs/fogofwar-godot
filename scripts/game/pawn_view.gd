@@ -316,11 +316,14 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	w.global_transform = xf
 	var land := Vector3(xf.origin.x, global_position.y, xf.origin.z) + world_dir * 0.65
 	var peak := xf.origin.lerp(land, 0.5) + Vector3.UP * 0.55
+	# Tollen alleen tijdens de vlucht; daarna snel plat op de grond.
 	var spin := w.create_tween()
-	spin.tween_property(w, "rotation", w.rotation + Vector3(3.5, 1.7, 4.6), 0.95)
+	spin.tween_property(w, "rotation", w.rotation + Vector3(2.4, 1.2, 3.0), 0.44) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var arc := w.create_tween()
-	arc.tween_property(w, "global_position", peak, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	arc.tween_property(w, "global_position", land, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	arc.tween_property(w, "global_position", peak, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	arc.tween_property(w, "global_position", land, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	arc.tween_property(w, "rotation", _flat_rotation(w), 0.12)
 	# Het musket blijft op het bord liggen (opruiming via battlefield_debris).
 	w.add_to_group("battlefield_debris")
 
@@ -405,6 +408,27 @@ func _is_hat(node: Node) -> bool:
 	return String(node.name).to_lower().contains("hat")
 
 
+## Doelrotatie die een brokstuk/wapen plat op de grond legt: de langste
+## lokale as van de mesh komt horizontaal, met een willekeurige draai en een
+## klein kanteltje voor een natuurlijke ligging. Zo staat een romp of musket
+## nooit rechtop en tolt er niets door op de grond.
+func _flat_rotation(part: Node3D) -> Vector3:
+	var mi: MeshInstance3D = part as MeshInstance3D
+	if mi == null:
+		var found: Array = part.find_children("*", "MeshInstance3D", true, false)
+		if not found.is_empty():
+			mi = found[0]
+	var x := 0.0
+	if mi != null:
+		var sz := mi.get_aabb().size
+		if sz.y >= sz.x and sz.y >= sz.z:
+			x = deg_to_rad(90.0)  # langste as is lokaal Y → kantelen = plat
+	return Vector3(
+		x + deg_to_rad(randf_range(-8.0, 8.0)),
+		randf() * TAU,
+		deg_to_rad(randf_range(-8.0, 8.0)))
+
+
 ## Lichte kill: alleen het hoedje wipt van het lijk; de rest van het
 ## gibs-bestand blijft verborgen (het lijf zelf valt heel om).
 func _pop_hat(dir: Vector3) -> void:
@@ -448,8 +472,8 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y, from.z) + fling
 	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power
-	var t_up := randf_range(0.2, 0.3)
-	var t_down := randf_range(0.2, 0.3)
+	var t_up := randf_range(0.16, 0.24)
+	var t_down := randf_range(0.16, 0.24)
 	# Tollen alleen tíjdens de vlucht (stopt bij landen), en bescheiden:
 	# ~een kwart tot halve omwenteling om één overheersende as.
 	var euler := Vector3.ZERO
@@ -461,7 +485,8 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	var arc := part.create_tween()
 	arc.tween_property(part, "global_position", peak, t_up).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	# Het deel blijft liggen waar het landt (opruiming via battlefield_debris).
+	# Bij het landen snel plat op de grond draaien en blijven liggen.
+	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
 	_spawn_blood(land, 1, 0.08)
 
 
@@ -473,12 +498,11 @@ func _drop_part(part: Node3D) -> void:
 		from.x + randf_range(-0.08, 0.08),
 		global_position.y - 0.02,
 		from.z + randf_range(-0.08, 0.08))
-	var tumble := part.create_tween()
-	tumble.tween_property(part, "rotation", part.rotation + Vector3(
-		randf_range(-0.5, 0.5), randf_range(-0.3, 0.3), randf_range(-0.5, 0.5)), 0.22) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var drop := part.create_tween()
-	drop.tween_property(part, "global_position", land, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	drop.tween_property(part, "global_position", land, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	# Meteen plat neerleggen.
+	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_spawn_blood(land, 1, 0.07)
 
 
