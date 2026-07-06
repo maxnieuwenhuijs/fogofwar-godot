@@ -368,7 +368,6 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
 			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
 		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
-		_spawn_blood(global_position + dir * 0.25, 2, 0.25, 0.45)
 		return
 	# Lichtere kill (musket/melee): het lijf blijft HEEL. Heeft het model een
 	# die-clip, dan speelt DIE het sterven (zichtbaar, geen tuimel erdoorheen)
@@ -379,7 +378,8 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		_spawn_blood_spurt(global_position + Vector3.UP * 0.55, dir, int(10.0 * fx("blood_spurt", 1.0)))
 		_shed_parts(dir, kind)  # losse delen: zie _shed_parts voor de regels
 		_become_debris()
-		_spawn_blood(global_position + dir * 0.2, 3, 0.28, fx("death_blood_delay", 0.9))
+		# Eén grote poel die onder het gevallen lichaam vandaan groeit.
+		_spawn_blood(global_position + dir * 0.2, 1, 0.03, fx("death_blood_delay", 0.9), -1.0, 2.4, "blood_pool")
 		return
 	# Fallback zonder die-clip (geometrische stukken): klassieke omvaller.
 	var axis := Vector3.UP.cross(dir).normalized()
@@ -449,7 +449,9 @@ func _become_debris() -> void:
 ## Gaan mee in de debris-opruiming.
 ## grow_time > 0 = gesynchroniseerde poel (bloedspuit): geen extra wachttijd,
 ## de poel groeit in precies die duur naar vol — timing matcht de straal.
-func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, delay: float = 0.0, grow_time: float = -1.0) -> void:
+## size_mult schaalt de poel (romp groot, hoedje klein); tex_prefix forceert
+## de texture-soort ("blood_pool"/"splat"), leeg = automatisch op spread.
+func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, delay: float = 0.0, grow_time: float = -1.0, size_mult: float = 1.0, tex_prefix: String = "") -> void:
 	var parent := get_parent()
 	if parent == null:
 		return
@@ -460,11 +462,11 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 		var mat := StandardMaterial3D.new()
 		# Kleine enkele inslag (druppel/spuit-restje) = spetter-texture,
 		# grotere plas onder lijk/ledemaat = volle pool-texture.
-		var tex := _blood_texture("splat" if spread <= 0.05 else "blood_pool")
+		var tex := _blood_texture(tex_prefix if tex_prefix != "" else ("splat" if spread <= 0.05 else "blood_pool"))
 		if tex != null:
 			# Spetter-PNG op een plat vlak; donker getint bij roet (artillerie).
 			var pm := PlaneMesh.new()
-			var d := randf_range(0.14, 0.34) * fx("blood_size", 1.0)
+			var d := randf_range(0.14, 0.34) * fx("blood_size", 1.0) * size_mult
 			pm.size = Vector2(d, d)
 			disc.mesh = pm
 			mat.albedo_texture = tex
@@ -472,7 +474,7 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 			mat.albedo_color = Color(1, 1, 1) if blood else Color(0.15, 0.15, 0.16)
 		else:
 			var m := CylinderMesh.new()
-			m.top_radius = randf_range(0.05, 0.14) * fx("blood_size", 1.0)
+			m.top_radius = randf_range(0.05, 0.14) * fx("blood_size", 1.0) * size_mult
 			m.bottom_radius = m.top_radius
 			m.height = 0.004
 			disc.mesh = m
@@ -676,16 +678,17 @@ func _is_hat(node: Node) -> bool:
 	return String(node.name).to_lower().contains("hat")
 
 
-## Bloedhoeveelheid per brokstuk: de romp bloedt het meest, het hoedje bijna
-## niet, armen/benen weinig. (Het musket bloedt nooit: _fling_weapon spawnt
+## Poel-maat per brokstuk (multiplier): elk stuk krijgt precies EEN poel
+## recht onder zijn landingsplek — de romp een grote, ledematen een normale,
+## het hoedje een kleintje. (Het musket bloedt nooit: _fling_weapon spawnt
 ## geen bloed.)
-func _blood_amount_for(part: Node3D) -> int:
+func _blood_size_for(part: Node3D) -> float:
 	var n := String(part.name).to_lower()
 	if n.contains("torso"):
-		return 4
+		return 2.2
 	if n.contains("hat"):
-		return 1 if randf() < 0.4 else 0
-	return 1
+		return 0.7
+	return 1.2
 
 
 ## Doelrotatie die een brokstuk/wapen plat op de grond legt: de langste
@@ -825,7 +828,7 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power * time_scale
 	# Bloeden: een vlees-deel (geen hoed/musket) spat druppels op het punt waar
 	# het van het lijf wordt gerukt.
-	if not _is_hat(part) and _blood_amount_for(part) > 0:
+	if not _is_hat(part):
 		_spawn_blood_burst(from, int(4 * fx("blood_burst", 1.0)))
 	var t_up := randf_range(0.16, 0.24) * time_scale
 	var t_down := randf_range(0.16, 0.24) * time_scale
@@ -842,9 +845,8 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Bij het landen snel plat op de grond draaien en blijven liggen.
 	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
-	var blood_n := _blood_amount_for(part)
-	if blood_n > 0:
-		_spawn_blood(land, blood_n, 0.18 if blood_n >= 3 else 0.08, t_up + t_down)
+	# Eén poel per stuk, recht onder de landingsplek.
+	_spawn_blood(land, 1, 0.02, t_up + t_down, -1.0, _blood_size_for(part), "blood_pool")
 
 
 ## Zacht in elkaar zakken: het deel ploft vrijwel ter plekke op de tegel met
@@ -860,9 +862,8 @@ func _drop_part(part: Node3D) -> void:
 	# Meteen plat neerleggen.
 	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	var blood_n := _blood_amount_for(part)
-	if blood_n > 0:
-		_spawn_blood(land, blood_n, 0.16 if blood_n >= 3 else 0.07, 0.2)
+	# Eén poel per stuk, recht onder de landingsplek.
+	_spawn_blood(land, 1, 0.02, 0.25, -1.0, _blood_size_for(part), "blood_pool")
 
 
 func _on_anim_finished(anim_name: String) -> void:
