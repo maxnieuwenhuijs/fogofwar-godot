@@ -697,14 +697,19 @@ func _spawn_blood_burst(center: Vector3, amount: int, dir: Vector3 = Vector3.ZER
 		var dist := randf_range(0.15, 0.55)
 		var apex := center + out * dist + Vector3.UP * randf_range(0.1, 0.4)
 		var ground := Vector3(apex.x, global_position.y + 0.02, apex.z)
+		# druppel-duur schaalt de hele vlucht (lager = snappier vallen).
+		var dtempo := fx("drop_fall_time", 1.0)
 		var tw := drop.create_tween()
-		tw.tween_property(drop, "global_position", apex, 0.16).set_ease(Tween.EASE_OUT)
-		tw.tween_property(drop, "global_position", ground, randf_range(0.2, 0.32)) \
+		tw.tween_property(drop, "global_position", apex, 0.16 * dtempo).set_ease(Tween.EASE_OUT)
+		tw.tween_property(drop, "global_position", ground, randf_range(0.2, 0.32) * dtempo) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		tw.parallel().tween_property(drop, "scale", Vector3(0.25, 0.25, 0.25), 0.5)
-		# Een deel van de druppels laat een vlekje achter op de landingsplek.
-		if i % 3 == 0:
-			tw.tween_callback(_spawn_blood.bind(ground, 1, 0.03, 0.0))
+		tw.parallel().tween_property(drop, "scale", Vector3(0.25, 0.25, 0.25), 0.5 * dtempo)
+		# druppel-vlekkans bepaalt welk deel een vlek achterlaat; de vlek
+		# verschijnt vlek-wacht na de inslag en groeit aan in vlek-groei
+		# (gesynchroniseerd pad, dus zonder de algemene plas-wachttijd).
+		if randf() < fx("drop_stain_chance", 0.35):
+			tw.tween_callback(_spawn_blood.bind(ground, 1, 0.03,
+				fx("drop_stain_delay", 0.05), fx("drop_stain_grow", 0.25)))
 		tw.tween_callback(drop.queue_free)
 
 

@@ -21,6 +21,10 @@
 			"torso": -0.45
 		}
 	},
+	"drop_fall_time": 1.0,
+	"drop_stain_chance": 0.35,
+	"drop_stain_delay": 0.05,
+	"drop_stain_grow": 0.25,
 	"gib_fling_power": 0.85,
 	"gib_spin": 0.95,
 	"hat_fling_power": 0.8,
