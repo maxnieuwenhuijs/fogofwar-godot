@@ -562,11 +562,20 @@ func _shed_parts(dir: Vector3) -> void:
 	if randf() < fx("hat_pop_chance", 0.55):
 		_shed_one(live, "hat", dir, fx("hat_fling_power", 1.5), fx("hat_fling_time", 1.8))
 	if randf() < fx("limb_shed_chance", 0.4):
-		var limbs: Array = ["arml", "armr", "legl", "legr"]
-		limbs.shuffle()
-		for limb in limbs:
-			if _shed_one(live, String(limb), dir, fx("limb_fling_power", 0.9), fx("limb_fling_time", 1.0)):
-				break
+		# Het ledemaat laat pas even NA de klap los, terwijl het lijf al inzakt
+		# (en dus nooit exact tegelijk met het hoedje).
+		var tw := create_tween()
+		tw.tween_interval(randf_range(0.1, 0.4))
+		tw.tween_callback(_shed_first_limb.bind(live, dir))
+
+
+## Ruk het eerste aanwezige losse ledemaat af (willekeurige volgorde).
+func _shed_first_limb(live: Array, dir: Vector3) -> void:
+	var limbs: Array = ["arml", "armr", "legl", "legr"]
+	limbs.shuffle()
+	for limb in limbs:
+		if _shed_one(live, String(limb), dir, fx("limb_fling_power", 0.9), fx("limb_fling_time", 1.0)):
+			break
 
 
 ## Verberg het levende deel (naam bevat part_name) en slinger de
@@ -619,6 +628,10 @@ func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_sc
 ## time_scale rekt de vlucht- (en dus hang-)tijd op; het hoedje krijgt er meer
 ## zodat hij zwevend wegtolt i.p.v. meteen neer te ploffen.
 func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: float = 1.0) -> void:
+	# Elk deel valt nét anders: kracht en hangtijd krijgen per deel ruis, zodat
+	# bij een explosie nooit twee armen synchroon wegvliegen of tegelijk landen.
+	violence *= randf_range(0.85, 1.2)
+	time_scale *= randf_range(0.75, 1.35)
 	var radial := part.global_position - global_position
 	radial.y = 0.0
 	if radial.length() > 0.01:
@@ -666,7 +679,7 @@ func _drop_part(part: Node3D) -> void:
 		global_position.y + 0.05,
 		from.z + randf_range(-0.08, 0.08))
 	var drop := part.create_tween()
-	drop.tween_property(part, "global_position", land, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	drop.tween_property(part, "global_position", land, randf_range(0.15, 0.3)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	# Meteen plat neerleggen.
 	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
