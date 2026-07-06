@@ -313,11 +313,12 @@ func _on_tuning_changed(_v: float) -> void:
 
 
 ## Herlaad het model zodat auto-fit + tuning exact zo draaien als in het spel.
-func _respawn_model() -> void:
+func _respawn_model(clear_debris: bool = true) -> void:
 	var doctrine: int = _fac_btn.get_selected_id()
 	var unit_type: int = _type_btn.get_selected_id()
-	for n in get_tree().get_nodes_in_group("battlefield_debris"):
-		n.queue_free()
+	if clear_debris:
+		for n in get_tree().get_nodes_in_group("battlefield_debris"):
+			n.queue_free()
 	if _pawn != null and is_instance_valid(_pawn):
 		_pawn.queue_free()
 	_pawn = PAWN_SCENE.instantiate()
@@ -360,11 +361,17 @@ func _on_fx_changed(_v: float) -> void:
 func _on_gib_test(strength: float) -> void:
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
+	PawnView.reload_effects()  # effects_tuning.json live herladen per test
+	# Vorige test-resten ruimen; het NIEUWE lijk laten we juist liggen.
+	for n in get_tree().get_nodes_in_group("battlefield_debris"):
+		n.queue_free()
 	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength)
 	_pawn = null
+	# Levend model komt terug, maar de gibs/bloed/musket BLIJVEN liggen
+	# (net als op het echte bord tot de nieuwe cyclus).
 	var t := create_tween()
-	t.tween_interval(2.4)
-	t.tween_callback(_respawn_model)
+	t.tween_interval(4.0)
+	t.tween_callback(_respawn_model.bind(false))
 
 
 func _on_clip(clip: String) -> void:
