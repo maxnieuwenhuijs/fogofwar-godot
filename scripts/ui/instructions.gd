@@ -166,7 +166,7 @@ func _tab_turns() -> String:
 		"[b]Het spel gaat in cycli. Elke cyclus:[/b]",
 		"",
 		"[b]1. Kaarten maken[/b] (3 rondes)",
-		"Je verdeelt punten over HP / Speed / Aanval. De som is altijd je budget (Mens: 7).",
+		"Je verdeelt punten over HP / Speed / Aanval. De som is altijd je budget (Varken: 7).",
 		"",
 		"[b]2. Laten zien[/b]",
 		"Beide spelers tonen hun kaarten. Wie het meest op Aanval heeft ingezet (het hoogste \"bod\") krijgt het [b]initiatief[/b]: die mag eerst koppelen en straks eerst slaan.",

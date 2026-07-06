@@ -52,7 +52,7 @@ enum UiPhase { DEFINE, LINKING, DONE }
 # VIJANDELIJKE infanterie. (Cavalerie springt sowieso over eigen pionnen.)
 const DOCTRINE_DATA: Dictionary = {
 	Doctrine.MENS: {
-		"name": "Mens", "cards": 3, "budget": 7, "comp": [13, 6, 3],
+		"name": "Varken", "cards": 3, "budget": 7, "comp": [13, 6, 3],
 		"move_through_own": false, "hp_bonus": 0, "speed_max": 0,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,

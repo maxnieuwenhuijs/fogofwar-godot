@@ -59,7 +59,7 @@ Formaat **HP / Speed / Aanval**. Archetype = strikt hoogste stat; gelijkspel = `
 | 2/1/2 | `mix` | standaard |
 | 1/2/2 | `mix` | standaard |
 
-### Budget 7 — Mens, Beer, Wolf, Vos (15 combinaties)
+### Budget 7 — Varken, Beer, Wolf, Vos (15 combinaties)
 
 | Kaart | Archetype | | Kaart | Archetype | | Kaart | Archetype |
 |---|---|---|---|---|---|---|---|
@@ -108,11 +108,11 @@ HP-blokjes en het kaartpaneel geven de exacte cijfers.
 | Factie | Infanterie (2 benen) | Big bro cavalerie (4 poten) |
 |---|---|---|
 | Muis | muis | dikke bruine rat -- LET OP: comp is 22/0/0, de rat verschijnt pas als de Muis cavalerie in z'n samenstelling krijgt (balans-besluit) |
-| Mens -> ? | wordt vervangen door een dier (suggesties in WIP.md: aap/gorilla, zwijn/everzwijn, hond/mastiff) | volgt na de keuze |
+| Varken (ex-Mens) | varken | **everzwijn** met slagtanden |
 | Leeuw | **cheetah** (slank, gevlekt, snel) | **leeuw** met volle manen |
-| Beer | beer | massieve grizzly |
-| Wolf | wolf | reusachtige dire wolf |
-| Vos | vos | reuzenvos op hoge poten (maned-wolf-silhouet -- past bij de +1 Speed-perk) |
+| Beer | **wasbeer** (gemaskerd gezicht) | massieve grizzly |
+| Wolf | wolf — VOORSTEL: jakhals (magerder, guerrilla-look) | reusachtige dire wolf |
+| Vos | vos — VOORSTEL: fennek (grote oren, klein) | reuzenvos op hoge poten (maned-wolf-silhouet -- past bij de +1 Speed-perk) |
 
 **Prompt-opbouw infanterie** (ongewijzigd): `Single character, <bouw>
 anthropomorphic <dier>, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey
@@ -146,11 +146,20 @@ later per familie.
 | `cavalerie_atk` | Single character, hugely muscular battle-scarred fat brown rat standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with bared teeth. Clean neutral studio background, single animal only, no text. |
 | `cavalerie_mix` | Single character, sturdy fat brown rat standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
 
-### Mens -- WORDT VERVANGEN (keuze pending)
+### Varken -- varken-infanterie + everzwijn als big bro (ex-Mens)
 
-De Mens-factie krijgt een nieuwe diersoort; infanterie- en big bro-prompts
-volgen na de keuze (zie WIP.md voor de suggesties). De artillerie blijft:
-
+| Bestand | Prompt |
+|---|---|
+| `infanterie_basis` | Single character, average build anthropomorphic pig, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean young anthropomorphic pig, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey shako, light field gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset pot-bellied anthropomorphic pig, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey bicorne hat. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic pig, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, carrying a musket with fixed bayonet. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic pig soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `cavalerie_basis` | Single character, powerful wild boar with large tusks standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_spd` | Single character, lean sleek wild boar with large tusks standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_hp` | Single character, massive heavyset wild boar with large tusks standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_atk` | Single character, hugely muscular battle-scarred wild boar with large tusks standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with bared teeth. Clean neutral studio background, single animal only, no text. |
+| `cavalerie_mix` | Single character, sturdy wild boar with large tusks standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
 | Bestand | Prompt |
 |---|---|
 | `artillerie_basis` | Single prop, Napoleonic field cannon on a weathered dark wooden gun carriage with two spoked wheels. Gritty realistic AAA-game concept art, highly detailed. Dark iron barrel. Clean neutral studio background, single object only, no text. |
@@ -179,15 +188,15 @@ volgen na de keuze (zie WIP.md voor de suggesties). De artillerie blijft:
 | `artillerie_atk` | Single prop, extra long-barreled heavy Napoleonic siege cannon on a wide reinforced weathered dark wooden carriage, pewter detailing. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 | `artillerie_mix` | Single prop, ornate Napoleonic field cannon on a weathered dark wooden carriage with pewter detailing. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, single object only, no text. |
 
-### Beer -- beer-infanterie + grizzly als big bro
+### Beer -- wasbeer-infanterie + grizzly als big bro
 
 | Bestand | Prompt |
 |---|---|
-| `infanterie_basis` | Single character, average build anthropomorphic bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and dark grey fur cap, unarmed. Clean neutral studio background, single figure only, no text. |
-| `infanterie_spd` | Single character, thin lean anthropomorphic brown bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey fur cap, light gear. Clean neutral studio background, single figure only, no text. |
-| `infanterie_hp` | Single character, massive heavyset anthropomorphic grizzly bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a heavy dark iron breastplate and fur cap. Clean neutral studio background, single figure only, no text. |
-| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic bear, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey fur cap, carrying a large battle axe. Clean neutral studio background, single figure only, no text. |
-| `infanterie_mix` | Single character, average build anthropomorphic bear soldier, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and fur cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
+| `infanterie_basis` | Single character, average build anthropomorphic raccoon with a masked face, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and dark grey fur cap, unarmed. Clean neutral studio background, single figure only, no text. |
+| `infanterie_spd` | Single character, thin lean anthropomorphic raccoon with a masked face, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey fur cap, light gear. Clean neutral studio background, single figure only, no text. |
+| `infanterie_hp` | Single character, heavyset round-bodied anthropomorphic raccoon with a masked face, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a heavy dark iron breastplate and fur cap. Clean neutral studio background, single figure only, no text. |
+| `infanterie_atk` | Single character, broad-shouldered muscular anthropomorphic raccoon with a masked face, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey fur cap, carrying a large battle axe. Clean neutral studio background, single figure only, no text. |
+| `infanterie_mix` | Single character, average build anthropomorphic raccoon soldier with a masked face, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and fur cap, with a musket slung over the shoulder. Clean neutral studio background, single figure only, no text. |
 | `cavalerie_basis` | Single character, powerful grizzly bear standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
 | `cavalerie_spd` | Single character, lean sleek grizzly bear standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps. Clean neutral studio background, single animal only, no text. |
 | `cavalerie_hp` | Single character, massive heavyset grizzly bear standing on four paws, quadruped, neutral stance. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic caparison saddle blanket and leather harness straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single animal only, no text. |

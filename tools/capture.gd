@@ -43,7 +43,7 @@ func _ready() -> void:
 		var games: int = int(targs[ti + 3]) if targs.size() > ti + 3 else 6
 		var faction: int = -1
 		if targs.size() > ti + 4:
-			var fnames := {"mens": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 				"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
 				"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS}
 			faction = fnames.get(String(targs[ti + 4]).to_lower(), -1)
@@ -419,7 +419,7 @@ func _ready() -> void:
 			"ultra": "res://scripts/ai/AIUltra.gd",
 		}
 		var doctrine_names := {
-			"mens": Constants.Doctrine.MENS,
+			"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS,
 			"muis": Constants.Doctrine.MUIS,
 			"leeuw": Constants.Doctrine.LEEUW,
 			"beer": Constants.Doctrine.BEER,
@@ -698,7 +698,7 @@ func _ready() -> void:
 		out = "res://_shot_link.png"
 	elif "play" in args:
 		# `-- play [factie]` — bv. `play muis` om karaktermodellen te bekijken.
-		var fnames := {"mens": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+		var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
 			"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS}
 		for fname in fnames:
