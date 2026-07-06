@@ -161,8 +161,12 @@ func _build_ui() -> void:
 	row3.add_child(freeze_btn)
 	var gib_btn := Button.new()
 	gib_btn.text = "gibs (kanon)"
-	gib_btn.pressed.connect(_on_gib_test)
+	gib_btn.pressed.connect(_on_gib_test.bind(1.4))
 	row3.add_child(gib_btn)
+	var gib_btn2 := Button.new()
+	gib_btn2.text = "gibs (musket)"
+	gib_btn2.pressed.connect(_on_gib_test.bind(0.75))
+	row3.add_child(gib_btn2)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -314,11 +318,12 @@ func _freeze_pose() -> void:
 	_pawn._anim.pause()
 
 
-## Test de dood-met-dismemberment (kanon-kracht); daarna komt het model terug.
-func _on_gib_test() -> void:
+## Test de dood-met-dismemberment op kanon- (1.4) of musket-kracht (0.75);
+## daarna komt het model vanzelf terug.
+func _on_gib_test(strength: float) -> void:
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
-	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), 1.4)
+	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength)
 	_pawn = null
 	var t := create_tween()
 	t.tween_interval(2.4)
