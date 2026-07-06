@@ -125,6 +125,14 @@ static func fx_all() -> Dictionary:
 	return _fx
 
 
+## Genest effect-dict, bv. "death_pools" (per dood-clip: delay/grow/size/
+## forward voor de bloedpoel). Leeg dict als de sleutel ontbreekt.
+static func fx_dict(key: String) -> Dictionary:
+	fx("", 0.0)
+	var v = _fx.get(key)
+	return v if v is Dictionary else {}
+
+
 ## Bloedspetter-textures: drop PNG's (met alpha) in assets/textures/blood/ en
 ## de plassen gebruiken ze automatisch (willekeurige keuze per plas). Map leeg
 ## = de simpele rode schijfjes. Export-veilig (.import/.remap remaps).
@@ -347,7 +355,9 @@ func stagger(world_dir: Vector3) -> void:
 ## bepaalt hoe gewelddadig de delen wegvliegen. Zonder gibs-bestand (placeholder
 ## of factie zonder gezaagd model) valt de klassieke omvaller terug.
 ## strength: melee ~0.7, schot 0.75, kanon 1.4.
-func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee") -> void:
+## force_die_clip: laat een SPECIFIEKE dood-clip spelen (Model-tuner) —
+## leeg = willekeurige variant.
+func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee", force_die_clip: String = "") -> void:
 	_ring.visible = false
 	set_hovered(false)
 	var dir := world_dir
@@ -372,14 +382,31 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 	# Lichtere kill (musket/melee): het lijf blijft HEEL. Heeft het model een
 	# die-clip, dan speelt DIE het sterven (zichtbaar, geen tuimel erdoorheen)
 	# en blijft het lijk in de eindpose van de animatie liggen.
-	if _anim != null and not _variants_of(anim_die).is_empty():
-		play_die()
+	var die_variants: Array = _variants_of(anim_die) if _anim != null else []
+	if not die_variants.is_empty():
+		# Specifieke clip (tuner) of een willekeurige variant.
+		var clip := ""
+		if force_die_clip != "":
+			for v in die_variants:
+				if String(v).ends_with(force_die_clip):
+					clip = String(v)
+					break
+		if clip == "":
+			clip = die_variants[randi() % die_variants.size()]
+		_anim.play(clip, 0.2)
 		# Bloed spuit uit de borst, in de richting van de klap mee.
 		_spawn_blood_spurt(global_position + Vector3.UP * 0.55, dir, int(10.0 * fx("blood_spurt", 1.0)))
 		_shed_parts(dir, kind)  # losse delen: zie _shed_parts voor de regels
 		_become_debris()
-		# Eén grote poel die onder het gevallen lichaam vandaan groeit.
-		_spawn_blood(global_position + dir * 0.2, 1, 0.03, fx("death_blood_delay", 0.9), -1.0, 2.4, "blood_pool")
+		# Poel onder het lichaam — timing/groei/maat/plek per dood-clip
+		# instelbaar via effects_tuning.json -> death_pools (tuner-rij
+		# "Dood-poel"). Zo valt de plas precies wanneer dít lijf ligt.
+		var base := clip.get_slice("/", clip.get_slice_count("/") - 1)
+		var cfg: Dictionary = fx_dict("death_pools").get(base, {})
+		_spawn_blood(global_position + dir * float(cfg.get("forward", 0.2)), 1, 0.03,
+			float(cfg.get("delay", fx("death_blood_delay", 0.9))),
+			float(cfg.get("grow", 0.7)),
+			float(cfg.get("size", 2.4)), "blood_pool")
 		return
 	# Fallback zonder die-clip (geometrische stukken): klassieke omvaller.
 	var axis := Vector3.UP.cross(dir).normalized()

@@ -45,6 +45,8 @@ var _x_spin: SpinBox
 var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
+var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
+var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
 var _info: Label
 
 var _updating := false  # geen slider-events tijdens het her-instellen
@@ -148,7 +150,7 @@ func _build_ui() -> void:
 	add_child(ui)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -380.0
+	panel.offset_top = -420.0
 	ui.add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -223,6 +225,27 @@ func _build_ui() -> void:
 		var spin := _make_spin(fxrow, float(d.min), float(d.max), float(d.step),
 			PawnView.fx(String(d.key), float(d.def)), _on_fx_changed)
 		_fx_spins[String(d.key)] = spin
+
+	# Dood-poel rij: per dood-clip de bloedpoel timen (wacht/groei/maat/
+	# afstand in de valrichting). OPSLAAN schrijft dit mee (death_pools).
+	var rowd := HBoxContainer.new()
+	box.add_child(rowd)
+	rowd.add_child(_make_label("Dood-poel: "))
+	_die_btn = OptionButton.new()
+	_die_btn.item_selected.connect(func(_i: int) -> void: _load_death_pool_values())
+	rowd.add_child(_die_btn)
+	rowd.add_child(_make_label(" wacht"))
+	_dp_spins["delay"] = _make_spin(rowd, 0.0, 3.0, 0.05, 0.9, _on_death_pool_changed)
+	rowd.add_child(_make_label(" groei"))
+	_dp_spins["grow"] = _make_spin(rowd, 0.1, 3.0, 0.05, 0.7, _on_death_pool_changed)
+	rowd.add_child(_make_label(" maat"))
+	_dp_spins["size"] = _make_spin(rowd, 0.5, 5.0, 0.1, 2.4, _on_death_pool_changed)
+	rowd.add_child(_make_label(" afstand"))
+	_dp_spins["forward"] = _make_spin(rowd, -1.0, 1.0, 0.05, 0.2, _on_death_pool_changed)
+	var dp_test := Button.new()
+	dp_test.text = "test dood-poel"
+	dp_test.pressed.connect(_on_death_pool_test)
+	rowd.add_child(dp_test)
 
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
@@ -348,7 +371,60 @@ func _reload_pawns() -> void:
 		_weapon_spins[["px", "py", "pz"][i]].value = float(wpos[i])
 		_weapon_spins[["rx", "ry", "rz"][i]].value = float(wrot[i])
 	_updating = false
+	_fill_die_options()
 	_refresh_info()
+
+
+## Vul het dood-clip menu met de die-varianten van het huidige model en
+## laad de bijbehorende death_pools-waarden.
+func _fill_die_options() -> void:
+	_die_btn.clear()
+	if _pawn != null and _pawn._anim != null:
+		for v in _pawn._variants_of(_pawn.anim_die):
+			var n := String(v)
+			_die_btn.add_item(n.get_slice("/", n.get_slice_count("/") - 1))
+	_load_death_pool_values()
+
+
+func _load_death_pool_values() -> void:
+	if _die_btn.item_count == 0:
+		return
+	var clip := _die_btn.get_item_text(_die_btn.selected)
+	var cfg: Dictionary = PawnView.fx_dict("death_pools").get(clip, {})
+	_updating = true
+	_dp_spins["delay"].value = float(cfg.get("delay", 0.9))
+	_dp_spins["grow"].value = float(cfg.get("grow", 0.7))
+	_dp_spins["size"].value = float(cfg.get("size", 2.4))
+	_dp_spins["forward"].value = float(cfg.get("forward", 0.2))
+	_updating = false
+
+
+func _on_death_pool_changed(_v: float) -> void:
+	if _updating or _die_btn.item_count == 0:
+		return
+	var clip := _die_btn.get_item_text(_die_btn.selected)
+	var pools: Dictionary = PawnView.fx_all().get("death_pools", {})
+	pools[clip] = {
+		"delay": snappedf(_dp_spins["delay"].value, 0.01),
+		"grow": snappedf(_dp_spins["grow"].value, 0.01),
+		"size": snappedf(_dp_spins["size"].value, 0.01),
+		"forward": snappedf(_dp_spins["forward"].value, 0.01),
+	}
+	PawnView.fx_all()["death_pools"] = pools
+
+
+## Speel precies de GEKOZEN dood-clip met de ingestelde poel-timing.
+func _on_death_pool_test() -> void:
+	if _pawn == null or not is_instance_valid(_pawn) or _die_btn.item_count == 0:
+		return
+	for n in get_tree().get_nodes_in_group("battlefield_debris"):
+		n.queue_free()
+	var clip := _die_btn.get_item_text(_die_btn.selected)
+	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), 0.75, "shot", clip)
+	_pawn = null
+	var t := create_tween()
+	t.tween_interval(4.0)
+	t.tween_callback(_respawn_model.bind(false))
 
 
 ## Slider bewogen → spin bijwerken, dan toepassen.
@@ -441,7 +517,8 @@ func _on_fx_changed(_v: float) -> void:
 func _on_gib_test(strength: float, kind: String = "shot") -> void:
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
-	PawnView.reload_effects()  # effects_tuning.json live herladen per test
+	# (Geen reload van effects_tuning.json hier: de knopjes in de tuner zijn
+	# de waarheid; herladen zou niet-opgeslagen wijzigingen terugdraaien.)
 	# Vorige test-resten ruimen; het NIEUWE lijk laten we juist liggen.
 	for n in get_tree().get_nodes_in_group("battlefield_debris"):
 		n.queue_free()
