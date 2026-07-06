@@ -272,12 +272,15 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		_become_debris()
 		_spawn_blood(global_position + dir * 0.25, 2, 0.25, 0.45)
 		return
-	# Lichtere kill (musket/melee): het lijf blijft HEEL en valt om;
-	# soms wipt alleen het hoedje eraf.
-	if randf() < 0.45:
-		_pop_hat(dir)
-	# Klassieke omvaller die blijft liggen (ook de fallback zonder gibs-bestand).
-	play_die()  # echte model-anim indien aanwezig
+	# Lichtere kill (musket/melee): het lijf blijft HEEL. Heeft het model een
+	# die-clip, dan speelt DIE het sterven (zichtbaar, geen tuimel erdoorheen)
+	# en blijft het lijk in de eindpose van de animatie liggen.
+	if _anim != null and not _variants_of(anim_die).is_empty():
+		play_die()
+		_become_debris()
+		_spawn_blood(global_position + dir * 0.2, 3, 0.28, 0.9)
+		return
+	# Fallback zonder die-clip (geometrische stukken): klassieke omvaller.
 	var axis := Vector3.UP.cross(dir).normalized()
 	if axis.length() < 0.01:
 		axis = Vector3(1, 0, 0)
@@ -451,8 +454,9 @@ func _flat_rotation(part: Node3D) -> Vector3:
 		deg_to_rad(randf_range(-8.0, 8.0)))
 
 
-## Lichte kill: alleen het hoedje wipt van het lijk; de rest van het
-## gibs-bestand blijft verborgen (het lijf zelf valt heel om).
+## (Nu ongebruikt — gereserveerd voor als levende modellen losse delen krijgen:
+## dan kan het echte hoedje verborgen worden en wipt dit gib-hoedje eraf zonder
+## dubbel hoedje op het lijk.)
 func _pop_hat(dir: Vector3) -> void:
 	if _model_path == "" or _piece == null:
 		return
