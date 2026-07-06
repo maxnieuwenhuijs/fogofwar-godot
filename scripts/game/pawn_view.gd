@@ -133,7 +133,9 @@ static var _blood_textures: Array = []
 static var _blood_tex_loaded: bool = false
 
 
-static func _blood_texture() -> Texture2D:
+## prefix filtert op bestandsnaam ("blood_pool" = volle plassen, "splat" =
+## fijne spetters); geen match of geen prefix = kies uit alles.
+static func _blood_texture(prefix: String = "") -> Texture2D:
 	if not _blood_tex_loaded:
 		_blood_tex_loaded = true
 		var seen: Dictionary = {}
@@ -149,10 +151,18 @@ static func _blood_texture() -> Texture2D:
 				if ResourceLoader.exists(BLOOD_TEX_DIR + fname):
 					var tex = load(BLOOD_TEX_DIR + fname)
 					if tex is Texture2D:
-						_blood_textures.append(tex)
+						_blood_textures.append({"name": fname.get_basename().to_lower(), "tex": tex})
 	if _blood_textures.is_empty():
 		return null
-	return _blood_textures[randi() % _blood_textures.size()]
+	var keuze: Array = []
+	if prefix != "":
+		for e in _blood_textures:
+			if String(e.name).begins_with(prefix):
+				keuze.append(e.tex)
+	if keuze.is_empty():
+		for e in _blood_textures:
+			keuze.append(e.tex)
+	return keuze[randi() % keuze.size()]
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
@@ -446,7 +456,9 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 	for i in amount:
 		var disc := MeshInstance3D.new()
 		var mat := StandardMaterial3D.new()
-		var tex := _blood_texture()
+		# Kleine enkele inslag (druppel/spuit-restje) = spetter-texture,
+		# grotere plas onder lijk/ledemaat = volle pool-texture.
+		var tex := _blood_texture("splat" if spread <= 0.05 else "blood_pool")
 		if tex != null:
 			# Spetter-PNG op een plat vlak; donker getint bij roet (artillerie).
 			var pm := PlaneMesh.new()
