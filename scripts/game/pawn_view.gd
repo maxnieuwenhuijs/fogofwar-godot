@@ -270,7 +270,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 		if _piece != null:
 			_piece.visible = false  # de brokstukken zíjn het lijk
 		_become_debris()
-		_spawn_blood(global_position + dir * 0.25, 6, 0.3)
+		_spawn_blood(global_position + dir * 0.25, 6, 0.3, 0.45)
 		return
 	# Lichtere kill (musket/melee): het lijf blijft HEEL en valt om;
 	# soms wipt alleen het hoedje eraf.
@@ -295,7 +295,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7) -> void:
 	slide.tween_property(self, "position", rest, 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	_become_debris()
-	_spawn_blood(global_position + dir * 0.35, 3, 0.3)
+	_spawn_blood(global_position + dir * 0.35, 3, 0.3, 0.4)
 
 
 ## Het musket vliegt bij dood uit de handen: los van het skelet, boogje in de
@@ -339,9 +339,11 @@ func _become_debris() -> void:
 		(area as Area3D).collision_layer = 0
 
 
-## Bloedspetters op het bord (roet bij artillerie): platte donkerrode schijfjes
-## rond het inslagpunt, plat op de tegel. Gaan mee in de debris-opruiming.
-func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25) -> void:
+## Bloedpoelen op het bord (roet bij artillerie): platte donkerrode schijfjes
+## rond het inslagpunt. Ze verschijnen pas ná `delay` (als het stuk op de
+## grond ligt) en lopen dan vol van een stipje naar volle grootte.
+## Gaan mee in de debris-opruiming.
+func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, delay: float = 0.0) -> void:
 	var parent := get_parent()
 	if parent == null:
 		return
@@ -368,6 +370,14 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25) -> v
 			ground_y,
 			world_center.z + randf_range(-spread, spread))
 		disc.rotation.y = randf() * TAU
+		# Vollopen: onzichtbaar tot het stuk ligt, dan uitvloeien.
+		disc.visible = false
+		disc.scale = Vector3(0.08, 1.0, 0.08)
+		var tw := disc.create_tween()
+		tw.tween_interval(delay + randf() * 0.3)
+		tw.tween_callback(disc.show)
+		tw.tween_property(disc, "scale", Vector3.ONE, randf_range(0.5, 0.9)) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 ## Random dismemberment bij dood, in proportie met de klap (zie play_death).
@@ -487,7 +497,7 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0) -> void:
 	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Bij het landen snel plat op de grond draaien en blijven liggen.
 	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
-	_spawn_blood(land, 1, 0.08)
+	_spawn_blood(land, 1, 0.08, t_up + t_down)
 
 
 ## Zacht in elkaar zakken: het deel ploft vrijwel ter plekke op de tegel met
@@ -503,7 +513,7 @@ func _drop_part(part: Node3D) -> void:
 	# Meteen plat neerleggen.
 	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_spawn_blood(land, 1, 0.07)
+	_spawn_blood(land, 1, 0.07, 0.2)
 
 
 func _on_anim_finished(anim_name: String) -> void:
