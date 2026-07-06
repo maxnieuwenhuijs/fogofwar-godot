@@ -891,17 +891,24 @@ func _auto_fit_model(root: Node3D) -> void:
 	var aabb := _combined_aabb(root)
 	if aabb.size.y <= 0.0001:
 		return
+	# Slim meten op botnamen: de VOETEN bepalen de grond en het tegel-midden,
+	# de staart telt nergens in mee. Zonder dit trok een lange staart het
+	# centrum naar achteren (model uit het midden), telde hij mee als breedte
+	# (model te klein geschaald) en hing hij onder de voeten (model zwevend) —
+	# precies de drie dingen die eerder handmatig weggetuned moesten worden.
+	var m := _measure_bones(root)
+	var ground_y: float = m.get("ground", aabb.position.y)
+	var top_y: float = m.get("top", aabb.end.y)
+	var center: Vector3 = m.get("center", aabb.get_center())
+	var footprint: float = m.get("footprint", maxf(aabb.size.x, aabb.size.z))
 	var target_h: float = 1.1 if _unit_type == 1 else (0.8 if _unit_type == 2 else 0.9)
-	var footprint: float = maxf(aabb.size.x, aabb.size.z)
-	var s: float = target_h / aabb.size.y
+	var s: float = target_h / maxf(top_y - ground_y, 0.0001)
 	if footprint > 0.0001:
 		s = minf(s, 0.95 / footprint)  # armen/loop mogen de buur-tegel niet in
 	root.scale = Vector3(s, s, s)
 	root.rotation.y = PI
-	# Na rotatie om Y (x,z → -x,-z): centreer het AABB-midden op de tegel en
-	# zet de onderkant op de grond.
-	var center := aabb.get_center()
-	root.position = Vector3(s * center.x, -s * aabb.position.y, s * center.z)
+	# Na rotatie om Y (x,z → -x,-z): voeten-midden op de tegel, zolen op de grond.
+	root.position = Vector3(s * center.x, -s * ground_y, s * center.z)
 	# Handmatige correctie uit de Model-tuner bovenop de auto-fit. x/z schuiven
 	# het model binnen het vak in TEGEL-ruimte: onafhankelijk van de kijkrichting,
 	# zodat rood en blauw (die tegengesteld kijken) én de tuner exact gelijk staan.
@@ -914,6 +921,49 @@ func _auto_fit_model(root: Node3D) -> void:
 		# x = wereld-oost/west en z = wereld-noord/zuid blijven, wat je ook draait.
 		var xz := transform.basis.inverse() * Vector3(float(t.get("x", 0.0)), 0.0, float(t.get("z", 0.0)))
 		root.position += xz + Vector3(0.0, float(t.get("y", 0.0)), 0.0)
+
+
+## Meet het skelet met kennis van botnamen (in root-lokale ruimte):
+## - voeten/tenen: laagste punt = grond, gemiddelde x/z = waar het model "staat"
+## - staart-botten worden overal genegeerd (vertekenen centrum, breedte en grond)
+## Leeg dict als er geen skelet is; _auto_fit_model valt dan terug op de AABB.
+func _measure_bones(root: Node3D) -> Dictionary:
+	var inv: Transform3D = root.global_transform.affine_inverse()
+	var feet: Array = []
+	var body_min := Vector3.INF
+	var body_max := -Vector3.INF
+	var found := false
+	for sk in root.find_children("*", "Skeleton3D", true, false):
+		var xf: Transform3D = inv * (sk as Skeleton3D).global_transform
+		for i in (sk as Skeleton3D).get_bone_count():
+			var bname := (sk as Skeleton3D).get_bone_name(i).to_lower()
+			if bname.contains("tail"):
+				continue
+			var p: Vector3 = (xf * (sk as Skeleton3D).get_bone_global_pose(i)).origin
+			found = true
+			body_min = body_min.min(p)
+			body_max = body_max.max(p)
+			if bname.contains("foot") or bname.contains("toe"):
+				feet.append(p)
+	if not found:
+		return {}
+	var center := (body_min + body_max) * 0.5
+	var ground := body_min.y
+	if not feet.is_empty():
+		var c := Vector3.ZERO
+		ground = INF
+		for p in feet:
+			c += p
+			ground = minf(ground, p.y)
+		c /= feet.size()
+		center.x = c.x
+		center.z = c.z
+	return {
+		"ground": ground,
+		"top": body_max.y,
+		"center": center,
+		"footprint": maxf(body_max.x - body_min.x, body_max.z - body_min.z),
+	}
 
 
 ## Gezamenlijke AABB van alle zichtbare delen, in de lokale ruimte van root.
