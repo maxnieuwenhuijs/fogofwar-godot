@@ -565,7 +565,7 @@ func _shed_parts(dir: Vector3) -> void:
 		var limbs: Array = ["arml", "armr", "legl", "legr"]
 		limbs.shuffle()
 		for limb in limbs:
-			if _shed_one(live, String(limb), dir, 0.9):
+			if _shed_one(live, String(limb), dir, fx("limb_fling_power", 0.9), fx("limb_fling_time", 1.0)):
 				break
 
 

@@ -19,6 +19,8 @@ const FX_DEFS: Array = [
 	{"key": "hat_fling_time", "label": "hoedhangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.8},
 	{"key": "hat_pop_chance", "label": "hoedkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.55},
 	{"key": "limb_shed_chance", "label": "ledemaatkans", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.4},
+	{"key": "limb_fling_power", "label": "ledemaatkracht", "min": 0.0, "max": 3.0, "step": 0.1, "def": 0.9},
+	{"key": "limb_fling_time", "label": "ledemaathangtijd", "min": 0.5, "max": 4.0, "step": 0.1, "def": 1.0},
 	{"key": "gib_fling_power", "label": "worpkracht", "min": 0.2, "max": 2.5, "step": 0.05, "def": 1.0},
 	{"key": "gib_spin", "label": "tolling", "min": 0.0, "max": 2.5, "step": 0.05, "def": 1.0},
 	{"key": "blood_burst", "label": "bloedwolk", "min": 0.0, "max": 3.0, "step": 0.1, "def": 1.0},
@@ -116,7 +118,7 @@ func _build_ui() -> void:
 	add_child(ui)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -330.0
+	panel.offset_top = -380.0
 	ui.add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
