@@ -431,7 +431,7 @@ func _build_ui() -> void:
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
 	row3.add_child(_make_label("Clip: "))
-	for clip in ["idle", "walk", "attack", "melee", "die"]:
+	for clip in ["idle", "walk", "attack", "melee", "hit", "die"]:
 		var btn := Button.new()
 		btn.text = clip
 		btn.pressed.connect(_on_clip.bind(clip))
@@ -965,6 +965,7 @@ func _on_clip(clip: String) -> void:
 				_pawn._anim.play(full, 0.2)
 				_info.text = "melee-clip: %s (%d van %d) — druk nogmaals voor de volgende variant" % [
 					full, ((_melee_cycle - 1) % variants.size()) + 1, variants.size()]
+		"hit": _pawn.play_hit()
 		"die": _pawn.play_die()
 
 

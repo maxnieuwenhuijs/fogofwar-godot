@@ -15,6 +15,7 @@ extends Node3D
 @export var anim_attack: String = "attack"
 @export var anim_melee: String = "melee"
 @export var anim_die: String = "die"
+@export var anim_hit: String = "hit"
 
 var _base_material: StandardMaterial3D
 var _select_material: StandardMaterial3D
@@ -483,6 +484,13 @@ func play_die() -> void:
 	_play_variant(anim_die)
 
 
+## Hit-reactie: korte incasseer-clip als de pion een klap/schot OVERLEEFT
+## (hit1/hit2, random). Modellen zonder hit-clip doen gewoon niets extra's.
+func play_hit() -> void:
+	if _anim != null and not _variants_of(anim_hit).is_empty():
+		_play_variant(anim_hit)
+
+
 ## Speel een willekeurige variant van een basisclip: "walk" kiest uit
 ## walk/walk2/walk3, "die" uit die/die2, enz. desync = start op een
 ## willekeurig punt in de clip, zodat 22 muizen nooit synchroon ademen
@@ -509,6 +517,7 @@ const ANIM_ALIASES: Dictionary = {
 	"attack": ["fire", "shoot"],
 	"die": ["death"],
 	"melee": ["bayonet", "sword", "punch", "stab"],
+	"hit": ["hurt", "flinch"],
 }
 
 
@@ -1177,7 +1186,13 @@ func _on_anim_finished(anim_name: String) -> void:
 	# Voorvoegsel ("lib/attack") en variant-nummer ("attack2") strippen.
 	var n := String(anim_name)
 	n = n.get_slice("/", n.get_slice_count("/") - 1).rstrip("0123456789")
-	if n == anim_attack or n == anim_melee:
+	# Eenmalige clips (schieten, melee, hit-reactie) keren terug naar idle —
+	# ook onder hun synoniem-namen (fire, bayonet, sword, hurt, ...).
+	var oneshots: Array = [anim_attack, anim_melee, anim_hit]
+	oneshots.append_array(ANIM_ALIASES.get("attack", []))
+	oneshots.append_array(ANIM_ALIASES.get("melee", []))
+	oneshots.append_array(ANIM_ALIASES.get("hit", []))
+	if n in oneshots:
 		play_idle()
 
 

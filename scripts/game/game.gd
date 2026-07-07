@@ -1221,6 +1221,7 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 		if pv != null and pv.visible:
 			pv.flash_hit()
 			pv.stagger(world_dir)
+			pv.play_hit()  # incasseer-animatie (hit1/hit2) bij overleven
 		# Bloedspat als een levend stuk (infanterie/cavalerie) de klap overleeft.
 		var hit_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 		if hit_pawn != null and hit_pawn.unit_type != Constants.UnitType.ARTILLERY:
