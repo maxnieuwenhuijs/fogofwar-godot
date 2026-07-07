@@ -59,6 +59,27 @@ def iter_fcurves(act):
     return out
 
 
+def lock_hips_location(act):
+    """Zet de heup-LOCATIE volledig vast op het eerste frame (rotaties blijven).
+    Voor hit-reacties: Mixamo bakt er een stapje in dat als "loopje" leest;
+    de reactie zelf zit in romp/armen/hoofd en blijft intact."""
+    for fc in iter_fcurves(act):
+        if 'Hips' not in fc.data_path or not fc.data_path.endswith('.location'):
+            continue
+        kps = fc.keyframe_points
+        if len(kps) < 2:
+            continue
+        v0 = kps[0].co.y
+        moved = max(abs(kp.co.y - v0) for kp in kps)
+        if moved < 1e-6:
+            continue
+        for kp in kps:
+            kp.co.y = v0
+            kp.handle_left.y = v0
+            kp.handle_right.y = v0
+        print("  vastgezet: %s heup-kanaal (uitslag %.3f) -> eerste frame (%s)" % (act.name, moved, fc.data_path))
+
+
 def detrend_root_motion(act):
     """Haal de netto verplaatsing uit de heup-locatiecurves (in place maken)."""
     for fc in iter_fcurves(act):
@@ -108,7 +129,9 @@ tracked = {t.name for t in base.animation_data.nla_tracks}
 for act in list(bpy.data.actions):
     if act.name not in tracked and not act.name.startswith("_"):
         add_track(base, act, act.name)
-    if act.name.startswith(("walk", "idle", "bayonet", "melee", "hit")):
+    if act.name.startswith("hit"):
+        lock_hips_location(act)
+    elif act.name.startswith(("walk", "idle", "bayonet", "melee")):
         detrend_root_motion(act)
 
 for clip_name, path in CLIPS:
@@ -134,7 +157,9 @@ for clip_name, path in CLIPS:
                         kp.co.y *= ratio
                         kp.handle_left.y *= ratio
                         kp.handle_right.y *= ratio
-        if clip_name.startswith(("walk", "idle", "bayonet", "melee", "hit")):
+        if clip_name.startswith("hit"):
+            lock_hips_location(act)
+        elif clip_name.startswith(("walk", "idle", "bayonet", "melee")):
             detrend_root_motion(act)
         add_track(base, act, clip_name)
         print("clip toegevoegd:", clip_name)
