@@ -50,6 +50,7 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "smoke_fade", "label": "rook-vervaag", "min": 0.0, "max": 0.95, "step": 0.01, "def": 0.35},
 	{"cat": "rook", "key": "smoke_linger_chance", "label": "rook-blijfkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.25},
 	{"cat": "rook", "key": "smoke_rise", "label": "rook-stijg", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "impact_smoke_life", "label": "inslag-rook-duur", "min": 0.05, "max": 5.0, "step": 0.01, "def": 0.6},
 	{"cat": "rook", "key": "fire_size", "label": "vuur-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "rook", "key": "fire_life", "label": "vuur-duur", "min": 0.03, "max": 2.0, "step": 0.01, "def": 0.14},
 	{"cat": "rook", "key": "fire_light", "label": "vuur-licht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
@@ -59,6 +60,7 @@ const FX_DEFS: Array = [
 	{"cat": "wereld", "key": "grid_alpha", "label": "raster", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.3},
 	{"cat": "wereld", "key": "spot_light", "label": "spot-licht", "min": 0.0, "max": 5.0, "step": 0.01, "def": 1.0},
 	{"cat": "wereld", "key": "spot_range", "label": "spot-bereik", "min": 0.3, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"cat": "wereld", "key": "rim_light", "label": "rand-licht", "min": 0.0, "max": 5.0, "step": 0.01, "def": 1.0},
 ]
 
 var _pawn: PawnView = null

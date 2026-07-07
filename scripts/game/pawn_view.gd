@@ -302,7 +302,7 @@ static func _black_to_alpha(tex: Texture2D, boost: float = 2.3) -> Texture2D:
 ## een klein wolkje ECHT uitzetten (rook-groei), opstijgen en vervagen.
 ## pos is in de lokale ruimte van parent. Knoppen: rook-aantal/-maat/-groei/
 ## -duur. Zonder textures: grijze bol-wolkjes (zelfde gedrag).
-static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO) -> void:
+static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0) -> void:
 	if parent == null:
 		return
 	var amount := int(clampf(float(count) * fx("smoke_amount", 1.0), 0.0, 24.0))
@@ -346,7 +346,7 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 		parent.add_child(puff)
 		puff.position = pos + Vector3(randf_range(-0.08, 0.08), randf_range(0.0, 0.08), randf_range(-0.08, 0.08))
 		puff.scale = Vector3.ONE * 0.55
-		var life := fx("smoke_life", 1.8) * randf_range(0.75, 1.15)
+		var life := fx("smoke_life", 1.8) * life_mult * randf_range(0.75, 1.15)
 		# rook-blijfkans: dit deel van de wolken blijft ~2.5x langer hangen.
 		if randf() < fx("smoke_linger_chance", 0.25):
 			life *= 2.5

@@ -1132,7 +1132,7 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	# Inslag-rook zodra het projectiel aankomt (zelfde richting = momentum).
 	var impact_count: int = 3 if is_cannon else 2
 	var impact_size: float = 0.14 if is_cannon else 0.08
-	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size, shot_dir))
+	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size, shot_dir, PawnView.fx("impact_smoke_life", 0.6)))
 	return dur
 
 
@@ -1217,6 +1217,14 @@ func _setup_battlefield_lighting() -> void:
 	spot.omni_attenuation = 1.6  # sneller uitdoven naar de randen
 	spot.shadow_enabled = true
 	_board.add_child(spot)
+	# Gritty rim/fill: koel tegenlicht vanuit lage schuine hoek dat de
+	# silhouetten van de pionnen aanzet (warm spot + koele rand = filmisch).
+	var rim := DirectionalLight3D.new()
+	rim.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
+	rim.light_color = Color(0.55, 0.62, 0.8)
+	rim.light_energy = 0.6 * PawnView.fx("rim_light", 1.0)
+	rim.light_specular = 1.4
+	_board.add_child(rim)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
@@ -1274,8 +1282,8 @@ func _muzzle_flash(pos: Vector3, big: bool) -> void:
 ## Zwartkruit-rook via de gedeelde spawner in PawnView: textures uit
 ## assets/textures/smoke/ (billboards die echt uitzetten), zonder textures
 ## grijze bol-wolkjes. Knoppen in de Model-tuner: rook-aantal/-maat/-groei/-duur.
-func _spawn_smoke(pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO) -> void:
-	PawnView.spawn_powder_smoke(_board, pos, count, size, dir)
+func _spawn_smoke(pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0) -> void:
+	PawnView.spawn_powder_smoke(_board, pos, count, size, dir, life_mult)
 
 
 ## Treffer-feedback (de "Hit"-fase). Op het inslagmoment (na `delay`): witte flits,
