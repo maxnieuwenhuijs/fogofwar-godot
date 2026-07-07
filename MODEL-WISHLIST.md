@@ -113,7 +113,7 @@ HP-blokjes en het kaartpaneel geven de exacte cijfers.
 
 | Factie | Infanterie (klein broertje) | Big bro cavalerie (groot, ook 2 benen) |
 |---|---|---|
-| Muis | muis | dikke bruine rat -- LET OP: comp is 22/0/0, de rat verschijnt pas als de Muis cavalerie in z'n samenstelling krijgt (balans-besluit) |
+| Muis | muis | dikke bruine rat -- LET OP: comp is 20/0/2 (2 kanonnen, nog geen cavalerie); de rat verschijnt pas als de Muis cavalerie in z'n samenstelling krijgt |
 | Varken (ex-Mens) | varken | **everzwijn** met slagtanden |
 | Leeuw | **cheetah** (slank, gevlekt, snel) | **leeuw** met volle manen |
 | Beer | **wasbeer** (gemaskerd gezicht) | massieve grizzly |
@@ -152,7 +152,7 @@ Idle), **Walking (In Place!)**, **Standing Melee Attack** (Swiping/Punch) als
 aan infanterie). Cavalerie-audio (nu paarden-galop) vervangen we later per
 familie (brul/grom/gepiep).
 
-### Muis -- infanterie + dikke rat
+### Muis -- infanterie + dikke rat + licht kanon
 
 | Bestand | Prompt |
 |---|---|
@@ -166,6 +166,12 @@ familie (brul/grom/gepiep).
 | `cavalry_hp` | Single character, towering, colossally fat, round and squat anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text. |
 | `cavalry_atk` | Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text. |
 | `cavalry_mix` | Single character, towering sturdy anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text. |
+
+| `artillery_base` | Single prop, small light Napoleonic field cannon on a weathered dark wooden gun carriage with two spoked wheels. Gritty realistic AAA-game concept art, highly detailed. Dark iron barrel. Clean neutral studio background, single object only, no text. |
+| `artillery_spd` | Single prop, very light small Napoleonic horse-artillery cannon with a slender barrel on a weathered dark wooden carriage with large thin spoked wheels. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, single object only, no text. |
+| `artillery_hp` | Single prop, short stubby thick-walled Napoleonic mortar on a heavy low weathered dark wooden block carriage, sandbags at the base. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, single object only, no text. |
+| `artillery_atk` | Single prop, long-barreled Napoleonic field gun on a reinforced weathered dark wooden carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron barrel. Clean neutral studio background, single object only, no text. |
+| `artillery_mix` | Single prop, small Napoleonic field cannon on a weathered dark wooden carriage, stacked cannonballs beside the wheel. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, single object only, no text. |
 
 ### Varken -- varken-infanterie + everzwijn als big bro (ex-Mens)
 
