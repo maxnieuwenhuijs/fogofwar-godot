@@ -448,6 +448,13 @@ func _build_team_ring() -> void:
 	add_child(_team_ring)
 
 
+## Team-ring alleen onder pionnen die meedoen (gekoppeld aan een levende
+## kaart). Ongekoppelde of uitgeschakelde pionnen staan er kaal bij.
+func set_team_ring_visible(v: bool) -> void:
+	if _team_ring != null:
+		_team_ring.visible = v
+
+
 ## Live bijstellen van de ring-gloed vanuit het sfeer-paneel (toets L in-game).
 func set_ring_glow(mult: float) -> void:
 	if _team_ring == null:
