@@ -1109,6 +1109,8 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	tween.tween_callback(proj.queue_free)
 
 	_muzzle_flash(muzzle, is_cannon)
+	# vuur-schok: korte terugslag-shake bij het afvuren (kanon harder).
+	_shake((0.55 if is_cannon else 0.3) * PawnView.fx("fire_shake", 1.0))
 	# Rook drift met de schot-richting mee, van de loop af.
 	var shot_dir := Vector3.ZERO
 	if muzzle.distance_to(target) > 0.01:
@@ -1129,9 +1131,10 @@ func _muzzle_flash(pos: Vector3, big: bool) -> void:
 	holder.position = pos
 	_board.add_child(holder)
 	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.75, 0.35)
-	light.light_energy = 2.6 if big else 1.6
-	light.omni_range = 2.6
+	light.light_color = Color(1.0, 0.78, 0.35)
+	# vuur-licht: hoe fel de omgeving even oplicht bij het schot.
+	light.light_energy = (2.6 if big else 1.6) * PawnView.fx("fire_light", 1.6)
+	light.omni_range = 2.8
 	holder.add_child(light)
 	var tween := create_tween().set_parallel()
 	if not textured:
@@ -1152,7 +1155,7 @@ func _muzzle_flash(pos: Vector3, big: bool) -> void:
 		holder.add_child(flash)
 		tween.tween_property(flash, "scale", Vector3.ONE * (2.0 if big else 1.4), 0.12).set_ease(Tween.EASE_OUT)
 		tween.tween_property(mat, "albedo_color:a", 0.0, 0.14).set_ease(Tween.EASE_IN)
-	tween.tween_property(light, "light_energy", 0.0, 0.14)
+	tween.tween_property(light, "light_energy", 0.0, 0.18)
 	tween.chain().tween_callback(holder.queue_free)
 
 

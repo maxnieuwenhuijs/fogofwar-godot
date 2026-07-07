@@ -12,13 +12,13 @@
 			"delay": 2.0,
 			"grow": 1.25,
 			"size": 1.7,
-			"torso": 0.25
+			"torso": 0.23
 		},
 		"death2": {
 			"delay": 3.0,
-			"grow": 0.15,
-			"size": 1.3,
-			"torso": -0.45
+			"grow": 1.25,
+			"size": 1.7,
+			"torso": -0.51
 		}
 	},
 	"drop_fall_time": 0.2,
@@ -26,8 +26,10 @@
 	"drop_stain_chance": 1.0,
 	"drop_stain_delay": 0.0,
 	"drop_stain_grow": 0.05,
-	"fire_life": 0.14,
-	"fire_size": 1.0,
+	"fire_life": 0.13,
+	"fire_light": 1.6,
+	"fire_shake": 1.0,
+	"fire_size": 1.5,
 	"gib_fling_power": 0.85,
 	"gib_pool_delay": 0.07,
 	"gib_pool_grow": 0.18,
@@ -40,12 +42,12 @@
 	"limb_shed_chance": 0.4,
 	"mist_travel": 1.6,
 	"smoke_alpha": 1.0,
-	"smoke_amount": 1.0,
-	"smoke_drift": 1.0,
-	"smoke_fade": 0.35,
+	"smoke_amount": 1.01,
+	"smoke_drift": 2.0,
+	"smoke_fade": 0.1,
 	"smoke_grow": 3.0,
-	"smoke_life": 1.8,
-	"smoke_linger_chance": 0.25,
-	"smoke_rise": 1.0,
+	"smoke_life": 0.4,
+	"smoke_linger_chance": 1.0,
+	"smoke_rise": 2.0,
 	"smoke_size": 1.0
 }

@@ -49,6 +49,8 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "smoke_rise", "label": "rook-stijg", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "rook", "key": "fire_size", "label": "vuur-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "rook", "key": "fire_life", "label": "vuur-duur", "min": 0.03, "max": 2.0, "step": 0.01, "def": 0.14},
+	{"cat": "rook", "key": "fire_light", "label": "vuur-licht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
+	{"cat": "rook", "key": "fire_shake", "label": "vuur-schok", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 ]
 
 var _pawn: PawnView = null
@@ -65,6 +67,8 @@ var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
 var _muzzle_spins: Dictionary = {}  # vuurmond "x"/"y"/"z" -> SpinBox
 var _muzzle_gizmo: Node3D = null    # oranje merkteken op de vuurmond
+var _tuner_light: DirectionalLight3D = null
+var _tuner_env: WorldEnvironment = null
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
@@ -117,6 +121,8 @@ func _ready() -> void:
 			_on_smoke_test(4, 0.16)
 		if "melee" in shot_args:
 			_on_clip("melee")
+		if "donker" in shot_args:
+			_on_dark_toggled(true)
 		if "vuur" in shot_args:
 			_on_fire_test()
 		_apply_camera()
@@ -199,11 +205,12 @@ func _build_world() -> void:
 	gz_arrow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_muzzle_gizmo.add_child(gz_arrow)
 	add_child(_muzzle_gizmo)
-	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-55.0, -30.0, 0.0)
-	light.light_energy = 1.2
-	add_child(light)
+	_tuner_light = DirectionalLight3D.new()
+	_tuner_light.rotation_degrees = Vector3(-55.0, -30.0, 0.0)
+	_tuner_light.light_energy = 1.2
+	add_child(_tuner_light)
 	var env := WorldEnvironment.new()
+	_tuner_env = env
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color(0.25, 0.26, 0.28)
@@ -291,6 +298,10 @@ func _build_ui() -> void:
 		_view_btn.add_item(v)
 	_view_btn.item_selected.connect(func(_i: int) -> void: _apply_camera())
 	row1.add_child(_view_btn)
+	var dark_btn := CheckButton.new()
+	dark_btn.text = "donker"
+	dark_btn.toggled.connect(_on_dark_toggled)
+	row1.add_child(dark_btn)
 	row1.add_child(_make_label("  Vergelijk:"))
 	_my_fac_btn = OptionButton.new()
 	_opp_fac_btn = OptionButton.new()
@@ -817,12 +828,29 @@ func _on_fire_test() -> void:
 	tw.tween_callback(_fire_smoke)
 
 
+## Donker-stand: nachtelijke scene om de vuurflits op intensiteit te beoordelen.
+func _on_dark_toggled(on: bool) -> void:
+	_tuner_light.light_energy = 0.22 if on else 1.2
+	_tuner_env.environment.background_color = Color(0.05, 0.055, 0.07) if on else Color(0.25, 0.26, 0.28)
+	_tuner_env.environment.ambient_light_energy = 0.12 if on else 0.7
+
+
 func _fire_smoke() -> void:
 	var is_art := _type_btn.get_selected_id() == 2
 	var muzzle := Vector3(0.0, 0.5, 0.75) if is_art else Vector3(0.08, 0.6, 0.55)
 	if _pawn != null and is_instance_valid(_pawn):
 		muzzle = _pawn.muzzle_world()  # per model ingemeten (Vuurmond-rij)
 	PawnView.spawn_muzzle_fire(self, muzzle, is_art)
+	# Zelfde lichtpuls als in het spel (vuur-licht knop).
+	var fl := OmniLight3D.new()
+	fl.light_color = Color(1.0, 0.78, 0.35)
+	fl.light_energy = (2.6 if is_art else 1.6) * PawnView.fx("fire_light", 1.6)
+	fl.omni_range = 2.8
+	add_child(fl)
+	fl.position = muzzle
+	var ltw := create_tween()
+	ltw.tween_property(fl, "light_energy", 0.0, 0.18)
+	ltw.tween_callback(fl.queue_free)
 	PawnView.spawn_powder_smoke(self, muzzle, 4 if is_art else 2,
 		0.16 if is_art else 0.09, Vector3(0.12, 0.0, 1.0).normalized())
 
