@@ -606,8 +606,8 @@ func _build_pawn_views() -> void:
 
 const HP_COLS := 5
 const HP_ROWS := 3
-const HP_BLOCK_SIZE := 8.25
-const HP_BLOCK_GAP := 1.5
+const HP_BLOCK_SIZE := 5.5
+const HP_BLOCK_GAP := 1.0
 const HP_COLOR_EMPTY := Color(0.06, 0.06, 0.08, 0.92)
 const HP_COLOR_HEALTH := Color(0.28, 0.85, 0.38)
 const HP_COLOR_STAMINA := Color(0.45, 0.74, 1.0)
@@ -652,9 +652,10 @@ func _update_health_bars() -> void:
 				or _camera.is_position_behind(pv.global_position):
 			entry.holder.visible = false
 			continue
-		var screen := _camera.unproject_position(pv.global_position + Vector3(0.0, 1.55, 0.0))
+		# Onderaan het poppetje: anker op de voeten, blokjes er net onder.
+		var screen := _camera.unproject_position(pv.global_position)
 		entry.holder.visible = true
-		entry.holder.position = screen - Vector2(total_w * 0.5, total_h + 4.0)
+		entry.holder.position = screen - Vector2(total_w * 0.5, 0.0) + Vector2(0.0, 3.0)
 		var blocks: Array = entry.blocks
 		for c in HP_COLS:
 			blocks[c].color = HP_COLOR_HEALTH if c < pawn.current_hp else HP_COLOR_EMPTY
