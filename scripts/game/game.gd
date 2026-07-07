@@ -819,17 +819,16 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 	_clear_highlights()
 
 
-## Koppel-fase: geen blauwe tegels meer maar de ringen zelf. Alle
-## koppelbare pionnen tonen hun team-ring op halve gloed; hover maakt
-## hem fel en iets groter (zie _update_hover).
+## Koppel-fase: donkere ring om ALLE nog niet gekoppelde pionnen (beide
+## teams); gekoppelde pionnen tonen hun actieve gloeiende team-ring en
+## hover maakt de ring fel en iets groter (zie _update_hover).
 func _highlight_own_unlinked_pawns() -> void:
 	_clear_highlights()
 	for pid in _pawn_views:
 		var pawn: Pawn = GameSession.state.pawns.get(pid)
 		if pawn == null or pawn.is_eliminated:
 			continue
-		var linkable: bool = pawn.owner_id == _human_id and pawn.linked_card_id == -1
-		(_pawn_views[pid] as PawnView).set_ring_link_state(1 if linkable else 0)
+		(_pawn_views[pid] as PawnView).set_ring_link_state(1 if pawn.linked_card_id == -1 else 0)
 
 
 func _auto_link(player_id: int) -> void:

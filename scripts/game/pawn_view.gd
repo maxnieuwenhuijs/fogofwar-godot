@@ -66,6 +66,7 @@ var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
 var _ring_mat_team: StandardMaterial3D = null  # gloeiende teamkleur (actief)
+var _ring_mat_idle: StandardMaterial3D = null  # donkere ring (koppel-fase, nog niet gekoppeld)
 var _last_clip_len: float = 0.0  # duur (sec, al gedeeld door speed) van de laatst gestarte clip
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
@@ -446,6 +447,10 @@ func _build_team_ring() -> void:
 	mat.emission_energy_multiplier = 0.55 * fx("ring_glow", 1.0)
 	_team_ring.material_override = mat
 	_ring_mat_team = mat
+	_ring_mat_idle = StandardMaterial3D.new()
+	_ring_mat_idle.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring_mat_idle.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ring_mat_idle.albedo_color = Color(0.02, 0.02, 0.025, 0.55)
 	_team_ring.visible = false  # verschijnt pas bij koppeling (zie _refresh_ring)
 	_team_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_team_ring)
@@ -480,16 +485,19 @@ func set_ring_glow(_mult: float) -> void:
 func _refresh_ring() -> void:
 	if _team_ring == null:
 		return
-	# Inactief en niet in de koppel-fase: helemaal geen ring - alleen
-	# pionnen die meedoen (of koppelbaar zijn) krijgen er een.
+	# Buiten de koppel-fase: alleen actieve (gekoppelde) pionnen een ring.
 	_team_ring.visible = _ring_active or _ring_link_state > 0
 	if not _team_ring.visible:
 		return
+	if _ring_link_state == 1 and not _ring_active:
+		# Koppel-fase: donkere neutrale ring om nog niet gekoppelde pionnen.
+		_team_ring.material_override = _ring_mat_idle
+		_team_ring.scale = Vector3(1.0, 0.35, 1.0)
+		return
+	_team_ring.material_override = _ring_mat_team
 	var glow := 0.55 * fx("ring_glow", 1.0)
-	if _ring_link_state == 1:
-		glow *= 0.35
-	elif _ring_link_state == 2:
-		glow *= 2.2
+	if _ring_link_state == 2:
+		glow *= 2.2  # hover: fel
 	if _ring_mat_team != null:
 		_ring_mat_team.emission_energy_multiplier = glow
 	_team_ring.scale = Vector3(1.15, 0.35, 1.15) if _ring_link_state == 2 else Vector3(1.0, 0.35, 1.0)
