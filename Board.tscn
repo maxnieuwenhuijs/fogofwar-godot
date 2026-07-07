@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bcr40k0m25t0k"]
 
 [ext_resource type="Texture2D" uid="uid://do4vqvy0a8flm" path="res://assets/models/board/board_Image_0.png" id="2_3ng4l"]
-[ext_resource type="PackedScene" uid="uid://brg5ek146s4m5" path="res://assets/models/board/board.glb" id="board_glb"]
+[ext_resource type="PackedScene" uid="uid://brg5ek146s4m5" path="res://board.glb" id="board_glb"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nd4as"]
 albedo_color = Color(0.96671575, 0.917739, 0.7477978, 0.5568628)
@@ -29,7 +29,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -5)
 [node name="BoardModel" parent="." unique_id=808372739 instance=ExtResource("board_glb")]
 transform = Transform3D(14.25, 0, 0, 0, 15, 0, 0, 0, 13.466249, 5, -0.75379825, 4.83)
 
-[node name="tripo_node_48d3685c-80df-4f76-a2a1-3d13c086be5c" parent="BoardModel/Node_1" parent_id_path=PackedInt32Array(808372739, 295358617) index="0" unique_id=972496157]
+[node name="tripo_node_48d3685c-80df-4f76-a2a1-3d13c086be5c" parent="BoardModel/Node_1" parent_id_path=PackedInt32Array(808372739, 966356463) index="0" unique_id=839867838]
 material_override = SubResource("StandardMaterial3D_nd4as")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1671274236]

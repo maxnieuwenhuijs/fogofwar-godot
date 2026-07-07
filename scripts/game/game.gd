@@ -735,6 +735,8 @@ func _refresh_all() -> void:
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		pv.set_team_ring_active(pawn.is_active)
+		if not Phase.is_linking(state.phase):
+			pv.set_ring_link_state(0)
 		var human_action := state.phase == Phase.Type.ACTION and state.current_player == _human_id \
 				and pawn.owner_id == _human_id and pawn.is_active
 		pv.set_dimmed(human_action and not Rules.can_pawn_act(state, pid))
@@ -808,17 +810,23 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 		return
 	GameSession.submit_link(_human_id, _selected_link_card_id, pawn_id)
 	_animate_link(pawn_id)
+	if _pawn_views.has(pawn_id):
+		(_pawn_views[pawn_id] as PawnView).set_ring_link_state(0)
 	_selected_link_card_id = -1
 	_clear_highlights()
 
 
+## Koppel-fase: geen blauwe tegels meer maar de ringen zelf. Alle
+## koppelbare pionnen tonen hun team-ring op halve gloed; hover maakt
+## hem fel en iets groter (zie _update_hover).
 func _highlight_own_unlinked_pawns() -> void:
 	_clear_highlights()
-	var coords: Array = []
-	for pawn in GameSession.state.pawns.values():
-		if pawn.owner_id == _human_id and not pawn.is_eliminated and pawn.linked_card_id == -1:
-			coords.append(pawn.position)
-	_highlight_tiles(coords, Color(0.3, 0.7, 1.0))
+	for pid in _pawn_views:
+		var pawn: Pawn = GameSession.state.pawns.get(pid)
+		if pawn == null or pawn.is_eliminated:
+			continue
+		var linkable: bool = pawn.owner_id == _human_id and pawn.linked_card_id == -1
+		(_pawn_views[pid] as PawnView).set_ring_link_state(1 if linkable else 0)
 
 
 func _auto_link(player_id: int) -> void:
@@ -1046,6 +1054,11 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				# bajonet echt richting het doelwit gaat.
 				attacker.rotate_y(deg_to_rad(PawnView.fx("melee_yaw", 0.0)))
 				attacker.play_melee()
+			# Verdediger draait zich naar de aanvaller: je vangt de stoot recht
+			# van voren en valt straks van de aanvaller af.
+			var melee_def: PawnView = _pawn_views.get(action.defender_id)
+			if melee_def != null:
+				melee_def.face_dir(result.attacker_from_pos - result.defender_pos)
 			# melee-raakmoment: de klap landt pas op het stoot-frame van de
 			# clip; alles hieronder (schade, geluid, opruk, terugslag) volgt.
 			var hit_del: float = PawnView.fx("melee_hit_delay", 0.55)
@@ -1055,7 +1068,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				# daarna pas het vrijgekomen vak in stapt.
 				var move_del: float = hit_del + 0.12
 				if attacker != null:
-					move_del = maxf(move_del, attacker.last_clip_duration() - 0.15)
+					move_del = maxf(move_del, attacker.last_clip_duration()
+							+ PawnView.fx("melee_advance_delay", 0.35) - 0.15)
 				get_tree().create_timer(move_del).timeout.connect(
 					_animate_move.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",
@@ -1998,9 +2012,16 @@ func _update_hover(screen_pos: Vector2) -> void:
 		return
 	if _hovered_pawn_id >= 0 and _pawn_views.has(_hovered_pawn_id):
 		_pawn_views[_hovered_pawn_id].set_hovered(false)
+		if Phase.is_linking(state.phase):
+			var old_pawn: Pawn = state.pawns.get(_hovered_pawn_id)
+			var still_linkable: bool = (old_pawn != null and old_pawn.owner_id == _human_id
+					and not old_pawn.is_eliminated and old_pawn.linked_card_id == -1)
+			_pawn_views[_hovered_pawn_id].set_ring_link_state(1 if still_linkable else 0)
 	_hovered_pawn_id = hovered
 	if hovered >= 0 and _pawn_views.has(hovered):
 		_pawn_views[hovered].set_hovered(true)
+		if Phase.is_linking(state.phase):
+			_pawn_views[hovered].set_ring_link_state(2)
 
 
 ## Pion-picking via schermprojectie (geen physics): pak de pion wiens

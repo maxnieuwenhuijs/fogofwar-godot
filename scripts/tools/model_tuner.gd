@@ -23,9 +23,11 @@ const FX_DEFS: Array = [
 	{"cat": "gore", "key": "limb_fling_time", "label": "ledemaat-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "gore", "key": "gib_fling_power", "label": "gib-worpkracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "gore", "key": "gib_spin", "label": "gib-tolling", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"cat": "gore", "key": "melee_speed", "label": "melee-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.4},
-	{"cat": "gore", "key": "melee_hit_delay", "label": "melee-raakmoment", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.55},
-	{"cat": "gore", "key": "melee_yaw", "label": "melee-draai", "min": -180.0, "max": 180.0, "step": 1.0, "def": 0.0},
+	{"cat": "bajonet", "key": "melee_speed", "label": "stoot-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.4},
+	{"cat": "bajonet", "key": "melee_hit_delay", "label": "raakmoment (reactie)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.55},
+	{"cat": "bajonet", "key": "melee_yaw", "label": "aanvaller-draai", "min": -180.0, "max": 180.0, "step": 1.0, "def": 0.0},
+	{"cat": "bajonet", "key": "melee_advance_delay", "label": "opruk-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.35},
+	{"cat": "bajonet", "key": "death_speed", "label": "sterf-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_burst", "label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
@@ -396,7 +398,7 @@ func _build_ui() -> void:
 	rowm.add_child(muzzle_test)
 
 	# Tabs GORE / BLOED / ROOK: effect-knoppen per categorie in een net raster.
-	var cats: Array = [["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"], ["Wereld", "wereld"]]
+	var cats: Array = [["Bajonet", "bajonet"], ["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"], ["Wereld", "wereld"]]
 	for cat in cats:
 		var tab := VBoxContainer.new()
 		tab.name = String(cat[0])
@@ -414,6 +416,19 @@ func _build_ui() -> void:
 			var spin := _make_spin(grid, float(d.min), float(d.max), float(d.step),
 				PawnView.fx(String(d.key), float(d.def)), _on_fx_changed)
 			_fx_spins[String(d.key)] = spin
+		if String(cat[1]) == "bajonet":
+			var rowb := HBoxContainer.new()
+			tab.add_child(rowb)
+			rowb.add_child(_make_label("Duel: "))
+			var bd := Button.new()
+			bd.text = "stoot (dood)"
+			bd.pressed.connect(_on_duel_test.bind(true))
+			rowb.add_child(bd)
+			var bo := Button.new()
+			bo.text = "stoot (overleeft)"
+			bo.pressed.connect(_on_duel_test.bind(false))
+			rowb.add_child(bo)
+			rowb.add_child(_make_label("  verdediger (vergelijk-factie) verschijnt tegenover je model"))
 		if String(cat[1]) == "bloed":
 			# Dood-poel: per dood-clip de lijkpoel timen.
 			var rowd := HBoxContainer.new()
@@ -1004,3 +1019,59 @@ func _save() -> void:
 	if f2 != null:
 		f2.store_string(JSON.stringify(PawnView.fx_all(), "\t") + "\n")
 	_info.text = "Opgeslagen → model_tuning.json + effects_tuning.json (geldt direct in het spel)"
+
+
+# --- Duel-test: bajonet-choreografie live afstemmen ---------------------------
+
+var _duel_root: Node3D = null
+
+
+## Verdediger (vergelijk-factie) verschijnt recht tegenover het model. De
+## aanvaller draait (aanvaller-draai), stoot (stoot-tempo), de verdediger
+## reageert op het raakmoment (val bij dood, terugdeins bij overleven) en bij
+## een kill rukt de aanvaller na de opruk-vertraging op - exact dezelfde
+## timing-route als in het spel.
+func _on_duel_test(kill: bool) -> void:
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	_clear_duel()
+	_pawn.position = Vector3(0.0, 0.05, 0.0)
+	_duel_root = Node3D.new()
+	add_child(_duel_root)
+	var def_pv: PawnView = PAWN_SCENE.instantiate()
+	def_pv.team = Constants.Team.RED
+	def_pv.position = Vector3(0.0, 0.05, 1.0)
+	_duel_root.add_child(def_pv)
+	def_pv.set_unit_type(_type_btn.get_selected_id())
+	def_pv.set_character(_opp_fac_btn.get_selected_id(), _type_btn.get_selected_id(), null)
+	def_pv.face_dir(Vector2i(0, -1))
+	# Aanvaller: exact dezelfde route als in het spel.
+	_pawn.face_dir(Vector2i(0, 1))
+	_pawn.rotate_y(deg_to_rad(PawnView.fx("melee_yaw", 0.0)))
+	_pawn.play_melee()
+	var hd: float = PawnView.fx("melee_hit_delay", 0.55)
+	get_tree().create_timer(hd).timeout.connect(func() -> void:
+		if def_pv == null or not is_instance_valid(def_pv):
+			return
+		if kill:
+			def_pv.play_death(Vector3(0.0, 0.0, 1.0), 0.7, "melee")
+		else:
+			def_pv.play_hit())
+	if kill:
+		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration()
+				+ PawnView.fx("melee_advance_delay", 0.35) - 0.15)
+		get_tree().create_timer(move_del).timeout.connect(func() -> void:
+			if _pawn == null or not is_instance_valid(_pawn):
+				return
+			_pawn.play_walk()
+			var tw := create_tween()
+			tw.tween_property(_pawn, "position", Vector3(0.0, 0.05, 1.0), 0.3)
+			tw.tween_callback(func() -> void:
+				if _pawn != null and is_instance_valid(_pawn):
+					_pawn.play_idle()))
+
+
+func _clear_duel() -> void:
+	if _duel_root != null and is_instance_valid(_duel_root):
+		_duel_root.queue_free()
+	_duel_root = null

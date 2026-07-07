@@ -455,18 +455,48 @@ func _build_team_ring() -> void:
 	add_child(_team_ring)
 
 
+var _ring_active: bool = false     # gekoppeld aan een levende kaart
+var _ring_link_state: int = 0      # koppel-fase: 0 normaal, 1 koppelbaar, 2 hover
+
+
 ## Actief (gekoppeld aan een levende kaart) = gloeiende team-ring;
 ## ongekoppeld of uitgeschakeld = hele doorzichtige donkere ring, net
 ## genoeg om de voet te markeren zonder aandacht te trekken.
 func set_team_ring_active(active: bool) -> void:
-	if _team_ring != null:
-		_team_ring.material_override = _ring_mat_team if active else _ring_mat_idle
+	_ring_active = active
+	_refresh_ring()
+
+
+## Koppel-fase: 1 = koppelbaar (team-ring op halve gloed), 2 = hover
+## (felle gloed + iets groter), 0 = terug naar normaal.
+func set_ring_link_state(state_: int) -> void:
+	if _ring_link_state == state_:
+		return
+	_ring_link_state = state_
+	_refresh_ring()
 
 
 ## Live bijstellen van de ring-gloed vanuit het sfeer-paneel (toets L in-game).
-func set_ring_glow(mult: float) -> void:
+func set_ring_glow(_mult: float) -> void:
+	_refresh_ring()
+
+
+func _refresh_ring() -> void:
+	if _team_ring == null:
+		return
+	if _ring_link_state == 0 and not _ring_active:
+		_team_ring.material_override = _ring_mat_idle
+		_team_ring.scale = Vector3(1.0, 0.35, 1.0)
+		return
+	_team_ring.material_override = _ring_mat_team
+	var glow := 0.55 * fx("ring_glow", 1.0)
+	if _ring_link_state == 1:
+		glow *= 0.35
+	elif _ring_link_state == 2:
+		glow *= 2.2
 	if _ring_mat_team != null:
-		_ring_mat_team.emission_energy_multiplier = 0.55 * mult
+		_ring_mat_team.emission_energy_multiplier = glow
+	_team_ring.scale = Vector3(1.15, 0.35, 1.15) if _ring_link_state == 2 else Vector3(1.0, 0.35, 1.0)
 
 
 ## Klein "neusje" aan de voorkant (-Z) zodat de kijkrichting zichtbaar is
@@ -665,7 +695,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 					break
 		if clip == "":
 			clip = die_variants[randi() % die_variants.size()]
-		_anim.play(clip, 0.2)
+		_anim.play(clip, 0.2, fx("death_speed", 1.0))
 		var base := clip.get_slice("/", clip.get_slice_count("/") - 1)
 		var cfg: Dictionary = fx_dict("death_pools").get(base, {})
 		# torso-afstand: van de voeten (pion-origin) naar waar de ROMP van dit

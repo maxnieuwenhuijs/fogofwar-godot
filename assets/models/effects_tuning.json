@@ -23,6 +23,7 @@
 			"torso": -0.51
 		}
 	},
+	"death_speed": 1.0,
 	"drop_fall_time": 0.8,
 	"drop_size": 0.4,
 	"drop_stain_chance": 1.0,
@@ -40,7 +41,7 @@
 	"gib_pool_delay": 0.07,
 	"gib_pool_grow": 0.18,
 	"gib_spin": 0.95,
-	"grid_alpha": 0.26,
+	"grid_alpha": 0.23,
 	"hat_fling_power": 1.0,
 	"hat_fling_time": 1.8,
 	"hat_pop_chance": 0.4,
@@ -48,6 +49,7 @@
 	"limb_fling_power": 0.9,
 	"limb_fling_time": 1.0,
 	"limb_shed_chance": 0.4,
+	"melee_advance_delay": 0.35,
 	"melee_hit_delay": 0.55,
 	"melee_speed": 1.4,
 	"melee_yaw": 0.0,
