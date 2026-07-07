@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bcr40k0m25t0k"]
-[ext_resource type="PackedScene" path="res://assets/models/board/board.glb" id="board_glb"]
 
+[ext_resource type="PackedScene" uid="uid://brg5ek146s4m5" path="res://assets/models/board/board.glb" id="board_glb"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4nv4r"]
 albedo_color = Color(0.010688732, 0.029790914, 0.6219675, 1)
@@ -18,8 +18,8 @@ albedo_color = Color(0.4368612, 0.08711798, 0.093458705, 1)
 [node name="Board" type="Node3D" unique_id=1944186346]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -5)
 
-[node name="BoardModel" parent="." instance=ExtResource("board_glb")]
-transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 5.0, -0.576, 5.0)
+[node name="BoardModel" parent="." unique_id=808372739 instance=ExtResource("board_glb")]
+transform = Transform3D(14.25, 0, 0, 0, 15, 0, 0, 0, 13.466249, 5, -0.75379825, 4.83)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1671274236]
 transform = Transform3D(0.9547695, 0.29711568, 0.011725552, -0.18961099, 0.5779836, 0.7937144, 0.22904778, -0.76003754, 0.6081776, 7.4264317, 30.079626, 21.421629)

@@ -134,6 +134,33 @@ static func fx_dict(key: String) -> Dictionary:
 	return v if v is Dictionary else {}
 
 
+## Witte omlijning zodat pionnen zich duidelijk aftekenen op het donkere
+## modder-bord. Inverted-hull via material_overlay (per instantie, dus
+## gedeelde glb-materialen blijven schoon). Dikte: knop "omlijning".
+static var _outline_mat: StandardMaterial3D = null
+
+
+static func _get_outline_mat() -> StandardMaterial3D:
+	if _outline_mat == null:
+		_outline_mat = StandardMaterial3D.new()
+		_outline_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_outline_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.85)
+		_outline_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_outline_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+		_outline_mat.grow = true
+	_outline_mat.grow_amount = fx("outline_width", 0.01)
+	return _outline_mat
+
+
+## Omlijning aan/uit op alle zichtbare delen van het stuk.
+func _apply_outline(root: Node3D) -> void:
+	var mat: StandardMaterial3D = _get_outline_mat() if fx("outline_width", 0.01) > 0.0 else null
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = mat
+	for csg in root.find_children("*", "CSGShape3D", true, false):
+		(csg as CSGShape3D).material_overlay = mat
+
+
 ## Bloedspetter-textures: drop PNG's (met alpha) in assets/textures/blood/ en
 ## de plassen gebruiken ze automatisch (willekeurige keuze per plas). Map leeg
 ## = de simpele rode schijfjes. Export-veilig (.import/.remap remaps).
@@ -686,6 +713,11 @@ func _fling_weapon(world_dir: Vector3) -> void:
 ## Het lijk/brokstuk blijft op het bord tot de volgende definieerfase;
 ## game._clear_debris() laat alles in de groep "battlefield_debris" wegzinken.
 func _become_debris() -> void:
+	# Geen omlijning meer: een lijk hoort in de modder op te gaan.
+	for mi in find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = null
+	for csg in find_children("*", "CSGShape3D", true, false):
+		(csg as CSGShape3D).material_overlay = null
 	add_to_group("battlefield_debris")
 	if _sokkel != null and is_instance_valid(_sokkel):
 		_sokkel.visible = false  # geen team-marker onder een lijk (leest als pion)
@@ -1375,6 +1407,7 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
+	_apply_outline(_piece)
 	# Geen team-sokkel meer onder .glb-modellen (besluit 6 juli): het
 	# team-onderscheid komt straks van de _team1/_team2-textures.
 	# Placeholder-blokje + neusje verbergen; het stuk heeft zelf een voorkant (-Z).
