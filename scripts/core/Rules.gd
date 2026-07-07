@@ -254,11 +254,13 @@ static func _has_free_neighbor(state: GameState, pos: Vector2i) -> bool:
 # Beschietingen (infanterieschot en artillerie)
 # =========================================================================
 
-## Schade die dit schot zou doen (0 = kan niet schieten).
+## Schade die dit schot zou doen (0 = kan niet schieten, bv. cavalerie).
+## Regelwijziging: infanterie schiet met de VOLLE Aanval-stat (voorheen
+## Aanval-1) - dus ook met Aanval 1 kun je altijd schieten, voor 1 schade.
 static func shot_damage(pawn: Pawn) -> int:
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
-			return maxi(0, pawn.attack_value - 1)
+			return pawn.attack_value
 		Constants.UnitType.ARTILLERY:
 			return pawn.attack_value
 	return 0

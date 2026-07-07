@@ -341,9 +341,8 @@ func test_infantry_shot_at_distance_two() -> void:
 	assert_has(targets, enemy.id)
 	var result: Dictionary = Rules.apply_shot(state, shooter.id, enemy.id)
 	assert_true(result.success)
-	# Schade = Attack − 1; schot kost 1 stamina — dus ook met 1 stamina
-	# over schiet de infanterist gewoon 2 vakken ver.
-	assert_eq(enemy.current_hp, 3)
+	# Schade = volle Attack (3); schot kost 1 stamina.
+	assert_eq(enemy.current_hp, 2)
 	assert_eq(shooter.remaining_stamina, 0)
 	# Vuur wint geen terrein.
 	assert_eq(shooter.position, Vector2i(5, 5))
@@ -362,7 +361,7 @@ func test_infantry_with_one_stamina_can_still_shoot() -> void:
 	assert_has(Rules.get_valid_shot_targets(state, shooter.id), enemy.id)
 	var result: Dictionary = Rules.apply_shot(state, shooter.id, enemy.id)
 	assert_true(result.success)
-	assert_eq(enemy.current_hp, 3)
+	assert_eq(enemy.current_hp, 2)
 	assert_eq(shooter.remaining_stamina, 0)
 
 func test_infantry_shot_blocked_by_any_pawn() -> void:
@@ -387,12 +386,17 @@ func test_infantry_shot_not_at_distance_one_or_three() -> void:
 	assert_false(targets.has(near.id))
 	assert_false(targets.has(far.id))
 
-func test_infantry_attack_one_cannot_shoot() -> void:
+func test_infantry_attack_one_can_shoot() -> void:
+	# Regelwijziging: schieten kan altijd, ook met Aanval 1 (schade = 1).
 	var state := GameState.new()
 	var shooter := _spawn(state, Constants.PLAYER_1, Vector2i(5, 5))
-	var _enemy := _spawn(state, Constants.PLAYER_2, Vector2i(5, 3))
+	var enemy := _spawn(state, Constants.PLAYER_2, Vector2i(5, 3))
 	_link_simple(state, shooter, 3, 3, 1)
-	assert_eq(Rules.get_valid_shot_targets(state, shooter.id).size(), 0)
+	_link_simple(state, enemy, 5, 1, 1)
+	assert_has(Rules.get_valid_shot_targets(state, shooter.id), enemy.id)
+	var result: Dictionary = Rules.apply_shot(state, shooter.id, enemy.id)
+	assert_true(result.success)
+	assert_eq(enemy.current_hp, 4)
 
 func test_shot_kills_inactive_pawn_no_forced_move() -> void:
 	var state := GameState.new()

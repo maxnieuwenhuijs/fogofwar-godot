@@ -734,7 +734,7 @@ func _refresh_all() -> void:
 			card = state.all_cards.get(pawn.linked_card_id)
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
-		pv.set_team_ring_visible(pawn.is_active)
+		pv.set_team_ring_active(pawn.is_active)
 		var human_action := state.phase == Phase.Type.ACTION and state.current_player == _human_id \
 				and pawn.owner_id == _human_id and pawn.is_active
 		pv.set_dimmed(human_action and not Rules.can_pawn_act(state, pid))

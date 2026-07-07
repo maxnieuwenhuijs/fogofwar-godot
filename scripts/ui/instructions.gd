@@ -194,7 +194,7 @@ func _tab_units() -> String:
 		"[b]Soldaat (infanterie)[/b]",
 		"• Loopt zo ver als zijn energie reikt.",
 		"• Slaat een vijand op het vak ernaast.",
-		"• Of schiet op [b]precies 2 vakken[/b] afstand (schade = Aanval − 1, dus met Aanval 1 kan hij niet schieten).",
+		"• Of schiet op [b]precies 2 vakken[/b] afstand (schade = je volle Aanval).",
 		"• Sterk in de verdediging: wie hem slaat en niet doodt, krijgt zelf −1.",
 		"",
 		"[b]Beest (cavalerie)[/b]",

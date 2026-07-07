@@ -65,6 +65,8 @@ var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
+var _ring_mat_team: StandardMaterial3D = null  # gloeiende teamkleur (actief)
+var _ring_mat_idle: StandardMaterial3D = null  # vage donkere ring (ongekoppeld)
 var _last_clip_len: float = 0.0  # duur (sec, al gedeeld door speed) van de laatst gestarte clip
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
@@ -444,24 +446,27 @@ func _build_team_ring() -> void:
 	mat.emission_enabled = true
 	mat.emission_energy_multiplier = 0.55 * fx("ring_glow", 1.0)
 	_team_ring.material_override = mat
+	_ring_mat_team = mat
+	_ring_mat_idle = StandardMaterial3D.new()
+	_ring_mat_idle.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring_mat_idle.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ring_mat_idle.albedo_color = Color(0.02, 0.02, 0.025, 0.4)
 	_team_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_team_ring)
 
 
-## Team-ring alleen onder pionnen die meedoen (gekoppeld aan een levende
-## kaart). Ongekoppelde of uitgeschakelde pionnen staan er kaal bij.
-func set_team_ring_visible(v: bool) -> void:
+## Actief (gekoppeld aan een levende kaart) = gloeiende team-ring;
+## ongekoppeld of uitgeschakeld = hele doorzichtige donkere ring, net
+## genoeg om de voet te markeren zonder aandacht te trekken.
+func set_team_ring_active(active: bool) -> void:
 	if _team_ring != null:
-		_team_ring.visible = v
+		_team_ring.material_override = _ring_mat_team if active else _ring_mat_idle
 
 
 ## Live bijstellen van de ring-gloed vanuit het sfeer-paneel (toets L in-game).
 func set_ring_glow(mult: float) -> void:
-	if _team_ring == null:
-		return
-	var mat := _team_ring.material_override as StandardMaterial3D
-	if mat != null:
-		mat.emission_energy_multiplier = 0.55 * mult
+	if _ring_mat_team != null:
+		_ring_mat_team.emission_energy_multiplier = 0.55 * mult
 
 
 ## Klein "neusje" aan de voorkant (-Z) zodat de kijkrichting zichtbaar is
