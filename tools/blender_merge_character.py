@@ -108,7 +108,7 @@ tracked = {t.name for t in base.animation_data.nla_tracks}
 for act in list(bpy.data.actions):
     if act.name not in tracked and not act.name.startswith("_"):
         add_track(base, act, act.name)
-    if act.name.startswith("walk") or act.name.startswith("idle"):
+    if act.name.startswith(("walk", "idle", "bayonet", "melee")):
         detrend_root_motion(act)
 
 for clip_name, path in CLIPS:
@@ -134,7 +134,7 @@ for clip_name, path in CLIPS:
                         kp.co.y *= ratio
                         kp.handle_left.y *= ratio
                         kp.handle_right.y *= ratio
-        if clip_name.startswith("walk") or clip_name.startswith("idle"):
+        if clip_name.startswith(("walk", "idle", "bayonet", "melee")):
             detrend_root_motion(act)
         add_track(base, act, clip_name)
         print("clip toegevoegd:", clip_name)

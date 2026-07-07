@@ -106,6 +106,8 @@ func _ready() -> void:
 			_formation_btn.set_pressed(true)
 		if "rook" in shot_args:
 			_on_smoke_test(4, 0.16)
+		if "melee" in shot_args:
+			_on_clip("melee")
 		_apply_camera()
 		await get_tree().create_timer(1.4).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
@@ -326,7 +328,7 @@ func _build_ui() -> void:
 
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
-	for clip in ["idle", "walk", "attack", "die"]:
+	for clip in ["idle", "walk", "attack", "melee", "die"]:
 		var btn := Button.new()
 		btn.text = clip
 		btn.pressed.connect(_on_clip.bind(clip))
@@ -722,6 +724,7 @@ func _on_clip(clip: String) -> void:
 		"idle": _pawn.play_idle()
 		"walk": _pawn.play_walk()
 		"attack": _pawn.play_attack()
+		"melee": _pawn.play_melee()
 		"die": _pawn.play_die()
 
 

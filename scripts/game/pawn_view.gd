@@ -447,7 +447,7 @@ func _play_variant(base: String, desync: bool = false) -> void:
 const ANIM_ALIASES: Dictionary = {
 	"attack": ["fire", "shoot"],
 	"die": ["death"],
-	"melee": ["punch", "stab"],
+	"melee": ["bayonet", "sword", "punch", "stab"],
 }
 
 
