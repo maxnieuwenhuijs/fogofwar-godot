@@ -1,4 +1,10 @@
 {
+	"board": {
+		"scale": 15.0,
+		"x": 0.0,
+		"y": 0.19,
+		"z": 0.0
+	},
 	"mouse/infantry_base": {
 		"muzzle": [
 			0.08,

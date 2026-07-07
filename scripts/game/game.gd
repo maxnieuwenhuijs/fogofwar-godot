@@ -74,6 +74,7 @@ func _ready() -> void:
 	_world.move_child(_board, 0)
 	_pawns_root.reparent(_board, false)
 	_setup_battlefield_lighting()
+	_setup_board_model()
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
@@ -1133,6 +1134,57 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	var impact_size: float = 0.14 if is_cannon else 0.08
 	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size, shot_dir))
 	return dur
+
+
+## 3D-bordmodel (assets/models/board/board.glb) als decor onder het logische
+## grid: automatisch gemeten en geschaald naar het 11x11-veld. De checker-
+## CSG-tegels worden verborgen (het model is de vloer); haven-tegels blijven
+## als gekleurde markers net boven het oppervlak. Bijstellen kan via
+## model_tuning.json sleutel "board": {scale, x, y, z}.
+func _setup_board_model() -> void:
+	var board_path := "res://assets/models/board/board.glb"
+	if not ResourceLoader.exists(board_path):
+		return
+	var model: Node3D = (load(board_path) as PackedScene).instantiate()
+	_board.add_child(model)
+	# Meet de mesh-AABB in model-ruimte.
+	var inv := model.global_transform.affine_inverse()
+	var aabb := AABB()
+	var first := true
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var ab: AABB = (inv * (mi as MeshInstance3D).global_transform) * (mi as MeshInstance3D).get_aabb()
+		if first:
+			aabb = ab
+			first = false
+		else:
+			aabb = aabb.merge(ab)
+	if first or aabb.size.x <= 0.0001:
+		return
+	var t: Dictionary = PawnView.model_tuning().get("board", {})
+	var sc: float = float(t.get("scale", 11.0 / maxf(aabb.size.x, aabb.size.z)))
+	model.scale = Vector3(sc, sc, sc)
+	# Veld-centrum ligt op (5, ., 5) in bord-ruimte; bovenkant net onder de
+	# pion-voeten (0.045) zodat highlights en bloed erbovenop renderen.
+	var center := aabb.get_center()
+	model.position = Vector3(
+		5.0 - center.x * sc + float(t.get("x", 0.0)),
+		0.045 - aabb.end.y * sc + float(t.get("y", 0.0)),
+		5.0 - center.z * sc + float(t.get("z", 0.0)))
+	# Checker-tegels uit (het model draagt de vloer); havens blijven zichtbaar
+	# en gaan een fractie omhoog tegen z-fighting met het bordoppervlak.
+	var tiles_node := _board.get_node_or_null("Tiles")
+	if tiles_node != null:
+		for tile in tiles_node.get_children():
+			if not (tile is CSGBox3D):
+				continue
+			var mat: StandardMaterial3D = (tile as CSGBox3D).material_override as StandardMaterial3D
+			if mat == null:
+				continue
+			var c := mat.albedo_color
+			if absf(c.r - c.g) + absf(c.g - c.b) > 0.3:
+				(tile as CSGBox3D).position.y = 0.012  # haven-marker
+			else:
+				(tile as CSGBox3D).visible = false
 
 
 ## Grimmige slagveld-belichting: semi-donker en modderig-warm, maar alles
