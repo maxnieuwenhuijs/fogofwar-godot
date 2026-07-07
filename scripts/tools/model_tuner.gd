@@ -75,6 +75,7 @@ const CAM_BASIS := Basis(
 var _info: Label
 
 var _updating := false  # geen slider-events tijdens het her-instellen
+var _melee_cycle := 0   # melee-knop bladert door de varianten (bayonet1, 2, ...)
 
 
 func _ready() -> void:
@@ -200,7 +201,7 @@ func _build_ui() -> void:
 	add_child(ui)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -525.0
+	panel.offset_top = -560.0
 	ui.add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -337,26 +338,6 @@ func _build_ui() -> void:
 	freeze_btn.text = "stilzetten"
 	freeze_btn.pressed.connect(_freeze_pose)
 	row3.add_child(freeze_btn)
-	var gib_btn := Button.new()
-	gib_btn.text = "gibs (kanon)"
-	gib_btn.pressed.connect(_on_gib_test.bind(1.4, "shot"))
-	row3.add_child(gib_btn)
-	var gib_btn2 := Button.new()
-	gib_btn2.text = "gibs (musket)"
-	gib_btn2.pressed.connect(_on_gib_test.bind(0.75, "shot"))
-	row3.add_child(gib_btn2)
-	var gib_btn3 := Button.new()
-	gib_btn3.text = "gibs (melee)"
-	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
-	row3.add_child(gib_btn3)
-	var smoke_btn := Button.new()
-	smoke_btn.text = "rook (musket)"
-	smoke_btn.pressed.connect(_on_smoke_test.bind(2, 0.09))
-	row3.add_child(smoke_btn)
-	var smoke_btn2 := Button.new()
-	smoke_btn2.text = "rook (kanon)"
-	smoke_btn2.pressed.connect(_on_smoke_test.bind(4, 0.16))
-	row3.add_child(smoke_btn2)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -366,6 +347,39 @@ func _build_ui() -> void:
 	back_btn.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
 	row3.add_child(back_btn)
+
+	# Test-rij: complete scenario's (vuren met rook, inslag, gibs, losse rook).
+	var row4 := HBoxContainer.new()
+	box.add_child(row4)
+	row4.add_child(_make_label("Test: "))
+	var fire_btn := Button.new()
+	fire_btn.text = "vuur"
+	fire_btn.pressed.connect(_on_fire_test)
+	row4.add_child(fire_btn)
+	var impact_btn := Button.new()
+	impact_btn.text = "inslag (kanon)"
+	impact_btn.pressed.connect(_on_impact_test)
+	row4.add_child(impact_btn)
+	var gib_btn := Button.new()
+	gib_btn.text = "gibs (kanon)"
+	gib_btn.pressed.connect(_on_gib_test.bind(1.4, "shot"))
+	row4.add_child(gib_btn)
+	var gib_btn2 := Button.new()
+	gib_btn2.text = "gibs (musket)"
+	gib_btn2.pressed.connect(_on_gib_test.bind(0.75, "shot"))
+	row4.add_child(gib_btn2)
+	var gib_btn3 := Button.new()
+	gib_btn3.text = "gibs (melee)"
+	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
+	row4.add_child(gib_btn3)
+	var smoke_btn := Button.new()
+	smoke_btn.text = "rook (musket)"
+	smoke_btn.pressed.connect(_on_smoke_test.bind(2, 0.09))
+	row4.add_child(smoke_btn)
+	var smoke_btn2 := Button.new()
+	smoke_btn2.text = "rook (kanon)"
+	smoke_btn2.pressed.connect(_on_smoke_test.bind(4, 0.16))
+	row4.add_child(smoke_btn2)
 
 	_info = Label.new()
 	box.add_child(_info)
@@ -694,6 +708,62 @@ func _on_fx_changed(_v: float) -> void:
 		PawnView.set_fx(String(key), snappedf((_fx_spins[key] as SpinBox).value, 0.001))
 
 
+## Vuur-test: attack-clip + loop-rook op het vuur-moment (maat past bij het
+## geselecteerde type: artillerie = kanon-rook).
+func _on_fire_test() -> void:
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	_pawn.play_attack()
+	var tw := create_tween()
+	tw.tween_interval(0.25)
+	tw.tween_callback(_fire_smoke)
+
+
+func _fire_smoke() -> void:
+	var is_art := _type_btn.get_selected_id() == 2
+	var muzzle := Vector3(0.0, 0.5, 0.75) if is_art else Vector3(0.08, 0.6, 0.55)
+	PawnView.spawn_powder_smoke(self, muzzle, 4 if is_art else 2,
+		0.16 if is_art else 0.09, Vector3(0.12, 0.0, 1.0).normalized())
+
+
+## Kanon-inslag: een kogel-streep vliegt in, inslag-rook + volledige gib-dood
+## - exact de keten die het spel bij een artillerie-treffer afspeelt.
+func _on_impact_test() -> void:
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	for n in get_tree().get_nodes_in_group("battlefield_debris"):
+		n.queue_free()
+	var from := Vector3(-2.4, 0.5, -1.3)
+	var to := Vector3(0.0, 0.45, 0.0)
+	var proj := MeshInstance3D.new()
+	var pm := SphereMesh.new()
+	pm.radius = 0.07
+	pm.height = 0.14
+	proj.mesh = pm
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.16, 0.16, 0.18)
+	mat.metallic = 0.5
+	proj.material_override = mat
+	add_child(proj)
+	proj.look_at_from_position(from, to, Vector3.UP)
+	proj.scale = Vector3(0.6, 0.6, 4.0)
+	var tw := create_tween()
+	tw.tween_property(proj, "position", to, 0.16)
+	tw.tween_callback(proj.queue_free)
+	tw.tween_callback(_impact_hit.bind((to - from).normalized()))
+
+
+func _impact_hit(dir: Vector3) -> void:
+	PawnView.spawn_powder_smoke(self, Vector3(0.0, 0.4, 0.0), 3, 0.14, dir)
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	_pawn.play_death(dir, 1.4, "shot")
+	_pawn = null
+	var t := create_tween()
+	t.tween_interval(4.0)
+	t.tween_callback(_respawn_model.bind(false))
+
+
 ## Rooktest aan de loop van het tuning-model (musket- of kanon-maat).
 func _on_smoke_test(count: int, size: float) -> void:
 	PawnView.spawn_powder_smoke(self, Vector3(0.05, 0.55, 0.3), count, size,
@@ -724,7 +794,17 @@ func _on_clip(clip: String) -> void:
 		"idle": _pawn.play_idle()
 		"walk": _pawn.play_walk()
 		"attack": _pawn.play_attack()
-		"melee": _pawn.play_melee()
+		"melee":
+			# Blader door de melee-varianten: elke druk de volgende clip.
+			var variants: Array = _pawn._variants_of(_pawn.anim_melee)
+			if variants.is_empty():
+				_pawn.play_melee()
+			else:
+				var full := String(variants[_melee_cycle % variants.size()])
+				_melee_cycle += 1
+				_pawn._anim.play(full, 0.2)
+				_info.text = "melee-clip: %s (%d van %d) — druk nogmaals voor de volgende variant" % [
+					full, ((_melee_cycle - 1) % variants.size()) + 1, variants.size()]
 		"die": _pawn.play_die()
 
 
