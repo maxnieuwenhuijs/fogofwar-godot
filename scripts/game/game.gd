@@ -1204,7 +1204,7 @@ func _build_grid_lines() -> void:
 func _setup_battlefield_lighting() -> void:
 	var sun: DirectionalLight3D = _board.get_node_or_null("DirectionalLight3D")
 	if sun != null:
-		sun.light_energy = 0.5 * PawnView.fx("world_light", 1.0)
+		sun.light_energy = 0.65 * PawnView.fx("world_light", 1.0)
 		sun.light_color = Color(1.0, 0.92, 0.8)
 	# Spotlight boven het bordcentrum: fel in het midden, dooft naar de randen
 	# uit (radiale falloff = diorama-onder-een-lamp). Tunebaar: spot-licht /
@@ -1213,16 +1213,16 @@ func _setup_battlefield_lighting() -> void:
 	spot.position = Vector3(5.0, 7.5, 5.0)
 	spot.light_color = Color(1.0, 0.9, 0.74)
 	spot.light_energy = 3.4 * PawnView.fx("spot_light", 1.0)
-	spot.omni_range = 11.0 * PawnView.fx("spot_range", 1.0)
-	spot.omni_attenuation = 1.6  # sneller uitdoven naar de randen
+	spot.omni_range = 14.0 * PawnView.fx("spot_range", 1.0)
+	spot.omni_attenuation = 0.9  # zachte falloff: ook de randen (legers) vangen licht
 	spot.shadow_enabled = true
 	_board.add_child(spot)
 	# Gritty rim/fill: koel tegenlicht vanuit lage schuine hoek dat de
 	# silhouetten van de pionnen aanzet (warm spot + koele rand = filmisch).
 	var rim := DirectionalLight3D.new()
 	rim.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
-	rim.light_color = Color(0.55, 0.62, 0.8)
-	rim.light_energy = 0.6 * PawnView.fx("rim_light", 1.0)
+	rim.light_color = Color(0.62, 0.68, 0.85)
+	rim.light_energy = 1.5 * PawnView.fx("rim_light", 1.0)
 	rim.light_specular = 1.4
 	_board.add_child(rim)
 	var env := Environment.new()
@@ -1230,7 +1230,7 @@ func _setup_battlefield_lighting() -> void:
 	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.58, 0.55, 0.5)
-	env.ambient_light_energy = 0.28 * PawnView.fx("world_ambient", 1.0)
+	env.ambient_light_energy = 0.36 * PawnView.fx("world_ambient", 1.0)
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 0.88
