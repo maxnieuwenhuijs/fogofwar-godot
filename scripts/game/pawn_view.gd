@@ -135,40 +135,6 @@ static func fx_dict(key: String) -> Dictionary:
 	return v if v is Dictionary else {}
 
 
-## Team-gekleurde omlijning zodat pionnen zich duidelijk aftekenen op het
-## donkere modder-bord EN je in een spiegelgevecht ziet wie van wie is:
-## rood leger = warmrode rand, blauw leger = koelblauwe rand.
-## Inverted-hull via material_overlay (per instantie, gedeelde
-## glb-materialen blijven schoon). Dikte: knop "omlijning".
-static var _outline_mats: Dictionary = {}
-
-
-static func _get_outline_mat(team_id: int) -> StandardMaterial3D:
-	if not _outline_mats.has(team_id):
-		var m := StandardMaterial3D.new()
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.cull_mode = BaseMaterial3D.CULL_FRONT
-		m.grow = true
-		if team_id == Constants.Team.RED:
-			m.albedo_color = Color(1.0, 0.5, 0.45, 0.95)
-		else:
-			m.albedo_color = Color(0.5, 0.72, 1.0, 0.95)
-		_outline_mats[team_id] = m
-	var mm: StandardMaterial3D = _outline_mats[team_id]
-	mm.grow_amount = fx("outline_width", 0.03)
-	return mm
-
-
-## Omlijning aan/uit op alle zichtbare delen van het stuk.
-func _apply_outline(root: Node3D) -> void:
-	var mat: StandardMaterial3D = _get_outline_mat(team) if fx("outline_width", 0.03) > 0.0 else null
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).material_overlay = mat
-	for csg in root.find_children("*", "CSGShape3D", true, false):
-		(csg as CSGShape3D).material_overlay = mat
-
-
 ## Bloedspetter-textures: drop PNG's (met alpha) in assets/textures/blood/ en
 ## de plassen gebruiken ze automatisch (willekeurige keuze per plas). Map leeg
 ## = de simpele rode schijfjes. Export-veilig (.import/.remap remaps).
@@ -749,11 +715,6 @@ func _fling_weapon(world_dir: Vector3) -> void:
 func _become_debris() -> void:
 	if _team_ring != null:
 		_team_ring.visible = false  # gesneuveld: geen team-ring meer
-	# Geen omlijning meer: een lijk hoort in de modder op te gaan.
-	for mi in find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).material_overlay = null
-	for csg in find_children("*", "CSGShape3D", true, false):
-		(csg as CSGShape3D).material_overlay = null
 	add_to_group("battlefield_debris")
 	if _sokkel != null and is_instance_valid(_sokkel):
 		_sokkel.visible = false  # geen team-marker onder een lijk (leest als pion)
@@ -1443,7 +1404,6 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
-	_apply_outline(_piece)
 	# Geen team-sokkel meer onder .glb-modellen (besluit 6 juli): het
 	# team-onderscheid komt straks van de _team1/_team2-textures.
 	# Placeholder-blokje + neusje verbergen; het stuk heeft zelf een voorkant (-Z).

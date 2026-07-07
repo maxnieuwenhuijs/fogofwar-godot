@@ -44,7 +44,6 @@
 	"melee_speed": 1.4,
 	"melee_yaw": 0.0,
 	"mist_travel": 1.6,
-	"outline_width": 0.03,
 	"smoke_alpha": 1.0,
 	"smoke_amount": 1.01,
 	"smoke_drift": 2.0,
