@@ -60,7 +60,7 @@ const DOCTRINE_DATA: Dictionary = {
 		"con": "Nergens de beste in",
 	},
 	Doctrine.MUIS: {
-		"name": "Muis", "cards": 4, "budget": 5, "comp": [22, 0, 0],
+		"name": "Muis", "cards": 4, "budget": 5, "comp": [20, 0, 2],
 		"move_through_own": true, "hp_bonus": 0, "speed_max": 0, "speed_bonus": 1,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
