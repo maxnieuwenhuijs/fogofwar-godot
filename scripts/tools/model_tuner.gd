@@ -55,6 +55,18 @@ var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> S
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
+var _cam: Camera3D = null           # wisselbare camera (spel/close-up/voorkant)
+var _view_btn: OptionButton = null
+var _my_fac_btn: OptionButton = null   # formatie: mijn factie
+var _opp_fac_btn: OptionButton = null  # formatie: tegenstander
+var _formation_btn: Button = null      # formatie aan/uit (toggle)
+var _formation_pawns: Array = []
+
+## Exact de kijkhoek van de bordcamera (Board.tscn) — de spel-view is WYSIWYG.
+const CAM_BASIS := Basis(
+	Vector3(0.9396926, 0.0, 0.34202012),
+	Vector3(0.2513556, 0.67815965, -0.69059384),
+	Vector3(-0.23194425, 0.7349146, 0.6372616))
 var _info: Label
 
 var _updating := false  # geen slider-events tijdens het her-instellen
@@ -80,6 +92,14 @@ func _ready() -> void:
 		get_viewport().get_texture().get_image().save_png("res://_shot_gibs.png")
 		get_tree().quit()
 	if "shot" in OS.get_cmdline_user_args():
+		var shot_args := OS.get_cmdline_user_args()
+		if "voorkant" in shot_args:
+			_view_btn.select(2)
+		elif "closeup" in shot_args:
+			_view_btn.select(1)
+		if "formatie" in shot_args:
+			_formation_btn.set_pressed(true)
+		_apply_camera()
 		await get_tree().create_timer(1.4).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
 		get_tree().quit()
@@ -135,20 +155,33 @@ func _build_world() -> void:
 	e.ambient_light_energy = 0.7
 	env.environment = e
 	add_child(env)
-	# Zelfde camera-instelling als het echte bord (Board.tscn): ORTHOGRAAL en
-	# dezelfde kijkhoek, zodat de pion in de tuner op precies dezelfde schaal
-	# t.o.v. de tegels verschijnt als in het spel. Alleen ingezoomd (kleine size).
-	var cam := Camera3D.new()
-	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
-	cam.size = 2.9
-	var b := Basis(
-		Vector3(0.9396926, 0.0, 0.34202012),
-		Vector3(0.2513556, 0.67815965, -0.69059384),
-		Vector3(-0.23194425, 0.7349146, 0.6372616))
-	var target := Vector3(0.0, 0.45, 0.0)
-	cam.transform = Transform3D(b, target + b.z * 8.0)
-	add_child(cam)
-	cam.current = true
+	# Camera wisselbaar via de Cam:-keuze (spel / close-up / voorkant).
+	# Default = exact de bordcamera (orthograaf, zelfde hoek): WYSIWYG.
+	_cam = Camera3D.new()
+	_cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	add_child(_cam)
+	_cam.current = true
+	_apply_camera()
+
+
+## Zet de camera volgens de gekozen view; in formatie-modus zoomt elke view
+## uit zodat beide linies (3 vs 3 op tegels) volledig in beeld staan.
+func _apply_camera() -> void:
+	if _cam == null:
+		return
+	var view := 0 if _view_btn == null else _view_btn.selected
+	var big := not _formation_pawns.is_empty()
+	match view:
+		1:  # close-up: zelfde spel-hoek, strak op het model
+			_cam.size = 4.2 if big else 1.5
+			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.55, 0.0) + CAM_BASIS.z * 8.0)
+		2:  # voorkant: recht van voren, licht van boven (linies vallen vrij)
+			_cam.size = 4.6 if big else 1.7
+			_cam.transform = Transform3D(Basis(), Vector3(0.0, 1.2, 3.6))
+			_cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
+		_:  # spel-camera (bordhoek)
+			_cam.size = 6.2 if big else 2.9
+			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.45, 0.0) + CAM_BASIS.z * 8.0)
 
 
 # --- UI -------------------------------------------------------------------------
@@ -180,6 +213,35 @@ func _build_ui() -> void:
 	row1.add_child(_arch_btn)
 	for b in [_fac_btn, _type_btn, _arch_btn]:
 		(b as OptionButton).item_selected.connect(func(_i: int) -> void: _reload_pawns())
+	# Camera-views: spel (bordhoek, WYSIWYG), close-up, voorkant.
+	row1.add_child(_make_label("  Cam:"))
+	_view_btn = OptionButton.new()
+	for v in ["spel", "close-up", "voorkant"]:
+		_view_btn.add_item(v)
+	_view_btn.item_selected.connect(func(_i: int) -> void: _apply_camera())
+	row1.add_child(_view_btn)
+	# Formatie-vergelijk: 3 vs 3 (inf/cav/art) van twee facties tegenover
+	# elkaar, allemaal via dezelfde auto-fit — schaal direct vergelijkbaar.
+	row1.add_child(_make_label("  Vergelijk:"))
+	_my_fac_btn = OptionButton.new()
+	_opp_fac_btn = OptionButton.new()
+	for d in Constants.DOCTRINE_DATA.keys():
+		_my_fac_btn.add_item(Constants.doctrine_name(d), int(d))
+		_opp_fac_btn.add_item(Constants.doctrine_name(d), int(d))
+	_my_fac_btn.select(1)   # Muis
+	_opp_fac_btn.select(0)  # Varken
+	row1.add_child(_my_fac_btn)
+	row1.add_child(_make_label(" vs "))
+	row1.add_child(_opp_fac_btn)
+	_formation_btn = Button.new()
+	_formation_btn.text = "formatie"
+	_formation_btn.toggle_mode = true
+	_formation_btn.toggled.connect(_on_formation_toggled)
+	row1.add_child(_formation_btn)
+	for fb in [_my_fac_btn, _opp_fac_btn]:
+		(fb as OptionButton).item_selected.connect(func(_i: int) -> void:
+			if _formation_btn.button_pressed:
+				_build_formation())
 
 	var row2 := HBoxContainer.new()
 	box.add_child(row2)
@@ -339,7 +401,53 @@ func _current_card() -> Card:
 	return Card.new(0, 0, 0, int(s[0]), int(s[1]), int(s[2]))
 
 
+## Formatie aan: vervang het tuning-model door 3 vs 3 (inf/cav/art) van de
+## twee gekozen facties, tegenover elkaar op tegels — net als in het spel.
+func _on_formation_toggled(on: bool) -> void:
+	if on:
+		_build_formation()
+	else:
+		_clear_formation()
+		_reload_pawns()
+	_apply_camera()
+
+
+func _clear_formation() -> void:
+	for fp in _formation_pawns:
+		if is_instance_valid(fp):
+			fp.queue_free()
+	_formation_pawns = []
+
+
+func _build_formation() -> void:
+	_clear_formation()
+	if _pawn != null and is_instance_valid(_pawn):
+		_pawn.queue_free()
+	_pawn = null
+	if _ref != null and is_instance_valid(_ref):
+		_ref.queue_free()
+	_ref = null
+	var facs: Array = [_my_fac_btn.get_selected_id(), _opp_fac_btn.get_selected_id()]
+	for side in 2:
+		var z := 1.0 if side == 0 else -1.0
+		for tp in 3:  # 0=infanterie, 1=cavalerie, 2=artillerie
+			var pv: PawnView = PAWN_SCENE.instantiate()
+			pv.team = Constants.Team.RED if side == 0 else Constants.Team.BLUE
+			pv.position = Vector3(float(tp - 1), 0.05, z)
+			add_child(pv)
+			pv.face_dir(Vector2i(0, -1) if side == 0 else Vector2i(0, 1))
+			pv.set_unit_type(tp)
+			pv.set_character(facs[side], tp, null)
+			_formation_pawns.append(pv)
+	_info.text = "Formatie: %s (rood, onder) vs %s (blauw, boven) — inf/cav/art via dezelfde auto-fit, schaal 1-op-1 vergelijkbaar. Formatie uit = terug naar tunen." % [
+		Constants.doctrine_name(facs[0]), Constants.doctrine_name(facs[1])]
+	_apply_camera()
+
+
 func _reload_pawns() -> void:
+	if _formation_btn != null and _formation_btn.button_pressed:
+		_formation_btn.set_pressed_no_signal(false)
+	_clear_formation()
 	if _pawn != null:
 		_pawn.queue_free()
 	if _ref != null:
@@ -381,6 +489,7 @@ func _reload_pawns() -> void:
 	_updating = false
 	_fill_die_options()
 	_refresh_info()
+	_apply_camera()
 
 
 ## Vul het dood-clip menu met de die-varianten van het huidige model en
