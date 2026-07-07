@@ -182,7 +182,10 @@ static var _smoke_textures: Array = []
 static var _smoke_tex_loaded: bool = false
 
 
-static func _smoke_texture() -> Texture2D:
+## Willekeurige rook-entry: {tex, cols, rows}. Sprite sheets zet je in de
+## bestandsnaam: "musket_smoke_3x3.png" = 3x3 grid dat als animatie afspeelt
+## (ontstaan -> uitzetten -> oplossen). Zonder grid-suffix = los plaatje.
+static func _smoke_entry() -> Dictionary:
 	if not _smoke_tex_loaded:
 		_smoke_tex_loaded = true
 		var seen: Dictionary = {}
@@ -198,10 +201,25 @@ static func _smoke_texture() -> Texture2D:
 				if ResourceLoader.exists(SMOKE_TEX_DIR + fname):
 					var tex = load(SMOKE_TEX_DIR + fname)
 					if tex is Texture2D:
-						_smoke_textures.append(_black_to_alpha(tex))
+						var cols := 1
+						var rows := 1
+						var base := fname.get_basename().to_lower()
+						var us := base.rfind("_")
+						if us >= 0:
+							var grid := base.substr(us + 1).split("x")
+							if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
+								cols = maxi(int(grid[0]), 1)
+								rows = maxi(int(grid[1]), 1)
+						_smoke_textures.append({"tex": _black_to_alpha(tex), "cols": cols, "rows": rows})
 	if _smoke_textures.is_empty():
-		return null
+		return {}
 	return _smoke_textures[randi() % _smoke_textures.size()]
+
+
+## Zet één frame van een rook-sprite-sheet (uv-offset binnen het grid).
+static func _sheet_frame(frame: int, mat: StandardMaterial3D, cols: int, rows: int) -> void:
+	var row := floori(float(frame) / float(cols))
+	mat.uv1_offset = Vector3(float(frame % cols) / float(cols), float(row) / float(rows), 0.0)
 
 
 ## Texture op zwarte achtergrond -> alpha (helderheid = dekking). Heeft het
@@ -236,21 +254,30 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 		return
 	var amount := int(clampf(float(count) * fx("smoke_amount", 1.0), 0.0, 24.0))
 	for i in amount:
-		var tex := _smoke_texture()
+		var e := _smoke_entry()
+		var sheet_cols := 1
+		var sheet_rows := 1
 		var puff := MeshInstance3D.new()
 		var mat := StandardMaterial3D.new()
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		if tex != null:
+		if not e.is_empty():
 			var q := QuadMesh.new()
 			var qs := size * 3.4 * fx("smoke_size", 1.0) * randf_range(0.8, 1.25)
 			q.size = Vector2(qs, qs)
 			puff.mesh = q
-			mat.albedo_texture = tex
+			mat.albedo_texture = e.tex
 			mat.albedo_color = Color(1, 1, 1, randf_range(0.75, 0.95))
 			mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 			mat.billboard_keep_scale = true
-			if randf() < 0.5:
+			sheet_cols = int(e.cols)
+			sheet_rows = int(e.rows)
+			if sheet_cols > 1 or sheet_rows > 1:
+				# Sprite sheet: uv op frame 0; afspelen start verderop, zodra
+				# de levensduur van deze wolk bekend is.
+				mat.uv1_scale = Vector3(1.0 / sheet_cols, 1.0 / sheet_rows, 1.0)
+				_sheet_frame(0, mat, sheet_cols, sheet_rows)
+			elif randf() < 0.5:
 				mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)
 		else:
 			var mesh := SphereMesh.new()
@@ -271,10 +298,18 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 		if dir != Vector3.ZERO:
 			# Rook wappert met het schot mee, van de loop af (rook-drift).
 			drift += dir.normalized() * randf_range(0.3, 0.6) * fx("smoke_drift", 1.0)
+		# Sprite sheets groeien zelf al in hun frames — de quad groeit dan
+		# maar beperkt mee; losse plaatjes krijgen de volle rook-groei.
+		var grow_target := fx("smoke_grow", 3.0)
+		if sheet_cols * sheet_rows > 1:
+			grow_target = 1.0 + (grow_target - 1.0) * 0.35
+			var anim_tw := puff.create_tween()
+			anim_tw.tween_method(_sheet_frame.bind(mat, sheet_cols, sheet_rows),
+				0, sheet_cols * sheet_rows - 1, life)
 		var tw := puff.create_tween()
 		tw.set_parallel(true)
 		tw.tween_property(puff, "position", puff.position + drift, life).set_ease(Tween.EASE_OUT)
-		tw.tween_property(puff, "scale", Vector3.ONE * fx("smoke_grow", 3.0) * randf_range(0.85, 1.2), life) \
+		tw.tween_property(puff, "scale", Vector3.ONE * grow_target * randf_range(0.85, 1.2), life) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
 		tw.chain().tween_callback(puff.queue_free)
