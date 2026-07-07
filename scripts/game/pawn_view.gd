@@ -1404,6 +1404,7 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
+	_apply_team_texture()
 	# Geen team-sokkel meer onder .glb-modellen (besluit 6 juli): het
 	# team-onderscheid komt straks van de _team1/_team2-textures.
 	# Placeholder-blokje + neusje verbergen; het stuk heeft zelf een voorkant (-Z).
@@ -1508,6 +1509,32 @@ func _auto_fit_model(root: Node3D) -> void:
 		# kant) en horen dus mee te draaien met de kijkrichting: zo staat het
 		# lijf voor rood en blauw identiek op de eigen tegel.
 		root.position += Vector3(float(t.get("x", 0.0)), float(t.get("y", 0.0)), float(t.get("z", 0.0)))
+
+
+## Team-texture: naast het model kan een <basis>_red.png / <basis>_blue.png
+## staan (uit Blender/de generator). Rood team krijgt _red, blauw _blue; is
+## er geen variant voor dit team, dan blijft de originele model-texture staan
+## (dus het neutrale basismodel = default). Zo één geanimeerd model, per team
+## een andere jas.
+static var _team_tex_cache: Dictionary = {}
+
+
+func _apply_team_texture() -> void:
+	if _piece == null or _model_path == "":
+		return
+	var suffix := "_red" if team == Constants.Team.RED else "_blue"
+	var tex_path := _model_path.get_basename() + suffix + ".png"
+	if not _team_tex_cache.has(tex_path):
+		_team_tex_cache[tex_path] = load(tex_path) if ResourceLoader.exists(tex_path) else null
+	var tex: Texture2D = _team_tex_cache[tex_path]
+	if tex == null:
+		return
+	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
+		var m := (mi as MeshInstance3D).get_active_material(0)
+		if m is BaseMaterial3D:
+			var dup := (m as BaseMaterial3D).duplicate()
+			(dup as BaseMaterial3D).albedo_texture = tex
+			(mi as MeshInstance3D).material_override = dup
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):
