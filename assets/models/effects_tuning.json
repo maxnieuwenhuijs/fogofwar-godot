@@ -36,5 +36,9 @@
 	"limb_fling_power": 0.9,
 	"limb_fling_time": 1.0,
 	"limb_shed_chance": 0.4,
-	"mist_travel": 1.6
+	"mist_travel": 1.6,
+	"smoke_amount": 1.0,
+	"smoke_grow": 3.0,
+	"smoke_life": 1.1,
+	"smoke_size": 1.0
 }

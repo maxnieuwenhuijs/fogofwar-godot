@@ -1142,30 +1142,11 @@ func _muzzle_flash(pos: Vector3, big: bool) -> void:
 	tween.chain().tween_callback(flash.queue_free)
 
 
-## Low-poly rookwolkjes: paar grijze bolletjes die opstijgen, groeien en vervagen.
+## Zwartkruit-rook via de gedeelde spawner in PawnView: textures uit
+## assets/textures/smoke/ (billboards die echt uitzetten), zonder textures
+## grijze bol-wolkjes. Knoppen in de Model-tuner: rook-aantal/-maat/-groei/-duur.
 func _spawn_smoke(pos: Vector3, count: int, size: float) -> void:
-	for i in count:
-		var puff := MeshInstance3D.new()
-		var mesh := SphereMesh.new()
-		mesh.radial_segments = 8
-		mesh.rings = 4
-		var radius: float = size * randf_range(0.75, 1.2)
-		mesh.radius = radius
-		mesh.height = radius * 2.0
-		puff.mesh = mesh
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(0.64, 0.64, 0.68, 0.7)
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		puff.material_override = mat
-		puff.position = pos + Vector3(randf_range(-0.08, 0.08), randf_range(0.0, 0.08), randf_range(-0.08, 0.08))
-		_board.add_child(puff)
-		var drift := Vector3(randf_range(-0.22, 0.22), randf_range(0.35, 0.6), randf_range(-0.22, 0.22))
-		var life: float = randf_range(0.55, 0.8)
-		var tween := create_tween().set_parallel()
-		tween.tween_property(puff, "position", puff.position + drift, life).set_ease(Tween.EASE_OUT)
-		tween.tween_property(puff, "scale", Vector3.ONE * 1.9, life)
-		tween.tween_property(mat, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
-		tween.chain().tween_callback(puff.queue_free)
+	PawnView.spawn_powder_smoke(_board, pos, count, size)
 
 
 ## Treffer-feedback (de "Hit"-fase). Op het inslagmoment (na `delay`): witte flits,

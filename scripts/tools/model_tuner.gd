@@ -34,6 +34,10 @@ const FX_DEFS: Array = [
 	{"key": "drop_stain_grow", "label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},
 	{"key": "gib_pool_delay", "label": "gib-poel-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.1},
 	{"key": "gib_pool_grow", "label": "gib-poel-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.45},
+	{"key": "smoke_amount", "label": "rook-aantal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"key": "smoke_size", "label": "rook-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"key": "smoke_grow", "label": "rook-groei", "min": 0.5, "max": 10.0, "step": 0.01, "def": 3.0},
+	{"key": "smoke_life", "label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.1},
 	{"key": "blood_extra_delay", "label": "plas-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.4},
 	{"key": "blood_grow", "label": "plas-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "blood_size", "label": "plas-maat", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
@@ -99,6 +103,8 @@ func _ready() -> void:
 			_view_btn.select(1)
 		if "formatie" in shot_args:
 			_formation_btn.set_pressed(true)
+		if "rook" in shot_args:
+			_on_smoke_test(4, 0.16)
 		_apply_camera()
 		await get_tree().create_timer(1.4).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
@@ -191,7 +197,7 @@ func _build_ui() -> void:
 	add_child(ui)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -490.0
+	panel.offset_top = -525.0
 	ui.add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -340,6 +346,14 @@ func _build_ui() -> void:
 	gib_btn3.text = "gibs (melee)"
 	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
 	row3.add_child(gib_btn3)
+	var smoke_btn := Button.new()
+	smoke_btn.text = "rook (musket)"
+	smoke_btn.pressed.connect(_on_smoke_test.bind(2, 0.09))
+	row3.add_child(smoke_btn)
+	var smoke_btn2 := Button.new()
+	smoke_btn2.text = "rook (kanon)"
+	smoke_btn2.pressed.connect(_on_smoke_test.bind(4, 0.16))
+	row3.add_child(smoke_btn2)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -675,6 +689,11 @@ func _on_fx_changed(_v: float) -> void:
 		return
 	for key in _fx_spins:
 		PawnView.set_fx(String(key), snappedf((_fx_spins[key] as SpinBox).value, 0.001))
+
+
+## Rooktest aan de loop van het tuning-model (musket- of kanon-maat).
+func _on_smoke_test(count: int, size: float) -> void:
+	PawnView.spawn_powder_smoke(self, Vector3(0.05, 0.55, 0.3), count, size)
 
 
 func _on_gib_test(strength: float, kind: String = "shot") -> void:

@@ -172,6 +172,110 @@ static func _blood_texture(prefix: String = "") -> Texture2D:
 			keuze.append(e.tex)
 	return keuze[randi() % keuze.size()]
 
+
+## Zwartkruit-rook: textures in assets/textures/smoke/ (elk formaat met
+## alpha, OF "isolated on black" uit een AI-generator — zwart wordt bij het
+## laden automatisch transparantie via helderheid=alpha). Map leeg = null
+## en de spawner valt terug op grijze bol-wolkjes.
+const SMOKE_TEX_DIR := "res://assets/textures/smoke/"
+static var _smoke_textures: Array = []
+static var _smoke_tex_loaded: bool = false
+
+
+static func _smoke_texture() -> Texture2D:
+	if not _smoke_tex_loaded:
+		_smoke_tex_loaded = true
+		var seen: Dictionary = {}
+		var d := DirAccess.open(SMOKE_TEX_DIR)
+		if d != null:
+			for f in d.get_files():
+				var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
+				if not fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"]:
+					continue
+				if seen.has(fname):
+					continue
+				seen[fname] = true
+				if ResourceLoader.exists(SMOKE_TEX_DIR + fname):
+					var tex = load(SMOKE_TEX_DIR + fname)
+					if tex is Texture2D:
+						_smoke_textures.append(_black_to_alpha(tex))
+	if _smoke_textures.is_empty():
+		return null
+	return _smoke_textures[randi() % _smoke_textures.size()]
+
+
+## Texture op zwarte achtergrond -> alpha (helderheid = dekking). Heeft het
+## plaatje al echte transparantie, dan blijft het ongemoeid. Eenmalig per
+## texture bij het laden.
+static func _black_to_alpha(tex: Texture2D) -> Texture2D:
+	var img := tex.get_image()
+	if img == null:
+		return tex
+	img.convert(Image.FORMAT_RGBA8)
+	var data := img.get_data()
+	var n := data.size()
+	var i := 0
+	while i < n:
+		if data[i + 3] < 250:
+			return tex  # heeft al alpha
+		i += 4
+	i = 0
+	while i < n:
+		data[i + 3] = maxi(data[i], maxi(data[i + 1], data[i + 2]))
+		i += 4
+	var out := Image.create_from_data(img.get_width(), img.get_height(), false, Image.FORMAT_RGBA8, data)
+	return ImageTexture.create_from_image(out)
+
+
+## Zwartkruit-rook aan de loop of op de inslag: billboard-flarden die vanuit
+## een klein wolkje ECHT uitzetten (rook-groei), opstijgen en vervagen.
+## pos is in de lokale ruimte van parent. Knoppen: rook-aantal/-maat/-groei/
+## -duur. Zonder textures: grijze bol-wolkjes (zelfde gedrag).
+static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float) -> void:
+	if parent == null:
+		return
+	var amount := int(clampf(float(count) * fx("smoke_amount", 1.0), 0.0, 24.0))
+	for i in amount:
+		var tex := _smoke_texture()
+		var puff := MeshInstance3D.new()
+		var mat := StandardMaterial3D.new()
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		if tex != null:
+			var q := QuadMesh.new()
+			var qs := size * 3.4 * fx("smoke_size", 1.0) * randf_range(0.8, 1.25)
+			q.size = Vector2(qs, qs)
+			puff.mesh = q
+			mat.albedo_texture = tex
+			mat.albedo_color = Color(1, 1, 1, randf_range(0.75, 0.95))
+			mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			mat.billboard_keep_scale = true
+			if randf() < 0.5:
+				mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)
+		else:
+			var mesh := SphereMesh.new()
+			mesh.radial_segments = 8
+			mesh.rings = 4
+			var radius := size * fx("smoke_size", 1.0) * randf_range(0.75, 1.2)
+			mesh.radius = radius
+			mesh.height = radius * 2.0
+			puff.mesh = mesh
+			mat.albedo_color = Color(0.64, 0.64, 0.68, 0.7)
+		puff.material_override = mat
+		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(puff)
+		puff.position = pos + Vector3(randf_range(-0.08, 0.08), randf_range(0.0, 0.08), randf_range(-0.08, 0.08))
+		puff.scale = Vector3.ONE * 0.55
+		var life := fx("smoke_life", 1.1) * randf_range(0.75, 1.15)
+		var drift := Vector3(randf_range(-0.22, 0.22), randf_range(0.3, 0.55), randf_range(-0.22, 0.22))
+		var tw := puff.create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(puff, "position", puff.position + drift, life).set_ease(Tween.EASE_OUT)
+		tw.tween_property(puff, "scale", Vector3.ONE * fx("smoke_grow", 3.0) * randf_range(0.85, 1.2), life) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(puff.queue_free)
+
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
 
