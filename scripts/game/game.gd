@@ -73,6 +73,7 @@ func _ready() -> void:
 	_world.add_child(_board)
 	_world.move_child(_board, 0)
 	_pawns_root.reparent(_board, false)
+	_setup_battlefield_lighting()
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
@@ -1121,6 +1122,33 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	var impact_size: float = 0.14 if is_cannon else 0.08
 	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size, shot_dir))
 	return dur
+
+
+## Grimmige slagveld-belichting: semi-donker en modderig-warm, maar alles
+## blijft leesbaar. Laag warm zonlicht, vuilbruin strooilicht, filmische
+## tonemap, ietsje ontkleurd en een vleugje grondmist. Tunebaar via de
+## Wereld-tab in de Model-tuner (wereld-licht / wereld-ambient).
+func _setup_battlefield_lighting() -> void:
+	var sun: DirectionalLight3D = _board.get_node_or_null("DirectionalLight3D")
+	if sun != null:
+		sun.light_energy = 0.72 * PawnView.fx("world_light", 1.0)
+		sun.light_color = Color(1.0, 0.92, 0.8)
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.10, 0.095, 0.09)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.58, 0.55, 0.5)
+	env.ambient_light_energy = 0.38 * PawnView.fx("world_ambient", 1.0)
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 0.88
+	env.adjustment_contrast = 1.12
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.33, 0.31, 0.28)
+	env.fog_density = 0.002
+	var we := WorldEnvironment.new()
+	we.environment = env
+	_world.add_child(we)
 
 
 ## Korte felle flits + lichtpuls aan de loop. Met een texture in

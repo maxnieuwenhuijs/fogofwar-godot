@@ -51,6 +51,8 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "fire_life", "label": "vuur-duur", "min": 0.03, "max": 2.0, "step": 0.01, "def": 0.14},
 	{"cat": "rook", "key": "fire_light", "label": "vuur-licht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
 	{"cat": "rook", "key": "fire_shake", "label": "vuur-schok", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "wereld", "key": "world_light", "label": "wereld-licht", "min": 0.1, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"cat": "wereld", "key": "world_ambient", "label": "wereld-ambient", "min": 0.1, "max": 3.0, "step": 0.01, "def": 1.0},
 ]
 
 var _pawn: PawnView = null
@@ -386,7 +388,7 @@ func _build_ui() -> void:
 	rowm.add_child(muzzle_test)
 
 	# Tabs GORE / BLOED / ROOK: effect-knoppen per categorie in een net raster.
-	var cats: Array = [["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"]]
+	var cats: Array = [["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"], ["Wereld", "wereld"]]
 	for cat in cats:
 		var tab := VBoxContainer.new()
 		tab.name = String(cat[0])
@@ -835,12 +837,26 @@ func _on_dark_toggled(on: bool) -> void:
 	_tuner_env.environment.ambient_light_energy = 0.12 if on else 0.7
 
 
+## Korte camera-schok in de tuner (zelfde gevoel als de shake in het spel).
+func _shake_camera(strength: float) -> void:
+	if _cam == null or strength <= 0.0:
+		return
+	var base := _cam.transform
+	var tw := create_tween()
+	for i in 5:
+		var off := Vector3(randf() - 0.5, randf() - 0.5, 0.0) * 0.055 * strength
+		tw.tween_property(_cam, "transform",
+			Transform3D(base.basis, base.origin + base.basis * off), 0.03)
+	tw.tween_property(_cam, "transform", base, 0.05)
+
+
 func _fire_smoke() -> void:
 	var is_art := _type_btn.get_selected_id() == 2
 	var muzzle := Vector3(0.0, 0.5, 0.75) if is_art else Vector3(0.08, 0.6, 0.55)
 	if _pawn != null and is_instance_valid(_pawn):
 		muzzle = _pawn.muzzle_world()  # per model ingemeten (Vuurmond-rij)
 	PawnView.spawn_muzzle_fire(self, muzzle, is_art)
+	_shake_camera((0.55 if is_art else 0.3) * PawnView.fx("fire_shake", 1.0))
 	# Zelfde lichtpuls als in het spel (vuur-licht knop).
 	var fl := OmniLight3D.new()
 	fl.light_color = Color(1.0, 0.78, 0.35)
@@ -883,6 +899,7 @@ func _on_impact_test() -> void:
 
 
 func _impact_hit(dir: Vector3) -> void:
+	_shake_camera(1.2 * PawnView.fx("fire_shake", 1.0))
 	PawnView.spawn_powder_smoke(self, Vector3(0.0, 0.4, 0.0), 3, 0.14, dir)
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
