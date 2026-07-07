@@ -34,6 +34,7 @@
 	"gib_pool_delay": 0.07,
 	"gib_pool_grow": 0.18,
 	"gib_spin": 0.95,
+	"grid_alpha": 0.3,
 	"hat_fling_power": 0.8,
 	"hat_fling_time": 1.8,
 	"hat_pop_chance": 0.4,

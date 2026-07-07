@@ -1,6 +1,14 @@
 [gd_scene format=3 uid="uid://bcr40k0m25t0k"]
 
+[ext_resource type="Texture2D" uid="uid://do4vqvy0a8flm" path="res://assets/models/board/board_Image_0.png" id="2_3ng4l"]
 [ext_resource type="PackedScene" uid="uid://brg5ek146s4m5" path="res://assets/models/board/board.glb" id="board_glb"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nd4as"]
+albedo_color = Color(0.96671575, 0.917739, 0.7477978, 0.5568628)
+albedo_texture = ExtResource("2_3ng4l")
+roughness = 0.85
+emission_enabled = true
+emission_energy_multiplier = 0.3
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4nv4r"]
 albedo_color = Color(0.010688732, 0.029790914, 0.6219675, 1)
@@ -21,6 +29,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -5)
 [node name="BoardModel" parent="." unique_id=808372739 instance=ExtResource("board_glb")]
 transform = Transform3D(14.25, 0, 0, 0, 15, 0, 0, 0, 13.466249, 5, -0.75379825, 4.83)
 
+[node name="tripo_node_48d3685c-80df-4f76-a2a1-3d13c086be5c" parent="BoardModel/Node_1" parent_id_path=PackedInt32Array(808372739, 295358617) index="0" unique_id=972496157]
+material_override = SubResource("StandardMaterial3D_nd4as")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1671274236]
 transform = Transform3D(0.9547695, 0.29711568, 0.011725552, -0.18961099, 0.5779836, 0.7937144, 0.22904778, -0.76003754, 0.6081776, 7.4264317, 30.079626, 21.421629)
 
@@ -32,6 +43,7 @@ size = 25.503
 near = 0.001
 
 [node name="Tiles" type="Node3D" parent="." unique_id=777209934]
+visible = false
 
 [node name="tile1" type="CSGBox3D" parent="Tiles" unique_id=1713970939]
 material_override = SubResource("StandardMaterial3D_4nv4r")
@@ -755,3 +767,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 7)
 material_override = SubResource("StandardMaterial3D_vs73w")
 use_collision = true
 size = Vector3(1, 0.1, 1)
+
+[editable path="BoardModel"]

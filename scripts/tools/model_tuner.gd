@@ -56,6 +56,7 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "fire_shake", "label": "vuur-schok", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "wereld", "key": "world_light", "label": "wereld-licht", "min": 0.1, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"cat": "wereld", "key": "world_ambient", "label": "wereld-ambient", "min": 0.1, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"cat": "wereld", "key": "grid_alpha", "label": "raster", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.3},
 ]
 
 var _pawn: PawnView = null

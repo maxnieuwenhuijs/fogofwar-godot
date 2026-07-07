@@ -1157,6 +1157,44 @@ func _setup_board_model() -> void:
 			(tile as CSGBox3D).position.y = 0.012  # haven-marker
 		else:
 			(tile as CSGBox3D).visible = false
+	_build_grid_lines()
+
+
+## Dun donkergrijs raster op de tegelgrenzen, net boven het bordoppervlak —
+## zo zie je de vakken op het modder-bord zonder het beeld te verstoren.
+## Zichtbaarheid tunebaar via de knop "raster" (0 = uit).
+func _build_grid_lines() -> void:
+	var a: float = PawnView.fx("grid_alpha", 0.3)
+	if a <= 0.0:
+		return
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0.12, 0.12, 0.13, a)
+	var root := Node3D.new()
+	root.name = "GridLines"
+	_board.add_child(root)
+	var w := 0.02  # lijndikte
+	for k in range(12):  # 11 tegels → 12 grenslijnen per as
+		var b: float = float(k) - 0.5
+		# Lijn langs X (op z-grens b).
+		var lx := MeshInstance3D.new()
+		var mx := BoxMesh.new()
+		mx.size = Vector3(11.0, 0.004, w)
+		lx.mesh = mx
+		lx.material_override = mat
+		lx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		lx.position = Vector3(5.0, 0.052, b)
+		root.add_child(lx)
+		# Lijn langs Z (op x-grens b).
+		var lz := MeshInstance3D.new()
+		var mz := BoxMesh.new()
+		mz.size = Vector3(w, 0.004, 11.0)
+		lz.mesh = mz
+		lz.material_override = mat
+		lz.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		lz.position = Vector3(b, 0.052, 5.0)
+		root.add_child(lz)
 
 
 ## Grimmige slagveld-belichting: semi-donker en modderig-warm, maar alles
