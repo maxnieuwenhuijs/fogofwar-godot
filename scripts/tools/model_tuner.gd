@@ -57,6 +57,8 @@ const FX_DEFS: Array = [
 	{"cat": "wereld", "key": "world_light", "label": "wereld-licht", "min": 0.1, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"cat": "wereld", "key": "world_ambient", "label": "wereld-ambient", "min": 0.1, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"cat": "wereld", "key": "grid_alpha", "label": "raster", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.3},
+	{"cat": "wereld", "key": "spot_light", "label": "spot-licht", "min": 0.0, "max": 5.0, "step": 0.01, "def": 1.0},
+	{"cat": "wereld", "key": "spot_range", "label": "spot-bereik", "min": 0.3, "max": 3.0, "step": 0.01, "def": 1.0},
 ]
 
 var _pawn: PawnView = null

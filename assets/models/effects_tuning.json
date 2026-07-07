@@ -54,6 +54,8 @@
 	"smoke_linger_chance": 1.0,
 	"smoke_rise": 2.0,
 	"smoke_size": 1.0,
+	"spot_light": 1.0,
+	"spot_range": 1.0,
 	"world_ambient": 3.0,
 	"world_light": 0.2
 }

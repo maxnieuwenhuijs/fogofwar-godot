@@ -1204,14 +1204,25 @@ func _build_grid_lines() -> void:
 func _setup_battlefield_lighting() -> void:
 	var sun: DirectionalLight3D = _board.get_node_or_null("DirectionalLight3D")
 	if sun != null:
-		sun.light_energy = 0.72 * PawnView.fx("world_light", 1.0)
+		sun.light_energy = 0.5 * PawnView.fx("world_light", 1.0)
 		sun.light_color = Color(1.0, 0.92, 0.8)
+	# Spotlight boven het bordcentrum: fel in het midden, dooft naar de randen
+	# uit (radiale falloff = diorama-onder-een-lamp). Tunebaar: spot-licht /
+	# spot-bereik.
+	var spot := OmniLight3D.new()
+	spot.position = Vector3(5.0, 7.5, 5.0)
+	spot.light_color = Color(1.0, 0.9, 0.74)
+	spot.light_energy = 3.4 * PawnView.fx("spot_light", 1.0)
+	spot.omni_range = 11.0 * PawnView.fx("spot_range", 1.0)
+	spot.omni_attenuation = 1.6  # sneller uitdoven naar de randen
+	spot.shadow_enabled = true
+	_board.add_child(spot)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.58, 0.55, 0.5)
-	env.ambient_light_energy = 0.46 * PawnView.fx("world_ambient", 1.0)
+	env.ambient_light_energy = 0.28 * PawnView.fx("world_ambient", 1.0)
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 0.88
