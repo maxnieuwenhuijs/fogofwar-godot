@@ -1104,11 +1104,15 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int) 
 	tween.tween_callback(proj.queue_free)
 
 	_muzzle_flash(muzzle, is_cannon)
-	_spawn_smoke(muzzle, 4 if is_cannon else 2, 0.16 if is_cannon else 0.09)
-	# Inslag-rook zodra het projectiel aankomt.
+	# Rook drift met de schot-richting mee, van de loop af.
+	var shot_dir := Vector3.ZERO
+	if muzzle.distance_to(target) > 0.01:
+		shot_dir = (target - muzzle).normalized()
+	_spawn_smoke(muzzle, 4 if is_cannon else 2, 0.16 if is_cannon else 0.09, shot_dir)
+	# Inslag-rook zodra het projectiel aankomt (zelfde richting = momentum).
 	var impact_count: int = 3 if is_cannon else 2
 	var impact_size: float = 0.14 if is_cannon else 0.08
-	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size))
+	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size, shot_dir))
 	return dur
 
 
@@ -1145,8 +1149,8 @@ func _muzzle_flash(pos: Vector3, big: bool) -> void:
 ## Zwartkruit-rook via de gedeelde spawner in PawnView: textures uit
 ## assets/textures/smoke/ (billboards die echt uitzetten), zonder textures
 ## grijze bol-wolkjes. Knoppen in de Model-tuner: rook-aantal/-maat/-groei/-duur.
-func _spawn_smoke(pos: Vector3, count: int, size: float) -> void:
-	PawnView.spawn_powder_smoke(_board, pos, count, size)
+func _spawn_smoke(pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO) -> void:
+	PawnView.spawn_powder_smoke(_board, pos, count, size, dir)
 
 
 ## Treffer-feedback (de "Hit"-fase). Op het inslagmoment (na `delay`): witte flits,

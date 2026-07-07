@@ -231,7 +231,7 @@ static func _black_to_alpha(tex: Texture2D) -> Texture2D:
 ## een klein wolkje ECHT uitzetten (rook-groei), opstijgen en vervagen.
 ## pos is in de lokale ruimte van parent. Knoppen: rook-aantal/-maat/-groei/
 ## -duur. Zonder textures: grijze bol-wolkjes (zelfde gedrag).
-static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float) -> void:
+static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO) -> void:
 	if parent == null:
 		return
 	var amount := int(clampf(float(count) * fx("smoke_amount", 1.0), 0.0, 24.0))
@@ -266,8 +266,11 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 		parent.add_child(puff)
 		puff.position = pos + Vector3(randf_range(-0.08, 0.08), randf_range(0.0, 0.08), randf_range(-0.08, 0.08))
 		puff.scale = Vector3.ONE * 0.55
-		var life := fx("smoke_life", 1.1) * randf_range(0.75, 1.15)
-		var drift := Vector3(randf_range(-0.22, 0.22), randf_range(0.3, 0.55), randf_range(-0.22, 0.22))
+		var life := fx("smoke_life", 1.8) * randf_range(0.75, 1.15)
+		var drift := Vector3(randf_range(-0.18, 0.18), randf_range(0.25, 0.45), randf_range(-0.18, 0.18))
+		if dir != Vector3.ZERO:
+			# Rook wappert met het schot mee, van de loop af (rook-drift).
+			drift += dir.normalized() * randf_range(0.3, 0.6) * fx("smoke_drift", 1.0)
 		var tw := puff.create_tween()
 		tw.set_parallel(true)
 		tw.tween_property(puff, "position", puff.position + drift, life).set_ease(Tween.EASE_OUT)

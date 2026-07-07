@@ -37,7 +37,8 @@ const FX_DEFS: Array = [
 	{"key": "smoke_amount", "label": "rook-aantal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "smoke_size", "label": "rook-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "smoke_grow", "label": "rook-groei", "min": 0.5, "max": 10.0, "step": 0.01, "def": 3.0},
-	{"key": "smoke_life", "label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.1},
+	{"key": "smoke_life", "label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
+	{"key": "smoke_drift", "label": "rook-drift", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "blood_extra_delay", "label": "plas-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.4},
 	{"key": "blood_grow", "label": "plas-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"key": "blood_size", "label": "plas-maat", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
@@ -693,7 +694,8 @@ func _on_fx_changed(_v: float) -> void:
 
 ## Rooktest aan de loop van het tuning-model (musket- of kanon-maat).
 func _on_smoke_test(count: int, size: float) -> void:
-	PawnView.spawn_powder_smoke(self, Vector3(0.05, 0.55, 0.3), count, size)
+	PawnView.spawn_powder_smoke(self, Vector3(0.05, 0.55, 0.3), count, size,
+		Vector3(0.3, 0.0, 1.0).normalized())
 
 
 func _on_gib_test(strength: float, kind: String = "shot") -> void:
