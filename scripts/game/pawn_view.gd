@@ -65,6 +65,7 @@ var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
+var _last_clip_len: float = 0.0  # duur (sec, al gedeeld door speed) van de laatst gestarte clip
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
 ## { "muis/infanterie_basis": {"scale": 1.15, "y": 0.02}, ... }
@@ -418,6 +419,7 @@ func _build_ring() -> void:
 	mat.emission_enabled = true
 	_ring.material_override = mat
 	_ring.visible = false
+	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ring)
 
 
@@ -440,10 +442,19 @@ func _build_team_ring() -> void:
 		mat.albedo_color = Color(0.2, 0.42, 0.9)
 		mat.emission = Color(0.25, 0.5, 1.0)
 	mat.emission_enabled = true
-	mat.emission_energy_multiplier = 0.55
+	mat.emission_energy_multiplier = 0.55 * fx("ring_glow", 1.0)
 	_team_ring.material_override = mat
 	_team_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_team_ring)
+
+
+## Live bijstellen van de ring-gloed vanuit het sfeer-paneel (toets L in-game).
+func set_ring_glow(mult: float) -> void:
+	if _team_ring == null:
+		return
+	var mat := _team_ring.material_override as StandardMaterial3D
+	if mat != null:
+		mat.emission_energy_multiplier = 0.55 * mult
 
 
 ## Klein "neusje" aan de voorkant (-Z) zodat de kijkrichting zichtbaar is
@@ -458,6 +469,7 @@ func _build_front_marker() -> void:
 	mat.emission = Color(1.0, 0.95, 0.6)
 	mat.emission_energy_multiplier = 0.35
 	_marker.material_override = mat
+	_marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_marker)
 
 
@@ -534,8 +546,15 @@ func _play_variant(base: String, desync: bool = false, speed: float = 1.0) -> vo
 	if _anim.current_animation == full:
 		return
 	_anim.play(full, 0.2, speed)  # korte crossfade tussen houdingen
+	_last_clip_len = _anim.get_animation(full).length / maxf(speed, 0.01)
 	if desync:
 		_anim.seek(randf() * _anim.get_animation(full).length, false)
+
+
+## Duur van de laatst gestarte clip (voor timing: bv. oprukken pas na de
+## bajonetstoot). Al gecorrigeerd voor de afspeelsnelheid.
+func last_clip_duration() -> float:
+	return _last_clip_len
 
 
 ## Alle varianten van een basisnaam in het model: exact ("walk") of met

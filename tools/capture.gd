@@ -705,6 +705,8 @@ func _ready() -> void:
 			if fname in args:
 				game._human_doctrine = fnames[fname]
 				game._ai_doctrine = fnames[fname]
+		if "sfeer" in args:
+			game._toggle_ambiance_panel()
 		var hand: CardHand = game.get_node("UI/CardHand")
 		var steps := 0
 		# Muis heeft 4 kaarten per ronde (24 koppelingen) → ruimere stap-limiet.

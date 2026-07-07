@@ -56,6 +56,14 @@ var _tick_accum: float = 0.0         # tempo-teller voor de snelle eind-tikken
 # Combat feel (Valheim-stijl "juice"): stagger + screen shake + hitstop + ragdoll.
 var _combat_feel: bool = true         # alles behalve shake
 var _screen_shake: bool = true        # apart uitzetbaar (motion sickness)
+# --- Sfeer/ambiance (toets L: paneel met live licht-sliders) ---
+var _sun_light: DirectionalLight3D = null
+var _spot_light: OmniLight3D = null
+var _rim_light: DirectionalLight3D = null
+var _env: Environment = null
+var _grid_mat: StandardMaterial3D = null
+var _ambiance_panel: PanelContainer = null
+var _dust_motes: Array = []
 var _shake_amt: float = 0.0
 var _cam_base: Vector3 = Vector3.ZERO
 var _in_hitstop: bool = false
@@ -1003,8 +1011,13 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# clip; alles hieronder (schade, geluid, opruk, terugslag) volgt.
 			var hit_del: float = PawnView.fx("melee_hit_delay", 0.55)
 			if result.get("forced_move", false):
-				# Oprukken pas NA de stoot - niet er dwars doorheen lopen.
-				get_tree().create_timer(hit_del + 0.12).timeout.connect(
+				# Oprukken pas NA de stoot: wacht tot de melee-clip (bijna) klaar
+				# is, zodat de aanvaller de stoot op zijn eigen vak afmaakt en
+				# daarna pas het vrijgekomen vak in stapt.
+				var move_del: float = hit_del + 0.12
+				if attacker != null:
+					move_del = maxf(move_del, attacker.last_clip_duration() - 0.15)
+				get_tree().create_timer(move_del).timeout.connect(
 					_animate_move.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",
 				maxf(hit_del - 0.12, 0.0))
@@ -1141,14 +1154,20 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 ## de checker-CSG-tegels (het model is de vloer) en gaan de haven-tegels een
 ## fractie omhoog tegen z-fighting. Geen model = het klassieke tegel-bord.
 func _setup_board_model() -> void:
-	if _board.get_node_or_null("BoardModel") == null:
+	var bm := _board.get_node_or_null("BoardModel")
+	if bm == null:
 		return
+	# Het bord werpt zelf geen schaduw: alleen de pionnen mogen schaduwen
+	# gooien (de dioramarand gaf anders lange vegen over het speelveld).
+	for mi in bm.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var tiles_node := _board.get_node_or_null("Tiles")
 	if tiles_node == null:
 		return
 	for tile in tiles_node.get_children():
 		if not (tile is CSGBox3D):
 			continue
+		(tile as CSGBox3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var mat: StandardMaterial3D = (tile as CSGBox3D).material_override as StandardMaterial3D
 		if mat == null:
 			continue
@@ -1164,13 +1183,11 @@ func _setup_board_model() -> void:
 ## zo zie je de vakken op het modder-bord zonder het beeld te verstoren.
 ## Zichtbaarheid tunebaar via de knop "raster" (0 = uit).
 func _build_grid_lines() -> void:
-	var a: float = PawnView.fx("grid_alpha", 0.3)
-	if a <= 0.0:
-		return
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(0.12, 0.12, 0.13, a)
+	mat.albedo_color = Color(0.12, 0.12, 0.13, PawnView.fx("grid_alpha", 0.3))
+	_grid_mat = mat  # live bij te stellen via het sfeer-paneel (alpha 0 = uit)
 	var root := Node3D.new()
 	root.name = "GridLines"
 	_board.add_child(root)
@@ -1202,49 +1219,262 @@ func _build_grid_lines() -> void:
 ## tonemap, ietsje ontkleurd en een vleugje grondmist. Tunebaar via de
 ## Wereld-tab in de Model-tuner (wereld-licht / wereld-ambient).
 func _setup_battlefield_lighting() -> void:
-	var sun: DirectionalLight3D = _board.get_node_or_null("DirectionalLight3D")
-	if sun != null:
-		sun.light_energy = 0.65 * PawnView.fx("world_light", 1.0)
-		sun.light_color = Color(1.0, 0.92, 0.8)
-		sun.shadow_enabled = true  # rakende slagveld-schaduwen van de pionnen
-		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-		sun.shadow_bias = 0.04
-		sun.shadow_normal_bias = 1.2
+	_sun_light = _board.get_node_or_null("DirectionalLight3D")
+	if _sun_light != null:
+		_sun_light.light_color = Color(1.0, 0.92, 0.8)
+		# Geen zon-schaduwen: de lage zonnestand rekt schaduwen metersver uit.
+		# De schaduw komt van de spot boven het bord (kort, direct onder de pion).
+		_sun_light.shadow_enabled = false
 	# Spotlight boven het bordcentrum: fel in het midden, dooft naar de randen
-	# uit (radiale falloff = diorama-onder-een-lamp). Tunebaar: spot-licht /
-	# spot-bereik.
-	var spot := OmniLight3D.new()
-	spot.position = Vector3(5.0, 7.5, 5.0)
-	spot.light_color = Color(1.0, 0.9, 0.74)
-	spot.light_energy = 3.4 * PawnView.fx("spot_light", 1.0)
-	spot.omni_range = 14.0 * PawnView.fx("spot_range", 1.0)
-	spot.omni_attenuation = 0.9  # zachte falloff: ook de randen (legers) vangen licht
-	spot.shadow_enabled = true
-	_board.add_child(spot)
+	# uit (radiale falloff = diorama-onder-een-lamp).
+	_spot_light = OmniLight3D.new()
+	_spot_light.light_color = Color(1.0, 0.9, 0.74)
+	_spot_light.shadow_enabled = true
+	_board.add_child(_spot_light)
 	# Gritty rim/fill: koel tegenlicht vanuit lage schuine hoek dat de
 	# silhouetten van de pionnen aanzet (warm spot + koele rand = filmisch).
-	var rim := DirectionalLight3D.new()
-	rim.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
-	rim.light_color = Color(0.66, 0.71, 0.82)
-	rim.light_energy = 0.85 * PawnView.fx("rim_light", 1.0)
-	rim.light_specular = 1.4
-	_board.add_child(rim)
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.58, 0.55, 0.5)
-	env.ambient_light_energy = 0.32 * PawnView.fx("world_ambient", 1.0)
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.adjustment_enabled = true
-	env.adjustment_saturation = 0.88
-	env.adjustment_contrast = 1.12
-	env.fog_enabled = true
-	env.fog_light_color = Color(0.07, 0.065, 0.06)
-	env.fog_density = 0.002
+	_rim_light = DirectionalLight3D.new()
+	_rim_light.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
+	_rim_light.light_color = Color(0.7, 0.73, 0.8)
+	_rim_light.light_specular = 1.4
+	_board.add_child(_rim_light)
+	_env = Environment.new()
+	_env.background_mode = Environment.BG_COLOR
+	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	_env.ambient_light_color = Color(0.58, 0.55, 0.5)
+	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_env.adjustment_enabled = true
+	_env.fog_enabled = true
+	_env.fog_light_color = Color(0.07, 0.065, 0.06)
 	var we := WorldEnvironment.new()
-	we.environment = env
+	we.environment = _env
 	_world.add_child(we)
+	_apply_ambiance()
+	_refresh_dust()
+
+
+## Alle sfeer-knoppen (belichting, mist, raster, ring-gloed, stof) in een keer
+## toepassen op de live scene. Draait bij het opstarten en bij elke
+## slider-beweging in het sfeer-paneel (toets L).
+func _apply_ambiance() -> void:
+	if _sun_light != null:
+		_sun_light.light_energy = 0.65 * PawnView.fx("world_light", 1.0)
+	if _spot_light != null:
+		_spot_light.light_energy = 3.4 * PawnView.fx("spot_light", 1.0)
+		_spot_light.omni_range = 14.0 * PawnView.fx("spot_range", 1.0)
+		_spot_light.omni_attenuation = PawnView.fx("spot_atten", 0.9)
+		_spot_light.position = Vector3(5.0, PawnView.fx("spot_height", 7.5), 5.0)
+		var sh: float = PawnView.fx("shadow", 0.75)
+		_spot_light.shadow_enabled = sh > 0.0
+		_spot_light.shadow_opacity = clampf(sh, 0.0, 1.0)
+	if _rim_light != null:
+		_rim_light.light_energy = 0.45 * PawnView.fx("rim_light", 1.0)
+	if _env != null:
+		_env.ambient_light_energy = 0.32 * PawnView.fx("world_ambient", 1.0)
+		var bg: float = 0.015 * PawnView.fx("bg_bright", 1.0)
+		_env.background_color = Color(bg, bg, bg * 1.25)
+		_env.adjustment_saturation = PawnView.fx("saturation", 0.88)
+		_env.adjustment_contrast = PawnView.fx("contrast", 1.12)
+		_env.fog_density = PawnView.fx("fog_density", 0.002)
+	if _grid_mat != null:
+		_grid_mat.albedo_color.a = PawnView.fx("grid_alpha", 0.3)
+	for pv in _pawn_views.values():
+		if is_instance_valid(pv):
+			(pv as PawnView).set_ring_glow(PawnView.fx("ring_glow", 1.0))
+
+
+# --- Sfeer-paneel (toets L): live licht-sliders op het echte bord ------------
+
+const AMBIANCE_DEFS: Array = [
+	{"key": "world_light", "label": "zon", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "world_ambient", "label": "omgevingslicht", "min": 0.0, "max": 4.0, "step": 0.01, "def": 1.0},
+	{"key": "spot_light", "label": "spot-licht", "min": 0.0, "max": 4.0, "step": 0.01, "def": 1.0},
+	{"key": "spot_range", "label": "spot-bereik", "min": 0.3, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "spot_atten", "label": "spot-falloff", "min": 0.2, "max": 4.0, "step": 0.01, "def": 0.9},
+	{"key": "spot_height", "label": "spot-hoogte", "min": 2.0, "max": 20.0, "step": 0.1, "def": 7.5},
+	{"key": "rim_light", "label": "rand-licht", "min": 0.0, "max": 4.0, "step": 0.01, "def": 1.0},
+	{"key": "shadow", "label": "schaduw-sterkte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.75},
+	{"key": "fog_density", "label": "mist", "min": 0.0, "max": 0.02, "step": 0.0005, "def": 0.002},
+	{"key": "bg_bright", "label": "achtergrond", "min": 0.0, "max": 20.0, "step": 0.1, "def": 1.0},
+	{"key": "saturation", "label": "verzadiging", "min": 0.3, "max": 1.5, "step": 0.01, "def": 0.88},
+	{"key": "contrast", "label": "contrast", "min": 0.7, "max": 1.6, "step": 0.01, "def": 1.12},
+	{"key": "grid_alpha", "label": "raster", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.3},
+	{"key": "ring_glow", "label": "ring-gloed", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "footprint_fade", "label": "voetspoor-vervaag", "min": 0.5, "max": 15.0, "step": 0.1, "def": 5.0},
+]
+
+
+func _toggle_ambiance_panel() -> void:
+	if _ambiance_panel == null:
+		_build_ambiance_panel()
+		return
+	_ambiance_panel.visible = not _ambiance_panel.visible
+
+
+func _build_ambiance_panel() -> void:
+	_ambiance_panel = PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.06, 0.08, 0.93)
+	sb.set_corner_radius_all(10)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 12.0
+	sb.content_margin_bottom = 12.0
+	_ambiance_panel.add_theme_stylebox_override("panel", sb)
+	_ambiance_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_ambiance_panel.offset_left = -520.0
+	_ambiance_panel.offset_right = -12.0
+	_ambiance_panel.offset_top = 90.0
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	_ambiance_panel.add_child(vbox)
+	var title := Label.new()
+	title.text = "Sfeer-instellingen (L om te sluiten)"
+	title.add_theme_font_size_override("font_size", 26)
+	vbox.add_child(title)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(480.0, 640.0)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+	var rows := VBoxContainer.new()
+	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rows.add_theme_constant_override("separation", 2)
+	scroll.add_child(rows)
+	for d in AMBIANCE_DEFS:
+		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var lbl := Label.new()
+		lbl.text = String(d["label"])
+		lbl.custom_minimum_size = Vector2(200.0, 0.0)
+		lbl.add_theme_font_size_override("font_size", 20)
+		row.add_child(lbl)
+		var slider := HSlider.new()
+		slider.min_value = d["min"]
+		slider.max_value = d["max"]
+		slider.step = d["step"]
+		slider.value = PawnView.fx(String(d["key"]), float(d["def"]))
+		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(slider)
+		var val := Label.new()
+		val.text = String.num(slider.value, 3)
+		val.custom_minimum_size = Vector2(76.0, 0.0)
+		val.add_theme_font_size_override("font_size", 20)
+		val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(val)
+		slider.value_changed.connect(_on_ambiance_slider.bind(String(d["key"]), val))
+		rows.add_child(row)
+	var save := Button.new()
+	save.text = "OPSLAAN"
+	save.pressed.connect(_save_ambiance)
+	vbox.add_child(save)
+	var hud_layer := get_node_or_null("UI")
+	if hud_layer != null:
+		hud_layer.add_child(_ambiance_panel)
+	else:
+		add_child(_ambiance_panel)
+
+
+func _on_ambiance_slider(value: float, key: String, val_label: Label) -> void:
+	PawnView.set_fx(key, value)
+	val_label.text = String.num(value, 3)
+	_apply_ambiance()
+	if key == "dust":
+		_refresh_dust()
+
+
+## Schrijft alle knoppen (sfeer + effecten) terug naar effects_tuning.json:
+## dezelfde file die de Model-tuner gebruikt.
+func _save_ambiance() -> void:
+	var f := FileAccess.open(PawnView.EFFECTS_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(PawnView.fx_all(), "\t") + "\n")
+		f.close()
+		_update_hud("Sfeer opgeslagen")
+
+
+# --- Stofdeeltjes: langzaam dwarrelende motes in het spotlicht ---------------
+
+func _refresh_dust() -> void:
+	var target := int(round(16.0 * PawnView.fx("dust", 1.0)))
+	while _dust_motes.size() > target:
+		var m: Node = _dust_motes.pop_back()
+		if is_instance_valid(m):
+			m.queue_free()
+	while _dust_motes.size() < target:
+		_dust_motes.append(_spawn_dust_mote())
+
+
+func _spawn_dust_mote() -> MeshInstance3D:
+	var m := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	var r := randf_range(0.01, 0.024)
+	mesh.radius = r
+	mesh.height = r * 2.0
+	mesh.radial_segments = 6
+	mesh.rings = 3
+	m.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1.0, 0.94, 0.8, randf_range(0.08, 0.22))
+	m.material_override = mat
+	m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	m.position = Vector3(randf_range(0.0, 10.0), randf_range(0.2, 2.4), randf_range(0.0, 10.0))
+	_board.add_child(m)
+	_drift_dust_mote(m)
+	return m
+
+
+func _drift_dust_mote(m: MeshInstance3D) -> void:
+	if not is_instance_valid(m) or m.is_queued_for_deletion():
+		return
+	var target := m.position + Vector3(randf_range(-0.7, 0.7), randf_range(-0.3, 0.3), randf_range(-0.7, 0.7))
+	target.x = clampf(target.x, -0.5, 10.5)
+	target.y = clampf(target.y, 0.15, 2.6)
+	target.z = clampf(target.z, -0.5, 10.5)
+	var tw := m.create_tween()
+	tw.tween_property(m, "position", target, randf_range(4.0, 9.0)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(_drift_dust_mote.bind(m))
+
+
+# --- Voetsporen: vervagende stapjes in de modder langs het looppad -----------
+
+func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
+	if PawnView.fx("footprints", 1.0) <= 0.0:
+		return
+	var flat_a := Vector3(a.x, 0.0, a.z)
+	var flat_b := Vector3(b.x, 0.0, b.z)
+	var dist := flat_a.distance_to(flat_b)
+	if dist < 0.05:
+		return
+	var dirn := (flat_b - flat_a).normalized()
+	var side := dirn.cross(Vector3.UP).normalized()
+	var count := int(dist / 0.28)
+	for i in range(count):
+		var t := float(i + 1) / float(count + 1)
+		var p := flat_a.lerp(flat_b, t) + side * (0.055 if i % 2 == 0 else -0.055)
+		var fp := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(0.05, 0.1)
+		fp.mesh = pm
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(0.05, 0.045, 0.04, 0.0)
+		fp.material_override = mat
+		fp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		fp.position = Vector3(p.x, 0.0545 + 0.0002 * float(i % 3), p.z)
+		fp.rotation.y = atan2(dirn.x, dirn.z)
+		_board.add_child(fp)
+		var tw := fp.create_tween()
+		tw.tween_interval(maxf(dur * t - 0.02, 0.0))
+		tw.tween_property(mat, "albedo_color:a", 0.32, 0.08)
+		tw.tween_interval(1.5)
+		tw.tween_property(mat, "albedo_color:a", 0.0, PawnView.fx("footprint_fade", 5.0))
+		tw.tween_callback(fp.queue_free)
 
 
 ## Korte felle flits + lichtpuls aan de loop. Met een texture in
@@ -1441,6 +1671,7 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> vo
 	_tweening_pawns[pawn_id] = true
 	var dist: int = absi(to_coord.x - from_coord.x) + absi(to_coord.y - from_coord.y)
 	var dur := clampf(0.13 * float(dist), 0.13, 0.45)
+	_spawn_footprints(start, end, dur)
 	# Beweeggeluid afhankelijk van het eenheidstype. Cavalerie: één galop-clip
 	# per beweging (bevat zelf al meerdere hoefslagen). Infanterie/artillerie:
 	# één klap per gelopen vakje (losse voetstappen / wielrollen).
@@ -1486,6 +1717,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_M:  # geluid dempen
 				Audio.set_enabled(not Audio.enabled)
 				_update_hud("Geluid: %s" % ("aan" if Audio.enabled else "uit"))
+			KEY_L:  # sfeer-paneel: belichting/ambiance live tunen
+				_toggle_ambiance_panel()
 		return
 	if event is InputEventMouseMotion:
 		if _placement_mode:
@@ -1798,6 +2031,7 @@ func _highlight_move_tiles(move_paths: Dictionary) -> void:
 		mat.emission = Color(0.2, 0.9, 0.35)
 		mat.emission_energy_multiplier = 0.4
 		box.material_override = mat
+		box.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		box.position = tile_position(coord.x, coord.y) + Vector3(0.0, 0.09, 0.0)
 		var label := Label3D.new()
 		label.text = str(cost)
@@ -1824,6 +2058,7 @@ func _highlight_tiles(coords: Array, color: Color, alpha: float = 0.55) -> void:
 		mat.emission = color
 		mat.emission_energy_multiplier = 0.4
 		box.material_override = mat
+		box.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		box.position = tile_position(coord.x, coord.y) + Vector3(0.0, 0.09, 0.0)
 		_board.add_child(box)
 		_highlights.append(box)
