@@ -270,7 +270,7 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 			q.size = Vector2(qs, qs)
 			puff.mesh = q
 			mat.albedo_texture = e.tex
-			mat.albedo_color = Color(1, 1, 1, randf_range(0.75, 0.95))
+			mat.albedo_color = Color(1, 1, 1, randf_range(0.75, 0.95) * clampf(fx("smoke_alpha", 1.0), 0.05, 1.0))
 			mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 			mat.billboard_keep_scale = true
 			sheet_cols = int(e.cols)
@@ -290,14 +290,18 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 			mesh.radius = radius
 			mesh.height = radius * 2.0
 			puff.mesh = mesh
-			mat.albedo_color = Color(0.64, 0.64, 0.68, 0.7)
+			mat.albedo_color = Color(0.64, 0.64, 0.68, 0.7 * clampf(fx("smoke_alpha", 1.0), 0.05, 1.0))
 		puff.material_override = mat
 		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(puff)
 		puff.position = pos + Vector3(randf_range(-0.08, 0.08), randf_range(0.0, 0.08), randf_range(-0.08, 0.08))
 		puff.scale = Vector3.ONE * 0.55
 		var life := fx("smoke_life", 1.8) * randf_range(0.75, 1.15)
-		var drift := Vector3(randf_range(-0.18, 0.18), randf_range(0.25, 0.45), randf_range(-0.18, 0.18))
+		# rook-blijfkans: dit deel van de wolken blijft ~2.5x langer hangen.
+		if randf() < fx("smoke_linger_chance", 0.25):
+			life *= 2.5
+		var drift := Vector3(randf_range(-0.18, 0.18),
+			randf_range(0.25, 0.45) * fx("smoke_rise", 1.0), randf_range(-0.18, 0.18))
 		if dir != Vector3.ZERO:
 			# Rook wappert met het schot mee, van de loop af (rook-drift).
 			drift += dir.normalized() * randf_range(0.3, 0.6) * fx("smoke_drift", 1.0)
@@ -314,8 +318,14 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 		tw.tween_property(puff, "position", puff.position + drift, life).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff, "scale", Vector3.ONE * grow_target * randf_range(0.85, 1.2), life) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
 		tw.chain().tween_callback(puff.queue_free)
+		# rook-vervaag: tot die fractie van de levensduur blijft de wolk op
+		# volle sterkte, daarna vervaagt hij (hoger = langer vol zichtbaar).
+		var fade_start := life * clampf(fx("smoke_fade", 0.35), 0.0, 0.95)
+		var fade_tw := puff.create_tween()
+		fade_tw.tween_interval(fade_start)
+		fade_tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life - fade_start) \
+			.set_ease(Tween.EASE_IN)
 
 @onready var _mesh: CSGBox3D = $CSGBox3D
 @onready var _label: Label3D = $Label3D
@@ -863,6 +873,26 @@ func _spawn_blood_burst(center: Vector3, amount: int, dir: Vector3 = Vector3.ZER
 			tw.tween_callback(_spawn_blood.bind(ground, 1, 0.03,
 				fx("drop_stain_delay", 0.05), fx("drop_stain_grow", 0.25)))
 		tw.tween_callback(drop.queue_free)
+
+
+## Wereldpositie van de vuurmond (waar flits + rook ontstaan). Per model
+## instelbaar via model_tuning "muzzle": [rechts, hoogte, voor] — in te
+## meten op de Model-tab van de tuner. Zonder tuning: generieke plek per type.
+func muzzle_world() -> Vector3:
+	var right := 0.08
+	var up := 0.85
+	var fwd := 0.45
+	if _unit_type == 2:
+		right = 0.0
+		up = 0.55
+		fwd = 0.7
+	var m = model_tuning().get(_tune_key, {}).get("muzzle", null)
+	if m is Array and (m as Array).size() == 3:
+		right = float(m[0])
+		up = float(m[1])
+		fwd = float(m[2])
+	return global_position + transform.basis.x * right \
+		+ transform.basis.y * up - transform.basis.z * fwd
 
 
 ## Random dismemberment bij dood, in proportie met de klap (zie play_death).

@@ -43,6 +43,10 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "smoke_grow", "label": "rook-groei", "min": 0.5, "max": 10.0, "step": 0.01, "def": 3.0},
 	{"cat": "rook", "key": "smoke_life", "label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
 	{"cat": "rook", "key": "smoke_drift", "label": "rook-drift", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "smoke_alpha", "label": "rook-alpha", "min": 0.05, "max": 1.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "smoke_fade", "label": "rook-vervaag", "min": 0.0, "max": 0.95, "step": 0.01, "def": 0.35},
+	{"cat": "rook", "key": "smoke_linger_chance", "label": "rook-blijfkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.25},
+	{"cat": "rook", "key": "smoke_rise", "label": "rook-stijg", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 ]
 
 var _pawn: PawnView = null
@@ -57,6 +61,7 @@ var _y_spin: SpinBox
 var _x_spin: SpinBox
 var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
+var _muzzle_spins: Dictionary = {}  # vuurmond "x"/"y"/"z" -> SpinBox
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
@@ -312,6 +317,20 @@ func _build_ui() -> void:
 	roww.add_child(_make_label(" rot°"))
 	for k in ["rx", "ry", "rz"]:
 		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
+	# Vuurmond: waar flits + rook ontstaan, in model-ruimte (rechts/hoogte/
+	# voor). Per model opgeslagen; "test vuur" toont het direct.
+	var rowm := HBoxContainer.new()
+	tab_model.add_child(rowm)
+	rowm.add_child(_make_label("Vuurmond: rechts"))
+	_muzzle_spins["x"] = _make_spin(rowm, -1.0, 1.0, 0.01, 0.08, _on_muzzle_changed)
+	rowm.add_child(_make_label(" hoogte"))
+	_muzzle_spins["y"] = _make_spin(rowm, 0.0, 2.0, 0.01, 0.85, _on_muzzle_changed)
+	rowm.add_child(_make_label(" voor"))
+	_muzzle_spins["z"] = _make_spin(rowm, -1.0, 1.5, 0.01, 0.45, _on_muzzle_changed)
+	var muzzle_test := Button.new()
+	muzzle_test.text = "test vuur"
+	muzzle_test.pressed.connect(_on_fire_test)
+	rowm.add_child(muzzle_test)
 
 	# Tabs GORE / BLOED / ROOK: effect-knoppen per categorie in een net raster.
 	var cats: Array = [["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"]]
@@ -466,6 +485,13 @@ func _sync_sliders_from_tuning() -> void:
 	_y_spin.value = float(t.get("y", 0.0))
 	_x_spin.value = float(t.get("x", 0.0))
 	_z_spin.value = float(t.get("z", 0.0))
+	var mz_def: Array = [0.0, 0.55, 0.7] if _type_btn.get_selected_id() == 2 else [0.08, 0.85, 0.45]
+	var mz: Array = t.get("muzzle", mz_def)
+	if mz.size() != 3:
+		mz = mz_def
+	_muzzle_spins["x"].value = float(mz[0])
+	_muzzle_spins["y"].value = float(mz[1])
+	_muzzle_spins["z"].value = float(mz[2])
 	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
 	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
 	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
@@ -683,12 +709,12 @@ func _on_tuning_changed(_v: float) -> void:
 	if key == "":
 		_refresh_info()
 		return
-	PawnView.set_model_tuning(key, {
-		"scale": snappedf(_scale_slider.value, 0.01),
-		"y": snappedf(_y_slider.value, 0.005),
-		"x": snappedf(_x_spin.value, 0.01),
-		"z": snappedf(_z_spin.value, 0.01),
-	})
+	var entry: Dictionary = PawnView.model_tuning().get(key, {})
+	entry["scale"] = snappedf(_scale_slider.value, 0.01)
+	entry["y"] = snappedf(_y_slider.value, 0.005)
+	entry["x"] = snappedf(_x_spin.value, 0.01)
+	entry["z"] = snappedf(_z_spin.value, 0.01)
+	PawnView.set_model_tuning(key, entry)
 	_retune_target()
 
 
@@ -752,6 +778,8 @@ func _on_fire_test() -> void:
 func _fire_smoke() -> void:
 	var is_art := _type_btn.get_selected_id() == 2
 	var muzzle := Vector3(0.0, 0.5, 0.75) if is_art else Vector3(0.08, 0.6, 0.55)
+	if _pawn != null and is_instance_valid(_pawn):
+		muzzle = _pawn.muzzle_world()  # per model ingemeten (Vuurmond-rij)
 	PawnView.spawn_powder_smoke(self, muzzle, 4 if is_art else 2,
 		0.16 if is_art else 0.09, Vector3(0.12, 0.0, 1.0).normalized())
 
@@ -792,6 +820,20 @@ func _impact_hit(dir: Vector3) -> void:
 	var t := create_tween()
 	t.tween_interval(4.0)
 	t.tween_callback(_respawn_model.bind(false))
+
+
+## Vuurmond gewijzigd: opslaan in de model-tuning (merge, behoudt de rest).
+func _on_muzzle_changed(_v: float) -> void:
+	if _updating:
+		return
+	var key := _tune_target_key()
+	if key == "":
+		return
+	var entry: Dictionary = PawnView.model_tuning().get(key, {})
+	entry["muzzle"] = [snappedf(_muzzle_spins["x"].value, 0.01),
+		snappedf(_muzzle_spins["y"].value, 0.01),
+		snappedf(_muzzle_spins["z"].value, 0.01)]
+	PawnView.set_model_tuning(key, entry)
 
 
 ## Rooktest aan de loop van het tuning-model (musket- of kanon-maat).

@@ -1014,7 +1014,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# Projectiel + muzzle flash + rook; de treffer-feedback wacht op de inslag.
 			var shooter_pawn: Pawn = GameSession.state.pawns.get(action.shooter_id)
 			var shooter_type: int = shooter_pawn.unit_type if shooter_pawn != null else Constants.UnitType.INFANTRY
-			var travel: float = _fire_projectile(result.attacker_from_pos, result.defender_pos, shooter_type)
+			var travel: float = _fire_projectile(result.attacker_from_pos, result.defender_pos, shooter_type, action.shooter_id)
 			# Geluid: afvuren nu, inslag bij aankomst van het projectiel.
 			if shooter_type == Constants.UnitType.ARTILLERY:
 				Audio.play("cannon_fuse")  # lont-sis, samen met de knal
@@ -1063,12 +1063,17 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 ## Vuur een projectiel af van vak naar vak. Kanon: snelle rechte kogel-streep,
 ## keihard rechtdoor; infanterie: klein fel tracer-bolletje, strak en snel.
 ## Retour: de reistijd, zodat de treffer-feedback op de inslag kan wachten.
-func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int) -> float:
+func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, shooter_id: int = -1) -> float:
 	var start: Vector3 = tile_position(from_coord.x, from_coord.y)
 	var end: Vector3 = tile_position(to_coord.x, to_coord.y)
 	var flat_dir: Vector3 = (end - start).normalized()
 	var is_cannon: bool = unit_type == Constants.UnitType.ARTILLERY
 	var muzzle: Vector3 = start + flat_dir * 0.35 + Vector3(0.0, 0.55 if is_cannon else 0.85, 0.0)
+	# Per model ingemeten vuurmond (Model-tuner) zodra de schutter een view
+	# heeft; de schutter is al naar het doel gedraaid (face_dir hierboven).
+	var spv: PawnView = _pawn_views.get(shooter_id)
+	if spv != null and spv._tune_key != "":
+		muzzle = _board.to_local(spv.muzzle_world())
 	var target: Vector3 = end + Vector3(0.0, 0.55, 0.0)
 	# Kanon vliegt razendsnel (keihard), infanterie iets rustiger.
 	var dist_len: float = (end - start).length()
