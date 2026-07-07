@@ -748,6 +748,11 @@ func _ready() -> void:
 				if target != null:
 					game._on_link_pawn_clicked(target.id)
 			await get_tree().create_timer(0.04).timeout
+		if "sporen" in args:
+			# Twee kruisende test-looppaden midden over het bord.
+			game._spawn_footprints(game.tile_position(1, 5), game.tile_position(9, 5), 0.1)
+			game._spawn_footprints(game.tile_position(5, 1), game.tile_position(5, 9), 0.1)
+			await get_tree().create_timer(0.5).timeout
 		await get_tree().create_timer(0.4).timeout
 		print("[PLAY] fase=%s cyclus=%d ronde=%d beurt=%d actief_p1=%d actief_p2=%d stappen=%d" % [
 			Phase.to_string_phase(GameSession.state.phase),

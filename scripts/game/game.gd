@@ -66,6 +66,7 @@ var _haven_mats: Array = []  # doorzichtige haven-plakkaten (rood/blauw)
 var _ambiance_panel: PanelContainer = null
 var _dust_motes: Array = []
 var _footprints: Array = []  # blijven staan tot de cyclus voorbij is
+var _footstep_texs: Array = []  # [linker, rechter] laars uit assets/textures/footstep/
 var _shake_amt: float = 0.0
 var _cam_base: Vector3 = Vector3.ZERO
 var _in_hitstop: bool = false
@@ -1560,6 +1561,16 @@ func _clear_footprints() -> void:
 	_footprints.clear()
 
 
+## Laars-textures (PNG met alpha) uit assets/textures/footstep/. Ontbreken
+## ze, dan valt het spoor terug op een kaal donker rechthoekje.
+func _footstep_texture(i: int) -> Texture2D:
+	if _footstep_texs.is_empty():
+		for n in ["left", "right"]:
+			var path: String = "res://assets/textures/footstep/" + String(n) + ".png"
+			_footstep_texs.append(load(path) if ResourceLoader.exists(path) else null)
+	return _footstep_texs[i % 2]
+
+
 func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
 	if PawnView.fx("footprints", 1.0) <= 0.0:
 		return
@@ -1576,16 +1587,23 @@ func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
 		var p := flat_a.lerp(flat_b, t) + side * (0.055 if i % 2 == 0 else -0.055)
 		var fp := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
-		pm.size = Vector2(0.05, 0.1)
+		var boot: Texture2D = _footstep_texture(i)
+		# 13x32-laars: breedte/hoogte-verhouding aanhouden.
+		pm.size = Vector2(0.055, 0.135) if boot != null else Vector2(0.05, 0.1)
 		fp.mesh = pm
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(0.05, 0.045, 0.04, 0.0)
+		if boot != null:
+			mat.albedo_texture = boot  # eigen donkere kleur + alpha zit in de PNG
+			mat.albedo_color = Color(1.0, 1.0, 1.0, 0.0)
+		else:
+			mat.albedo_color = Color(0.05, 0.045, 0.04, 0.0)
 		fp.material_override = mat
 		fp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		fp.position = Vector3(p.x, 0.0545 + 0.0002 * float(i % 3), p.z)
-		fp.rotation.y = atan2(dirn.x, dirn.z)
+		# Tenen in de looprichting (PlaneMesh: beeld-bovenkant ligt op -Z).
+		fp.rotation.y = atan2(-dirn.x, -dirn.z)
 		_board.add_child(fp)
 		_footprints.append(fp)
 		# Geen vervaging: de sporen blijven staan tot alle kaarten van de
