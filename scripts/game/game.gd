@@ -1136,55 +1136,27 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	return dur
 
 
-## 3D-bordmodel (assets/models/board/board.glb) als decor onder het logische
-## grid: automatisch gemeten en geschaald naar het 11x11-veld. De checker-
-## CSG-tegels worden verborgen (het model is de vloer); haven-tegels blijven
-## als gekleurde markers net boven het oppervlak. Bijstellen kan via
-## model_tuning.json sleutel "board": {scale, x, y, z}.
+## Het 3D-bordmodel staat als node "BoardModel" in Board.tscn - plaats en
+## schaal het gewoon in de Godot-editor. Staat het er, dan verbergen we hier
+## de checker-CSG-tegels (het model is de vloer) en gaan de haven-tegels een
+## fractie omhoog tegen z-fighting. Geen model = het klassieke tegel-bord.
 func _setup_board_model() -> void:
-	var board_path := "res://assets/models/board/board.glb"
-	if not ResourceLoader.exists(board_path):
+	if _board.get_node_or_null("BoardModel") == null:
 		return
-	var model: Node3D = (load(board_path) as PackedScene).instantiate()
-	_board.add_child(model)
-	# Meet de mesh-AABB in model-ruimte.
-	var inv := model.global_transform.affine_inverse()
-	var aabb := AABB()
-	var first := true
-	for mi in model.find_children("*", "MeshInstance3D", true, false):
-		var ab: AABB = (inv * (mi as MeshInstance3D).global_transform) * (mi as MeshInstance3D).get_aabb()
-		if first:
-			aabb = ab
-			first = false
-		else:
-			aabb = aabb.merge(ab)
-	if first or aabb.size.x <= 0.0001:
-		return
-	var t: Dictionary = PawnView.model_tuning().get("board", {})
-	var sc: float = float(t.get("scale", 11.0 / maxf(aabb.size.x, aabb.size.z)))
-	model.scale = Vector3(sc, sc, sc)
-	# Veld-centrum ligt op (5, ., 5) in bord-ruimte; bovenkant net onder de
-	# pion-voeten (0.045) zodat highlights en bloed erbovenop renderen.
-	var center := aabb.get_center()
-	model.position = Vector3(
-		5.0 - center.x * sc + float(t.get("x", 0.0)),
-		0.045 - aabb.end.y * sc + float(t.get("y", 0.0)),
-		5.0 - center.z * sc + float(t.get("z", 0.0)))
-	# Checker-tegels uit (het model draagt de vloer); havens blijven zichtbaar
-	# en gaan een fractie omhoog tegen z-fighting met het bordoppervlak.
 	var tiles_node := _board.get_node_or_null("Tiles")
-	if tiles_node != null:
-		for tile in tiles_node.get_children():
-			if not (tile is CSGBox3D):
-				continue
-			var mat: StandardMaterial3D = (tile as CSGBox3D).material_override as StandardMaterial3D
-			if mat == null:
-				continue
-			var c := mat.albedo_color
-			if absf(c.r - c.g) + absf(c.g - c.b) > 0.3:
-				(tile as CSGBox3D).position.y = 0.012  # haven-marker
-			else:
-				(tile as CSGBox3D).visible = false
+	if tiles_node == null:
+		return
+	for tile in tiles_node.get_children():
+		if not (tile is CSGBox3D):
+			continue
+		var mat: StandardMaterial3D = (tile as CSGBox3D).material_override as StandardMaterial3D
+		if mat == null:
+			continue
+		var c := mat.albedo_color
+		if absf(c.r - c.g) + absf(c.g - c.b) > 0.3:
+			(tile as CSGBox3D).position.y = 0.012  # haven-marker
+		else:
+			(tile as CSGBox3D).visible = false
 
 
 ## Grimmige slagveld-belichting: semi-donker en modderig-warm, maar alles
@@ -1198,7 +1170,7 @@ func _setup_battlefield_lighting() -> void:
 		sun.light_color = Color(1.0, 0.92, 0.8)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.10, 0.095, 0.09)
+	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.58, 0.55, 0.5)
 	env.ambient_light_energy = 0.38 * PawnView.fx("world_ambient", 1.0)
@@ -1207,7 +1179,7 @@ func _setup_battlefield_lighting() -> void:
 	env.adjustment_saturation = 0.88
 	env.adjustment_contrast = 1.12
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.33, 0.31, 0.28)
+	env.fog_light_color = Color(0.07, 0.065, 0.06)
 	env.fog_density = 0.002
 	var we := WorldEnvironment.new()
 	we.environment = env
