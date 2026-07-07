@@ -1225,8 +1225,8 @@ func _setup_battlefield_lighting() -> void:
 	# silhouetten van de pionnen aanzet (warm spot + koele rand = filmisch).
 	var rim := DirectionalLight3D.new()
 	rim.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
-	rim.light_color = Color(0.62, 0.68, 0.85)
-	rim.light_energy = 1.5 * PawnView.fx("rim_light", 1.0)
+	rim.light_color = Color(0.66, 0.71, 0.82)
+	rim.light_energy = 0.85 * PawnView.fx("rim_light", 1.0)
 	rim.light_specular = 1.4
 	_board.add_child(rim)
 	var env := Environment.new()
@@ -1234,7 +1234,7 @@ func _setup_battlefield_lighting() -> void:
 	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.58, 0.55, 0.5)
-	env.ambient_light_energy = 0.36 * PawnView.fx("world_ambient", 1.0)
+	env.ambient_light_energy = 0.32 * PawnView.fx("world_ambient", 1.0)
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 0.88
