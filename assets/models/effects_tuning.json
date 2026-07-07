@@ -35,7 +35,7 @@
 	"fire_shake": 0.4,
 	"fire_size": 1.5,
 	"fog_density": 0.005,
-	"footprint_dark": 0.89,
+	"footprint_dark": 0.54,
 	"footprints": 1.0,
 	"gib_fling_power": 0.85,
 	"gib_pool_delay": 0.07,
@@ -58,7 +58,7 @@
 	"rim_light": 0.0,
 	"ring_glow": 0.12,
 	"saturation": 0.57,
-	"shadow": 1.0,
+	"shadow": 0.99,
 	"shadow_bias": 0.02,
 	"smoke_alpha": 1.0,
 	"smoke_amount": 1.01,
@@ -77,6 +77,8 @@
 	"spot_range": 0.81,
 	"spot_x": 6.1,
 	"spot_z": 5.0,
+	"wheel_base": 0.17,
+	"wheel_width": 0.024,
 	"world_ambient": 0.0,
 	"world_light": 1.14
 }

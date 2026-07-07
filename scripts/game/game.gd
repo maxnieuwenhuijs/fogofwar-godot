@@ -1422,6 +1422,8 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "footprint_dark", "label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},
+	{"key": "wheel_width", "label": "wielspoor-breedte", "min": 0.005, "max": 0.12, "step": 0.001, "def": 0.024},
+	{"key": "wheel_base", "label": "wielbasis", "min": 0.05, "max": 0.6, "step": 0.005, "def": 0.17},
 ]
 
 
@@ -1523,10 +1525,11 @@ func _spawn_wheel_tracks(flat_a: Vector3, flat_b: Vector3, dirn: Vector3, side: 
 	for i in range(count):
 		var t := float(i + 1) / float(count + 1)
 		for lane in [-1.0, 1.0]:
-			var p: Vector3 = flat_a.lerp(flat_b, t) + side * (0.085 * float(lane))
+			# wielbasis: hart-op-hart afstand tussen de twee banen.
+			var p: Vector3 = flat_a.lerp(flat_b, t) + side * (PawnView.fx("wheel_base", 0.17) * 0.5 * float(lane))
 			var fp := MeshInstance3D.new()
 			var pm := PlaneMesh.new()
-			pm.size = Vector2(0.024, 0.15)
+			pm.size = Vector2(PawnView.fx("wheel_width", 0.024), 0.15)
 			fp.mesh = pm
 			var mat := StandardMaterial3D.new()
 			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
