@@ -475,7 +475,9 @@ func play_attack() -> void:
 ## Melee-klap: eigen clip als het model die heeft, anders de (schiet)attack.
 func play_melee() -> void:
 	if _anim != null and not _variants_of(anim_melee).is_empty():
-		_play_variant(anim_melee)
+		# melee-tempo: bajonet/zwaard-clips zijn lang; sneller afspelen houdt
+		# het gevecht strak (raakmoment stem je af met melee-raakmoment).
+		_play_variant(anim_melee, false, fx("melee_speed", 1.4))
 	else:
 		_play_variant(anim_attack)
 
@@ -495,7 +497,7 @@ func play_hit() -> void:
 ## walk/walk2/walk3, "die" uit die/die2, enz. desync = start op een
 ## willekeurig punt in de clip, zodat 22 muizen nooit synchroon ademen
 ## of in de maat marcheren.
-func _play_variant(base: String, desync: bool = false) -> void:
+func _play_variant(base: String, desync: bool = false, speed: float = 1.0) -> void:
 	if _anim == null:
 		return
 	var variants := _variants_of(base)
@@ -504,7 +506,7 @@ func _play_variant(base: String, desync: bool = false) -> void:
 	var full: String = variants[randi() % variants.size()]
 	if _anim.current_animation == full:
 		return
-	_anim.play(full, 0.2)  # korte crossfade tussen houdingen
+	_anim.play(full, 0.2, speed)  # korte crossfade tussen houdingen
 	if desync:
 		_anim.seek(randf() * _anim.get_animation(full).length, false)
 
