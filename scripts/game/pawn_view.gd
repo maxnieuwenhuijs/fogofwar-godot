@@ -178,18 +178,18 @@ static func _blood_texture(prefix: String = "") -> Texture2D:
 ## laden automatisch transparantie via helderheid=alpha). Map leeg = null
 ## en de spawner valt terug op grijze bol-wolkjes.
 const SMOKE_TEX_DIR := "res://assets/textures/smoke/"
-static var _smoke_textures: Array = []
-static var _smoke_tex_loaded: bool = false
+const FIRE_TEX_DIR := "res://assets/textures/fire/"
+static var _vfx_cache: Dictionary = {}  # map-pad -> Array van {tex, cols, rows}
 
 
-## Willekeurige rook-entry: {tex, cols, rows}. Sprite sheets zet je in de
-## bestandsnaam: "musket_smoke_3x3.png" = 3x3 grid dat als animatie afspeelt
-## (ontstaan -> uitzetten -> oplossen). Zonder grid-suffix = los plaatje.
-static func _smoke_entry() -> Dictionary:
-	if not _smoke_tex_loaded:
-		_smoke_tex_loaded = true
+## Generieke VFX-loader: scant een map eenmalig, zet zwart-op-achtergrond om
+## naar alpha (boost = dekking-versterking) en herkent sprite sheets aan een
+## _<kolommen>x<rijen>-suffix in de naam. Entry = {tex, cols, rows}.
+static func _vfx_entry(dir_path: String, boost: float) -> Dictionary:
+	if not _vfx_cache.has(dir_path):
+		var list: Array = []
 		var seen: Dictionary = {}
-		var d := DirAccess.open(SMOKE_TEX_DIR)
+		var d := DirAccess.open(dir_path)
 		if d != null:
 			for f in d.get_files():
 				var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
@@ -198,8 +198,8 @@ static func _smoke_entry() -> Dictionary:
 				if seen.has(fname):
 					continue
 				seen[fname] = true
-				if ResourceLoader.exists(SMOKE_TEX_DIR + fname):
-					var tex = load(SMOKE_TEX_DIR + fname)
+				if ResourceLoader.exists(dir_path + fname):
+					var tex = load(dir_path + fname)
 					if tex is Texture2D:
 						var cols := 1
 						var rows := 1
@@ -210,10 +210,58 @@ static func _smoke_entry() -> Dictionary:
 							if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
 								cols = maxi(int(grid[0]), 1)
 								rows = maxi(int(grid[1]), 1)
-						_smoke_textures.append({"tex": _black_to_alpha(tex), "cols": cols, "rows": rows})
-	if _smoke_textures.is_empty():
+						list.append({"tex": _black_to_alpha(tex, boost), "cols": cols, "rows": rows})
+		_vfx_cache[dir_path] = list
+	var list2: Array = _vfx_cache[dir_path]
+	if list2.is_empty():
 		return {}
-	return _smoke_textures[randi() % _smoke_textures.size()]
+	return list2[randi() % list2.size()]
+
+
+static func _smoke_entry() -> Dictionary:
+	return _vfx_entry(SMOKE_TEX_DIR, 2.3)
+
+
+## Vuurflits aan de loop met een texture uit assets/textures/fire/ (billboard,
+## kort en fel; sheets spelen hun frames binnen de flits-duur af). false =
+## geen textures, de aanroeper tekent dan de klassieke bol-flits.
+static func spawn_muzzle_fire(parent: Node3D, pos: Vector3, big: bool) -> bool:
+	var e := _vfx_entry(FIRE_TEX_DIR, 1.5)
+	if e.is_empty() or parent == null:
+		return false
+	var quad := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	var qs := (0.55 if big else 0.32) * fx("fire_size", 1.0) * randf_range(0.9, 1.15)
+	q.size = Vector2(qs, qs)
+	quad.mesh = q
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_texture = e.tex
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.billboard_keep_scale = true
+	var cols := int(e.cols)
+	var rows := int(e.rows)
+	if cols > 1 or rows > 1:
+		mat.uv1_scale = Vector3(1.0 / cols, 1.0 / rows, 1.0)
+		_sheet_frame(0, mat, cols, rows)
+	elif randf() < 0.5:
+		mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(quad)
+	quad.position = pos
+	quad.scale = Vector3.ONE * 0.7
+	var life := fx("fire_life", 0.14) * randf_range(0.85, 1.2)
+	if cols * rows > 1:
+		var anim_tw := quad.create_tween()
+		anim_tw.tween_method(_sheet_frame.bind(mat, cols, rows), 0, cols * rows - 1, life)
+	var tw := quad.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(quad, "scale", Vector3.ONE * randf_range(1.25, 1.5), life).set_ease(Tween.EASE_OUT)
+	tw.tween_property(mat, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(quad.queue_free)
+	return true
 
 
 ## Zet één frame van een rook-sprite-sheet (uv-offset binnen het grid).

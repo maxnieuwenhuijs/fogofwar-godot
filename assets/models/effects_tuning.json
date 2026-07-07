@@ -26,6 +26,8 @@
 	"drop_stain_chance": 1.0,
 	"drop_stain_delay": 0.0,
 	"drop_stain_grow": 0.05,
+	"fire_life": 0.14,
+	"fire_size": 1.0,
 	"gib_fling_power": 0.85,
 	"gib_pool_delay": 0.07,
 	"gib_pool_grow": 0.18,

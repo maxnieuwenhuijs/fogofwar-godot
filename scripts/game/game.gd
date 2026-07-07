@@ -1121,34 +1121,39 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	return dur
 
 
-## Korte felle flits + lichtpuls aan de loop.
+## Korte felle flits + lichtpuls aan de loop. Met een texture in
+## assets/textures/fire/ een echte vlam-billboard; anders de bol-flits.
 func _muzzle_flash(pos: Vector3, big: bool) -> void:
-	var flash := MeshInstance3D.new()
-	var mesh := SphereMesh.new()
-	var radius: float = 0.16 if big else 0.09
-	mesh.radius = radius
-	mesh.height = radius * 2.0
-	flash.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.75, 0.25, 0.9)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.7, 0.2)
-	mat.emission_energy_multiplier = 2.5
-	flash.material_override = mat
-	flash.position = pos
-	flash.scale = Vector3.ONE * 0.5
+	var textured := PawnView.spawn_muzzle_fire(_board, pos, big)
+	var holder := Node3D.new()
+	holder.position = pos
+	_board.add_child(holder)
 	var light := OmniLight3D.new()
 	light.light_color = Color(1.0, 0.75, 0.35)
 	light.light_energy = 2.6 if big else 1.6
 	light.omni_range = 2.6
-	flash.add_child(light)
-	_board.add_child(flash)
+	holder.add_child(light)
 	var tween := create_tween().set_parallel()
-	tween.tween_property(flash, "scale", Vector3.ONE * (2.0 if big else 1.4), 0.12).set_ease(Tween.EASE_OUT)
-	tween.tween_property(mat, "albedo_color:a", 0.0, 0.14).set_ease(Tween.EASE_IN)
+	if not textured:
+		var flash := MeshInstance3D.new()
+		var mesh := SphereMesh.new()
+		var radius: float = 0.16 if big else 0.09
+		mesh.radius = radius
+		mesh.height = radius * 2.0
+		flash.mesh = mesh
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.75, 0.25, 0.9)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.7, 0.2)
+		mat.emission_energy_multiplier = 2.5
+		flash.material_override = mat
+		flash.scale = Vector3.ONE * 0.5
+		holder.add_child(flash)
+		tween.tween_property(flash, "scale", Vector3.ONE * (2.0 if big else 1.4), 0.12).set_ease(Tween.EASE_OUT)
+		tween.tween_property(mat, "albedo_color:a", 0.0, 0.14).set_ease(Tween.EASE_IN)
 	tween.tween_property(light, "light_energy", 0.0, 0.14)
-	tween.chain().tween_callback(flash.queue_free)
+	tween.chain().tween_callback(holder.queue_free)
 
 
 ## Zwartkruit-rook via de gedeelde spawner in PawnView: textures uit

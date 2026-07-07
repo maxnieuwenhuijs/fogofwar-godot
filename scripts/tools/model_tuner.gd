@@ -47,6 +47,8 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "smoke_fade", "label": "rook-vervaag", "min": 0.0, "max": 0.95, "step": 0.01, "def": 0.35},
 	{"cat": "rook", "key": "smoke_linger_chance", "label": "rook-blijfkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.25},
 	{"cat": "rook", "key": "smoke_rise", "label": "rook-stijg", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "fire_size", "label": "vuur-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "fire_life", "label": "vuur-duur", "min": 0.03, "max": 2.0, "step": 0.01, "def": 0.14},
 ]
 
 var _pawn: PawnView = null
@@ -780,6 +782,7 @@ func _fire_smoke() -> void:
 	var muzzle := Vector3(0.0, 0.5, 0.75) if is_art else Vector3(0.08, 0.6, 0.55)
 	if _pawn != null and is_instance_valid(_pawn):
 		muzzle = _pawn.muzzle_world()  # per model ingemeten (Vuurmond-rij)
+	PawnView.spawn_muzzle_fire(self, muzzle, is_art)
 	PawnView.spawn_powder_smoke(self, muzzle, 4 if is_art else 2,
 		0.16 if is_art else 0.09, Vector3(0.12, 0.0, 1.0).normalized())
 
