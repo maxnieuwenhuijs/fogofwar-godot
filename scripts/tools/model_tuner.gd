@@ -64,6 +64,7 @@ var _x_spin: SpinBox
 var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
 var _muzzle_spins: Dictionary = {}  # vuurmond "x"/"y"/"z" -> SpinBox
+var _muzzle_gizmo: Node3D = null    # oranje merkteken op de vuurmond
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
@@ -116,6 +117,8 @@ func _ready() -> void:
 			_on_smoke_test(4, 0.16)
 		if "melee" in shot_args:
 			_on_clip("melee")
+		if "vuur" in shot_args:
+			_on_fire_test()
 		_apply_camera()
 		await get_tree().create_timer(1.4).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
@@ -123,6 +126,18 @@ func _ready() -> void:
 
 
 # --- Wereld: tegels, licht, camera --------------------------------------------
+
+## Gizmo volgt elk frame de actuele vuurmond van het tuning-model.
+func _process(_dt: float) -> void:
+	if _muzzle_gizmo == null:
+		return
+	if _pawn != null and is_instance_valid(_pawn) and _pawn._tune_key != "":
+		_muzzle_gizmo.visible = true
+		_muzzle_gizmo.global_position = _pawn.muzzle_world()
+		_muzzle_gizmo.global_rotation = _pawn.global_rotation
+	else:
+		_muzzle_gizmo.visible = false
+
 
 func _build_world() -> void:
 	for x in range(-2, 3):
@@ -159,6 +174,31 @@ func _build_world() -> void:
 	im.surface_end()
 	dbg.mesh = im
 	add_child(dbg)
+	# Vuurmond-gizmo: oranje bolletje + richtingspijltje op de plek waar
+	# vuur + rook ontstaan; volgt live de Vuurmond-spinboxen (Model-tab).
+	_muzzle_gizmo = Node3D.new()
+	var gz_ball := MeshInstance3D.new()
+	var gz_mesh := SphereMesh.new()
+	gz_mesh.radius = 0.035
+	gz_mesh.height = 0.07
+	gz_mesh.radial_segments = 10
+	gz_mesh.rings = 5
+	gz_ball.mesh = gz_mesh
+	var gz_mat := StandardMaterial3D.new()
+	gz_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	gz_mat.albedo_color = Color(1.0, 0.55, 0.1)
+	gz_ball.material_override = gz_mat
+	gz_ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_muzzle_gizmo.add_child(gz_ball)
+	var gz_arrow := MeshInstance3D.new()
+	var gz_box := BoxMesh.new()
+	gz_box.size = Vector3(0.012, 0.012, 0.16)
+	gz_arrow.mesh = gz_box
+	gz_arrow.position = Vector3(0.0, 0.0, -0.11)
+	gz_arrow.material_override = gz_mat
+	gz_arrow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_muzzle_gizmo.add_child(gz_arrow)
+	add_child(_muzzle_gizmo)
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-55.0, -30.0, 0.0)
 	light.light_energy = 1.2
