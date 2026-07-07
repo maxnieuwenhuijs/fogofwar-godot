@@ -1269,6 +1269,7 @@ func _setup_battlefield_lighting() -> void:
 	_spot_light.light_color = Color(1.0, 0.9, 0.74)
 	_spot_light.rotation_degrees = Vector3(-90.0, 0.0, 0.0)  # kegel recht omlaag
 	_spot_light.shadow_enabled = true
+	_spot_light.shadow_blur = 1.2  # zachte miniatuur-schaduwrand
 	_board.add_child(_spot_light)
 	# Gritty rim/fill: koel tegenlicht vanuit lage schuine hoek dat de
 	# silhouetten van de pionnen aanzet (warm spot + koele rand = filmisch).
@@ -1309,6 +1310,8 @@ func _apply_ambiance() -> void:
 		var sh: float = PawnView.fx("shadow", 0.75)
 		_spot_light.shadow_enabled = sh > 0.0
 		_spot_light.shadow_opacity = clampf(sh, 0.0, 1.0)
+		_spot_light.shadow_bias = PawnView.fx("shadow_bias", 0.03)
+		_spot_light.shadow_normal_bias = 1.0
 	if _rim_light != null:
 		_rim_light.light_energy = 0.45 * PawnView.fx("rim_light", 1.0)
 	if _env != null:
@@ -1340,6 +1343,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "spot_angle_soft", "label": "spot-hoek-zachtheid", "min": 0.2, "max": 4.0, "step": 0.01, "def": 1.2},
 	{"key": "rim_light", "label": "rand-licht", "min": 0.0, "max": 4.0, "step": 0.01, "def": 1.0},
 	{"key": "shadow", "label": "schaduw-sterkte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.75},
+	{"key": "shadow_bias", "label": "schaduw-offset", "min": 0.0, "max": 0.3, "step": 0.005, "def": 0.03},
 	{"key": "fog_density", "label": "mist", "min": 0.0, "max": 0.02, "step": 0.0005, "def": 0.002},
 	{"key": "bg_bright", "label": "achtergrond", "min": 0.0, "max": 20.0, "step": 0.1, "def": 1.0},
 	{"key": "saturation", "label": "verzadiging", "min": 0.3, "max": 1.5, "step": 0.01, "def": 0.88},
