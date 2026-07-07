@@ -225,7 +225,9 @@ static func _sheet_frame(frame: int, mat: StandardMaterial3D, cols: int, rows: i
 ## Texture op zwarte achtergrond -> alpha (helderheid = dekking). Heeft het
 ## plaatje al echte transparantie, dan blijft het ongemoeid. Eenmalig per
 ## texture bij het laden.
-static func _black_to_alpha(tex: Texture2D) -> Texture2D:
+## boost > 1 maakt donkere rook dekkender (anders is donkergrijze rook per
+## definitie doorzichtig en verbleekt hij boven witte tegels).
+static func _black_to_alpha(tex: Texture2D, boost: float = 2.3) -> Texture2D:
 	var img := tex.get_image()
 	if img == null:
 		return tex
@@ -239,7 +241,8 @@ static func _black_to_alpha(tex: Texture2D) -> Texture2D:
 		i += 4
 	i = 0
 	while i < n:
-		data[i + 3] = maxi(data[i], maxi(data[i + 1], data[i + 2]))
+		var lum := maxi(data[i], maxi(data[i + 1], data[i + 2]))
+		data[i + 3] = mini(int(float(lum) * boost), 255)
 		i += 4
 	var out := Image.create_from_data(img.get_width(), img.get_height(), false, Image.FORMAT_RGBA8, data)
 	return ImageTexture.create_from_image(out)
