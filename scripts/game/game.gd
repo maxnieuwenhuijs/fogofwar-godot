@@ -58,7 +58,7 @@ var _combat_feel: bool = true         # alles behalve shake
 var _screen_shake: bool = true        # apart uitzetbaar (motion sickness)
 # --- Sfeer/ambiance (toets L: paneel met live licht-sliders) ---
 var _sun_light: DirectionalLight3D = null
-var _spot_light: OmniLight3D = null
+var _spot_light: SpotLight3D = null
 var _rim_light: DirectionalLight3D = null
 var _env: Environment = null
 var _grid_mat: StandardMaterial3D = null
@@ -1242,8 +1242,9 @@ func _setup_battlefield_lighting() -> void:
 		_sun_light.shadow_enabled = false
 	# Spotlight boven het bordcentrum: fel in het midden, dooft naar de randen
 	# uit (radiale falloff = diorama-onder-een-lamp).
-	_spot_light = OmniLight3D.new()
+	_spot_light = SpotLight3D.new()
 	_spot_light.light_color = Color(1.0, 0.9, 0.74)
+	_spot_light.rotation_degrees = Vector3(-90.0, 0.0, 0.0)  # kegel recht omlaag
 	_spot_light.shadow_enabled = true
 	_board.add_child(_spot_light)
 	# Gritty rim/fill: koel tegenlicht vanuit lage schuine hoek dat de
@@ -1276,9 +1277,12 @@ func _apply_ambiance() -> void:
 		_sun_light.light_energy = 0.65 * PawnView.fx("world_light", 1.0)
 	if _spot_light != null:
 		_spot_light.light_energy = 3.4 * PawnView.fx("spot_light", 1.0)
-		_spot_light.omni_range = 14.0 * PawnView.fx("spot_range", 1.0)
-		_spot_light.omni_attenuation = PawnView.fx("spot_atten", 0.9)
-		_spot_light.position = Vector3(5.0, PawnView.fx("spot_height", 7.5), 5.0)
+		_spot_light.spot_range = 14.0 * PawnView.fx("spot_range", 1.0)
+		_spot_light.spot_attenuation = PawnView.fx("spot_atten", 0.9)
+		_spot_light.spot_angle = PawnView.fx("spot_angle", 60.0)
+		_spot_light.spot_angle_attenuation = PawnView.fx("spot_angle_soft", 1.2)
+		_spot_light.position = Vector3(PawnView.fx("spot_x", 5.0),
+				PawnView.fx("spot_height", 7.5), PawnView.fx("spot_z", 5.0))
 		var sh: float = PawnView.fx("shadow", 0.75)
 		_spot_light.shadow_enabled = sh > 0.0
 		_spot_light.shadow_opacity = clampf(sh, 0.0, 1.0)
@@ -1307,6 +1311,10 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "spot_range", "label": "spot-bereik", "min": 0.3, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "spot_atten", "label": "spot-falloff", "min": 0.2, "max": 4.0, "step": 0.01, "def": 0.9},
 	{"key": "spot_height", "label": "spot-hoogte", "min": 2.0, "max": 20.0, "step": 0.1, "def": 7.5},
+	{"key": "spot_x", "label": "spot-plaats X", "min": -2.0, "max": 12.0, "step": 0.1, "def": 5.0},
+	{"key": "spot_z", "label": "spot-plaats Z", "min": -2.0, "max": 12.0, "step": 0.1, "def": 5.0},
+	{"key": "spot_angle", "label": "spot-hoek", "min": 10.0, "max": 90.0, "step": 0.5, "def": 60.0},
+	{"key": "spot_angle_soft", "label": "spot-hoek-zachtheid", "min": 0.2, "max": 4.0, "step": 0.01, "def": 1.2},
 	{"key": "rim_light", "label": "rand-licht", "min": 0.0, "max": 4.0, "step": 0.01, "def": 1.0},
 	{"key": "shadow", "label": "schaduw-sterkte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.75},
 	{"key": "fog_density", "label": "mist", "min": 0.0, "max": 0.02, "step": 0.0005, "def": 0.002},
