@@ -15,34 +15,34 @@ const ARCH_CARDS: Dictionary = {
 }
 ## Effect-knopjes (effects_tuning.json): label, bereik en standaardwaarde.
 const FX_DEFS: Array = [
-	{"key": "hat_fling_power", "label": "hoed-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.5},
-	{"key": "hat_fling_time", "label": "hoed-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
-	{"key": "hat_pop_chance", "label": "hoed-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
-	{"key": "limb_shed_chance", "label": "ledemaat-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.4},
-	{"key": "limb_fling_power", "label": "ledemaat-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.9},
-	{"key": "limb_fling_time", "label": "ledemaat-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "gib_fling_power", "label": "gib-worpkracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "gib_spin", "label": "gib-tolling", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "blood_burst", "label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "mist_travel", "label": "mist-dracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
-	{"key": "drop_fall_time", "label": "druppel-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "drop_size", "label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "drop_stain_chance", "label": "druppel-vlekkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
-	{"key": "drop_stain_delay", "label": "vlek-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.05},
-	{"key": "drop_stain_grow", "label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},
-	{"key": "gib_pool_delay", "label": "gib-poel-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.1},
-	{"key": "gib_pool_grow", "label": "gib-poel-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.45},
-	{"key": "smoke_amount", "label": "rook-aantal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "smoke_size", "label": "rook-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "smoke_grow", "label": "rook-groei", "min": 0.5, "max": 10.0, "step": 0.01, "def": 3.0},
-	{"key": "smoke_life", "label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
-	{"key": "smoke_drift", "label": "rook-drift", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "blood_extra_delay", "label": "plas-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.4},
-	{"key": "blood_grow", "label": "plas-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "blood_size", "label": "plas-maat", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
-	{"key": "death_blood_delay", "label": "lijkpoel-fallback", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.9},
+	{"cat": "gore", "key": "hat_fling_power", "label": "hoed-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.5},
+	{"cat": "gore", "key": "hat_fling_time", "label": "hoed-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
+	{"cat": "gore", "key": "hat_pop_chance", "label": "hoed-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
+	{"cat": "gore", "key": "limb_shed_chance", "label": "ledemaat-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.4},
+	{"cat": "gore", "key": "limb_fling_power", "label": "ledemaat-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.9},
+	{"cat": "gore", "key": "limb_fling_time", "label": "ledemaat-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "gore", "key": "gib_fling_power", "label": "gib-worpkracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "gore", "key": "gib_spin", "label": "gib-tolling", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "blood_burst", "label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "mist_travel", "label": "mist-dracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
+	{"cat": "bloed", "key": "drop_fall_time", "label": "druppel-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "drop_size", "label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "drop_stain_chance", "label": "druppel-vlekkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
+	{"cat": "bloed", "key": "drop_stain_delay", "label": "vlek-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.05},
+	{"cat": "bloed", "key": "drop_stain_grow", "label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},
+	{"cat": "bloed", "key": "gib_pool_delay", "label": "gib-poel-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.1},
+	{"cat": "bloed", "key": "gib_pool_grow", "label": "gib-poel-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.45},
+	{"cat": "bloed", "key": "blood_extra_delay", "label": "plas-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.4},
+	{"cat": "bloed", "key": "blood_grow", "label": "plas-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "blood_size", "label": "plas-maat", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "death_blood_delay", "label": "lijkpoel-fallback", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.9},
+	{"cat": "rook", "key": "smoke_amount", "label": "rook-aantal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "smoke_size", "label": "rook-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "rook", "key": "smoke_grow", "label": "rook-groei", "min": 0.5, "max": 10.0, "step": 0.01, "def": 3.0},
+	{"cat": "rook", "key": "smoke_life", "label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
+	{"cat": "rook", "key": "smoke_drift", "label": "rook-drift", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 ]
 
 var _pawn: PawnView = null
@@ -201,11 +201,26 @@ func _build_ui() -> void:
 	add_child(ui)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -560.0
+	panel.offset_top = -430.0
+	panel.offset_left = 6.0
+	panel.offset_right = -6.0
+	panel.offset_bottom = -6.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.11, 0.15, 0.96)
+	style.border_color = Color(0.38, 0.44, 0.60, 0.7)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 10.0
+	style.content_margin_right = 10.0
+	style.content_margin_top = 8.0
+	style.content_margin_bottom = 8.0
+	panel.add_theme_stylebox_override("panel", style)
 	ui.add_child(panel)
 	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
 
+	# --- Bovenbalk: model-selectie · camera · vergelijk-formatie -------------
 	var row1 := HBoxContainer.new()
 	box.add_child(row1)
 	_fac_btn = OptionButton.new()
@@ -223,15 +238,12 @@ func _build_ui() -> void:
 	row1.add_child(_arch_btn)
 	for b in [_fac_btn, _type_btn, _arch_btn]:
 		(b as OptionButton).item_selected.connect(_on_model_select_changed)
-	# Camera-views: spel (bordhoek, WYSIWYG), close-up, voorkant.
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
 	for v in ["spel", "close-up", "voorkant"]:
 		_view_btn.add_item(v)
 	_view_btn.item_selected.connect(func(_i: int) -> void: _apply_camera())
 	row1.add_child(_view_btn)
-	# Formatie-vergelijk: 3 vs 3 (inf/cav/art) van twee facties tegenover
-	# elkaar, allemaal via dezelfde auto-fit — schaal direct vergelijkbaar.
 	row1.add_child(_make_label("  Vergelijk:"))
 	_my_fac_btn = OptionButton.new()
 	_opp_fac_btn = OptionButton.new()
@@ -253,8 +265,19 @@ func _build_ui() -> void:
 			if _formation_btn.button_pressed:
 				_build_formation())
 
+	# --- Tabs per categorie ---------------------------------------------------
+	var tabs := TabContainer.new()
+	tabs.custom_minimum_size = Vector2(0, 230)
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(tabs)
+
+	# Tab MODEL: maat/positie + musket.
+	var tab_model := VBoxContainer.new()
+	tab_model.name = "Model"
+	tab_model.add_theme_constant_override("separation", 8)
+	tabs.add_child(tab_model)
 	var row2 := HBoxContainer.new()
-	box.add_child(row2)
+	tab_model.add_child(row2)
 	row2.add_child(_make_label("Schaal"))
 	_scale_slider = HSlider.new()
 	_scale_slider.min_value = 0.4
@@ -275,15 +298,12 @@ func _build_ui() -> void:
 	_y_slider.value_changed.connect(_on_slider_paired.bind("y"))
 	row2.add_child(_y_slider)
 	_y_spin = _make_spin(row2, -0.4, 0.4, 0.005, 0.0, _on_spin_paired.bind("y"))
-	# X/Z: het model binnen het vak schuiven (bv. als het uit het midden staat).
 	row2.add_child(_make_label("  X"))
 	_x_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
 	row2.add_child(_make_label(" Z"))
 	_z_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
-
-	# Musket-rij: schaal, positie (wereld-units langs de hand-assen), rotatie.
 	var roww := HBoxContainer.new()
-	box.add_child(roww)
+	tab_model.add_child(roww)
 	roww.add_child(_make_label("Musket: schaal"))
 	_weapon_spins["scale"] = _make_spin(roww, 0.1, 3.0, 0.05, 1.0, _on_weapon_changed)
 	roww.add_child(_make_label(" pos"))
@@ -293,42 +313,50 @@ func _build_ui() -> void:
 	for k in ["rx", "ry", "rz"]:
 		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
 
-	# Effect-rijen: alle knopjes uit effects_tuning.json, live toegepast.
-	var fxrow: HBoxContainer = null
-	for i in FX_DEFS.size():
-		if i % 4 == 0:
-			fxrow = HBoxContainer.new()
-			box.add_child(fxrow)
-			fxrow.add_child(_make_label("Effect: " if i == 0 else "        "))
-		var d: Dictionary = FX_DEFS[i]
-		fxrow.add_child(_make_label(" %s" % d.label))
-		var spin := _make_spin(fxrow, float(d.min), float(d.max), float(d.step),
-			PawnView.fx(String(d.key), float(d.def)), _on_fx_changed)
-		_fx_spins[String(d.key)] = spin
+	# Tabs GORE / BLOED / ROOK: effect-knoppen per categorie in een net raster.
+	var cats: Array = [["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"]]
+	for cat in cats:
+		var tab := VBoxContainer.new()
+		tab.name = String(cat[0])
+		tab.add_theme_constant_override("separation", 8)
+		tabs.add_child(tab)
+		var grid := GridContainer.new()
+		grid.columns = 8
+		grid.add_theme_constant_override("h_separation", 10)
+		grid.add_theme_constant_override("v_separation", 6)
+		tab.add_child(grid)
+		for d in FX_DEFS:
+			if String(d.get("cat", "")) != String(cat[1]):
+				continue
+			grid.add_child(_make_label(String(d.label)))
+			var spin := _make_spin(grid, float(d.min), float(d.max), float(d.step),
+				PawnView.fx(String(d.key), float(d.def)), _on_fx_changed)
+			_fx_spins[String(d.key)] = spin
+		if String(cat[1]) == "bloed":
+			# Dood-poel: per dood-clip de lijkpoel timen.
+			var rowd := HBoxContainer.new()
+			tab.add_child(rowd)
+			rowd.add_child(_make_label("Dood-poel: "))
+			_die_btn = OptionButton.new()
+			_die_btn.item_selected.connect(func(_i: int) -> void: _load_death_pool_values())
+			rowd.add_child(_die_btn)
+			rowd.add_child(_make_label(" wacht"))
+			_dp_spins["delay"] = _make_spin(rowd, 0.0, 10.0, 0.01, 0.9, _on_death_pool_changed)
+			rowd.add_child(_make_label(" groei"))
+			_dp_spins["grow"] = _make_spin(rowd, 0.05, 10.0, 0.01, 0.7, _on_death_pool_changed)
+			rowd.add_child(_make_label(" maat"))
+			_dp_spins["size"] = _make_spin(rowd, 0.1, 10.0, 0.01, 2.4, _on_death_pool_changed)
+			rowd.add_child(_make_label(" torso-afstand"))
+			_dp_spins["torso"] = _make_spin(rowd, -2.0, 2.0, 0.01, 0.3, _on_death_pool_changed)
+			var dp_test := Button.new()
+			dp_test.text = "test dood-poel"
+			dp_test.pressed.connect(_on_death_pool_test)
+			rowd.add_child(dp_test)
 
-	# Dood-poel rij: per dood-clip de bloedpoel timen (wacht/groei/maat/
-	# afstand in de valrichting). OPSLAAN schrijft dit mee (death_pools).
-	var rowd := HBoxContainer.new()
-	box.add_child(rowd)
-	rowd.add_child(_make_label("Dood-poel: "))
-	_die_btn = OptionButton.new()
-	_die_btn.item_selected.connect(func(_i: int) -> void: _load_death_pool_values())
-	rowd.add_child(_die_btn)
-	rowd.add_child(_make_label(" wacht"))
-	_dp_spins["delay"] = _make_spin(rowd, 0.0, 10.0, 0.01, 0.9, _on_death_pool_changed)
-	rowd.add_child(_make_label(" groei"))
-	_dp_spins["grow"] = _make_spin(rowd, 0.05, 10.0, 0.01, 0.7, _on_death_pool_changed)
-	rowd.add_child(_make_label(" maat"))
-	_dp_spins["size"] = _make_spin(rowd, 0.1, 10.0, 0.01, 2.4, _on_death_pool_changed)
-	rowd.add_child(_make_label(" torso-afstand"))
-	_dp_spins["torso"] = _make_spin(rowd, -2.0, 2.0, 0.01, 0.3, _on_death_pool_changed)
-	var dp_test := Button.new()
-	dp_test.text = "test dood-poel"
-	dp_test.pressed.connect(_on_death_pool_test)
-	rowd.add_child(dp_test)
-
+	# --- Vaste onderbalk: clips · tests · opslaan ------------------------------
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
+	row3.add_child(_make_label("Clip: "))
 	for clip in ["idle", "walk", "attack", "melee", "die"]:
 		var btn := Button.new()
 		btn.text = clip
@@ -338,6 +366,9 @@ func _build_ui() -> void:
 	freeze_btn.text = "stilzetten"
 	freeze_btn.pressed.connect(_freeze_pose)
 	row3.add_child(freeze_btn)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row3.add_child(spacer)
 	var save_btn := Button.new()
 	save_btn.text = "  OPSLAAN  "
 	save_btn.pressed.connect(_save)
@@ -348,7 +379,6 @@ func _build_ui() -> void:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
 	row3.add_child(back_btn)
 
-	# Test-rij: complete scenario's (vuren met rook, inslag, gibs, losse rook).
 	var row4 := HBoxContainer.new()
 	box.add_child(row4)
 	row4.add_child(_make_label("Test: "))
@@ -382,8 +412,8 @@ func _build_ui() -> void:
 	row4.add_child(smoke_btn2)
 
 	_info = Label.new()
+	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_info)
-
 
 func _make_label(text: String) -> Label:
 	var l := Label.new()
