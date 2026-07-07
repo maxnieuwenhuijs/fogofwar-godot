@@ -62,6 +62,7 @@ var _spot_light: SpotLight3D = null
 var _rim_light: DirectionalLight3D = null
 var _env: Environment = null
 var _grid_mat: StandardMaterial3D = null
+var _haven_mats: Array = []  # doorzichtige haven-plakkaten (rood/blauw)
 var _ambiance_panel: PanelContainer = null
 var _dust_motes: Array = []
 var _shake_amt: float = 0.0
@@ -1226,15 +1227,48 @@ func _setup_board_model() -> void:
 			continue
 		var c := mat.albedo_color
 		if absf(c.r - c.g) + absf(c.g - c.b) > 0.3:
-			(tile as CSGBox3D).position.y = 0.012  # haven-marker
-		else:
-			(tile as CSGBox3D).visible = false
+			# Haven: gloeiende vierkante rand om de tegel (een dichte plaat
+			# verdween onder het golvende diorama-oppervlak; een rand leest
+			# bovendien ook met een pion erop).
+			_spawn_haven_marker((tile as CSGBox3D).position, c.r > c.b)
+		(tile as CSGBox3D).visible = false
 	_build_grid_lines()
 
 
 ## Dun donkergrijs raster op de tegelgrenzen, net boven het bordoppervlak —
 ## zo zie je de vakken op het modder-bord zonder het beeld te verstoren.
 ## Zichtbaarheid tunebaar via de knop "raster" (0 = uit).
+## Gloeiende vierkante rand om een haven-tegel: doorzichtig donkerrood of
+## donkerblauw, zwevend boven het golvende bordoppervlak. Zichtbaarheid
+## tunebaar via het sfeer-paneel (haven-zichtbaarheid, 0 = uit).
+func _spawn_haven_marker(tile_pos: Vector3, is_red: bool) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var a: float = PawnView.fx("haven_alpha", 0.45)
+	mat.albedo_color = Color(0.55, 0.07, 0.06, a) if is_red else Color(0.08, 0.16, 0.6, a)
+	mat.emission_enabled = true
+	mat.emission = Color(0.9, 0.15, 0.12) if is_red else Color(0.15, 0.35, 1.0)
+	mat.emission_energy_multiplier = 0.5
+	_haven_mats.append(mat)
+	var root := Node3D.new()
+	root.position = Vector3(tile_pos.x, 0.12, tile_pos.z)
+	_board.add_child(root)
+	for i in 4:
+		var bar := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.88, 0.012, 0.055) if i < 2 else Vector3(0.055, 0.012, 0.88)
+		bar.mesh = bm
+		bar.material_override = mat
+		bar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var off := 0.4125
+		if i < 2:
+			bar.position = Vector3(0.0, 0.0, -off if i == 0 else off)
+		else:
+			bar.position = Vector3(-off if i == 2 else off, 0.0, 0.0)
+		root.add_child(bar)
+
+
 func _build_grid_lines() -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -1338,6 +1372,8 @@ func _apply_ambiance() -> void:
 		_env.fog_density = PawnView.fx("fog_density", 0.002)
 	if _grid_mat != null:
 		_grid_mat.albedo_color.a = PawnView.fx("grid_alpha", 0.3)
+	for hm in _haven_mats:
+		(hm as StandardMaterial3D).albedo_color.a = PawnView.fx("haven_alpha", 0.45)
 	for pv in _pawn_views.values():
 		if is_instance_valid(pv):
 			(pv as PawnView).set_ring_glow(PawnView.fx("ring_glow", 1.0))
@@ -1364,6 +1400,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "saturation", "label": "verzadiging", "min": 0.3, "max": 1.5, "step": 0.01, "def": 0.88},
 	{"key": "contrast", "label": "contrast", "min": 0.7, "max": 1.6, "step": 0.01, "def": 1.12},
 	{"key": "grid_alpha", "label": "raster", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.3},
+	{"key": "haven_alpha", "label": "haven-zichtbaarheid", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.45},
 	{"key": "ring_glow", "label": "ring-gloed", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
