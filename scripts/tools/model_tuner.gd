@@ -212,7 +212,7 @@ func _build_ui() -> void:
 		_arch_btn.add_item(a)
 	row1.add_child(_arch_btn)
 	for b in [_fac_btn, _type_btn, _arch_btn]:
-		(b as OptionButton).item_selected.connect(func(_i: int) -> void: _reload_pawns())
+		(b as OptionButton).item_selected.connect(_on_model_select_changed)
 	# Camera-views: spel (bordhoek, WYSIWYG), close-up, voorkant.
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
@@ -371,13 +371,70 @@ func _make_spin(parent: Node, minv: float, maxv: float, step: float, def: float,
 	return s
 
 
+## Dropdown gewisseld: normaal het model herladen; in formatie-modus blijft
+## de opstelling staan en schakelen alleen de sliders naar het gekozen model.
+func _on_model_select_changed(_i: int) -> void:
+	if _formation_pawns.is_empty():
+		_reload_pawns()
+	else:
+		_sync_sliders_from_tuning()
+
+
+## De tuning-sleutel van het model dat de sliders nu sturen: het losse
+## tuning-model, of in formatie-modus de pion die matcht met de dropdowns
+## (factie + type). Leeg als die combinatie niet in de formatie staat.
+func _tune_target_key() -> String:
+	if _pawn != null and is_instance_valid(_pawn):
+		return _pawn._tune_key
+	var fac := _fac_btn.get_selected_id()
+	var tp := _type_btn.get_selected_id()
+	for e in _formation_pawns:
+		if int(e.fac) == fac and int(e.tp) == tp and is_instance_valid(e.pv):
+			return (e.pv as PawnView)._tune_key
+	return ""
+
+
+## Sliders/spinboxen vullen met de opgeslagen tuning van het doelmodel.
+func _sync_sliders_from_tuning() -> void:
+	var key := _tune_target_key()
+	_updating = true
+	var t: Dictionary = PawnView.model_tuning().get(key, {})
+	_scale_slider.value = float(t.get("scale", 1.0))
+	_scale_spin.value = float(t.get("scale", 1.0))
+	_y_slider.value = float(t.get("y", 0.0))
+	_y_spin.value = float(t.get("y", 0.0))
+	_x_spin.value = float(t.get("x", 0.0))
+	_z_spin.value = float(t.get("z", 0.0))
+	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
+	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
+	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
+	var wrot: Array = w.get("rot", [0.0, 0.0, 0.0])
+	for i in 3:
+		_weapon_spins[["px", "py", "pz"][i]].value = float(wpos[i])
+		_weapon_spins[["rx", "ry", "rz"][i]].value = float(wrot[i])
+	_updating = false
+	if not _formation_pawns.is_empty() and key == "":
+		_info.text = "Model %s/%s staat niet in de formatie — kies een van de vergeleken facties linksboven om te tunen." % [
+			_fac_name(), Constants.unit_type_name(_type_btn.get_selected_id())]
+
+
+## Pas tuning toe op wat er staat: formatie herbouwen of het losse model.
+func _retune_target() -> void:
+	if not _formation_pawns.is_empty():
+		_build_formation()
+	else:
+		_respawn_model()
+
+
 ## Huidige factie-naam in kleine letters ("muis") — sleutels in model_tuning.json.
 func _fac_name() -> String:
 	return Constants.doctrine_folder(_fac_btn.get_selected_id())
 
 
 func _on_weapon_changed(_v: float) -> void:
-	if _updating or _pawn == null:
+	if _updating:
+		return
+	if _pawn == null and _formation_pawns.is_empty():
 		return
 	PawnView.set_model_tuning("%s/musket" % _fac_name(), {
 		"scale": snappedf(_weapon_spins["scale"].value, 0.01),
@@ -388,7 +445,7 @@ func _on_weapon_changed(_v: float) -> void:
 			snappedf(_weapon_spins["ry"].value, 1.0),
 			snappedf(_weapon_spins["rz"].value, 1.0)],
 	})
-	_respawn_model()
+	_retune_target()
 
 
 # --- Model laden / bijstellen ---------------------------------------------------
@@ -413,9 +470,9 @@ func _on_formation_toggled(on: bool) -> void:
 
 
 func _clear_formation() -> void:
-	for fp in _formation_pawns:
-		if is_instance_valid(fp):
-			fp.queue_free()
+	for e in _formation_pawns:
+		if is_instance_valid(e.pv):
+			e.pv.queue_free()
 	_formation_pawns = []
 
 
@@ -438,9 +495,10 @@ func _build_formation() -> void:
 			pv.face_dir(Vector2i(0, -1) if side == 0 else Vector2i(0, 1))
 			pv.set_unit_type(tp)
 			pv.set_character(facs[side], tp, null)
-			_formation_pawns.append(pv)
-	_info.text = "Formatie: %s (rood, onder) vs %s (blauw, boven) — inf/cav/art via dezelfde auto-fit, schaal 1-op-1 vergelijkbaar. Formatie uit = terug naar tunen." % [
+			_formation_pawns.append({"pv": pv, "fac": int(facs[side]), "tp": tp})
+	_info.text = "Formatie: %s (rood, onder) vs %s (blauw, boven) — schaal 1-op-1. Sliders tunen het model uit de dropdowns linksboven (factie + type)." % [
 		Constants.doctrine_name(facs[0]), Constants.doctrine_name(facs[1])]
+	_sync_sliders_from_tuning()
 	_apply_camera()
 
 
@@ -471,22 +529,7 @@ func _reload_pawns() -> void:
 	_pawn.set_character(doctrine, unit_type, _current_card())
 	_freeze_pose()
 	# Sliders op de opgeslagen waarden zetten (zonder events af te vuren).
-	_updating = true
-	var t: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {})
-	_scale_slider.value = float(t.get("scale", 1.0))
-	_scale_spin.value = float(t.get("scale", 1.0))
-	_y_slider.value = float(t.get("y", 0.0))
-	_y_spin.value = float(t.get("y", 0.0))
-	_x_spin.value = float(t.get("x", 0.0))
-	_z_spin.value = float(t.get("z", 0.0))
-	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
-	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
-	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
-	var wrot: Array = w.get("rot", [0.0, 0.0, 0.0])
-	for i in 3:
-		_weapon_spins[["px", "py", "pz"][i]].value = float(wpos[i])
-		_weapon_spins[["rx", "ry", "rz"][i]].value = float(wrot[i])
-	_updating = false
+	_sync_sliders_from_tuning()
 	_fill_die_options()
 	_refresh_info()
 	_apply_camera()
@@ -571,18 +614,21 @@ func _on_spin_paired(v: float, key: String) -> void:
 
 
 func _on_tuning_changed(_v: float) -> void:
-	if _updating or _pawn == null:
+	if _updating:
 		return
-	if _pawn._tune_key == "":
+	if _pawn == null and _formation_pawns.is_empty():
+		return
+	var key := _tune_target_key()
+	if key == "":
 		_refresh_info()
 		return
-	PawnView.set_model_tuning(_pawn._tune_key, {
+	PawnView.set_model_tuning(key, {
 		"scale": snappedf(_scale_slider.value, 0.01),
 		"y": snappedf(_y_slider.value, 0.005),
 		"x": snappedf(_x_spin.value, 0.01),
 		"z": snappedf(_z_spin.value, 0.01),
 	})
-	_respawn_model()
+	_retune_target()
 
 
 ## Herlaad het model zodat auto-fit + tuning exact zo draaien als in het spel.

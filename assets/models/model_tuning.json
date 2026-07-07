@@ -1,8 +1,8 @@
 {
 	"mouse/infantry_base": {
-		"scale": 1.0,
+		"scale": 1.18,
 		"x": 0.0,
-		"y": 0.0,
+		"y": 0.005,
 		"z": 0.0
 	},
 	"mouse/musket": {
