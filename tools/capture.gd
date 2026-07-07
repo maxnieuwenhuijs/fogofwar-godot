@@ -752,6 +752,7 @@ func _ready() -> void:
 			# Twee kruisende test-looppaden midden over het bord.
 			game._spawn_footprints(game.tile_position(1, 5), game.tile_position(9, 5), 0.1)
 			game._spawn_footprints(game.tile_position(5, 1), game.tile_position(5, 9), 0.1)
+			game._spawn_wheel_tracks(game.tile_position(1, 7), game.tile_position(9, 7), Vector3(1, 0, 0), Vector3(0, 0, 1), 0.1)
 			await get_tree().create_timer(0.5).timeout
 		await get_tree().create_timer(0.4).timeout
 		print("[PLAY] fase=%s cyclus=%d ronde=%d beurt=%d actief_p1=%d actief_p2=%d stappen=%d" % [

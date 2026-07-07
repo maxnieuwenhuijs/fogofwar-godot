@@ -66,7 +66,7 @@ var _haven_mats: Array = []  # doorzichtige haven-plakkaten (rood/blauw)
 var _ambiance_panel: PanelContainer = null
 var _dust_motes: Array = []
 var _footprints: Array = []  # blijven staan tot de cyclus voorbij is
-var _footstep_texs: Array = []  # [linker, rechter] laars uit assets/textures/footstep/
+var _footstep_cache: Dictionary = {}  # pad -> Texture2D of null (assets/textures/footstep/)
 var _shake_amt: float = 0.0
 var _cam_base: Vector3 = Vector3.ZERO
 var _in_hitstop: bool = false
@@ -739,7 +739,14 @@ func _refresh_all() -> void:
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		pv.set_team_ring_active(pawn.is_active)
-		if not Phase.is_linking(state.phase):
+		if Phase.is_linking(state.phase):
+			# Koppel-fase: donkere ring om alles wat nog geen kaart heeft,
+			# felle ring op de gehoverde eigen pion.
+			var lstate: int = 1 if pawn.linked_card_id == -1 else 0
+			if lstate == 1 and pid == _hovered_pawn_id and pawn.owner_id == _human_id:
+				lstate = 2
+			pv.set_ring_link_state(lstate)
+		else:
 			pv.set_ring_link_state(0)
 		var human_action := state.phase == Phase.Type.ACTION and state.current_player == _human_id \
 				and pawn.owner_id == _human_id and pawn.is_active
@@ -908,6 +915,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		_start_phase_timer(PHASE_TIME_LIMIT)
 	elif Phase.is_linking(new_phase):
 		_auto_link_human = false
+		_highlight_own_unlinked_pawns()  # ringen meteen aan, niet pas na kaart-klik
 		_start_phase_timer(PHASE_TIME_LIMIT)
 	else:
 		_card_hand.visible = false
@@ -1506,6 +1514,39 @@ func _save_ambiance() -> void:
 		_update_hud("Sfeer opgeslagen")
 
 
+## Artillerie-spoor: twee parallelle onderbroken wielstrepen links en
+## rechts van de aslijn (optioneel met wiel.png als texture).
+func _spawn_wheel_tracks(flat_a: Vector3, flat_b: Vector3, dirn: Vector3, side: Vector3, dur: float) -> void:
+	var dist := flat_a.distance_to(flat_b)
+	var count := int(dist / 0.16)
+	var tex := _footstep_texture(["wiel"])
+	for i in range(count):
+		var t := float(i + 1) / float(count + 1)
+		for lane in [-1.0, 1.0]:
+			var p: Vector3 = flat_a.lerp(flat_b, t) + side * (0.085 * float(lane))
+			var fp := MeshInstance3D.new()
+			var pm := PlaneMesh.new()
+			pm.size = Vector2(0.024, 0.15)
+			fp.mesh = pm
+			var mat := StandardMaterial3D.new()
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			if tex != null:
+				mat.albedo_texture = tex
+				mat.albedo_color = Color(1.0, 1.0, 1.0, 0.0)
+			else:
+				mat.albedo_color = Color(0.05, 0.045, 0.04, 0.0)
+			fp.material_override = mat
+			fp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			fp.position = Vector3(p.x, 0.0543 + 0.0002 * float(i % 3), p.z)
+			fp.rotation.y = atan2(-dirn.x, -dirn.z)
+			_board.add_child(fp)
+			_footprints.append(fp)
+			var tw := fp.create_tween()
+			tw.tween_interval(maxf(dur * t - 0.02, 0.0))
+			tw.tween_property(mat, "albedo_color:a", PawnView.fx("footprint_dark", 0.32), 0.08)
+
+
 # --- Stofdeeltjes: langzaam dwarrelende motes in het spotlicht ---------------
 
 func _refresh_dust() -> void:
@@ -1561,17 +1602,23 @@ func _clear_footprints() -> void:
 	_footprints.clear()
 
 
-## Laars-textures (PNG met alpha) uit assets/textures/footstep/. Ontbreken
-## ze, dan valt het spoor terug op een kaal donker rechthoekje.
-func _footstep_texture(i: int) -> Texture2D:
-	if _footstep_texs.is_empty():
-		for n in ["left", "right"]:
-			var path: String = "res://assets/textures/footstep/" + String(n) + ".png"
-			_footstep_texs.append(load(path) if ResourceLoader.exists(path) else null)
-	return _footstep_texs[i % 2]
+## Spoor-texture uit assets/textures/footstep/: probeert de kandidaten op
+## volgorde (specifiek -> generiek). Conventie, klaar voor dierenpoten:
+##   infanterie:  <factie>_left.png -> left.png            (bv. muis_left.png)
+##   cavalerie:   <factie>_hoef_left.png -> hoef_left.png  (idem rechts)
+##   artillerie:  wiel.png (optioneel; anders kale strepen)
+## Niets gevonden = null: het spoor valt terug op een kaal donker vormpje.
+func _footstep_texture(candidates: Array) -> Texture2D:
+	for c in candidates:
+		var path: String = "res://assets/textures/footstep/" + String(c) + ".png"
+		if not _footstep_cache.has(path):
+			_footstep_cache[path] = load(path) if ResourceLoader.exists(path) else null
+		if _footstep_cache[path] != null:
+			return _footstep_cache[path]
+	return null
 
 
-func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
+func _spawn_footprints(a: Vector3, b: Vector3, dur: float, mover: Pawn = null) -> void:
 	if PawnView.fx("footprints", 1.0) <= 0.0:
 		return
 	var flat_a := Vector3(a.x, 0.0, a.z)
@@ -1581,15 +1628,32 @@ func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
 		return
 	var dirn := (flat_b - flat_a).normalized()
 	var side := dirn.cross(Vector3.UP).normalized()
+	# Artillerie rolt: twee parallelle wielsporen i.p.v. voetstappen.
+	if mover != null and mover.unit_type == Constants.UnitType.ARTILLERY:
+		_spawn_wheel_tracks(flat_a, flat_b, dirn, side, dur)
+		return
+	var fac := ""
+	if mover != null:
+		fac = Constants.doctrine_name(GameSession.state.doctrine_of(mover.owner_id)).to_lower()
+	var is_cav: bool = mover != null and mover.unit_type == Constants.UnitType.CAVALRY
 	var count := int(dist / 0.28)
 	for i in range(count):
 		var t := float(i + 1) / float(count + 1)
 		var p := flat_a.lerp(flat_b, t) + side * (0.055 if i % 2 == 0 else -0.055)
 		var fp := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
-		var boot: Texture2D = _footstep_texture(i)
-		# 13x32-laars: breedte/hoogte-verhouding aanhouden.
-		pm.size = Vector2(0.055, 0.135) if boot != null else Vector2(0.05, 0.1)
+		var lr: String = "left" if i % 2 == 0 else "right"
+		var boot: Texture2D = null
+		if is_cav:
+			boot = _footstep_texture([fac + "_hoef_" + lr, "hoef_" + lr])
+		else:
+			boot = _footstep_texture([fac + "_" + lr, lr])
+		if boot != null:
+			# Verhouding van de texture zelf aanhouden (laars, poot, hoef...).
+			var asp: float = float(boot.get_width()) / maxf(float(boot.get_height()), 1.0)
+			pm.size = Vector2(0.135 * asp, 0.135)
+		else:
+			pm.size = Vector2(0.045, 0.07) if is_cav else Vector2(0.05, 0.1)
 		fp.mesh = pm
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -1807,11 +1871,11 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> vo
 	_tweening_pawns[pawn_id] = true
 	var dist: int = absi(to_coord.x - from_coord.x) + absi(to_coord.y - from_coord.y)
 	var dur := clampf(0.13 * float(dist), 0.13, 0.45)
-	_spawn_footprints(start, end, dur)
 	# Beweeggeluid afhankelijk van het eenheidstype. Cavalerie: één galop-clip
 	# per beweging (bevat zelf al meerdere hoefslagen). Infanterie/artillerie:
 	# één klap per gelopen vakje (losse voetstappen / wielrollen).
 	var mover: Pawn = GameSession.state.pawns.get(pawn_id)
+	_spawn_footprints(start, end, dur, mover)
 	if mover != null and mover.unit_type == Constants.UnitType.CAVALRY:
 		Audio.play("horse_move")
 	else:
