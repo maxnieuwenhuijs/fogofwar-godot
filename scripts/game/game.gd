@@ -1206,6 +1206,10 @@ func _setup_battlefield_lighting() -> void:
 	if sun != null:
 		sun.light_energy = 0.65 * PawnView.fx("world_light", 1.0)
 		sun.light_color = Color(1.0, 0.92, 0.8)
+		sun.shadow_enabled = true  # rakende slagveld-schaduwen van de pionnen
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+		sun.shadow_bias = 0.04
+		sun.shadow_normal_bias = 1.2
 	# Spotlight boven het bordcentrum: fel in het midden, dooft naar de randen
 	# uit (radiale falloff = diorama-onder-een-lamp). Tunebaar: spot-licht /
 	# spot-bereik.
