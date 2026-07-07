@@ -256,6 +256,21 @@ func _build_help_button() -> void:
 	help.offset_bottom = 84.0
 	help.pressed.connect(_on_help_pressed)
 	$UI.add_child(help)
+	# "sfeer"-knopje eronder: opent het sfeer-paneel (zelfde als toets L).
+	var sfeer := Button.new()
+	sfeer.text = "sfeer"
+	sfeer.custom_minimum_size = Vector2(64, 40)
+	sfeer.add_theme_font_size_override("font_size", 16)
+	sfeer.anchors_preset = Control.PRESET_TOP_RIGHT
+	sfeer.anchor_left = 1.0
+	sfeer.anchor_right = 1.0
+	sfeer.offset_left = -84.0
+	sfeer.offset_right = -20.0
+	sfeer.offset_top = 92.0
+	sfeer.offset_bottom = 132.0
+	sfeer.modulate = Color(1.0, 1.0, 1.0, 0.55)
+	sfeer.pressed.connect(_toggle_ambiance_panel)
+	$UI.add_child(sfeer)
 
 
 var _help_resume_timer: bool = false
@@ -1326,7 +1341,7 @@ func _build_ambiance_panel() -> void:
 	_ambiance_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_ambiance_panel.offset_left = -520.0
 	_ambiance_panel.offset_right = -12.0
-	_ambiance_panel.offset_top = 90.0
+	_ambiance_panel.offset_top = 140.0
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 	_ambiance_panel.add_child(vbox)
