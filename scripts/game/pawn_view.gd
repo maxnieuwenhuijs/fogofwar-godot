@@ -64,6 +64,7 @@ var _tune_key: String = ""   # "mouse/infantry_base" — sleutel in model_tuning
 var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb)
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
+var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
 ## { "muis/infanterie_basis": {"scale": 1.15, "y": 0.02}, ... }
@@ -134,27 +135,34 @@ static func fx_dict(key: String) -> Dictionary:
 	return v if v is Dictionary else {}
 
 
-## Witte omlijning zodat pionnen zich duidelijk aftekenen op het donkere
-## modder-bord. Inverted-hull via material_overlay (per instantie, dus
-## gedeelde glb-materialen blijven schoon). Dikte: knop "omlijning".
-static var _outline_mat: StandardMaterial3D = null
+## Team-gekleurde omlijning zodat pionnen zich duidelijk aftekenen op het
+## donkere modder-bord EN je in een spiegelgevecht ziet wie van wie is:
+## rood leger = warmrode rand, blauw leger = koelblauwe rand.
+## Inverted-hull via material_overlay (per instantie, gedeelde
+## glb-materialen blijven schoon). Dikte: knop "omlijning".
+static var _outline_mats: Dictionary = {}
 
 
-static func _get_outline_mat() -> StandardMaterial3D:
-	if _outline_mat == null:
-		_outline_mat = StandardMaterial3D.new()
-		_outline_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_outline_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.85)
-		_outline_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_outline_mat.cull_mode = BaseMaterial3D.CULL_FRONT
-		_outline_mat.grow = true
-	_outline_mat.grow_amount = fx("outline_width", 0.01)
-	return _outline_mat
+static func _get_outline_mat(team_id: int) -> StandardMaterial3D:
+	if not _outline_mats.has(team_id):
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.cull_mode = BaseMaterial3D.CULL_FRONT
+		m.grow = true
+		if team_id == Constants.Team.RED:
+			m.albedo_color = Color(1.0, 0.5, 0.45, 0.95)
+		else:
+			m.albedo_color = Color(0.5, 0.72, 1.0, 0.95)
+		_outline_mats[team_id] = m
+	var mm: StandardMaterial3D = _outline_mats[team_id]
+	mm.grow_amount = fx("outline_width", 0.03)
+	return mm
 
 
 ## Omlijning aan/uit op alle zichtbare delen van het stuk.
 func _apply_outline(root: Node3D) -> void:
-	var mat: StandardMaterial3D = _get_outline_mat() if fx("outline_width", 0.01) > 0.0 else null
+	var mat: StandardMaterial3D = _get_outline_mat(team) if fx("outline_width", 0.03) > 0.0 else null
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).material_overlay = mat
 	for csg in root.find_children("*", "CSGShape3D", true, false):
@@ -425,6 +433,7 @@ func _ready() -> void:
 	_dim_material.albedo_color = col.darkened(0.6)
 	_build_ring()
 	_build_front_marker()
+	_build_team_ring()
 	_try_load_model()
 	_update_material()
 	set_stats_label(false, 0, 0)
@@ -444,6 +453,31 @@ func _build_ring() -> void:
 	_ring.material_override = mat
 	_ring.visible = false
 	add_child(_ring)
+
+
+## Plat gloeiend voetringetje in teamkleur: leesbaarheid op het donkere
+## modder-bord + team-onderscheid (zoals een miniatuur-voetstukje). Verdwijnt
+## als de pion sneuvelt (_become_debris).
+func _build_team_ring() -> void:
+	_team_ring = CSGTorus3D.new()
+	_team_ring.inner_radius = 0.3
+	_team_ring.outer_radius = 0.37
+	_team_ring.sides = 24
+	_team_ring.ring_sides = 4
+	_team_ring.position = Vector3(0.0, 0.015, 0.0)
+	_team_ring.scale = Vector3(1.0, 0.35, 1.0)  # plat plakkaatje
+	var mat := StandardMaterial3D.new()
+	if team == Constants.Team.RED:
+		mat.albedo_color = Color(0.85, 0.2, 0.18)
+		mat.emission = Color(0.9, 0.25, 0.2)
+	else:
+		mat.albedo_color = Color(0.2, 0.42, 0.9)
+		mat.emission = Color(0.25, 0.5, 1.0)
+	mat.emission_enabled = true
+	mat.emission_energy_multiplier = 0.55
+	_team_ring.material_override = mat
+	_team_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_team_ring)
 
 
 ## Klein "neusje" aan de voorkant (-Z) zodat de kijkrichting zichtbaar is
@@ -713,6 +747,8 @@ func _fling_weapon(world_dir: Vector3) -> void:
 ## Het lijk/brokstuk blijft op het bord tot de volgende definieerfase;
 ## game._clear_debris() laat alles in de groep "battlefield_debris" wegzinken.
 func _become_debris() -> void:
+	if _team_ring != null:
+		_team_ring.visible = false  # gesneuveld: geen team-ring meer
 	# Geen omlijning meer: een lijk hoort in de modder op te gaan.
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).material_overlay = null

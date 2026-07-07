@@ -1173,7 +1173,7 @@ func _setup_battlefield_lighting() -> void:
 	env.background_color = Color(0.015, 0.015, 0.02)  # zwart: het bord zweeft in het donker
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.58, 0.55, 0.5)
-	env.ambient_light_energy = 0.38 * PawnView.fx("world_ambient", 1.0)
+	env.ambient_light_energy = 0.46 * PawnView.fx("world_ambient", 1.0)
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 0.88
