@@ -251,6 +251,11 @@ func _ready() -> void:
 				str(game._selected_pawn_id == target.id), game._valid_moves.size()])
 		get_tree().quit()
 		return
+	elif "tegenstander" in args:
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._show_opponent_menu()
+		await get_tree().create_timer(0.4).timeout
+		out = "res://_shot_tegenstander.png"
 	elif "uitleg" in args:
 		game._show_doctrine_menu()
 		await get_tree().create_timer(0.4).timeout

@@ -303,7 +303,7 @@ func _show_doctrine_menu() -> void:
 		lines.append("%s:  ✚ %s   ✖ %s" % [data.name, data.pro, data.con])
 	_overlay.show_choice(
 		"Kies je doctrine",
-		"Vast voor de hele partij. De AI kiest blind een eigen doctrine.\nSamenstelling = Infanterie / Cavalerie / Artillerie.\n\n" + "\n".join(lines),
+		"Vast voor de hele partij. Hierna kies je de tegenstander.\nSamenstelling = Infanterie / Cavalerie / Artillerie.\n\n" + "\n".join(lines),
 		names,
 		_on_doctrine_choice,
 		Color.WHITE, true,
@@ -312,8 +312,31 @@ func _show_doctrine_menu() -> void:
 
 func _on_doctrine_choice(index: int) -> void:
 	_human_doctrine = Constants.DOCTRINE_DATA.keys()[index]
-	# Blinde, gelijktijdige keuze (v4.1 §4.1): de AI kiest onafhankelijk.
-	_ai_doctrine = Constants.DOCTRINE_DATA.keys()[randi() % Constants.DOCTRINE_DATA.size()]
+	_show_opponent_menu()
+
+
+## Kies de factie van de AI-tegenstander. "Verrassing" volgt de officiele
+## regel (v4.1 §4.1: blinde, gelijktijdige keuze); een vaste factie is
+## handig om te oefenen tegen een specifieke matchup.
+func _show_opponent_menu() -> void:
+	var names: Array = ["Verrassing (AI kiest blind)"]
+	for key in Constants.DOCTRINE_DATA.keys():
+		var data: Dictionary = Constants.doctrine_data(key)
+		names.append("%s  (%d/%d/%d)" % [data.name, data.comp[0], data.comp[1], data.comp[2]])
+	_overlay.show_choice(
+		"Tegen wie speel je?",
+		"Kies de factie van de AI, of laat hem blind loten (standaardregel).",
+		names,
+		_on_opponent_choice,
+		Color.WHITE, true,
+	)
+
+
+func _on_opponent_choice(index: int) -> void:
+	if index == 0:
+		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[randi() % Constants.DOCTRINE_DATA.size()]
+	else:
+		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[index - 1]
 	_start_match(ai_difficulty)
 
 
