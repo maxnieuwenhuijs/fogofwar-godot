@@ -65,6 +65,7 @@ var _grid_mat: StandardMaterial3D = null
 var _haven_mats: Array = []  # doorzichtige haven-plakkaten (rood/blauw)
 var _ambiance_panel: PanelContainer = null
 var _dust_motes: Array = []
+var _footprints: Array = []  # blijven staan tot de cyclus voorbij is
 var _shake_amt: float = 0.0
 var _cam_base: Vector3 = Vector3.ZERO
 var _in_hitstop: bool = false
@@ -350,6 +351,7 @@ func _start_match(difficulty: int) -> void:
 	_shake_amt = 0.0
 	_dying_views.clear()
 	_clear_debris(true)  # slagveld van de vorige partij ruimen
+	_clear_footprints()
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
 	ai_difficulty = difficulty
 	_setup_ai()
@@ -895,6 +897,8 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			_refresh_all()
 			_update_hud("Ronde afgerond")
 			await get_tree().create_timer(0.9).timeout
+		if GameSession.state.round_number <= 1:
+			_clear_footprints()  # nieuwe cyclus: vers slagveld
 		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
 		var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
 		_card_hand.configure(int(doctrine.cards), int(doctrine.budget), int(doctrine.speed_max))
@@ -1374,6 +1378,11 @@ func _apply_ambiance() -> void:
 		_grid_mat.albedo_color.a = PawnView.fx("grid_alpha", 0.3)
 	for hm in _haven_mats:
 		(hm as StandardMaterial3D).albedo_color.a = PawnView.fx("haven_alpha", 0.45)
+	for fp in _footprints:
+		if is_instance_valid(fp):
+			var fpm := (fp as MeshInstance3D).material_override as StandardMaterial3D
+			if fpm != null and fpm.albedo_color.a > 0.001:  # nog niet verschenen sporen overslaan
+				fpm.albedo_color.a = PawnView.fx("footprint_dark", 0.32)
 	for pv in _pawn_views.values():
 		if is_instance_valid(pv):
 			(pv as PawnView).set_ring_glow(PawnView.fx("ring_glow", 1.0))
@@ -1404,7 +1413,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "ring_glow", "label": "ring-gloed", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
-	{"key": "footprint_fade", "label": "voetspoor-vervaag", "min": 0.5, "max": 15.0, "step": 0.1, "def": 5.0},
+	{"key": "footprint_dark", "label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},
 ]
 
 
@@ -1544,6 +1553,14 @@ func _drift_dust_mote(m: MeshInstance3D) -> void:
 
 # --- Voetsporen: vervagende stapjes in de modder langs het looppad -----------
 
+## Slagveld vegen: alle voetsporen weg (nieuwe cyclus of nieuw potje).
+func _clear_footprints() -> void:
+	for fp in _footprints:
+		if is_instance_valid(fp):
+			(fp as Node).queue_free()
+	_footprints.clear()
+
+
 func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
 	if PawnView.fx("footprints", 1.0) <= 0.0:
 		return
@@ -1571,12 +1588,12 @@ func _spawn_footprints(a: Vector3, b: Vector3, dur: float) -> void:
 		fp.position = Vector3(p.x, 0.0545 + 0.0002 * float(i % 3), p.z)
 		fp.rotation.y = atan2(dirn.x, dirn.z)
 		_board.add_child(fp)
+		_footprints.append(fp)
+		# Geen vervaging: de sporen blijven staan tot alle kaarten van de
+		# cyclus gespeeld zijn - het slagveld vertelt het verhaal van de slag.
 		var tw := fp.create_tween()
 		tw.tween_interval(maxf(dur * t - 0.02, 0.0))
-		tw.tween_property(mat, "albedo_color:a", 0.32, 0.08)
-		tw.tween_interval(1.5)
-		tw.tween_property(mat, "albedo_color:a", 0.0, PawnView.fx("footprint_fade", 5.0))
-		tw.tween_callback(fp.queue_free)
+		tw.tween_property(mat, "albedo_color:a", PawnView.fx("footprint_dark", 0.32), 0.08)
 
 
 ## Korte felle flits + lichtpuls aan de loop. Met een texture in
