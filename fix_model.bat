@@ -20,7 +20,7 @@ if "%MODEL%"=="" (
 set BLENDER=%BLENDER_PATH%
 if "%BLENDER%"=="" set BLENDER=C:\Program Files\Blender Foundation\Blender 5.1\blender.exe
 echo Rechtdraaien: %MODEL%
-"%BLENDER%" --background --python "%~dp0tools\blender_merge_character.py" -- --base "%MODEL%" --gibs
+"%BLENDER%" --background --python "%~dp0tools\blender_merge_character.py" -- --base "%MODEL%"
 echo.
 echo Klaar. Vergeet niet in Godot te importeren (editor openen).
 pause
