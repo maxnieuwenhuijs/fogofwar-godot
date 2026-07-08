@@ -573,6 +573,12 @@ func play_die() -> void:
 
 ## Hit-reactie: korte incasseer-clip als de pion een klap/schot OVERLEEFT
 ## (hit1/hit2, random). Modellen zonder hit-clip doen gewoon niets extra's.
+## Koppel-moment: het karakter maakt zich klaar (ready_up-clip) terwijl de
+## pion omhoog hopt. Heeft het model de clip niet, dan gebeurt er niets.
+func play_ready() -> void:
+	_play_variant("ready")
+
+
 func play_hit() -> void:
 	if _anim != null and not _variants_of(anim_hit).is_empty():
 		_play_variant(anim_hit)
@@ -612,6 +618,7 @@ const ANIM_ALIASES: Dictionary = {
 	"die": ["death"],
 	"melee": ["bayonet", "sword", "punch", "stab"],
 	"hit": ["hurt", "flinch"],
+	"ready": ["ready_up", "readyup"],
 }
 
 
@@ -1288,6 +1295,8 @@ func _on_anim_finished(anim_name: String) -> void:
 	oneshots.append_array(ANIM_ALIASES.get("attack", []))
 	oneshots.append_array(ANIM_ALIASES.get("melee", []))
 	oneshots.append_array(ANIM_ALIASES.get("hit", []))
+	oneshots.append("ready")
+	oneshots.append_array(ANIM_ALIASES.get("ready", []))
 	if n in oneshots:
 		play_idle()
 

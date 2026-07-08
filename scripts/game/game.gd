@@ -857,6 +857,7 @@ func _animate_link(pawn_id: int) -> void:
 	if pv == null:
 		return
 	pv.flash_ring(Color(0.5, 0.85, 1.0))
+	pv.play_ready()  # karakter maakt zich klaar zodra de kaart vastklikt
 	_tweening_pawns[pawn_id] = true
 	var base_y := pv.position.y
 	var tween := create_tween().set_trans(Tween.TRANS_SINE)

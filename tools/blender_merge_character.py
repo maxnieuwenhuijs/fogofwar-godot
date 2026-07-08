@@ -22,10 +22,16 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 BASE = ""
 OUT = ""
 CLIPS = []  # (naam, pad)
+FORCE_YAW = {}  # clipnaam -> graden die de clip gedraaid staat (handmatige override)
 i = 0
 while i < len(argv):
     a = argv[i]
-    if a == "--base":
+    if a == "--forceyaw":
+        i += 1
+        for part in argv[i].split(","):
+            nm, deg = part.split("=")
+            FORCE_YAW[nm.strip()] = float(deg)
+    elif a == "--base":
         i += 1
         BASE = argv[i]
     elif a == "--out":
@@ -125,18 +131,23 @@ def yaw_between(q_ref_arm, q_clip_arm):
     return math.degrees(twist.to_euler().y)
 
 
-def fix_quarter_turn(act, q_rest, q_ref_arm, ref_name):
+def fix_quarter_turn(act, q_rest, q_ref_arm, ref_name, force_deg=None):
     """Mixamo levert clips soms een kwart- of halve slag gedraaid (bayonet/hit).
     Meet de heup-yaw op frame 0 t.o.v. de referentie-clip; ligt het verschil op
     een veelvoud van 90 graden, draai dan de HELE clip (rotatie- en
     locatie-keys van de heup) terug. Kleine bedoelde draaiingen (<45) blijven."""
-    q0 = hips_first_quat(act)
-    if q0 is None:
-        return
-    yaw = yaw_between(q_ref_arm, q_rest @ q0)
-    snap = round(yaw / 90.0) * 90.0
-    if abs(snap) < 45.0 or abs(yaw - snap) > 35.0:
-        return
+    if force_deg is not None:
+        snap = float(force_deg)
+        if abs(snap) < 1e-6:
+            return
+    else:
+        q0 = hips_first_quat(act)
+        if q0 is None:
+            return
+        yaw = yaw_between(q_ref_arm, q_rest @ q0)
+        snap = round(yaw / 90.0) * 90.0
+        if abs(snap) < 45.0 or abs(yaw - snap) > 35.0:
+            return
     q_corr = mathutils.Quaternion((0.0, 1.0, 0.0), math.radians(-snap))
     q_fix = q_rest.inverted() @ q_corr @ q_rest
     rot_fcs = sorted([fc for fc in iter_fcurves(act)
@@ -208,7 +219,9 @@ tracked = {t.name for t in base.animation_data.nla_tracks}
 for act in list(bpy.data.actions):
     if act.name not in tracked and not act.name.startswith("_"):
         add_track(base, act, act.name)
-    if q_ref_arm is not None and not act.name.startswith("idle"):
+    if act.name in FORCE_YAW:
+        fix_quarter_turn(act, q_rest_hips, q_ref_arm, "handmatige --forceyaw", FORCE_YAW[act.name])
+    elif q_ref_arm is not None and not act.name.startswith("idle"):
         fix_quarter_turn(act, q_rest_hips, q_ref_arm, ref_act.name)
     if act.name.startswith(("hit", "bayonet", "melee")):
         lock_hips_location(act)
@@ -238,7 +251,9 @@ for clip_name, path in CLIPS:
                         kp.co.y *= ratio
                         kp.handle_left.y *= ratio
                         kp.handle_right.y *= ratio
-        if q_ref_arm is not None and not clip_name.startswith("idle"):
+        if clip_name in FORCE_YAW:
+            fix_quarter_turn(act, q_rest_hips, q_ref_arm, "handmatige --forceyaw", FORCE_YAW[clip_name])
+        elif q_ref_arm is not None and not clip_name.startswith("idle"):
             fix_quarter_turn(act, q_rest_hips, q_ref_arm, ref_act.name)
         if clip_name.startswith(("hit", "bayonet", "melee")):
             lock_hips_location(act)
