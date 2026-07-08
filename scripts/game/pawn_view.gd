@@ -1146,7 +1146,7 @@ func _is_hat(node: Node) -> bool:
 ## geen bloed.)
 func _blood_size_for(part: Node3D) -> float:
 	var n := String(part.name).to_lower()
-	if n.contains("torso"):
+	if n.contains("torso") or n.contains("body"):
 		return 2.2
 	if n.contains("hat"):
 		return 0.7

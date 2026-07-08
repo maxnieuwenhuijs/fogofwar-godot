@@ -24,10 +24,13 @@ OUT = ""
 CLIPS = []  # (naam, pad)
 FORCE_YAW = {}  # clipnaam -> graden die de clip gedraaid staat (handmatige override)
 DONOR = ""  # pad naar master-model: alle clips daarvan worden overgenomen
+MAKE_GIBS = False  # --gibs: genereer <model>_gibs.glb uit de losse mesh-delen
 i = 0
 while i < len(argv):
     a = argv[i]
-    if a == "--donor":
+    if a == "--gibs":
+        MAKE_GIBS = True
+    elif a == "--donor":
         i += 1
         DONOR = argv[i]
     elif a == "--forceyaw":
@@ -329,4 +332,45 @@ for img in bpy.data.images:
 bpy.ops.export_scene.gltf(filepath=os.path.abspath(OUT), export_format='GLB',
                           export_animation_mode='NLA_TRACKS',
                           export_image_format='JPEG', export_jpeg_quality=85)
+
+
+def make_gibs(model_out):
+    """Statische, niet-geskinde kopie van de losse mesh-delen in rest-pose,
+    geexporteerd als <model>_gibs.glb. Zo hoeft er geen apart gibs-bestand
+    handmatig gemaakt te worden. Werkt alleen zinvol als het model uit
+    meerdere mesh-objecten bestaat (1 mesh = 1 brok)."""
+    gibs_path = os.path.splitext(os.path.abspath(model_out))[0] + "_gibs.glb"
+    mesh_objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    if not mesh_objs:
+        print("GIBS overgeslagen: geen mesh-objecten.")
+        return
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in mesh_objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = mesh_objs[0]
+    if len(mesh_objs) < 2:
+        print('GIBS overgeslagen: model heeft maar 1 mesh (geen losse delen). Exporteer met gescheiden onderdelen.')
+        return
+    bpy.ops.object.duplicate()
+    dups = list(bpy.context.selected_objects)
+    for o in dups:
+        for m in list(o.modifiers):
+            if m.type == 'ARMATURE':
+                o.modifiers.remove(m)
+    # ontkoppel van de armature maar behoud de wereldstand (rest-pose plek)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in dups:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = dups[0]
+    bpy.ops.export_scene.gltf(filepath=gibs_path, export_format='GLB',
+                              use_selection=True,
+                              export_image_format='JPEG', export_jpeg_quality=85)
+    bpy.ops.object.delete()
+    print("GIBS -> %s (%d delen)" % (gibs_path, len(dups)))
+
+
+if MAKE_GIBS:
+    make_gibs(OUT)
 print("KLAAR ->", OUT)

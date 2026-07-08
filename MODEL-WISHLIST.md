@@ -324,6 +324,15 @@ clips.
 | `die` (+ `die2`…) | Rifle Death / Standing Death (voor- en achterover) | 1-2 varianten |
 | `aim` (voor later: aanleg-fase) | Rifle Down To Aim | optioneel |
 
+**Gibs zijn nu automatisch (8 juli):** het merge-script genereert
+`<model>_gibs.glb` zelf uit de losse mesh-delen van het model (vlag `--gibs`,
+zit al in `fix_model.bat`). Voorwaarde: exporteer het model met **gescheiden
+onderdelen** (dus in Blender NIET joinen), met de namen `armL/armR/body/hat/legL/legR/tail`
+- dan werkt hoed-pop + grote romp-poel. Een 1-mesh-model levert geen gibs
+(valt terug op de die-clip + bloedmist). Je hoeft dus geen gibs-bestand meer
+handmatig te maken; alleen de gore-textures (`<model>_red_gore.png` /
+`_blue_gore.png`) lever je zelf aan.
+
 5. **Laat alles in Downloads staan** en geef door welk bestand welk archetype
    is — het merge-script bouwt er één `.glb` van met alle clips (varianten
    worden in het spel willekeurig gekozen, met desync zodat de zwerm nooit
