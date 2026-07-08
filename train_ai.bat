@@ -17,6 +17,14 @@ set TESTMODE=0
 if "%MIN%"=="" set MIN=480
 if /i "%MIN%"=="test" set MIN=4
 if /i "%1"=="test" set TESTMODE=1
+rem --- check-modus: kijk of een lopende run echt schrijft --------------
+if /i "%1"=="check" (
+    echo Draaiende trainers en versheid van de output:
+    powershell -NoProfile -Command "Write-Host ('Godot-processen actief : ' + @(Get-Process Godot* -ErrorAction SilentlyContinue).Count); Write-Host ''; Get-ChildItem 'datai_weights_f*.json','data\matchup_*.txt' | Sort-Object LastWriteTime -Descending | ForEach-Object { $leeftijd=[int]((Get-Date)-$_.LastWriteTime).TotalMinutes; Write-Host (($_.Name).PadRight(26) + $_.LastWriteTime.ToString('dd-MM HH:mm') + '  (' + $leeftijd + ' min geleden)') }; Write-Host ''; Write-Host 'Vers = de trainers schrijven. Gewichten verversen bij elke adoptie;' ; Write-Host 'rapporten (matchup) pas aan het einde van het budget.'"
+    pause
+    exit /b
+)
+
 set GODOT=%GODOT_PATH%
 if "%GODOT%"=="" set GODOT=C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe
 
