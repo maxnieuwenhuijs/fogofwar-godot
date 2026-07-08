@@ -704,6 +704,23 @@ func _ready() -> void:
 			await get_tree().create_timer(0.04).timeout
 		# Selecteer de eerste kaart zodat je selectie + pion-highlights ziet.
 		game._on_link_card_picked(0)
+		if "uncouple" in args:
+			# Koppel een paar eigen pionnen (krijgen archetype-look), trigger dan
+			# de ontkoppel-cascade en schiet tijdens de terug-poffen.
+			var linked := 0
+			for pid in game._pawn_views:
+				var pw2 = GameSession.state.pawns.get(pid)
+				if pw2 != null and pw2.owner_id == 1 and not pw2.is_eliminated and pw2.linked_card_id == -1:
+					game._on_link_card_picked(0)
+					game._on_link_pawn_clicked(pid)
+					linked += 1
+					if linked >= 6:
+						break
+			await get_tree().create_timer(0.6).timeout
+			game._uncouple_cascade()
+			await get_tree().create_timer(0.12).timeout
+			print("[LINK] ontkoppel-cascade getriggerd")
+			out = "res://_shot_link.png"
 		if "puff" in args:
 			# Koppel de kaart aan een eigen ongekoppelde pion en schiet tijdens
 			# de rook-pof (model-wissel base -> archetype).

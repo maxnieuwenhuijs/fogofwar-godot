@@ -883,6 +883,31 @@ func _animate_link(pawn_id: int) -> void:
 	tween.tween_callback(func() -> void: _tweening_pawns.erase(pawn_id))
 
 
+## Ontkoppel-cascade (nieuwe cyclus): elk gekoppeld stuk krijgt snel na
+## elkaar een rook-pofje waaronder het model terugwisselt naar base -
+## precies de omgekeerde beweging van de koppel-pof. Reserves (al base)
+## en lege vakken doen niks mee.
+func _uncouple_cascade() -> void:
+	var state: GameState = GameSession.state
+	var idx := 0
+	for pid in _pawn_views:
+		var pv: PawnView = _pawn_views[pid]
+		var pawn: Pawn = state.pawns.get(pid)
+		if pawn == null or pawn.is_eliminated or not pv.visible or not pv.has_archetype_look():
+			continue
+		var delay := float(idx) * 0.03  # snelle golf over de linie
+		idx += 1
+		var doctrine: int = state.doctrine_of(pawn.owner_id)
+		var utype: int = pawn.unit_type
+		get_tree().create_timer(delay).timeout.connect(func() -> void:
+			if not is_instance_valid(pv):
+				return
+			var puff: int = int(round(4.0 * PawnView.fx("link_puff", 1.0)))
+			if puff > 0:
+				_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2, Vector3.UP * 0.25, 1.3)
+			pv.set_character(doctrine, utype, null))  # terug naar base
+
+
 func _pick_link_pawn(player_id: int) -> Pawn:
 	# Bij voorkeur een pion met ademruimte (kan bewegen/aanvallen); anders
 	# eindig je met ingeklemde achterste-rij pionnen die niks kunnen.
@@ -924,6 +949,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			await get_tree().create_timer(0.9).timeout
 		if GameSession.state.round_number <= 1:
 			_clear_footprints()  # nieuwe cyclus: vers slagveld
+			_uncouple_cascade()  # gekoppelde stukken poffen snel terug naar base
 		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
 		var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
 		_card_hand.configure(int(doctrine.cards), int(doctrine.budget), int(doctrine.speed_max))

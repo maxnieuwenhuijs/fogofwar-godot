@@ -624,6 +624,12 @@ func last_clip_duration() -> float:
 ## Duur (sec) van de langste variant van een basisclip (bv. "die"), NIET
 ## gedeeld door de afspeelsnelheid - de aanroeper schaalt zelf met death_speed.
 ## 0 als de clip ontbreekt.
+## True als het stuk momenteel een archetype-model toont (spd/hp/atk/mix),
+## dus gekoppeld oogt; false voor het neutrale base-model of geen model.
+func has_archetype_look() -> bool:
+	return _char_key != "" and not _char_key.ends_with(":base")
+
+
 func clip_duration(base: String) -> float:
 	if _anim == null:
 		return 0.0
