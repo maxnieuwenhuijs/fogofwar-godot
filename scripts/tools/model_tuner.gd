@@ -21,6 +21,7 @@ const MELEE_DEFS: Array = [
 	{"key": "hit_delay", "label": "raakmoment", "min": 0.0, "max": 3.0, "step": 0.01, "fx": "melee_hit_delay", "def": 0.55},
 	{"key": "yaw", "label": "aanvaller-draai", "min": -180.0, "max": 180.0, "step": 1.0, "fx": "melee_yaw", "def": 0.0},
 	{"key": "advance_delay", "label": "opruk-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "fx": "melee_advance_delay", "def": 0.35},
+	{"key": "move_wait", "label": "opruk-wacht (dood)", "min": 0.0, "max": 1.5, "step": 0.01, "fx": "melee_move_wait", "def": 1.0},
 	{"key": "hit_speed", "label": "hit-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "fx": "hit_speed", "def": 1.0},
 	{"key": "death_speed", "label": "sterf-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "fx": "death_speed", "def": 1.0},
 	{"key": "retaliation_delay", "label": "terugslag-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "fx": "melee_retaliation_delay", "def": 0.35},
@@ -1177,8 +1178,11 @@ func _on_duel_test(kill: bool) -> void:
 			def_pv.play_hit()
 			def_pv.play_wound(Vector3(0.0, 0.0, 1.0)))
 	if kill:
-		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration()
-				+ _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35) - 0.15)
+		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration())
+		var dsp2: float = def_pv.melee_fx("death_speed", "death_speed", 1.0)
+		var death_dur2: float = def_pv.clip_duration("die") / maxf(dsp2, 0.01)
+		move_del = maxf(move_del, hd + death_dur2 * _pawn.melee_fx("move_wait", "melee_move_wait", 1.0))
+		move_del += _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35)
 		get_tree().create_timer(move_del).timeout.connect(func() -> void:
 			if gen != _preview_gen or _pawn == null or not is_instance_valid(_pawn):
 				return

@@ -1095,13 +1095,21 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			var hit_del: float = (attacker.melee_fx("hit_delay", "melee_hit_delay", 0.55)
 					if attacker != null else PawnView.fx("melee_hit_delay", 0.55))
 			if result.get("forced_move", false):
-				# Oprukken pas NA de stoot: wacht tot de melee-clip (bijna) klaar
-				# is, zodat de aanvaller de stoot op zijn eigen vak afmaakt en
-				# daarna pas het vrijgekomen vak in stapt.
+				# Opruk-choreografie: de aanvaller blijft op zijn eigen vak staan
+				# tot ZOWEL zijn eigen stoot-clip klaar is ALS de dood-animatie
+				# van de verdediger ver genoeg (opruk-wacht = fractie van de
+				# dood-clip; 1.0 = volledig afwachten). Pas daarna + de
+				# opruk-vertraging stapt hij het vrijgekomen vak in - dus nooit
+				# door een nog-stervende tegenstander heen.
 				var move_del: float = hit_del + 0.12
 				if attacker != null:
-					move_del = maxf(move_del, attacker.last_clip_duration()
-							+ attacker.melee_fx("advance_delay", "melee_advance_delay", 0.35) - 0.15)
+					move_del = maxf(move_del, attacker.last_clip_duration())
+				if result.get("eliminated", false) and melee_def != null and attacker != null:
+					var dsp: float = melee_def.melee_fx("death_speed", "death_speed", 1.0)
+					var death_dur: float = melee_def.clip_duration("die") / maxf(dsp, 0.01)
+					move_del = maxf(move_del, hit_del + death_dur * attacker.melee_fx("move_wait", "melee_move_wait", 1.0))
+				if attacker != null:
+					move_del += attacker.melee_fx("advance_delay", "melee_advance_delay", 0.35)
 				get_tree().create_timer(move_del).timeout.connect(
 					_animate_move.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",

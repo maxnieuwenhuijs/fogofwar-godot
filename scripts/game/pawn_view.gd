@@ -621,6 +621,20 @@ func last_clip_duration() -> float:
 	return _last_clip_len
 
 
+## Duur (sec) van de langste variant van een basisclip (bv. "die"), NIET
+## gedeeld door de afspeelsnelheid - de aanroeper schaalt zelf met death_speed.
+## 0 als de clip ontbreekt.
+func clip_duration(base: String) -> float:
+	if _anim == null:
+		return 0.0
+	var longest := 0.0
+	for v in _variants_of(base):
+		var a := _anim.get_animation(v)
+		if a != null:
+			longest = maxf(longest, a.length)
+	return longest
+
+
 ## Alle varianten van een basisnaam in het model: exact ("walk") of met
 ## volgnummer ("walk2"), inclusief bibliotheek-voorvoegsel ("lib/walk2").
 ## Synoniemen zoals clips uit Blender/Mixamo heten, zodat een model met
