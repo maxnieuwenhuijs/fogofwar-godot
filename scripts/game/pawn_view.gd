@@ -691,19 +691,21 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		dir = Vector3(0, 0, 1)
 	dir = dir.normalized()
 	_fling_weapon(dir)  # musket vliegt uit de handen
-	# Alleen kanon-kracht klapt het lijf volledig uiteen in zijn brokstukken.
-	if strength >= 1.2 and _spawn_gibs(dir, strength):
-		if _piece != null:
-			_piece.visible = false  # de brokstukken zíjn het lijk
-		_become_debris()
-		# Grove bloedmist + druppel-fontein op het moment van de knal; de
-		# druppels regenen neer en laten vlekken achter op het bord.
+	# Kanon-kracht: ALTIJD grove bloedmist + druppel-fontein op het moment van
+	# de knal - ook zonder gibs-bestand, zodat een nieuw model dat nog geen
+	# _gibs.glb heeft tóch de kanon-gore toont. Mét gibs-bestand klapt het lijf
+	# bovendien volledig uiteen; zonder valt het via de die-clip hieronder.
+	if strength >= 1.2:
 		var mist := fx("blood_mist", 1.0)
 		if mist > 0.0:
 			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
 			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
 		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
-		return
+		if _spawn_gibs(dir, strength):
+			if _piece != null:
+				_piece.visible = false  # de brokstukken zíjn het lijk
+			_become_debris()
+			return
 	# Lichtere kill (musket/melee): het lijf blijft HEEL. Heeft het model een
 	# die-clip, dan speelt DIE het sterven (zichtbaar, geen tuimel erdoorheen)
 	# en blijft het lijk in de eindpose van de animatie liggen.

@@ -112,6 +112,11 @@ func _ready() -> void:
 	_reload_pawns()
 	if "gibshot" in OS.get_cmdline_user_args():
 		var gs_args := OS.get_cmdline_user_args()
+		for a in gs_args:
+			var ai := ARCHS.find(a)
+			if ai > 0:
+				_arch_btn.select(ai)
+				_reload_pawns()
 		var gs_strength := 1.4
 		var gs_kind := "shot"
 		if "musket" in gs_args:
