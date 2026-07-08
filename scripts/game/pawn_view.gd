@@ -61,6 +61,7 @@ var _unit_type: int = -1
 var _char_key: String = ""   # laatst getoonde factie:type:archetype (idempotent)
 var _variant_cache: Dictionary = {}  # basisclip -> [volledige variant-namen]
 var _tune_key: String = ""   # "mouse/infantry_base" — sleutel in model_tuning.json
+var _weapon_tune_key: String = "mouse/musket"   # actieve musket-tuning-sleutel
 var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb)
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
@@ -1530,6 +1531,22 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	_update_material()
 
 
+## Bepaal welke musket-mesh + tuning-sleutel bij een model horen. Voorkeur:
+## een per-model musket naast het model (<model>_musket.glb, eigen sleutel),
+## anders de factie-musket (<factie>/musket.glb). Zo krijgt elk model dat met
+## z'n eigen wapen wordt geleverd dat automatisch, met eigen fijnafstelling.
+static func weapon_for(model_path: String, fac: String) -> Dictionary:
+	var per := model_path.get_basename() + "_musket"
+	for ext in [".glb", ".fbx"]:
+		if ResourceLoader.exists(per + ext):
+			return {"file": per + ext, "key": "%s/%s_musket" % [fac, model_path.get_file().get_basename()]}
+	for ext in [".glb", ".fbx"]:
+		var fp := "%s%s/musket%s" % [MODELS_DIR, fac, ext]
+		if ResourceLoader.exists(fp):
+			return {"file": fp, "key": "%s/musket" % fac}
+	return {"file": "", "key": "%s/musket" % fac}
+
+
 ## Wapen-prop (musket) aan de rechterhand van het karaktermodel. Conventie:
 ## assets/models/<factie>/musket.glb of .fbx (statische mesh). De prop wordt
 ## automatisch op musketlengte (~0.55 wereld-unit) geschaald; fijnafstelling
@@ -1538,12 +1555,9 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 func _attach_weapon(fac: String) -> void:
 	if _unit_type != 0:
 		return  # v1: alleen infanterie draagt het musket
-	var path := ""
-	for ext in [".glb", ".fbx"]:
-		var p := "%s%s/musket%s" % [MODELS_DIR, fac, ext]
-		if ResourceLoader.exists(p):
-			path = p
-			break
+	var wp := weapon_for(_model_path, fac)
+	var path: String = wp["file"]
+	_weapon_tune_key = wp["key"]
 	if path == "":
 		return
 	var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
@@ -1577,7 +1591,7 @@ func _attach_weapon(fac: String) -> void:
 		prop.scale = Vector3(factor, factor, factor)
 	# Fijnafstelling uit de tuning: pos ≈ wereld-units langs de hand-assen
 	# (gecorrigeerd voor skelet-schaal), rotatie in graden.
-	var t: Dictionary = model_tuning().get("%s/musket" % fac, {})
+	var t: Dictionary = model_tuning().get(_weapon_tune_key, {})
 	prop.scale *= float(t.get("scale", 1.0))
 	var pos: Array = t.get("pos", [0.0, 0.0, 0.0])
 	var rot: Array = t.get("rot", [0.0, 0.0, 0.0])

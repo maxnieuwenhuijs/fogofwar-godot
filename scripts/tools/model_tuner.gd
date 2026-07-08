@@ -127,6 +127,11 @@ func _ready() -> void:
 		get_tree().quit()
 	if "shot" in OS.get_cmdline_user_args():
 		var shot_args := OS.get_cmdline_user_args()
+		for a in shot_args:
+			var ai := ARCHS.find(a)
+			if ai > 0:
+				_arch_btn.select(ai)
+				_reload_pawns()
 		if "voorkant" in shot_args:
 			_view_btn.select(2)
 		elif "closeup" in shot_args:
@@ -567,6 +572,18 @@ func _tune_target_key() -> String:
 	return ""
 
 
+## Actieve musket-tuning-sleutel van het doelmodel (per-model of factie).
+func _weapon_target_key() -> String:
+	if _pawn != null and is_instance_valid(_pawn) and _pawn._weapon_tune_key != "":
+		return _pawn._weapon_tune_key
+	var fac := _fac_btn.get_selected_id()
+	var tp := _type_btn.get_selected_id()
+	for e in _formation_pawns:
+		if int(e.fac) == fac and int(e.tp) == tp and is_instance_valid(e.pv):
+			return (e.pv as PawnView)._weapon_tune_key
+	return "%s/musket" % _fac_name()
+
+
 ## Sliders/spinboxen vullen met de opgeslagen tuning van het doelmodel.
 func _sync_sliders_from_tuning() -> void:
 	var key := _tune_target_key()
@@ -589,7 +606,7 @@ func _sync_sliders_from_tuning() -> void:
 	for d in MELEE_DEFS:
 		if _melee_spins.has(String(d.key)):
 			_melee_spins[String(d.key)].value = float(mfxd.get(String(d.key), PawnView.fx(String(d.fx), float(d.def))))
-	var w: Dictionary = PawnView.model_tuning().get("%s/musket" % _fac_name(), {})
+	var w: Dictionary = PawnView.model_tuning().get(_weapon_target_key(), {})
 	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
 	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
 	var wrot: Array = w.get("rot", [0.0, 0.0, 0.0])
@@ -620,7 +637,7 @@ func _on_weapon_changed(_v: float) -> void:
 		return
 	if _pawn == null and _formation_pawns.is_empty():
 		return
-	PawnView.set_model_tuning("%s/musket" % _fac_name(), {
+	PawnView.set_model_tuning(_weapon_target_key(), {
 		"scale": snappedf(_weapon_spins["scale"].value, 0.01),
 		"pos": [snappedf(_weapon_spins["px"].value, 0.01),
 			snappedf(_weapon_spins["py"].value, 0.01),
