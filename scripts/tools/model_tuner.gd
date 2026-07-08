@@ -14,21 +14,15 @@ const ARCH_CARDS: Dictionary = {
 	"spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1],
 }
 ## Effect-knopjes (effects_tuning.json): label, bereik en standaardwaarde.
-## Per-model melee-tuning (Melee-tab): schrijft naar model_tuning.json
-## "<factie>/<model>" -> "melee". fx = globale effects-sleutel als fallback.
-const MELEE_DEFS: Array = [
-	{"key": "speed", "label": "stoot-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "fx": "melee_speed", "def": 1.4},
-	{"key": "hit_delay", "label": "raakmoment", "min": 0.0, "max": 3.0, "step": 0.01, "fx": "melee_hit_delay", "def": 0.55},
-	{"key": "yaw", "label": "aanvaller-draai", "min": -180.0, "max": 180.0, "step": 1.0, "fx": "melee_yaw", "def": 0.0},
-	{"key": "advance_delay", "label": "opruk-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "fx": "melee_advance_delay", "def": 0.35},
-	{"key": "move_wait", "label": "opruk-wacht (dood)", "min": 0.0, "max": 1.5, "step": 0.01, "fx": "melee_move_wait", "def": 1.0},
-	{"key": "hit_speed", "label": "hit-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "fx": "hit_speed", "def": 1.0},
-	{"key": "death_speed", "label": "sterf-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "fx": "death_speed", "def": 1.0},
-	{"key": "retaliation_delay", "label": "terugslag-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "fx": "melee_retaliation_delay", "def": 0.35},
-]
-var _melee_spins: Dictionary = {}
-
 const FX_DEFS: Array = [
+	{"cat": "bajonet", "key": "melee_speed", "label": "stoot-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.4},
+	{"cat": "bajonet", "key": "melee_hit_delay", "label": "raakmoment", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"cat": "bajonet", "key": "melee_yaw", "label": "aanvaller-draai", "min": -180.0, "max": 180.0, "step": 1.0, "def": 0.0},
+	{"cat": "bajonet", "key": "melee_advance_delay", "label": "opruk-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.5},
+	{"cat": "bajonet", "key": "melee_move_wait", "label": "opruk-wacht (dood)", "min": 0.0, "max": 1.5, "step": 0.01, "def": 0.3},
+	{"cat": "bajonet", "key": "hit_speed", "label": "hit-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bajonet", "key": "death_speed", "label": "sterf-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bajonet", "key": "melee_retaliation_delay", "label": "terugslag-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.1},
 	{"cat": "gore", "key": "hat_fling_power", "label": "hoed-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.5},
 	{"cat": "gore", "key": "hat_fling_time", "label": "hoed-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
 	{"cat": "gore", "key": "hat_pop_chance", "label": "hoed-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
@@ -486,17 +480,7 @@ func _build_ui() -> void:
 				PawnView.fx(String(d.key), float(d.def)), _on_fx_changed)
 			_fx_spins[String(d.key)] = spin
 		if String(cat[1]) == "bajonet":
-			# Alle knoppen hier zijn PER MODEL (factie+type linksboven).
-			var gridm := GridContainer.new()
-			gridm.columns = 8
-			gridm.add_theme_constant_override("h_separation", 10)
-			gridm.add_theme_constant_override("v_separation", 6)
-			tab.add_child(gridm)
-			for d in MELEE_DEFS:
-				gridm.add_child(_make_label(String(d.label)))
-				_melee_spins[String(d.key)] = _make_spin(gridm, float(d.min), float(d.max), float(d.step),
-					PawnView.fx(String(d.fx), float(d.def)), _on_melee_changed)
-			tab.add_child(_make_label("Knoppen gelden PER MODEL (kies factie+type linksboven). Preview: duel-knoppen in de Test-rij bovenin (verdediger = vergelijk-factie)."))
+			tab.add_child(_make_label("Melee-timing geldt voor ALLE modellen (zelfde clips). Preview: duel-knoppen in de Test-rij bovenin."))
 		if String(cat[1]) == "bloed":
 			# Dood-poel: per dood-clip de lijkpoel timen.
 			var rowd := HBoxContainer.new()
@@ -622,10 +606,6 @@ func _sync_sliders_from_tuning() -> void:
 	_muzzle_spins["x"].value = float(mz[0])
 	_muzzle_spins["y"].value = float(mz[1])
 	_muzzle_spins["z"].value = float(mz[2])
-	var mfxd: Dictionary = t.get("melee", {})
-	for d in MELEE_DEFS:
-		if _melee_spins.has(String(d.key)):
-			_melee_spins[String(d.key)].value = float(mfxd.get(String(d.key), PawnView.fx(String(d.fx), float(d.def))))
 	var w: Dictionary = PawnView.model_tuning().get(_weapon_target_key(), {})
 	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
 	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
@@ -1111,20 +1091,6 @@ func _refresh_info() -> void:
 
 ## Per-model melee-knop gewijzigd: schrijf naar model_tuning["<key>"]["melee"]
 ## (in het geheugen; OPSLAAN zet het op schijf). Werkt direct in duel/spel.
-func _on_melee_changed(_v: float) -> void:
-	if _updating:
-		return
-	var key := _tune_target_key()
-	if key == "":
-		return
-	var t: Dictionary = PawnView.model_tuning().get(key, {})
-	var m: Dictionary = t.get("melee", {})
-	for d in MELEE_DEFS:
-		m[String(d.key)] = _melee_spins[String(d.key)].value
-	t["melee"] = m
-	PawnView.set_model_tuning(key, t)
-
-
 func _save() -> void:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
