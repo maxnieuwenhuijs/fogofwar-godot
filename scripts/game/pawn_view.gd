@@ -882,6 +882,17 @@ func play_wound(world_dir: Vector3) -> void:
 	var amount := int(round(4.0 * fx("wound_blood", 1.0)))
 	if amount <= 0:
 		return
+	# wond-vertraging: spetters pas even NA het raakmoment (0 = direct).
+	var del: float = fx("wound_delay", 0.0)
+	if del > 0.0:
+		var tw := create_tween()
+		tw.tween_interval(del)
+		tw.tween_callback(_do_wound.bind(world_dir, amount))
+	else:
+		_do_wound(world_dir, amount)
+
+
+func _do_wound(world_dir: Vector3, amount: int) -> void:
 	var dir := world_dir
 	dir.y = 0.0
 	if dir.length() < 0.01:
