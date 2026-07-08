@@ -1122,6 +1122,7 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	scene_parent.add_child(parts_root)
 	# Zelfde maat/rotatie/plek als het getunede lijf.
 	parts_root.global_transform = (_piece as Node3D).global_transform
+	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
 	var parts: Array = parts_root.find_children("*", "MeshInstance3D", true, false)
 	if parts.is_empty():
 		parts_root.queue_free()
@@ -1248,6 +1249,7 @@ func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_sc
 	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
 	scene_parent.add_child(parts_root)
 	parts_root.global_transform = (_piece as Node3D).global_transform
+	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
 	var chosen: Node3D = null
 	for part in parts_root.find_children("*", "MeshInstance3D", true, false):
 		if chosen == null and String(part.name).to_lower().contains(part_name):
@@ -1652,22 +1654,40 @@ func _auto_fit_model(root: Node3D) -> void:
 static var _team_tex_cache: Dictionary = {}
 
 
-func _apply_team_texture() -> void:
-	if _piece == null or _model_path == "":
+## Team-texture voor een model. gore=true zoekt eerst de bloederige variant
+## (<model>_red_gore.png / _blue_gore.png) en valt terug op de gewone team-
+## texture; ontbreken beide, dan null (het model houdt z'n glb-texture).
+static func team_texture(model_path: String, team_v: int, gore: bool = false) -> Texture2D:
+	var suffix := "_red" if team_v == Constants.Team.RED else "_blue"
+	var candidates: Array = []
+	if gore:
+		candidates.append(model_path.get_basename() + suffix + "_gore.png")
+	candidates.append(model_path.get_basename() + suffix + ".png")
+	for path in candidates:
+		if not _team_tex_cache.has(path):
+			_team_tex_cache[path] = load(path) if ResourceLoader.exists(path) else null
+		if _team_tex_cache[path] != null:
+			return _team_tex_cache[path]
+	return null
+
+
+## Zet een albedo-texture op alle MeshInstance3D-delen onder root (per-instantie
+## material_override, dus gedeelde glb-materialen blijven schoon).
+static func apply_albedo_to(root: Node, tex: Texture2D) -> void:
+	if tex == null or root == null:
 		return
-	var suffix := "_red" if team == Constants.Team.RED else "_blue"
-	var tex_path := _model_path.get_basename() + suffix + ".png"
-	if not _team_tex_cache.has(tex_path):
-		_team_tex_cache[tex_path] = load(tex_path) if ResourceLoader.exists(tex_path) else null
-	var tex: Texture2D = _team_tex_cache[tex_path]
-	if tex == null:
-		return
-	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		var m := (mi as MeshInstance3D).get_active_material(0)
 		if m is BaseMaterial3D:
 			var dup := (m as BaseMaterial3D).duplicate()
 			(dup as BaseMaterial3D).albedo_texture = tex
 			(mi as MeshInstance3D).material_override = dup
+
+
+func _apply_team_texture() -> void:
+	if _piece == null or _model_path == "":
+		return
+	apply_albedo_to(_piece, team_texture(_model_path, team, false))
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):

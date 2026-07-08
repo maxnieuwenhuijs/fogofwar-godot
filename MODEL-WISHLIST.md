@@ -380,6 +380,10 @@ kijken, de voorkant in het spel is −Z. Je hoeft dus níks op maat te maken.
   met rode/blauwe uniform-accenten. Het spel kiest dan per team de juiste albedo;
   ontbreken de bestanden, dan blijft de basis-look + het sokkeltje. (Loader-kant
   wordt gebouwd zodra de eerste recolor er is.)
+- **Gibs-gore-texture (gepland):** leg optioneel `<basis>_red_gore.png` / `<basis>_blue_gore.png`
+  naast het model - een bloederige recolor van de team-texture. De brokstukken
+  (uit `<basis>_gibs.glb`) krijgen die automatisch; ontbreekt hij, dan de gewone
+  team-texture, anders de glb-texture. Zelfde UV-atlas als het hoofdmodel.
 - **Animaties (optioneel)**: `AnimationPlayer` met clips `idle` / `walk` /
   `attack` / `die` wordt automatisch opgepakt (namen instelbaar op PawnView)
 - Na het droppen éénmalig importeren: editor openen of
