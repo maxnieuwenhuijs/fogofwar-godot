@@ -23,10 +23,14 @@ BASE = ""
 OUT = ""
 CLIPS = []  # (naam, pad)
 FORCE_YAW = {}  # clipnaam -> graden die de clip gedraaid staat (handmatige override)
+DONOR = ""  # pad naar master-model: alle clips daarvan worden overgenomen
 i = 0
 while i < len(argv):
     a = argv[i]
-    if a == "--forceyaw":
+    if a == "--donor":
+        i += 1
+        DONOR = argv[i]
+    elif a == "--forceyaw":
         i += 1
         for part in argv[i].split(","):
             nm, deg = part.split("=")
@@ -206,6 +210,44 @@ if base.animation_data is None:
     base.animation_data_create()
 base_hips = base.data.bones.get('mixamorig:Hips')
 base_len = base_hips.head_local.length if base_hips else 1.0
+
+# --donor: alle clips van het master-model overnemen (zelfde Mixamo-skelet;
+# heup-locatiecurves worden geschaald naar de heuphoogte van dit model).
+if DONOR:
+    pre_names = {a.name for a in bpy.data.actions}
+    before_obj = set(bpy.context.scene.objects)
+    before_act = set(bpy.data.actions)
+    if DONOR.lower().endswith((".glb", ".gltf")):
+        bpy.ops.import_scene.gltf(filepath=os.path.abspath(DONOR))
+    else:
+        bpy.ops.import_scene.fbx(filepath=os.path.abspath(DONOR))
+    donor_objs = [o for o in bpy.context.scene.objects if o not in before_obj]
+    donor_acts = [a for a in bpy.data.actions if a not in before_act]
+    donor_arm = next((o for o in donor_objs if o.type == 'ARMATURE'), None)
+    ratio = 1.0
+    if donor_arm is not None:
+        dh = donor_arm.data.bones.get('mixamorig:Hips')
+        if dh is not None and dh.head_local.length > 1e-9:
+            ratio = base_len / dh.head_local.length
+    kept = 0
+    for act in donor_acts:
+        plain = act.name.split(".")[0]
+        if plain in pre_names or act.name.startswith("_"):
+            bpy.data.actions.remove(act)  # basis heeft deze clip al
+            continue
+        act.name = plain
+        if abs(ratio - 1.0) > 1e-3:
+            for fc in iter_fcurves(act):
+                if 'Hips' in fc.data_path and fc.data_path.endswith('.location'):
+                    for kp in fc.keyframe_points:
+                        kp.co.y *= ratio
+                        kp.handle_left.y *= ratio
+                        kp.handle_right.y *= ratio
+        kept += 1
+    for o in donor_objs:
+        bpy.data.objects.remove(o, do_unlink=True)
+    print("DONOR: %d clips overgenomen uit %s (heup-schaal %.3f)" % (kept, DONOR, ratio))
+
 q_rest_hips = base_hips.matrix_local.to_quaternion() if base_hips else mathutils.Quaternion()
 ref_act = next((a for a in bpy.data.actions if a.name.startswith('idle')), None)
 q_ref_arm = None

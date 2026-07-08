@@ -288,6 +288,24 @@ Camouflage-patroon in de schubben; de artillerie zit onder netten en zeilen.
 
 ## 4. De pipeline per karakter (Mixamo) + Model-tuner
 
+**Sneltoets (8 juli): 1 Mixamo-download per model.** Elk Mixamo-karakter
+krijgt hetzelfde skelet, dus de clips hoeven maar EEN keer per clip-set
+gedownload te worden. Nieuwe modellen erven alles van de master:
+
+```
+blender --background --python tools/blender_merge_character.py -- ^
+    --base assets/models/<factie>/<model>.glb ^
+    --donor assets/models/mouse/infantry_base.glb
+```
+
+De muis is de master voor alle INFANTERIE (rifle-set incl. ready_up); de
+eerste big bro wordt straks de master voor alle BIG BROS (fight-set:
+idle/walk/punch of sword/hit/death - cavalerie draagt geen musket).
+Heup-hoogteverschillen worden automatisch geschaald; kwartslag-fix,
+heup-locks en texture-verkleining draaien in dezelfde run mee. Stap 4-5
+hieronder zijn dus alleen nodig voor een NIEUWE clip-set of losse extra
+clips.
+
 1. **Genereer** het model (Laag Poly, target ~1.000) en download als `.glb`.
 2. **Blender (alleen doorgeefluik)**: importeer de glb → File → Export → **FBX**
    met Path Mode **Copy** + het **embed-doosje** aan (texture zit dan ín de FBX).
