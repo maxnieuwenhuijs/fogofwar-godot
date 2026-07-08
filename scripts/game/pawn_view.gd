@@ -558,11 +558,22 @@ func play_attack() -> void:
 
 
 ## Melee-klap: eigen clip als het model die heeft, anders de (schiet)attack.
+## Per-model gevechts-tuning: model_tuning.json "<factie>/<model>" ->
+## {"melee": {...}} (Melee-tab in de tuner). Valt terug op de globale
+## effects-knop en daarna de code-default - zonder per-model waarden
+## verandert er dus niets.
+func melee_fx(short_key: String, fx_key: String, def_val: float) -> float:
+	var m: Dictionary = model_tuning().get(_tune_key, {}).get("melee", {})
+	if m.has(short_key):
+		return float(m[short_key])
+	return fx(fx_key, def_val)
+
+
 func play_melee() -> void:
 	if _anim != null and not _variants_of(anim_melee).is_empty():
 		# melee-tempo: bajonet/zwaard-clips zijn lang; sneller afspelen houdt
 		# het gevecht strak (raakmoment stem je af met melee-raakmoment).
-		_play_variant(anim_melee, false, fx("melee_speed", 1.4))
+		_play_variant(anim_melee, false, melee_fx("speed", "melee_speed", 1.4))
 	else:
 		_play_variant(anim_attack)
 
@@ -581,7 +592,7 @@ func play_ready() -> void:
 
 func play_hit() -> void:
 	if _anim != null and not _variants_of(anim_hit).is_empty():
-		_play_variant(anim_hit)
+		_play_variant(anim_hit, false, melee_fx("hit_speed", "hit_speed", 1.0))
 
 
 ## Speel een willekeurige variant van een basisclip: "walk" kiest uit
@@ -706,7 +717,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 					break
 		if clip == "":
 			clip = die_variants[randi() % die_variants.size()]
-		_anim.play(clip, 0.2, fx("death_speed", 1.0))
+		_anim.play(clip, 0.2, melee_fx("death_speed", "death_speed", 1.0))
 		var base := clip.get_slice("/", clip.get_slice_count("/") - 1)
 		var cfg: Dictionary = fx_dict("death_pools").get(base, {})
 		# torso-afstand: van de voeten (pion-origin) naar waar de ROMP van dit

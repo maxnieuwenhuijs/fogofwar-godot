@@ -1066,7 +1066,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				# melee-draai: sommige stoot-clips prikken schuin t.o.v. de
 				# kijkrichting; deze knop draait de aanvaller bij zodat de
 				# bajonet echt richting het doelwit gaat.
-				attacker.rotate_y(deg_to_rad(PawnView.fx("melee_yaw", 0.0)))
+				attacker.rotate_y(deg_to_rad(attacker.melee_fx("yaw", "melee_yaw", 0.0)))
 				attacker.play_melee()
 			# Verdediger draait zich naar de aanvaller: je vangt de stoot recht
 			# van voren en valt straks van de aanvaller af.
@@ -1075,7 +1075,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				melee_def.face_dir(result.attacker_from_pos - result.defender_pos)
 			# melee-raakmoment: de klap landt pas op het stoot-frame van de
 			# clip; alles hieronder (schade, geluid, opruk, terugslag) volgt.
-			var hit_del: float = PawnView.fx("melee_hit_delay", 0.55)
+			var hit_del: float = (attacker.melee_fx("hit_delay", "melee_hit_delay", 0.55)
+					if attacker != null else PawnView.fx("melee_hit_delay", 0.55))
 			if result.get("forced_move", false):
 				# Oprukken pas NA de stoot: wacht tot de melee-clip (bijna) klaar
 				# is, zodat de aanvaller de stoot op zijn eigen vak afmaakt en
@@ -1083,7 +1084,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				var move_del: float = hit_del + 0.12
 				if attacker != null:
 					move_del = maxf(move_del, attacker.last_clip_duration()
-							+ PawnView.fx("melee_advance_delay", 0.35) - 0.15)
+							+ attacker.melee_fx("advance_delay", "melee_advance_delay", 0.35) - 0.15)
 				get_tree().create_timer(move_del).timeout.connect(
 					_animate_move.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",
@@ -1094,11 +1095,13 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				_death_sound(action.defender_id, hit_del)
 			if result.get("retaliation", false):
 				# Terugslag: de aanvaller krijgt even later zelf schade te zien.
-				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), hit_del + 0.35,
+				var ret_del: float = hit_del + (melee_def.melee_fx("retaliation_delay", "melee_retaliation_delay", 0.35)
+						if melee_def != null else 0.35)
+				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), ret_del,
 					result.defender_pos, result.get("attacker_eliminated", false), 0.5)
-				_retaliation_sound(action.defender_id, hit_del + 0.35)
+				_retaliation_sound(action.defender_id, ret_del)
 				if result.get("attacker_eliminated", false):
-					_death_sound(action.attacker_id, hit_del + 0.4)
+					_death_sound(action.attacker_id, ret_del + 0.05)
 		"shot":
 			var shooter: PawnView = _pawn_views.get(action.shooter_id)
 			if shooter != null:
