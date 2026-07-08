@@ -55,6 +55,7 @@
 	"melee_speed": 1.4,
 	"melee_yaw": 0.0,
 	"mist_travel": 2.0,
+	"ready_chance": 0.3,
 	"rim_light": 0.0,
 	"ring_glow": 0.12,
 	"saturation": 0.57,
