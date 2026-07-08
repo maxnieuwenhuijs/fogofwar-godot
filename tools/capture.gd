@@ -676,6 +676,11 @@ func _ready() -> void:
 		print("[REVEAL] fase=%s" % Phase.to_string_phase(GameSession.state.phase))
 		out = "res://_shot_reveal.png"
 	elif "link" in args:
+		var lfn := {"muis": Constants.Doctrine.MUIS, "varken": Constants.Doctrine.MENS, "leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		for fn in lfn:
+			if fn in args:
+				game._human_doctrine = lfn[fn]
+				game._ai_doctrine = lfn[fn]
 		var hand: CardHand = game.get_node("UI/CardHand")
 		var steps := 0
 		while not (Phase.is_linking(GameSession.state.phase) and GameSession.state.current_player == 1) \
@@ -689,16 +694,30 @@ func _ready() -> void:
 			elif Phase.is_reveal(st.phase):
 				game._continue_after_reveal()
 			elif Phase.is_define(st.phase) and st.cards_defined[1].size() == 0:
+				var lbud: int = int(GameSession.state.doctrine_data_of(1).budget)
 				for c in hand.get_card_views():
-					c.data.hp = 3
-					c.data.stamina = 2
-					c.data.attack = 2
+					c.data.hp = 1
+					c.data.stamina = mini(lbud - 2, 3)
+					c.data.attack = lbud - 1 - mini(lbud - 2, 3)
 					c._refresh()
 				hand._on_confirm_pressed()
 			await get_tree().create_timer(0.04).timeout
 		# Selecteer de eerste kaart zodat je selectie + pion-highlights ziet.
 		game._on_link_card_picked(0)
-		await get_tree().create_timer(0.4).timeout
+		if "puff" in args:
+			# Koppel de kaart aan een eigen ongekoppelde pion en schiet tijdens
+			# de rook-pof (model-wissel base -> archetype).
+			var target_id := -1
+			for pid in game._pawn_views:
+				var pw = GameSession.state.pawns.get(pid)
+				if pw != null and pw.owner_id == 1 and not pw.is_eliminated and pw.linked_card_id == -1:
+					target_id = pid
+					break
+			if target_id >= 0:
+				game._on_link_pawn_clicked(target_id)
+			await get_tree().create_timer(0.13).timeout
+		else:
+			await get_tree().create_timer(0.4).timeout
 		print("[LINK] fase=%s beurt=%d" % [Phase.to_string_phase(GameSession.state.phase), GameSession.state.current_player])
 		out = "res://_shot_link.png"
 	elif "play" in args:

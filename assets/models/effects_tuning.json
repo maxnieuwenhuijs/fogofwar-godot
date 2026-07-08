@@ -50,6 +50,7 @@
 	"limb_fling_power": 0.9,
 	"limb_fling_time": 1.0,
 	"limb_shed_chance": 0.4,
+	"link_puff": 1.0,
 	"melee_advance_delay": 1.4,
 	"melee_hit_delay": 0.3,
 	"melee_speed": 1.4,

@@ -857,8 +857,24 @@ func _animate_link(pawn_id: int) -> void:
 	if pv == null:
 		return
 	pv.flash_ring(Color(0.5, 0.85, 1.0))
-	if randf() < PawnView.fx("ready_chance", 0.3):
-		pv.play_ready()  # deel van de pionnen maakt zich klaar (kans instelbaar)
+	# Rook-pofje verhult de model-wissel: base -> archetype gebeurt ONDER de
+	# rook, zodat het poppetje na de pof als z'n nieuwe (bv. spd) versie
+	# tevoorschijn komt. Grootte tunebaar via "koppel-pof".
+	var puff: int = int(round(4.0 * PawnView.fx("link_puff", 1.0)))
+	if puff > 0:
+		_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2, Vector3.UP * 0.25, 1.3)
+	# Onder de pof: naar het archetype-model wisselen + daar de ready-flourish.
+	var link_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	var link_card: Card = null
+	if link_pawn != null and link_pawn.linked_card_id >= 0:
+		link_card = GameSession.state.all_cards.get(link_pawn.linked_card_id)
+	get_tree().create_timer(0.14).timeout.connect(func() -> void:
+		if not is_instance_valid(pv):
+			return
+		if link_pawn != null:
+			pv.set_character(GameSession.state.doctrine_of(link_pawn.owner_id), link_pawn.unit_type, link_card)
+		if randf() < PawnView.fx("ready_chance", 0.3):
+			pv.play_ready())
 	_tweening_pawns[pawn_id] = true
 	var base_y := pv.position.y
 	var tween := create_tween().set_trans(Tween.TRANS_SINE)
