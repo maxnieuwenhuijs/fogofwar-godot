@@ -1,9 +1,0 @@
-Fog of War — trainings-matchup voor Mens
-Generaties: 168 · adopties: 71 · minuten: 481.6
-Winrate van Mens tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Mens     58.1%  (1008 potjes)
-  vs Muis     98.6%  (1008 potjes)
-  vs Leeuw    14.4%  (1008 potjes)
-  vs Beer     25.4%  (1008 potjes)
-  vs Wolf     67.7%  (1008 potjes)
-  vs Vos      24.8%  (1008 potjes)

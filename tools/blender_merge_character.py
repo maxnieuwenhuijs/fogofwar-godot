@@ -15,6 +15,8 @@ Gebruik (headless Blender):
 import bpy
 import sys
 import os
+import math
+import mathutils
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 BASE = ""
@@ -101,6 +103,76 @@ def detrend_root_motion(act):
         print("  in-place: %s drift %.3f verwijderd (%s)" % (act.name, drift, fc.data_path))
 
 
+def hips_first_quat(act):
+    """Eerste-frame heup-rotatie (pose-space) uit de fcurves; None als afwezig."""
+    comps = {}
+    for fc in iter_fcurves(act):
+        if 'Hips' in fc.data_path and fc.data_path.endswith('.rotation_quaternion'):
+            if len(fc.keyframe_points):
+                comps[fc.array_index] = fc.keyframe_points[0].co.y
+    if len(comps) < 4:
+        return None
+    return mathutils.Quaternion((comps[0], comps[1], comps[2], comps[3]))
+
+
+def yaw_between(q_ref_arm, q_clip_arm):
+    """Getekende draai (graden) om de wereld-Z tussen twee armature-space rotaties."""
+    d = q_clip_arm @ q_ref_arm.inverted()
+    twist = mathutils.Quaternion((d.w, 0.0, d.y, 0.0))
+    if twist.magnitude < 1e-9:
+        return 0.0
+    twist.normalize()
+    return math.degrees(twist.to_euler().y)
+
+
+def fix_quarter_turn(act, q_rest, q_ref_arm, ref_name):
+    """Mixamo levert clips soms een kwart- of halve slag gedraaid (bayonet/hit).
+    Meet de heup-yaw op frame 0 t.o.v. de referentie-clip; ligt het verschil op
+    een veelvoud van 90 graden, draai dan de HELE clip (rotatie- en
+    locatie-keys van de heup) terug. Kleine bedoelde draaiingen (<45) blijven."""
+    q0 = hips_first_quat(act)
+    if q0 is None:
+        return
+    yaw = yaw_between(q_ref_arm, q_rest @ q0)
+    snap = round(yaw / 90.0) * 90.0
+    if abs(snap) < 45.0 or abs(yaw - snap) > 35.0:
+        return
+    q_corr = mathutils.Quaternion((0.0, 1.0, 0.0), math.radians(-snap))
+    q_fix = q_rest.inverted() @ q_corr @ q_rest
+    rot_fcs = sorted([fc for fc in iter_fcurves(act)
+                      if 'Hips' in fc.data_path and fc.data_path.endswith('.rotation_quaternion')],
+                     key=lambda fc: fc.array_index)
+    if len(rot_fcs) == 4 and len({len(fc.keyframe_points) for fc in rot_fcs}) == 1:
+        for k in range(len(rot_fcs[0].keyframe_points)):
+            q_old = mathutils.Quaternion((rot_fcs[0].keyframe_points[k].co.y,
+                                          rot_fcs[1].keyframe_points[k].co.y,
+                                          rot_fcs[2].keyframe_points[k].co.y,
+                                          rot_fcs[3].keyframe_points[k].co.y))
+            q_new = q_fix @ q_old
+            for idx, comp in enumerate((q_new.w, q_new.x, q_new.y, q_new.z)):
+                kp = rot_fcs[idx].keyframe_points[k]
+                dy = comp - kp.co.y
+                kp.co.y = comp
+                kp.handle_left.y += dy
+                kp.handle_right.y += dy
+    loc_fcs = sorted([fc for fc in iter_fcurves(act)
+                      if 'Hips' in fc.data_path and fc.data_path.endswith('.location')],
+                     key=lambda fc: fc.array_index)
+    if len(loc_fcs) == 3 and len({len(fc.keyframe_points) for fc in loc_fcs}) == 1:
+        for k in range(len(loc_fcs[0].keyframe_points)):
+            v_old = mathutils.Vector((loc_fcs[0].keyframe_points[k].co.y,
+                                      loc_fcs[1].keyframe_points[k].co.y,
+                                      loc_fcs[2].keyframe_points[k].co.y))
+            v_new = q_fix @ v_old
+            for idx in range(3):
+                kp = loc_fcs[idx].keyframe_points[k]
+                dy = v_new[idx] - kp.co.y
+                kp.co.y = v_new[idx]
+                kp.handle_left.y += dy
+                kp.handle_right.y += dy
+    print("  kwartslag-fix: %s stond %.0f graden gedraaid t.o.v. %s -> teruggedraaid" % (act.name, snap, ref_name))
+
+
 def add_track(arm, act, name):
     act.name = name
     act.use_fake_user = True
@@ -123,12 +195,21 @@ if base.animation_data is None:
     base.animation_data_create()
 base_hips = base.data.bones.get('mixamorig:Hips')
 base_len = base_hips.head_local.length if base_hips else 1.0
+q_rest_hips = base_hips.matrix_local.to_quaternion() if base_hips else mathutils.Quaternion()
+ref_act = next((a for a in bpy.data.actions if a.name.startswith('idle')), None)
+q_ref_arm = None
+if ref_act is not None:
+    _q0 = hips_first_quat(ref_act)
+    if _q0 is not None:
+        q_ref_arm = q_rest_hips @ _q0
 
 # Bestaande clips: track garanderen + walk/idle in place maken.
 tracked = {t.name for t in base.animation_data.nla_tracks}
 for act in list(bpy.data.actions):
     if act.name not in tracked and not act.name.startswith("_"):
         add_track(base, act, act.name)
+    if q_ref_arm is not None and not act.name.startswith("idle"):
+        fix_quarter_turn(act, q_rest_hips, q_ref_arm, ref_act.name)
     if act.name.startswith(("hit", "bayonet", "melee")):
         lock_hips_location(act)
     elif act.name.startswith(("walk", "idle")):
@@ -157,6 +238,8 @@ for clip_name, path in CLIPS:
                         kp.co.y *= ratio
                         kp.handle_left.y *= ratio
                         kp.handle_right.y *= ratio
+        if q_ref_arm is not None and not clip_name.startswith("idle"):
+            fix_quarter_turn(act, q_rest_hips, q_ref_arm, ref_act.name)
         if clip_name.startswith(("hit", "bayonet", "melee")):
             lock_hips_location(act)
         elif clip_name.startswith(("walk", "idle")):
@@ -167,6 +250,14 @@ for clip_name, path in CLIPS:
         bpy.data.objects.remove(o, do_unlink=True)
 
 base.animation_data.action = None
+# Textures klein houden: de game overschrijft de albedo toch met de losse
+# team-textures (<basis>_red/_blue.png); een volle 4K-PNG in de glb is 10+ MB
+# bloat. Verklein naar max 1024 en exporteer als JPEG (mobile-target).
+for img in bpy.data.images:
+    if img.size[0] > 1024 or img.size[1] > 1024:
+        img.scale(min(img.size[0], 1024), min(img.size[1], 1024))
+        print('  texture verkleind: %s -> %dx%d' % (img.name, img.size[0], img.size[1]))
 bpy.ops.export_scene.gltf(filepath=os.path.abspath(OUT), export_format='GLB',
-                          export_animation_mode='NLA_TRACKS')
+                          export_animation_mode='NLA_TRACKS',
+                          export_image_format='JPEG', export_jpeg_quality=85)
 print("KLAAR ->", OUT)

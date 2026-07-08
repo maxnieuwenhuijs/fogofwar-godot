@@ -1,9 +1,0 @@
-Fog of War — trainings-matchup voor Vos
-Generaties: 136 · adopties: 37 · minuten: 481.1
-Winrate van Vos tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Mens     87.4%  (816 potjes)
-  vs Muis     98.8%  (816 potjes)
-  vs Leeuw    18.1%  (816 potjes)
-  vs Beer     69.6%  (816 potjes)
-  vs Wolf     86.0%  (816 potjes)
-  vs Vos      47.5%  (816 potjes)
