@@ -50,8 +50,8 @@
 	"limb_fling_power": 0.9,
 	"limb_fling_time": 1.0,
 	"limb_shed_chance": 0.4,
-	"melee_advance_delay": 0.35,
-	"melee_hit_delay": 0.55,
+	"melee_advance_delay": 1.4,
+	"melee_hit_delay": 0.3,
 	"melee_speed": 1.4,
 	"melee_yaw": 0.0,
 	"mist_travel": 2.0,
@@ -79,6 +79,6 @@
 	"spot_z": 5.0,
 	"wheel_base": 0.415,
 	"wheel_width": 0.058,
-	"world_ambient": 0.0,
+	"world_ambient": 0.1,
 	"world_light": 1.14
 }

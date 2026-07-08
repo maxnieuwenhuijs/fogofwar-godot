@@ -145,10 +145,22 @@ def fix_quarter_turn(act, q_rest, q_ref_arm, ref_name, force_deg=None):
         if abs(snap) < 1e-6:
             return
     else:
-        q0 = hips_first_quat(act)
-        if q0 is None:
+        # Meet de yaw over de HELE clip (gemiddelde van alle keys): een
+        # rig-offset staat de hele clip rond de 90, een bedoelde
+        # reactie-twist (of geweer-aanslag) blijft daar ruim onder.
+        fcs = sorted([fc for fc in iter_fcurves(act)
+                      if 'Hips' in fc.data_path and fc.data_path.endswith('.rotation_quaternion')],
+                     key=lambda fc: fc.array_index)
+        if len(fcs) != 4 or len({len(fc.keyframe_points) for fc in fcs}) != 1:
             return
-        yaw = yaw_between(q_ref_arm, q_rest @ q0)
+        yaws = []
+        for k in range(len(fcs[0].keyframe_points)):
+            qk = mathutils.Quaternion((fcs[0].keyframe_points[k].co.y, fcs[1].keyframe_points[k].co.y,
+                                       fcs[2].keyframe_points[k].co.y, fcs[3].keyframe_points[k].co.y))
+            yaws.append(yaw_between(q_ref_arm, q_rest @ qk))
+        if not yaws:
+            return
+        yaw = sum(yaws) / len(yaws)
         snap = round(yaw / 90.0) * 90.0
         if abs(snap) < 45.0 or abs(yaw - snap) > 35.0:
             return
