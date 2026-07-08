@@ -42,6 +42,7 @@ const FX_DEFS: Array = [
 	{"cat": "bloed", "key": "mist_travel", "label": "mist-dracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
 	{"cat": "bloed", "key": "drop_fall_time", "label": "druppel-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "drop_size", "label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "wound_blood", "label": "wond-bloed (overleven)", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "drop_stain_chance", "label": "druppel-vlekkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
 	{"cat": "bloed", "key": "drop_stain_delay", "label": "vlek-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.05},
 	{"cat": "bloed", "key": "drop_stain_grow", "label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},
@@ -1088,7 +1089,8 @@ func _on_duel_test(kill: bool) -> void:
 		if kill:
 			def_pv.play_death(Vector3(0.0, 0.0, 1.0), 0.7, "melee")
 		else:
-			def_pv.play_hit())
+			def_pv.play_hit()
+			def_pv.play_wound(Vector3(0.0, 0.0, 1.0)))
 	if kill:
 		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration()
 				+ _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35) - 0.15)

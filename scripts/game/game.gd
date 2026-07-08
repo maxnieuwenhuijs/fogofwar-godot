@@ -1750,13 +1750,16 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 		_kill_view(pawn_id, world_dir, s, kind)
 	else:
 		var pv: PawnView = _pawn_views.get(pawn_id)
+		# Levende stukken (infanterie/cavalerie) bloeden; een kanon niet.
+		var hit_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+		var bloedt: bool = hit_pawn != null and hit_pawn.unit_type != Constants.UnitType.ARTILLERY
 		if pv != null and pv.visible:
 			pv.flash_hit()
 			pv.stagger(world_dir)
 			pv.play_hit()  # incasseer-animatie (hit1/hit2) bij overleven
-		# Bloedspat als een levend stuk (infanterie/cavalerie) de klap overleeft.
-		var hit_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
-		if hit_pawn != null and hit_pawn.unit_type != Constants.UnitType.ARTILLERY:
+			if bloedt:
+				pv.play_wound(world_dir)  # spetters + druppels: gewond maar staand
+		if bloedt:
 			Audio.play("blood_splash")
 	if damage > 0:
 		_spawn_damage_float(coord, "-%d" % damage)

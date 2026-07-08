@@ -874,6 +874,27 @@ func _spawn_blood(world_center: Vector3, amount: int, spread: float = 0.25, dela
 ## Gerichte bloedstraal: druppels spuiten kort achter elkaar in een kegel rond
 ## dir uit de wond (borst bij een schot, stomp-gat bij een verloren ledemaat),
 ## vallen in een boogje neer en verdwijnen. Laat één klein plasje achter.
+## Overleef-wond: de klap komt aan maar de pion blijft staan. Een korte
+## spetterstraal uit de romp met de klap mee (weg van de aanvaller) plus
+## een zwakkere zijwaartse splash - druppels vliegen rond en laten kleine
+## vlekjes achter. Knop "wond-bloed" (0 = uit) schaalt de hoeveelheid.
+func play_wound(world_dir: Vector3) -> void:
+	var amount := int(round(4.0 * fx("wound_blood", 1.0)))
+	if amount <= 0:
+		return
+	var dir := world_dir
+	dir.y = 0.0
+	if dir.length() < 0.01:
+		dir = -global_transform.basis.z
+	dir = dir.normalized()
+	var origin := global_position + Vector3(0.0, 0.55, 0.0) + dir * 0.08
+	_spawn_blood_spurt(origin, dir, amount)
+	if amount >= 3:
+		# Backsplash: zwakker straaltje schuin opzij voor een voller beeld.
+		var side := dir.rotated(Vector3.UP, randf_range(-1.2, 1.2))
+		_spawn_blood_spurt(origin + Vector3(0.0, -0.12, 0.0), side, amount / 2)
+
+
 func _spawn_blood_spurt(origin: Vector3, dir: Vector3, amount: int) -> void:
 	var parent := get_parent()
 	if parent == null or amount <= 0:
