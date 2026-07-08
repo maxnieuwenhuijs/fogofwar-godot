@@ -301,8 +301,9 @@ Camouflage-patroon in de schubben; de artillerie zit onder netten en zeilen.
 | `idle` (+ `idle2`, `idle3`…) | Rifle Idle | 1-3 varianten |
 | `walk` (+ `walk2`…) | Walk With Rifle — **"In Place" aanvinken!** | 1-3 varianten |
 | `attack` | Firing Rifle (enkel schot, staand) | 1 |
-| `melee` (+ `melee2`…) | Standing Melee Attack / Rifle Butt (kolfstoot) | 1-2 — ontbreekt hij, dan gebruikt melee de attack-clip |
-| `die` (+ `die2`…) | Rifle Death / Death From The Front | 1-2 varianten |
+| `melee` (+ `melee2`…) | Bayonet Attack / Rifle Butt (kolfstoot) | 1-2 — ontbreekt hij, dan gebruikt melee de attack-clip |
+| `hit` (+ `hit2`…) | Hit Reaction / Standing React Small | 1-2 — overleef-reactie bij een treffer |
+| `die` (+ `die2`…) | Rifle Death / Standing Death (voor- en achterover) | 1-2 varianten |
 | `aim` (voor later: aanleg-fase) | Rifle Down To Aim | optioneel |
 
 5. **Laat alles in Downloads staan** en geef door welk bestand welk archetype
