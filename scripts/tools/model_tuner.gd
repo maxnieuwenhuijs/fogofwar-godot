@@ -258,15 +258,15 @@ func _apply_camera() -> void:
 	var big := not _formation_pawns.is_empty()
 	match view:
 		1:  # close-up: zelfde spel-hoek, strak op het model
-			_cam.size = 4.2 if big else 1.5
+			_cam.size = 8.5 if big else 1.5
 			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.55, 0.0) + CAM_BASIS.z * 8.0)
 		2:  # voorkant: recht van voren, licht van boven (linies vallen vrij)
-			_cam.size = 4.6 if big else 1.7
+			_cam.size = 9.0 if big else 1.7
 			_cam.transform = Transform3D(Basis(), Vector3(0.0, 1.2, 3.6))
 			_cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
 		_:  # spel-camera (bordhoek)
-			_cam.size = 6.2 if big else 2.9
-			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.45, 0.0) + CAM_BASIS.z * 8.0)
+			_cam.size = 12.5 if big else 2.9
+			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.6, 0.0) + CAM_BASIS.z * 8.0)
 
 
 # --- UI -------------------------------------------------------------------------
@@ -564,8 +564,18 @@ func _on_model_select_changed(_i: int) -> void:
 func _tune_target_key() -> String:
 	if _pawn != null and is_instance_valid(_pawn):
 		return _pawn._tune_key
+	return _formation_target_key()
+
+
+## Model in de formatie dat bij de dropdowns hoort (factie+type+archetype),
+## met terugval op alleen factie+type.
+func _formation_target_key() -> String:
 	var fac := _fac_btn.get_selected_id()
 	var tp := _type_btn.get_selected_id()
+	var arch: String = ARCHS[_arch_btn.selected]
+	for e in _formation_pawns:
+		if int(e.fac) == fac and int(e.tp) == tp and String(e.get("arch", "base")) == arch and is_instance_valid(e.pv):
+			return (e.pv as PawnView)._tune_key
 	for e in _formation_pawns:
 		if int(e.fac) == fac and int(e.tp) == tp and is_instance_valid(e.pv):
 			return (e.pv as PawnView)._tune_key
@@ -578,6 +588,10 @@ func _weapon_target_key() -> String:
 		return _pawn._weapon_tune_key
 	var fac := _fac_btn.get_selected_id()
 	var tp := _type_btn.get_selected_id()
+	var arch: String = ARCHS[_arch_btn.selected]
+	for e in _formation_pawns:
+		if int(e.fac) == fac and int(e.tp) == tp and String(e.get("arch", "base")) == arch and is_instance_valid(e.pv):
+			return (e.pv as PawnView)._weapon_tune_key
 	for e in _formation_pawns:
 		if int(e.fac) == fac and int(e.tp) == tp and is_instance_valid(e.pv):
 			return (e.pv as PawnView)._weapon_tune_key
@@ -686,18 +700,29 @@ func _build_formation() -> void:
 		_ref.queue_free()
 	_ref = null
 	var facs: Array = [_my_fac_btn.get_selected_id(), _opp_fac_btn.get_selected_id()]
+	# Kolommen = archetypes (base/spd/hp/atk/mix), rijen = eenheidstype
+	# (infanterie vooraan, dan cavalerie, dan artillerie). Jouw factie
+	# tegenover de tegenstander, zelfde type recht tegenover elkaar.
+	var col_x := 1.4   # afstand tussen archetype-kolommen
+	var row_z := [1.3, 2.9, 4.5]  # diepte per type (infanterie het dichtst bij het midden)
 	for side in 2:
-		var z := 1.0 if side == 0 else -1.0
+		var sgn := 1.0 if side == 0 else -1.0
 		for tp in 3:  # 0=infanterie, 1=cavalerie, 2=artillerie
-			var pv: PawnView = PAWN_SCENE.instantiate()
-			pv.team = Constants.Team.RED if side == 0 else Constants.Team.BLUE
-			pv.position = Vector3(float(tp - 1), 0.05, z)
-			add_child(pv)
-			pv.face_dir(Vector2i(0, -1) if side == 0 else Vector2i(0, 1))
-			pv.set_unit_type(tp)
-			pv.set_character(facs[side], tp, null)
-			_formation_pawns.append({"pv": pv, "fac": int(facs[side]), "tp": tp})
-	_info.text = "Formatie: %s (rood, onder) vs %s (blauw, boven) — schaal 1-op-1. Sliders tunen het model uit de dropdowns linksboven (factie + type)." % [
+			for ci in ARCHS.size():
+				var arch: String = ARCHS[ci]
+				var card = null
+				if ARCH_CARDS.has(arch):
+					var st: Array = ARCH_CARDS[arch]
+					card = Card.new(0, 0, 0, int(st[0]), int(st[1]), int(st[2]))
+				var pv: PawnView = PAWN_SCENE.instantiate()
+				pv.team = Constants.Team.RED if side == 0 else Constants.Team.BLUE
+				pv.position = Vector3((float(ci) - 2.0) * col_x, 0.05, sgn * row_z[tp])
+				add_child(pv)
+				pv.face_dir(Vector2i(0, -1) if side == 0 else Vector2i(0, 1))
+				pv.set_unit_type(tp)
+				pv.set_character(facs[side], tp, card)
+				_formation_pawns.append({"pv": pv, "fac": int(facs[side]), "tp": tp, "arch": arch})
+	_info.text = "Formatie: %s (rood) vs %s (blauw). Kolommen = base/spd/hp/atk/mix, rijen = infanterie/cavalerie/artillerie (voor naar achter). Sliders tunen het model uit de dropdowns (factie + type + archetype)." % [
 		Constants.doctrine_name(facs[0]), Constants.doctrine_name(facs[1])]
 	_sync_sliders_from_tuning()
 	_apply_camera()

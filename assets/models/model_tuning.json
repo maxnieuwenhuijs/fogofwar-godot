@@ -10,6 +10,30 @@
 		"y": 0.005,
 		"z": 0.0
 	},
+	"mouse/infantry_spd": {
+		"muzzle": [
+			0.15,
+			0.7,
+			0.45
+		],
+		"scale": 0.9,
+		"x": 0.0,
+		"y": 0.0,
+		"z": 0.0
+	},
+	"mouse/infantry_spd_musket": {
+		"pos": [
+			0.03,
+			0.18,
+			-0.01
+		],
+		"rot": [
+			35.0,
+			45.0,
+			-35.0
+		],
+		"scale": 1.3
+	},
 	"mouse/musket": {
 		"pos": [
 			0.02,
