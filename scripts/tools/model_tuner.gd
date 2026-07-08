@@ -339,6 +339,60 @@ func _build_ui() -> void:
 			if _formation_btn.button_pressed:
 				_build_formation())
 
+	# --- Preview-strip: altijd zichtbaar, welke tab je ook open hebt ----------
+	# Elke druk onderbreekt de vorige preview direct (zie _interrupt_previews).
+	var rowp := HBoxContainer.new()
+	box.add_child(rowp)
+	rowp.add_child(_make_label("Clip: "))
+	for clip in ["idle", "walk", "attack", "melee", "hit", "ready", "die"]:
+		var pbtn := Button.new()
+		pbtn.text = clip
+		pbtn.pressed.connect(_on_clip.bind(clip))
+		rowp.add_child(pbtn)
+	var freeze_btn := Button.new()
+	freeze_btn.text = "stilzetten"
+	freeze_btn.pressed.connect(_freeze_pose)
+	rowp.add_child(freeze_btn)
+	var rowt := HBoxContainer.new()
+	box.add_child(rowt)
+	rowt.add_child(_make_label("Test: "))
+	var fire_btn := Button.new()
+	fire_btn.text = "vuur"
+	fire_btn.pressed.connect(_on_fire_test)
+	rowt.add_child(fire_btn)
+	var impact_btn := Button.new()
+	impact_btn.text = "inslag (kanon)"
+	impact_btn.pressed.connect(_on_impact_test)
+	rowt.add_child(impact_btn)
+	var gib_btn := Button.new()
+	gib_btn.text = "gibs (kanon)"
+	gib_btn.pressed.connect(_on_gib_test.bind(1.4, "shot"))
+	rowt.add_child(gib_btn)
+	var gib_btn2 := Button.new()
+	gib_btn2.text = "gibs (musket)"
+	gib_btn2.pressed.connect(_on_gib_test.bind(0.75, "shot"))
+	rowt.add_child(gib_btn2)
+	var gib_btn3 := Button.new()
+	gib_btn3.text = "gibs (melee)"
+	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
+	rowt.add_child(gib_btn3)
+	var smoke_btn := Button.new()
+	smoke_btn.text = "rook (musket)"
+	smoke_btn.pressed.connect(_on_smoke_test.bind(2, 0.09))
+	rowt.add_child(smoke_btn)
+	var smoke_btn2 := Button.new()
+	smoke_btn2.text = "rook (kanon)"
+	smoke_btn2.pressed.connect(_on_smoke_test.bind(4, 0.16))
+	rowt.add_child(smoke_btn2)
+	var duel_btn := Button.new()
+	duel_btn.text = "duel (dood)"
+	duel_btn.pressed.connect(_on_duel_test.bind(true))
+	rowt.add_child(duel_btn)
+	var duel_btn2 := Button.new()
+	duel_btn2.text = "duel (overleeft)"
+	duel_btn2.pressed.connect(_on_duel_test.bind(false))
+	rowt.add_child(duel_btn2)
+
 	# --- Tabs per categorie ---------------------------------------------------
 	var tabs := TabContainer.new()
 	tabs.custom_minimum_size = Vector2(0, 230)
@@ -431,18 +485,7 @@ func _build_ui() -> void:
 				gridm.add_child(_make_label(String(d.label)))
 				_melee_spins[String(d.key)] = _make_spin(gridm, float(d.min), float(d.max), float(d.step),
 					PawnView.fx(String(d.fx), float(d.def)), _on_melee_changed)
-			var rowb := HBoxContainer.new()
-			tab.add_child(rowb)
-			rowb.add_child(_make_label("Duel: "))
-			var bd := Button.new()
-			bd.text = "stoot (dood)"
-			bd.pressed.connect(_on_duel_test.bind(true))
-			rowb.add_child(bd)
-			var bo := Button.new()
-			bo.text = "stoot (overleeft)"
-			bo.pressed.connect(_on_duel_test.bind(false))
-			rowb.add_child(bo)
-			rowb.add_child(_make_label("  PER MODEL (kies factie+type linksboven) - verdediger = vergelijk-factie"))
+			tab.add_child(_make_label("Knoppen gelden PER MODEL (kies factie+type linksboven). Preview: duel-knoppen in de Test-rij bovenin (verdediger = vergelijk-factie)."))
 		if String(cat[1]) == "bloed":
 			# Dood-poel: per dood-clip de lijkpoel timen.
 			var rowd := HBoxContainer.new()
@@ -464,19 +507,9 @@ func _build_ui() -> void:
 			dp_test.pressed.connect(_on_death_pool_test)
 			rowd.add_child(dp_test)
 
-	# --- Vaste onderbalk: clips · tests · opslaan ------------------------------
+	# --- Vaste onderbalk: opslaan ---------------------------------------------
 	var row3 := HBoxContainer.new()
 	box.add_child(row3)
-	row3.add_child(_make_label("Clip: "))
-	for clip in ["idle", "walk", "attack", "melee", "hit", "die"]:
-		var btn := Button.new()
-		btn.text = clip
-		btn.pressed.connect(_on_clip.bind(clip))
-		row3.add_child(btn)
-	var freeze_btn := Button.new()
-	freeze_btn.text = "stilzetten"
-	freeze_btn.pressed.connect(_freeze_pose)
-	row3.add_child(freeze_btn)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row3.add_child(spacer)
@@ -489,38 +522,6 @@ func _build_ui() -> void:
 	back_btn.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
 	row3.add_child(back_btn)
-
-	var row4 := HBoxContainer.new()
-	box.add_child(row4)
-	row4.add_child(_make_label("Test: "))
-	var fire_btn := Button.new()
-	fire_btn.text = "vuur"
-	fire_btn.pressed.connect(_on_fire_test)
-	row4.add_child(fire_btn)
-	var impact_btn := Button.new()
-	impact_btn.text = "inslag (kanon)"
-	impact_btn.pressed.connect(_on_impact_test)
-	row4.add_child(impact_btn)
-	var gib_btn := Button.new()
-	gib_btn.text = "gibs (kanon)"
-	gib_btn.pressed.connect(_on_gib_test.bind(1.4, "shot"))
-	row4.add_child(gib_btn)
-	var gib_btn2 := Button.new()
-	gib_btn2.text = "gibs (musket)"
-	gib_btn2.pressed.connect(_on_gib_test.bind(0.75, "shot"))
-	row4.add_child(gib_btn2)
-	var gib_btn3 := Button.new()
-	gib_btn3.text = "gibs (melee)"
-	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
-	row4.add_child(gib_btn3)
-	var smoke_btn := Button.new()
-	smoke_btn.text = "rook (musket)"
-	smoke_btn.pressed.connect(_on_smoke_test.bind(2, 0.09))
-	row4.add_child(smoke_btn)
-	var smoke_btn2 := Button.new()
-	smoke_btn2.text = "rook (kanon)"
-	smoke_btn2.pressed.connect(_on_smoke_test.bind(4, 0.16))
-	row4.add_child(smoke_btn2)
 
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -758,16 +759,18 @@ func _on_death_pool_changed(_v: float) -> void:
 
 ## Speel precies de GEKOZEN dood-clip met de ingestelde poel-timing.
 func _on_death_pool_test() -> void:
+	_interrupt_previews(true, true)
 	if _pawn == null or not is_instance_valid(_pawn) or _die_btn.item_count == 0:
 		return
-	for n in get_tree().get_nodes_in_group("battlefield_debris"):
-		n.queue_free()
 	var clip := _die_btn.get_item_text(_die_btn.selected)
 	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), 0.75, "shot", clip)
 	_pawn = null
+	var gen := _preview_gen
 	var t := create_tween()
 	t.tween_interval(4.0)
-	t.tween_callback(_respawn_model.bind(false))
+	t.tween_callback(func() -> void:
+		if gen == _preview_gen:
+			_respawn_model(false))
 
 
 ## Slider bewogen → spin bijwerken, dan toepassen.
@@ -815,6 +818,22 @@ func _on_tuning_changed(_v: float) -> void:
 
 
 ## Herlaad het model zodat auto-fit + tuning exact zo draaien als in het spel.
+var _preview_gen: int = 0
+
+
+## Elke preview-druk onderbreekt de vorige DIRECT: lopende duel-/gib-timers
+## worden ongeldig via de generatie-teller, oude test-resten geruimd en als
+## het model dood/weg is komt er meteen een vers exemplaar - nooit wachten.
+func _interrupt_previews(clear_debris: bool, need_pawn: bool) -> void:
+	_preview_gen += 1
+	_clear_duel()
+	if clear_debris:
+		for n in get_tree().get_nodes_in_group("battlefield_debris"):
+			n.queue_free()
+	if need_pawn and (_pawn == null or not is_instance_valid(_pawn)):
+		_respawn_model(false)
+
+
 func _respawn_model(clear_debris: bool = true) -> void:
 	var doctrine: int = _fac_btn.get_selected_id()
 	var unit_type: int = _type_btn.get_selected_id()
@@ -863,12 +882,18 @@ func _on_fx_changed(_v: float) -> void:
 ## Vuur-test: attack-clip + loop-rook op het vuur-moment (maat past bij het
 ## geselecteerde type: artillerie = kanon-rook).
 func _on_fire_test() -> void:
+	_interrupt_previews(false, true)
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
+	if _pawn._anim != null:
+		_pawn._anim.stop()
 	_pawn.play_attack()
+	var gen := _preview_gen
 	var tw := create_tween()
 	tw.tween_interval(0.25)
-	tw.tween_callback(_fire_smoke)
+	tw.tween_callback(func() -> void:
+		if gen == _preview_gen:
+			_fire_smoke())
 
 
 ## Donker-stand: nachtelijke scene om de vuurflits op intensiteit te beoordelen.
@@ -915,10 +940,10 @@ func _fire_smoke() -> void:
 ## Kanon-inslag: een kogel-streep vliegt in, inslag-rook + volledige gib-dood
 ## - exact de keten die het spel bij een artillerie-treffer afspeelt.
 func _on_impact_test() -> void:
+	_interrupt_previews(true, true)
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
-	for n in get_tree().get_nodes_in_group("battlefield_debris"):
-		n.queue_free()
+	var gen := _preview_gen
 	var from := Vector3(-2.4, 0.5, -1.3)
 	var to := Vector3(0.0, 0.45, 0.0)
 	var proj := MeshInstance3D.new()
@@ -936,7 +961,9 @@ func _on_impact_test() -> void:
 	var tw := create_tween()
 	tw.tween_property(proj, "position", to, 0.16)
 	tw.tween_callback(proj.queue_free)
-	tw.tween_callback(_impact_hit.bind((to - from).normalized()))
+	tw.tween_callback(func() -> void:
+		if gen == _preview_gen:
+			_impact_hit((to - from).normalized()))
 
 
 func _impact_hit(dir: Vector3) -> void:
@@ -946,9 +973,12 @@ func _impact_hit(dir: Vector3) -> void:
 		return
 	_pawn.play_death(dir, 1.4, "shot")
 	_pawn = null
+	var gen := _preview_gen
 	var t := create_tween()
 	t.tween_interval(4.0)
-	t.tween_callback(_respawn_model.bind(false))
+	t.tween_callback(func() -> void:
+		if gen == _preview_gen:
+			_respawn_model(false))
 
 
 ## Vuurmond gewijzigd: opslaan in de model-tuning (merge, behoudt de rest).
@@ -967,30 +997,33 @@ func _on_muzzle_changed(_v: float) -> void:
 
 ## Rooktest aan de loop van het tuning-model (musket- of kanon-maat).
 func _on_smoke_test(count: int, size: float) -> void:
+	_interrupt_previews(false, false)
 	PawnView.spawn_powder_smoke(self, Vector3(0.05, 0.55, 0.3), count, size,
 		Vector3(0.3, 0.0, 1.0).normalized())
 
 
 func _on_gib_test(strength: float, kind: String = "shot") -> void:
+	# Vorige preview direct afbreken; oude resten weg, het NIEUWE lijk blijft.
+	_interrupt_previews(true, true)
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
-	# (Geen reload van effects_tuning.json hier: de knopjes in de tuner zijn
-	# de waarheid; herladen zou niet-opgeslagen wijzigingen terugdraaien.)
-	# Vorige test-resten ruimen; het NIEUWE lijk laten we juist liggen.
-	for n in get_tree().get_nodes_in_group("battlefield_debris"):
-		n.queue_free()
 	_pawn.play_death(Vector3(0.2, 0.0, 1.0).normalized(), strength, kind)
 	_pawn = null
-	# Levend model komt terug, maar de gibs/bloed/musket BLIJVEN liggen
-	# (net als op het echte bord tot de nieuwe cyclus).
+	# Levend model komt terug, tenzij er intussen een nieuwe preview draait.
+	var gen := _preview_gen
 	var t := create_tween()
 	t.tween_interval(4.0)
-	t.tween_callback(_respawn_model.bind(false))
+	t.tween_callback(func() -> void:
+		if gen == _preview_gen:
+			_respawn_model(false))
 
 
 func _on_clip(clip: String) -> void:
+	_interrupt_previews(false, true)
 	if _pawn == null:
 		return
+	if _pawn._anim != null:
+		_pawn._anim.stop()  # zelfde clip nogmaals = direct opnieuw starten
 	match clip:
 		"idle": _pawn.play_idle()
 		"walk": _pawn.play_walk()
@@ -1007,6 +1040,7 @@ func _on_clip(clip: String) -> void:
 				_info.text = "melee-clip: %s (%d van %d) — druk nogmaals voor de volgende variant" % [
 					full, ((_melee_cycle - 1) % variants.size()) + 1, variants.size()]
 		"hit": _pawn.play_hit()
+		"ready": _pawn.play_ready()
 		"die": _pawn.play_die()
 
 
@@ -1066,9 +1100,11 @@ var _duel_root: Node3D = null
 ## een kill rukt de aanvaller na de opruk-vertraging op - exact dezelfde
 ## timing-route als in het spel.
 func _on_duel_test(kill: bool) -> void:
+	_interrupt_previews(true, true)
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
-	_clear_duel()
+	if _pawn._anim != null:
+		_pawn._anim.stop()
 	_pawn.position = Vector3(0.0, 0.05, 0.0)
 	_duel_root = Node3D.new()
 	add_child(_duel_root)
@@ -1083,9 +1119,10 @@ func _on_duel_test(kill: bool) -> void:
 	_pawn.face_dir(Vector2i(0, 1))
 	_pawn.rotate_y(deg_to_rad(_pawn.melee_fx("yaw", "melee_yaw", 0.0)))
 	_pawn.play_melee()
+	var gen := _preview_gen
 	var hd: float = _pawn.melee_fx("hit_delay", "melee_hit_delay", 0.55)
 	get_tree().create_timer(hd).timeout.connect(func() -> void:
-		if def_pv == null or not is_instance_valid(def_pv):
+		if gen != _preview_gen or def_pv == null or not is_instance_valid(def_pv):
 			return
 		if kill:
 			def_pv.play_death(Vector3(0.0, 0.0, 1.0), 0.7, "melee")
@@ -1096,7 +1133,7 @@ func _on_duel_test(kill: bool) -> void:
 		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration()
 				+ _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35) - 0.15)
 		get_tree().create_timer(move_del).timeout.connect(func() -> void:
-			if _pawn == null or not is_instance_valid(_pawn):
+			if gen != _preview_gen or _pawn == null or not is_instance_valid(_pawn):
 				return
 			_pawn.play_walk()
 			var tw := create_tween()

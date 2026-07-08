@@ -80,6 +80,5 @@
 	"wheel_base": 0.415,
 	"wheel_width": 0.058,
 	"world_ambient": 0.1,
-	"world_light": 1.14,
-	"wound_delay": 0.0
+	"world_light": 1.14
 }
