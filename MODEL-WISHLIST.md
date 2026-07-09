@@ -286,64 +286,91 @@ Camouflage-patroon in de schubben; de artillerie zit onder netten en zeilen.
 | `artillery_atk` | Single prop, long-barreled Napoleonic cannon with dark grey camouflage netting pulled aside, on a weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text. |
 | `artillery_mix` | Single prop, Napoleonic field cannon with a folded dark grey tarp on the weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text. |
 
-## 4. De pipeline per karakter (Mixamo) + Model-tuner
+## 4. Nieuw model importeren -- stap voor stap
 
-**Sneltoets (8 juli): 1 Mixamo-download per model.** Elk Mixamo-karakter
-krijgt hetzelfde skelet, dus de clips hoeven maar EEN keer per clip-set
-gedownload te worden. Nieuwe modellen erven alles van de master:
+De volledige pijplijn (bewezen op muis base + spd, 8-9 juli). Per model lever
+je **2 glb-exports uit hetzelfde .blend + textures**; de rest draait het
+merge-script.
 
-```
-blender --background --python tools/blender_merge_character.py -- ^
-    --base assets/models/<factie>/<model>.glb ^
-    --donor assets/models/mouse/infantry_base.glb
-```
+### Wat je per model levert
 
-De muis is de master voor alle INFANTERIE (rifle-set incl. ready_up); de
-eerste big bro wordt straks de master voor alle BIG BROS (fight-set:
-idle/walk/punch of sword/hit/death - cavalerie draagt geen musket).
-Heup-hoogteverschillen worden automatisch geschaald; kwartslag-fix,
-heup-locks en texture-verkleining draaien in dezelfde run mee. Stap 4-5
-hieronder zijn dus alleen nodig voor een NIEUWE clip-set of losse extra
-clips.
+| Bestand | Wat | Verplicht |
+|---|---|---|
+| `<model>.glb` | geanimeerd model, **losse delen**, met skin + animatie | ja |
+| `<model>_gibs.glb` | dezelfde losse delen, **zonder** skin + animatie (statisch) | ja (voor gibs) |
+| `<model>_red.png` + `<model>_blue.png` | team-uniformen (rood/blauw leger) | ja |
+| `<model>_red_gore.png` + `<model>_blue_gore.png` | bloederige recolor voor de gibs | optioneel |
+| `<model>_musket.glb` | eigen musket; anders valt het terug op `<factie>/musket.glb` | optioneel |
 
-1. **Genereer** het model (Laag Poly, target ~1.000) en download als `.glb`.
-2. **Blender (alleen doorgeefluik)**: importeer de glb → File → Export → **FBX**
-   met Path Mode **Copy** + het **embed-doosje** aan (texture zit dan ín de FBX).
-3. **Upload naar Mixamo**: statisch model in **A- of T-pose, zónder botten** —
-   Mixamo rigt zelf (markers op kin/polsen/ellebogen/knieën/kruis zetten).
-4. **Download de clips** — FBX Binary, 30 fps, **With Skin**, en let op dat je
-   éigen karakter de animatie voordoet in de viewer:
+Pad-conventie: `assets/models/<factie>/<type>_<archetype>.glb` (zie 4b).
+
+### De stappen
+
+1. **Genereer** het model (Tripo/Meshy, **Laag Poly ~1.000 tris**). Model met
+   gescheiden lichaamsdelen is ideaal.
+2. **Mixamo-rig** -- upload statisch in **A-/T-pose, zonder botten**; Mixamo
+   auto-rigt (markers op kin/polsen/ellebogen/knieen/kruis). Download **1x** FBX
+   "With Skin" (welke clip maakt niet uit; het gaat om het gerigde karakter).
+3. **Blender -- delen splitsen & benoemen.** Knip het lijf in losse objecten en
+   noem ze **exact**: `armL armR body hat legL legR tail` (Edit Mode -> selecteer
+   per deel -> `P` -> Selection). Die namen sturen hoed-pop (`hat`) en de grote
+   romp-poel (`body`). **Waarom los:** de enkel-ledemaat-kill verbergt een levend
+   deel, dus het geanimeerde model moet losse delen hebben (1 mesh = geen limb-shed).
+4. **Export 1 -- geanimeerd model** (`<model>.glb`): selecteer de **7 delen + de
+   Armature**, File -> Export -> glTF 2.0 (.glb), **Skinning AAN, Animation AAN**.
+5. **Export 2 -- gibs** (`<model>_gibs.glb`): selecteer **alleen de 7 delen**
+   (niet de Armature), **Skinning UIT, Animation UIT**. Dit is de statische
+   "gebakken" versie -- nodig omdat een skinned mesh niet los te slingeren is.
+6. **Clips + rechtdraaien:**
+   - Zitten alle 15 clips al in je .blend? Sleep `<model>.glb` op **`fix_model.bat`**
+     (draait de kwartslag-fix; Mixamo levert bayonet/hit/ready ~90 graden gedraaid).
+   - Missen er clips? Draai de donor-merge (kopieert alle clips van de master,
+     met heup-schaal + kwartslag-fix + heup-locks):
+     ```
+     blender --background --python tools/blender_merge_character.py -- ^
+         --base assets/models/<factie>/<model>.glb ^
+         --donor assets/models/mouse/infantry_base.glb
+     ```
+     De **muis** is de master voor alle infanterie (rifle-set incl. `ready_up`).
+     Draai de donor altijd tegen de **huidige** base (die is al gefixt).
+7. **Textures schilderen** -- `<model>_red.png` + `<model>_blue.png` (en optioneel
+   `_red_gore`/`_blue_gore`) op **dezelfde UV-atlas**. Makkelijkst: rood klaar ->
+   dupliceren -> alleen de uniform-delen blauw overschilderen; en voor gore je
+   team-texture dupliceren + bloed/scheuren erover.
+8. **Textures verkleinen (belangrijk!)** -- zet in Godot de import van elke grote
+   team/gore-PNG op **`process/size_limit=1024` + `mipmaps/generate=true`**. Zonder
+   dit laadt een 4096-plaatje (~67MB VRAM) vers op het eerste gib-moment -> korte
+   freeze. Op gib-formaat is 1024 onzichtbaar. De 4096-bron blijft intact.
+9. **Godot importeren** -- editor openen of `Godot --headless --path . --import`.
+10. **Tunen (Model-tuner, hoofdmenu).** Alleen **positioneel/schaal** per model:
+    schaal, hoogte, X/Z, **musket** (schaal/pos/rot) en **vuurmond** (muzzle flash).
+    OPSLAAN -> `assets/models/model_tuning.json` (mee-committen). De **melee-timing
+    is globaal** (`effects_tuning.json`, Melee-tab) -- gedeelde clips = gedeelde
+    timing, dus die hoef je per model niet aan te raken.
+
+### Mixamo-cliptabel (infanterie, rifle-set)
 
 | Clip in het spel | Mixamo-zoekterm | Aantal |
 |---|---|---|
-| `idle` (+ `idle2`, `idle3`…) | Rifle Idle | 1-3 varianten |
-| `walk` (+ `walk2`…) | Walk With Rifle — **"In Place" aanvinken!** | 1-3 varianten |
+| `idle` (+ `idle2`, `idle3`) | Rifle Idle | 1-3 |
+| `walk` (+ `walk2`) | Walk With Rifle -- **"In Place" aanvinken!** | 1-3 |
 | `attack` | Firing Rifle (enkel schot, staand) | 1 |
-| `melee` (+ `melee2`…) | Bayonet Attack / Rifle Butt (kolfstoot) | 1-2 — ontbreekt hij, dan gebruikt melee de attack-clip |
-| `hit` (+ `hit2`…) | Hit Reaction / Standing React Small | 1-2 — overleef-reactie bij een treffer |
-| `die` (+ `die2`…) | Rifle Death / Standing Death (voor- en achterover) | 1-2 varianten |
-| `aim` (voor later: aanleg-fase) | Rifle Down To Aim | optioneel |
+| `melee` (+ `melee2`) | Bayonet Attack / Rifle Butt | 1-2 (anders valt melee op attack terug) |
+| `hit` (+ `hit2`) | Hit Reaction / Standing React Small | 1-2 (overleef-reactie) |
+| `die` (+ `die2`) | Rifle Death / Standing Death (voor- en achterover) | 1-2 |
+| `ready` (`ready_up`) | Rifle Down To Aim / Ready | optioneel (koppel-flourish) |
 
-**Gibs zijn nu automatisch (8 juli):** het merge-script genereert
-`<model>_gibs.glb` zelf uit de losse mesh-delen van het model (vlag `--gibs`,
-zit al in `fix_model.bat`). Voorwaarde: exporteer het model met **gescheiden
-onderdelen** (dus in Blender NIET joinen), met de namen `armL/armR/body/hat/legL/legR/tail`
-- dan werkt hoed-pop + grote romp-poel. Een 1-mesh-model levert geen gibs
-(valt terug op de die-clip + bloedmist). Je hoeft dus geen gibs-bestand meer
-handmatig te maken; alleen de gore-textures (`<model>_red_gore.png` /
-`_blue_gore.png`) lever je zelf aan.
+**Belangrijkste valkuilen (uit de praktijk):**
+- **Twee exports, altijd** -- een skinned mesh kun je niet als losse brokken
+  wegslingeren; het aparte `_gibs.glb` (armature-loos) IS de gebakken versie.
+- **Kwartslag** -- Mixamo levert bayonet/hit/ready ~90 graden gedraaid; het
+  merge-script/`fix_model.bat` meet de heup-yaw over de hele clip en draait
+  alleen de echte rig-fouten terug (fire/idle-aanslag blijft).
+- **1024-textures** -- anders hapert de gib.
+- **Melee-timing = globaal, plaatsing = per model.**
 
-5. **Laat alles in Downloads staan** en geef door welk bestand welk archetype
-   is — het merge-script bouwt er één `.glb` van met alle clips (varianten
-   worden in het spel willekeurig gekozen, met desync zodat de zwerm nooit
-   synchroon beweegt).
-6. **Model-tuner** (hoofdmenu → "Model-tuner"): kies factie/type/archetype,
-   stel met de sliders **schaal en hoogte** af naast het referentiestuk,
-   bekijk de clips met de knoppen, en klik **OPSLAAN** → schrijft
-   `assets/models/model_tuning.json`, die het spel altijd toepast bovenop de
-   auto-fit. (Dat bestand mee-committen.)
-
-Cavalerie (ruiter te paard) kan Mixamo níét riggen — die pipeline volgt apart.
+Cavalerie (big bro) krijgt een eigen fight-clip-set (geen musket); die master
+volgt zodra het eerste big-bro-model er is.
 
 ## 4b. Bestandsconventie & fallback
 
