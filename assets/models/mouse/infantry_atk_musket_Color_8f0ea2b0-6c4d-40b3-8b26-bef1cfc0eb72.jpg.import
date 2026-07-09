@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnt1gayyqpn6x"
-path="res://.godot/imported/infantry_atk_musket_Color_8f0ea2b0-6c4d-40b3-8b26-bef1cfc0eb72.jpg-a49ecdd8a9190af4253d61bdd7488eb5.ctex"
+path.s3tc="res://.godot/imported/infantry_atk_musket_Color_8f0ea2b0-6c4d-40b3-8b26-bef1cfc0eb72.jpg-a49ecdd8a9190af4253d61bdd7488eb5.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8dfdd3abd6f3911f09967152bf9264b5"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/mouse/infantry_atk_musket_Color_8f0ea2b0-6c4d-40b3-8b26-bef1cfc0eb72.jpg"
-dest_files=["res://.godot/imported/infantry_atk_musket_Color_8f0ea2b0-6c4d-40b3-8b26-bef1cfc0eb72.jpg-a49ecdd8a9190af4253d61bdd7488eb5.ctex"]
+dest_files=["res://.godot/imported/infantry_atk_musket_Color_8f0ea2b0-6c4d-40b3-8b26-bef1cfc0eb72.jpg-a49ecdd8a9190af4253d61bdd7488eb5.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

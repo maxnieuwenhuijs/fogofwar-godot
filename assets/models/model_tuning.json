@@ -17,10 +17,28 @@
 		"z": 0.0
 	},
 	"mouse/infantry_hp": {
+		"muzzle": [
+			0.45,
+			1.29,
+			0.45
+		],
 		"scale": 1.24,
 		"x": 0.0,
 		"y": 0.0,
 		"z": 0.0
+	},
+	"mouse/infantry_hp_musket": {
+		"pos": [
+			-0.01,
+			0.15,
+			0.03
+		],
+		"rot": [
+			30.0,
+			55.0,
+			-5.0
+		],
+		"scale": 1.4
 	},
 	"mouse/infantry_spd": {
 		"muzzle": [
