@@ -1,9 +1,27 @@
 {
 	"mouse/infantry_atk": {
+		"muzzle": [
+			0.32,
+			1.09,
+			0.45
+		],
 		"scale": 1.05,
 		"x": 0.0,
 		"y": 0.0,
 		"z": 0.0
+	},
+	"mouse/infantry_atk_musket": {
+		"pos": [
+			0.05,
+			0.26,
+			-0.02
+		],
+		"rot": [
+			155.0,
+			-85.0,
+			-75.0
+		],
+		"scale": 1.6
 	},
 	"mouse/infantry_base": {
 		"muzzle": [

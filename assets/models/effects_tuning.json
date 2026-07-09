@@ -14,13 +14,37 @@
 			"delay": 2.0,
 			"grow": 1.25,
 			"size": 1.7,
-			"torso": 0.23
+			"torso": 0.0
 		},
 		"death2": {
 			"delay": 3.0,
 			"grow": 1.25,
 			"size": 1.7,
-			"torso": -0.51
+			"torso": 0.0
+		},
+		"death3": {
+			"delay": 0.9,
+			"grow": 1.25,
+			"size": 1.7,
+			"torso": 0.01
+		},
+		"death4": {
+			"delay": 0.9,
+			"grow": 1.25,
+			"size": 1.7,
+			"torso": 0.3
+		},
+		"death5": {
+			"delay": 0.9,
+			"grow": 1.25,
+			"size": 2.4,
+			"torso": 0.1
+		},
+		"death6": {
+			"delay": 2.3,
+			"grow": 1.25,
+			"size": 1.7,
+			"torso": -0.1
 		}
 	},
 	"death_speed": 1.0,
