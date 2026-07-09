@@ -1497,6 +1497,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 		if ResourceLoader.exists(path):
 			_tune_key = "%s/%s" % [fac, String(path).get_file().get_basename()]
 			_model_path = path
+			_preload_gib_assets(path)  # gib-glb + gore alvast op de achtergrond laden
 			_swap_piece(load(path), true)  # auto-fit: schaal/grond/180°
 			_attach_weapon(fac)
 			return
@@ -1672,6 +1673,19 @@ func _auto_fit_model(root: Node3D) -> void:
 ## (dus het neutrale basismodel = default). Zo één geanimeerd model, per team
 ## een andere jas.
 static var _team_tex_cache: Dictionary = {}
+
+
+## Laad de gib-assets (gibs-glb + gore-textures) alvast op de ACHTERGROND
+## zodra het model verschijnt, zodat het eerste gib-moment niet hapert: de
+## eerste load van schijf + GPU-upload zou anders een frame-freeze geven.
+## Threaded; een latere load() pakt de al-warme resource uit de cache.
+static func _preload_gib_assets(model_path: String) -> void:
+	if model_path == "":
+		return
+	var b := model_path.get_basename()
+	for path in [b + "_gibs.glb", b + "_red_gore.png", b + "_blue_gore.png"]:
+		if ResourceLoader.exists(path):
+			ResourceLoader.load_threaded_request(path)
 
 
 ## Team-texture voor een model. gore=true zoekt eerst de bloederige variant
