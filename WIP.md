@@ -180,6 +180,15 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   reducer; F1.1 agents-op-views ruimt dit op).
   **MAX-acceptatie gespeeld: alles klopt** — F0 IS FORMEEL AF (juli 2026).
 
+- **Regelwijziging 4.1.10-hr (besluit Max, na F0):** kaartdefinitie is
+  begrensd door je vrije pionnen; 0 vrije pionnen = ronde overslaan, de
+  tegenstander gaat alleen door. Doorgevoerd in validator (expected_define_
+  count), reducer (define-gate + fase-entry-gates), AI, sim/MatchRunner en de
+  kaartwaaier-UI. Versie-bump 4.1.9-hr -> 4.1.10-hr; CHANGELOG-entry; goldens
+  + golden_sims-baselines geregenereerd (bewuste breuk conform werkafspraak).
+  3 legacy-tests bijgewerkt; 3 nieuwe regeltests. Checks: 915 asserts groen ·
+  simcheck 5/5 (nieuwe baselines) · play exit 0.
+
 Volgende fase: **F1 — Arena v1** (agent-interface op views, L0-L3, doorvoer
 >=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
 eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).

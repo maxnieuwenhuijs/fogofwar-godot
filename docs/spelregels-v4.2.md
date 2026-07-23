@@ -1,6 +1,6 @@
 # Fog of War — Spelregels (spec)
 
-> **Deel A** legt vast wat de engine vandaag écht doet: regelversie **4.1.9-hr**
+> **Deel A** legt vast wat de engine vandaag écht doet: regelversie **4.1.10-hr**
 > (de huisregels zoals geïmplementeerd, gecodificeerd juli 2026 via volledige
 > code-extractie + kruischeck tegen `spelregels-v4.1.md`). Elke regel draagt zijn
 > codebron. Wijkt dit document af van de code, dan is dat een bug in één van beide
@@ -10,7 +10,7 @@
 
 ---
 
-# DEEL A — Regelversie 4.1.9-hr
+# DEEL A — Regelversie 4.1.10-hr
 
 ## 1. Bord & winnen
 
@@ -54,8 +54,8 @@
   (P1: rij 10+9, P2: rij 0+1). Geldig = exact de doctrine-samenstelling, alles
   binnen eigen rijen, geen dubbele bezetting. `GameState.gd:150-170`
 - Opstellen is simultaan en blind (éénmalig indienen; pas als beide binnen zijn
-  start cyclus 1). De engine dwingt de blindheid zelf nog niet af — dat is
-  view-werk (F0.6). `GameSession.gd:39-56`
+  start cyclus 1). Sinds F0.6 dwingt de view-laag de blindheid ook in de data
+  af (vijandelijke pionnen bestaan niet in jouw view tijdens PLACEMENT).
 - **Standaard-opstelling** (auto-plaatsing): artillerie voorste rij op kolommen
   0/10/5; infanterie voorste rij centrum-uit, dan achterste rij centrum-uit;
   cavalerie achterste rij flanken-eerst met overloop naar voor.
@@ -63,9 +63,12 @@
 
 ## 4. Kaarten definiëren
 
-- Per setup-ronde dient elke speler **exact het doctrine-aantal** kaarten in
-  (Varken/Beer/Wolf/Krokodil 3, Muis 4, Leeuw 2), éénmalig, simultaan en blind
-  (commit-gate: pas door als beide binnen zijn). `GameSession.gd:61-94`
+- Per setup-ronde dient elke speler kaarten in: **het doctrine-aantal
+  (Varken/Beer/Wolf/Krokodil 3, Muis 4, Leeuw 2), maar nooit méér dan je
+  vrije (levende, ongekoppelde) pionnen** (4.1.10-hr). Nul vrije pionnen =
+  ronde overslaan; de tegenstander gaat alleen door. Eénmalig, simultaan en
+  blind (commit-gate: pas door als iedereen die moet, binnen is).
+  `Validator.expected_define_count, Reducer._check_define_gate`
 - Een kaart heeft **HP / Speed / Aanval**: elke stat ≥ 1 en de som **exact** het
   doctrine-budget (5/7/9). Beer: Speed ≤ 3. Eén ongeldige kaart verwerpt de hele
   indiening. Hoogst mogelijke losse stat = budget − 2. `Card.gd:22-27`

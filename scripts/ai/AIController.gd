@@ -204,7 +204,11 @@ func generate_cards(state: GameState) -> Array:
 		[wh, ws * 1.3, wa * 1.3],  # allrounder
 	]
 	var cards: Array = []
-	for i in int(doctrine.cards):
+	# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen.
+	var aantal: int = int(doctrine.cards)
+	if state != null:
+		aantal = Validator.expected_define_count(state, player_id)
+	for i in aantal:
 		var p: Array = profiles[i % profiles.size()]
 		cards.append(_gen_card(p[0], p[1], p[2], int(doctrine.budget), int(doctrine.speed_max)))
 	return cards

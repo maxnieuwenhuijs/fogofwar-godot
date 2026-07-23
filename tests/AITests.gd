@@ -75,6 +75,7 @@ func test_generate_cards_respects_doctrine_budgets() -> void:
 	for doctrine in Constants.DOCTRINE_DATA.keys():
 		var state := GameState.new()
 		state.doctrines[Constants.PLAYER_1] = doctrine
+		state.setup_initial_pawns()  # 4.1.10-hr: kaart-aantal hangt van vrije pionnen af
 		var cards: Array = ai.generate_cards(state)
 		_assert_cards_valid(cards, doctrine)
 

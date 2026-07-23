@@ -209,9 +209,15 @@ func _eliminate_all_pawns_except(state: GameState, player_id: int, keep_count: i
 		state.remove_pawn(pawn)
 
 func test_linking_with_fewer_pawns_other_player_continues() -> void:
+	# 4.1.10-hr: met 2 vrije pionnen definieer je nog maar 2 kaarten — er
+	# vervallen geen kaarten meer, en de tegenstander gaat gewoon door.
 	GameSession.start_new_game_default()
 	_eliminate_all_pawns_except(GameSession.state, Constants.PLAYER_1, 2)
-	GameSession.submit_define_cards(Constants.PLAYER_1, _cards_for(1, 1, 5, 1, 1, 5, 1, 1, 5))
+	assert_eq(Validator.expected_define_count(GameSession.state, Constants.PLAYER_1), 2)
+	var te_veel: bool = GameSession.submit_define_cards(Constants.PLAYER_1, _cards_for(1, 1, 5, 1, 1, 5, 1, 1, 5))
+	assert_false(te_veel, "3 kaarten met 2 vrije pionnen wordt geweigerd")
+	GameSession.submit_define_cards(Constants.PLAYER_1,
+		[{"hp": 1, "stamina": 1, "attack": 5}, {"hp": 1, "stamina": 1, "attack": 5}])
 	GameSession.submit_define_cards(Constants.PLAYER_2, _cards_for(5, 1, 1, 5, 1, 1, 5, 1, 1))
 	GameSession.acknowledge_reveal()
 	assert_eq(GameSession.state.phase, Phase.Type.SETUP_1_LINKING)

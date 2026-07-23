@@ -73,14 +73,27 @@ static func _check_place(state: GameState, action: Dictionary, player_id: int) -
 	return _ok()
 
 
+## 4.1.10-hr: je definieert per ronde hoogstens zoveel kaarten als je vrije
+## (levende, ongekoppelde) pionnen hebt; 0 vrije pionnen = ronde overslaan.
+static func expected_define_count(state: GameState, player_id: int) -> int:
+	var vrij: int = 0
+	for pawn in state.pawns.values():
+		if pawn.owner_id == player_id and not pawn.is_eliminated and pawn.linked_card_id == -1:
+			vrij += 1
+	return mini(int(state.doctrine_data_of(player_id).cards), vrij)
+
+
 static func _check_define(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
 	if not Phase.is_define(state.phase):
 		return _nee("Niet in definitie fase")
 	if state.cards_defined.get(player_id, []).size() > 0:
 		return _nee("Je hebt al gedefinieerd deze ronde")
 	var doctrine: Dictionary = state.doctrine_data_of(player_id)
-	if action.cards.size() != int(doctrine.cards):
-		return _nee("Moet %d kaarten definiëren" % int(doctrine.cards))
+	var expected: int = expected_define_count(state, player_id)
+	if expected == 0:
+		return _nee("Geen vrije pionnen — deze ronde sla je over")
+	if action.cards.size() != expected:
+		return _nee("Moet %d kaarten definiëren" % expected)
 	for c in action.cards:
 		if not Card.is_valid_stats(int(c.hp), int(c.stamina), int(c.attack),
 				doctrine.budget, doctrine.speed_max, state.rules.per_stat_cap):
@@ -204,7 +217,8 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 				out.append(Actions.make_place(state.default_placement(player_id)))
 			return out
 	if Phase.is_define(state.phase):
-		if state.cards_defined.get(player_id, []).size() == 0:
+		if state.cards_defined.get(player_id, []).size() == 0 \
+				and expected_define_count(state, player_id) > 0:
 			for cards in _sample_card_sets(state, player_id):
 				out.append(Actions.make_define_cards(cards))
 		return out
@@ -273,7 +287,7 @@ static func _enumerate_charges(state: GameState, pawn: Pawn) -> Array:
 static func _sample_card_sets(state: GameState, player_id: int) -> Array:
 	var doctrine: Dictionary = state.doctrine_data_of(player_id)
 	var budget: int = int(doctrine.budget)
-	var n: int = int(doctrine.cards)
+	var n: int = expected_define_count(state, player_id)
 	var speed_max: int = int(doctrine.speed_max)
 	var cap: int = state.rules.per_stat_cap
 	var sets: Array = []

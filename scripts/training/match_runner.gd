@@ -56,9 +56,11 @@ func step() -> void:
 		return
 	var cur = ai1 if _state.current_player == Constants.PLAYER_1 else ai2
 	if Phase.is_define(ph):
-		if _state.cards_defined[Constants.PLAYER_1].size() == 0:
+		if _state.cards_defined[Constants.PLAYER_1].size() == 0 \
+				and Validator.expected_define_count(_state, Constants.PLAYER_1) > 0:
 			Reducer.apply(_state, Actions.make_define_cards(ai1.generate_cards(_state)), Constants.PLAYER_1)
-		if _state.cards_defined[Constants.PLAYER_2].size() == 0:
+		if _state.cards_defined[Constants.PLAYER_2].size() == 0 \
+				and Validator.expected_define_count(_state, Constants.PLAYER_2) > 0:
 			Reducer.apply(_state, Actions.make_define_cards(ai2.generate_cards(_state)), Constants.PLAYER_2)
 	elif Phase.is_reveal(ph):
 		# Per-speler ACK (F0.4b); de runner bevestigt voor beide bots.

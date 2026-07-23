@@ -177,3 +177,69 @@ func test_gelijk_bod_geeft_p1_initiatief_in_cyclus1() -> void:
 	_apply_ok(s, Actions.make_ack_reveal(), 1, "ack p1")
 	_apply_ok(s, Actions.make_ack_reveal(), 2, "ack p2")
 	assert_eq(s.initiative_player, Constants.PLAYER_1)
+
+
+# --- 4.1.10-hr: kaarten definiëren begrensd door vrije pionnen ---------------
+
+func _pion_met_kaart(s: GameState, owner: int, pos: Vector2i) -> Pawn:
+	var pawn: Pawn = s._spawn_pawn(owner, pos)
+	var kaart := Card.new(s.next_card_id(), owner, 1, 3, 2, 2)
+	s.all_cards[kaart.id] = kaart
+	pawn.link_card(kaart)
+	return pawn
+
+
+func test_define_begrensd_door_vrije_pionnen() -> void:
+	var s := GameState.new()
+	s.phase = Phase.Type.SETUP_2_DEFINE
+	s.round_number = 2
+	# P1: 2 vrije pionnen + 1 gekoppelde -> verwacht 2 kaarten (Varken: 3).
+	s._spawn_pawn(1, Vector2i(5, 9))
+	s._spawn_pawn(1, Vector2i(6, 9))
+	_pion_met_kaart(s, 1, Vector2i(4, 9))
+	# P2: 3 vrije -> verwacht gewoon 3.
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s._spawn_pawn(2, Vector2i(6, 1))
+	s._spawn_pawn(2, Vector2i(7, 1))
+	assert_eq(Validator.expected_define_count(s, 1), 2)
+	assert_eq(Validator.expected_define_count(s, 2), 3)
+	var drie: Array = [{"hp": 3, "stamina": 2, "attack": 2},
+		{"hp": 2, "stamina": 2, "attack": 3}, {"hp": 2, "stamina": 3, "attack": 2}]
+	var twee: Array = [{"hp": 3, "stamina": 2, "attack": 2}, {"hp": 2, "stamina": 2, "attack": 3}]
+	var res: Dictionary = Reducer.apply(s, Actions.make_define_cards(drie), 1)
+	assert_false(res.ok, "3 kaarten met 2 vrije pionnen moet geweigerd worden")
+	assert_eq(res.error, "Moet 2 kaarten definiëren")
+	res = Reducer.apply(s, Actions.make_define_cards(twee), 1)
+	assert_true(res.ok, "2 kaarten past precies")
+	assert_true(Phase.is_define(s.phase), "P2 moet nog")
+	res = Reducer.apply(s, Actions.make_define_cards(drie), 2)
+	assert_true(res.ok)
+	assert_true(Phase.is_reveal(s.phase), "beide binnen -> reveal")
+
+
+func test_define_zonder_vrije_pionnen_slaat_ronde_over() -> void:
+	var s := GameState.new()
+	s.phase = Phase.Type.SETUP_2_DEFINE
+	s.round_number = 2
+	_pion_met_kaart(s, 1, Vector2i(5, 9))  # P1: alles gekoppeld -> 0 vrij
+	s._spawn_pawn(2, Vector2i(5, 1))       # P2: 1 vrij
+	var res: Dictionary = Reducer.apply(s, Actions.make_define_cards(
+		[{"hp": 3, "stamina": 2, "attack": 2}]), 1)
+	assert_false(res.ok, "definiëren zonder vrije pionnen is illegaal")
+	assert_eq(res.error, "Geen vrije pionnen — deze ronde sla je over")
+	# De tegenstander gaat gewoon: één define en de fase schuift door.
+	res = Reducer.apply(s, Actions.make_define_cards(
+		[{"hp": 3, "stamina": 2, "attack": 2}]), 2)
+	assert_true(res.ok)
+	assert_true(Phase.is_reveal(s.phase), "P1 is vrijgesteld; alleen P2 telde voor de gate")
+
+
+func test_define_beide_zonder_vrije_pionnen_schuift_meteen_door() -> void:
+	var s := GameState.new()
+	s.phase = Phase.Type.SETUP_2_DEFINE
+	s.round_number = 2
+	_pion_met_kaart(s, 1, Vector2i(5, 9))
+	_pion_met_kaart(s, 2, Vector2i(5, 1))
+	# De fase-entry-gate (aangeroepen bij het betreden van elke define-fase).
+	Reducer._check_define_gate(s, [])
+	assert_true(Phase.is_reveal(s.phase), "niemand hoeft te definiëren -> meteen door")

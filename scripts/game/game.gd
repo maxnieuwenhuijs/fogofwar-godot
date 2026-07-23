@@ -1009,10 +1009,13 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			_uncouple_cascade()  # gekoppelde stukken poffen snel terug naar base
 		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
 		var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
-		_card_hand.configure(int(doctrine.cards), int(doctrine.budget), int(doctrine.speed_max))
+		# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
+		# engine deze ronde zelf over en schuift de fase vanzelf door).
+		var kaart_aantal: int = Validator.expected_define_count(GameSession.state, _human_id)
+		_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max))
 		_card_hand.open_for_define()
 		_update_hud("Definieer je kaarten (%d× budget %d) — HP = leven · Speed = stappen/acties · Aanval = schade" % [
-			int(doctrine.cards), int(doctrine.budget)])
+			kaart_aantal, int(doctrine.budget)])
 		_start_phase_timer(PHASE_TIME_LIMIT)
 	elif Phase.is_linking(new_phase):
 		_auto_link_human = false

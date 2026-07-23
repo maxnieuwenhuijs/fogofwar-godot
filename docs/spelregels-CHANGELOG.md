@@ -1,5 +1,23 @@
 # Spelregels — CHANGELOG
 
+## 4.1.10-hr — juli 2026 (regelwijziging: kaartdefinitie begrensd door vrije pionnen)
+
+**Regel (besluit Max):** je definieert per setup-ronde hoogstens zoveel kaarten
+als je vrije (levende, ongekoppelde) pionnen hebt. Heb je er nul, dan sla je de
+ronde over en gaat de tegenstander alleen door (define, reveal en koppelen
+lopen gewoon; jouw kant is vrijgesteld). Voorheen definieerde een uitgedunde
+speler elke ronde het volle doctrine-aantal en vervielen de overtollige
+kaarten pas bij het koppelen — drie lege verplichte rondes voor de verliezende
+kant.
+
+- Engine: `Validator.expected_define_count` (min(doctrine.cards, vrije
+  pionnen)); commit-gate telt vrijgestelde spelers als klaar; gate draait ook
+  bij het betreden van elke define-fase (beide vrijgesteld → meteen door).
+- AI/sim/UI volgen automatisch (generate_cards, kaartwaaier toont het juiste
+  aantal sloten).
+- Golden replays + sim-baselines geregenereerd onder de nieuwe regel
+  (bewuste breuk conform werkafspraak §0).
+
 > Regel uit het masterplan (§0): breekt een wijziging een golden replay, dan hoort
 > daar een versie-bump in `rules_version` bij + een entry hier. Vanaf F0.7 zijn
 > golden replays de handhaving; tot die tijd is dit document de waarheid.

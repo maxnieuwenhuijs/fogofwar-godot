@@ -84,6 +84,7 @@ func test_sample_card_sets_valid_for_all_doctrines() -> void:
 	for doctrine in Constants.DOCTRINE_DATA.keys():
 		var s := GameState.new()
 		s.doctrines[Constants.PLAYER_1] = doctrine
+		s.setup_initial_pawns()  # 4.1.10-hr: kaart-aantal hangt van vrije pionnen af
 		var doctrine_data: Dictionary = s.doctrine_data_of(Constants.PLAYER_1)
 		var sets: Array = Validator._sample_card_sets(s, Constants.PLAYER_1)
 		assert_true(sets.size() >= 1, "minstens 1 geldige voorbeeldset voor %s" % String(doctrine_data.name))

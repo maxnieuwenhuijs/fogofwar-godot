@@ -1415,9 +1415,9 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 		var ph: int = st.phase
 		var cur = a1 if st.current_player == 1 else a2
 		if Phase.is_define(ph):
-			if st.cards_defined[1].size() == 0:
+			if st.cards_defined[1].size() == 0 and Validator.expected_define_count(st, 1) > 0:
 				GameSession.submit_define_cards(1, a1.generate_cards(st))
-			if st.cards_defined[2].size() == 0:
+			if st.cards_defined[2].size() == 0 and Validator.expected_define_count(st, 2) > 0:
 				GameSession.submit_define_cards(2, a2.generate_cards(st))
 		elif Phase.is_reveal(ph):
 			GameSession.acknowledge_reveal()

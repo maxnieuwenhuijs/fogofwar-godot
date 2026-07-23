@@ -88,6 +88,7 @@ static func _do_place(state: GameState, action: Dictionary, player_id: int, even
 		_set_phase(state, Phase.Type.SETUP_1_DEFINE, events)
 		_ev(events, EV_CYCLE_STARTED, {"cycle": 1})
 		_ev(events, EV_STATE, {})
+		_check_define_gate(state, events)
 
 
 static func _do_define(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
@@ -105,10 +106,20 @@ static func _do_define(state: GameState, action: Dictionary, player_id: int, eve
 		state.all_cards[card.id] = card
 	state.cards_defined[player_id] = new_cards
 	_ev(events, EV_STATE, {})
-	# Commit-gate: pas als beide spelers gedefinieerd hebben volgt de reveal.
-	if state.cards_defined[Constants.PLAYER_1].size() > 0 \
-			and state.cards_defined[Constants.PLAYER_2].size() > 0:
-		_enter_reveal(state, events)
+	_check_define_gate(state, events)
+
+
+## Commit-gate (4.1.10-hr): de reveal volgt zodra elke speler die MOET
+## definiëren (>= 1 vrije pion) dat gedaan heeft; een uitgedunde speler
+## zonder vrije pionnen slaat de ronde over en de ander gaat gewoon door.
+static func _check_define_gate(state: GameState, events: Array) -> void:
+	if not Phase.is_define(state.phase):
+		return
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if state.cards_defined.get(speler, []).size() == 0 \
+				and Validator.expected_define_count(state, speler) > 0:
+			return  # deze speler moet nog
+	_enter_reveal(state, events)
 
 
 static func _enter_reveal(state: GameState, events: Array) -> void:
@@ -215,6 +226,7 @@ static func _advance_from_linking(state: GameState, events: Array) -> void:
 		state.round_number += 1
 		state.reset_for_new_round()
 		_set_phase(state, Phase.define_for_round(state.round_number), events)
+		_check_define_gate(state, events)
 	else:
 		_enter_action_phase(state, events)
 
@@ -250,6 +262,7 @@ static func _start_new_cycle(state: GameState, events: Array) -> void:
 	_set_phase(state, Phase.Type.SETUP_1_DEFINE, events)
 	_ev(events, EV_CYCLE_STARTED, {"cycle": state.cycle})
 	_ev(events, EV_STATE, {})
+	_check_define_gate(state, events)
 
 
 ## RESIGN (F0.4c): opgeven kan in elke speelbare fase; de tegenstander wint.

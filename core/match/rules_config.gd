@@ -12,7 +12,7 @@ extends RefCounted
 # - clock: engine-klokken (F0.8)
 # - campaign (cp/pool/spawn/cannon): v4.2 (F2); null = puur 4.1-gedrag
 
-var rules_version: String = "4.1.9-hr"
+var rules_version: String = "4.1.10-hr"
 var rounds_per_cycle: int = 3
 var pawns_in_haven_to_win: int = 2
 
