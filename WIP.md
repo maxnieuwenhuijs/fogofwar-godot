@@ -130,7 +130,25 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   is B8-werk (agents op views, F1.1, met full_state-ablatievlag).
   Checks: 846 asserts groen · vosview PASS (9/9) · simcheck 5/5 · play exit 0.
 
-Volgende stap: **F0.7 — event-log, zobrist en golden replays**.
+- **F0.7 — event-log, zobrist en golden replays.** `core/match/match_log.gd`:
+  append-only {seq, player_id, action, events, hash, ts} per geaccepteerde
+  actie; fold() = de replay-machine (per-actie hash-checksum);
+  verify_file() = fold + eind-hash + byte-identieke eindstaat (genormaliseerd
+  — JSON leest ints als floats terug). `core/match/zobrist.gd`: state-hash =
+  sha256 over de canonieke serialisatie (incrementele XOR is F1-optimalisatie).
+  GameSession.match_log = opt-in recording op alle drie accept-paden.
+  Capture-modi: `-- record <uit.json> <p1> <p2> [d1] [d2] [seed]`,
+  `-- replay <bestand>` (exit 0 bij byte-match), `-- makegoldens`.
+  tests/golden_replays/: 12 goldens — 6 volledige sim-partijen (1 per
+  doctrine, vaste seeds) + 6 randgevallen (terugslag-doodt-aanvaller,
+  wolf-stap-in-haven-wint, charge-kill-verplichte-verplaatsing,
+  vos-onthulling-bij-schade, kaart-vervalt-zonder-pion, cycluslimiet-remise).
+  GoldenReplayTests: elke golden byte-identiek bij elke suite-run — breekt er
+  een: bewuste beslissing + versie-bump + CHANGELOG (werkafspraak §0).
+  Checks: 860 asserts groen · 12/12 goldens · 10 partijen record+replay
+  byte-identiek · simcheck 5/5 · play exit 0.
+
+Volgende stap: **F0.8 — klokken, timeout en CLAIM_TIMEOUT** (daarna F0.9-acceptatie met Max).
 
 ---
 

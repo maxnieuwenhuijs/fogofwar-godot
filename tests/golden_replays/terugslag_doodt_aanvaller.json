@@ -1,0 +1,365 @@
+{
+	"entries": [
+		{
+			"action": {
+				"attacker_id": 0,
+				"defender_id": 1,
+				"type": "melee"
+			},
+			"events": [
+				{
+					"payload": {
+						"action": {
+							"attacker_id": 0,
+							"defender_id": 1,
+							"type": "attack"
+						},
+						"result": {
+							"attacker_alive": false,
+							"attacker_eliminated": true,
+							"attacker_from_pos": [
+								5,
+								5
+							],
+							"charge_from": [
+								0,
+								0
+							],
+							"damage": 1,
+							"defender_pos": [
+								5,
+								4
+							],
+							"eliminated": false,
+							"forced_move": false,
+							"is_shot": false,
+							"move_target": [
+								0,
+								0
+							],
+							"moved": false,
+							"retaliation": true,
+							"retaliation_damage": 2,
+							"success": true,
+							"wolf_step_available": false
+						}
+					},
+					"seq": 0,
+					"type": "action_applied"
+				},
+				{
+					"payload": {},
+					"seq": 1,
+					"type": "state_updated"
+				},
+				{
+					"payload": {
+						"player_id": 2
+					},
+					"seq": 2,
+					"type": "turn_changed"
+				}
+			],
+			"hash": "b274466c62588915e6d1dc839a8c1187b8be0b439d5ea1ac10071bff6ff5ba48",
+			"player_id": 1,
+			"seq": 0,
+			"ts": 1784807822.944
+		}
+	],
+	"final_hash": "b274466c62588915e6d1dc839a8c1187b8be0b439d5ea1ac10071bff6ff5ba48",
+	"final_state": {
+		"all_cards": {
+			"0": {
+				"attack": 1,
+				"hp": 1,
+				"id": 0,
+				"linked_pawn_id": 0,
+				"owner_id": 1,
+				"round_number": 1,
+				"stamina": 2
+			},
+			"1": {
+				"attack": 1,
+				"hp": 5,
+				"id": 1,
+				"linked_pawn_id": 1,
+				"owner_id": 2,
+				"round_number": 1,
+				"stamina": 2
+			}
+		},
+		"cards_defined": {
+			"1": [],
+			"2": []
+		},
+		"cards_revealed": {
+			"1": [],
+			"2": []
+		},
+		"current_player": 2,
+		"cycle": 1,
+		"doctrines": {
+			"1": 0,
+			"2": 0
+		},
+		"haven_touches": {
+			"1": [],
+			"2": []
+		},
+		"initiative_player": 1,
+		"last_initiative_winner": 1,
+		"next_card_id": 2,
+		"next_pawn_id": 3,
+		"pawns": {
+			"0": {
+				"attack_value": 1,
+				"card_revealed": true,
+				"current_hp": -1,
+				"id": 0,
+				"is_active": false,
+				"is_eliminated": true,
+				"linked_card_id": 0,
+				"max_hp": 1,
+				"max_stamina": 2,
+				"owner_id": 1,
+				"position": [
+					5,
+					5
+				],
+				"remaining_stamina": 1,
+				"unit_type": 0
+			},
+			"1": {
+				"attack_value": 1,
+				"card_revealed": true,
+				"current_hp": 4,
+				"id": 1,
+				"is_active": true,
+				"is_eliminated": false,
+				"linked_card_id": 1,
+				"max_hp": 5,
+				"max_stamina": 2,
+				"owner_id": 2,
+				"position": [
+					5,
+					4
+				],
+				"remaining_stamina": 2,
+				"unit_type": 1
+			},
+			"2": {
+				"attack_value": 0,
+				"card_revealed": true,
+				"current_hp": 0,
+				"id": 2,
+				"is_active": false,
+				"is_eliminated": false,
+				"linked_card_id": -1,
+				"max_hp": 0,
+				"max_stamina": 0,
+				"owner_id": 1,
+				"position": [
+					0,
+					10
+				],
+				"remaining_stamina": 0,
+				"unit_type": 0
+			}
+		},
+		"pending_wolf_step_pawn": -1,
+		"phase": 11,
+		"placements_done": {
+			"1": false,
+			"2": false
+		},
+		"reveal_acks": {
+			"1": false,
+			"2": false
+		},
+		"round_number": 1,
+		"rules": {
+			"art_min_range": 2,
+			"art_move": 1,
+			"art_range": 6,
+			"art_shot_cost": 1,
+			"campaign": null,
+			"clock": {
+				"bank_sec": 0,
+				"increment_sec": 0,
+				"reconnect_grace_sec": 20
+			},
+			"cycle_limit": 0,
+			"doctrines": {},
+			"fire_blocked": true,
+			"fire_hits_inactive": true,
+			"haven_score_cumulative": false,
+			"inf_shot_cost": 1,
+			"inf_shot_full_attack": true,
+			"inf_shot_over_pawn": false,
+			"inf_shot_range": 2,
+			"pawns_in_haven_to_win": 2,
+			"per_stat_cap": 0,
+			"retaliation": {
+				"art": 0,
+				"cav": 2,
+				"inf": 1
+			},
+			"rounds_per_cycle": 3,
+			"rules_version": "4.1.9-hr",
+			"stamina_model": "pool",
+			"statue_threshold": 0,
+			"tiebreak": "material_haven_proximity"
+		},
+		"winner": -1
+	},
+	"meta": {
+		"created": "2026-07-23T13:57:02",
+		"formaat": 1,
+		"initial_state": {
+			"all_cards": {
+				"0": {
+					"attack": 1,
+					"hp": 1,
+					"id": 0,
+					"linked_pawn_id": 0,
+					"owner_id": 1,
+					"round_number": 1,
+					"stamina": 2
+				},
+				"1": {
+					"attack": 1,
+					"hp": 5,
+					"id": 1,
+					"linked_pawn_id": 1,
+					"owner_id": 2,
+					"round_number": 1,
+					"stamina": 2
+				}
+			},
+			"cards_defined": {
+				"1": [],
+				"2": []
+			},
+			"cards_revealed": {
+				"1": [],
+				"2": []
+			},
+			"current_player": 1,
+			"cycle": 1,
+			"doctrines": {
+				"1": 0,
+				"2": 0
+			},
+			"haven_touches": {
+				"1": [],
+				"2": []
+			},
+			"initiative_player": 1,
+			"last_initiative_winner": 1,
+			"next_card_id": 2,
+			"next_pawn_id": 3,
+			"pawns": {
+				"0": {
+					"attack_value": 1,
+					"card_revealed": true,
+					"current_hp": 1,
+					"id": 0,
+					"is_active": true,
+					"is_eliminated": false,
+					"linked_card_id": 0,
+					"max_hp": 1,
+					"max_stamina": 2,
+					"owner_id": 1,
+					"position": [
+						5,
+						5
+					],
+					"remaining_stamina": 2,
+					"unit_type": 0
+				},
+				"1": {
+					"attack_value": 1,
+					"card_revealed": true,
+					"current_hp": 5,
+					"id": 1,
+					"is_active": true,
+					"is_eliminated": false,
+					"linked_card_id": 1,
+					"max_hp": 5,
+					"max_stamina": 2,
+					"owner_id": 2,
+					"position": [
+						5,
+						4
+					],
+					"remaining_stamina": 2,
+					"unit_type": 1
+				},
+				"2": {
+					"attack_value": 0,
+					"card_revealed": true,
+					"current_hp": 0,
+					"id": 2,
+					"is_active": false,
+					"is_eliminated": false,
+					"linked_card_id": -1,
+					"max_hp": 0,
+					"max_stamina": 0,
+					"owner_id": 1,
+					"position": [
+						0,
+						10
+					],
+					"remaining_stamina": 0,
+					"unit_type": 0
+				}
+			},
+			"pending_wolf_step_pawn": -1,
+			"phase": 11,
+			"placements_done": {
+				"1": false,
+				"2": false
+			},
+			"reveal_acks": {
+				"1": false,
+				"2": false
+			},
+			"round_number": 1,
+			"rules": {
+				"art_min_range": 2,
+				"art_move": 1,
+				"art_range": 6,
+				"art_shot_cost": 1,
+				"campaign": null,
+				"clock": {
+					"bank_sec": 0,
+					"increment_sec": 0,
+					"reconnect_grace_sec": 20
+				},
+				"cycle_limit": 0,
+				"doctrines": {},
+				"fire_blocked": true,
+				"fire_hits_inactive": true,
+				"haven_score_cumulative": false,
+				"inf_shot_cost": 1,
+				"inf_shot_full_attack": true,
+				"inf_shot_over_pawn": false,
+				"inf_shot_range": 2,
+				"pawns_in_haven_to_win": 2,
+				"per_stat_cap": 0,
+				"retaliation": {
+					"art": 0,
+					"cav": 2,
+					"inf": 1
+				},
+				"rounds_per_cycle": 3,
+				"rules_version": "4.1.9-hr",
+				"stamina_model": "pool",
+				"statue_threshold": 0,
+				"tiebreak": "material_haven_proximity"
+			},
+			"winner": -1
+		},
+		"rules_version": "4.1.9-hr"
+	}
+}

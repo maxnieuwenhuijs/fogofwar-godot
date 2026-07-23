@@ -13,6 +13,11 @@ signal error_occurred(player_id: int, message: String)
 
 var state: GameState = null
 
+## F0.7: opt-in event-log — zet een MatchLog (na start_new_game) en elke
+## geaccepteerde actie wordt bijgeschreven. Gebruikt door -- record en straks
+## door de server/arena; de gewone UI-flow laat dit op null.
+var match_log: MatchLog = null
+
 
 func _ready() -> void:
 	state = GameState.new()
@@ -49,9 +54,11 @@ func submit_define_cards(player_id: int, cards_data: Array) -> bool:
 ## Per-speler reveal-bevestiging (F0.4b): de fase gaat pas door als beide
 ## spelers geackt hebben. Stil bij weigering (het oude ack-pad was ook stil).
 func submit_ack_reveal(player_id: int) -> bool:
-	var res: Dictionary = Reducer.apply(state, Actions.make_ack_reveal(), player_id)
+	var action := Actions.make_ack_reveal()
+	var res: Dictionary = Reducer.apply(state, action, player_id)
 	if not res.ok:
 		return false
+	_record(player_id, action, res.events)
 	_relay_events(res.events)
 	return true
 
@@ -85,9 +92,11 @@ func submit_wolf_step(player_id: int, target: Vector2i) -> bool:
 
 func skip_wolf_step(player_id: int) -> bool:
 	# Stil bij weigering (bestaand gedrag: geen error_occurred-signaal).
-	var res: Dictionary = Reducer.apply(state, Actions.make_skip_wolf_step(), player_id)
+	var action := Actions.make_skip_wolf_step()
+	var res: Dictionary = Reducer.apply(state, action, player_id)
 	if not res.ok:
 		return false
+	_record(player_id, action, res.events)
 	_relay_events(res.events)
 	return true
 
@@ -98,8 +107,13 @@ func _apply_action(player_id: int, action: Dictionary) -> bool:
 	if not res.ok:
 		error_occurred.emit(player_id, res.error)
 		return false
+	_record(player_id, action, res.events)
 	_relay_events(res.events)
 	return true
+
+func _record(player_id: int, action: Dictionary, events: Array) -> void:
+	if match_log != null:
+		match_log.record(player_id, action, events, state)
 
 func _relay_events(events: Array) -> void:
 	for ev in events:

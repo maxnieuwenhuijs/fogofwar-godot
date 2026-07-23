@@ -447,6 +447,36 @@ func _ready() -> void:
 		print("[SIMCHECK] klaar: %d afwijking(en)" % mismatches)
 		get_tree().quit(0 if mismatches == 0 else 1)
 		return
+	elif "record" in args:
+		# F0.7: neem een partij op als event-log. Gebruik:
+		#   -- record <uit.json> <p1> <p2> [d1] [d2] [seed]
+		var ri := args.find("record")
+		var rout: String = String(args[ri + 1]) if args.size() > ri + 1 else "user://replays/partij.json"
+		var rn1: String = String(args[ri + 2]) if args.size() > ri + 2 else "easy"
+		var rn2: String = String(args[ri + 3]) if args.size() > ri + 3 else "easy"
+		var rd1: int = _sim_doctrine(String(args[ri + 4]) if args.size() > ri + 4 else "mens")
+		var rd2: int = _sim_doctrine(String(args[ri + 5]) if args.size() > ri + 5 else "mens")
+		var rseed: int = int(args[ri + 6]) if args.size() > ri + 6 else 0
+		var ru: Dictionary = _run_sim(rn1, rn2, rd1, rd2, rseed, null, rout)
+		print("[RECORD] %s -> winner=%d acties=%d entries=%d" % [rout, ru.winner, ru.acties, ru.get("entries", 0)])
+		get_tree().quit()
+		return
+	elif "replay" in args:
+		# F0.7: verifieer een opgenomen log — fold + per-actie-hash + eindstaat.
+		var pi := args.find("replay")
+		if args.size() <= pi + 1:
+			print("[REPLAY] geef een bestandspad op")
+			get_tree().quit(1)
+			return
+		var rpath := String(args[pi + 1])
+		var uitkomst: Dictionary = MatchLog.verify_file(rpath)
+		print("[REPLAY] %s -> %s" % [rpath, "OK (byte-identiek)" if uitkomst.ok else "FOUT: " + String(uitkomst.get("fout", "?"))])
+		get_tree().quit(0 if uitkomst.ok else 1)
+		return
+	elif "makegoldens" in args:
+		_make_goldens()
+		get_tree().quit()
+		return
 	elif "sim" in args:
 		# Puur engine + AI: speel een volledige partij AI vs AI en log het resultaat.
 		# Gebruik: -- sim <p1> <p2> [d1] [d2] [seed] [--rules pad.json]
@@ -1356,7 +1386,7 @@ func _sim_doctrine(naam: String) -> int:
 
 ## Volledige AI-vs-AI-partij op de GameSession-autoload; synchroon.
 ## Retourneert {winner, cyclus, acties, guard}.
-func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules: RulesConfig) -> Dictionary:
+func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules: RulesConfig, record_path: String = "") -> Dictionary:
 	var paths := {
 		"easy": "res://scripts/ai/AIEasy.gd",
 		"medium": "res://scripts/ai/AIMedium.gd",
@@ -1371,6 +1401,10 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 	a1.rng = sim_rng.fork("p1")
 	a2.rng = sim_rng.fork("p2")
 	GameSession.start_new_game(d1, d2, sim_rules)
+	if record_path != "":
+		GameSession.match_log = MatchLog.new()
+		GameSession.match_log.setup(GameSession.state, {"p1": n1, "p2": n2,
+			"d1": Constants.doctrine_name(d1), "d2": Constants.doctrine_name(d2), "seed": sim_seed})
 	GameSession.submit_placement(1, a1.choose_placement(GameSession.state))
 	GameSession.submit_placement(2, a2.choose_placement(GameSession.state))
 	var acts := 0
@@ -1421,4 +1455,142 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 					GameSession.submit_shot(st.current_player, act.shooter_id, act.target_id)
 				"charge":
 					GameSession.submit_charge(st.current_player, act.pawn_id, act.move_target, act.defender_id)
-	return {"winner": GameSession.state.winner, "cyclus": GameSession.state.cycle, "acties": acts, "guard": guard}
+	var uitkomst := {"winner": GameSession.state.winner, "cyclus": GameSession.state.cycle, "acties": acts, "guard": guard}
+	if record_path != "" and GameSession.match_log != null:
+		uitkomst["entries"] = GameSession.match_log.entries.size()
+		GameSession.match_log.save(record_path, GameSession.state)
+		GameSession.match_log = null
+	return uitkomst
+
+# =========================================================================
+# Golden replays (F0.7): 6 sim-partijen + 6 handgeschreven randgevallen
+# =========================================================================
+
+func _make_goldens() -> void:
+	var dir := "res://tests/golden_replays/"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+	# 1-6: per doctrine één volledige partij (easy vs easy, vaste seeds).
+	var docs: Array = [["mens", 11], ["muis", 22], ["leeuw", 33], ["beer", 44], ["wolf", 55], ["vos", 66]]
+	var tegen: Array = ["vos", "leeuw", "wolf", "muis", "beer", "mens"]
+	for i in docs.size():
+		var naam: String = docs[i][0]
+		var pad: String = dir + "sim_%s.json" % naam
+		var ru: Dictionary = _run_sim("easy", "easy", _sim_doctrine(naam), _sim_doctrine(String(tegen[i])), int(docs[i][1]), null, pad)
+		print("[GOLDENS] %s: winner=%d acties=%d" % [pad, ru.winner, ru.acties])
+	# 7-12: randgevallen op geconstrueerde staten.
+	_golden_terugslag_doodt_aanvaller(dir)
+	_golden_wolf_stap_in_haven_wint(dir)
+	_golden_charge_kill_verplichte_verplaatsing(dir)
+	_golden_vos_onthulling_bij_schade(dir)
+	_golden_kaart_vervalt_zonder_pion(dir)
+	_golden_cycluslimiet_remise(dir)
+	print("[GOLDENS] klaar")
+
+
+## Neem een handgeschreven actielijst op: [[action, player], ...].
+func _golden_opnemen(pad: String, s: GameState, acties: Array) -> void:
+	var log := MatchLog.new()
+	log.setup(s)
+	for a in acties:
+		var res: Dictionary = Reducer.apply(s, a[0], a[1])
+		if not res.ok:
+			print("[GOLDENS] FOUT bij %s: %s" % [pad, res.error])
+			return
+		log.record(a[1], a[0], res.events, s)
+	log.save(pad, s)
+	print("[GOLDENS] %s: %d acties" % [pad, acties.size()])
+
+
+func _golden_actieve_pion(s: GameState, owner: int, pos: Vector2i, unit_type: int, hp: int, spd: int, atk: int) -> Pawn:
+	var pawn: Pawn = s._spawn_pawn(owner, pos, unit_type)
+	var card := Card.new(s.next_card_id(), owner, s.round_number, hp, spd, atk)
+	s.all_cards[card.id] = card
+	pawn.link_card(card)
+	return pawn
+
+
+func _golden_terugslag_doodt_aanvaller(dir: String) -> void:
+	# Aanvaller (1 HP) slaat een overlevende cavalerist: terugslag 2 → aanvaller dood.
+	var s := GameState.new()
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var aanvaller := _golden_actieve_pion(s, 1, Vector2i(5, 5), Constants.UnitType.INFANTRY, 1, 2, 1)
+	var cav := _golden_actieve_pion(s, 2, Vector2i(5, 4), Constants.UnitType.CAVALRY, 5, 2, 1)
+	s._spawn_pawn(1, Vector2i(0, 10))  # reserve zodat de partij niet meteen eindigt
+	_golden_opnemen(dir + "terugslag_doodt_aanvaller.json", s,
+		[[Actions.make_melee(aanvaller.id, cav.id), 1]])
+
+
+func _golden_wolf_stap_in_haven_wint(dir: String) -> void:
+	# Wolf slaat, overleeft de terugslag en stapt gratis de haven in → winst.
+	var s := GameState.new()
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.WOLF
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	s._spawn_pawn(1, Vector2i(0, 0))  # al in de haven
+	var wolf := _golden_actieve_pion(s, 1, Vector2i(4, 1), Constants.UnitType.INFANTRY, 3, 2, 1)
+	var vijand := _golden_actieve_pion(s, 2, Vector2i(3, 1), Constants.UnitType.INFANTRY, 5, 2, 1)
+	s._spawn_pawn(2, Vector2i(10, 10))
+	_golden_opnemen(dir + "wolf_stap_in_haven_wint.json", s, [
+		[Actions.make_melee(wolf.id, vijand.id), 1],
+		[Actions.make_wolf_step(Vector2i(4, 0)), 1],
+	])
+
+
+func _golden_charge_kill_verplichte_verplaatsing(dir: String) -> void:
+	# Charge: 2 stappen + kill → verplichte verplaatsing naar het vrijgekomen vak.
+	var s := GameState.new()
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var cav := _golden_actieve_pion(s, 1, Vector2i(5, 7), Constants.UnitType.CAVALRY, 3, 3, 5)
+	var doel := _golden_actieve_pion(s, 2, Vector2i(5, 4), Constants.UnitType.INFANTRY, 2, 2, 1)
+	s._spawn_pawn(2, Vector2i(10, 10))
+	_golden_opnemen(dir + "charge_kill_verplichte_verplaatsing.json", s,
+		[[Actions.make_charge(cav.id, Vector2i(5, 5), doel.id), 1]])
+
+
+func _golden_vos_onthulling_bij_schade(dir: String) -> void:
+	# Gedekte Krokodil-pion wordt beschoten: onthulling vóór de schade.
+	var s := GameState.new()
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.VOS
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var schutter := _golden_actieve_pion(s, 1, Vector2i(5, 5), Constants.UnitType.INFANTRY, 3, 2, 2)
+	var gedekt := _golden_actieve_pion(s, 2, Vector2i(5, 3), Constants.UnitType.INFANTRY, 5, 2, 1)
+	gedekt.card_revealed = false
+	s.cards_revealed[2] = [s.all_cards[gedekt.linked_card_id]]
+	s._spawn_pawn(2, Vector2i(10, 10))
+	_golden_opnemen(dir + "vos_onthulling_bij_schade.json", s,
+		[[Actions.make_shoot(schutter.id, gedekt.id), 1]])
+
+
+func _golden_kaart_vervalt_zonder_pion(dir: String) -> void:
+	# Koppelfase: 2 kaarten, 1 vrije pion → de tweede kaart vervalt, de ronde
+	# schuift door naar de volgende define.
+	var s := GameState.new()
+	s.phase = Phase.linking_for_round(1)
+	s.current_player = 1
+	s.initiative_player = 1
+	var vrij: Pawn = s._spawn_pawn(1, Vector2i(5, 9))
+	var c1 := Card.new(s.next_card_id(), 1, 1, 3, 2, 2)
+	var c2 := Card.new(s.next_card_id(), 1, 1, 2, 2, 3)
+	s.all_cards[c1.id] = c1
+	s.all_cards[c2.id] = c2
+	s.cards_revealed[1] = [c1, c2]
+	s._spawn_pawn(2, Vector2i(5, 1))  # P2 heeft geen koppelwerk
+	_golden_opnemen(dir + "kaart_vervalt_zonder_pion.json", s,
+		[[Actions.make_link(c1.id, vrij.id), 1]])
+
+
+func _golden_cycluslimiet_remise(dir: String) -> void:
+	# Perfect gespiegelde eindstand op de cycluslimiet → echte remise (-1).
+	var s := GameState.new()
+	s.rules = RulesConfig.new()
+	s.rules.cycle_limit = 1
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var mover := _golden_actieve_pion(s, 1, Vector2i(5, 8), Constants.UnitType.INFANTRY, 3, 1, 1)
+	s._spawn_pawn(2, Vector2i(5, 3))
+	_golden_opnemen(dir + "cycluslimiet_remise.json", s,
+		[[Actions.make_move(mover.id, Vector2i(5, 7)), 1]])
+

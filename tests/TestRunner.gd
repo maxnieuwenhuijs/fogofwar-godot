@@ -30,6 +30,7 @@ func _run_all() -> void:
 		preload("res://tests/ReducerTests.gd").new(),
 		preload("res://tests/SerializerTests.gd").new(),
 		preload("res://tests/ViewTests.gd").new(),
+		preload("res://tests/GoldenReplayTests.gd").new(),
 	]
 	for t in test_classes:
 		t._runner = self

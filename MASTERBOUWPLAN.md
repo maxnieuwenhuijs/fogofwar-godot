@@ -319,7 +319,7 @@ in F4 de servergrens bewaakt. Plus een programmatische UI-assert: nieuwe capture
 een gedekte Vos-pion op het bord, leest de HP-blokjes-nodes uit en asserteert dat het label het
 "?"-sentinel toont (screenshot als bijvangst, exit-code op de assert).
 
-### ☐ F0.7 — Event-log, zobrist en golden replays
+### ☑ F0.7 — Event-log, zobrist en golden replays — AF (juli 2026)
 
 **Bestanden:** `core/match/match_log.gd`, `core/match/zobrist.gd` (nieuw), `tests/golden_replays/`,
 capture-modi `record`/`replay`.
