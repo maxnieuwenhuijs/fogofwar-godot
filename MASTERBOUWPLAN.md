@@ -451,7 +451,7 @@ verhuist in F4 naar een cron-job op de VPS (bouwplan §8.4; geen n8n — B5).
 **CHECK:** dashboard opent lokaal met echte data; nachtjob draait één keer end-to-end aantoonbaar
 (inclusief het echte 8-uurs-capaciteitslog voor F1.3).
 
-### ☐ F1.6 — Eerste balanspatch op data
+### ☑ F1.6 — Eerste balanspatch op data
 
 **Werk:** de openstaande balansvragen met het nieuwe instrument beantwoorden, minstens: **Muis (kapot:
 4–12% tegen de topfacties, 16,7% totaal in de arena-matrix — zie data/matchup_muis.txt en

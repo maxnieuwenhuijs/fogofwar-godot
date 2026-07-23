@@ -270,7 +270,26 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
-- **F1.6 (loopt) — eerste balanspatch op data.** Meetfase klaar: L2-baseline
+- **F1.6 AFGEROND (23 juli) — vervolg + slot:** trainer-gate was het echte
+  blok: de absolute adoptie-eis (>=8/12 = 67% winrate) is voor een zwakke
+  factie onhaalbaar — 2x een run met 0 adopties, ook met betere kandidaten.
+  Nu RELATIEF: de huidige kampioen speelt dezelfde deterministische
+  verificatiereeks als referentie (gecacht per factie, vervalt bij adoptie);
+  adoptie = totaal >= referentie+2 en per helft geen achteruitgang >1.
+  BEWIJS: proefrun gen 2 -> GEADOPTEERD (8/12 vs referentie 5/12). L2-matrix
+  na de gewichten-wissel (3348 partijen, Max' run): Muis 16.7 -> 25.0,
+  Leeuw 58.3 -> 50.0 (verliest nu van Muis), rest exact gelijk — CHECK
+  gehaald: alle doctrines binnen 25-75 (Muis/Wolf op de vloer, Krokodil op
+  het plafond: verdere training gewenst, geen blocker). Convergentiecheck
+  live gerapporteerd; geen regels gewijzigd dus geen golden-bumps.
+  MEETLES: L2 is deterministisch per matchup (elke cel 93/0/0) — winrates
+  verspringen per 8.3%; herhalingen voegen niets toe. TODO later: vleugje
+  loting in L2-gelijkwaardige zetten. Dashboard-trend vergelijkt nu alleen
+  runs met dezelfde agents+matchups. Paneel (paneel.ps1 + "FogOfWar
+  Paneel.bat"): alle runs met een knop, VOLLE NACHTRUN-knop (8u),
+  fuzz schaalt mee met de duur; machine blijkt 32 threads (31 procs).
+
+  Oorspronkelijke F1.6-notities: Meetfase klaar: L2-baseline
   864 partijen (Krokodil 75% / Varken 66.7 / Leeuw 58.3 / Beer 58.3 / Wolf 25
   / Muis 16.7 — drie buiten het 25-75-werkdoel). L1-sweeps (identieke seeds):
   statue_threshold=2 VERWORPEN (standbeeld-kills 18k->0 maar 69% van de
