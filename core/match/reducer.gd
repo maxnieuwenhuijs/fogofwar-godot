@@ -13,7 +13,7 @@ extends RefCounted
 # ze 1-op-1 naar de bestaande signals (game.gd merkt niets); straks schrijft
 # het event-log (F0.7) ze weg en streamt de server (F4) ze naar clients.
 #
-# Nog niet hier: RESIGN + cycluslimiet-remise (F0.4c), klokken (F0.8).
+# Sinds F0.4c: RESIGN + cycluslimiet-remise. Sinds F0.8: klokken (now_ms-param).
 
 const EV_ACTION := "action_applied"           # {action, result} → action_performed-signal
 const EV_STATE := "state_updated"             # {} → state_updated-signal
@@ -26,11 +26,15 @@ const EV_CYCLE_STARTED := "cycle_started"     # {cycle}
 const EV_GAME_OVER := "game_over"             # {winner}
 
 
-static func apply(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
+static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: int = -1) -> Dictionary:
 	var verdict: Dictionary = Validator.is_legal(state, action, player_id)
 	if not verdict.legal:
 		return {"ok": false, "events": [], "error": verdict.reason}
 	var events: Array = []
+	# F0.8: bankverbruik in de actiefase — gemeten tegen de OUDE deadline,
+	# vóór de actie de beurt (en dus de deadline) verschuift.
+	if now_ms >= 0 and _clocks_on(state) and state.phase == Phase.Type.ACTION 			and state.turn_deadline > 0 and String(action.type) != Actions.CLAIM_TIMEOUT:
+		_consume_bank(state, player_id, now_ms)
 	match String(action.type):
 		Actions.PLACE:
 			_do_place(state, action, player_id, events)
@@ -54,15 +58,21 @@ static func apply(state: GameState, action: Dictionary, player_id: int) -> Dicti
 			_do_skip_wolf(state, events)
 		Actions.RESIGN:
 			_do_resign(state, player_id, events)
+		Actions.CLAIM_TIMEOUT:
+			if now_ms < 0 or not _clocks_on(state) or state.turn_deadline <= 0 					or now_ms <= state.turn_deadline:
+				return {"ok": false, "events": [], "error": "Deadline nog niet verstreken"}
+			_do_claim_timeout(state, player_id, now_ms, events)
 		_:
-			return {"ok": false, "events": [], "error": "Actietype nog niet in de reducer (CLAIM_TIMEOUT: F0.8)"}
+			return {"ok": false, "events": [], "error": "Onbekend actietype"}
+	if now_ms >= 0:
+		_update_deadline(state, now_ms)
 	_seq(events)
 	return {"ok": true, "events": events, "error": ""}
 
 
-## Kan de reducer dit actietype al aan? (CLAIM_TIMEOUT volgt in F0.8.)
+## De reducer dekt sinds F0.8 de volledige actietaal.
 static func handles(action_type: String) -> bool:
-	return action_type != Actions.CLAIM_TIMEOUT and Actions._FIELDS.has(action_type)
+	return Actions._FIELDS.has(action_type)
 
 
 # =========================================================================
@@ -395,6 +405,92 @@ static func _advance_turn(state: GameState, events: Array) -> void:
 	if opponent_can:
 		state.current_player = opponent
 	_ev(events, EV_TURN, {"player_id": state.current_player})
+
+
+# =========================================================================
+# Klokken (F0.8) — rules.clock {bank_sec, increment_sec}; bank_sec 0 = uit.
+# Model: setup-fasen krijgen increment_sec per beslissing (geen bankverbruik,
+# deadline overschreden = defaults); de actiefase krijgt increment + bank
+# (tijd voorbij de increment eet de bank op; deadline = bank op = forfeit).
+# =========================================================================
+
+static func _clocks_on(state: GameState) -> bool:
+	return int(state.rules.clock.get("bank_sec", 0)) > 0
+
+
+static func _ensure_clocks(state: GameState) -> void:
+	if state.clocks.is_empty():
+		var bank: int = int(state.rules.clock.get("bank_sec", 0)) * 1000
+		state.clocks = {
+			Constants.PLAYER_1: {"bank_ms": bank},
+			Constants.PLAYER_2: {"bank_ms": bank},
+		}
+
+
+## Tijd voorbij de increment-ruimte gaat van de bank van de acterende speler af.
+static func _consume_bank(state: GameState, player_id: int, now_ms: int) -> void:
+	_ensure_clocks(state)
+	var bank: int = int(state.clocks[player_id].bank_ms)
+	var overshoot: int = maxi(0, now_ms - (state.turn_deadline - bank))
+	state.clocks[player_id].bank_ms = maxi(0, bank - overshoot)
+
+
+## Nieuwe deadline na élke geslaagde actie/fase-overgang.
+static func _update_deadline(state: GameState, now_ms: int) -> void:
+	if not _clocks_on(state):
+		return
+	_ensure_clocks(state)
+	if state.phase == Phase.Type.GAME_OVER:
+		state.turn_deadline = 0
+		return
+	var increment: int = int(state.rules.clock.get("increment_sec", 0)) * 1000
+	if state.phase == Phase.Type.ACTION:
+		state.turn_deadline = now_ms + increment + int(state.clocks[state.current_player].bank_ms)
+	else:
+		state.turn_deadline = now_ms + increment
+
+
+## CLAIM_TIMEOUT (deadline al gevalideerd): setup-fasen krijgen defaults voor
+## elke achterblijver; in de actiefase is de bank op en verliest de beurtspeler.
+static func _do_claim_timeout(state: GameState, _claimant: int, now_ms: int, events: Array) -> void:
+	var ph: int = state.phase
+	if ph == Phase.Type.ACTION:
+		_ensure_clocks(state)
+		state.clocks[state.current_player].bank_ms = 0
+		state.winner = Constants.opponent(state.current_player)
+		_set_phase(state, Phase.Type.GAME_OVER, events)
+		_ev(events, EV_GAME_OVER, {"winner": state.winner})
+		return
+	if ph == Phase.Type.PLACEMENT:
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if not state.placements_done.get(speler, false):
+				_merge_sub_apply(state, Actions.make_place(state.default_placement(speler)), speler, now_ms, events)
+		return
+	if Phase.is_define(ph):
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if state.cards_defined.get(speler, []).size() == 0:
+				var sets: Array = Validator._sample_card_sets(state, speler)
+				if not sets.is_empty():
+					_merge_sub_apply(state, Actions.make_define_cards(sets[0]), speler, now_ms, events)
+		return
+	if Phase.is_reveal(ph):
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if not state.reveal_acks.get(speler, false):
+				_merge_sub_apply(state, Actions.make_ack_reveal(), speler, now_ms, events)
+		return
+	if Phase.is_linking(ph):
+		# Eén automatische koppeling voor de trage beurtspeler; de deadline
+		# verschuift daarna vanzelf (meerdere claims mogelijk).
+		var opties: Array = Validator.legal_actions(state, state.current_player)
+		if not opties.is_empty():
+			_merge_sub_apply(state, opties[0], state.current_player, now_ms, events)
+
+
+## Sub-actie binnen een timeout-afhandeling: pas toe en neem de events over.
+static func _merge_sub_apply(state: GameState, action: Dictionary, player_id: int, now_ms: int, events: Array) -> void:
+	var res: Dictionary = apply(state, action, player_id, now_ms)
+	if res.ok:
+		events.append_array(res.events)
 
 
 # =========================================================================

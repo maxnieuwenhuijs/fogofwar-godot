@@ -53,7 +53,13 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 			# Effect volgt in F0.4c; legaal in elke speelbare fase.
 			return _ok() if state.phase != Phase.Type.PRE_GAME else _nee("De partij is nog niet begonnen")
 		Actions.CLAIM_TIMEOUT:
-			return _nee("Klokken bestaan nog niet (F0.8)")
+			# Structurele legaliteit; of de deadline écht verstreken is beslist
+			# de reducer met now_ms (puur: de validator leest geen klok).
+			if int(state.rules.clock.get("bank_sec", 0)) <= 0:
+				return _nee("Klokken staan uit in deze match")
+			if state.turn_deadline <= 0:
+				return _nee("Geen actieve deadline")
+			return _ok()
 	return _nee("Onbekend actietype")
 
 

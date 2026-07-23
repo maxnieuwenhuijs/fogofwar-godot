@@ -60,13 +60,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b274466c62588915e6d1dc839a8c1187b8be0b439d5ea1ac10071bff6ff5ba48",
+			"hash": "384d372ba5fe0636cdb448e698dc1df237b8182976b57dcbc66735d92bb6d36a",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784807822.944
+			"ts": 1784810459.71
 		}
 	],
-	"final_hash": "b274466c62588915e6d1dc839a8c1187b8be0b439d5ea1ac10071bff6ff5ba48",
+	"final_hash": "384d372ba5fe0636cdb448e698dc1df237b8182976b57dcbc66735d92bb6d36a",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -96,6 +96,7 @@
 			"1": [],
 			"2": []
 		},
+		"clocks": {},
 		"current_player": 2,
 		"cycle": 1,
 		"doctrines": {
@@ -210,10 +211,11 @@
 			"statue_threshold": 0,
 			"tiebreak": "material_haven_proximity"
 		},
+		"turn_deadline": 0,
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-23T13:57:02",
+		"created": "2026-07-23T14:40:59",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -244,6 +246,7 @@
 				"1": [],
 				"2": []
 			},
+			"clocks": {},
 			"current_player": 1,
 			"cycle": 1,
 			"doctrines": {
@@ -358,6 +361,7 @@
 				"statue_threshold": 0,
 				"tiebreak": "material_haven_proximity"
 			},
+			"turn_deadline": 0,
 			"winner": -1
 		},
 		"rules_version": "4.1.9-hr"

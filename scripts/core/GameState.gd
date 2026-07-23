@@ -45,6 +45,13 @@ var reveal_acks: Dictionary = {}
 # Wolf-doctrine: pion die na zijn melee nog een optionele gratis stap tegoed heeft.
 var pending_wolf_step_pawn: int = -1
 
+# F0.8 — klokken in de staat (rules.clock; bank_sec 0 = klokken uit).
+# clocks[speler] = {bank_ms}; turn_deadline is absolute tijd (now_ms-domein
+# van de aanroeper: server = servertijd, tests = eigen teller). De reducer
+# leest zelf nooit een klok (puur): now_ms komt als parameter mee.
+var clocks: Dictionary = {}
+var turn_deadline: int = 0
+
 var winner: int = -1
 
 var _next_pawn_id: int = 0
@@ -272,6 +279,8 @@ func clone() -> GameState:
 	copy.placements_done = placements_done.duplicate()
 	copy.reveal_acks = reveal_acks.duplicate()
 	copy.pending_wolf_step_pawn = pending_wolf_step_pawn
+	copy.clocks = clocks.duplicate(true)
+	copy.turn_deadline = turn_deadline
 	copy._next_pawn_id = _next_pawn_id
 	copy._next_card_id = _next_card_id
 	copy.board = []

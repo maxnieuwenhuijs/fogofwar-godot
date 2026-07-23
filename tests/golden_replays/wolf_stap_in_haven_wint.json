@@ -60,10 +60,10 @@
 					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "0985445c015ef9793f03887db9aeb804fbc23282a2688310d3ffccdc93cf0df1",
+			"hash": "da14b3008b937308d10761bf6986e3dd776622fdcd3b1016b8c2031ba2162189",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784807822.96
+			"ts": 1784810459.726
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "2ce37db469d76b756a09679fdf111d094abbaea7198716a60d511e4e4e5bde5f",
+			"hash": "803b2e8656f6ca85128d66ef015a1d5988cfdbe68830ffef453cf7121c48237e",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784807822.96
+			"ts": 1784810459.727
 		}
 	],
-	"final_hash": "2ce37db469d76b756a09679fdf111d094abbaea7198716a60d511e4e4e5bde5f",
+	"final_hash": "803b2e8656f6ca85128d66ef015a1d5988cfdbe68830ffef453cf7121c48237e",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -152,6 +152,7 @@
 			"1": [],
 			"2": []
 		},
+		"clocks": {},
 		"current_player": 1,
 		"cycle": 1,
 		"doctrines": {
@@ -284,10 +285,11 @@
 			"statue_threshold": 0,
 			"tiebreak": "material_haven_proximity"
 		},
+		"turn_deadline": 0,
 		"winner": 1
 	},
 	"meta": {
-		"created": "2026-07-23T13:57:02",
+		"created": "2026-07-23T14:40:59",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -318,6 +320,7 @@
 				"1": [],
 				"2": []
 			},
+			"clocks": {},
 			"current_player": 1,
 			"cycle": 1,
 			"doctrines": {
@@ -450,6 +453,7 @@
 				"statue_threshold": 0,
 				"tiebreak": "material_haven_proximity"
 			},
+			"turn_deadline": 0,
 			"winner": -1
 		},
 		"rules_version": "4.1.9-hr"

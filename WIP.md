@@ -148,7 +148,27 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   Checks: 860 asserts groen · 12/12 goldens · 10 partijen record+replay
   byte-identiek · simcheck 5/5 · play exit 0.
 
-Volgende stap: **F0.8 — klokken, timeout en CLAIM_TIMEOUT** (daarna F0.9-acceptatie met Max).
+- **F0.8 — klokken + CLAIM_TIMEOUT.** state.clocks[speler]={bank_ms} +
+  state.turn_deadline (absoluut, in het now_ms-domein van de aanroeper);
+  Reducer.apply(+now_ms-param — puur, leest zelf geen klok). Model:
+  setup-fasen = increment_sec per beslissing (deadline verlopen -> defaults:
+  default-opstelling / default-loadout via de validator-samples / auto-ack /
+  auto-link); actiefase = increment + bank (overschot eet de bank; deadline
+  verlopen = forfeit). CLAIM_TIMEOUT volledig: validator checkt structureel
+  (klokken aan + deadline gezet), de reducer valideert het verstrijken met
+  now_ms. bank_sec 0 (default) = klokken uit -> offline ongewijzigd; game.gd
+  blijft offline de klok-autoriteit (20s-driver) maar de fasetimer leest
+  state.turn_deadline zodra die gezet is. UI: opgeven-knop (met bevestiging)
+  onder de sfeer-knop -> GameSession.submit_resign. Ook: submit_claim_timeout.
+  Serializer + clone dragen clocks/turn_deadline mee -> goldens geregenereerd
+  (formaat-wijziging, geen regelwijziging; simcheck 5/5 bewijst dat).
+  tests/ClockTests.gd (7): increment spaart bank, trage actie eet bank, claim
+  voor deadline geweigerd, lege bank = forfeit, timeout in define =
+  default-loadout, klokken-uit = claim illegaal, klok-round-trip.
+  Checks: 885 asserts groen · simcheck 5/5 · play exit 0 · vosview PASS.
+
+**F0 is code-compleet.** Rest: F0.9-acceptatie — headless checks + MAX speelt
+een potje (win/verlies/Vos, '?'-blokjes, opgeven-knop).
 
 ---
 

@@ -138,8 +138,27 @@ func _process(delta: float) -> void:
 
 func _start_phase_timer(seconds: float) -> void:
 	_timer_active = true
-	_timer_left = seconds
+	# F0.8: staan er klokken in de match-config (state.turn_deadline gezet),
+	# dan is de engine-deadline leidend; anders het vaste offline-limiet.
+	if GameSession.state != null and GameSession.state.turn_deadline > 0:
+		_timer_left = maxf(0.1, float(GameSession.state.turn_deadline - Time.get_ticks_msec()) / 1000.0)
+	else:
+		_timer_left = seconds
 	_last_tick_second = -1  # aftel-tikken opnieuw laten beginnen
+
+
+## Opgeven met bevestiging; de winst gaat via het normale game_over-pad.
+func _on_resign_pressed() -> void:
+	var ph: int = GameSession.state.phase
+	if ph == Phase.Type.GAME_OVER or ph == Phase.Type.PRE_GAME:
+		return
+	var dlg := ConfirmationDialog.new()
+	dlg.dialog_text = "Weet je zeker dat je wilt opgeven?"
+	dlg.ok_button_text = "Opgeven"
+	dlg.cancel_button_text = "Doorspelen"
+	dlg.confirmed.connect(func() -> void: GameSession.submit_resign(_human_id))
+	$UI.add_child(dlg)
+	dlg.popup_centered()
 
 
 func _stop_phase_timer() -> void:
@@ -274,6 +293,21 @@ func _build_help_button() -> void:
 	sfeer.modulate = Color(1.0, 1.0, 1.0, 0.55)
 	sfeer.pressed.connect(_toggle_ambiance_panel)
 	$UI.add_child(sfeer)
+	# F0.8: opgeven-knop (RESIGN bestaat sinds F0.4c), onder de sfeer-knop.
+	var geef_op := Button.new()
+	geef_op.text = "opgeven"
+	geef_op.custom_minimum_size = Vector2(64, 40)
+	geef_op.add_theme_font_size_override("font_size", 14)
+	geef_op.anchors_preset = Control.PRESET_TOP_RIGHT
+	geef_op.anchor_left = 1.0
+	geef_op.anchor_right = 1.0
+	geef_op.offset_left = -84.0
+	geef_op.offset_right = -20.0
+	geef_op.offset_top = 140.0
+	geef_op.offset_bottom = 180.0
+	geef_op.modulate = Color(1.0, 0.85, 0.85, 0.55)
+	geef_op.pressed.connect(_on_resign_pressed)
+	$UI.add_child(geef_op)
 
 
 var _help_resume_timer: bool = false

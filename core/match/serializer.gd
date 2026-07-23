@@ -47,6 +47,8 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		"last_initiative_winner": state.last_initiative_winner,
 		"winner": state.winner,
 		"pending_wolf_step_pawn": state.pending_wolf_step_pawn,
+		"turn_deadline": state.turn_deadline,
+		"clocks": state.clocks.duplicate(true),
 		"rules": state.rules.to_dict(),
 		"doctrines": doctrines,
 		"pawns": pawns_d,
@@ -71,6 +73,10 @@ static func state_from_dict(d: Dictionary) -> GameState:
 	s.last_initiative_winner = int(d.get("last_initiative_winner", Constants.PLAYER_1))
 	s.winner = int(d.get("winner", -1))
 	s.pending_wolf_step_pawn = int(d.get("pending_wolf_step_pawn", -1))
+	s.turn_deadline = int(d.get("turn_deadline", 0))
+	s.clocks = {}
+	for k in d.get("clocks", {}):
+		s.clocks[int(String(k))] = {"bank_ms": int(d.clocks[k].get("bank_ms", 0))}
 	s.rules = RulesConfig.from_dict(d.get("rules", {}))
 	# Kaarten éérst: één object per id, daarna verwijzen alle lijsten daarnaar.
 	s.all_cards = {}

@@ -340,7 +340,7 @@ capture-modi `record`/`replay`.
 **CHECK (= F0-acceptatie bouwplan):** neem 10 partijen op (mix doctrines/AI-niveaus, vaste seeds),
 replay ze → eind-zobrist én volledige eindstate byte-identiek. Alle 12 goldens groen in de testsuite.
 
-### ☐ F0.8 — Klokken, timeout en de complete CLAIM_TIMEOUT-afhandeling
+### ☑ F0.8 — Klokken, timeout en de complete CLAIM_TIMEOUT-afhandeling — AF (juli 2026)
 
 **Bestanden:** `reducer.gd`, `rules_config.gd`, `game.gd` (timer wordt weergave), UI.
 

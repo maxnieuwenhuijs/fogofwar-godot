@@ -90,6 +90,22 @@ func submit_charge(player_id: int, pawn_id: int, move_target: Vector2i, defender
 func submit_wolf_step(player_id: int, target: Vector2i) -> bool:
 	return _apply_action(player_id, Actions.make_wolf_step(target))
 
+## Opgeven (F0.4c) — vanuit de UI (opgeven-knop in het hulpmenu).
+func submit_resign(player_id: int) -> bool:
+	return _apply_action(player_id, Actions.make_resign())
+
+## Timeout claimen (F0.8) — offline is game.gd de klok-autoriteit en geeft
+## die zijn eigen now_ms mee; online wordt dat de server (F4).
+func submit_claim_timeout(player_id: int, now_ms: int) -> bool:
+	var action := Actions.make_claim_timeout()
+	var res: Dictionary = Reducer.apply(state, action, player_id, now_ms)
+	if not res.ok:
+		error_occurred.emit(player_id, res.error)
+		return false
+	_record(player_id, action, res.events)
+	_relay_events(res.events)
+	return true
+
 func skip_wolf_step(player_id: int) -> bool:
 	# Stil bij weigering (bestaand gedrag: geen error_occurred-signaal).
 	var action := Actions.make_skip_wolf_step()
