@@ -47,7 +47,19 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   Checks: 503 asserts groen · sim seed 777 met/zonder default-config identiek
   (winner=2 cyclus=12 acties=339 = F0.1-baseline) · `-- play` exit 0.
 
-Volgende stap: **F0.3 — actions.gd + validator.gd** (één actietaal, één poort).
+- **F0.3 — actions + validator.** `core/match/actions.gd` (12 actietypes als
+  const strings, make_*-factories, to_dict/from_dict met Vector2i↔[x,y],
+  is_wellformed; CLAIM_TIMEOUT gedefinieerd maar illegaal tot F0.8, RESIGN
+  krijgt effect in F0.4c). `core/match/validator.gd`: is_legal(state, action,
+  player) met exact de bestaande foutmeldingen (charge via droge run op een
+  kloon) + legal_actions (PLACE/DEFINE als voorbeeld-generator, rest volledig,
+  incl. charge-enumeratie). Alle GameSession.submit_* + skip_wolf_step gaan
+  door de poort; _validate_action_turn verwijderd. tests/ValidatorTests.gd:
+  property-test 50 random partijen uit legal_actions (elke actie is_legal,
+  elke dispatch geaccepteerd, JSON-roundtrip) + roundtrip/wellformed/samples.
+  Checks: 613 asserts groen (24s) · sim seed 777 onveranderd · `-- play` exit 0.
+
+Volgende stap: **F0.4a — Reducer, deel 1** (actiefase naar Reducer.apply).
 
 ---
 

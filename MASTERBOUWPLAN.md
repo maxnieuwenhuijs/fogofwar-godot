@@ -220,7 +220,7 @@ standbeeld; (c) `stamina_model="one_action"` → pion kan één actie per cyclus
 → schot over precies één tussenpion legaal; (e) config round-trip dict→JSON→dict identiek. Sim-modus
 accepteert `-- sim ... --rules res://arena/arena_configs/v41_default.json`.
 
-### ☐ F0.3 — actions.gd + validator.gd: één actietaal, één poort
+### ☑ F0.3 — actions.gd + validator.gd: één actietaal, één poort — AF (juli 2026)
 
 **Bestanden:** `core/match/actions.gd`, `core/match/validator.gd` (nieuw), aanpassingen `GameSession.gd`.
 

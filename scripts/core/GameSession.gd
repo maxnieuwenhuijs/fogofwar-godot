@@ -40,14 +40,10 @@ func start_new_game_default(doctrine_p1: int = Constants.Doctrine.MENS, doctrine
 
 ## Vrije opstelling binnen de twee thuisrijen (v4.1 §2.2). Beide ingediend → Cyclus 1.
 func submit_placement(player_id: int, placements: Array) -> bool:
-	if state.phase != Phase.Type.PLACEMENT:
-		error_occurred.emit(player_id, "Niet in opstellingsfase")
-		return false
-	if state.placements_done.get(player_id, false):
-		error_occurred.emit(player_id, "Opstelling al ingediend")
-		return false
-	if not state.is_valid_placement(player_id, placements):
-		error_occurred.emit(player_id, "Ongeldige opstelling")
+	# F0.3: alle legaliteit door één poort (Validator); mutatie blijft hier tot F0.4.
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_place(placements), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	state.apply_placement(player_id, placements)
 	placement_submitted.emit(player_id)
@@ -62,22 +58,12 @@ func submit_default_placement(player_id: int) -> bool:
 	return submit_placement(player_id, state.default_placement(player_id))
 
 func submit_define_cards(player_id: int, cards_data: Array) -> bool:
-	if not Phase.is_define(state.phase):
-		error_occurred.emit(player_id, "Niet in definitie fase")
-		return false
-	if state.cards_defined.get(player_id, []).size() > 0:
-		error_occurred.emit(player_id, "Je hebt al gedefinieerd deze ronde")
-		return false
-	var doctrine: Dictionary = state.doctrine_data_of(player_id)
-	var expected: int = doctrine.cards
-	if cards_data.size() != expected:
-		error_occurred.emit(player_id, "Moet %d kaarten definiëren" % expected)
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_define_cards(cards_data), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	var new_cards: Array = []
 	for d in cards_data:
-		if not Card.is_valid_stats(int(d.hp), int(d.stamina), int(d.attack), doctrine.budget, doctrine.speed_max, state.rules.per_stat_cap):
-			error_occurred.emit(player_id, "Ongeldige statistieken (som moet %d zijn, elk minstens 1)" % doctrine.budget)
-			return false
 		var card := Card.new(
 			state.next_card_id(),
 			player_id,
@@ -148,20 +134,12 @@ func _player_has_unlinked_pawn(player_id: int) -> bool:
 	return false
 
 func submit_link(player_id: int, card_id: int, pawn_id: int) -> bool:
-	if not Phase.is_linking(state.phase):
-		error_occurred.emit(player_id, "Niet in linking fase")
-		return false
-	if state.current_player != player_id:
-		error_occurred.emit(player_id, "Niet jouw beurt")
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_link(card_id, pawn_id), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	var card: Card = state.all_cards.get(card_id, null)
-	if card == null or card.owner_id != player_id or card.round_number != state.round_number or card.is_linked():
-		error_occurred.emit(player_id, "Ongeldige kaart")
-		return false
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
-	if pawn == null or pawn.owner_id != player_id or pawn.is_eliminated or pawn.linked_card_id != -1:
-		error_occurred.emit(player_id, "Ongeldige pion")
-		return false
 	var doctrine: Dictionary = state.doctrine_data_of(player_id)
 	# Beer: +1 HP buiten het budget (v4.1 §6.4). Speed-bonus buiten het budget:
 	# Muis krijgt +1 op elke pion (zwerm-mobiliteit), Vos +1 op cavalerie.
@@ -232,26 +210,12 @@ func _enter_action_phase() -> void:
 		state.current_player = opponent_id
 	turn_changed.emit(state.current_player)
 
-func _validate_action_turn(player_id: int) -> bool:
-	if state.phase != Phase.Type.ACTION:
-		error_occurred.emit(player_id, "Niet in actie fase")
-		return false
-	if state.current_player != player_id:
-		error_occurred.emit(player_id, "Niet jouw beurt")
-		return false
-	if state.pending_wolf_step_pawn != -1:
-		error_occurred.emit(player_id, "Eerst de Wolf-stap afronden (of overslaan)")
-		return false
-	return true
-
 func submit_move(player_id: int, pawn_id: int, target_pos: Vector2i) -> bool:
-	if not _validate_action_turn(player_id):
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_move(pawn_id, target_pos), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
-	var pawn: Pawn = state.pawns.get(pawn_id, null)
-	if pawn == null or pawn.owner_id != player_id:
-		error_occurred.emit(player_id, "Ongeldige pion")
-		return false
-	var from_pos: Vector2i = pawn.position
+	var from_pos: Vector2i = state.pawns[pawn_id].position
 	if not Rules.apply_move(state, pawn_id, target_pos):
 		error_occurred.emit(player_id, "Ongeldige zet")
 		return false
@@ -268,11 +232,9 @@ func submit_move(player_id: int, pawn_id: int, target_pos: Vector2i) -> bool:
 
 ## Melee-aanval (Infanterie, of Cavalerie zonder verplaatsing).
 func submit_attack(player_id: int, attacker_id: int, defender_id: int) -> bool:
-	if not _validate_action_turn(player_id):
-		return false
-	var attacker: Pawn = state.pawns.get(attacker_id, null)
-	if attacker == null or attacker.owner_id != player_id:
-		error_occurred.emit(player_id, "Ongeldige aanvaller")
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_melee(attacker_id, defender_id), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	var result: Dictionary = Rules.apply_melee(state, attacker_id, defender_id)
 	if not result.success:
@@ -285,11 +247,9 @@ func submit_attack(player_id: int, attacker_id: int, defender_id: int) -> bool:
 
 ## Beschieting: infanterieschot (afstand exact 2) of artillerievuur (vaste dracht 6, +1 Leeuw).
 func submit_shot(player_id: int, shooter_id: int, target_id: int) -> bool:
-	if not _validate_action_turn(player_id):
-		return false
-	var shooter: Pawn = state.pawns.get(shooter_id, null)
-	if shooter == null or shooter.owner_id != player_id:
-		error_occurred.emit(player_id, "Ongeldige schutter")
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_shoot(shooter_id, target_id), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	var result: Dictionary = Rules.apply_shot(state, shooter_id, target_id)
 	if not result.success:
@@ -302,11 +262,9 @@ func submit_shot(player_id: int, shooter_id: int, target_id: int) -> bool:
 
 ## Cavalerie-charge: bewegen + optionele melee in één actie (defender_id -1 = geen aanval).
 func submit_charge(player_id: int, pawn_id: int, move_target: Vector2i, defender_id: int) -> bool:
-	if not _validate_action_turn(player_id):
-		return false
-	var pawn: Pawn = state.pawns.get(pawn_id, null)
-	if pawn == null or pawn.owner_id != player_id:
-		error_occurred.emit(player_id, "Ongeldige pion")
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_charge(pawn_id, move_target, defender_id), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	var result: Dictionary = Rules.apply_charge(state, pawn_id, move_target, defender_id)
 	if not result.success:
@@ -324,13 +282,11 @@ func submit_charge(player_id: int, pawn_id: int, move_target: Vector2i, defender
 
 ## Wolf: de optionele gratis stap na een melee. target = aangrenzend leeg vak.
 func submit_wolf_step(player_id: int, target: Vector2i) -> bool:
-	if state.phase != Phase.Type.ACTION or state.current_player != player_id:
-		error_occurred.emit(player_id, "Niet jouw beurt")
+	var verdict: Dictionary = Validator.is_legal(state, Actions.make_wolf_step(target), player_id)
+	if not verdict.legal:
+		error_occurred.emit(player_id, verdict.reason)
 		return false
 	var pawn_id: int = state.pending_wolf_step_pawn
-	if pawn_id == -1:
-		error_occurred.emit(player_id, "Geen Wolf-stap tegoed")
-		return false
 	var from_pos: Vector2i = state.pawns[pawn_id].position
 	if not Rules.apply_wolf_step(state, pawn_id, target):
 		error_occurred.emit(player_id, "Ongeldige Wolf-stap")
@@ -342,7 +298,7 @@ func submit_wolf_step(player_id: int, target: Vector2i) -> bool:
 	return true
 
 func skip_wolf_step(player_id: int) -> bool:
-	if state.pending_wolf_step_pawn == -1 or state.current_player != player_id:
+	if not Validator.is_legal(state, Actions.make_skip_wolf_step(), player_id).legal:
 		return false
 	state.pending_wolf_step_pawn = -1
 	_post_action(player_id)
