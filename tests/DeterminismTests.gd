@@ -61,7 +61,7 @@ func test_same_seed_same_match() -> void:
 		while not runner.done and steps < 400:
 			runner.step()
 			steps += 1
-		runs.append("%d|%d|%d" % [runner.winner, runner.engine.state.cycle, steps])
+		runs.append("%d|%d|%d" % [runner.winner, runner.state().cycle, steps])
 		runner.dispose()
 	assert_eq(runs[0], runs[1], "zelfde seed hoort een identiek verloop te geven")
 
@@ -81,8 +81,8 @@ func test_different_seeds_vary_course() -> void:
 			runner.step()
 			steps += 1
 			if steps <= 30:
-				first_moves.append(str(runner.engine.state.current_player))
-		prints["%d|%d|%d|%s" % [runner.winner, runner.engine.state.cycle, steps, "".join(first_moves)]] = true
+				first_moves.append(str(runner.state().current_player))
+		prints["%d|%d|%d|%s" % [runner.winner, runner.state().cycle, steps, "".join(first_moves)]] = true
 		runner.dispose()
 	assert_true(prints.size() >= 2,
 		"4 verschillende seeds horen minstens 2 verschillende verlopen te geven (kreeg %d)" % prints.size())

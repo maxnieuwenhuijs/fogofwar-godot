@@ -1,18 +1,18 @@
-Fog of War — arena winrate-matrix (medium, 20 potjes/richting)
+Fog of War — arena winrate-matrix (medium, 4 potjes/richting)
 Rij wint-%% tegen kolom. Spiegels (diagonaal) horen rond 50%%.
 
          Varken  Muis    Leeuw   Beer    Wolf    Krokodi 
-Varken   50%     100%    0%      50%     100%    0%      
-Muis     0%      50%     0%      0%      50%     0%      
-Leeuw    100%    100%    50%     100%    100%    100%    
-Beer     50%     100%    0%      50%     100%    100%    
-Wolf     0%      50%     0%      0%      50%     0%      
-Krokodil 100%    100%    0%      0%      100%    50%     
+Varken   50%     100%    50%     100%    100%    0%      
+Muis     0%      50%     0%      0%      0%      0%      
+Leeuw    50%     100%    50%     100%    50%     0%      
+Beer     0%      100%    0%      50%     100%    50%     
+Wolf     0%      100%    50%     0%      50%     0%      
+Krokodil 100%    100%    100%    50%     100%    50%     
 
 Ranglijst (algehele winrate):
-  Leeuw    91.7%  (240 potjes)
-  Beer     66.7%  (240 potjes)
-  Krokodil  58.3%  (240 potjes)
-  Varken   50.0%  (240 potjes)
-  Muis     16.7%  (240 potjes)
-  Wolf     16.7%  (240 potjes)
+  Krokodil  83.3%  (48 potjes)
+  Varken   66.7%  (48 potjes)
+  Leeuw    58.3%  (48 potjes)
+  Beer     50.0%  (48 potjes)
+  Wolf     33.3%  (48 potjes)
+  Muis      8.3%  (48 potjes)

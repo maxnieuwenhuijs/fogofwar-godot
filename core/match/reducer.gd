@@ -52,17 +52,17 @@ static func apply(state: GameState, action: Dictionary, player_id: int) -> Dicti
 			_do_wolf_step(state, action, events)
 		Actions.SKIP_WOLF_STEP:
 			_do_skip_wolf(state, events)
+		Actions.RESIGN:
+			_do_resign(state, player_id, events)
 		_:
-			return {"ok": false, "events": [], "error": "Actietype nog niet in de reducer (F0.4c)"}
+			return {"ok": false, "events": [], "error": "Actietype nog niet in de reducer (CLAIM_TIMEOUT: F0.8)"}
 	_seq(events)
 	return {"ok": true, "events": events, "error": ""}
 
 
-## Kan de reducer dit actietype al aan? (RESIGN/CLAIM_TIMEOUT volgen in F0.4c/F0.8.)
+## Kan de reducer dit actietype al aan? (CLAIM_TIMEOUT volgt in F0.8.)
 static func handles(action_type: String) -> bool:
-	return action_type in [Actions.PLACE, Actions.DEFINE_CARDS, Actions.ACK_REVEAL,
-		Actions.LINK, Actions.MOVE, Actions.MELEE, Actions.SHOOT,
-		Actions.CHARGE, Actions.WOLF_STEP, Actions.SKIP_WOLF_STEP]
+	return action_type != Actions.CLAIM_TIMEOUT and Actions._FIELDS.has(action_type)
 
 
 # =========================================================================
@@ -229,9 +229,58 @@ static func _start_new_cycle(state: GameState, events: Array) -> void:
 	state.reset_for_new_cycle()
 	if _check_game_over(state, events):
 		return
+	# Cycluslimiet-remise (F0.4c): voorbij de limiet beslist de tiebreak
+	# (materiaal → haven → nabijheid; -1 = echte remise). Voorkomt oneindige
+	# patstellingen (bv. twee deterministische AI's die elkaar eeuwig ontwijken).
+	if state.rules.cycle_limit > 0 and state.cycle > state.rules.cycle_limit:
+		state.winner = tiebreak_winner(state)
+		_set_phase(state, Phase.Type.GAME_OVER, events)
+		_ev(events, EV_GAME_OVER, {"winner": state.winner})
+		return
 	_set_phase(state, Phase.Type.SETUP_1_DEFINE, events)
 	_ev(events, EV_CYCLE_STARTED, {"cycle": state.cycle})
 	_ev(events, EV_STATE, {})
+
+
+## RESIGN (F0.4c): opgeven kan in elke speelbare fase; de tegenstander wint.
+static func _do_resign(state: GameState, player_id: int, events: Array) -> void:
+	state.winner = Constants.opponent(player_id)
+	_set_phase(state, Phase.Type.GAME_OVER, events)
+	_ev(events, EV_GAME_OVER, {"winner": state.winner})
+
+
+## Tiebreak bij de cycluslimiet (was: MatchRunner-heuristiek, nu spelregel):
+## 1) meeste pionnen over, 2) meeste in de haven, 3) verst opgerukt richting
+## de eigen doelhaven. Alles gelijk → -1 (remise).
+static func tiebreak_winner(state: GameState) -> int:
+	var a1: int = state.get_alive_pawns_for(Constants.PLAYER_1).size()
+	var a2: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
+	if a1 != a2:
+		return Constants.PLAYER_1 if a1 > a2 else Constants.PLAYER_2
+	var h1: int = Rules.count_pawns_in_haven(state, Constants.PLAYER_1)
+	var h2: int = Rules.count_pawns_in_haven(state, Constants.PLAYER_2)
+	if h1 != h2:
+		return Constants.PLAYER_1 if h1 > h2 else Constants.PLAYER_2
+	var p1: int = _haven_closeness(state, Constants.PLAYER_1)
+	var p2: int = _haven_closeness(state, Constants.PLAYER_2)
+	if p1 != p2:
+		return Constants.PLAYER_1 if p1 > p2 else Constants.PLAYER_2
+	return -1
+
+
+static func _haven_closeness(state: GameState, side: int) -> int:
+	var haven: Array = Constants.get_haven_for_player(side)
+	var total: int = 0
+	for pawn in state.pawns.values():
+		if pawn.owner_id != side or pawn.is_eliminated:
+			continue
+		var best: int = 999
+		for h in haven:
+			var d: int = absi(pawn.position.x - h.x) + absi(pawn.position.y - h.y)
+			if d < best:
+				best = d
+		total += Constants.BOARD_SIZE * 2 - best
+	return total
 
 
 # =========================================================================

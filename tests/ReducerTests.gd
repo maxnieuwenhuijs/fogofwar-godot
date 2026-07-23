@@ -88,6 +88,83 @@ func test_fold_setup_to_action_without_node() -> void:
 	_apply_ok(s, zetten[0], s.current_player, "eerste actiefase-zet")
 
 
+func test_resign_in_elke_fase() -> void:
+	# PLACEMENT: P1 geeft op → P2 wint.
+	var s := _fresh_state()
+	_apply_ok(s, Actions.make_resign(), 1, "resign in placement")
+	assert_eq(s.phase, Phase.Type.GAME_OVER)
+	assert_eq(s.winner, Constants.PLAYER_2)
+	# DEFINE: P2 geeft op → P1 wint.
+	s = _fresh_state()
+	_apply_ok(s, Actions.make_place(s.default_placement(1)), 1, "place p1")
+	_apply_ok(s, Actions.make_place(s.default_placement(2)), 2, "place p2")
+	assert_true(Phase.is_define(s.phase))
+	_apply_ok(s, Actions.make_resign(), 2, "resign in define")
+	assert_eq(s.winner, Constants.PLAYER_1)
+	# REVEAL, LINKING en ACTION: doorspelen tot elke fase en opgeven.
+	var cards: Array = [{"hp": 3, "stamina": 2, "attack": 2},
+		{"hp": 2, "stamina": 2, "attack": 3}, {"hp": 2, "stamina": 3, "attack": 2}]
+	for doel_fase in ["reveal", "linking", "action"]:
+		s = _fresh_state()
+		_apply_ok(s, Actions.make_place(s.default_placement(1)), 1, "place p1")
+		_apply_ok(s, Actions.make_place(s.default_placement(2)), 2, "place p2")
+		for ronde in [1, 2, 3]:
+			_apply_ok(s, Actions.make_define_cards(cards), 1, "define p1")
+			_apply_ok(s, Actions.make_define_cards(cards), 2, "define p2")
+			if doel_fase == "reveal" and ronde == 1:
+				break
+			_apply_ok(s, Actions.make_ack_reveal(), 1, "ack p1")
+			_apply_ok(s, Actions.make_ack_reveal(), 2, "ack p2")
+			if doel_fase == "linking" and ronde == 1:
+				break
+			var guard := 0
+			while Phase.is_linking(s.phase) and guard < 20:
+				guard += 1
+				_apply_ok(s, Validator.legal_actions(s, s.current_player)[0], s.current_player, "link")
+		_apply_ok(s, Actions.make_resign(), 1, "resign in " + doel_fase)
+		assert_eq(s.winner, Constants.PLAYER_2, "opgeven in %s geeft P2 de winst" % doel_fase)
+	# GAME_OVER: opgeven kan niet meer.
+	var na: Dictionary = Reducer.apply(s, Actions.make_resign(), 2)
+	assert_false(na.ok, "resign na afloop is illegaal")
+
+
+func test_cycle_limit_tiebreak_materiaal() -> void:
+	# P1 heeft meer materiaal; bij de cycluslimiet wint P1 via de tiebreak.
+	var s := GameState.new()
+	s.rules = RulesConfig.new()
+	s.rules.cycle_limit = 1
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var mover: Pawn = s._spawn_pawn(1, Vector2i(5, 8))
+	var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)  # speed 1: één stap en klaar
+	s.all_cards[card.id] = card
+	mover.link_card(card)
+	s._spawn_pawn(1, Vector2i(0, 5))  # extra standbeeld: P1 2 pionnen, P2 1
+	s._spawn_pawn(2, Vector2i(10, 5))
+	var res: Dictionary = Reducer.apply(s, Actions.make_move(mover.id, Vector2i(5, 7)), 1)
+	assert_true(res.ok)
+	assert_eq(s.phase, Phase.Type.GAME_OVER, "cycluslimiet bereikt -> partij beslist")
+	assert_eq(s.winner, Constants.PLAYER_1, "tiebreak op materiaal (2 vs 1)")
+
+
+func test_cycle_limit_echte_remise() -> void:
+	# Perfect gespiegelde eindstand: materiaal, haven en nabijheid gelijk -> -1.
+	var s := GameState.new()
+	s.rules = RulesConfig.new()
+	s.rules.cycle_limit = 1
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var mover: Pawn = s._spawn_pawn(1, Vector2i(5, 8))
+	var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)
+	s.all_cards[card.id] = card
+	mover.link_card(card)
+	s._spawn_pawn(2, Vector2i(5, 3))  # spiegel van (5,7): beide 7 van hun haven
+	var res: Dictionary = Reducer.apply(s, Actions.make_move(mover.id, Vector2i(5, 7)), 1)
+	assert_true(res.ok)
+	assert_eq(s.phase, Phase.Type.GAME_OVER)
+	assert_eq(s.winner, -1, "volledig gelijk -> echte remise")
+
+
 func test_gelijk_bod_geeft_p1_initiatief_in_cyclus1() -> void:
 	# Identieke kaartsets -> gelijk bod -> deterministisch: P1 (cyclus 1 ronde 1).
 	var s := _fresh_state()
