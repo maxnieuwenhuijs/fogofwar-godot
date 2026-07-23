@@ -427,7 +427,7 @@ bewijzen gelijkheid) — pas beslissen mét meetdata.
 Nachtcapaciteit (8 cores × 8 uur ≥ 150k L1-matches) mag als **extrapolatie** uit `--bench` worden
 afgevinkt; het echte run-log volgt vanzelf uit de eerste nachtjob (F1.5).
 
-### ☐ F1.4 — Fuzz & invarianten als nachtvangnet
+### ☑ F1.4 — Fuzz & invarianten als nachtvangnet
 
 **Bestanden:** `arena/fuzz.gd`.
 

@@ -26,13 +26,15 @@ func setup(initial_state: GameState, extra_meta: Dictionary = {}) -> void:
 
 
 ## Eén geaccepteerde actie bijschrijven (met post-actie-hash als checksum).
-func record(player_id: int, action: Dictionary, events: Array, state_after: GameState) -> void:
+## with_hash=false (F1.4-fuzz): sla de sha256 per actie over — de fold-
+## vergelijking op de eindstaat vangt afwijkingen alsnog, tegen 10k games/nacht.
+func record(player_id: int, action: Dictionary, events: Array, state_after: GameState, with_hash: bool = true) -> void:
 	entries.append({
 		"seq": entries.size(),
 		"player_id": player_id,
 		"action": Actions.to_dict(action),
 		"events": _jsonify(events),
-		"hash": Zobrist.state_hash(state_after),
+		"hash": Zobrist.state_hash(state_after) if with_hash else "",
 		"ts": Time.get_unix_time_from_system(),
 	})
 
@@ -47,7 +49,7 @@ static func fold(initial_state_dict: Dictionary, log_entries: Array, verify_hash
 		var res: Dictionary = Reducer.apply(s, action, int(e.player_id))
 		if not res.ok:
 			return {"ok": false, "seq": int(e.seq), "fout": "actie geweigerd: %s" % res.error, "state": s}
-		if verify_hashes:
+		if verify_hashes and String(e.hash) != "":
 			var h: String = Zobrist.state_hash(s)
 			if h != String(e.hash):
 				return {"ok": false, "seq": int(e.seq), "fout": "hash-mismatch", "verwacht": e.hash, "gekregen": h, "state": s}

@@ -252,6 +252,24 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   ~ 1,8 MILJOEN L1-partijen (eis >=150k: 12x overhead). Gedrag bewezen
   identiek na elke trede: 1013 asserts groen · simcheck 5/5 · play · vosview.
 
+- **F1.4 — fuzz & invarianten als nachtvangnet.** `arena/fuzz.gd`: ArenaFuzz
+  draait L0-vs-L0 (seeded, doctrine-rotatie, cycle_limit 12) met een
+  FuzzChecker op de metrics-haak. Invarianten per actie: (1) pion-ids bevroren
+  na de opstelling + geen opstanding uit de dood, (2) HP-delta == damage +
+  terugslag uit de events (reset-bewust: verlaat de actie de actiefase, dan
+  unlinkt _start_new_cycle iedereen VOOR de winnaarbepaling — correct gedrag,
+  geen schending), (3) 0 illegale/fallback-keuzes, (4) fold(log) == eindstaat
+  (byte-vergelijking; MatchLog.record kreeg with_hash=false zodat per-actie-
+  sha256 niet nodig is), (5) view-lek-canary gesampled per 25 acties. Elke
+  schending -> repro-json in results/fuzz/ met seed+schendingen+volledig log.
+  CLI: `arena.tscn -- --fuzz [games] [seed]` en `-- --fuzz-selftest` (sabotage:
+  spook-pion + HP-mutatie op een gevechtsactie — een kale +1 HP was NIET
+  genoeg, de cyclus-reset wist hem uit; les: de tester testen loont). De fuzz
+  vond meteen 11 valse alarmen in de eigen checker (cyclus-reset-semantiek) —
+  vangnet werkt. CHECK: 500 partijen schoon (3.75/s incl. checks) · selftest
+  3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
+  vosview.
+
 Volgende stap: **F1.4 — fuzz & invarianten als nachtvangnet**. (agent-interface op views, L0-L3, doorvoer
 >=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
 eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).

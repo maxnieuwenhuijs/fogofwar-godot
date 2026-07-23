@@ -33,6 +33,9 @@ func _ready() -> void:
 	if args.has("--bench"):
 		_bench(args)
 		return
+	if args.has("--fuzz") or args.has("--fuzz-selftest"):
+		_fuzz(args)
+		return
 	var config_pad := _arg(args, "--config", "res://arena/arena_configs/quick_l1.json")
 	var out_map := _arg(args, "--out", "res://results/run")
 	var seed_offset := int(_arg(args, "--seed-offset", "0"))
@@ -109,6 +112,35 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 	var duur := (Time.get_ticks_msec() - t0) / 1000.0
 	return {"games": games, "pad": pad, "duur": duur,
 		"per_sec": (games / duur) if duur > 0 else 0.0, "matrix": matrix}
+
+
+## F1.4 — fuzz-vangnet: `-- --fuzz [games] [seed]` (nachtrun) of
+## `-- --fuzz-selftest` (sabotage-run: de checks MOETEN de ingebouwde
+## mutatie vangen — test-de-tester). Repro's bij schendingen in results/fuzz/.
+func _fuzz(args: PackedStringArray) -> void:
+	var selftest := args.has("--fuzz-selftest")
+	var vlag := "--fuzz-selftest" if selftest else "--fuzz"
+	var i := args.find(vlag)
+	var games := 3 if selftest else 500
+	if args.size() > i + 1 and not String(args[i + 1]).begins_with("--"):
+		games = int(args[i + 1])
+	var seed_val := 640000
+	if args.size() > i + 2 and not String(args[i + 2]).begins_with("--"):
+		seed_val = int(args[i + 2])
+	var t0 := Time.get_ticks_msec()
+	var uitkomst: Dictionary = ArenaFuzz.run(games, seed_val, "res://results/fuzz", selftest)
+	var duur := (Time.get_ticks_msec() - t0) / 1000.0
+	if selftest:
+		var gevangen: bool = uitkomst.violations > 0
+		print("[FUZZ-SELFTEST] sabotage %s door de checks (%d/%d partijen geflagd) — %s" % [
+			"GEVANGEN" if gevangen else "NIET GEVANGEN", uitkomst.violations, games,
+			"PASS" if gevangen else "FAIL: het vangnet is stuk"])
+		get_tree().quit(0 if gevangen else 1)
+		return
+	print("[FUZZ] %d partijen in %.1f s (%.2f/s): %d schendingen%s" % [
+		games, duur, games / duur, uitkomst.violations,
+		"" if uitkomst.violations == 0 else " — repro's: " + str(uitkomst.repro_paden)])
+	get_tree().quit(0 if uitkomst.violations == 0 else 1)
 
 
 ## F1.3 — doorvoermeting op 1 core: `-- --bench [l0|l1|l2] [games]`.
