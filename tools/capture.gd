@@ -428,108 +428,48 @@ func _ready() -> void:
 		get_viewport().get_texture().get_image().save_png("res://_shot_hitfx.png")
 		get_tree().quit()
 		return
+	elif "simcheck" in args:
+		# F0.4a: draai alle vastgelegde golden sims (tests/golden_sims.json) en
+		# vergelijk winnaar/cycli/acties. Exit 0 = alles identiek, 1 = afwijking.
+		var gj = JSON.parse_string(FileAccess.get_file_as_string("res://tests/golden_sims.json"))
+		var mismatches := 0
+		for entry in gj.sims:
+			var uitkomst: Dictionary = _run_sim(String(entry.p1), String(entry.p2),
+				_sim_doctrine(String(entry.d1)), _sim_doctrine(String(entry.d2)), int(entry.seed), null)
+			var ok: bool = uitkomst.winner == int(entry.winner) 				and uitkomst.cyclus == int(entry.cyclus) and uitkomst.acties == int(entry.acties)
+			print("[SIMCHECK] %s-%s %s-%s seed=%d -> winner=%d cyclus=%d acties=%d %s" % [
+				entry.p1, entry.p2, entry.d1, entry.d2, int(entry.seed),
+				uitkomst.winner, uitkomst.cyclus, uitkomst.acties,
+				"OK" if ok else "AFWIJKING (verwacht winner=%d cyclus=%d acties=%d)" % [
+					int(entry.winner), int(entry.cyclus), int(entry.acties)]])
+			if not ok:
+				mismatches += 1
+		print("[SIMCHECK] klaar: %d afwijking(en)" % mismatches)
+		get_tree().quit(0 if mismatches == 0 else 1)
+		return
 	elif "sim" in args:
 		# Puur engine + AI: speel een volledige partij AI vs AI en log het resultaat.
-		# Gebruik: -- sim <p1> <p2> [d1] [d2] [seed]
+		# Gebruik: -- sim <p1> <p2> [d1] [d2] [seed] [--rules pad.json]
 		#   p = easy/medium/hard (default medium); d = mens/muis/leeuw/beer/wolf/vos;
 		#   seed (int, default 0) maakt de partij reproduceerbaar (F0.1).
-		var paths := {
-			"easy": "res://scripts/ai/AIEasy.gd",
-			"medium": "res://scripts/ai/AIMedium.gd",
-			"hard": "res://scripts/ai/AIHard.gd",
-			"ultra": "res://scripts/ai/AIUltra.gd",
-		}
-		var doctrine_names := {
-			"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS,
-			"muis": Constants.Doctrine.MUIS,
-			"leeuw": Constants.Doctrine.LEEUW,
-			"beer": Constants.Doctrine.BEER,
-			"wolf": Constants.Doctrine.WOLF,
-			"vos": Constants.Doctrine.VOS, "krokodil": Constants.Doctrine.VOS,
-		}
 		var n1: String = args[1] if args.size() > 1 else "medium"
 		var n2: String = args[2] if args.size() > 2 else "medium"
-		var d1: int = doctrine_names.get(args[3] if args.size() > 3 else "mens", Constants.Doctrine.MENS)
-		var d2: int = doctrine_names.get(args[4] if args.size() > 4 else "mens", Constants.Doctrine.MENS)
-		var a1 = load(paths.get(n1, paths["medium"])).new()
-		a1.player_id = 1
-		var a2 = load(paths.get(n2, paths["medium"])).new()
-		a2.player_id = 2
+		var d1: int = _sim_doctrine(args[3] if args.size() > 3 else "mens")
+		var d2: int = _sim_doctrine(args[4] if args.size() > 4 else "mens")
 		var sim_seed: int = int(args[5]) if args.size() > 5 else 0
-		var sim_rng := SeededRng.new(sim_seed)
-		a1.rng = sim_rng.fork("p1")
-		a2.rng = sim_rng.fork("p2")
 		# Optioneel: --rules <pad.json> laadt een RulesConfig (F0.2).
 		var sim_rules: RulesConfig = null
 		var ridx: int = args.find("--rules")
 		if ridx != -1 and args.size() > ridx + 1:
 			sim_rules = RulesConfig.load_from_file(String(args[ridx + 1]))
 			print("[SIM] rules_config: %s (%s)" % [args[ridx + 1], sim_rules.rules_version])
-		GameSession.start_new_game(d1, d2, sim_rules)
-		GameSession.submit_placement(1, a1.choose_placement(GameSession.state))
-		GameSession.submit_placement(2, a2.choose_placement(GameSession.state))
-		var acts := 0
-		var guard := 0
-		while GameSession.state.phase != Phase.Type.GAME_OVER and guard < 8000:
-			guard += 1
-			var st: GameState = GameSession.state
-			var ph: int = st.phase
-			var cur = a1 if st.current_player == 1 else a2
-			if Phase.is_define(ph):
-				if st.cards_defined[1].size() == 0:
-					GameSession.submit_define_cards(1, a1.generate_cards(st))
-				if st.cards_defined[2].size() == 0:
-					GameSession.submit_define_cards(2, a2.generate_cards(st))
-			elif Phase.is_reveal(ph):
-				GameSession.acknowledge_reveal()
-			elif Phase.is_linking(ph):
-				var link = cur.choose_link(st)
-				if link.has("card_id"):
-					if not GameSession.submit_link(st.current_player, link.card_id, link.pawn_id):
-						print("[SIM-LINKFAIL] beurt=%d kaart=%d pion=%d" % [st.current_player, link.card_id, link.pawn_id])
-						break
-				else:
-					print("[SIM-LINKBREAK] beurt=%d ronde=%d" % [st.current_player, st.round_number])
-					break
-			elif ph == Phase.Type.ACTION:
-				if st.pending_wolf_step_pawn != -1:
-					var step: Dictionary = cur.choose_wolf_step(st)
-					if step.has("target"):
-						GameSession.submit_wolf_step(st.current_player, step.target)
-					else:
-						GameSession.skip_wolf_step(st.current_player)
-					continue
-				var act = cur.choose_action(st)
-				if act.is_empty():
-					print("[SIM-BREAK] fase=%s beurt=%d can_act=%s actief=%d" % [
-						Phase.to_string_phase(st.phase), st.current_player,
-						str(Rules.can_player_act(st, st.current_player)),
-						st.get_active_pawns_for(st.current_player).size()])
-					for pawn in st.get_active_pawns_for(st.current_player):
-						if Rules.can_pawn_act(st, pawn.id):
-							print("  pion %d type=%d pos=%s stamina=%d/%d atk=%d melee=%d schoten=%d zetten=%d" % [
-								pawn.id, pawn.unit_type, str(pawn.position),
-								pawn.remaining_stamina, pawn.max_stamina, pawn.attack_value,
-								Rules.get_valid_melee_targets(st, pawn.id).size(),
-								Rules.get_valid_shot_targets(st, pawn.id).size(),
-								Rules.get_valid_moves(st, pawn.id).size()])
-					break
-				acts += 1
-				match String(act.type):
-					"move":
-						GameSession.submit_move(st.current_player, act.pawn_id, act.target)
-					"attack":
-						GameSession.submit_attack(st.current_player, act.attacker_id, act.defender_id)
-					"shot":
-						GameSession.submit_shot(st.current_player, act.shooter_id, act.target_id)
-					"charge":
-						GameSession.submit_charge(st.current_player, act.pawn_id, act.move_target, act.defender_id)
+		var uitkomst: Dictionary = _run_sim(n1, n2, d1, d2, sim_seed, sim_rules)
 		var s := GameSession.state
 		print("[SIM %s(P1,%s) vs %s(P2,%s)] winner=%d cyclus=%d acties=%d p1_haven=%d p2_haven=%d p1_alive=%d p2_alive=%d guard=%d" % [
 			n1, Constants.doctrine_name(d1), n2, Constants.doctrine_name(d2),
-			s.winner, s.cycle, acts,
+			s.winner, s.cycle, uitkomst.acties,
 			Rules.count_pawns_in_haven(s, 1), Rules.count_pawns_in_haven(s, 2),
-			s.get_alive_pawns_for(1).size(), s.get_alive_pawns_for(2).size(), guard])
+			s.get_alive_pawns_for(1).size(), s.get_alive_pawns_for(2).size(), uitkomst.guard])
 		get_tree().quit()
 		return
 	elif "aithread" in args:
@@ -1332,3 +1272,89 @@ func _click_at(pos: Vector2) -> void:
 	up.pressed = false
 	up.position = pos
 	get_viewport().push_input(up)
+
+
+# =========================================================================
+# Sim-helpers (F0.4a): één herbruikbare partij-runner voor sim en simcheck
+# =========================================================================
+
+func _sim_doctrine(naam: String) -> int:
+	var doctrine_names := {
+		"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS,
+		"muis": Constants.Doctrine.MUIS,
+		"leeuw": Constants.Doctrine.LEEUW,
+		"beer": Constants.Doctrine.BEER,
+		"wolf": Constants.Doctrine.WOLF,
+		"vos": Constants.Doctrine.VOS, "krokodil": Constants.Doctrine.VOS,
+	}
+	return doctrine_names.get(String(naam).to_lower(), Constants.Doctrine.MENS)
+
+
+## Volledige AI-vs-AI-partij op de GameSession-autoload; synchroon.
+## Retourneert {winner, cyclus, acties, guard}.
+func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules: RulesConfig) -> Dictionary:
+	var paths := {
+		"easy": "res://scripts/ai/AIEasy.gd",
+		"medium": "res://scripts/ai/AIMedium.gd",
+		"hard": "res://scripts/ai/AIHard.gd",
+		"ultra": "res://scripts/ai/AIUltra.gd",
+	}
+	var a1 = load(paths.get(n1, paths["medium"])).new()
+	a1.player_id = 1
+	var a2 = load(paths.get(n2, paths["medium"])).new()
+	a2.player_id = 2
+	var sim_rng := SeededRng.new(sim_seed)
+	a1.rng = sim_rng.fork("p1")
+	a2.rng = sim_rng.fork("p2")
+	GameSession.start_new_game(d1, d2, sim_rules)
+	GameSession.submit_placement(1, a1.choose_placement(GameSession.state))
+	GameSession.submit_placement(2, a2.choose_placement(GameSession.state))
+	var acts := 0
+	var guard := 0
+	while GameSession.state.phase != Phase.Type.GAME_OVER and guard < 8000:
+		guard += 1
+		var st: GameState = GameSession.state
+		var ph: int = st.phase
+		var cur = a1 if st.current_player == 1 else a2
+		if Phase.is_define(ph):
+			if st.cards_defined[1].size() == 0:
+				GameSession.submit_define_cards(1, a1.generate_cards(st))
+			if st.cards_defined[2].size() == 0:
+				GameSession.submit_define_cards(2, a2.generate_cards(st))
+		elif Phase.is_reveal(ph):
+			GameSession.acknowledge_reveal()
+		elif Phase.is_linking(ph):
+			var link = cur.choose_link(st)
+			if link.has("card_id"):
+				if not GameSession.submit_link(st.current_player, link.card_id, link.pawn_id):
+					print("[SIM-LINKFAIL] beurt=%d kaart=%d pion=%d" % [st.current_player, link.card_id, link.pawn_id])
+					break
+			else:
+				print("[SIM-LINKBREAK] beurt=%d ronde=%d" % [st.current_player, st.round_number])
+				break
+		elif ph == Phase.Type.ACTION:
+			if st.pending_wolf_step_pawn != -1:
+				var step: Dictionary = cur.choose_wolf_step(st)
+				if step.has("target"):
+					GameSession.submit_wolf_step(st.current_player, step.target)
+				else:
+					GameSession.skip_wolf_step(st.current_player)
+				continue
+			var act = cur.choose_action(st)
+			if act.is_empty():
+				print("[SIM-BREAK] fase=%s beurt=%d can_act=%s actief=%d" % [
+					Phase.to_string_phase(st.phase), st.current_player,
+					str(Rules.can_player_act(st, st.current_player)),
+					st.get_active_pawns_for(st.current_player).size()])
+				break
+			acts += 1
+			match String(act.type):
+				"move":
+					GameSession.submit_move(st.current_player, act.pawn_id, act.target)
+				"attack":
+					GameSession.submit_attack(st.current_player, act.attacker_id, act.defender_id)
+				"shot":
+					GameSession.submit_shot(st.current_player, act.shooter_id, act.target_id)
+				"charge":
+					GameSession.submit_charge(st.current_player, act.pawn_id, act.move_target, act.defender_id)
+	return {"winner": GameSession.state.winner, "cyclus": GameSession.state.cycle, "acties": acts, "guard": guard}

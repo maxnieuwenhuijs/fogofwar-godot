@@ -59,7 +59,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   elke dispatch geaccepteerd, JSON-roundtrip) + roundtrip/wellformed/samples.
   Checks: 613 asserts groen (24s) · sim seed 777 onveranderd · `-- play` exit 0.
 
-Volgende stap: **F0.4a — Reducer, deel 1** (actiefase naar Reducer.apply).
+- **F0.4a — Reducer, deel 1 (actiefase).** `core/match/reducer.gd`:
+  apply(state, action, player_id) -> {ok, events, error} voor MOVE/MELEE/
+  SHOOT/CHARGE/WOLF_STEP/SKIP_WOLF_STEP incl. beurtwissel (_advance_turn),
+  win-check (_check_game_over) en CYCLE_RESET-event (shim draait
+  _start_new_cycle tot F0.4b). Events = typed dicts {type, seq, payload};
+  GameSession vertaalt ze 1-op-1 naar de bestaande signals (_relay_events) —
+  game.gd merkt niets. _post_action/_after_combat/_check_action_phase_status
+  uit GameSession verwijderd. Sim-CLI geherstructureerd: _run_sim-helper +
+  nieuwe modus `-- simcheck` (draait tests/golden_sims.json, exit 1 bij
+  afwijking; 5 vaste seeds vastgelegd op pre-reducer-commit d320647;
+  medium-medium ontbreekt bewust — kan zonder cycle_limit oneindig patstellen,
+  F0.4c). Checks: 613 asserts groen · simcheck 5/5 OK · `-- play` exit 0.
+
+Volgende stap: **F0.4b — Reducer, deel 2** (setup-fasen + cyclus + per-speler ACK).
 
 ---
 

@@ -243,7 +243,7 @@ accepteert `-- sim ... --rules res://arena/arena_configs/v41_default.json`.
 `legal_actions` (seed uit F0.1); élke gekozen actie passeert `is_legal` en élke toegepaste
 `is_legal`-actie slaagt; actie → JSON → actie is identiek.
 
-### ☐ F0.4a — Reducer, deel 1: de actiefase
+### ☑ F0.4a — Reducer, deel 1: de actiefase — AF (juli 2026)
 
 **Bestanden:** `core/match/reducer.gd` (nieuw), `GameSession.gd` (actiefase-submits worden shim).
 

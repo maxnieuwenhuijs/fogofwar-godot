@@ -211,141 +211,59 @@ func _enter_action_phase() -> void:
 	turn_changed.emit(state.current_player)
 
 func submit_move(player_id: int, pawn_id: int, target_pos: Vector2i) -> bool:
-	var verdict: Dictionary = Validator.is_legal(state, Actions.make_move(pawn_id, target_pos), player_id)
-	if not verdict.legal:
-		error_occurred.emit(player_id, verdict.reason)
-		return false
-	var from_pos: Vector2i = state.pawns[pawn_id].position
-	if not Rules.apply_move(state, pawn_id, target_pos):
-		error_occurred.emit(player_id, "Ongeldige zet")
-		return false
-	var action := {
-		"type": "move",
-		"pawn_id": pawn_id,
-		"from": from_pos,
-		"target": target_pos,
-	}
-	var result := {"success": true}
-	action_performed.emit(action, result)
-	_post_action(player_id)
-	return true
+	return _apply_action(player_id, Actions.make_move(pawn_id, target_pos))
 
 ## Melee-aanval (Infanterie, of Cavalerie zonder verplaatsing).
 func submit_attack(player_id: int, attacker_id: int, defender_id: int) -> bool:
-	var verdict: Dictionary = Validator.is_legal(state, Actions.make_melee(attacker_id, defender_id), player_id)
-	if not verdict.legal:
-		error_occurred.emit(player_id, verdict.reason)
-		return false
-	var result: Dictionary = Rules.apply_melee(state, attacker_id, defender_id)
-	if not result.success:
-		error_occurred.emit(player_id, "Ongeldige aanval")
-		return false
-	var action := {"type": "attack", "attacker_id": attacker_id, "defender_id": defender_id}
-	action_performed.emit(action, result)
-	_after_combat(player_id, attacker_id, result)
-	return true
+	return _apply_action(player_id, Actions.make_melee(attacker_id, defender_id))
 
 ## Beschieting: infanterieschot (afstand exact 2) of artillerievuur (vaste dracht 6, +1 Leeuw).
 func submit_shot(player_id: int, shooter_id: int, target_id: int) -> bool:
-	var verdict: Dictionary = Validator.is_legal(state, Actions.make_shoot(shooter_id, target_id), player_id)
-	if not verdict.legal:
-		error_occurred.emit(player_id, verdict.reason)
-		return false
-	var result: Dictionary = Rules.apply_shot(state, shooter_id, target_id)
-	if not result.success:
-		error_occurred.emit(player_id, "Ongeldig schot")
-		return false
-	var action := {"type": "shot", "shooter_id": shooter_id, "target_id": target_id}
-	action_performed.emit(action, result)
-	_post_action(player_id)
-	return true
+	return _apply_action(player_id, Actions.make_shoot(shooter_id, target_id))
 
 ## Cavalerie-charge: bewegen + optionele melee in één actie (defender_id -1 = geen aanval).
 func submit_charge(player_id: int, pawn_id: int, move_target: Vector2i, defender_id: int) -> bool:
-	var verdict: Dictionary = Validator.is_legal(state, Actions.make_charge(pawn_id, move_target, defender_id), player_id)
-	if not verdict.legal:
-		error_occurred.emit(player_id, verdict.reason)
-		return false
-	var result: Dictionary = Rules.apply_charge(state, pawn_id, move_target, defender_id)
-	if not result.success:
-		error_occurred.emit(player_id, "Ongeldige charge")
-		return false
-	var action := {
-		"type": "charge",
-		"pawn_id": pawn_id,
-		"move_target": move_target,
-		"defender_id": defender_id,
-	}
-	action_performed.emit(action, result)
-	_after_combat(player_id, pawn_id, result)
-	return true
+	return _apply_action(player_id, Actions.make_charge(pawn_id, move_target, defender_id))
 
 ## Wolf: de optionele gratis stap na een melee. target = aangrenzend leeg vak.
 func submit_wolf_step(player_id: int, target: Vector2i) -> bool:
-	var verdict: Dictionary = Validator.is_legal(state, Actions.make_wolf_step(target), player_id)
-	if not verdict.legal:
-		error_occurred.emit(player_id, verdict.reason)
-		return false
-	var pawn_id: int = state.pending_wolf_step_pawn
-	var from_pos: Vector2i = state.pawns[pawn_id].position
-	if not Rules.apply_wolf_step(state, pawn_id, target):
-		error_occurred.emit(player_id, "Ongeldige Wolf-stap")
-		return false
-	state.pending_wolf_step_pawn = -1
-	var action := {"type": "wolf_step", "pawn_id": pawn_id, "from": from_pos, "target": target}
-	action_performed.emit(action, {"success": true})
-	_post_action(player_id)
-	return true
+	return _apply_action(player_id, Actions.make_wolf_step(target))
 
 func skip_wolf_step(player_id: int) -> bool:
-	if not Validator.is_legal(state, Actions.make_skip_wolf_step(), player_id).legal:
+	# Stil bij weigering (bestaand gedrag: geen error_occurred-signaal).
+	var res: Dictionary = Reducer.apply(state, Actions.make_skip_wolf_step(), player_id)
+	if not res.ok:
 		return false
-	state.pending_wolf_step_pawn = -1
-	_post_action(player_id)
+	_relay_events(res.events)
 	return true
 
-## Na melee/charge: eerst win-check, daarna eventueel de Wolf-stap openzetten.
-func _after_combat(player_id: int, attacker_id: int, result: Dictionary) -> void:
-	state_updated.emit(state)
-	var winner: int = Rules.check_win(state)
-	if winner != -1:
-		state.winner = winner
-		_transition_to(Phase.Type.GAME_OVER)
-		game_over.emit(winner)
-		return
-	if result.get("wolf_step_available", false):
-		state.pending_wolf_step_pawn = attacker_id
-		wolf_step_pending.emit(attacker_id)
-		return  # beurt wisselt pas na submit_wolf_step / skip_wolf_step
-	_check_action_phase_status()
+## F0.4a-shim: actiefase-acties gaan door Reducer.apply; de events worden
+## 1-op-1 naar de bestaande signals vertaald zodat game.gd niets merkt.
+func _apply_action(player_id: int, action: Dictionary) -> bool:
+	var res: Dictionary = Reducer.apply(state, action, player_id)
+	if not res.ok:
+		error_occurred.emit(player_id, res.error)
+		return false
+	_relay_events(res.events)
+	return true
 
-func _post_action(_player_id: int) -> void:
-	state_updated.emit(state)
-	var winner: int = Rules.check_win(state)
-	if winner != -1:
-		state.winner = winner
-		_transition_to(Phase.Type.GAME_OVER)
-		game_over.emit(winner)
-		return
-	_check_action_phase_status()
-
-func _check_action_phase_status() -> void:
-	if state.phase != Phase.Type.ACTION:
-		return
-	var current_can: bool = Rules.can_player_act(state, state.current_player)
-	var opponent: int = Constants.opponent(state.current_player)
-	var opponent_can: bool = Rules.can_player_act(state, opponent)
-	if not current_can and not opponent_can:
-		_start_new_cycle()
-		return
-	if not current_can and opponent_can:
-		state.current_player = opponent
-		turn_changed.emit(state.current_player)
-	elif current_can and opponent_can:
-		state.current_player = opponent
-		turn_changed.emit(state.current_player)
-	else:
-		turn_changed.emit(state.current_player)
+func _relay_events(events: Array) -> void:
+	for ev in events:
+		match String(ev.type):
+			Reducer.EV_ACTION:
+				action_performed.emit(ev.payload.action, ev.payload.result)
+			Reducer.EV_STATE:
+				state_updated.emit(state)
+			Reducer.EV_WOLF_PENDING:
+				wolf_step_pending.emit(ev.payload.pawn_id)
+			Reducer.EV_TURN:
+				turn_changed.emit(ev.payload.player_id)
+			Reducer.EV_PHASE:
+				phase_changed.emit(ev.payload.new_phase, ev.payload.old_phase)
+			Reducer.EV_GAME_OVER:
+				game_over.emit(ev.payload.winner)
+			Reducer.EV_CYCLE_RESET:
+				_start_new_cycle()  # verhuist in F0.4b naar de reducer
 
 func _start_new_cycle() -> void:
 	state.reset_for_new_cycle()
