@@ -270,6 +270,27 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F1.6 (loopt) — eerste balanspatch op data.** Meetfase klaar: L2-baseline
+  864 partijen (Krokodil 75% / Varken 66.7 / Leeuw 58.3 / Beer 58.3 / Wolf 25
+  / Muis 16.7 — drie buiten het 25-75-werkdoel). L1-sweeps (identieke seeds):
+  statue_threshold=2 VERWORPEN (standbeeld-kills 18k->0 maar 69% van de
+  partijen strandt in tiebreak, cycli x2.9 — de knop doodt de dynamiek);
+  havencum en retal-zwaar op L1 onmeetbaar (L1 raakt die mechanieken amper)
+  -> L2-nachtdata. REGELBESLUIT: geen knop gedraaid, 4.1.10-hr blijft — de
+  onbalans is een gewichten-probleem (L1 bewijst: 18/4/0-comp wint 91.7% met
+  simpel haven-gedrag). Hertraining: doortrainen vanaf het oude Muis-profiel
+  is een doodlopend dal (11 gen, 0 adopties, kandidaten 0/6 vanaf gen 1;
+  convergentiecheck live bewezen: "50% — plateau" op identieke kampioenen).
+  Profiel-A/B op de gerichte Muis-L2-matrix (160 partijen/variant, vaste
+  seeds): oud getraind 10.0% == haven-rusher x10 10.0% (byte-identiek spel:
+  L2-Muis komt nooit toe aan de haven-term) < KROKODIL-VERHOUDINGEN 20.0%
+  (wint ineens 50% van Leeuw; er is weer een gradient). Besluit: f1 =
+  krokodil-verhoudingen als startpunt; avondtraining 420 min (seed 20260724)
+  eindigt ~01:30, nachtrun (02:00, nu op matrix_l2) meet het resultaat.
+  Nachtjob-default naar L2 gezet. Nog open voor F1.6-CHECK: L2-matrix na
+  training binnen 25-75 voor alle doctrines; havencum/retal-besluit op
+  L2-data; Krokodil-dominantie beoordelen.
+
 - **F1.5 — dashboard + nachtjob.** `tools/dashboard/build_dashboard.py`
   (stdlib-only) leest results/**/games.jsonl, groepeert per run-map en bouwt
   results/dashboard.html: winrate-matrix-heatmap (gerichte paren), totaal-
