@@ -65,12 +65,16 @@ function Maak-Minuten([int]$y, [int]$standaard) {
 }
 
 # --- Nachtrun (fuzz -> L2-arena -> dashboard), duur instelbaar ---------------
+# De fuzz schaalt mee met de duur (~10% van het budget, 500-10000 partijen),
+# zodat een korte run vooral arena-tijd overhoudt.
 $numNacht = Maak-Minuten 45 120
 $null = Maak-Knop "Nachtrun (fuzz + L2-arena)" 45 {
     if (-not (Bevestig-BijDrukte)) { return }
+    $duur = [int]$numNacht.Value
+    $fuzz = [Math]::Max(500, [Math]::Min(10000, $duur * 25))
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena_nacht.ps1",
-        "-DuurMinuten", [int]$numNacht.Value)
+        "-DuurMinuten", $duur, "-FuzzGames", $fuzz)
 }
 
 # --- Training (6 parallelle trainers via train_ai.bat), duur instelbaar ------
