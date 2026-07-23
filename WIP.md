@@ -167,8 +167,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   default-loadout, klokken-uit = claim illegaal, klok-round-trip.
   Checks: 885 asserts groen · simcheck 5/5 · play exit 0 · vosview PASS.
 
-**F0 is code-compleet.** Rest: F0.9-acceptatie — headless checks + MAX speelt
-een potje (win/verlies/Vos, '?'-blokjes, opgeven-knop).
+- **F0.9 — acceptatie (headless-deel AF).** Alle Claude-checks groen:
+  (1) suite 170 tests / 900 asserts (was 111/310 bij de nulmeting) incl. 5
+  extra dekkingstests (timeout-in-reveal ackt achterblijver, timeout-in-
+  linking koppelt automatisch, dekking-vervalt-bij-cyclus-reset,
+  haven_touches-round-trip, vervalst-log-wordt-afgekeurd — het F4.5-anti-
+  manipulatiepad); (2) 10-partijen-replay 10/10 byte-identiek (F0.7);
+  (3) leak-canary + vosview PASS; (4) play/simcheck/arena-matrix groen;
+  (5) GameSession 162 regels (~150-doel; incl. commentaar), Rules.apply_
+  buiten de reducer alleen nog in AIController-SIMULATIE op klonen
+  (gedocumenteerde uitzondering; live-staat muteert uitsluitend via de
+  reducer; F1.1 agents-op-views ruimt dit op).
+  **OPEN — MAX:** één volledige mens-vs-AI-sessie: win + verlies + een
+  Krokodil-potje; voelt identiek, "?"-blokjes kloppen, opgeven-knop werkt.
+  Daarna is F0 formeel af en start F1 (arena).
 
 ---
 

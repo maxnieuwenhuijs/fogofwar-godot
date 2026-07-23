@@ -156,3 +156,20 @@ func test_eliminaties_en_bord_herbouw() -> void:
 	assert_eq(terug.get_pawn_at(Vector2i(5, 4)).id, aanvaller.id,
 		"verplichte verplaatsing zichtbaar op het herbouwde bord")
 	assert_eq(_canon(terug), _canon(s))
+
+
+func test_haven_touches_round_trip() -> void:
+	var s := GameState.new()
+	s.rules = RulesConfig.new()
+	s.rules.haven_score_cumulative = true
+	s.phase = Phase.Type.ACTION
+	var pawn: Pawn = s._spawn_pawn(1, Vector2i(4, 1))
+	var card := Card.new(s.next_card_id(), 1, 1, 3, 5, 1)
+	s.all_cards[card.id] = card
+	pawn.link_card(card)
+	s.set_pawn_position(pawn, Vector2i(4, 0))  # touch
+	s.set_pawn_position(pawn, Vector2i(4, 5))  # weer weg
+	assert_true(s.haven_touches[1].has(pawn.id))
+	var terug := _roundtrip(s)
+	assert_true(terug.haven_touches[1].has(pawn.id), "touch overleeft de round-trip")
+	assert_eq(Rules.count_pawns_in_haven(terug, 1), 1, "cumulatieve telling blijft kloppen")

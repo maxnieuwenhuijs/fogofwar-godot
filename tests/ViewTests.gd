@@ -154,3 +154,20 @@ func test_vos_sentinel_en_kaart_redactie() -> void:
 	pawn.card_revealed = true
 	view_p1 = View.for_player(s, 1)
 	assert_eq(int(view_p1.pawns[str(pawn.id)].current_hp), 3, "na onthulling volledig zichtbaar")
+
+
+func test_dekking_vervalt_bij_cyclus_reset() -> void:
+	var s := _fresh(Constants.Doctrine.MENS, Constants.Doctrine.VOS)
+	var pawn: Pawn = s._spawn_pawn(2, Vector2i(5, 5))
+	var card := Card.new(s.next_card_id(), 2, 1, 3, 2, 2)
+	s.all_cards[card.id] = card
+	pawn.link_card(card)
+	pawn.card_revealed = false
+	s.phase = Phase.Type.ACTION
+	assert_eq(View.for_player(s, 1).pawns[str(pawn.id)].current_hp, View.HIDDEN)
+	# Cyclus-reset: unlink zet de dekking terug naar openbaar (er valt niets
+	# meer te verbergen — de pion is weer een kaal standbeeld).
+	s.reset_for_new_cycle()
+	var pv: Dictionary = View.for_player(s, 1).pawns[str(pawn.id)]
+	assert_eq(int(pv.current_hp), 0, "na de reset gewoon de (lege) stats")
+	assert_true(bool(pv.card_revealed))
