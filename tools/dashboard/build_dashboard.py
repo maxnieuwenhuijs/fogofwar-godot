@@ -162,11 +162,12 @@ def bouw_html(runs):
     meta = huidig["meta"] or {}
     # Trendbasis: de nieuwste EERDERE run met dezelfde agent-instellingen —
     # een L2-matrix vergelijken met een L1-testje geeft schijn-trends.
-    agents = (meta.get("config") or {}).get("agents", {})
+    cfg = meta.get("config") or {}
+    sleutel = (cfg.get("agents", {}), cfg.get("matchups"))
     vorig = None
     for r in reversed(runs[:-1]):
-        r_agents = ((r["meta"] or {}).get("config") or {}).get("agents", {})
-        if r_agents == agents:
+        r_cfg = ((r["meta"] or {}).get("config") or {})
+        if (r_cfg.get("agents", {}), r_cfg.get("matchups")) == sleutel:
             vorig = r
             break
     games = huidig["games"]
