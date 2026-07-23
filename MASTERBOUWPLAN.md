@@ -148,7 +148,7 @@ Het asset-spoor (modellen/geluid per MODEL-WISHLIST) loopt parallel en blokkeert
 Doel: het bestaande spel wordt een pure, serialiseerbare, replaybare MatchCore zonder gedragswijziging.
 Elke stap laat de volledige bestaande testsuite + de UI groen.
 
-### ☐ F0.0 — Specs vastleggen + dode code opruimen
+### ☑ F0.0 — Specs vastleggen + dode code opruimen — AF (juli 2026)
 
 **Doel:** de geïmplementeerde werkelijkheid wordt de spec; de refactor krijgt een vast referentiepunt.
 

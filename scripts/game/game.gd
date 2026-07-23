@@ -766,7 +766,7 @@ func _on_define_confirmed(_cards: Array) -> void:
 
 # --- Reveal (initiatief-bod, v4.1 §4.3-B) -------------------------------------
 
-func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int, _needs_rps: bool) -> void:
+func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
 	var body := "Jij (rood): bod %d%% · aanval %d · speed %d\nAI (blauw): bod %d%% · aanval %d · speed %d\n\nHet hoogste aanval-bod krijgt het initiatief:\ndie speler koppelt én handelt straks als eerste." % [
 		int(round(float(t1.get("bid", 0.0)) * 100.0)), int(t1.attack), int(t1.stamina),
 		int(round(float(t2.get("bid", 0.0)) * 100.0)), int(t2.attack), int(t2.stamina),

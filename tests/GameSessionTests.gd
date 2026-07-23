@@ -93,7 +93,7 @@ func test_submit_define_both_players_triggers_reveal() -> void:
 	GameSession.submit_define_cards(Constants.PLAYER_2, _cards_for(5, 1, 1, 3, 2, 2, 1, 1, 5))
 	assert_eq(GameSession.state.phase, Phase.Type.SETUP_1_REVEAL)
 	GameSession.acknowledge_reveal()
-	# v4.1: geen RPS meer — volledig gelijk bod → deterministisch (P1 in C1/R1).
+	# v4.1: volledig gelijk bod → deterministische tiebreak (P1 in C1/R1).
 	assert_eq(GameSession.state.phase, Phase.Type.SETUP_1_LINKING)
 	assert_eq(GameSession.state.initiative_player, Constants.PLAYER_1)
 

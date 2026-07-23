@@ -60,12 +60,12 @@ const DOCTRINE_DATA: Dictionary = {
 		"con": "Nergens de beste in",
 	},
 	Doctrine.MUIS: {
-		"name": "Muis", "cards": 4, "budget": 5, "comp": [20, 0, 2],
+		"name": "Muis", "cards": 4, "budget": 5, "comp": [18, 4, 0],
 		"move_through_own": true, "hp_bonus": 0, "speed_max": 0, "speed_bonus": 1,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
 		"pro": "4 kaarten, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)",
-		"con": "Budget 5: stats max 3, geen cavalerie of kanonnen",
+		"con": "Budget 5: stats max 3, geen kanonnen",
 	},
 	Doctrine.LEEUW: {
 		"name": "Leeuw", "cards": 2, "budget": 9, "comp": [6, 10, 2],

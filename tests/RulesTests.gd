@@ -725,7 +725,6 @@ func test_initiative_attack_bid_wins() -> void:
 	]
 	var result: Dictionary = Rules.compute_initiative(state)
 	assert_eq(result.winner, Constants.PLAYER_1)
-	assert_false(result.needs_rps)
 
 func test_initiative_speed_bid_tiebreak() -> void:
 	var state := GameState.new()
@@ -756,7 +755,6 @@ func test_initiative_full_tie_is_deterministic() -> void:
 	]
 	# Ronde 1 van Cyclus 1: Speler 1 wint de tiebreak.
 	var result: Dictionary = Rules.compute_initiative(state)
-	assert_false(result.needs_rps)
 	assert_eq(result.winner, Constants.PLAYER_1)
 	# Later in de partij: de vorige initiatiefhouder wint.
 	state.cycle = 2

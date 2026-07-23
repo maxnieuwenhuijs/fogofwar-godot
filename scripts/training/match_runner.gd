@@ -32,7 +32,7 @@ func state() -> GameState:
 	return engine.state
 
 
-## Eén beslissing verder (define/reveal/rps/link/action).
+## Eén beslissing verder (define/reveal/link/action).
 func step() -> void:
 	if done:
 		return

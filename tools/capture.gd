@@ -886,8 +886,13 @@ func _ready() -> void:
 		await get_tree().create_timer(0.9).timeout
 		out = "res://_shot_open.png"
 
-	var img: Image = get_viewport().get_texture().get_image()
-	img.save_png(out)
+	# Headless (--headless) is er geen rendering: get_texture() geeft null.
+	# De [PLAY]-regel hierboven is dan het rooksignaal; screenshot is bijvangst.
+	var vp_tex := get_viewport().get_texture()
+	if vp_tex != null and vp_tex.get_image() != null:
+		vp_tex.get_image().save_png(out)
+	else:
+		print("[PLAY] headless: geen viewport-texture, screenshot overgeslagen")
 	get_tree().quit()
 
 

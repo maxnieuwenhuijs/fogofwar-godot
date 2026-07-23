@@ -6,6 +6,25 @@
 
 ---
 
+## ⏵ MASTERBOUWPLAN — voortgang (bijgewerkt juli 2026)
+
+Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
+
+- **F0.0 — Specs vastgelegd + dode code opgeruimd.** `docs/spelregels-v4.2.md`
+  (Deel A = 4.1.9-hr zoals geïmplementeerd, Deel B = 4.2-concept) +
+  `docs/spelregels-CHANGELOG.md` (12 stille afwijkingen gedocumenteerd). Alle
+  RPS-code verwijderd (Phase-enum hernummerd — er bestond nog geen serialisatie).
+  **Muis-comp → [18,4,0]** (besluit Max; hertraining volgt in F1.6, de oude
+  Muis-gewichten gelden als verouderd). Besluit: **geen n8n** — jobs worden
+  node-cron/systemd-timers (masterplan B5 aangepast). capture.gd `-- play` hangt
+  headless niet meer op de screenshot (null-texture → overslaan + nette exit).
+  Checks: 422 asserts groen · rps-grep 0 (incl. tools/) · `-- play` exit 0.
+
+Volgende stap: **F0.1 — SeededRng** (met scope-uitbreiding: ook de
+doctrine-loting in game.gd:340, vondst uit de verificatie-sweep).
+
+---
+
 ## ⏵ STAND VAN ZAKEN MODELLEN + GORE-SYSTEEM (bijgewerkt 6 juli 2026, avond)
 
 **De Muis-infanterie is 100% af en het complete gore/effect-systeem staat.**
@@ -355,7 +374,7 @@ Laag 1  Core (headless) scripts/core/  — Phase, Card, Pawn, GameState, Rules, 
 
 ## 8. AI
 
-- Interface: `generate_cards`, `choose_rps`, `choose_link`, `choose_action`.
+- Interface: `generate_cards`, `choose_placement`, `choose_link`, `choose_action`.
 - **Gedeelde zero-sum evaluatie** (`AIController.evaluate(state, me)`): pionnen-in-haven ×6000,
   niet-lineaire nabijheid van de 2 dichtstbijzijnde pionnen naar BEIDE havens (= aanval +
   verdediging), bewaking van winvakjes ±320, materiaal ±32, HP ±3. `AIController` biedt ook

@@ -3,7 +3,7 @@ extends Node
 signal state_updated(state: GameState)
 signal phase_changed(new_phase: int, old_phase: int)
 signal placement_submitted(player_id: int)
-signal cards_revealed_event(totals_p1: Dictionary, totals_p2: Dictionary, initiative_winner: int, needs_rps: bool)
+signal cards_revealed_event(totals_p1: Dictionary, totals_p2: Dictionary, initiative_winner: int)
 signal turn_changed(player_id: int)
 signal action_performed(action: Dictionary, result: Dictionary)
 signal wolf_step_pending(pawn_id: int)
@@ -104,7 +104,6 @@ func _enter_reveal_phase() -> void:
 		_reveal_pending.totals_p1,
 		_reveal_pending.totals_p2,
 		_reveal_pending.winner,
-		false,
 	)
 
 func acknowledge_reveal() -> void:
@@ -281,7 +280,7 @@ func submit_attack(player_id: int, attacker_id: int, defender_id: int) -> bool:
 	_after_combat(player_id, attacker_id, result)
 	return true
 
-## Beschieting: infanterieschot (afstand 2) of artillerievuur (dracht = Speed).
+## Beschieting: infanterieschot (afstand exact 2) of artillerievuur (vaste dracht 6, +1 Leeuw).
 func submit_shot(player_id: int, shooter_id: int, target_id: int) -> bool:
 	if not _validate_action_turn(player_id):
 		return false

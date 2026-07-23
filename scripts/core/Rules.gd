@@ -9,11 +9,11 @@ extends RefCounted
 # - Artillerie doet 1 ding per beurt (1 stap óf 1 schot) en heeft een VASTE
 #   dracht van 6 vakken (Constants.ARTILLERY_RANGE), mits vrije rechte lijn.
 # - Infanterie: bewegen, melee (afstand 1) óf schot (afstand exact 2, tussenvak leeg,
-#   schade Attack−1). Terugslag: overleeft een actieve infanterist een melee, dan
+#   schade = volle Attack). Terugslag: overleeft een actieve infanterist een melee, dan
 #   krijgt de aanvaller 1 schade.
 # - Cavalerie: charge = 0..Speed stappen + optionele melee (minstens 1 stap óf aanval).
-# - Artillerie: 1 stap bewegen óf schieten op afstand 2..Speed (vrije rechte lijn,
-#   volle Attack). Dode zone: afstand 1 nooit beschietbaar.
+# - Artillerie: 1 stap bewegen óf schieten op afstand 2..6 vaste dracht (+1 Leeuw;
+#   vrije rechte lijn, volle Attack). Dode zone: afstand 1 nooit beschietbaar.
 # - Vuur raakt alles met vrij zicht (ook inactieve pionnen), wordt door elke
 #   tussenliggende pion geblokkeerd en wint nooit terrein.
 # - Alleen melee-eliminaties geven de verplichte verplaatsing.
@@ -449,7 +449,7 @@ static func compute_bid(cards: Array, budget: int, stat: String) -> float:
 	return float(total - n) / float(n * (budget - 3))
 
 ## Deterministisch: bod op Attack → bod op Speed → Ronde 1/Cyclus 1: Speler 1,
-## anders de vorige initiatiefhouder. (De RPS-tiebreaker uit v1 vervalt.)
+## anders de vorige initiatiefhouder. (De steen-papier-schaar-tiebreaker uit v1 verviel in v4.1.)
 static func compute_initiative(state: GameState) -> Dictionary:
 	var cards_p1: Array = state.cards_revealed[Constants.PLAYER_1]
 	var cards_p2: Array = state.cards_revealed[Constants.PLAYER_2]
@@ -463,7 +463,6 @@ static func compute_initiative(state: GameState) -> Dictionary:
 	totals_p2["bid"] = bid_p2
 	var result := {
 		"winner": -1,
-		"needs_rps": false,
 		"totals_p1": totals_p1,
 		"totals_p2": totals_p2,
 	}
