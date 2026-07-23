@@ -42,9 +42,6 @@ var placements_done: Dictionary = {}
 # spelers geackt hebben (het oude single-ack-gat is hiermee dicht).
 var reveal_acks: Dictionary = {}
 
-var pending_forced_move_attacker: int = -1
-var pending_forced_move_target: Vector2i = Vector2i.ZERO
-
 # Wolf-doctrine: pion die na zijn melee nog een optionele gratis stap tegoed heeft.
 var pending_wolf_step_pawn: int = -1
 
@@ -248,7 +245,6 @@ func reset_for_new_cycle() -> void:
 	cards_defined[Constants.PLAYER_2] = []
 	cards_revealed[Constants.PLAYER_1] = []
 	cards_revealed[Constants.PLAYER_2] = []
-	pending_forced_move_attacker = -1
 	pending_wolf_step_pawn = -1
 	cycle += 1
 	round_number = 1
@@ -275,8 +271,6 @@ func clone() -> GameState:
 	copy.doctrines = doctrines.duplicate()
 	copy.placements_done = placements_done.duplicate()
 	copy.reveal_acks = reveal_acks.duplicate()
-	copy.pending_forced_move_attacker = pending_forced_move_attacker
-	copy.pending_forced_move_target = pending_forced_move_target
 	copy.pending_wolf_step_pawn = pending_wolf_step_pawn
 	copy._next_pawn_id = _next_pawn_id
 	copy._next_card_id = _next_card_id
@@ -289,11 +283,14 @@ func clone() -> GameState:
 	copy.all_cards = {}
 	for cid in all_cards:
 		copy.all_cards[cid] = all_cards[cid].clone()
+	# F0.5: kaart-identiteit blijft heel — defined/revealed verwijzen naar
+	# DEZELFDE kloon-objecten als all_cards (was: drie losse klonen per kaart,
+	# waardoor een koppeling op de ene lijst onzichtbaar bleef op de andere).
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		copy.cards_defined[player_id] = []
 		for c in cards_defined[player_id]:
-			copy.cards_defined[player_id].append(c.clone())
+			copy.cards_defined[player_id].append(copy.all_cards[c.id])
 		copy.cards_revealed[player_id] = []
 		for c in cards_revealed[player_id]:
-			copy.cards_revealed[player_id].append(c.clone())
+			copy.cards_revealed[player_id].append(copy.all_cards[c.id])
 	return copy
