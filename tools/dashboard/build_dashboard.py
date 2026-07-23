@@ -159,8 +159,16 @@ def esc(s):
 
 def bouw_html(runs):
     huidig = runs[-1]
-    vorig = runs[-2] if len(runs) > 1 else None
     meta = huidig["meta"] or {}
+    # Trendbasis: de nieuwste EERDERE run met dezelfde agent-instellingen —
+    # een L2-matrix vergelijken met een L1-testje geeft schijn-trends.
+    agents = (meta.get("config") or {}).get("agents", {})
+    vorig = None
+    for r in reversed(runs[:-1]):
+        r_agents = ((r["meta"] or {}).get("config") or {}).get("agents", {})
+        if r_agents == agents:
+            vorig = r
+            break
     games = huidig["games"]
     wr, wn = winrates_per_doctrine(games)
     m = matrix(games)
