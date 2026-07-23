@@ -178,9 +178,11 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   buiten de reducer alleen nog in AIController-SIMULATIE op klonen
   (gedocumenteerde uitzondering; live-staat muteert uitsluitend via de
   reducer; F1.1 agents-op-views ruimt dit op).
-  **OPEN — MAX:** één volledige mens-vs-AI-sessie: win + verlies + een
-  Krokodil-potje; voelt identiek, "?"-blokjes kloppen, opgeven-knop werkt.
-  Daarna is F0 formeel af en start F1 (arena).
+  **MAX-acceptatie gespeeld: alles klopt** — F0 IS FORMEEL AF (juli 2026).
+
+Volgende fase: **F1 — Arena v1** (agent-interface op views, L0-L3, doorvoer
+>=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
+eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).
 
 ---
 

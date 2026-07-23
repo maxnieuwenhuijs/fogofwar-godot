@@ -357,7 +357,7 @@ vriendelijke auto-fallbacks als *driver*-gedrag dat gewone acties indient); onli
 `CLAIM_TIMEOUT` vóór de deadline → geweigerd; timeout in DEFINE-fase → default-loadout toegepast.
 UI-rooktest: timer telt af op basis van `state.turn_deadline` (capture `-- play`).
 
-### ◪ F0.9 — F0-acceptatie & opruiming — headless-deel AF (juli 2026); MAX-potje open
+### ☑ F0.9 — F0-acceptatie & opruiming — AF (juli 2026; MAX-acceptatiepotje gespeeld: alles klopt)
 
 **CHECK (Claude, headless):**
 1. `tests/TestScene.tscn` groen — baseline 111 tests/~310 asserts + de nieuwe suites (verwacht ≥170 tests).
