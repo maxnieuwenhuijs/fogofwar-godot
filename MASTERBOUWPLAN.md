@@ -376,7 +376,7 @@ kloppen, opgeven-knop werkt.
 Doel: van "trainings-bijproduct in capture.gd" naar een reproduceerbaar meetinstrument dat de
 §8-playtest-agenda draait en de eerste balanspatch op data oplevert.
 
-### ☐ F1.1 — Agent-interface op views
+### ☑ F1.1 — Agent-interface op views — AF (juli 2026)
 
 **Bestanden:** `agents/agent.gd`, `agents/l0_random.gd`, `agents/l1_greedy.gd`, `agents/l2_weights.gd`, `agents/l3_search.gd`.
 

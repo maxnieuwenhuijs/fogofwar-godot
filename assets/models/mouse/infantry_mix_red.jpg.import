@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drkjo8am66b84"
-path.s3tc="res://.godot/imported/infantry_mix_gibs_NormalGL_68fa9394-db23-4d53-812b-234dda686d01.jpg-64463cdfa8b98605e05f49474048c65d.s3tc.ctex"
+uid="uid://cvd8p7x0a6ufg"
+path.s3tc="res://.godot/imported/infantry_mix_red.jpg-5e6003e7a0789aae7117ac687e0e4366.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "5fc65ada14223093f62ffabf9e75f6cc"
+"md5": "a8df0fc2fda8d60cf70fd268306dc638"
 }
 
 [deps]
 
-source_file="res://assets/models/mouse/infantry_mix_gibs_NormalGL_68fa9394-db23-4d53-812b-234dda686d01.jpg"
-dest_files=["res://.godot/imported/infantry_mix_gibs_NormalGL_68fa9394-db23-4d53-812b-234dda686d01.jpg-64463cdfa8b98605e05f49474048c65d.s3tc.ctex"]
+source_file="res://assets/models/mouse/infantry_mix_red.jpg"
+dest_files=["res://.godot/imported/infantry_mix_red.jpg-5e6003e7a0789aae7117ac687e0e4366.s3tc.ctex"]
 
 [params]
 
@@ -25,12 +25,12 @@ compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=1
+compress/normal_map=0
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
-roughness/mode=1
-roughness/src_normal="res://assets/models/mouse/infantry_mix_gibs_NormalGL_68fa9394-db23-4d53-812b-234dda686d01.jpg"
+roughness/mode=0
+roughness/src_normal=""
 process/channel_remap/red=0
 process/channel_remap/green=1
 process/channel_remap/blue=2

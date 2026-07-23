@@ -189,7 +189,30 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3 legacy-tests bijgewerkt; 3 nieuwe regeltests. Checks: 915 asserts groen ·
   simcheck 5/5 (nieuwe baselines) · play exit 0.
 
-Volgende fase: **F1 — Arena v1** (agent-interface op views, L0-L3, doorvoer
+## F1 — Arena v1 (bezig)
+
+- **F1.1 — Agent-interface op views.** Hard contract (bouwplan par. 7.1):
+  `decide(view, legal, rng) -> Action`. `agents/agent.gd` (basisklasse +
+  reconstruct_state: view -> speelbare staat met PUNTSCHATTING voor gedekte
+  stats = gemiddelde over onthulde vijandelijke kaarten, B11; gedekte pion
+  heeft per definitie nog geen schade dus current=max klopt per constructie),
+  `l0_random.gd` (uniform random — fuzz-motor), `l1_greedy.gd` (kill > haven >
+  schade > random; arena-werkpaard), `l2_weights.gd` (AIMedium-eval op de
+  reconstructie; per-doctrine-profielen uit ai_weights.json),
+  `l3_search.gd` (Hard/Ultra-search, zelfde reconstructie),
+  `agent_runner.gd` (EEN uniforme lus voor alle fasen: view + legal_actions +
+  Reducer.apply; geen fase-dispatch, geen Node — de kiem van arena/run.gd en
+  het worker-model). full_state-vlag (B8) -> View.for_player(redacted=false):
+  fog-loze view voor ablatie. View uitgebreid met haven_touches (publiek).
+  Vangnetten gemeten: illegal_count/fallback_count op de runner.
+  Oude AIEasy..Ultra blijven als UI-wrappers (plan-conform) tot de game-UI
+  overstapt. tests/AgentTests.gd: L0 20 volledige partijen 0 illegaal/0
+  fallback (cycle_limit begrenst), puntschatting-test, L1-kill-test,
+  B8-ablatie gelogd (view 2 - full 2 - remise 0 over 4 Krokodil-spiegels;
+  echte meting volgt in F1.6). Checks: 1013 asserts groen (1m32s) · simcheck
+  5/5 · play exit 0 · vosview PASS.
+
+Volgende stap: **F1.2 — standalone runner + metrics** (arena/run.gd, jsonl per game). (agent-interface op views, L0-L3, doorvoer
 >=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
 eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).
 

@@ -20,9 +20,11 @@ extends RefCounted
 const HIDDEN := "?"
 
 
-static func for_player(state: GameState, player_id: int) -> Dictionary:
+## redacted=false (B8-ablatievlag): zelfde vorm, maar zonder fog — voor het
+## meten van wat verborgen informatie waard is (L2-view vs L2-full_state).
+static func for_player(state: GameState, player_id: int, redacted: bool = true) -> Dictionary:
 	var enemy: int = Constants.opponent(player_id)
-	var blind_placement: bool = state.phase == Phase.Type.PLACEMENT
+	var blind_placement: bool = redacted and state.phase == Phase.Type.PLACEMENT
 	# Zichtbare vijandelijke kaarten: onthuld in de huidige ronde, of ooit
 	# gekoppeld (eerdere rondes waren per definitie openbaar bij hun reveal).
 	var visible_enemy_cards: Dictionary = {}
@@ -33,12 +35,12 @@ static func for_player(state: GameState, player_id: int) -> Dictionary:
 		var pawn: Pawn = state.pawns[id]
 		if pawn.owner_id == enemy and blind_placement:
 			continue  # blind opstellen: de ander bestaat nog niet voor jou
-		pawns_d[str(id)] = _pawn_view(pawn, player_id)
+		pawns_d[str(id)] = _pawn_view(pawn, player_id) if redacted else pawn.to_dict()
 	var cards_d: Dictionary = {}
 	for id in state.all_cards:
 		var card: Card = state.all_cards[id]
-		var covered: bool = _card_link_covered(state, card)
-		if card.owner_id == player_id:
+		var covered: bool = redacted and _card_link_covered(state, card)
+		if card.owner_id == player_id or not redacted:
 			cards_d[str(id)] = card.to_dict()
 		elif visible_enemy_cards.has(card.id) or card.linked_pawn_id != -1:
 			var cd: Dictionary = card.to_dict()
@@ -77,6 +79,12 @@ static func for_player(state: GameState, player_id: int) -> Dictionary:
 			str(player_id): bool(state.reveal_acks.get(player_id, false)),
 			str(enemy): bool(state.reveal_acks.get(enemy, false)),
 		},
+		# Publiek (de "score-race" is voor beide kanten zichtbaar):
+		"haven_touches": {
+			str(player_id): state.haven_touches.get(player_id, {}).keys(),
+			str(enemy): state.haven_touches.get(enemy, {}).keys(),
+		},
+		"enemy_defined_ids_hidden": redacted,
 	}
 
 

@@ -58,6 +58,30 @@
 		],
 		"scale": 1.4
 	},
+	"mouse/infantry_mix": {
+		"muzzle": [
+			0.12,
+			0.81,
+			0.45
+		],
+		"scale": 1.11,
+		"x": 0.0,
+		"y": 0.0,
+		"z": 0.0
+	},
+	"mouse/infantry_mix_musket": {
+		"pos": [
+			0.09,
+			0.18,
+			0.06
+		],
+		"rot": [
+			120.0,
+			50.0,
+			5.0
+		],
+		"scale": 1.55
+	},
 	"mouse/infantry_spd": {
 		"muzzle": [
 			0.15,
