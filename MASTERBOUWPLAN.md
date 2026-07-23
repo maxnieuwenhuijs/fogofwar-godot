@@ -74,7 +74,8 @@ Per bouwplan-onderdeel: wat er al staat, wat er mist. Status: ✅ = staat er, �
    pionnen-pools in de match en de SPAWN-fase per cyclus bestaan in geen enkele vorm. Zonder die laag kan
    geen enkele campagneregel (donaties, testament, poolfactor) werken. → eigen fase F2.
 4. **Twee plannen spreken elkaar tegen op de backend:** het online-plan koos "headless Godot-server met
-   rooms + SQLite op de droplet"; het bouwplan kiest "Node+MySQL+Redis+n8n met Godot-workers". Het
+   rooms + SQLite op de droplet"; het bouwplan kiest "Node+MySQL+Redis met Godot-workers" (n8n is
+   geschrapt, zie B5). Het
    masterplan volgt **het bouwplan** (de campagne/meta-laag heeft de Node-stack echt nodig); alle
    engine-/clientwerk uit online-plan Fase 0 blijft geldig en is in F0/F4 opgenomen. De droplet blijft de
    deploy-machine.
@@ -93,12 +94,12 @@ Per bouwplan-onderdeel: wat er al staat, wat er mist. Status: ✅ = staat er, �
 | B2 | **`apply()` muteert in-place; de aanroeper kloont indien nodig.** Signatuur `Reducer.apply(state, action, player_id) -> {ok, events, error}`; "puur" betekent hier: geen Nodes, geen signals, geen globals, deterministisch. | Een copy-per-zet in GDScript maakt de ≥5/s/core-eis onhaalbaar; AI/arena clonen nu ook al zelf. |
 | B3 | **GameSession blijft tijdens F0 bestaan als dunne compat-shim** (autoload, zelfde signals, zelfde `submit_*`-signaturen) bovenop MatchCore. game.gd en de bestaande tests blijven daardoor vrijwel ongewijzigd draaien; de shim krimpt per stap. | De 2381-regel driver en 3 testsuites zijn het vangnet — dat gooi je niet weg middenin de verbouwing. |
 | B4 | **Regelversie-lijn:** `4.1.9-hr` = de huidige geïmplementeerde huisregels (vastgelegd in F0.0) → `4.2.0` = + CP/pools/spawn/kanon-act (F2). Elke match slaat `rules_version` + volledige `rules_config` op. | Bouwplan §0 "regelversies zijn heilig". |
-| B5 | **Backend = Node (Fastify) + MySQL + Redis + n8n; Godot headless workers valideren matches** (bouwplan §1/§5). Capaciteitsaanname uit §5.3 geldt: één 4-core VPS ≈ duizenden campagnes, bottleneck = push-notificaties — dus géén premature schaal-architectuur; schalen = workers bijstarten. Online-plan Fase 0-items verhuizen naar F0 (engine) en F4 (client); de "room = sessie-instantie"-vondst wordt het worker-model. | Campagne, ledgers, deadlines, notificaties en n8n-jobs horen niet in een Godot-proces. |
+| B5 | **Backend = Node (Fastify) + MySQL + Redis; Godot headless workers valideren matches** (bouwplan §1/§5). **GEEN n8n of andere workflow-automation-tooling (besluit Max, juli 2026):** alle geplande jobs (nachtruns, digests, seizoenswissel, e-mail-fallback) zijn gewone code — node-cron in de backend of systemd-timers/Taakplanner. Capaciteitsaanname uit §5.3 geldt: één 4-core VPS ≈ duizenden campagnes, bottleneck = push-notificaties — dus géén premature schaal-architectuur; schalen = workers bijstarten. Online-plan Fase 0-items verhuizen naar F0 (engine) en F4 (client); de "room = sessie-instantie"-vondst wordt het worker-model. | Campagne, ledgers, deadlines, notificaties en cron-jobs horen niet in een Godot-proces. |
 | B6 | **Solo-campagne draait lokaal; de server her-valideert het event-log bij sync** (bouwplan §14.1, voorstel overgenomen). Implementatie: F4.5. | Goedkoopste milestone, geen netwerkvariabelen; vals spelen offline levert geen online punten op. |
 | B7 | **Ranked 1v1 gaat open vanaf F4** als aparte snelle queue en regelversie-testbed, mét consent-vlag voor A/B op rules_config (§9.4/§14.2). **Bot-backfill zichtbaar 🤖** (§14.3). | Vertrouwen > vullingsgraad; 1v1 is ook het A/B-kanaal voor rules_config. |
 | B8 | **Agents krijgen views, niet de staat.** De agent-interface (F1.1) is `decide(view, legal, rng)`; een expliciete `full_state`-vlag houdt de oude (valsspelende) eval beschikbaar zodat het Vos-effect meetbaar wordt (ablatie). | Bouwplan §7.1; lost meteen het "AI kijkt door de fog"-gat op. |
 | B9 | **Naamgeving:** enum-namen (MENS/VOS) blijven; presentatienamen (Varken/Krokodil) blijven in `DOCTRINE_DATA.name`; nieuwe bestanden volgen bouwplan-namen (`state.gd`, `reducer.gd`, …) in `res://core/`. Dode RPS-code wordt in F0.0 verwijderd. | Twee vertaallagen bestaan al; saneren ≠ hernoemen wat werkt. |
-| B10 | **Arena-data leeft in jsonl-bestanden** (`results/`), niet in de `arena_runs`/`arena_games`-MySQL-tabellen uit bouwplan §5.1 — die tabellen komen pas als F7-rapportage of n8n ze echt nodig heeft. | De arena draait (F1) vóór er een database bestaat (F4); bestanden zijn gratis reproduceerbaar en diff-baar. |
+| B10 | **Arena-data leeft in jsonl-bestanden** (`results/`), niet in de `arena_runs`/`arena_games`-MySQL-tabellen uit bouwplan §5.1 — die tabellen komen pas als F7-rapportage ze echt nodig heeft. | De arena draait (F1) vóór er een database bestaat (F4); bestanden zijn gratis reproduceerbaar en diff-baar. |
 | B11 | **Imperfecte informatie in L2/L3:** F1 start met een puntschatting (verwachtingswaarde over de onthulde kaartenset) voor onbekende Vos-stats; het bouwplan-§7.2-model (determinized sampling N=16) is een expliciete upgrade-stap zodra de arena aantoont dat de puntschatting L3 merkbaar zwakker maakt (F8, eerder mag). | Sampling ×16 vermenigvuldigt de rekentijd; eerst meten of het nodig is. |
 | B12 | **Client-telemetrie = het server-event-log** (acties, think_ms, uitkomsten); er komt géén apart `Telemetry.gd`-autoload in v1. De **web-replay-viewer** uit bouwplan §3 schuift naar F8 (client-replay + `-- replay` dekken de behoefte tot die tijd). | Event sourcing ís de telemetrie (bouwplan §1); geen dubbele meetlaag bouwen. |
 
@@ -114,7 +115,7 @@ res://agents/         agent.gd  l0_random.gd  l1_greedy.gd  l2_weights.gd  l3_se
 res://arena/          arena.tscn  run.gd  metrics.gd  fuzz.gd  arena_configs/
 res://net/            net_client.gd  event_stream.gd  offline_queue.gd  (F4)
 res://ui/screens/     (campagne-schermen F3; lobby/online F4; leaderboard/profiel F6)
-server/               Node-backend: api/ ws/ workers/ jobs/ db/ n8n/  (F4)
+server/               Node-backend: api/ ws/ workers/ jobs/ db/  (F4; jobs = node-cron, geen n8n)
 docs/                 spelregels-v4.2.md  campagne-spec.md  protocol.md  spelregels-CHANGELOG.md
 tests/                unit-suites  golden_replays/  fuzz/
 ```
@@ -158,8 +159,11 @@ Elke stap laat de volledige bestaande testsuite + de UI groen.
      gratis), artillerie 1 actie/beurt met vaste dracht 6 (+1 Leeuw) en dode zone 1, infanterieschot
      afstand exact 2 met **volle** Attack, terugslag {inf 1, cav 2, art 0}, cav springt over eigen
      pionnen (Wolf-cav ook over vijandelijke inf), Muis +1 Speed doctrine-breed, Vos-cav +1 Speed,
-     doctrine-comps zoals `DOCTRINE_DATA` (incl. Muis [20,0,2] — bewuste keuze of terugdraaien: **vraag
-     aan Max**, zie §15.1), presentatienamen Varken/Krokodil.
+     doctrine-comps zoals `DOCTRINE_DATA` (**besluit Max juli 2026: Muis wordt [18,4,0]** — het BIG
+     BRO-besluit van 6 juli wordt in F0.0 doorgevoerd, arena-hermeting in F1.6; zie §15.1),
+     presentatienamen Varken/Krokodil, beschieting raakt óók inactieve pionnen en elimineert
+     standbeelden ongeacht HP (Rules.gd get_valid_shot_targets + apply_shot — de basis onder F0.2's
+     `fire_hits_inactive`/`statue_threshold`-knoppen).
    - **Deel B — "4.2.0", de campagne-uitbreidingen** (concept, uit bouwplan §2.1/§2.4): CP-inzet
      (`BET_CP{0..3}`, cap +1 per kaart), pionnen-pool + spawnfase (`SPAWN` ≤3 per cyclus), kanon-actiepot
      (`CANNON_ACT{ROLL|SHOOT|RETREAT}`), klokken. Markeer elk punt "TE BEVESTIGEN".
@@ -442,7 +446,7 @@ gevangen.
 **Werk:** dashboard leest `results/**/games.jsonl` → statisch HTML (winrate-matrix-heatmap,
 §8-metrieken, trend vs vorige run, regelversie erbij). Nachtjob eerst lokaal via Windows Taakplanner
 (`arena_nacht.ps1`: git pull → arena → fuzz → dashboard → diff-samenvatting naar Telegram/mail);
-verhuist in F4 naar n8n op de VPS (bouwplan §8.4).
+verhuist in F4 naar een cron-job op de VPS (bouwplan §8.4; geen n8n — B5).
 
 **CHECK:** dashboard opent lokaal met echte data; nachtjob draait één keer end-to-end aantoonbaar
 (inclusief het echte 8-uurs-capaciteitslog voor F1.3).
@@ -728,7 +732,7 @@ live-kaartjes (stemmen/donaties/rapporten).
 
 ### ☐ F5.3 — Push-notificaties (de bekende pijnplek — eerste week van F5)
 FCM (Android) + APNs (iOS) via plugin; de 3 ping-types (jouw duel / raad open / rapport);
-e-mail-fallback via n8n. Vroeg prototypen op echte apparaten.
+e-mail-fallback via een backend-job (node-cron/nodemailer). Vroeg prototypen op echte apparaten.
 **CHECK:** push komt aan op een echt toestel bij elk van de 3 events (MAX bevestigt); fallback-mail bij
 uitgezette push (integratietest).
 
@@ -745,7 +749,7 @@ server-logs van dat event.
   zie F6.3), placement via RD. **CHECK:** rating-unittests tegen referentie-implementatie; RD daalt met
   partijen.
 - ☐ **F6.2 Seizoenen & leagues:** LP = campagnepunten × tier-multiplier, 6 weken, Hout→Fabel,
-  promotie/degradatie 20%, soft reset + embleem-cosmetica. **CHECK:** seizoenswissel-job (n8n) op een
+  promotie/degradatie 20%, soft reset + embleem-cosmetica. **CHECK:** seizoenswissel-job (node-cron) op een
   testseizoen; LP-berekening als unit-test.
 - ☐ **F6.3 Leaderboards + schermen:** globaal, per doctrine (min. 20 partijen), seizoen-LP, vrienden
   (vereist vriendcodes uit F4.1), **solo-campagne-bord** (gevoed door F4.5-sync), drama-borden
@@ -756,7 +760,7 @@ server-logs van dat event.
   min → bots, zichtbaar 🤖 (B7). **Commend/report stuurt matchmaking-pools** (bouwplan §10). **CHECK:**
   wachtrij-simulatie met 100 nep-clients vult lobbies correct; commend-signaal verschuift pool-toewijzing
   in een simulatie.
-- ☐ **F6.5 Moderatie + collusie:** rapporteren → n8n-digest; sancties mute → quick-chat-only →
+- ☐ **F6.5 Moderatie + collusie:** rapporteren → dagelijkse digest-job (node-cron); sancties mute → quick-chat-only →
   queue-ban; rate-limits per route; **device/IP-collusieheuristiek** (2 accounts zelfde speler in één
   campagne → flag, niet auto-ban). **CHECK:** sanctie-escalatie als integratietest; collusie-flag op
   gesimuleerd device-paar.
@@ -768,7 +772,7 @@ server-logs van dat event.
 - ☐ **F7.1** 16-bot-campagnes headless (CampaignCore + MatchCore), campagne-metrics: doctrine-winrate op
   campagneniveau, comeback-rate 3v1, duur in duels, CP-inflatie, testament-naar-vijand-frequentie
   (drama-metriek), burgeroorlog-frequentie + vrijloting-effect, poolfactor-validatie (kampioen houdt
-  10–25% pool over). Data mag nu alsnog naar `arena_runs`/`arena_games`-tabellen als n8n-rapportage dat
+  10–25% pool over). Data mag nu alsnog naar `arena_runs`/`arena_games`-tabellen als de rapportage-jobs dat
   vraagt (B10). **CHECK:** één nachtrun produceert het campagne-dashboard.
 - ☐ **F7.2** Campagnegewichten-evolutie (bouwplan §7.4: populatie 24/doctrine, round-robin met
   kleurwissel + vaste seeds, top 25% op Elo, mutatie+crossover; reproduceerbaar via `(git_sha,
@@ -811,7 +815,7 @@ zonder speler-geheimen + delay), cosmetica.
 | F0-refactor breekt de speelbare game | Shim-strategie (B3): UI + tests blijven elke stap groen; capture-rooktest per stap; F0.4 in drie delen |
 | v4.2-economie blijkt onuitgebalanceerd ontwerp | F2 ligt vóór de campagne; agents leren de acties eerst (F2.5), dán pas meten (F2.6) |
 | Campagne-spec-details ontbreken (staat niet in de repo) | F3.0-ontwerpsessie met Max is een expliciete stap; reducer-tests zijn de contractvorm |
-| Push-notificaties (plugin-gedoe) | F5.3 in week 1 van F5; e-mail/Telegram-fallback via n8n |
+| Push-notificaties (plugin-gedoe) | F5.3 in week 1 van F5; e-mail/Telegram-fallback via backend-job |
 | Verborgen info lekt via client | Geheimen bestaan client-side niet (F0.6); canary offline (F0) → CI (F4) |
 | Regel-iteratie breekt oude data | `rules_version`+config per match; replayer laadt config uit de match |
 | Async-16 bloedt leeg met vreemden | Live-8 publiek default; forfeit-keten garandeert een winnaar |
@@ -822,17 +826,17 @@ zonder speler-geheimen + delay), cosmetica.
 
 Genummerd; het plan noemt ze op de plek waar ze vallen.
 
-1. **Muis-samenstelling:** [20,0,2] (code) of 22/0/0 (spelregels-doc) of 18/4/0 (BIG BRO-besluit uit
-   WIP.md 6 juli; MODEL-WISHLIST bevestigt "rat verschijnt pas als de Muis cavalerie krijgt")? →
-   F0.0/F1.6, arena beslist mee.
+1. ~~**Muis-samenstelling**~~ **BESLOTEN (juli 2026): 18/4/0** — het BIG BRO-besluit wordt in F0.0
+   doorgevoerd (comp-wijziging + spec + CHANGELOG); arena-hermeting en eventuele bijstelling in F1.6.
+   De dikke rat (Muis-cavalerie) komt op de modellenlijst (MODEL-WISHLIST).
 2. **v4.2-economie-details** (CP-effect op kaart, poolfactor-basis, spawnvakken, kanon-actiepot-details,
    dracht 5 vs 6): → F2.1-ontwerpsessie.
 3. **Campagne-spec-details** die niet in het bouwplan staan (pool-afboeking na duel, exacte
    deadline-duren per fase, live-8 vs async-16 timerverschillen): → F3.0-ontwerpsessie.
-4. **Bevestiging architectuurkeuzes B5–B7 en B10–B12** (Node-backend; solo lokaal + sync-hervalidatie;
-   ranked open vanaf F4; 🤖-backfill zichtbaar; arena-data in jsonl; L3-puntschatting eerst; geen apart
-   telemetrie-autoload; web-replay-viewer pas F8) — het plan neemt de bouwplan-voorstellen over of
-   markeert de afwijking; bezwaar = nu melden.
+4. ~~**Bevestiging architectuurkeuzes B5–B7 en B10–B12**~~ **BESLOTEN (juli 2026): akkoord, met één
+   wijziging — GEEN n8n of andere workflow-automation-tooling.** Alle geplande jobs worden gewone
+   code: node-cron in de backend, systemd-timers/Taakplanner voor host-level. B5 is aangepast; alle
+   n8n-verwijzingen in dit plan zijn vervangen.
 
 ---
 
