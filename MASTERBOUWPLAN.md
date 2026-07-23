@@ -257,7 +257,7 @@ wolf_step_available/posities) worden event-payloads. GameSession's actiefase-sub
 **CHECK:** alle bestaande actiefase-tests groen via de shim; `-- sim <p1> <p2> <d1> <d2> <seed>` geeft
 voor 6 vaste seeds exact dezelfde winnaar+cycli als vóór deze stap (uitkomsten vastgelegd in een test).
 
-### ☐ F0.4b — Reducer, deel 2: setup-fasen + cyclus
+### ☑ F0.4b — Reducer, deel 2: setup-fasen + cyclus — AF (juli 2026)
 
 **Bestanden:** `reducer.gd`, `GameSession.gd` (krimpt verder).
 

@@ -38,6 +38,10 @@ var all_cards: Dictionary = {}
 # Vrije opstelling (v4.1): welke spelers hun opstelling al hebben ingediend.
 var placements_done: Dictionary = {}
 
+# Per-speler reveal-bevestiging (F0.4b): de fase gaat pas door als beide
+# spelers geackt hebben (het oude single-ack-gat is hiermee dicht).
+var reveal_acks: Dictionary = {}
+
 var pending_forced_move_attacker: int = -1
 var pending_forced_move_target: Vector2i = Vector2i.ZERO
 
@@ -270,6 +274,7 @@ func clone() -> GameState:
 	copy.winner = winner
 	copy.doctrines = doctrines.duplicate()
 	copy.placements_done = placements_done.duplicate()
+	copy.reveal_acks = reveal_acks.duplicate()
 	copy.pending_forced_move_attacker = pending_forced_move_attacker
 	copy.pending_forced_move_target = pending_forced_move_target
 	copy.pending_wolf_step_pawn = pending_wolf_step_pawn

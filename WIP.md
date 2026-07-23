@@ -72,7 +72,21 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   medium-medium ontbreekt bewust — kan zonder cycle_limit oneindig patstellen,
   F0.4c). Checks: 613 asserts groen · simcheck 5/5 OK · `-- play` exit 0.
 
-Volgende stap: **F0.4b — Reducer, deel 2** (setup-fasen + cyclus + per-speler ACK).
+- **F0.4b — Reducer, deel 2 (setup-fasen + cyclus).** De volledige fasemachine
+  zit in de reducer: PLACE (beide binnen -> define + CYCLE_STARTED),
+  DEFINE_CARDS (commit-gate -> reveal + CARDS_REVEALED-event), **ACK_REVEAL
+  per speler** (state.reveal_acks; single-ack-gat dicht — validator weigert
+  dubbele ack met "Al bevestigd"), LINK met staartkoppel-logica,
+  ronde/cyclus-overgangen en _start_new_cycle. GameSession = 132-regel shim
+  (19 functies; F0.9-doel <=150 nu al gehaald): submits zijn 1-regel-
+  delegaties, acknowledge_reveal() = compat-shim die beide spelers ackt,
+  nieuw: submit_ack_reveal(player). Nieuwe events: EV_PLACEMENT,
+  EV_CARDS_REVEALED, EV_CYCLE_STARTED (EV_CYCLE_RESET vervallen).
+  tests/ReducerTests.gd: per-speler-ACK, fold-test opstelling->actiefase
+  ZONDER Node (18 koppelingen, 2x9 actieve pionnen), initiatief-tiebreak.
+  Checks: 705 asserts groen · simcheck 5/5 OK · `-- play` exit 0.
+
+Volgende stap: **F0.4c — Reducer, deel 3** (RESIGN + cycluslimiet-remise; MatchRunner zonder Node).
 
 ---
 

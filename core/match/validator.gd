@@ -30,7 +30,11 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 		Actions.DEFINE_CARDS:
 			return _check_define(state, action, player_id)
 		Actions.ACK_REVEAL:
-			return _ok() if Phase.is_reveal(state.phase) else _nee("Niet in reveal fase")
+			if not Phase.is_reveal(state.phase):
+				return _nee("Niet in reveal fase")
+			if state.reveal_acks.get(player_id, false):
+				return _nee("Al bevestigd")
+			return _ok()
 		Actions.LINK:
 			return _check_link(state, action, player_id)
 		Actions.MOVE:
@@ -199,7 +203,8 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 				out.append(Actions.make_define_cards(cards))
 		return out
 	if Phase.is_reveal(state.phase):
-		out.append(Actions.make_ack_reveal())
+		if not state.reveal_acks.get(player_id, false):
+			out.append(Actions.make_ack_reveal())
 		return out
 	if Phase.is_linking(state.phase):
 		if state.current_player != player_id:

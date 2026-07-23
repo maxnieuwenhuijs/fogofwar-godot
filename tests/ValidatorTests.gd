@@ -26,8 +26,7 @@ func _dispatch(engine, player: int, a: Dictionary) -> bool:
 		Actions.DEFINE_CARDS:
 			return engine.submit_define_cards(player, a.cards)
 		Actions.ACK_REVEAL:
-			engine.acknowledge_reveal()
-			return true
+			return engine.submit_ack_reveal(player)
 		Actions.LINK:
 			return engine.submit_link(player, a.card_id, a.pawn_id)
 		Actions.MOVE:

@@ -1,26 +1,29 @@
 class_name Reducer
 extends RefCounted
 
-# F0.4a — de reducer: apply(state, action, player_id) -> {ok, events, error}.
+# F0.4a/b — de reducer: apply(state, action, player_id) -> {ok, events, error}.
 # Puur in de afgesproken zin (B2): geen Nodes, geen signals, geen globals,
 # deterministisch; muteert de meegegeven state in-place (aanroeper kloont
-# indien nodig). Dit deel dekt de ACTIEFASE: MOVE/MELEE/SHOOT/CHARGE/
-# WOLF_STEP/SKIP_WOLF_STEP, inclusief beurtwissel en win-check.
+# indien nodig). Dekt sinds F0.4b de VOLLEDIGE fasemachine: opstelling,
+# kaartdefinitie (commit-gate), reveal (per-speler ACK — het single-ack-gat is
+# dicht), koppelfase met staartkoppelen, ronde/cyclus-overgangen én de
+# actiefase met beurtwissel en win-checks.
 #
 # Events zijn typed dicts {type, seq, payload}. De GameSession-shim vertaalt
 # ze 1-op-1 naar de bestaande signals (game.gd merkt niets); straks schrijft
 # het event-log (F0.7) ze weg en streamt de server (F4) ze naar clients.
 #
-# Nog in de shim (F0.4b): setup-fasen, fasemachine en de cyclus-reset — de
-# reducer geeft daarvoor het event CYCLE_RESET terug.
+# Nog niet hier: RESIGN + cycluslimiet-remise (F0.4c), klokken (F0.8).
 
-const EV_ACTION := "action_applied"      # {action, result} → action_performed-signal
-const EV_STATE := "state_updated"        # {} → state_updated-signal
+const EV_ACTION := "action_applied"           # {action, result} → action_performed-signal
+const EV_STATE := "state_updated"             # {} → state_updated-signal
+const EV_PLACEMENT := "placement_submitted"   # {player_id}
+const EV_CARDS_REVEALED := "cards_revealed"   # {totals_p1, totals_p2, winner}
 const EV_WOLF_PENDING := "wolf_step_pending"  # {pawn_id}
-const EV_TURN := "turn_changed"          # {player_id}
-const EV_PHASE := "phase_changed"        # {new_phase, old_phase}
-const EV_GAME_OVER := "game_over"        # {winner}
-const EV_CYCLE_RESET := "cycle_reset"    # {} → shim draait _start_new_cycle (tot F0.4b)
+const EV_TURN := "turn_changed"               # {player_id}
+const EV_PHASE := "phase_changed"             # {new_phase, old_phase}
+const EV_CYCLE_STARTED := "cycle_started"     # {cycle}
+const EV_GAME_OVER := "game_over"             # {winner}
 
 
 static func apply(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
@@ -29,6 +32,14 @@ static func apply(state: GameState, action: Dictionary, player_id: int) -> Dicti
 		return {"ok": false, "events": [], "error": verdict.reason}
 	var events: Array = []
 	match String(action.type):
+		Actions.PLACE:
+			_do_place(state, action, player_id, events)
+		Actions.DEFINE_CARDS:
+			_do_define(state, action, player_id, events)
+		Actions.ACK_REVEAL:
+			_do_ack_reveal(state, player_id, events)
+		Actions.LINK:
+			_do_link(state, action, player_id, events)
 		Actions.MOVE:
 			_do_move(state, action, events)
 		Actions.MELEE:
@@ -42,19 +53,189 @@ static func apply(state: GameState, action: Dictionary, player_id: int) -> Dicti
 		Actions.SKIP_WOLF_STEP:
 			_do_skip_wolf(state, events)
 		_:
-			return {"ok": false, "events": [], "error": "Actietype nog niet in de reducer (F0.4b)"}
+			return {"ok": false, "events": [], "error": "Actietype nog niet in de reducer (F0.4c)"}
 	_seq(events)
 	return {"ok": true, "events": events, "error": ""}
 
 
-## Kan de reducer dit actietype al aan? (De shim routeert de rest zelf.)
+## Kan de reducer dit actietype al aan? (RESIGN/CLAIM_TIMEOUT volgen in F0.4c/F0.8.)
 static func handles(action_type: String) -> bool:
-	return action_type in [Actions.MOVE, Actions.MELEE, Actions.SHOOT,
+	return action_type in [Actions.PLACE, Actions.DEFINE_CARDS, Actions.ACK_REVEAL,
+		Actions.LINK, Actions.MOVE, Actions.MELEE, Actions.SHOOT,
 		Actions.CHARGE, Actions.WOLF_STEP, Actions.SKIP_WOLF_STEP]
 
 
 # =========================================================================
-# Acties
+# Setup-fasen (F0.4b)
+# =========================================================================
+
+static func _do_place(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	state.apply_placement(player_id, action.placements)
+	_ev(events, EV_PLACEMENT, {"player_id": player_id})
+	_ev(events, EV_STATE, {})
+	if state.placements_done.get(Constants.PLAYER_1, false) \
+			and state.placements_done.get(Constants.PLAYER_2, false):
+		_set_phase(state, Phase.Type.SETUP_1_DEFINE, events)
+		_ev(events, EV_CYCLE_STARTED, {"cycle": 1})
+		_ev(events, EV_STATE, {})
+
+
+static func _do_define(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	var new_cards: Array = []
+	for d in action.cards:
+		var card := Card.new(
+			state.next_card_id(),
+			player_id,
+			state.round_number,
+			int(d.hp),
+			int(d.stamina),
+			int(d.attack),
+		)
+		new_cards.append(card)
+		state.all_cards[card.id] = card
+	state.cards_defined[player_id] = new_cards
+	_ev(events, EV_STATE, {})
+	# Commit-gate: pas als beide spelers gedefinieerd hebben volgt de reveal.
+	if state.cards_defined[Constants.PLAYER_1].size() > 0 \
+			and state.cards_defined[Constants.PLAYER_2].size() > 0:
+		_enter_reveal(state, events)
+
+
+static func _enter_reveal(state: GameState, events: Array) -> void:
+	state.cards_revealed[Constants.PLAYER_1] = state.cards_defined[Constants.PLAYER_1].duplicate()
+	state.cards_revealed[Constants.PLAYER_2] = state.cards_defined[Constants.PLAYER_2].duplicate()
+	state.reveal_acks = {Constants.PLAYER_1: false, Constants.PLAYER_2: false}
+	_set_phase(state, Phase.reveal_for_round(state.round_number), events)
+	# Initiatief is deterministisch; hier alvast berekend voor het reveal-event.
+	var init: Dictionary = Rules.compute_initiative(state)
+	_ev(events, EV_CARDS_REVEALED, {
+		"totals_p1": init.totals_p1,
+		"totals_p2": init.totals_p2,
+		"winner": init.winner,
+	})
+
+
+## Per-speler ACK (F0.4b-gedragsverbetering): de fase gaat pas door als
+## BEIDE spelers bevestigd hebben. compute_initiative is deterministisch,
+## dus bij de tweede ack veilig opnieuw te berekenen.
+static func _do_ack_reveal(state: GameState, player_id: int, events: Array) -> void:
+	state.reveal_acks[player_id] = true
+	if not (state.reveal_acks.get(Constants.PLAYER_1, false)
+			and state.reveal_acks.get(Constants.PLAYER_2, false)):
+		return  # wachten op de ander
+	var init: Dictionary = Rules.compute_initiative(state)
+	state.initiative_player = init.winner
+	state.last_initiative_winner = init.winner
+	_begin_linking(state, events)
+
+
+static func _begin_linking(state: GameState, events: Array) -> void:
+	state.current_player = state.initiative_player
+	# Heeft de initiatiefhouder zelf geen koppelwerk, dan start de tegenstander
+	# (staartkoppelen vanaf de eerste beurt).
+	var opponent: int = Constants.opponent(state.initiative_player)
+	if not _has_link_work(state, state.current_player) and _has_link_work(state, opponent):
+		state.current_player = opponent
+	_set_phase(state, Phase.linking_for_round(state.round_number), events)
+	_ev(events, EV_TURN, {"player_id": state.current_player})
+	_check_linking_complete(state, events)
+
+
+static func _do_link(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	var card: Card = state.all_cards.get(int(action.card_id), null)
+	var pawn: Pawn = state.pawns.get(int(action.pawn_id), null)
+	var doctrine: Dictionary = state.doctrine_data_of(player_id)
+	# Beer: +1 HP buiten het budget (v4.1 §6.4). Speed-bonus buiten het budget:
+	# Muis krijgt +1 op elke pion (zwerm-mobiliteit), Vos +1 op cavalerie.
+	var speed_bonus: int = int(doctrine.get("speed_bonus", 0))
+	if pawn.unit_type == Constants.UnitType.CAVALRY:
+		speed_bonus += int(doctrine.cav_speed_bonus)
+	pawn.link_card(card, doctrine.hp_bonus, speed_bonus)
+	# Vos: de toewijzing is gedekt tot de pion schade toebrengt of ontvangt (§6.6).
+	pawn.card_revealed = not doctrine.hidden_link
+	_ev(events, EV_STATE, {})
+	_advance_linking_turn(state, events)
+
+
+## Om de beurt koppelen; is één speler klaar, dan koppelt de ander zijn
+## resterende kaarten achter elkaar (staartkoppelen, v4.1 §4.3-C-2).
+static func _advance_linking_turn(state: GameState, events: Array) -> void:
+	if not Phase.is_linking(state.phase):
+		return
+	var next_player: int = Constants.opponent(state.current_player)
+	var next_has_work: bool = _has_link_work(state, next_player)
+	var current_has_work: bool = _has_link_work(state, state.current_player)
+	if next_has_work:
+		state.current_player = next_player
+		_ev(events, EV_TURN, {"player_id": state.current_player})
+		_check_linking_complete(state, events)
+	elif current_has_work:
+		_ev(events, EV_TURN, {"player_id": state.current_player})
+		_check_linking_complete(state, events)
+	else:
+		_advance_from_linking(state, events)
+
+
+static func _check_linking_complete(state: GameState, events: Array) -> void:
+	if not Phase.is_linking(state.phase):
+		return
+	# Klaar zodra geen van beide spelers nog koppelwerk heeft; kaarten zonder
+	# geldige pion vervallen gewoon (v4.1 §4.3-C-3).
+	if not _has_link_work(state, Constants.PLAYER_1) \
+			and not _has_link_work(state, Constants.PLAYER_2):
+		_advance_from_linking(state, events)
+
+
+static func _has_link_work(state: GameState, player_id: int) -> bool:
+	var has_unlinked_card := false
+	for c in state.cards_revealed[player_id]:
+		if not c.is_linked():
+			has_unlinked_card = true
+			break
+	if not has_unlinked_card:
+		return false
+	for pawn in state.pawns.values():
+		if pawn.owner_id == player_id and not pawn.is_eliminated and pawn.linked_card_id == -1:
+			return true
+	return false
+
+
+static func _advance_from_linking(state: GameState, events: Array) -> void:
+	if state.round_number < state.rules.rounds_per_cycle:
+		state.round_number += 1
+		state.reset_for_new_round()
+		_set_phase(state, Phase.define_for_round(state.round_number), events)
+	else:
+		_enter_action_phase(state, events)
+
+
+static func _enter_action_phase(state: GameState, events: Array) -> void:
+	# De initiatiefhouder van Ronde 3 begint. Kan hij niets, dan de tegenstander;
+	# kan niemand iets, dan direct de Resetfase (v4.1 §4.4/4.5).
+	state.current_player = state.initiative_player
+	_set_phase(state, Phase.Type.ACTION, events)
+	var current_can: bool = Rules.can_player_act(state, state.current_player)
+	var opponent: int = Constants.opponent(state.current_player)
+	var opponent_can: bool = Rules.can_player_act(state, opponent)
+	if not current_can and not opponent_can:
+		_start_new_cycle(state, events)
+		return
+	if not current_can:
+		state.current_player = opponent
+	_ev(events, EV_TURN, {"player_id": state.current_player})
+
+
+static func _start_new_cycle(state: GameState, events: Array) -> void:
+	state.reset_for_new_cycle()
+	if _check_game_over(state, events):
+		return
+	_set_phase(state, Phase.Type.SETUP_1_DEFINE, events)
+	_ev(events, EV_CYCLE_STARTED, {"cycle": state.cycle})
+	_ev(events, EV_STATE, {})
+
+
+# =========================================================================
+# Actiefase (F0.4a)
 # =========================================================================
 
 static func _do_move(state: GameState, action: Dictionary, events: Array) -> void:
@@ -113,14 +294,13 @@ static func _do_wolf_step(state: GameState, action: Dictionary, events: Array) -
 
 
 static func _do_skip_wolf(state: GameState, events: Array) -> void:
-	# Geen action_performed-event: het huidige skip-pad emitte dat ook nooit.
+	# Geen action_performed-event: het oude skip-pad emitte dat ook nooit.
 	state.pending_wolf_step_pawn = -1
 	_post_action(state, events)
 
 
 # =========================================================================
-# Afhandeling na een actie (was: GameSession._post_action/_after_combat/
-# _check_action_phase_status)
+# Afhandeling na een actie
 # =========================================================================
 
 ## Na melee/charge: eerst win-check, daarna eventueel de Wolf-stap openzetten.
@@ -147,15 +327,13 @@ static func _check_game_over(state: GameState, events: Array) -> bool:
 	if winner == -1:
 		return false
 	state.winner = winner
-	var old: int = state.phase
-	state.phase = Phase.Type.GAME_OVER
-	_ev(events, EV_PHASE, {"new_phase": Phase.Type.GAME_OVER, "old_phase": old})
+	_set_phase(state, Phase.Type.GAME_OVER, events)
 	_ev(events, EV_GAME_OVER, {"winner": winner})
 	return true
 
 
 ## Beurtwissel: strikte afwisseling waar mogelijk; kan niemand meer iets,
-## dan eindigt de cyclus (het CYCLE_RESET-event; de shim reset tot F0.4b).
+## dan eindigt de cyclus (reset + nieuwe setup-ronde, of winst).
 static func _advance_turn(state: GameState, events: Array) -> void:
 	if state.phase != Phase.Type.ACTION:
 		return
@@ -163,7 +341,7 @@ static func _advance_turn(state: GameState, events: Array) -> void:
 	var opponent: int = Constants.opponent(state.current_player)
 	var opponent_can: bool = Rules.can_player_act(state, opponent)
 	if not current_can and not opponent_can:
-		_ev(events, EV_CYCLE_RESET, {})
+		_start_new_cycle(state, events)
 		return
 	if opponent_can:
 		state.current_player = opponent
@@ -173,6 +351,12 @@ static func _advance_turn(state: GameState, events: Array) -> void:
 # =========================================================================
 # Event-helpers
 # =========================================================================
+
+static func _set_phase(state: GameState, new_phase: int, events: Array) -> void:
+	var old: int = state.phase
+	state.phase = new_phase
+	_ev(events, EV_PHASE, {"new_phase": new_phase, "old_phase": old})
+
 
 static func _ev(events: Array, type: String, payload: Dictionary) -> void:
 	events.append({"type": type, "seq": 0, "payload": payload})

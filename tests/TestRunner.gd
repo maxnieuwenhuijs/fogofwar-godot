@@ -27,6 +27,7 @@ func _run_all() -> void:
 		preload("res://tests/DeterminismTests.gd").new(),
 		preload("res://tests/RulesConfigTests.gd").new(),
 		preload("res://tests/ValidatorTests.gd").new(),
+		preload("res://tests/ReducerTests.gd").new(),
 	]
 	for t in test_classes:
 		t._runner = self
