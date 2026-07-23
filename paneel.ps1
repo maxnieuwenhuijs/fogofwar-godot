@@ -26,7 +26,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War - paneel"
-$form.Size = New-Object System.Drawing.Size(400, 430)
+$form.Size = New-Object System.Drawing.Size(400, 475)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -64,11 +64,19 @@ function Maak-Minuten([int]$y, [int]$standaard) {
     return $n
 }
 
-# --- Nachtrun (fuzz -> L2-arena -> dashboard), duur instelbaar ---------------
-# De fuzz schaalt mee met de duur (~10% van het budget, 500-10000 partijen),
-# zodat een korte run vooral arena-tijd overhoudt.
-$numNacht = Maak-Minuten 45 120
-$null = Maak-Knop "Nachtrun (fuzz + L2-arena)" 45 {
+# --- Volle nachtrun: een klik, 8 uur (10k fuzz + L2-arena) -------------------
+$btnNacht8 = Maak-Knop "VOLLE NACHTRUN (8 uur)" 45 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena_nacht.ps1",
+        "-DuurMinuten", 480, "-FuzzGames", 10000)
+}
+$btnNacht8.BackColor = [System.Drawing.Color]::Honeydew
+
+# --- Korte nachtrun, duur instelbaar. De fuzz schaalt mee met de duur --------
+# (~10% van het budget, 500-10000 partijen): korte run = vooral arena-tijd.
+$numNacht = Maak-Minuten 90 120
+$null = Maak-Knop "Korte nachtrun (fuzz + L2-arena)" 90 {
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numNacht.Value
     $fuzz = [Math]::Max(500, [Math]::Min(10000, $duur * 25))
@@ -78,14 +86,14 @@ $null = Maak-Knop "Nachtrun (fuzz + L2-arena)" 45 {
 }
 
 # --- Training (6 parallelle trainers via train_ai.bat), duur instelbaar ------
-$numTrain = Maak-Minuten 90 60
-$null = Maak-Knop "Training (6 facties)" 90 {
+$numTrain = Maak-Minuten 135 60
+$null = Maak-Knop "Training (6 facties)" 135 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process "$repo\train_ai.bat" -WorkingDirectory $repo -ArgumentList ([string][int]$numTrain.Value)
 }
 
 # --- Snelle arena-test (quick_l1, ~2 min) ------------------------------------
-$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 135 {
+$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 180 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
@@ -93,7 +101,7 @@ $null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 135 {
 }
 
 # --- Volledige L2-matrix (~40 min) -------------------------------------------
-$null = Maak-Knop "Volledige L2-matrix (~40 min)" 180 {
+$null = Maak-Knop "Volledige L2-matrix (~40 min)" 225 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
@@ -101,14 +109,14 @@ $null = Maak-Knop "Volledige L2-matrix (~40 min)" 180 {
 }
 
 # --- Fuzz-vangnet (500 partijen) ---------------------------------------------
-$null = Maak-Knop "Fuzz-check (500 partijen)" 225 {
+$null = Maak-Knop "Fuzz-check (500 partijen)" 270 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process $godot -WorkingDirectory $repo -ArgumentList @(
         "--headless", "--path", ".", "res://arena/arena.tscn", "--", "--fuzz", "500")
 }
 
 # --- Dashboard bouwen + openen ------------------------------------------------
-$null = Maak-Knop "Dashboard verversen + openen" 270 {
+$null = Maak-Knop "Dashboard verversen + openen" 315 {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
@@ -119,7 +127,7 @@ $null = Maak-Knop "Dashboard verversen + openen" 270 {
 }
 
 # --- Alles stoppen -------------------------------------------------------------
-$btnStop = Maak-Knop "STOP alle runs" 325 {
+$btnStop = Maak-Knop "STOP alle runs" 370 {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null
