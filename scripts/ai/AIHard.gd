@@ -81,7 +81,7 @@ func _quick(state: GameState, side: int, action: Dictionary) -> int:
 			var shooter: Pawn = state.pawns[action.shooter_id]
 			var s: int = 130  # veilig chippen: geen terugslag, geen terreinverlies
 			s += maxi(0, Constants.BOARD_SIZE - _min_dist(target.position, opp_target)) * 8
-			if not target.is_active or Rules.shot_damage(shooter) >= target.current_hp:
+			if not target.is_active or Rules.shot_damage(state, shooter) >= target.current_hp:
 				s += 300
 			return s
 		"charge":

@@ -194,7 +194,7 @@ verschillende seed met AIEasy → verschillend verloop. Grep (breed patroon!):
 `grep -rEn "\brandi\b|\brandf\b|randi_range|randf_range|randomize\(|pick_random|\.shuffle\(" scripts/core scripts/ai scripts/training`
 → 0 treffers buiten `seeded_rng.gd` en `audio_manager.gd`.
 
-### ☐ F0.2 — rules_config.gd: alle knoppen worden data
+### ☑ F0.2 — rules_config.gd: alle knoppen worden data — AF (juli 2026)
 
 **Bestanden:** `core/match/rules_config.gd` (nieuw), `arena/arena_configs/v41_default.json` (nieuw),
 `GameState.gd`, `Rules.gd`, `Constants.gd`, `Card.gd`.

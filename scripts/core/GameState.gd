@@ -4,6 +4,17 @@ extends RefCounted
 var phase: int = Phase.Type.PRE_GAME
 var cycle: int = 1
 var round_number: int = 1
+
+# F0.2: alle regelknoppen als data; onveranderlijk tijdens de match
+# (clone() deelt daarom de referentie in plaats van te kopiëren).
+var rules: RulesConfig = RulesConfig.defaults()
+
+# Cumulatieve haven-score (rules.haven_score_cumulative): per speler de ids
+# van pionnen die ooit een eigen havenvak hebben aangeraakt.
+var haven_touches: Dictionary = {
+	Constants.PLAYER_1: {},
+	Constants.PLAYER_2: {},
+}
 var current_player: int = Constants.PLAYER_1
 var initiative_player: int = Constants.PLAYER_1
 var last_initiative_winner: int = Constants.PLAYER_1
@@ -58,7 +69,9 @@ func doctrine_of(player_id: int) -> int:
 	return doctrines.get(player_id, Constants.Doctrine.MENS)
 
 func doctrine_data_of(player_id: int) -> Dictionary:
-	return Constants.doctrine_data(doctrine_of(player_id))
+	# Config-overrides (rules.doctrines) gaan bovenop DOCTRINE_DATA;
+	# zonder overrides is dit het snelle pad (geen merge).
+	return rules.doctrine_data(doctrine_of(player_id))
 
 ## Standaard-opstelling voor beide spelers (gebruikt door tests, AI en auto-plaatsing).
 func setup_initial_pawns() -> void:
@@ -198,6 +211,11 @@ func set_pawn_position(pawn: Pawn, new_pos: Vector2i) -> void:
 	board[pawn.position.y][pawn.position.x] = Constants.EMPTY_TILE
 	pawn.position = new_pos
 	board[new_pos.y][new_pos.x] = pawn.id
+	# Cumulatieve haven-score: élke positie-wijziging (move/charge/verplichte
+	# verplaatsing/Wolf-stap) loopt hierdoor, dus dit ene haakje dekt alles.
+	if rules.haven_score_cumulative \
+			and Constants.get_haven_for_player(pawn.owner_id).has(new_pos):
+		haven_touches[pawn.owner_id][pawn.id] = true
 
 func remove_pawn(pawn: Pawn) -> void:
 	board[pawn.position.y][pawn.position.x] = Constants.EMPTY_TILE
@@ -239,6 +257,10 @@ func reset_for_new_round() -> void:
 
 func clone() -> GameState:
 	var copy := GameState.new()
+	copy.rules = rules  # config is per match onveranderlijk → referentie delen
+	copy.haven_touches = {}
+	for player_id in haven_touches:
+		copy.haven_touches[player_id] = haven_touches[player_id].duplicate()
 	copy.phase = phase
 	copy.cycle = cycle
 	copy.round_number = round_number

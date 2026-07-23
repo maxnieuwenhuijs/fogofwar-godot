@@ -1,0 +1,33 @@
+{
+	"art_min_range": 2,
+	"art_move": 1,
+	"art_range": 6,
+	"art_shot_cost": 1,
+	"campaign": null,
+	"clock": {
+		"bank_sec": 0,
+		"increment_sec": 0,
+		"reconnect_grace_sec": 20
+	},
+	"cycle_limit": 0,
+	"doctrines": {},
+	"fire_blocked": true,
+	"fire_hits_inactive": true,
+	"haven_score_cumulative": false,
+	"inf_shot_cost": 1,
+	"inf_shot_full_attack": true,
+	"inf_shot_over_pawn": false,
+	"inf_shot_range": 2,
+	"pawns_in_haven_to_win": 2,
+	"per_stat_cap": 0,
+	"retaliation": {
+		"art": 0,
+		"cav": 2,
+		"inf": 1
+	},
+	"rounds_per_cycle": 3,
+	"rules_version": "4.1.9-hr",
+	"stamina_model": "pool",
+	"statue_threshold": 0,
+	"tiebreak": "material_haven_proximity"
+}

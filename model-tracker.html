@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fog of War - Model Tracker</title>
+<style>
+  :root {
+    --bg: #14161c;
+    --panel: #1c1f28;
+    --panel2: #232734;
+    --line: #303646;
+    --text: #d8dce8;
+    --dim: #8a91a5;
+    --accent: #e8b84b;
+    --ok: #4caf7d;
+    --opt: #5a86c9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0 0 80px;
+    background: var(--bg); color: var(--text);
+    font: 14px/1.5 system-ui, "Segoe UI", sans-serif;
+  }
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+    padding: 12px 20px;
+  }
+  header h1 { margin: 0 0 6px; font-size: 18px; letter-spacing: .5px; }
+  header h1 span { color: var(--accent); }
+  .topbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .totalwrap { flex: 1 1 260px; min-width: 220px; }
+  .bar {
+    height: 14px; background: var(--panel2); border-radius: 7px; overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .bar > i {
+    display: block; height: 100%; background: linear-gradient(90deg, #b98a2e, var(--accent));
+    width: 0%; transition: width .25s;
+  }
+  .bar.small { height: 9px; }
+  .barlabel { font-size: 12px; color: var(--dim); margin-top: 3px; }
+  .btns { display: flex; gap: 8px; }
+  button {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    padding: 5px 12px; border-radius: 4px; cursor: pointer; font: inherit; font-size: 12px;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  .facnav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .facnav a {
+    text-decoration: none; color: var(--text); font-size: 12px;
+    background: var(--panel2); border: 1px solid var(--line);
+    padding: 3px 10px; border-radius: 12px;
+  }
+  .facnav a b { color: var(--accent); font-weight: 600; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+
+  section.factie {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    margin-bottom: 26px; overflow: hidden;
+    border-top: 3px solid var(--fc, var(--accent));
+  }
+  .fhead {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    padding: 14px 18px; cursor: pointer; user-select: none;
+  }
+  .fhead h2 { margin: 0; font-size: 17px; color: var(--fc, var(--accent)); }
+  .fhead .dieren { color: var(--dim); font-size: 12.5px; flex: 1 1 auto; }
+  .fhead .fprog { flex: 0 0 200px; }
+  .fhead .chev { color: var(--dim); font-size: 12px; width: 16px; text-align: center; }
+  .fbody { padding: 0 18px 18px; }
+  .collapsed .fbody { display: none; }
+
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin: 18px 0 8px; }
+  .facnote {
+    background: var(--panel2); border-left: 3px solid var(--opt); padding: 7px 12px;
+    font-size: 12.5px; color: var(--dim); border-radius: 0 4px 4px 0; margin: 10px 0;
+  }
+
+  /* clips */
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 4px 18px; }
+  .clip { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; }
+  .clip input { accent-color: var(--ok); width: 15px; height: 15px; flex: none; }
+  .clip .zoekterm { color: var(--dim); font-size: 11.5px; }
+  .clip.done label { color: var(--dim); text-decoration: line-through; }
+  .cliptype { margin-bottom: 8px; }
+  .cliptype > .ctitel { font-size: 12.5px; color: var(--text); margin: 8px 0 4px; font-weight: 600; }
+
+  /* units-tabel */
+  .tabelwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 860px; }
+  th, td { padding: 4px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  th.unit, td.unit { text-align: left; white-space: nowrap; }
+  td.unit { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+  td.unit .tag {
+    display: inline-block; font-size: 10px; font-family: system-ui, sans-serif;
+    color: var(--opt); border: 1px solid var(--opt); border-radius: 3px;
+    padding: 0 4px; margin-left: 6px; vertical-align: 1px;
+  }
+  tr.optioneel td.unit { color: var(--dim); }
+  tr.done td.unit { color: var(--ok); }
+  td input[type=checkbox] { accent-color: var(--ok); width: 16px; height: 16px; cursor: pointer; }
+  td input[type=checkbox].opt { accent-color: var(--opt); }
+  td.na { color: #3a4052; font-size: 12px; }
+  td.notes { width: 170px; }
+  td.notes input {
+    width: 100%; background: transparent; border: none; border-bottom: 1px dashed var(--line);
+    color: var(--text); font: inherit; font-size: 12px; padding: 2px 2px;
+  }
+  td.notes input:focus { outline: none; border-bottom-color: var(--accent); }
+  td .pknop {
+    font-size: 10.5px; padding: 2px 7px; border-radius: 3px;
+  }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  tr.promptrij td {
+    background: #171a22; text-align: left; padding: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  tr.promptrij[hidden] { display: none; }
+  .promptbox { padding: 10px 14px 12px; }
+  .promptbox .pkop {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+    font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .5px;
+  }
+  .prompttekst {
+    font-size: 12.5px; line-height: 1.65; color: #b9c0d4;
+    background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--fc, var(--accent));
+    border-radius: 0 4px 4px 0; padding: 9px 12px; max-width: 980px;
+    white-space: pre-wrap; user-select: text; cursor: text;
+  }
+  .pknop.open { border-color: var(--accent); color: var(--accent); }
+  .typekop td {
+    background: var(--panel2); text-align: left; font-size: 12px; font-weight: 600;
+    color: var(--text); padding: 5px 8px; letter-spacing: .5px;
+  }
+  .typekop .subprog { float: right; color: var(--dim); font-weight: 400; }
+
+  .legenda { font-size: 11.5px; color: var(--dim); margin-top: 14px; }
+  .legenda b { color: var(--text); font-weight: 600; }
+  #toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--panel2); border: 1px solid var(--accent); color: var(--text);
+    padding: 8px 18px; border-radius: 5px; font-size: 13px; opacity: 0;
+    pointer-events: none; transition: opacity .25s; z-index: 100;
+  }
+  #toast.zichtbaar { opacity: 1; }
+  #savestamp { font-size: 11px; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fog of War <span>Model Tracker</span></h1>
+  <div class="topbar">
+    <div class="totalwrap">
+      <div class="bar"><i id="totalbar"></i></div>
+      <div class="barlabel" id="totallabel"></div>
+    </div>
+    <div class="btns">
+      <button id="btnExport">Backup (JSON)</button>
+      <button id="btnImport">Herstel</button>
+      <button id="btnReset">Reset</button>
+    </div>
+    <span id="savestamp"></span>
+  </div>
+  <nav class="facnav" id="facnav"></nav>
+  <input type="file" id="importfile" accept=".json" style="display:none">
+</header>
+
+<main id="main"></main>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   DATA - facties, units, stappen, Mixamo-clips en prompts
+   (bron: MODEL-WISHLIST.md, stand 23 juli 2026)
+   ============================================================ */
+
+const STAPPEN = [
+  { id: "gen",    kop: "Model",  titel: "Laag-poly model gegenereerd (Tripo/Meshy, ~1.000 tris)" },
+  { id: "rig",    kop: "Rig",    titel: "Mixamo auto-rig (A-pose, 1x FBX With Skin)", na: ["artillery"] },
+  { id: "anim",   kop: "Clips",  titel: "Clips erin (eigen blend of donor-merge) + fix-pass gedraaid", na: ["artillery"] },
+  { id: "glb",    kop: "GLB",    titel: "Export geanimeerd .glb (7 losse delen + armature, skinning aan)" },
+  { id: "gibs",   kop: "Gibs",   titel: "Export _gibs.glb (zelfde delen, zonder armature/animatie)" },
+  { id: "red",    kop: "Rood",   titel: "Team-texture rood (_red.png)" },
+  { id: "blue",   kop: "Blauw",  titel: "Team-texture blauw (_blue.png)" },
+  { id: "goreR",  kop: "Gore R", titel: "Gore-texture rood (_red_gore.png), optioneel", optioneel: true },
+  { id: "goreB",  kop: "Gore B", titel: "Gore-texture blauw (_blue_gore.png), optioneel", optioneel: true },
+  { id: "musket", kop: "Musket", titel: "Eigen musket-glb, optioneel (valt terug op factie-musket)", optioneel: true, na: ["cavalry", "artillery"] },
+  { id: "godot",  kop: "Godot",  titel: "Godot geimporteerd + Model-tuner (schaal/positie/musket/vuurmond)" },
+];
+
+const TYPES = [
+  { id: "infantry",  naam: "Infanterie" },
+  { id: "cavalry",   naam: "Cavalerie (big bro)" },
+  { id: "artillery", naam: "Artillerie" },
+];
+const ARCHETYPES = ["base", "spd", "hp", "atk", "mix"];
+
+const INF_CLIPS = [
+  { id: "idle",   naam: "idle (1-3x)",     zoek: "Rifle Idle" },
+  { id: "walk",   naam: "walk (1-3x)",     zoek: "Walk With Rifle - In Place aanvinken!" },
+  { id: "fire",   naam: "fire",            zoek: "Firing Rifle (enkel schot, staand)" },
+  { id: "melee",  naam: "bayonet (1-2x)",  zoek: "Bayonet Attack / Rifle Butt" },
+  { id: "hit",    naam: "hit (1-2x)",      zoek: "Hit Reaction / Standing React Small" },
+  { id: "die",    naam: "death (1-2x)",    zoek: "Rifle Death / Standing Death" },
+  { id: "ready",  naam: "ready_up (opt.)", zoek: "Rifle Down To Aim / Ready" },
+];
+const CAV_CLIPS = [
+  { id: "idle",  naam: "idle",            zoek: "Bouncing Fight Idle" },
+  { id: "walk",  naam: "walk",            zoek: "Walking - In Place aanvinken!" },
+  { id: "melee", naam: "melee / attack",  zoek: "Standing Melee Attack / Swiping / Punch" },
+  { id: "die",   naam: "death",           zoek: "Death" },
+];
+
+const FACTIES = [
+  {
+    id: "mouse", naam: "Muis", kleur: "#9aa7c7",
+    dieren: "infanterie: muis (shako) | big bro: dikke bruine rat | budget 5",
+    noot: "Comp-besluit juli: 18/4/0, dus 18 infanterie + 4 cavalerie (dikke rat), GEEN artillerie. De muis-infanterie is de master voor alle infanterie-clips (donor-merge).",
+    geenTypes: ["artillery"],
+  },
+  {
+    id: "pig", naam: "Varken", kleur: "#d99aa0",
+    dieren: "infanterie: varken (bicorne) | big bro: everzwijn met slagtanden | budget 7",
+    noot: "Varkens blijven plomp en rond, ook de spd (alleen relatief slanker).",
+  },
+  {
+    id: "lion", naam: "Leeuw", kleur: "#d9b856",
+    dieren: "infanterie: cheetah (berenmuts) | big bro: leeuw met manen | budget 9",
+  },
+  {
+    id: "bear", naam: "Beer", kleur: "#b58a5f",
+    dieren: "infanterie: wasbeer (ushanka) | big bro: grizzly | budget 7 (Speed-cap 3)",
+  },
+  {
+    id: "wolf", naam: "Wolf", kleur: "#8d99ae",
+    dieren: "infanterie: vos (veldpet) | big bro: dire wolf | budget 7",
+  },
+  {
+    id: "crocodile", naam: "Krokodil", kleur: "#7fb27f",
+    dieren: "infanterie: hagedis (tricorne) | big bro: krokodil | budget 7 | thema: schutkleur/hinderlaag",
+  },
+];
+
+/* Generatie-prompts per factie/unit (MODEL-WISHLIST par. 3) */
+const PROMPTS = {
+mouse: {
+  infantry_base: "Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako. Clean neutral studio background, single figure only, no text.",
+  infantry_hp: "Single character, enormously fat, round-bellied, short and squat anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako. Clean neutral studio background, single figure only, no text.",
+  infantry_atk: "Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  infantry_mix: "Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single character, towering powerful anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text.",
+  cavalry_mix: "Single character, towering sturdy anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+},
+pig: {
+  infantry_base: "Single character, plump, chubby build anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  infantry_spd: "Single character, lighter and leaner but still plump and round-bellied young anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey bicorne hat. Clean neutral studio background, single figure only, no text.",
+  infantry_hp: "Single character, enormously fat, pot-bellied, short and squat anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey bicorne hat. Clean neutral studio background, single figure only, no text.",
+  infantry_atk: "Single character, gigantic, hulking and heavily-muscled but still thick, porky and round-bellied anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  infantry_mix: "Single character, plump, chubby build anthropomorphic pig soldier with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single character, towering powerful anthropomorphic wild boar with enormous upward-curving tusks, a bristly spined back and a broad snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic wild boar with enormous upward-curving tusks, a bristly spined back and a broad snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic wild boar with enormous upward-curving tusks, a bristly spined back and a broad snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic wild boar with enormous upward-curving tusks, a bristly spined back and a broad snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text.",
+  cavalry_mix: "Single character, towering sturdy anthropomorphic wild boar with enormous upward-curving tusks, a bristly spined back and a broad snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  artillery_base: "Single prop, Napoleonic field cannon on a weathered dark wooden gun carriage with two spoked wheels, with a small anthropomorphic pig gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron barrel. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_spd: "Single prop, light Napoleonic horse-artillery cannon with a slender barrel on a weathered dark wooden carriage with large thin spoked wheels, with a small anthropomorphic pig gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_hp: "Single prop, short thick Napoleonic fortress mortar on a heavy low weathered wooden block carriage, with a small anthropomorphic pig gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_atk: "Single prop, long-barreled heavy Napoleonic siege cannon on a reinforced weathered dark wooden carriage, with a small anthropomorphic pig gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron barrel. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_mix: "Single prop, Napoleonic field cannon on a weathered dark wooden carriage, with a small anthropomorphic pig gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+},
+lion: {
+  infantry_base: "Single character, average build anthropomorphic cheetah with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic officer's uniform with dark grey epaulettes and tall black bearskin cap, unarmed. Clean neutral studio background, single figure only, no text.",
+  infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic cheetah sprinter with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and tall black bearskin cap. Clean neutral studio background, single figure only, no text.",
+  infantry_hp: "Single character, enormously fat, round, short and squat anthropomorphic cheetah with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass and a tall black bearskin cap. Clean neutral studio background, single figure only, no text.",
+  infantry_atk: "Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic cheetah with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and tall black bearskin cap, carrying a heavy sabre. Clean neutral studio background, single figure only, no text.",
+  infantry_mix: "Single character, average build anthropomorphic cheetah guard with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and tall black bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single character, towering powerful anthropomorphic male lion with an enormous thick flowing mane, a broad muzzle and a tufted tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic male lion with an enormous thick flowing mane, a broad muzzle and a tufted tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic male lion with an enormous thick flowing mane, a broad muzzle and a tufted tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic male lion with an enormous thick flowing mane, a broad muzzle and a tufted tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text.",
+  cavalry_mix: "Single character, towering sturdy anthropomorphic male lion with an enormous thick flowing mane, a broad muzzle and a tufted tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  artillery_base: "Single prop, long-barreled Napoleonic siege cannon on an ornate weathered dark wooden gun carriage with pewter detailing, with a small anthropomorphic cheetah gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_spd: "Single prop, light long slender Napoleonic culverin cannon on a weathered dark wooden carriage with large thin wheels and pewter detailing, with a small anthropomorphic cheetah gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_hp: "Single prop, massive short thick Napoleonic bombard on a heavy low weathered wooden carriage with pewter detailing, with a small anthropomorphic cheetah gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Dark bronze. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_atk: "Single prop, extra long-barreled heavy Napoleonic siege cannon on a wide reinforced weathered dark wooden carriage with pewter detailing, with a small anthropomorphic cheetah gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_mix: "Single prop, ornate Napoleonic field cannon on a weathered dark wooden carriage with pewter detailing, with a small anthropomorphic cheetah gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+},
+bear: {
+  infantry_base: "Single character, average build anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and dark grey round Russian ushanka-style fur hat with ear flaps, unarmed. Clean neutral studio background, single figure only, no text.",
+  infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey round Russian ushanka-style fur hat with ear flaps. Clean neutral studio background, single figure only, no text.",
+  infantry_hp: "Single character, enormously fat, round-bellied, short and squat anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a heavy dark iron breastplate and round Russian ushanka-style fur hat with ear flaps. Clean neutral studio background, single figure only, no text.",
+  infantry_atk: "Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey round Russian ushanka-style fur hat with ear flaps, carrying a large battle axe. Clean neutral studio background, single figure only, no text.",
+  infantry_mix: "Single character, average build anthropomorphic raccoon soldier with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and round Russian ushanka-style fur hat with ear flaps, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single character, towering powerful anthropomorphic grizzly bear with a massive shoulder hump, huge claws and a broad fanged muzzle, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic grizzly bear with a massive shoulder hump, huge claws and a broad fanged muzzle, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic grizzly bear with a massive shoulder hump, huge claws and a broad fanged muzzle, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic grizzly bear with a massive shoulder hump, huge claws and a broad fanged muzzle, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text.",
+  cavalry_mix: "Single character, towering sturdy anthropomorphic grizzly bear with a massive shoulder hump, huge claws and a broad fanged muzzle, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  artillery_base: "Single prop, short thick Napoleonic fortress mortar on a weathered dark wooden block carriage, with a small anthropomorphic raccoon gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_spd: "Single prop, light Napoleonic cannon mounted on a weathered wooden sled carriage, with a small anthropomorphic raccoon gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_hp: "Single prop, heavy Napoleonic siege mortar on a massive low weathered wooden carriage, with a small anthropomorphic raccoon gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_atk: "Single prop, wide-mouthed double Napoleonic mortar on a reinforced weathered dark wooden carriage, with a small anthropomorphic raccoon gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_mix: "Single prop, Napoleonic winter field cannon on a weathered dark wooden carriage, with a small anthropomorphic raccoon gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
+},
+wolf: {
+  infantry_base: "Single character, average build anthropomorphic fox with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and dark grey forage cap, unarmed. Clean neutral studio background, single figure only, no text.",
+  infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed gaunt anthropomorphic fox with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered short military jacket and forage cap. Clean neutral studio background, single figure only, no text.",
+  infantry_hp: "Single character, enormously fat, thick-furred, short and squat anthropomorphic fox with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered greatcoat with a scavenged dark steel breastplate and dark grey forage cap. Clean neutral studio background, single figure only, no text.",
+  infantry_atk: "Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic fox with huge pointed ears, a big bushy tail and bared teeth, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and dark grey forage cap, carrying a heavy cleaver. Clean neutral studio background, single figure only, no text.",
+  infantry_mix: "Single character, average build anthropomorphic fox soldier with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single character, towering powerful anthropomorphic giant dire wolf with a shaggy mane, huge fangs and pointed ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic giant dire wolf with a shaggy mane, huge fangs and pointed ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic giant dire wolf with a shaggy mane, huge fangs and pointed ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic giant dire wolf with a shaggy mane, huge fangs and pointed ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text.",
+  cavalry_mix: "Single character, towering sturdy anthropomorphic giant dire wolf with a shaggy mane, huge fangs and pointed ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  artillery_base: "Single prop, scavenged Napoleonic field cannon with ropes and burlap sacks tied around it, on a weathered dark wooden carriage, with a small anthropomorphic fox gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_spd: "Single prop, light Napoleonic mountain cannon on a small weathered dark wooden carriage, with a small anthropomorphic fox gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_hp: "Single prop, heavy scavenged Napoleonic cannon reinforced with scrap-iron plating bolted to the barrel, on a weathered dark wooden carriage, with a small anthropomorphic fox gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_atk: "Single prop, heavy scavenged Napoleonic cannon with extra powder kegs strapped to the weathered dark wooden carriage, with a small anthropomorphic fox gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_mix: "Single prop, scavenged Napoleonic field cannon on a patched weathered dark wooden carriage, with a small anthropomorphic fox gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+},
+crocodile: {
+  infantry_base: "Single character, average build anthropomorphic lizard with camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and a dark grey tricorne musketeer hat under a loose dark grey hooded cloak, unarmed. Clean neutral studio background, single figure only, no text.",
+  infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic gecko-like lizard with camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey tricorne musketeer hat. Clean neutral studio background, single figure only, no text.",
+  infantry_hp: "Single character, enormously fat, round, short and squat anthropomorphic lizard with thick armored scutes and camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass and a dark grey tricorne musketeer hat. Clean neutral studio background, single figure only, no text.",
+  infantry_atk: "Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic lizard with camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and a dark grey tricorne musketeer hat under a half-open dark grey hooded cloak revealing two daggers. Clean neutral studio background, single figure only, no text.",
+  infantry_mix: "Single character, average build anthropomorphic lizard soldier with camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey tricorne musketeer hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single character, towering powerful anthropomorphic crocodile with a long toothy snout, armored scutes and a massive tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic crocodile with a long toothy snout, armored scutes and a massive tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic crocodile with a long toothy snout, thick armored scutes and a massive tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, very low stance. Clean neutral studio background, single figure only, no text.",
+  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic crocodile with a long toothy snout, armored scutes and a massive tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with open jaws showing teeth. Clean neutral studio background, single figure only, no text.",
+  cavalry_mix: "Single character, towering sturdy anthropomorphic crocodile with a long toothy snout, armored scutes and a massive tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps low stance. Clean neutral studio background, single figure only, no text.",
+  artillery_base: "Single prop, Napoleonic field cannon covered in dark grey camouflage netting with only the barrel protruding, on a weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_spd: "Single prop, light Napoleonic cannon half covered by a dark grey tarp on a weathered dark wooden carriage with thin wheels, with a small anthropomorphic lizard gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_hp: "Single prop, Napoleonic cannon draped in heavy dark grey camouflage netting and burlap, on a low weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_atk: "Single prop, long-barreled Napoleonic cannon with dark grey camouflage netting pulled aside, on a weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+  artillery_mix: "Single prop, Napoleonic field cannon with a folded dark grey tarp on the weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
+},
+};
+
+/* Startstand (23 juli 2026): alles wat al op disk staat, aangevinkt.
+   Alleen gebruikt bij de allereerste keer openen; daarna telt localStorage. */
+const STARTSTAND = (() => {
+  const done = [];
+  const inf = (a, stappen) => stappen.forEach(s => done.push("mouse.infantry_" + a + "." + s));
+  inf("base", ["gen","rig","anim","glb","gibs","red","blue","goreR","goreB","musket","godot"]);
+  inf("spd",  ["gen","rig","anim","glb","gibs","red","blue","goreR","goreB","musket","godot"]);
+  inf("hp",   ["gen","rig","anim","glb","gibs","red","blue","musket","godot"]);
+  inf("atk",  ["gen","rig","anim","glb","gibs","red","blue","goreR","goreB","musket","godot"]);
+  INF_CLIPS.forEach(c => done.push("mouse.clips.infantry." + c.id));
+  return done;
+})();
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const OPSLAG_KEY = "fow-model-tracker-v1";
+let state = null;
+
+function laadState() {
+  try {
+    const raw = localStorage.getItem(OPSLAG_KEY);
+    if (raw) { state = JSON.parse(raw); return; }
+  } catch (e) { /* file:// zonder localStorage of corrupt: verse start */ }
+  state = { checks: {}, notes: {}, dicht: {}, stamp: null };
+  STARTSTAND.forEach(k => state.checks[k] = true);
+}
+
+function bewaarState() {
+  state.stamp = new Date().toISOString();
+  try { localStorage.setItem(OPSLAG_KEY, JSON.stringify(state)); } catch (e) {}
+  toonStamp();
+}
+
+function toonStamp() {
+  const el = document.getElementById("savestamp");
+  el.textContent = state.stamp ? "Opgeslagen " + new Date(state.stamp).toLocaleString("nl-NL") : "";
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+function stapVanToepassing(stap, typeId) {
+  return !(stap.na && stap.na.includes(typeId));
+}
+
+/* Telt (gedaan, totaal) van de VERPLICHTE stappen; mix-rijen en optionele
+   stappen tellen niet mee in de voortgang. */
+function telFactie(f) {
+  let gedaan = 0, totaal = 0;
+  for (const t of TYPES) {
+    if (f.geenTypes && f.geenTypes.includes(t.id)) continue;
+    for (const a of ARCHETYPES) {
+      if (a === "mix") continue;
+      for (const s of STAPPEN) {
+        if (s.optioneel || !stapVanToepassing(s, t.id)) continue;
+        totaal++;
+        if (state.checks[f.id + "." + t.id + "_" + a + "." + s.id]) gedaan++;
+      }
+    }
+  }
+  return { gedaan, totaal };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function bouw() {
+  const main = document.getElementById("main");
+  const nav = document.getElementById("facnav");
+  main.innerHTML = "";
+  nav.innerHTML = "";
+
+  for (const f of FACTIES) {
+    const a = document.createElement("a");
+    a.href = "#f-" + f.id;
+    a.id = "nav-" + f.id;
+    nav.appendChild(a);
+
+    const sec = document.createElement("section");
+    sec.className = "factie" + (state.dicht[f.id] ? " collapsed" : "");
+    sec.id = "f-" + f.id;
+    sec.style.setProperty("--fc", f.kleur);
+
+    let html = `
+      <div class="fhead" data-fac="${f.id}">
+        <span class="chev">${state.dicht[f.id] ? "&#9656;" : "&#9662;"}</span>
+        <h2>${f.naam}</h2>
+        <span class="dieren">${f.dieren}</span>
+        <div class="fprog">
+          <div class="bar small"><i id="bar-${f.id}"></i></div>
+          <div class="barlabel" id="lbl-${f.id}"></div>
+        </div>
+      </div>
+      <div class="fbody">`;
+
+    if (f.noot) html += `<div class="facnote">${f.noot}</div>`;
+
+    /* -- Animaties -- */
+    html += `<h3>Animaties downloaden (Mixamo)</h3>`;
+    for (const t of TYPES) {
+      if (t.id === "artillery") continue;
+      if (f.geenTypes && f.geenTypes.includes(t.id)) continue;
+      const clips = t.id === "infantry" ? INF_CLIPS : CAV_CLIPS;
+      html += `<div class="cliptype"><div class="ctitel">${t.naam}${t.id === "infantry" ? " (rifle-set; Muis = master, donor-merge kopieert)" : " (melee-set; eerste big bro wordt master)"}</div><div class="clips">`;
+      for (const c of clips) {
+        const key = `${f.id}.clips.${t.id}.${c.id}`;
+        const aan = !!state.checks[key];
+        html += `
+          <div class="clip${aan ? " done" : ""}">
+            <input type="checkbox" id="cb-${key.replace(/\./g, "-")}" data-key="${key}" ${aan ? "checked" : ""}>
+            <label for="cb-${key.replace(/\./g, "-")}">${c.naam} <span class="zoekterm">| ${c.zoek}</span></label>
+          </div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    /* -- Units-tabel -- */
+    html += `<h3>Modellen &amp; textures</h3><div class="tabelwrap"><table><thead><tr><th class="unit">Unit</th>`;
+    for (const s of STAPPEN) html += `<th title="${esc(s.titel)}">${s.kop}</th>`;
+    html += `<th>Prompt</th><th class="unit">Notitie</th></tr></thead><tbody>`;
+
+    for (const t of TYPES) {
+      if (f.geenTypes && f.geenTypes.includes(t.id)) continue;
+      html += `<tr class="typekop"><td colspan="${STAPPEN.length + 3}">${t.naam}<span class="subprog" id="sub-${f.id}-${t.id}"></span></td></tr>`;
+      for (const arch of ARCHETYPES) {
+        const unit = t.id + "_" + arch;
+        const optRij = arch === "mix";
+        let alleKlaar = true;
+        let cellen = "";
+        for (const s of STAPPEN) {
+          if (!stapVanToepassing(s, t.id)) { cellen += `<td class="na">-</td>`; continue; }
+          const key = `${f.id}.${unit}.${s.id}`;
+          const aan = !!state.checks[key];
+          if (!aan && !s.optioneel && !optRij) alleKlaar = false;
+          cellen += `<td><input type="checkbox" class="${s.optioneel || optRij ? "opt" : ""}" data-key="${key}" ${aan ? "checked" : ""} title="${esc(s.titel)}"></td>`;
+        }
+        const prompt = PROMPTS[f.id] && PROMPTS[f.id][unit];
+        const noteKey = `${f.id}.${unit}`;
+        const prId = `pr-${f.id}-${unit}`;
+        html += `
+          <tr class="${optRij ? "optioneel" : ""}${alleKlaar && !optRij ? " done" : ""}" data-rij="${f.id}.${unit}">
+            <td class="unit">${unit}${optRij ? `<span class="tag">optioneel</span>` : ""}</td>
+            ${cellen}
+            <td>${prompt ? `<button class="pknop" data-toggle="${prId}">prompt &#9662;</button>` : `<span class="na">-</span>`}</td>
+            <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
+          </tr>`;
+        if (prompt) html += `
+          <tr class="promptrij" id="${prId}" hidden>
+            <td colspan="${STAPPEN.length + 3}">
+              <div class="promptbox">
+                <div class="pkop">
+                  <span>Generatie-prompt ${f.naam} / ${unit}</span>
+                  <button class="pknop" data-prompt="${f.id}|${unit}">kopieer</button>
+                </div>
+                <div class="prompttekst">${esc(prompt)}</div>
+              </div>
+            </td>
+          </tr>`;
+      }
+    }
+    html += `</tbody></table></div>`;
+    html += `<div class="legenda"><b>Blauwe vinkjes</b> = optioneel (telt niet mee in de voortgang). Volgorde per model: genereren, Mixamo-rig, delen splitsen (armL armR body hat legL legR tail), clips + fix-pass, 2 exports (glb + _gibs.glb), team-textures, 1024-import, Godot + tuner. Zie MODEL-WISHLIST.md par. 4.</div>`;
+    html += `</div>`;
+    sec.innerHTML = html;
+    main.appendChild(sec);
+  }
+
+  koppelEvents();
+  verversTellers();
+  toonStamp();
+}
+
+function verversTellers() {
+  let totGedaan = 0, totTotaal = 0;
+  for (const f of FACTIES) {
+    const { gedaan, totaal } = telFactie(f);
+    totGedaan += gedaan; totTotaal += totaal;
+    const pct = totaal ? Math.round(gedaan / totaal * 100) : 0;
+    document.getElementById("bar-" + f.id).style.width = pct + "%";
+    document.getElementById("lbl-" + f.id).textContent = `${gedaan}/${totaal} (${pct}%) - nog ${totaal - gedaan}`;
+    const navEl = document.getElementById("nav-" + f.id);
+    navEl.innerHTML = `${f.naam} <b>${pct}%</b>`;
+
+    for (const t of TYPES) {
+      const el = document.getElementById(`sub-${f.id}-${t.id}`);
+      if (!el) continue;
+      let g = 0, tot = 0;
+      for (const a of ARCHETYPES) {
+        if (a === "mix") continue;
+        for (const s of STAPPEN) {
+          if (s.optioneel || !stapVanToepassing(s, t.id)) continue;
+          tot++;
+          if (state.checks[`${f.id}.${t.id}_${a}.${s.id}`]) g++;
+        }
+      }
+      el.textContent = `${g}/${tot}`;
+    }
+  }
+  const pctTot = totTotaal ? Math.round(totGedaan / totTotaal * 100) : 0;
+  document.getElementById("totalbar").style.width = pctTot + "%";
+  document.getElementById("totallabel").textContent =
+    `Totaal: ${totGedaan}/${totTotaal} verplichte stappen (${pctTot}%) - nog ${totTotaal - totGedaan} te doen`;
+}
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("zichtbaar");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("zichtbaar"), 1600);
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function koppelEvents() {
+  document.getElementById("main").addEventListener("change", ev => {
+    const el = ev.target;
+    if (el.matches("input[type=checkbox][data-key]")) {
+      const key = el.dataset.key;
+      if (el.checked) state.checks[key] = true; else delete state.checks[key];
+      bewaarState();
+      /* rij- en clipstyling live bijwerken zonder volledige re-render */
+      const rij = el.closest("tr");
+      if (rij) {
+        let klaar = true;
+        rij.querySelectorAll("input[type=checkbox]:not(.opt)").forEach(cb => { if (!cb.checked) klaar = false; });
+        rij.classList.toggle("done", klaar && !rij.classList.contains("optioneel"));
+      }
+      const clip = el.closest(".clip");
+      if (clip) clip.classList.toggle("done", el.checked);
+      verversTellers();
+    }
+  });
+
+  document.getElementById("main").addEventListener("input", ev => {
+    const el = ev.target;
+    if (el.matches("input[data-note]")) {
+      const key = el.dataset.note;
+      if (el.value.trim()) state.notes[key] = el.value; else delete state.notes[key];
+      clearTimeout(koppelEvents._nt);
+      koppelEvents._nt = setTimeout(bewaarState, 400);
+    }
+  });
+
+  document.getElementById("main").addEventListener("click", ev => {
+    const kop = ev.target.closest(".fhead");
+    if (kop && !ev.target.closest("input,button")) {
+      const id = kop.dataset.fac;
+      state.dicht[id] = !state.dicht[id];
+      bewaarState();
+      const sec = document.getElementById("f-" + id);
+      sec.classList.toggle("collapsed", state.dicht[id]);
+      kop.querySelector(".chev").innerHTML = state.dicht[id] ? "&#9656;" : "&#9662;";
+      return;
+    }
+    const tg = ev.target.closest("button[data-toggle]");
+    if (tg) {
+      const rij = document.getElementById(tg.dataset.toggle);
+      const open = rij.hidden;
+      rij.hidden = !open;
+      tg.classList.toggle("open", open);
+      tg.innerHTML = open ? "prompt &#9652;" : "prompt &#9662;";
+      return;
+    }
+    const pk = ev.target.closest("button[data-prompt]");
+    if (pk) {
+      const [fac, unit] = pk.dataset.prompt.split("|");
+      const tekst = PROMPTS[fac][unit];
+      const klaarMelding = () => toast("Prompt gekopieerd: " + fac + "/" + unit);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tekst).then(klaarMelding, () => fallbackKopie(tekst, klaarMelding));
+      } else {
+        fallbackKopie(tekst, klaarMelding);
+      }
+    }
+  });
+
+  document.getElementById("btnExport").onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "model-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Backup gedownload");
+  };
+  document.getElementById("btnImport").onclick = () => document.getElementById("importfile").click();
+  document.getElementById("importfile").onchange = ev => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const data = JSON.parse(r.result);
+        if (!data.checks) throw new Error("geen checks");
+        state = { checks: data.checks || {}, notes: data.notes || {}, dicht: data.dicht || {}, stamp: data.stamp || null };
+        bewaarState();
+        bouw();
+        toast("Backup hersteld");
+      } catch (e) { toast("Ongeldig backup-bestand"); }
+    };
+    r.readAsText(file);
+    ev.target.value = "";
+  };
+  document.getElementById("btnReset").onclick = () => {
+    if (!confirm("Alles wissen en terug naar de startstand (Muis-infanterie afgevinkt)?")) return;
+    state = { checks: {}, notes: {}, dicht: {}, stamp: null };
+    STARTSTAND.forEach(k => state.checks[k] = true);
+    bewaarState();
+    bouw();
+    toast("Teruggezet naar startstand");
+  };
+}
+
+/* Klembord-fallback voor file:// zonder clipboard-API */
+function fallbackKopie(tekst, cb) {
+  const ta = document.createElement("textarea");
+  ta.value = tekst;
+  ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); cb(); } catch (e) { toast("Kopieren mislukt"); }
+  document.body.removeChild(ta);
+}
+
+laadState();
+bouw();
+</script>
+</body>
+</html>

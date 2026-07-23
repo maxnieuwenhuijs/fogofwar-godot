@@ -2155,7 +2155,7 @@ func _select_pawn(pawn_id: int) -> void:
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
 			if pawn.attack_value >= 2:
-				hint += ", rood = melee, oranje = schot (afstand 2, schade %d)" % Rules.shot_damage(pawn)
+				hint += ", rood = melee, oranje = schot (afstand 2, schade %d)" % Rules.shot_damage(GameSession.state, pawn)
 			else:
 				hint += ", rood = melee (Aanval 1: schieten kan niet)"
 		Constants.UnitType.CAVALRY:

@@ -33,7 +33,21 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   Checks: 456 asserts groen · sim seed 777 2× identiek, 778 wijkt af ·
   `-- play` exit 0.
 
-Volgende stap: **F0.2 — rules_config.gd** (alle regelknoppen worden data).
+- **F0.2 — rules_config.** `core/match/rules_config.gd` (class_name RulesConfig):
+  ~20 knoppen als data — vuurmodel (fire_hits_inactive/fire_blocked/
+  inf_shot_over_pawn), statue_threshold (melee én schot), haven_score_cumulative
+  (touch-hook in GameState.set_pawn_position), per_stat_cap, schotparameters,
+  retaliation-dict, stamina_model pool|one_action, cycle_limit+tiebreak (velden;
+  handhaving F0.4c), clock (velden; F0.8), doctrine-overrides, campaign-blok
+  (F2). GameState.rules (clone deelt referentie — config is match-onveranderlijk);
+  Rules.gd leest alles via state.rules; vuurlijn-scan gedeeld (_scan_fire_lines).
+  shot_damage/shot_cost/move_range kregen state als eerste param. Sim-CLI:
+  `--rules <pad.json>`; `-- genrules` schrijft defaults →
+  arena/arena_configs/v41_default.json. Suite: +17 tests (RulesConfigTests).
+  Checks: 503 asserts groen · sim seed 777 met/zonder default-config identiek
+  (winner=2 cyclus=12 acties=339 = F0.1-baseline) · `-- play` exit 0.
+
+Volgende stap: **F0.3 — actions.gd + validator.gd** (één actietaal, één poort).
 
 ---
 

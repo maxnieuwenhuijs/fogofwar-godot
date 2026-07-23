@@ -54,6 +54,18 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 
+	if "genrules" in OS.get_cmdline_user_args():
+		# Schrijf RulesConfig.defaults() naar json (F0.2).
+		# Gebruik: -- genrules [pad]  (default: res://arena/arena_configs/v41_default.json)
+		var gargs := OS.get_cmdline_user_args()
+		var gi := gargs.find("genrules")
+		var gpath := String(gargs[gi + 1]) if gargs.size() > gi + 1 else "res://arena/arena_configs/v41_default.json"
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(gpath.get_base_dir()))
+		RulesConfig.defaults().save_to_file(gpath)
+		print("[GENRULES] %s geschreven (%s)" % [gpath, RulesConfig.defaults().rules_version])
+		get_tree().quit()
+		return
+
 	if "showweights" in OS.get_cmdline_user_args():
 		# Print het actieve (gemergde) profiel zoals het spel het zou laden.
 		var sw_profile := AIController.load_profile()
@@ -408,7 +420,7 @@ func _ready() -> void:
 		GameSession.state.current_player = 1
 		game._select_pawn(inf.id)
 		print("[SHOOT] infanterie: doelwitten=%s (aanval %d → schade %d)" % [
-			str(game._valid_shots), inf.attack_value, Rules.shot_damage(inf)])
+			str(game._valid_shots), inf.attack_value, Rules.shot_damage(GameSession.state, inf)])
 		game._on_pawn_clicked(victim2.id)
 		print("[SHOOT] infanterieschot raak=%s (verwacht true)" % str(victim2.is_eliminated))
 		# Vang de treffer-feedback (flits + zwevend schade-label) op een screenshot.
@@ -447,7 +459,13 @@ func _ready() -> void:
 		var sim_rng := SeededRng.new(sim_seed)
 		a1.rng = sim_rng.fork("p1")
 		a2.rng = sim_rng.fork("p2")
-		GameSession.start_new_game(d1, d2)
+		# Optioneel: --rules <pad.json> laadt een RulesConfig (F0.2).
+		var sim_rules: RulesConfig = null
+		var ridx: int = args.find("--rules")
+		if ridx != -1 and args.size() > ridx + 1:
+			sim_rules = RulesConfig.load_from_file(String(args[ridx + 1]))
+			print("[SIM] rules_config: %s (%s)" % [args[ridx + 1], sim_rules.rules_version])
+		GameSession.start_new_game(d1, d2, sim_rules)
 		GameSession.submit_placement(1, a1.choose_placement(GameSession.state))
 		GameSession.submit_placement(2, a2.choose_placement(GameSession.state))
 		var acts := 0

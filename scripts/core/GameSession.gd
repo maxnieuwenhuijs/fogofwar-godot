@@ -20,8 +20,11 @@ func _ready() -> void:
 	state = GameState.new()
 
 ## Start een partij: doctrines vastleggen, daarna vrije opstelling (PLACEMENT).
-func start_new_game(doctrine_p1: int = Constants.Doctrine.MENS, doctrine_p2: int = Constants.Doctrine.MENS) -> void:
+## rules_config: per-match regelknoppen (F0.2); null = 4.1.9-hr-defaults.
+func start_new_game(doctrine_p1: int = Constants.Doctrine.MENS, doctrine_p2: int = Constants.Doctrine.MENS, rules_config: RulesConfig = null) -> void:
 	state = GameState.new()
+	if rules_config != null:
+		state.rules = rules_config
 	state.doctrines[Constants.PLAYER_1] = doctrine_p1
 	state.doctrines[Constants.PLAYER_2] = doctrine_p2
 	state.cycle = 1
@@ -72,7 +75,7 @@ func submit_define_cards(player_id: int, cards_data: Array) -> bool:
 		return false
 	var new_cards: Array = []
 	for d in cards_data:
-		if not Card.is_valid_stats(int(d.hp), int(d.stamina), int(d.attack), doctrine.budget, doctrine.speed_max):
+		if not Card.is_valid_stats(int(d.hp), int(d.stamina), int(d.attack), doctrine.budget, doctrine.speed_max, state.rules.per_stat_cap):
 			error_occurred.emit(player_id, "Ongeldige statistieken (som moet %d zijn, elk minstens 1)" % doctrine.budget)
 			return false
 		var card := Card.new(
@@ -207,7 +210,7 @@ func _player_has_pending_link_work(player_id: int) -> bool:
 func _advance_from_linking() -> void:
 	_linking_queue.clear()
 	_reveal_pending = {}
-	if state.round_number < Constants.ROUNDS_PER_CYCLE:
+	if state.round_number < state.rules.rounds_per_cycle:
 		state.round_number += 1
 		state.reset_for_new_round()
 		_transition_to(Phase.define_for_round(state.round_number))

@@ -25,13 +25,18 @@ static func count_pawns_in_haven(state: GameState, player_id: int) -> int:
 	var haven: Array = Constants.get_haven_for_player(player_id)
 	var count := 0
 	for pawn in state.pawns.values():
-		if pawn.owner_id == player_id and not pawn.is_eliminated and haven.has(pawn.position):
+		if pawn.owner_id != player_id or pawn.is_eliminated:
+			continue
+		# Cumulatief model (config): ooit aangeraakt blijft tellen, ook na
+		# weglopen — zolang de pion leeft. Standaard: nu op het vak staan.
+		if haven.has(pawn.position) \
+				or (state.rules.haven_score_cumulative and state.haven_touches[player_id].has(pawn.id)):
 			count += 1
 	return count
 
 static func check_win(state: GameState) -> int:
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
-		if count_pawns_in_haven(state, player_id) >= Constants.PAWNS_IN_HAVEN_TO_WIN:
+		if count_pawns_in_haven(state, player_id) >= state.rules.pawns_in_haven_to_win:
 			return player_id
 	var p1_alive: int = state.get_alive_pawns_for(Constants.PLAYER_1).size()
 	var p2_alive: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
@@ -46,10 +51,10 @@ static func check_win(state: GameState) -> int:
 # =========================================================================
 
 ## Maximaal loopbereik van een pion in deze beurt: resterende stamina,
-## voor artillerie gemaximeerd op 1 stap per beurt (v4.1 §3.3).
-static func move_range(pawn: Pawn) -> int:
+## voor artillerie gemaximeerd op rules.art_move stappen per beurt (v4.1 §3.3).
+static func move_range(state: GameState, pawn: Pawn) -> int:
 	if pawn.unit_type == Constants.UnitType.ARTILLERY:
-		return mini(Constants.ARTILLERY_MOVE, pawn.remaining_stamina)
+		return mini(state.rules.art_move, pawn.remaining_stamina)
 	return pawn.remaining_stamina
 
 static func get_valid_moves(state: GameState, pawn_id: int) -> Array:
@@ -60,7 +65,7 @@ static func get_valid_move_paths(state: GameState, pawn_id: int) -> Dictionary:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null or pawn.is_eliminated or not pawn.is_active:
 		return paths
-	var max_steps: int = move_range(pawn)
+	var max_steps: int = move_range(state, pawn)
 	if max_steps <= 0:
 		return paths
 	# Doorbewegen (gepasseerde vakken tellen als stappen; eindigen op een bezet
@@ -107,6 +112,7 @@ static func apply_move(state: GameState, pawn_id: int, target_pos: Vector2i) -> 
 		return false
 	state.set_pawn_position(pawn, target_pos)
 	pawn.spend_stamina((paths[target_pos] as Array).size())
+	_after_action_stamina(state, pawn)
 	return true
 
 # =========================================================================
@@ -144,6 +150,7 @@ static func apply_melee(state: GameState, attacker_id: int, defender_id: int) ->
 	result.defender_pos = defender.position
 	attacker.spend_stamina(1)
 	_resolve_melee(state, attacker, defender, result)
+	_after_action_stamina(state, attacker)
 	result.success = true
 	return result
 
@@ -167,7 +174,9 @@ static func apply_charge(state: GameState, pawn_id: int, move_target: Vector2i, 
 			return result
 		steps = (paths[move_target] as Array).size()
 	# Kosten: stappen + 1 voor de aanval — beide moeten betaald kunnen worden.
-	var cost: int = steps + (1 if defender_id != -1 else 0)
+	# one_action-model (v4.1-doc): de charge is één actie, de aanval kost geen
+	# extra stamina bovenop de stappen (steps <= Speed volstaat).
+	var cost: int = steps + (1 if defender_id != -1 and state.rules.stamina_model != "one_action" else 0)
 	if cost > pawn.remaining_stamina:
 		return result
 	# Valideer de aanval VANAF het doelvak vóór we bewegen (atomaire actie).
@@ -188,6 +197,7 @@ static func apply_charge(state: GameState, pawn_id: int, move_target: Vector2i, 
 		var defender2: Pawn = state.pawns.get(defender_id, null)
 		result.defender_pos = defender2.position
 		_resolve_melee(state, pawn, defender2, result)
+	_after_action_stamina(state, pawn)
 	result.success = true
 	return result
 
@@ -207,7 +217,9 @@ static func _resolve_melee(state: GameState, attacker: Pawn, defender: Pawn, res
 			state.remove_pawn(defender)
 			result.eliminated = true
 	else:
-		if damage > 0:
+		# Standbeeld: sneuvelt alleen als de schade de drempel haalt
+		# (statue_threshold 0 = elke schade > 0, het 4.1.9-hr-gedrag).
+		if damage >= maxi(1, state.rules.statue_threshold):
 			state.remove_pawn(defender)
 			result.eliminated = true
 	if result.eliminated:
@@ -215,9 +227,9 @@ static func _resolve_melee(state: GameState, attacker: Pawn, defender: Pawn, res
 		state.set_pawn_position(attacker, vacated_pos)
 		result.forced_move = true
 	elif defender.is_active:
-		# Terugslag: type-afhankelijk (infanterie 1, cavalerie 2, artillerie 0);
-		# alleen tegen melee, kost geen actie.
-		var retaliation: int = int(Constants.RETALIATION_DAMAGE.get(defender.unit_type, 0))
+		# Terugslag: type-afhankelijk (config; default infanterie 1, cavalerie 2,
+		# artillerie 0); alleen tegen melee, kost geen actie.
+		var retaliation: int = state.rules.retaliation_for(defender.unit_type)
 		if retaliation > 0:
 			attacker.card_revealed = true
 			attacker.current_hp -= retaliation
@@ -255,93 +267,96 @@ static func _has_free_neighbor(state: GameState, pos: Vector2i) -> bool:
 # =========================================================================
 
 ## Schade die dit schot zou doen (0 = kan niet schieten, bv. cavalerie).
-## Regelwijziging: infanterie schiet met de VOLLE Aanval-stat (voorheen
-## Aanval-1) - dus ook met Aanval 1 kun je altijd schieten, voor 1 schade.
-static func shot_damage(pawn: Pawn) -> int:
+## inf_shot_full_attack (default aan): volle Aanval-stat; uit = Attack-1
+## (de v4.1-doc-variant, waarmee een Aanval-1-pion niet kan schieten).
+static func shot_damage(state: GameState, pawn: Pawn) -> int:
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
-			return pawn.attack_value
+			return pawn.attack_value if state.rules.inf_shot_full_attack else maxi(pawn.attack_value - 1, 0)
 		Constants.UnitType.ARTILLERY:
 			return pawn.attack_value
 	return 0
 
-## Stamina-kosten van een schot (nu voor beide 1; tunebaar in Constants).
-static func shot_cost(pawn: Pawn) -> int:
+## Stamina-kosten van een schot (config; default beide 1).
+static func shot_cost(state: GameState, pawn: Pawn) -> int:
 	if pawn.unit_type == Constants.UnitType.INFANTRY:
-		return Constants.INFANTRY_SHOT_COST
-	return Constants.ARTILLERY_SHOT_COST
+		return state.rules.inf_shot_cost
+	return state.rules.art_shot_cost
 
-## Geldige schot-doelwitten (pion-ids). Vuur raakt actief én inactief; elke
-## tussenliggende pion blokkeert; alleen orthogonale rechte lijnen. Kost 1 stamina.
-static func get_valid_shot_targets(state: GameState, pawn_id: int) -> Array:
-	var targets: Array = []
-	var pawn: Pawn = state.pawns.get(pawn_id, null)
-	if pawn == null or pawn.is_eliminated or not pawn.is_active \
-			or pawn.remaining_stamina < shot_cost(pawn):
-		return targets
-	var min_range: int
-	var max_range: int
+## Dracht [min, max] van dit schot volgens de config, of leeg als de pion
+## nooit kan schieten (cavalerie).
+static func _shot_ranges(state: GameState, pawn: Pawn) -> Array:
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
-			min_range = Constants.INFANTRY_SHOT_RANGE
-			max_range = Constants.INFANTRY_SHOT_RANGE
+			# Afstand exact N: min = max.
+			return [state.rules.inf_shot_range, state.rules.inf_shot_range]
 		Constants.UnitType.ARTILLERY:
-			min_range = Constants.ARTILLERY_MIN_RANGE
-			# Vaste dracht 6; Leeuw-kanonnen schieten 1 verder.
-			max_range = Constants.ARTILLERY_RANGE + int(state.doctrine_data_of(pawn.owner_id).art_range_bonus)
-		_:
-			return targets  # cavalerie kan niet schieten
-	if shot_damage(pawn) <= 0 or max_range < min_range:
-		return targets
+			# Vaste dracht + doctrine-bonus (Leeuw +1); dode zone eronder.
+			return [state.rules.art_min_range,
+				state.rules.art_range + int(state.doctrine_data_of(pawn.owner_id).art_range_bonus)]
+	return []
+
+## Gedeelde vuurlijn-scan voor doelwitten én UI-tegels. Vuurmodel-knoppen:
+## - fire_blocked (default aan): eerste pion in de lijn blokkeert alles erachter;
+##   uit = boogvuur, niets blokkeert.
+## - fire_hits_inactive (default aan): uit = standbeelden zijn geen doelwit
+##   (maar blokkeren wél als fire_blocked aan staat).
+## - inf_shot_over_pawn (default uit): infanterie mag over precies één
+##   tussenpion vóór de minimale afstand heen schieten.
+static func _scan_fire_lines(state: GameState, pawn: Pawn, collect_tiles: bool) -> Array:
+	var out: Array = []
+	var ranges: Array = _shot_ranges(state, pawn)
+	if ranges.is_empty():
+		return out
+	var min_range: int = ranges[0]
+	var max_range: int = ranges[1]
+	if shot_damage(state, pawn) <= 0 or max_range < min_range:
+		return out
+	var rules: RulesConfig = state.rules
+	var may_skip_one: bool = rules.inf_shot_over_pawn \
+		and pawn.unit_type == Constants.UnitType.INFANTRY
 	for dir in [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]:
+		var skipped: bool = false
 		for dist in range(1, max_range + 1):
 			var pos: Vector2i = pawn.position + dir * dist
 			if not Constants.is_on_board(pos):
 				break
 			var other: Pawn = state.get_pawn_at(pos)
 			if other == null:
+				if collect_tiles and dist >= min_range:
+					out.append(pos)
 				continue
-			# Eerste pion in de lijn: raakbaar binnen dracht, en blokkeert verder alles.
-			if other.owner_id != pawn.owner_id and dist >= min_range:
-				targets.append(other.id)
-			break
-	return targets
+			var targetable: bool = other.owner_id != pawn.owner_id \
+				and dist >= min_range \
+				and (other.is_active or rules.fire_hits_inactive)
+			if targetable:
+				out.append(pos if collect_tiles else other.id)
+			if rules.fire_blocked:
+				# Uitzondering: infanterie mag één blokkerende pion vóór de
+				# minimumafstand overslaan (schot over één pion heen).
+				if may_skip_one and not skipped and dist < min_range:
+					skipped = true
+					continue
+				break
+			# Boogvuur: niets blokkeert, scan de hele lijn af.
+	return out
+
+## Geldige schot-doelwitten (pion-ids); vuurmodel volgens de match-config.
+static func get_valid_shot_targets(state: GameState, pawn_id: int) -> Array:
+	var pawn: Pawn = state.pawns.get(pawn_id, null)
+	if pawn == null or pawn.is_eliminated or not pawn.is_active \
+			or pawn.remaining_stamina < shot_cost(state, pawn):
+		return []
+	return _scan_fire_lines(state, pawn, false)
 
 ## Vakken binnen dracht met vrije vuurlijn (voor UI-visualisatie): alle lege
 ## vakken waar dit schot zou kunnen komen, plus de vakken van raakbare doelwitten.
 static func get_shot_range_tiles(state: GameState, pawn_id: int) -> Array:
-	var tiles: Array = []
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null or pawn.is_eliminated or not pawn.is_active \
-			or pawn.remaining_stamina < shot_cost(pawn):
-		return tiles
-	var min_range: int
-	var max_range: int
-	match pawn.unit_type:
-		Constants.UnitType.INFANTRY:
-			min_range = Constants.INFANTRY_SHOT_RANGE
-			max_range = Constants.INFANTRY_SHOT_RANGE
-		Constants.UnitType.ARTILLERY:
-			min_range = Constants.ARTILLERY_MIN_RANGE
-			max_range = Constants.ARTILLERY_RANGE + int(state.doctrine_data_of(pawn.owner_id).art_range_bonus)
-		_:
-			return tiles
-	if shot_damage(pawn) <= 0 or max_range < min_range:
-		return tiles
-	for dir in [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]:
-		for dist in range(1, max_range + 1):
-			var pos: Vector2i = pawn.position + dir * dist
-			if not Constants.is_on_board(pos):
-				break
-			var other: Pawn = state.get_pawn_at(pos)
-			if other == null:
-				if dist >= min_range:
-					tiles.append(pos)
-				continue
-			if other.owner_id != pawn.owner_id and dist >= min_range:
-				tiles.append(pos)
-			break
-	return tiles
+			or pawn.remaining_stamina < shot_cost(state, pawn):
+		return []
+	return _scan_fire_lines(state, pawn, true)
 
 
 ## Beschieting (v4.1 §7): geen terugslag, geen verplaatsing; het vak blijft leeg.
@@ -359,7 +374,7 @@ static func apply_shot(state: GameState, shooter_id: int, target_id: int) -> Dic
 	shooter.card_revealed = true
 	if target.is_active:
 		target.card_revealed = true
-	var damage: int = shot_damage(shooter)
+	var damage: int = shot_damage(state, shooter)
 	result.damage = damage
 	result.is_shot = true
 	if target.is_active:
@@ -368,9 +383,13 @@ static func apply_shot(state: GameState, shooter_id: int, target_id: int) -> Dic
 			state.remove_pawn(target)
 			result.eliminated = true
 	else:
-		state.remove_pawn(target)  # schade > 0 is al gevalideerd
-		result.eliminated = true
-	shooter.spend_stamina(shot_cost(shooter))
+		# Standbeeld: alleen geëlimineerd als de schade de drempel haalt
+		# (statue_threshold 0 = elke schade > 0; het schot is anders verspild).
+		if damage >= maxi(1, state.rules.statue_threshold):
+			state.remove_pawn(target)
+			result.eliminated = true
+	shooter.spend_stamina(shot_cost(state, shooter))
+	_after_action_stamina(state, shooter)
 	result.success = true
 	return result
 
@@ -397,6 +416,13 @@ static func _empty_attack_result() -> Dictionary:
 # Actie-beschikbaarheid en beurtwissel
 # =========================================================================
 
+## one_action-model (config): één actie per pion per cyclus — na élke actie
+## gaat de resterende stamina naar 0. Onder het (default) pool-model doet
+## deze helper niets.
+static func _after_action_stamina(state: GameState, pawn: Pawn) -> void:
+	if state.rules.stamina_model == "one_action" and not pawn.is_eliminated:
+		pawn.remaining_stamina = 0
+
 static func can_pawn_act(state: GameState, pawn_id: int) -> bool:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null or pawn.is_eliminated or not pawn.is_active or pawn.remaining_stamina < 1:
@@ -407,7 +433,7 @@ static func can_pawn_act(state: GameState, pawn_id: int) -> bool:
 		return true
 	# Bewegen: goedkope check — is er een leeg buurvak? Kan de pion springen
 	# (Muis/cavalerie), dan beslist de volledige padberekening.
-	if move_range(pawn) > 0:
+	if move_range(state, pawn) > 0:
 		for neighbor in Constants.manhattan_neighbors(pawn.position):
 			if Constants.is_on_board(neighbor) and state.is_tile_empty(neighbor):
 				return true

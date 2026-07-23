@@ -19,10 +19,13 @@ func _init(p_id: int = 0, p_owner: int = 0, p_round: int = 0, p_hp: int = 1, p_s
 
 # v4.1: som = kaartbudget van de doctrine (Mens 7); elke stat min 1.
 # speed_max > 0 = doctrinelimiet op Speed bij definitie (Beer: 3).
-static func is_valid_stats(p_hp: int, p_stamina: int, p_attack: int, p_budget: int = Constants.STAT_SUM, p_speed_max: int = 0) -> bool:
+# stat_cap > 0 = config-knop (rules.per_stat_cap): harde bovengrens per stat.
+static func is_valid_stats(p_hp: int, p_stamina: int, p_attack: int, p_budget: int = Constants.STAT_SUM, p_speed_max: int = 0, p_stat_cap: int = 0) -> bool:
 	if p_hp < Constants.STAT_MIN or p_stamina < Constants.STAT_MIN or p_attack < Constants.STAT_MIN:
 		return false
 	if p_speed_max > 0 and p_stamina > p_speed_max:
+		return false
+	if p_stat_cap > 0 and (p_hp > p_stat_cap or p_stamina > p_stat_cap or p_attack > p_stat_cap):
 		return false
 	return p_hp + p_stamina + p_attack == p_budget
 
