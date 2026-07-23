@@ -439,7 +439,7 @@ repro-bestand met seed+config+log.
 **CHECK:** fuzz-run van 500 partijen schoon; een handmatig ingebouwde mutatie-bug (test de tester) wordt
 gevangen.
 
-### ☐ F1.5 — Dashboard + nachtjob
+### ☑ F1.5 — Dashboard + nachtjob
 
 **Bestanden:** `tools/dashboard/build_dashboard.py` (of .gd), `arena_nacht.ps1`.
 

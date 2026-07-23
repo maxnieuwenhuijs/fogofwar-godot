@@ -270,6 +270,29 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F1.5 — dashboard + nachtjob.** `tools/dashboard/build_dashboard.py`
+  (stdlib-only) leest results/**/games.jsonl, groepeert per run-map en bouwt
+  results/dashboard.html: winrate-matrix-heatmap (gerichte paren), totaal-
+  winrate per doctrine met geel-markering buiten 25-75% en trend-pp t.o.v. de
+  vorige run, plus de par.8.2-metrieken (winmethode/remise-triggers, cycli/
+  acties/zobrist-herhalingen, illegale keuzes, kanonnen-zonder-schot-%,
+  standbeeld-kills per kaartprofiel, schade-per-actie en overkill-per-kill per
+  doctrine, winnende havenvakken, koppel-matrix) en een runs-historie.
+  `arena_nacht.ps1`: git pull --ff-only -> fuzz (10k) -> tijdgebonden arena-
+  batches (procs = cores-2, verse seeds per nacht via epoch-offset, alles in
+  run_meta = reproduceerbaar) -> merge naar 1 games.jsonl -> dashboard ->
+  summary.txt + nacht.log. Geregistreerd in Windows Taakplanner: taak
+  "FogOfWar nachtrun", dagelijks 02:00, 8 uur (verwijderen: schtasks /Delete
+  /TN "FogOfWar nachtrun" /F; geen n8n, werkafspraak B5). Valkuilen gefixt:
+  $procs botste case-insensitief met param [int]$Procs; PS 5.1 Set-Content
+  schrijft utf-8-BOM (dashboard leest utf-8-sig); dubbele glob telde elke
+  jsonl 2x. CHECK: smoke-run -Kort end-to-end groen (720 partijen, 6.6
+  match/s over 4 procs, fuzz 100 schoon, dashboard met echte data in de
+  browser bekeken). EERSTE DATA (L1, 4.1.10-hr): Muis-comp 18/4/0 wint 91.7%
+  totaal en verliest GEEN enkele gerichte matchup; P1-kant wint bijna alles
+  behalve tegen Muis; 720/720 partijen eindigen via haven. F1.6-vragen dus:
+  Muis-dominantie (ipv het oude 8.3%-kapot), starter-voordeel, haven-race.
+
 Volgende stap: **F1.4 — fuzz & invarianten als nachtvangnet**. (agent-interface op views, L0-L3, doorvoer
 >=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
 eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).
