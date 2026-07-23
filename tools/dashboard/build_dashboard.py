@@ -25,6 +25,10 @@ def lees_runs(results_dir: Path):
     for pad in sorted(set(results_dir.glob("**/games.jsonl"))):
         delen = pad.relative_to(results_dir).parts
         run_naam = delen[0] if len(delen) > 1 else "(root)"
+        # Merged root-bestand wint: arena.ps1 voegt proc*/games.jsonl samen tot
+        # results/<run>/games.jsonl — de diepere bestanden dan niet dubbel tellen.
+        if len(delen) > 2 and (results_dir / run_naam / "games.jsonl").exists():
+            continue
         run = runs.setdefault(run_naam, {"naam": run_naam, "meta": None, "games": []})
         # utf-8-sig: PowerShell 5.1 Set-Content schrijft een BOM voor de header.
         with open(pad, encoding="utf-8-sig") as f:

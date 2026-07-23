@@ -21,12 +21,12 @@
  "pawns_in_haven_to_win": 2,
  "per_stat_cap": 0,
  "retaliation": {
-  "art": 0,
+  "art": 1,
   "cav": 2,
-  "inf": 1
+  "inf": 2
  },
  "rounds_per_cycle": 3,
- "rules_version": "4.1.10-hr",
+ "rules_version": "4.1.10-hr+retalzwaar",
  "stamina_model": "pool",
  "statue_threshold": 0,
  "tiebreak": "material_haven_proximity"

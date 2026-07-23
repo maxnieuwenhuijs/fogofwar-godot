@@ -7,3 +7,4 @@ _shot*.png
 _shot*.png.import
 # Arena-uitvoer (reproduceerbaar uit config+seed, B10)
 results/
+__pycache__/

@@ -962,6 +962,11 @@ func _ready() -> void:
 
 const TRAIN_AI := preload("res://scripts/ai/AIMedium.gd")
 
+# Convergentiecheck (bouwplan §7.4, F1.6): elke CONV_INTERVAL factie-generaties
+# speelt de huidige kampioen head-to-head tegen die van CONV_INTERVAL terug.
+const CONV_INTERVAL := 5
+const CONV_GAMES := 12
+
 ## Populatie-training: per generatie één factie. POP kandidaten (alle gewichten
 ## licht verstoord, log-normaal met stapgrootte sigma) spelen elk GAMES potjes;
 ## de top-helft wordt gerecombineerd (meetkundig gemiddelde) en geverifieerd
@@ -1001,6 +1006,9 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	var adoptions: int = 0
 	# Matchup-tally: hoe vaak wint DEZE (getrainde) factie tegen elke tegenstander.
 	var matchup: Dictionary = {}
+	# Convergentie: per factie een venster kampioen-snapshots + generatie-teller.
+	var conv_geschiedenis: Dictionary = {}
+	var gen_factie: Dictionary = {}
 	print("[TRAIN] Budget %.1f min · populatie %d · %d potjes per kandidaat · %d facties · PARALLEL (%d threads)" % [
 		minutes, pop, games, doctrines.size(), pop])
 	print("[TRAIN] Eén generatie = %d potjes (kandidaten + dubbele verificatie); parallel op eigen threads..." % [
@@ -1117,6 +1125,23 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 			gen, Constants.doctrine_name(d), float(candidates[0].fit), games,
 			verify, n_verify, verify_champ, verify_base,
 			"GEADOPTEERD 💾" if adopted else "verworpen", float(sigma[d]), elapsed])
+		# Convergentiecheck (bouwplan §7.4): elke CONV_INTERVAL factie-generaties
+		# de huidige kampioen head-to-head (spiegel d-vs-d, VASTE seeds) tegen de
+		# kampioen van CONV_INTERVAL generaties terug. ~50% = plateau. Alleen
+		# rapportage — de mens beslist over stoppen/doortrainen.
+		gen_factie[d] = int(gen_factie.get(d, 0)) + 1
+		if not conv_geschiedenis.has(d):
+			conv_geschiedenis[d] = []
+		var hist: Array = conv_geschiedenis[d]
+		hist.append((profile[d] as Dictionary).duplicate())
+		if hist.size() > CONV_INTERVAL + 1:
+			hist.pop_front()
+		if int(gen_factie[d]) % CONV_INTERVAL == 0 and hist.size() > CONV_INTERVAL:
+			var conv: float = _convergence_match(profile[d], hist[0], d, train_seed)
+			var pct: float = 100.0 * conv / float(CONV_GAMES)
+			print("[TRAIN] convergentiecheck %s: nu vs %d gen terug: %.0f%% (%.1f/%d, vaste seeds) — %s" % [
+				Constants.doctrine_name(d), CONV_INTERVAL, pct, conv, CONV_GAMES,
+				"nog vooruitgang" if pct >= 58.0 else "plateau"])
 	print("[TRAIN] Klaar: %d generaties, %d adopties in %.1f min. Profiel: res://data/ai_weights.json" % [
 		gen, adoptions, float(Time.get_ticks_msec() - t0) / 60_000.0])
 	# Matchup-overzicht: hoe deed de getrainde factie het tegen elke tegenstander?
@@ -1353,6 +1378,40 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 		return 0.5
 	var cand_side: int = Constants.PLAYER_1 if cand_is_p1 else Constants.PLAYER_2
 	return 1.0 if winner == cand_side else 0.0
+
+
+## Convergentie-potjes: spiegel-partijen (beide kanten factie d) met VASTE
+## seeds — zelfde run-seed geeft exact dezelfde meetreeks. Retour: punten
+## voor de nieuwe kampioen (1 / 0.5 / 0 per potje), kanten wisselend.
+func _convergence_match(nieuw_w: Dictionary, oud_w: Dictionary, d: int, run_seed: int) -> float:
+	var threads: Array = []
+	for g in CONV_GAMES:
+		var thread := Thread.new()
+		thread.start(_conv_game.bind(nieuw_w, oud_w, d, g % 2 == 0, 910000 + run_seed * 31 + g))
+		threads.append(thread)
+	var pts: float = 0.0
+	for t in threads:
+		pts += float(t.wait_to_finish())
+	return pts
+
+
+func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: bool, seed_val: int) -> float:
+	var na = TRAIN_AI.new()
+	na.weights = nieuw_w.duplicate()
+	var oa = TRAIN_AI.new()
+	oa.weights = oud_w.duplicate()
+	var a1 = na if nieuw_is_p1 else oa
+	var a2 = oa if nieuw_is_p1 else na
+	var runner := MatchRunner.new(a1, a2, d, d, seed_val)
+	runner.max_steps = 900
+	while not runner.done:
+		runner.step()
+	var winner: int = runner.winner
+	runner.dispose()
+	if winner == -1:
+		return 0.5
+	var kant: int = Constants.PLAYER_1 if nieuw_is_p1 else Constants.PLAYER_2
+	return 1.0 if winner == kant else 0.0
 
 
 func _click_at(pos: Vector2) -> void:

@@ -13,7 +13,7 @@
  "doctrines": {},
  "fire_blocked": true,
  "fire_hits_inactive": true,
- "haven_score_cumulative": false,
+ "haven_score_cumulative": true,
  "inf_shot_cost": 1,
  "inf_shot_full_attack": true,
  "inf_shot_over_pawn": false,
@@ -26,7 +26,7 @@
   "inf": 1
  },
  "rounds_per_cycle": 3,
- "rules_version": "4.1.10-hr",
+ "rules_version": "4.1.10-hr+havencum",
  "stamina_model": "pool",
  "statue_threshold": 0,
  "tiebreak": "material_haven_proximity"

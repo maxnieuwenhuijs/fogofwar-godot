@@ -8,7 +8,9 @@ param(
     [int]$DuurMinuten = 480,
     [int]$Procs = 0,
     [int]$FuzzGames = 10000,
-    [string]$Config = "arena/arena_configs/matrix_l1.json",
+    # L2 default (F1.6): het balans-werkdoel is op L2 gedefinieerd; een nacht
+    # levert ~20k+ L2-partijen. Voor doorvoer-/capaciteitsmetingen: matrix_l1.
+    [string]$Config = "arena/arena_configs/matrix_l2.json",
     [switch]$Kort
 )
 $ErrorActionPreference = "Continue"

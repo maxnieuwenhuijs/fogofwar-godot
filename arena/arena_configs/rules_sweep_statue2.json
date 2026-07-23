@@ -26,8 +26,8 @@
   "inf": 1
  },
  "rounds_per_cycle": 3,
- "rules_version": "4.1.10-hr",
+ "rules_version": "4.1.10-hr+statue2",
  "stamina_model": "pool",
- "statue_threshold": 0,
+ "statue_threshold": 2,
  "tiebreak": "material_haven_proximity"
 }

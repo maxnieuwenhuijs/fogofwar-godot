@@ -1,0 +1,12 @@
+{
+ "matchups": "all",
+ "games_per_matchup": 5,
+ "agents": {
+  "p1": "l1",
+  "p2": "l1"
+ },
+ "base_seed": 95000,
+ "max_steps": 1500,
+ "track_repetitions": true,
+ "rules": "res://arena/arena_configs/rules_sweep_retalzwaar.json"
+}
