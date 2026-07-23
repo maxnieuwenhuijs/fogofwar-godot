@@ -272,7 +272,7 @@ per-speler-pad (één ack → fase blijft; tweede ack → door).
 opstelling t/m actiefase geeft de verwachte eindstand; per-speler-ACK-test groen; sim-uitkomsten van de
 6 seeds onveranderd.
 
-### ☐ F0.4c — Reducer, deel 3: RESIGN + remise; MatchRunner zonder Node
+### ☑ F0.4c — Reducer, deel 3: RESIGN + remise; MatchRunner zonder Node — AF (juli 2026)
 
 **Bestanden:** `reducer.gd`, `match_runner.gd`, `trainer.gd`, `capture.gd`.
 
@@ -285,7 +285,7 @@ opstelling t/m actiefase geeft de verwachte eindstand; per-speler-ACK-test groen
 remise/tiebreak-uitkomst zoals geconfigureerd. `-- arena 4 medium` draait Node-vrij en produceert een
 matrix; sim-seeds onveranderd.
 
-### ☐ F0.5 — serializer.gd: snapshot zonder kaart-identiteitsbreuk
+### ☑ F0.5 — serializer.gd: snapshot zonder kaart-identiteitsbreuk — AF (juli 2026)
 
 **Bestanden:** `core/match/serializer.gd` (nieuw), `GameState.gd`.
 
@@ -300,7 +300,7 @@ tot fase X, serialiseer → deserialiseer → vergelijk veld-voor-veld + speel d
 seed → identieke uitkomst. Expliciete regressietest: linking-fase op een gedeserialiseerde staat
 **eindigt** (risico 7 uit het online-plan).
 
-### ☐ F0.6 — view.gd: verborgen informatie bestaat alleen nog in de view
+### ☑ F0.6 — view.gd: verborgen informatie bestaat alleen nog in de view — AF (juli 2026)
 
 **Bestanden:** `core/match/view.gd` (nieuw), `game.gd` + HP-blokjes (Vos-"?"), capture.gd, tests.
 

@@ -86,7 +86,51 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   ZONDER Node (18 koppelingen, 2x9 actieve pionnen), initiatief-tiebreak.
   Checks: 705 asserts groen · simcheck 5/5 OK · `-- play` exit 0.
 
-Volgende stap: **F0.4c — Reducer, deel 3** (RESIGN + cycluslimiet-remise; MatchRunner zonder Node).
+- **F0.4c — Reducer, deel 3 (RESIGN + remise; MatchRunner Node-vrij).**
+  RESIGN werkt in elke speelbare fase (tegenstander wint; na GAME_OVER
+  illegaal). Cycluslimiet is een echte spelregel: rules.cycle_limit > 0 en
+  cyclus voorbij de limiet -> Reducer.tiebreak_winner (materiaal -> haven ->
+  nabijheid; alles gelijk = -1 remise) — einde oneindige patstellingen
+  (default 0 = uit, offline ongewijzigd). MatchRunner draait rechtstreeks op
+  Reducer.apply met een kale GameState: geen GameSessionScript.new()/free()
+  meer; dispose() is een no-op (compat). Trainer en arena volgen automatisch.
+  Reducer-tests: resign per fase, tiebreak-materiaal, echte-remise-spiegel.
+  Checks: 768 asserts groen · simcheck 5/5 · `-- play` exit 0 · `-- arena 4
+  medium` Node-vrij (matrix, zie hieronder).
+
+- **F0.5 — serializer.** `core/match/serializer.gd`: state_to_dict/
+  state_from_dict — kaarten EENMAAL per id (all_cards), cards_defined/
+  cards_revealed als id-lijsten, reconstructie herstelt referenties naar
+  dezelfde objecten; bord wordt herbouwd uit pion-posities; RulesConfig
+  serialiseert mee; JSON-veilig (string-keys, Vector2i als [x,y]).
+  GameState.clone() ref-correct gemaakt (defined/revealed wijzen naar de
+  all_cards-klonen) en blijft handgeschreven voor de AI-hot-path; de
+  lockstep-test (clone == serializer-roundtrip, veld-voor-veld) bewaakt dat
+  beide kopieerpaden identiek materialiseren. Dood veld
+  pending_forced_move_attacker/target verwijderd (CHANGELOG-restpunt).
+  tests/SerializerTests.gd (7): round-trip in ELKE fase (incl. GAME_OVER via
+  resign), doorspelen-na-deserialisatie identiek (40 zetten lockstep),
+  risico-7-regressie (linking EINDIGT op gedeserialiseerde staat),
+  kaart-identiteit, clone-ref-correctheid, bord-herbouw met eliminaties.
+  Checks: 828 asserts groen · simcheck 5/5 · `-- play` exit 0.
+
+- **F0.6 — view.gd (fog of war).** `core/match/view.gd`: View.for_player(state,
+  player) -> gefilterde JSON-veilige weergave. Blind opstellen (PLACEMENT:
+  vijandelijke pionnen bestaan niet in de view), defines onzichtbaar tot de
+  reveal (geen aantallen-lek; enemy_has_defined-bool is wel openbaar),
+  Krokodil-dekking: stats -> "?"-sentinel (geen 0/-1), koppeling weggelaten,
+  vijandelijke kaart openbaar maar linked_pawn_id geredacteerd zolang gedekt.
+  UI: HP-blokjes tonen "?"-label voor gedekte vijandelijke pionnen (game.gd
+  _build/_update_health_bars). tests/ViewTests.gd: leak-canary property-test
+  (200+ staten over 12 partijen met Krokodil, structurele checks — letterlijk
+  de test die in F4 de servergrens bewaakt) + blind-placement/define-hidden/
+  sentinel-unit-tests. Nieuwe capture-modus `-- vosview`: speelt tot de
+  actiefase vs Krokodil-AI en assert het "?"-label op alle 9 gedekte pionnen
+  (exit-code op de assert). NB: de AI leest nog steeds de volle staat — dat
+  is B8-werk (agents op views, F1.1, met full_state-ablatievlag).
+  Checks: 846 asserts groen · vosview PASS (9/9) · simcheck 5/5 · play exit 0.
+
+Volgende stap: **F0.7 — event-log, zobrist en golden replays**.
 
 ---
 

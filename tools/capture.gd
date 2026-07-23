@@ -703,6 +703,70 @@ func _ready() -> void:
 			await get_tree().create_timer(0.4).timeout
 		print("[LINK] fase=%s beurt=%d" % [Phase.to_string_phase(GameSession.state.phase), GameSession.state.current_player])
 		out = "res://_shot_link.png"
+	elif "vosview" in args:
+		# F0.6-check: speel tot de actiefase tegen een Krokodil-AI en assert dat
+		# de HP-blokjes van gedekte vijandelijke pionnen het "?"-sentinel tonen
+		# (en eigen pionnen niet). Exit 0 = groen, 1 = lek/regressie.
+		game._ai_doctrine = Constants.Doctrine.VOS
+		var vhand: CardHand = game.get_node("UI/CardHand")
+		var vsteps := 0
+		while GameSession.state.phase != Phase.Type.ACTION \
+				and GameSession.state.phase != Phase.Type.GAME_OVER and vsteps < 700:
+			vsteps += 1
+			var vst: GameState = GameSession.state
+			if vst.phase == Phase.Type.PRE_GAME:
+				game._start_match(1)
+			elif vst.phase == Phase.Type.PLACEMENT:
+				game._confirm_placement()
+			elif Phase.is_reveal(vst.phase):
+				game._continue_after_reveal()
+			elif Phase.is_define(vst.phase) and vst.cards_defined[1].size() == 0:
+				var vbud: int = int(GameSession.state.doctrine_data_of(1).budget)
+				for c in vhand.get_card_views():
+					c.data.hp = 1
+					c.data.stamina = mini(vbud - 2, 3)
+					c.data.attack = vbud - 1 - mini(vbud - 2, 3)
+					c._refresh()
+				vhand._on_confirm_pressed()
+			elif Phase.is_linking(vst.phase) and vst.current_player == 1:
+				for i in vst.cards_revealed[1].size():
+					if not vst.cards_revealed[1][i].is_linked():
+						game._on_link_card_picked(i)
+						break
+				var vtarget = null
+				for pawn in vst.pawns.values():
+					if pawn.owner_id == 1 and not pawn.is_eliminated \
+							and pawn.linked_card_id == -1 and game._pawn_has_room(pawn):
+						vtarget = pawn
+						break
+				if vtarget != null:
+					game._on_link_pawn_clicked(vtarget.id)
+			await get_tree().create_timer(0.02).timeout
+		var fouten := 0
+		var gedekt_gecheckt := 0
+		game._update_health_bars()
+		for pawn in GameSession.state.pawns.values():
+			var entry = game._hp_bars.get(pawn.id, null)
+			if entry == null or not entry.has("qlabel"):
+				continue
+			var hoort_gedekt: bool = pawn.owner_id == 2 and pawn.is_active and not pawn.card_revealed
+			if hoort_gedekt:
+				gedekt_gecheckt += 1
+				if not entry.qlabel.visible or entry.qlabel.text != "?":
+					fouten += 1
+					print("[VOSVIEW] FOUT: gedekte pion %d toont geen '?'" % pawn.id)
+			elif entry.qlabel.visible and pawn.owner_id == 1:
+				fouten += 1
+				print("[VOSVIEW] FOUT: eigen pion %d toont onterecht '?'" % pawn.id)
+		print("[VOSVIEW] gedekte pionnen gecheckt=%d fouten=%d fase=%s" % [
+			gedekt_gecheckt, fouten, Phase.to_string_phase(GameSession.state.phase)])
+		var vosview_ok: bool = fouten == 0 and gedekt_gecheckt > 0
+		print("[VOSVIEW] " + ("PASS" if vosview_ok else "FAIL"))
+		var vtex := get_viewport().get_texture()
+		if vtex != null and vtex.get_image() != null:
+			vtex.get_image().save_png("res://_shot_vosview.png")
+		get_tree().quit(0 if vosview_ok else 1)
+		return
 	elif "play" in args:
 		# `-- play [factie]` — bv. `play muis` om karaktermodellen te bekijken.
 		var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,

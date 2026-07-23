@@ -688,8 +688,20 @@ func _build_health_bars() -> void:
 					r * (HP_BLOCK_SIZE + HP_BLOCK_GAP))
 				holder.add_child(block)
 				blocks.append(block)
+		# F0.6: "?"-label voor gedekte Krokodil-pionnen (stats zijn geheim; lege
+		# blokjes zouden 0-waarden lekken, dus de hele rij wordt een vraagteken).
+		var qlabel := Label.new()
+		qlabel.text = "?"
+		qlabel.visible = false
+		qlabel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		qlabel.add_theme_font_size_override("font_size", 18)
+		qlabel.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
+		qlabel.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		qlabel.add_theme_constant_override("outline_size", 4)
+		qlabel.position = Vector2(HP_COLS * (HP_BLOCK_SIZE + HP_BLOCK_GAP) * 0.5 - 6.0, -4.0)
+		holder.add_child(qlabel)
 		_hp_layer.add_child(holder)
-		_hp_bars[pawn.id] = {"holder": holder, "blocks": blocks}
+		_hp_bars[pawn.id] = {"holder": holder, "blocks": blocks, "qlabel": qlabel}
 
 
 func _update_health_bars() -> void:
@@ -711,6 +723,14 @@ func _update_health_bars() -> void:
 		entry.holder.visible = true
 		entry.holder.position = screen - Vector2(total_w * 0.5, 0.0) + Vector2(0.0, 3.0)
 		var blocks: Array = entry.blocks
+		# F0.6: gedekte vijandelijke pion (Krokodil) → "?"-staat, geen echte stats.
+		var covered: bool = pawn.owner_id != _human_id and not pawn.card_revealed
+		if entry.has("qlabel"):
+			entry.qlabel.visible = covered
+		if covered:
+			for b in blocks:
+				b.color = HP_COLOR_EMPTY
+			continue
 		for c in HP_COLS:
 			blocks[c].color = HP_COLOR_HEALTH if c < pawn.current_hp else HP_COLOR_EMPTY
 			blocks[HP_COLS + c].color = HP_COLOR_STAMINA if c < pawn.remaining_stamina else HP_COLOR_EMPTY
