@@ -233,7 +233,26 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   Checks: schema 0 fouten · reproduceerbaarheid bewezen · 1013 asserts
   groen · simcheck 5/5 · play exit 0.
 
-Volgende stap: **F1.3 — doorvoer >=5 matches/s/core** (meetladder + optimalisaties). (agent-interface op views, L0-L3, doorvoer
+- **F1.3 — doorvoer: DOEL GEHAALD (7.9 match/s/core met L1; eis >=5).**
+  Meetladder (bench: `arena.tscn -- --bench [l0|l1|l2|l3] [games]`, 60 games,
+  ruis +-10%): baseline 2.4 -> L1 leest de view direct i.p.v. staat-
+  reconstructie per beslissing (3.9) -> reducer-fast-gate: goedkope poort
+  (fase/beurt/eigendom) + atomaire Rules.apply_*-validatie, geen dubbele
+  pathfinding en geen charge-kloon meer (4.2; simcheck bewijst identiek
+  gedrag) -> kosten-BFS zonder pad-array-kopieën in legal_actions (4.3) ->
+  view-dieet: geen geelimineerde pionnen/dode kaarten in de view (L1 neutraal,
+  L0/fuzz +35%, payload begrensd voor F4) -> DE KLAPPERS: check_win en
+  can_player_act zonder array-allocaties (draaiden na elke actie) +
+  wants_view-zelfverklaring (L0 nooit een view, L1 alleen in de actiefase;
+  minder info aanvragen is nooit valsspelen) -> 7.86 match/s (3346 besl./s).
+  L0 (fuzz-motor): 0.62 -> 3.19/s (5x). Gedocumenteerde doorvoer: L2 0.16/s
+  (96 besl./s), L3 0.02/s — eval/search-optimalisatie is F8-werk (B1-
+  escalatie naar C# is NIET nodig: GDScript haalt het doel ruim).
+  Nachtcapaciteit (extrapolatie conform plan): 8 cores x 8 uur x 7.86/s
+  ~ 1,8 MILJOEN L1-partijen (eis >=150k: 12x overhead). Gedrag bewezen
+  identiek na elke trede: 1013 asserts groen · simcheck 5/5 · play · vosview.
+
+Volgende stap: **F1.4 — fuzz & invarianten als nachtvangnet**. (agent-interface op views, L0-L3, doorvoer
 >=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
 eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).
 

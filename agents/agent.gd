@@ -29,6 +29,13 @@ func decide(_view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictiona
 	return legal[0] if not legal.is_empty() else {}
 
 
+## F1.3 — zelfverklaring: leest deze agent de view in deze fase? Zo niet, dan
+## slaat de runner de (dure) view-opbouw over en levert {} aan. Minder info
+## aanvragen kan nooit valsspelen zijn; L2/L3 laten dit gewoon op true.
+func wants_view(_phase: int) -> bool:
+	return true
+
+
 ## B11 — view → speelbare GameState. Gedekte "?"-stats worden puntschattingen;
 ## een gedekte pion heeft per definitie nog geen schade gehad (onthulling
 ## gebeurt bij schade), dus current = max klopt per constructie.

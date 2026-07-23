@@ -413,7 +413,7 @@ merget de jsonl's. Run-metadata (git-sha, config, seed) in een header-regel — 
 config+seed 2× → identieke jsonl (reproduceerbaarheid); het capture-arena-pad blijft werken of is
 verwijderd met verwijzing.
 
-### ☐ F1.3 — Doorvoer ≥5 matches/s/core
+### ☑ F1.3 — Doorvoer ≥5 matches/s/core — AF (juli 2026: 7.9/s met L1)
 
 **Werk:** benchmark-modus (`--bench`): meet matches/s op 1 core met L1-vs-L1 (het arena-werkpaard).
 Optimalisatievolgorde (meten na elke stap): (1) geen Node/signal-overhead meer (al gedaan in F0.4c);

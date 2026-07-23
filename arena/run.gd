@@ -30,6 +30,9 @@ const DOCTRINE_NAMEN := {
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
+	if args.has("--bench"):
+		_bench(args)
+		return
 	var config_pad := _arg(args, "--config", "res://arena/arena_configs/quick_l1.json")
 	var out_map := _arg(args, "--out", "res://results/run")
 	var seed_offset := int(_arg(args, "--seed-offset", "0"))
@@ -106,6 +109,27 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 	var duur := (Time.get_ticks_msec() - t0) / 1000.0
 	return {"games": games, "pad": pad, "duur": duur,
 		"per_sec": (games / duur) if duur > 0 else 0.0, "matrix": matrix}
+
+
+## F1.3 — doorvoermeting op 1 core: `-- --bench [l0|l1|l2] [games]`.
+## Zonder metrics (pure engine+agent-snelheid), gemengde doctrine-paren.
+func _bench(args: PackedStringArray) -> void:
+	var i := args.find("--bench")
+	var label := String(args[i + 1]) if args.size() > i + 1 and not String(args[i + 1]).begins_with("--") else "l1"
+	var games := int(args[i + 2]) if args.size() > i + 2 else 30
+	var docs: Array = Constants.DOCTRINE_DATA.keys()
+	var t0 := Time.get_ticks_msec()
+	var totaal_steps := 0
+	for g in games:
+		var runner := AgentRunner.new(_maak_agent(label), _maak_agent(label),
+			docs[g % docs.size()], docs[(g + 3) % docs.size()], 33000 + g)
+		runner.max_steps = 1500
+		runner.run()
+		totaal_steps += runner.steps
+	var duur := (Time.get_ticks_msec() - t0) / 1000.0
+	print("[BENCH] %s-vs-%s: %d partijen in %.1f s -> %.2f match/s/core (%.0f beslissingen/s)" % [
+		label, label, games, duur, games / duur, totaal_steps / duur])
+	get_tree().quit(0)
 
 
 func _bepaal_matchups(spec) -> Array:

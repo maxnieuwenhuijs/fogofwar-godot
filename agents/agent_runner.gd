@@ -71,7 +71,8 @@ func step() -> void:
 		if legal.is_empty():
 			continue
 		var agent: Agent = _agents[p]
-		var view: Dictionary = View.for_player(_state, p, not agent.full_state)
+		var view: Dictionary = View.for_player(_state, p, not agent.full_state) \
+			if agent.wants_view(_state.phase) else {}
 		var actie: Dictionary = agent.decide(view, legal, agent.rng)
 		if actie.is_empty():
 			fallback_count += 1

@@ -3,8 +3,11 @@ extends Agent
 
 # L1 — greedy one-liners (bouwplan §7.1): pak een kill > loop naar de haven >
 # doe schade > random. Setup-fasen: de eerste legale optie (deterministisch).
-# Bewust dom gehouden: L1 is het snelle arena-werkpaard (F1.3-benchmark) en
-# de leesbare referentie waar L2/L3 zich tegen bewijzen.
+#
+# F1.3: L1 leest de VIEW direct (dicts), zonder staat-reconstructie — dit is
+# het arena-werkpaard en de reconstructie was de dikste kostenpost per
+# beslissing. Gedekte vijandelijke stats ("?") gelden als onbekend: L1 claimt
+# er nooit een kill op (conservatief).
 
 
 func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary:
@@ -14,10 +17,10 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	# Setup-fasen (place/define/ack/link) en de Wolf-stap: eerste optie.
 	if eerste_type not in [Actions.MOVE, Actions.MELEE, Actions.SHOOT, Actions.CHARGE]:
 		return legal[0]
-	var s: GameState = Agent.reconstruct_state(view)
-	# 1) Pak een kill (geschatte schade >= resterende HP van het doelwit).
+	var pawns: Dictionary = view.pawns
+	# 1) Pak een kill (bekende schade >= bekende resterende HP).
 	for a in legal:
-		if _is_kill(s, a):
+		if _is_kill(pawns, a):
 			return a
 	# 2) Loop naar de haven: de zet met de grootste afstandswinst.
 	var beste: Dictionary = {}
@@ -27,11 +30,13 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 		var t: String = String(a.type)
 		if t != Actions.MOVE and t != Actions.CHARGE:
 			continue
-		var pawn: Pawn = s.pawns.get(int(a.pawn_id), null)
-		if pawn == null:
+		var pd: Dictionary = pawns.get(str(int(a.pawn_id)), {})
+		if pd.is_empty():
 			continue
+		var van: Array = pd.position
 		var doel: Vector2i = a.target if t == Actions.MOVE else a.move_target
-		var winst: int = _haven_afstand(pawn.position, haven) - _haven_afstand(doel, haven)
+		var winst: int = _haven_afstand(int(van[0]), int(van[1]), haven) \
+			- _haven_afstand(doel.x, doel.y, haven)
 		if winst > beste_winst:
 			beste_winst = winst
 			beste = a
@@ -45,30 +50,40 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	return legal[decide_rng.randi_range(0, legal.size() - 1)]
 
 
-func _is_kill(s: GameState, a: Dictionary) -> bool:
+func _is_kill(pawns: Dictionary, a: Dictionary) -> bool:
+	var aanvaller_id: int = -1
+	var doel_id: int = -1
 	match String(a.type):
 		Actions.MELEE:
-			var att: Pawn = s.pawns.get(int(a.attacker_id), null)
-			var def: Pawn = s.pawns.get(int(a.defender_id), null)
-			return att != null and def != null \
-				and (not def.is_active or att.attack_value >= def.current_hp)
+			aanvaller_id = int(a.attacker_id)
+			doel_id = int(a.defender_id)
 		Actions.SHOOT:
-			var sh: Pawn = s.pawns.get(int(a.shooter_id), null)
-			var doel: Pawn = s.pawns.get(int(a.target_id), null)
-			return sh != null and doel != null \
-				and (not doel.is_active or Rules.shot_damage(s, sh) >= doel.current_hp)
+			aanvaller_id = int(a.shooter_id)
+			doel_id = int(a.target_id)
 		Actions.CHARGE:
 			if int(a.defender_id) == -1:
 				return false
-			var cav: Pawn = s.pawns.get(int(a.pawn_id), null)
-			var slachtoffer: Pawn = s.pawns.get(int(a.defender_id), null)
-			return cav != null and slachtoffer != null \
-				and (not slachtoffer.is_active or cav.attack_value >= slachtoffer.current_hp)
-	return false
+			aanvaller_id = int(a.pawn_id)
+			doel_id = int(a.defender_id)
+		_:
+			return false
+	var att: Dictionary = pawns.get(str(aanvaller_id), {})
+	var doel: Dictionary = pawns.get(str(doel_id), {})
+	if att.is_empty() or doel.is_empty():
+		return false
+	if not bool(doel.get("is_active", false)):
+		return true  # standbeeld: elke treffer is dodelijk
+	if doel.current_hp is String:
+		return false  # gedekt ("?"): geen kill claimen op een gok
+	return int(att.attack_value) >= int(doel.current_hp)
 
 
-func _haven_afstand(pos: Vector2i, haven: Array) -> int:
+func _haven_afstand(x: int, y: int, haven: Array) -> int:
 	var best: int = 999
 	for h in haven:
-		best = mini(best, absi(pos.x - h.x) + absi(pos.y - h.y))
+		best = mini(best, absi(x - h.x) + absi(y - h.y))
 	return best
+
+
+func wants_view(phase: int) -> bool:
+	return phase == Phase.Type.ACTION  # setup-fasen: eerste legale optie, geen view nodig

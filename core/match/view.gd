@@ -30,19 +30,39 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	var visible_enemy_cards: Dictionary = {}
 	for c in state.cards_revealed.get(enemy, []):
 		visible_enemy_cards[c.id] = true
+	# F1.3 — view-dieet: geëlimineerde pionnen en dode kaarten (verlopen of
+	# gekoppeld aan een gesneuvelde pion) blijven weg. Ze zijn beslissings-
+	# irrelevant en all_cards accumuleert per cyclus — zonder dit dieet groeit
+	# elke view (en straks elke server-payload, F4) onbegrensd mee.
 	var pawns_d: Dictionary = {}
 	for id in state.pawns:
 		var pawn: Pawn = state.pawns[id]
+		if pawn.is_eliminated:
+			continue
 		if pawn.owner_id == enemy and blind_placement:
 			continue  # blind opstellen: de ander bestaat nog niet voor jou
 		pawns_d[str(id)] = _pawn_view(pawn, player_id) if redacted else pawn.to_dict()
+	var eigen_defined: Dictionary = {}
+	for c in state.cards_defined.get(player_id, []):
+		eigen_defined[c.id] = true
 	var cards_d: Dictionary = {}
 	for id in state.all_cards:
 		var card: Card = state.all_cards[id]
+		# Relevant = huidige ronde (defined/revealed) óf gekoppeld aan een
+		# levende pion; de rest is historie.
+		var linked_alive: bool = false
+		if card.linked_pawn_id != -1:
+			var drager: Pawn = state.pawns.get(card.linked_pawn_id, null)
+			linked_alive = drager != null and not drager.is_eliminated and drager.is_active
+		var eigen_huidig: bool = card.owner_id == player_id \
+			and (eigen_defined.has(card.id) or card.round_number == state.round_number)
+		var vijand_onthuld: bool = visible_enemy_cards.has(card.id)
+		if not (linked_alive or eigen_huidig or vijand_onthuld):
+			continue
 		var covered: bool = redacted and _card_link_covered(state, card)
 		if card.owner_id == player_id or not redacted:
 			cards_d[str(id)] = card.to_dict()
-		elif visible_enemy_cards.has(card.id) or card.linked_pawn_id != -1:
+		elif vijand_onthuld or linked_alive:
 			var cd: Dictionary = card.to_dict()
 			if covered:
 				cd.linked_pawn_id = -1  # de koppeling is het geheim, niet de kaart
@@ -64,7 +84,7 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"initiative_player": state.initiative_player,
 		"winner": state.winner,
 		"pending_wolf_step_pawn": state.pending_wolf_step_pawn,
-		"rules": state.rules.to_dict(),
+		"rules": state.rules.cached_dict(),
 		"doctrines": {str(player_id): state.doctrine_of(player_id), str(enemy): state.doctrine_of(enemy)},
 		"pawns": pawns_d,
 		"cards": cards_d,

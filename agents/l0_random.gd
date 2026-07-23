@@ -10,3 +10,7 @@ func decide(_view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionar
 	if legal.is_empty():
 		return {}
 	return legal[decide_rng.randi_range(0, legal.size() - 1)]
+
+
+func wants_view(_phase: int) -> bool:
+	return false  # L0 kiest puur uit legal

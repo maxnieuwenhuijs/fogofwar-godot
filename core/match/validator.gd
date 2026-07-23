@@ -63,6 +63,57 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 	return _nee("Onbekend actietype")
 
 
+## F1.3 — de SNELLE poort voor de reducer: structuur, fase, beurt, eigendom.
+## De dure legaliteit (paden/doelwitten/charge-kosten) dwingt Rules.apply_*
+## zelf atomair af; is_legal blijft de volledige poort voor tests/tools/UI.
+static func gate_check(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
+	if not Actions.is_wellformed(action):
+		return _nee("Misvormde actie")
+	if state.phase == Phase.Type.GAME_OVER:
+		return _nee("De partij is voorbij")
+	match String(action.type):
+		Actions.PLACE:
+			return _check_place(state, action, player_id)
+		Actions.DEFINE_CARDS:
+			return _check_define(state, action, player_id)
+		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT:
+			return is_legal(state, action, player_id)  # al goedkoop: geen dure checks
+		Actions.MOVE, Actions.CHARGE:
+			var gate := _action_turn(state, player_id)
+			if not gate.legal:
+				return gate
+			var pawn: Pawn = state.pawns.get(int(action.pawn_id), null)
+			if pawn == null or pawn.owner_id != player_id:
+				return _nee("Ongeldige pion")
+			return _ok()
+		Actions.MELEE:
+			var gate_m := _action_turn(state, player_id)
+			if not gate_m.legal:
+				return gate_m
+			var att: Pawn = state.pawns.get(int(action.attacker_id), null)
+			if att == null or att.owner_id != player_id:
+				return _nee("Ongeldige aanvaller")
+			return _ok()
+		Actions.SHOOT:
+			var gate_s := _action_turn(state, player_id)
+			if not gate_s.legal:
+				return gate_s
+			var sh: Pawn = state.pawns.get(int(action.shooter_id), null)
+			if sh == null or sh.owner_id != player_id:
+				return _nee("Ongeldige schutter")
+			return _ok()
+		Actions.WOLF_STEP:
+			if state.phase != Phase.Type.ACTION or state.current_player != player_id:
+				return _nee("Niet jouw beurt")
+			if state.pending_wolf_step_pawn == -1:
+				return _nee("Geen Wolf-stap tegoed")
+			var wolf: Pawn = state.pawns.get(state.pending_wolf_step_pawn, null)
+			if wolf == null or wolf.is_eliminated:
+				return _nee("Ongeldige Wolf-stap")
+			return _ok()
+	return _nee("Onbekend actietype")
+
+
 static func _check_place(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
 	if state.phase != Phase.Type.PLACEMENT:
 		return _nee("Niet in opstellingsfase")
@@ -250,27 +301,30 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 	for pawn in state.get_active_pawns_for(player_id):
 		if pawn.remaining_stamina < 1:
 			continue
-		for target in Rules.get_valid_moves(state, pawn.id):
+		# F1.3: kosten-BFS EENMAAL (zonder pad-arrays) en hergebruiken voor
+		# moves en charges — apply berekent het volle pad alleen voor de
+		# daadwerkelijk gekozen zet.
+		var costs: Dictionary = Rules.get_valid_move_costs(state, pawn.id)
+		for target in costs:
 			out.append(Actions.make_move(pawn.id, target))
 		for defender_id in Rules.get_valid_melee_targets(state, pawn.id):
 			out.append(Actions.make_melee(pawn.id, defender_id))
 		for target_id in Rules.get_valid_shot_targets(state, pawn.id):
 			out.append(Actions.make_shoot(pawn.id, target_id))
 		if pawn.unit_type == Constants.UnitType.CAVALRY:
-			out.append_array(_enumerate_charges(state, pawn))
+			out.append_array(_enumerate_charges(state, pawn, costs))
 	return out
 
 
 ## Charges: per bereikbaar eindvak (en de eigen positie) elke aangrenzende
 ## vijand, mits de kosten uit de resterende stamina te betalen zijn.
-static func _enumerate_charges(state: GameState, pawn: Pawn) -> Array:
+static func _enumerate_charges(state: GameState, pawn: Pawn, costs: Dictionary) -> Array:
 	var out: Array = []
 	var one_action: bool = state.rules.stamina_model == "one_action"
-	var paths: Dictionary = Rules.get_valid_move_paths(state, pawn.id)
-	var end_positions: Array = paths.keys()
+	var end_positions: Array = costs.keys()
 	end_positions.append(pawn.position)  # charge zonder verplaatsing (alleen aanval)
 	for end_pos in end_positions:
-		var steps: int = 0 if end_pos == pawn.position else (paths[end_pos] as Array).size()
+		var steps: int = 0 if end_pos == pawn.position else int(costs[end_pos])
 		var cost: int = steps + (0 if one_action else 1)
 		if cost > pawn.remaining_stamina:
 			continue

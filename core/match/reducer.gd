@@ -27,14 +27,17 @@ const EV_GAME_OVER := "game_over"             # {winner}
 
 
 static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: int = -1) -> Dictionary:
-	var verdict: Dictionary = Validator.is_legal(state, action, player_id)
-	if not verdict.legal:
-		return {"ok": false, "events": [], "error": verdict.reason}
+	# F1.3: snelle poort (structuur/fase/beurt/eigendom) — de dure legaliteit
+	# (paden, doelwitten, charge-kosten) zit al ATOMAIR in Rules.apply_* en
+	# wordt daar afgedwongen; dubbel valideren kostte de arena ~30% doorvoer.
+	# Validator.is_legal blijft de volledige poort voor tests/tools/UI.
+	var gate: Dictionary = Validator.gate_check(state, action, player_id)
+	if not gate.legal:
+		return {"ok": false, "events": [], "error": gate.reason}
+	var was_actiefase: bool = state.phase == Phase.Type.ACTION
 	var events: Array = []
-	# F0.8: bankverbruik in de actiefase — gemeten tegen de OUDE deadline,
-	# vóór de actie de beurt (en dus de deadline) verschuift.
-	if now_ms >= 0 and _clocks_on(state) and state.phase == Phase.Type.ACTION 			and state.turn_deadline > 0 and String(action.type) != Actions.CLAIM_TIMEOUT:
-		_consume_bank(state, player_id, now_ms)
+	var ok := true
+	var fout := ""
 	match String(action.type):
 		Actions.PLACE:
 			_do_place(state, action, player_id, events)
@@ -45,25 +48,37 @@ static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: 
 		Actions.LINK:
 			_do_link(state, action, player_id, events)
 		Actions.MOVE:
-			_do_move(state, action, events)
+			ok = _do_move(state, action, events)
+			fout = "Ongeldige zet"
 		Actions.MELEE:
-			_do_melee(state, action, events)
+			ok = _do_melee(state, action, events)
+			fout = "Ongeldige aanval"
 		Actions.SHOOT:
-			_do_shoot(state, action, events)
+			ok = _do_shoot(state, action, events)
+			fout = "Ongeldig schot"
 		Actions.CHARGE:
-			_do_charge(state, action, events)
+			ok = _do_charge(state, action, events)
+			fout = "Ongeldige charge"
 		Actions.WOLF_STEP:
-			_do_wolf_step(state, action, events)
+			ok = _do_wolf_step(state, action, events)
+			fout = "Ongeldige Wolf-stap"
 		Actions.SKIP_WOLF_STEP:
 			_do_skip_wolf(state, events)
 		Actions.RESIGN:
 			_do_resign(state, player_id, events)
 		Actions.CLAIM_TIMEOUT:
-			if now_ms < 0 or not _clocks_on(state) or state.turn_deadline <= 0 					or now_ms <= state.turn_deadline:
+			if now_ms < 0 or not _clocks_on(state) or state.turn_deadline <= 0 or now_ms <= state.turn_deadline:
 				return {"ok": false, "events": [], "error": "Deadline nog niet verstreken"}
 			_do_claim_timeout(state, player_id, now_ms, events)
 		_:
 			return {"ok": false, "events": [], "error": "Onbekend actietype"}
+	if not ok:
+		return {"ok": false, "events": [], "error": fout}
+	# F0.8: bankverbruik na een geslaagde actiefase-actie, gemeten tegen de
+	# OUDE deadline (die pas in _update_deadline verschuift).
+	if now_ms >= 0 and _clocks_on(state) and was_actiefase \
+			and state.turn_deadline > 0 and String(action.type) != Actions.CLAIM_TIMEOUT:
+		_consume_bank(state, player_id, now_ms)
 	if now_ms >= 0:
 		_update_deadline(state, now_ms)
 	_seq(events)
@@ -310,59 +325,72 @@ static func _haven_closeness(state: GameState, side: int) -> int:
 # Actiefase (F0.4a)
 # =========================================================================
 
-static func _do_move(state: GameState, action: Dictionary, events: Array) -> void:
+static func _do_move(state: GameState, action: Dictionary, events: Array) -> bool:
 	var pawn_id: int = int(action.pawn_id)
 	var from_pos: Vector2i = state.pawns[pawn_id].position
-	Rules.apply_move(state, pawn_id, action.target)
+	if not Rules.apply_move(state, pawn_id, action.target):
+		return false
 	# Legacy-vorm van het action_performed-signaal (game.gd matcht hierop).
 	_ev(events, EV_ACTION, {
 		"action": {"type": "move", "pawn_id": pawn_id, "from": from_pos, "target": action.target},
 		"result": {"success": true},
 	})
 	_post_action(state, events)
+	return true
 
 
-static func _do_melee(state: GameState, action: Dictionary, events: Array) -> void:
+static func _do_melee(state: GameState, action: Dictionary, events: Array) -> bool:
 	var attacker_id: int = int(action.attacker_id)
 	var result: Dictionary = Rules.apply_melee(state, attacker_id, int(action.defender_id))
+	if not result.success:
+		return false
 	_ev(events, EV_ACTION, {
 		"action": {"type": "attack", "attacker_id": attacker_id, "defender_id": int(action.defender_id)},
 		"result": result,
 	})
 	_after_combat(state, attacker_id, result, events)
+	return true
 
 
-static func _do_shoot(state: GameState, action: Dictionary, events: Array) -> void:
+static func _do_shoot(state: GameState, action: Dictionary, events: Array) -> bool:
 	var shooter_id: int = int(action.shooter_id)
 	var result: Dictionary = Rules.apply_shot(state, shooter_id, int(action.target_id))
+	if not result.success:
+		return false
 	_ev(events, EV_ACTION, {
 		"action": {"type": "shot", "shooter_id": shooter_id, "target_id": int(action.target_id)},
 		"result": result,
 	})
 	_post_action(state, events)
+	return true
 
 
-static func _do_charge(state: GameState, action: Dictionary, events: Array) -> void:
+static func _do_charge(state: GameState, action: Dictionary, events: Array) -> bool:
 	var pawn_id: int = int(action.pawn_id)
 	var result: Dictionary = Rules.apply_charge(state, pawn_id, action.move_target, int(action.defender_id))
+	if not result.success:
+		return false
 	_ev(events, EV_ACTION, {
 		"action": {"type": "charge", "pawn_id": pawn_id, "move_target": action.move_target,
 			"defender_id": int(action.defender_id)},
 		"result": result,
 	})
 	_after_combat(state, pawn_id, result, events)
+	return true
 
 
-static func _do_wolf_step(state: GameState, action: Dictionary, events: Array) -> void:
+static func _do_wolf_step(state: GameState, action: Dictionary, events: Array) -> bool:
 	var pawn_id: int = state.pending_wolf_step_pawn
 	var from_pos: Vector2i = state.pawns[pawn_id].position
-	Rules.apply_wolf_step(state, pawn_id, action.target)
+	if not Rules.apply_wolf_step(state, pawn_id, action.target):
+		return false
 	state.pending_wolf_step_pawn = -1
 	_ev(events, EV_ACTION, {
 		"action": {"type": "wolf_step", "pawn_id": pawn_id, "from": from_pos, "target": action.target},
 		"result": {"success": true},
 	})
 	_post_action(state, events)
+	return true
 
 
 static func _do_skip_wolf(state: GameState, events: Array) -> void:

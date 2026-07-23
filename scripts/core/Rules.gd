@@ -38,8 +38,8 @@ static func check_win(state: GameState) -> int:
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		if count_pawns_in_haven(state, player_id) >= state.rules.pawns_in_haven_to_win:
 			return player_id
-	var p1_alive: int = state.get_alive_pawns_for(Constants.PLAYER_1).size()
-	var p2_alive: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
+	var p1_alive: int = state.count_alive_pawns_for(Constants.PLAYER_1)
+	var p2_alive: int = state.count_alive_pawns_for(Constants.PLAYER_2)
 	if p1_alive == 0 and p2_alive > 0:
 		return Constants.PLAYER_2
 	if p2_alive == 0 and p1_alive > 0:
@@ -102,6 +102,49 @@ static func get_valid_move_paths(state: GameState, pawn_id: int) -> Dictionary:
 			if occupant == null:
 				paths[neighbor] = new_path
 	return paths
+
+## F1.3 — hot-path-variant: alleen bestemmingen + stap-kosten (géén
+## pad-arrays; die kopieën per cel waren de grootste allocatie-post van de
+## arena). Zelfde BFS-volgorde als get_valid_move_paths → identieke uitkomst.
+## apply_move blijft de volledige paden gebruiken (1× per toegepaste zet).
+static func get_valid_move_costs(state: GameState, pawn_id: int) -> Dictionary:
+	var costs: Dictionary = {}
+	var pawn: Pawn = state.pawns.get(pawn_id, null)
+	if pawn == null or pawn.is_eliminated or not pawn.is_active:
+		return costs
+	var max_steps: int = move_range(state, pawn)
+	if max_steps <= 0:
+		return costs
+	var doctrine: Dictionary = state.doctrine_data_of(pawn.owner_id)
+	var is_cav: bool = pawn.unit_type == Constants.UnitType.CAVALRY
+	var pass_own: bool = doctrine.move_through_own or is_cav
+	var jump_enemy_inf: bool = is_cav and doctrine.cav_jump_infantry
+	var depth: Dictionary = {}
+	depth[pawn.position] = 0
+	var frontier: Array = [pawn.position]
+	while not frontier.is_empty():
+		var current: Vector2i = frontier.pop_front()
+		var d: int = depth[current]
+		if d >= max_steps:
+			continue
+		for neighbor in Constants.manhattan_neighbors(current):
+			if not Constants.is_on_board(neighbor):
+				continue
+			if depth.has(neighbor):
+				continue
+			var occupant: Pawn = state.get_pawn_at(neighbor)
+			var passable: bool = occupant == null \
+				or (pass_own and occupant.owner_id == pawn.owner_id and occupant.id != pawn.id) \
+				or (jump_enemy_inf and occupant.owner_id != pawn.owner_id \
+					and occupant.unit_type == Constants.UnitType.INFANTRY)
+			if not passable:
+				continue
+			depth[neighbor] = d + 1
+			frontier.append(neighbor)
+			if occupant == null:
+				costs[neighbor] = d + 1
+	return costs
+
 
 static func apply_move(state: GameState, pawn_id: int, target_pos: Vector2i) -> bool:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
@@ -427,26 +470,31 @@ static func can_pawn_act(state: GameState, pawn_id: int) -> bool:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null or pawn.is_eliminated or not pawn.is_active or pawn.remaining_stamina < 1:
 		return false
+	# F1.3: goedkoopste checks eerst (dit draait na élke actie voor beide
+	# spelers). Leeg buurvak = 4 lookups; melee = 4 lookups; de schot-scan en
+	# de sprong-BFS zijn de dure paden en komen als laatste.
+	var kan_bewegen: bool = move_range(state, pawn) > 0
+	if kan_bewegen:
+		for neighbor in Constants.manhattan_neighbors(pawn.position):
+			if Constants.is_on_board(neighbor) and state.is_tile_empty(neighbor):
+				return true
 	if not get_valid_melee_targets(state, pawn_id).is_empty():
 		return true
 	if not get_valid_shot_targets(state, pawn_id).is_empty():
 		return true
-	# Bewegen: goedkope check — is er een leeg buurvak? Kan de pion springen
-	# (Muis/cavalerie), dan beslist de volledige padberekening.
-	if move_range(state, pawn) > 0:
-		for neighbor in Constants.manhattan_neighbors(pawn.position):
-			if Constants.is_on_board(neighbor) and state.is_tile_empty(neighbor):
-				return true
+	if kan_bewegen:
 		var doctrine: Dictionary = state.doctrine_data_of(pawn.owner_id)
 		var can_jump: bool = doctrine.move_through_own \
 			or pawn.unit_type == Constants.UnitType.CAVALRY
-		if can_jump and not get_valid_move_paths(state, pawn_id).is_empty():
+		if can_jump and not get_valid_move_costs(state, pawn_id).is_empty():
 			return true
 	return false
 
 static func can_player_act(state: GameState, player_id: int) -> bool:
-	for pawn in state.get_active_pawns_for(player_id):
-		if can_pawn_act(state, pawn.id):
+	# F1.3: directe iteratie (geen tussenliggende array; draait 2x per actie).
+	for pawn in state.pawns.values():
+		if pawn.owner_id == player_id and pawn.is_active and not pawn.is_eliminated \
+				and can_pawn_act(state, pawn.id):
 			return true
 	return false
 

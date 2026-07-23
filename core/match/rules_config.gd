@@ -87,6 +87,16 @@ func doctrine_data(doctrine: int) -> Dictionary:
 	return merged
 
 
+## Gecachet dict voor hot-path-lezers (View bouwt per beslissing een view;
+## de config is per match onveranderlijk). ALLEEN-LEZEN — muteer dit nooit.
+var _dict_cache = null
+
+func cached_dict() -> Dictionary:
+	if _dict_cache == null:
+		_dict_cache = to_dict()
+	return _dict_cache
+
+
 func to_dict() -> Dictionary:
 	return {
 		"rules_version": rules_version,

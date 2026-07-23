@@ -237,6 +237,14 @@ func get_active_pawns_for(player_id: int) -> Array:
 			result.append(pawn)
 	return result
 
+## F1.3: tellen zonder array-allocatie (draait in check_win na élke actie).
+func count_alive_pawns_for(player_id: int) -> int:
+	var n: int = 0
+	for pawn in pawns.values():
+		if pawn.owner_id == player_id and not pawn.is_eliminated:
+			n += 1
+	return n
+
 func get_alive_pawns_for(player_id: int) -> Array:
 	var result: Array = []
 	for pawn in pawns.values():
