@@ -1009,6 +1009,9 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	# Convergentie: per factie een venster kampioen-snapshots + generatie-teller.
 	var conv_geschiedenis: Dictionary = {}
 	var gen_factie: Dictionary = {}
+	# Referentie-score van de HUIDIGE kampioen op de vaste verificatiereeks,
+	# per factie gecacht (vervalt bij adoptie). Zie de relatieve gate hieronder.
+	var verify_ref: Dictionary = {}
 	print("[TRAIN] Budget %.1f min · populatie %d · %d potjes per kandidaat · %d facties · PARALLEL (%d threads)" % [
 		minutes, pop, games, doctrines.size(), pop])
 	print("[TRAIN] Eén generatie = %d potjes (kandidaten + dubbele verificatie); parallel op eigen threads..." % [
@@ -1092,21 +1095,32 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 		# 4) Verificatie-gate (parallel): 2×games potjes — de HELFT tegen de
 		#    kampioen, de HELFT tegen de vaste baseline (anders kun je overfitten
 		#    op je eigen stijl en absoluut zwakker worden zonder dat de gate het
-		#    ziet). Tegenstander-facties round-robin i.p.v. loting. Adoptie eist
-		#    marge op het totaal ÉN geen verlies tegen een van beide helften —
-		#    de oude gate (4/6 tegen alleen de kampioen) liet ~34% pure ruis door,
-		#    vandaar 90-127 'adopties' met gedrifte gewichten in de nachtrun.
+		#    ziet). Tegenstander-facties round-robin i.p.v. loting.
+		#    RELATIEVE gate (F1.6): de oude absolute eis (>= 8/12 = 67% winrate)
+		#    was voor een zwakke factie onhaalbaar — Muis op ~20% kreeg 12
+		#    generaties lang 0 adopties, ook met echt betere kandidaten. Nu
+		#    speelt de HUIDIGE kampioen dezelfde (deterministische) reeks als
+		#    referentie; adoptie eist totaal >= referentie + 2 en per helft geen
+		#    achteruitgang groter dan 1. Meet "beter dan nu", niet "goed".
 		# Twee rondes van `games` threads (12 tegelijk = allocator-contention).
 		var n_verify: int = games * 2
+		if not verify_ref.has(d):
+			verify_ref[d] = {
+				"champ": _verify_round(champ_w, d, profile, doctrines, games),
+				"base": _verify_round(champ_w, d, baseline, doctrines, games),
+			}
+		var ref: Dictionary = verify_ref[d]
+		var ref_tot: float = float(ref.champ) + float(ref.base)
 		var verify_champ: float = _verify_round(mean, d, profile, doctrines, games)
 		var verify_base: float = _verify_round(mean, d, baseline, doctrines, games)
 		var verify: float = verify_champ + verify_base
-		var half: float = float(games) * 0.5
-		var adopted: bool = verify >= float(n_verify) * 0.5 + 2.0 \
-			and verify_champ >= half and verify_base >= half
+		var adopted: bool = verify >= ref_tot + 2.0 \
+			and verify_champ >= float(ref.champ) - 1.0 \
+			and verify_base >= float(ref.base) - 1.0
 		if adopted:
 			profile[d] = mean
 			adoptions += 1
+			verify_ref.erase(d)  # nieuwe kampioen → nieuwe referentie meten
 			sigma[d] = minf(0.35, float(sigma[d]) * 1.15)
 			if faction >= 0:
 				# Parallel-modus: alleen het eigen factie-bestand schrijven,
@@ -1121,9 +1135,9 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 		else:
 			sigma[d] = maxf(0.06, float(sigma[d]) * 0.85)
 		var elapsed: float = float(Time.get_ticks_msec() - t0) / 60_000.0
-		print("[TRAIN] gen %d · %s · beste kandidaat %.1f/%d · verificatie %.1f/%d (kampioen %.1f + baseline %.1f) → %s · sigma %.2f · %.1f min" % [
+		print("[TRAIN] gen %d · %s · beste kandidaat %.1f/%d · verificatie %.1f/%d vs referentie %.1f (kampioen %.1f/%.1f + baseline %.1f/%.1f) → %s · sigma %.2f · %.1f min" % [
 			gen, Constants.doctrine_name(d), float(candidates[0].fit), games,
-			verify, n_verify, verify_champ, verify_base,
+			verify, n_verify, ref_tot, verify_champ, float(ref.champ), verify_base, float(ref.base),
 			"GEADOPTEERD 💾" if adopted else "verworpen", float(sigma[d]), elapsed])
 		# Convergentiecheck (bouwplan §7.4): elke CONV_INTERVAL factie-generaties
 		# de huidige kampioen head-to-head (spiegel d-vs-d, VASTE seeds) tegen de
