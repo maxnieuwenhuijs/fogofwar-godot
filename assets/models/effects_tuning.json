@@ -32,12 +32,12 @@
 			"delay": 0.9,
 			"grow": 1.25,
 			"size": 1.7,
-			"torso": 0.3
+			"torso": -0.06
 		},
 		"death5": {
 			"delay": 0.9,
 			"grow": 1.25,
-			"size": 2.4,
+			"size": 1.7,
 			"torso": 0.1
 		},
 		"death6": {
@@ -45,6 +45,12 @@
 			"grow": 1.25,
 			"size": 1.7,
 			"torso": -0.1
+		},
+		"death7": {
+			"delay": 0.98,
+			"grow": 1.25,
+			"size": 1.7,
+			"torso": 0.3
 		}
 	},
 	"death_speed": 1.0,
