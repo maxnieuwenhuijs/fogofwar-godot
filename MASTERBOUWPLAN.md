@@ -175,7 +175,7 @@ Elke stap laat de volledige bestaande testsuite + de UI groen.
 
 **CHECK:** tests groen; `grep -ri "rps" scripts/ tests/` levert 0 treffers; beide docs bestaan.
 
-### ☐ F0.1 — SeededRng: het laatste beetje niet-determinisme eruit
+### ☑ F0.1 — SeededRng: het laatste beetje niet-determinisme eruit — AF (juli 2026)
 
 **Bestanden:** `core/shared/seeded_rng.gd` (nieuw), `AIEasy.gd`, `match_runner.gd`, `capture.gd`, `trainer.gd`.
 (`audio_manager.gd` en `pawn_view.gd` blijven bewust op de globale RNG — presentatie hoeft niet

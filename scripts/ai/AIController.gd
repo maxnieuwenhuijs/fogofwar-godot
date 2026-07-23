@@ -3,6 +3,10 @@ extends RefCounted
 
 var player_id: int = Constants.PLAYER_2
 
+## Seedbare RNG (F0.1): default een vaste seed zodat elk gedrag reproduceerbaar
+## is; MatchRunner/sim/arena zetten hier hun eigen (afgeleide) seed op.
+var rng: SeededRng = SeededRng.new(1337)
+
 ## Evaluatie-gewichten — instelbaar zodat de Trainer ze kan leren (self-play).
 var weights: Dictionary = default_weights()
 

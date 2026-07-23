@@ -20,8 +20,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   headless niet meer op de screenshot (null-texture → overslaan + nette exit).
   Checks: 422 asserts groen · rps-grep 0 (incl. tools/) · `-- play` exit 0.
 
-Volgende stap: **F0.1 — SeededRng** (met scope-uitbreiding: ook de
-doctrine-loting in game.gd:340, vondst uit de verificatie-sweep).
+- **F0.1 — SeededRng.** `core/shared/seeded_rng.gd` (class_name SeededRng:
+  randi_range/randf/randf_range/randfn/pick/shuffle/fork). AIController heeft
+  `rng` (default seed 1337); AIEasy, trainer (run_seed-veld) en de headless
+  CMA-trainer loten er nu doorheen — de "randi alleen op de main thread"-
+  beperking in capture.gd is daarmee vervallen. MatchRunner: 5e param
+  `seed_val` → forkt per agent ("p1"/"p2"). Sim-CLI: `-- sim <p1> <p2> [d1]
+  [d2] [seed]`; train-CLI: 5e arg = run-seed. Doctrine-loting (game.gd) blijft
+  bewust globaal (pre-match invoer, gedocumenteerde uitzondering, net als
+  audio/VFX). Nieuwe suite DeterminismTests (6 tests). Check-grep verfijnd naar
+  kale globale calls (de SeededRng-API hergebruikt de randi_range-namen).
+  Checks: 456 asserts groen · sim seed 777 2× identiek, 778 wijkt af ·
+  `-- play` exit 0.
+
+Volgende stap: **F0.2 — rules_config.gd** (alle regelknoppen worden data).
 
 ---
 

@@ -11,4 +11,4 @@ func choose_action(state: GameState) -> Dictionary:
 		scored.append({"action": a, "value": evaluate(simulate(state, a), player_id)})
 	scored.sort_custom(func(x, y): return x.value > y.value)
 	var top: int = mini(3, scored.size())
-	return scored[randi() % top].action
+	return scored[rng.randi_range(0, top - 1)].action

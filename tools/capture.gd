@@ -47,7 +47,10 @@ func _ready() -> void:
 				"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
 				"wolf": Constants.Doctrine.WOLF, "vos": Constants.Doctrine.VOS, "krokodil": Constants.Doctrine.VOS}
 			faction = fnames.get(String(targs[ti + 4]).to_lower(), -1)
-		_run_training(minutes, pop, games, faction)
+		# F0.1: optionele run-seed als 5e argument; zonder seed varieert de run
+		# (exploratie), mét seed is de hele trainingsrun reproduceerbaar.
+		var train_seed: int = int(targs[ti + 5]) if targs.size() > ti + 5 else int(Time.get_ticks_msec())
+		_run_training(minutes, pop, games, faction, train_seed)
 		get_tree().quit()
 		return
 
@@ -415,8 +418,9 @@ func _ready() -> void:
 		return
 	elif "sim" in args:
 		# Puur engine + AI: speel een volledige partij AI vs AI en log het resultaat.
-		# Gebruik: -- sim <p1> <p2> [d1] [d2]
-		#   p = easy/medium/hard (default medium); d = mens/muis/leeuw/beer/wolf/vos.
+		# Gebruik: -- sim <p1> <p2> [d1] [d2] [seed]
+		#   p = easy/medium/hard (default medium); d = mens/muis/leeuw/beer/wolf/vos;
+		#   seed (int, default 0) maakt de partij reproduceerbaar (F0.1).
 		var paths := {
 			"easy": "res://scripts/ai/AIEasy.gd",
 			"medium": "res://scripts/ai/AIMedium.gd",
@@ -439,6 +443,10 @@ func _ready() -> void:
 		a1.player_id = 1
 		var a2 = load(paths.get(n2, paths["medium"])).new()
 		a2.player_id = 2
+		var sim_seed: int = int(args[5]) if args.size() > 5 else 0
+		var sim_rng := SeededRng.new(sim_seed)
+		a1.rng = sim_rng.fork("p1")
+		a2.rng = sim_rng.fork("p2")
 		GameSession.start_new_game(d1, d2)
 		GameSession.submit_placement(1, a1.choose_placement(GameSession.state))
 		GameSession.submit_placement(2, a2.choose_placement(GameSession.state))
@@ -907,7 +915,10 @@ const TRAIN_AI := preload("res://scripts/ai/AIMedium.gd")
 ## de top-helft wordt gerecombineerd (meetkundig gemiddelde) en geverifieerd
 ## tegen de kampioen. Sigma past zichzelf aan (groter bij succes, kleiner bij
 ## falen). Het profiel wordt bij elke adoptie opgeslagen.
-func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> void:
+func _run_training(minutes: float, pop: int, games: int, faction: int = -1, train_seed: int = 0) -> void:
+	# F0.1: alle trainings-loting via één seedbare stream (was: globale randi/randfn
+	# op de hoofdthread; die thread-beperking vervalt hiermee).
+	var train_rng := SeededRng.new(train_seed)
 	var profile: Dictionary = AIController.load_profile()
 	if profile.is_empty():
 		profile = AIController.default_profile()
@@ -953,7 +964,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 		for _j in pop:
 			var w: Dictionary = {}
 			for k in champ_w:
-				var scaled: float = float(champ_w[k]) * exp(randfn(0.0, float(sigma[d])))
+				var scaled: float = float(champ_w[k]) * exp(train_rng.randfn(0.0, float(sigma[d])))
 				if absf(scaled) < 0.01:
 					scaled = 0.01 if scaled >= 0.0 else -0.01
 				w[k] = scaled
@@ -964,7 +975,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 		#    loting (gepaarde vergelijking → veel minder ruis per generatie).
 		#    Tegenstander-facties gebalanceerd (geschud rondje) i.p.v. willekeurig.
 		var doc_order: Array = doctrines.duplicate()
-		doc_order.shuffle()
+		train_rng.shuffle(doc_order)
 		var schedule: Array = []
 		for g in games:
 			# Potje 0: vast ijkpunt (baseline); potje 1: de huidige kampioen;
@@ -975,13 +986,12 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1) -> v
 			elif g == 1:
 				opp_profile = profile
 			else:
-				opp_profile = pool[randi() % pool.size()]
+				opp_profile = pool[train_rng.randi_range(0, pool.size() - 1)]
 			var opp_d: int = doc_order[g % doc_order.size()]
 			schedule.append({"opp_w": opp_profile[opp_d], "opp_d": opp_d, "cand_is_p1": g % 2 == 0})
 		# Fitness PARALLEL: één thread per kandidaat (pop threads tegelijk).
 		# Meer threads (per potje) bleek AVERECHTS: te veel GDScript-threads
 		# vechten om de allocator en maken het 4× trager. pop (6) is de sweet spot.
-		# (Loting gebeurt op de hoofdthread — randi is niet thread-safe.)
 		var threads: Array = []
 		for j in pop:
 			var jobs: Array = []

@@ -6,6 +6,11 @@ extends Control
 
 const AIScript := preload("res://scripts/ai/AIMedium.gd")
 const GAMES_PER_GEN := 8  # balans: betrouwbaar signaal, maar ~2× sneller dan 16
+
+## F0.1: alle trainer-loting seedbaar. Default varieert per run (exploratie),
+## maar zet run_seed vast en de hele trainingsrun is reproduceerbaar.
+var run_seed: int = int(Time.get_ticks_msec())
+@onready var rng: SeededRng = SeededRng.new(run_seed)
 const MAX_POOL := 8
 const EVAL_GAMES := 4   # kampioen vs baseline, voor de kracht-grafiek
 const ADOPT_MARGIN := 2 # uitdager moet met ≥2 potjes verschil winnen (geen geluk)
@@ -151,8 +156,8 @@ func _start_generation() -> void:
 		# De UITDAGER speelt altijd de gemuteerde factie (daar zit het signaal);
 		# de tegenstander krijgt per potje een willekeurige factie.
 		var chal_is_p1: bool = i % 2 == 0
-		var opp_profile: Dictionary = _champion if i == 0 else _pool[randi() % _pool.size()]
-		var opp_doctrine: int = doctrines[randi() % doctrines.size()]
+		var opp_profile: Dictionary = _champion if i == 0 else _pool[rng.randi_range(0, _pool.size() - 1)]
+		var opp_doctrine: int = doctrines[rng.randi_range(0, doctrines.size() - 1)]
 		var chal_ai = AIScript.new()
 		chal_ai.weights = (_challenger[_mutated_doctrine] as Dictionary).duplicate()
 		var opp_ai = AIScript.new()
@@ -161,7 +166,7 @@ func _start_generation() -> void:
 		var a2 = opp_ai if chal_is_p1 else chal_ai
 		var d1: int = _mutated_doctrine if chal_is_p1 else opp_doctrine
 		var d2: int = opp_doctrine if chal_is_p1 else _mutated_doctrine
-		var runner := MatchRunner.new(a1, a2, d1, d2)
+		var runner := MatchRunner.new(a1, a2, d1, d2, hash([run_seed, _generation, i]))
 		_runners.append(runner)
 		_chal_side.append(Constants.PLAYER_1 if chal_is_p1 else Constants.PLAYER_2)
 		if i < _boards.size():
@@ -202,14 +207,14 @@ func _finish_generation() -> void:
 func _mutate(profile: Dictionary) -> Dictionary:
 	var out := _deep_copy(profile)
 	var doctrines: Array = out.keys()
-	_mutated_doctrine = doctrines[randi() % doctrines.size()]
+	_mutated_doctrine = doctrines[rng.randi_range(0, doctrines.size() - 1)]
 	var w: Dictionary = out[_mutated_doctrine]
 	var keys := w.keys()
-	var k: String = keys[randi() % keys.size()]
+	var k: String = keys[rng.randi_range(0, keys.size() - 1)]
 	var old_v: float = w[k]
 	# Altijd een betekenisvolle stap (min ±12%), nooit bijna-geen-verandering.
 	# Multiplicatief → het teken blijft behouden (flankvoorkeuren zijn negatief).
-	var factor: float = randf_range(1.12, 1.5) if randf() < 0.5 else randf_range(0.55, 0.88)
+	var factor: float = rng.randf_range(1.12, 1.5) if rng.randf() < 0.5 else rng.randf_range(0.55, 0.88)
 	var new_v: float = old_v * factor
 	if absf(new_v) < 0.01:
 		new_v = 0.01 if new_v >= 0.0 else -0.01

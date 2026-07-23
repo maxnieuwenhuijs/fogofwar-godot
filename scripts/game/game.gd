@@ -337,6 +337,9 @@ func _show_opponent_menu() -> void:
 
 func _on_opponent_choice(index: int) -> void:
 	if index == 0:
+		# BEWUSTE UITZONDERING op F0.1 (net als audio/VFX): de doctrine-loting is
+		# pre-match invoer in de mens-vs-AI-flow, geen in-match spellogica. Voor
+		# reproduceerbare partijen (sim/arena/replay) gaan doctrines als args mee.
 		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[randi() % Constants.DOCTRINE_DATA.size()]
 	else:
 		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[index - 1]

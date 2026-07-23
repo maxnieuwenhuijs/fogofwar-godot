@@ -17,11 +17,16 @@ var _guard: int = 0
 var max_steps: int = 2500
 
 
-func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS) -> void:
+func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS, seed_val: int = 0) -> void:
 	ai1 = controller1
 	ai2 = controller2
 	ai1.player_id = Constants.PLAYER_1
 	ai2.player_id = Constants.PLAYER_2
+	# F0.1: beide agents krijgen een onafhankelijke sub-stream van de match-seed,
+	# zodat een extra loting bij P1 nooit het verloop van P2 verschuift.
+	var match_rng := SeededRng.new(seed_val)
+	ai1.rng = match_rng.fork("p1")
+	ai2.rng = match_rng.fork("p2")
 	engine = GameSessionScript.new()
 	engine.start_new_game(doctrine1, doctrine2)
 	engine.submit_placement(Constants.PLAYER_1, ai1.choose_placement(engine.state))
