@@ -302,9 +302,11 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   `arena_nacht.ps1`: git pull --ff-only -> fuzz (10k) -> tijdgebonden arena-
   batches (procs = cores-2, verse seeds per nacht via epoch-offset, alles in
   run_meta = reproduceerbaar) -> merge naar 1 games.jsonl -> dashboard ->
-  summary.txt + nacht.log. Geregistreerd in Windows Taakplanner: taak
-  "FogOfWar nachtrun", dagelijks 02:00, 8 uur (verwijderen: schtasks /Delete
-  /TN "FogOfWar nachtrun" /F; geen n8n, werkafspraak B5). Valkuilen gefixt:
+  summary.txt + nacht.log. BESLUIT MAX (23 juli): NIET automatisch plannen op
+  de lokale machine — de nachtjob wordt altijd handmatig gestart
+  (`.\arena_nacht.ps1`, evt. met -DuurMinuten). De Taakplanner-taak is weer
+  verwijderd; tools/register_nachtjob.ps1 blijft beschikbaar voor wie ooit
+  wél wil plannen (en voor de VPS-cron in F4; geen n8n, werkafspraak B5). Valkuilen gefixt:
   $procs botste case-insensitief met param [int]$Procs; PS 5.1 Set-Content
   schrijft utf-8-BOM (dashboard leest utf-8-sig); dubbele glob telde elke
   jsonl 2x. CHECK: smoke-run -Kort end-to-end groen (720 partijen, 6.6
