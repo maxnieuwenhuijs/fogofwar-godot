@@ -393,7 +393,7 @@ agents overstapt.
 **CHECK:** AITests geport; nieuwe test: L0 speelt 20 volledige partijen zonder crash of illegale actie
 (elke keuze door `is_legal`); L2-met-view vs L2-full-state winrate-delta wordt gelogd (Vos-ablatie werkt).
 
-### ☐ F1.2 — Standalone runner + metrics
+### ☑ F1.2 — Standalone runner + metrics — AF (juli 2026)
 
 **Bestanden:** `arena/arena.tscn` (minimal scene, root-script run.gd), `arena/run.gd`, `arena/metrics.gd`,
 `arena/arena_configs/*.json` (map bestaat sinds F0.2), `arena.ps1` (multi-proces launcher).

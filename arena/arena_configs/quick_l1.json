@@ -1,0 +1,8 @@
+{
+	"matchups": [["muis", "wolf"], ["wolf", "muis"]],
+	"games_per_matchup": 5,
+	"agents": {"p1": "l1", "p2": "l1"},
+	"base_seed": 1000,
+	"max_steps": 1500,
+	"track_repetitions": true
+}

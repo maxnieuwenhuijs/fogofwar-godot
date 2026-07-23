@@ -212,7 +212,28 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   echte meting volgt in F1.6). Checks: 1013 asserts groen (1m32s) · simcheck
   5/5 · play exit 0 · vosview PASS.
 
-Volgende stap: **F1.2 — standalone runner + metrics** (arena/run.gd, jsonl per game). (agent-interface op views, L0-L3, doorvoer
+- **F1.2 — standalone runner + metrics.** `arena/arena.tscn` + `arena/run.gd`:
+  `godot --headless --path . res://arena/arena.tscn -- --config <json> --out
+  <map> [--seed-offset N]`. Configs in arena/arena_configs/: quick_l1 (2
+  doctrines x 10), matrix_l1 (alle 36 richtingen), vos_ablatie_l2 (B8:
+  full_state p2). `arena/metrics.gd`: per game EEN jsonl-regel met de
+  letterlijke par. 8.2-mapping — cycli, winnaar+methode (haven/eliminatie/
+  tiebreak/remise + trigger), zobrist-herhalingen, standbeeld-kills per
+  kaartprofiel (1/5/1-oogst), schoten per kanon + kanonnen-zonder-schot-%
+  (benadering geblokkeerde intenties), koppelverdeling kaartprofiel->type
+  PER SPELER, overkill-per-kill (Leeuw-spiraal), schade-per-actie (Muis),
+  winmethode per havenvak (hoekfort), full_state-vlaggen (ablatie).
+  Header-regel: git-sha + config + ts; game-regels ZONDER wallclock ->
+  zelfde config+seed = byte-identieke jsonl (bewezen: run A == run B).
+  arena.ps1 (multi-proces: 1 per core, seed-offset, merge), arena.bat ->
+  nieuwe runner (FOW_NOPAUSE-guard; oude capture-pad blijft, zie
+  arena.bat.oud). results/ in .gitignore (B10: reproduceerbaar uit
+  config+seed). EERSTE DOORVOERMETING: 3.0 match/s/core met L1 (was 0.13
+  met de oude Node-runner — 23x sneller; F1.3-doel >=5/s is dichtbij).
+  Checks: schema 0 fouten · reproduceerbaarheid bewezen · 1013 asserts
+  groen · simcheck 5/5 · play exit 0.
+
+Volgende stap: **F1.3 — doorvoer >=5 matches/s/core** (meetladder + optimalisaties). (agent-interface op views, L0-L3, doorvoer
 >=5 matches/s/core, metrics per bouwplan-par. 8.2, fuzz, dashboard, en de
 eerste balanspatch op data — Muis-hertraining met de nieuwe cavalerie).
 

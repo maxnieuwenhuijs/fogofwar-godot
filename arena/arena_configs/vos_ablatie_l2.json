@@ -1,0 +1,9 @@
+{
+	"matchups": [["vos", "vos"]],
+	"games_per_matchup": 20,
+	"agents": {"p1": "l2", "p2": "l2"},
+	"full_state": {"p1": false, "p2": true},
+	"base_seed": 70000,
+	"max_steps": 1200,
+	"track_repetitions": false
+}

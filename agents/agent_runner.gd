@@ -23,6 +23,11 @@ var illegal_count: int = 0
 var fallback_count: int = 0
 var max_steps: int = 3000
 
+## Optionele metrics-collector (arena/metrics.gd): before_action/after_action
+## worden rond elke geslaagde apply aangeroepen. Duck-typed — de runner blijft
+## bruikbaar zonder arena-laag.
+var metrics = null
+
 var _state: GameState
 var _agents: Dictionary = {}
 
@@ -71,10 +76,17 @@ func step() -> void:
 		if actie.is_empty():
 			fallback_count += 1
 			actie = legal[0]
+		if metrics != null:
+			metrics.before_action(_state, p, actie)
 		var res: Dictionary = Reducer.apply(_state, actie, p)
 		if not res.ok:
 			illegal_count += 1
-			Reducer.apply(_state, legal[0], p)
+			actie = legal[0]
+			if metrics != null:
+				metrics.before_action(_state, p, actie)
+			res = Reducer.apply(_state, actie, p)
+		if metrics != null and res.ok:
+			metrics.after_action(_state, p, actie, res.events)
 		acted = true
 		break
 	if not acted:
