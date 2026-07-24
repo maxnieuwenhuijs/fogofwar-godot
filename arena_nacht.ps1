@@ -4,13 +4,12 @@
 #
 # Gebruik: .\arena_nacht.ps1 [-DuurMinuten 480] [-Procs 0] [-FuzzGames 10000] [-Kort]
 #   -Kort = smoke-run voor de end-to-end-check: 1 arena-batch + 100 fuzz-games.
+#   -Config <pad> = alleen die ene config (default: om-en-om 4.1 EN v4.2, F2.6).
 param(
     [int]$DuurMinuten = 480,
     [int]$Procs = 0,
     [int]$FuzzGames = 10000,
-    # L2 default (F1.6): het balans-werkdoel is op L2 gedefinieerd; een nacht
-    # levert ~20k+ L2-partijen. Voor doorvoer-/capaciteitsmetingen: matrix_l1.
-    [string]$Config = "arena/arena_configs/matrix_l2.json",
+    [string]$Config = "",
     [switch]$Kort
 )
 $ErrorActionPreference = "Continue"
@@ -48,43 +47,61 @@ Get-Content "$uit/fuzz.log" | Where-Object { $_ -match "\[FUZZ" } | ForEach-Obje
 if (-not $fuzzOk) { Log "[NACHT] LET OP: fuzz vond schendingen (zie results/fuzz/ voor repro's)" }
 
 # 3) Arena, tijdgebonden: batches van $Procs parallelle matrix-runs tot de
-# deadline. Elke batch/proc krijgt een unieke seed-offset (nacht-epoch erin,
-# zodat elke nacht verse seeds loot; de offset staat in run_meta = reproduceerbaar).
+# deadline; de batches wisselen om-en-om tussen de programma's (F2.6: default
+# 4.1-matrix EN v4.2-matrix in een nacht — met -Config draait alleen die ene).
+# Elke batch/proc krijgt een unieke seed-offset (nacht-epoch erin, zodat elke
+# nacht verse seeds loot; de offset staat in run_meta = reproduceerbaar).
+$programmas = @("arena/arena_configs/matrix_l2.json", "arena/arena_configs/v42_matrix_l2.json")
+if ($Config -ne "") { $programmas = @($Config) }
+$labels = @()
+foreach ($p in $programmas) { $labels += [IO.Path]::GetFileNameWithoutExtension($p) }
 $deadline = $t0.AddMinutes($DuurMinuten)
 $nachtOffset = [long]([DateTimeOffset]::Now.ToUnixTimeSeconds() % 100000) * 10000000
 $batch = 0
 $totaalGames = 0
 while ($true) {
+    $ci = $batch % $programmas.Count
     $batchProcs = @()
     for ($i = 0; $i -lt $Procs; $i++) {
-        $sub = "$uit/b${batch}_p$i"
+        $sub = "$uit/c${ci}_b${batch}_p$i"
         $offset = $nachtOffset + ([long]($batch * $Procs + $i)) * 100000
         $batchProcs += Start-Process -FilePath $godot -PassThru -WindowStyle Hidden -ArgumentList @(
             "--headless", "--path", ".", "res://arena/arena.tscn", "--",
-            "--config", $Config, "--out", $sub, "--seed-offset", "$offset")
+            "--config", $programmas[$ci], "--out", $sub, "--seed-offset", "$offset")
     }
     $batchProcs | Wait-Process
     $batch++
-    Log "[NACHT] arena-batch $batch klaar ($Procs procs)"
-    if ((Get-Date) -ge $deadline) { break }
-    if ($Kort) { break }
+    Log ("[NACHT] arena-batch $batch klaar ($Procs procs, " + $labels[$ci] + ")")
+    if ($Kort) {
+        # Smoke: precies 1 batch per programma, ongeacht de klok.
+        if ($batch -ge $programmas.Count) { break }
+    } elseif ((Get-Date) -ge $deadline) { break }
 }
 
-# 4) Samenvoegen tot 1 games.jsonl voor deze nachtrun (header 1x).
-$doel = "$uit/games.jsonl"
-$eerste = $true
-Get-ChildItem -Path $uit -Recurse -Filter "games.jsonl" | Where-Object { $_.FullName -ne (Resolve-Path $doel -ErrorAction SilentlyContinue).Path } | ForEach-Object {
-    if ($eerste) {
-        Get-Content $_.FullName -TotalCount 1 | Set-Content -Encoding utf8 $doel
-        $eerste = $false
+# 4) Samenvoegen: per programma een eigen run-map (het dashboard ziet ze als
+# aparte runs en mengt 4.1- en v4.2-cijfers dus nooit).
+for ($ci = 0; $ci -lt $programmas.Count; $ci++) {
+    $bronnen = @(Get-ChildItem -Path $uit -Directory -Filter "c${ci}_*")
+    if ($bronnen.Count -eq 0) { continue }  # programma niet aan bod gekomen
+    $runMap = "results/nacht_${stamp}_" + $labels[$ci]
+    New-Item -ItemType Directory -Force -Path $runMap | Out-Null
+    $doel = "$runMap/games.jsonl"
+    $eerste = $true
+    $bronnen | Get-ChildItem -Filter "games.jsonl" | ForEach-Object {
+        if ($eerste) {
+            Get-Content $_.FullName -TotalCount 1 | Set-Content -Encoding utf8 $doel
+            $eerste = $false
+        }
+        Get-Content $_.FullName | Select-Object -Skip 1 | Add-Content -Encoding utf8 $doel
     }
-    Get-Content $_.FullName | Select-Object -Skip 1 | Add-Content -Encoding utf8 $doel
+    if (Test-Path $doel) {
+        $n = (Get-Content $doel | Measure-Object -Line).Lines - 1
+        $totaalGames += $n
+        Log ("[NACHT] " + $labels[$ci] + ": $n partijen -> $doel")
+    }
 }
-if (Test-Path $doel) {
-    $totaalGames = (Get-Content $doel | Measure-Object -Line).Lines - 1
-    # Submappen opruimen: alles zit nu in de samengevoegde games.jsonl.
-    Get-ChildItem -Path $uit -Directory | Remove-Item -Recurse -Force -Confirm:$false
-}
+# Submappen opruimen: alles zit nu in de samengevoegde run-mappen.
+Get-ChildItem -Path $uit -Directory | Remove-Item -Recurse -Force -Confirm:$false
 
 # 5) Dashboard verversen.
 python tools/dashboard/build_dashboard.py 2>&1 | ForEach-Object { Log $_ }
@@ -98,8 +115,9 @@ if (-not $fuzzOk) { $fuzzTekst = "SCHENDINGEN (results/fuzz/)" }
 $samenvatting = @(
     "Fog of War nachtrun $stamp (git $sha)",
     ("arena : {0} partijen in {1:N0} s over {2} batches x {3} procs = {4} match/s totaal" -f $totaalGames, $duurSec, $batch, $Procs, $perSec),
+    ("programma's: " + ($labels -join " + ") + " (om-en-om, aparte run-mappen)"),
     "fuzz  : $FuzzGames partijen, $fuzzTekst",
-    "output: $doel + results/dashboard.html"
+    "output: results/nacht_${stamp}_<programma>/games.jsonl + results/dashboard.html"
 )
 $samenvatting | Set-Content -Encoding utf8 "$uit/summary.txt"
 $samenvatting | ForEach-Object { Log "[SUMMARY] $_" }
