@@ -327,6 +327,9 @@ static func shot_damage(state: GameState, pawn: Pawn) -> int:
 static func shot_cost(state: GameState, pawn: Pawn) -> int:
 	if pawn.unit_type == Constants.UnitType.INFANTRY:
 		return state.rules.inf_shot_cost
+	# v4.2 (F2.4): onder campaign komt de kanon-schotkost uit de actiepot-config.
+	if state.rules.campaign_actief():
+		return int(state.rules.campaign.get("kanon_actie_kost", {}).get("shoot", state.rules.art_shot_cost))
 	return state.rules.art_shot_cost
 
 ## Dracht [min, max] van dit schot volgens de config, of leeg als de pion
@@ -338,8 +341,12 @@ static func _shot_ranges(state: GameState, pawn: Pawn) -> Array:
 			return [state.rules.inf_shot_range, state.rules.inf_shot_range]
 		Constants.UnitType.ARTILLERY:
 			# Vaste dracht + doctrine-bonus (Leeuw +1); dode zone eronder.
+			# v4.2 (F2.4/D8): onder campaign geldt campaign.kanon_dracht_max.
+			var basis: int = state.rules.art_range
+			if state.rules.campaign_actief():
+				basis = int(state.rules.campaign.get("kanon_dracht_max", basis))
 			return [state.rules.art_min_range,
-				state.rules.art_range + int(state.doctrine_data_of(pawn.owner_id).art_range_bonus)]
+				basis + int(state.doctrine_data_of(pawn.owner_id).art_range_bonus)]
 	return []
 
 ## Gedeelde vuurlijn-scan voor doelwitten én UI-tegels. Vuurmodel-knoppen:

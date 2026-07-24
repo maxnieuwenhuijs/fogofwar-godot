@@ -29,6 +29,14 @@ byte-identiek 4.1.10-hr; activering van het blok zet `rules_version` op 4.2.0.
   D12) en cp_earned bij haven-/eliminatie-winst (tarief 8/4, D13 — saldo
   blijft onaangeraakt, de campagnepot boekt bij). View: eigen saldo/inzet
   zichtbaar, vijandelijk saldo "?" en inzet onzichtbaar tot de reveal.
+- **F2.4 — CANNON_ACT** (zelfde 4.2.0-lijn): onder campaign is
+  `CANNON_ACT{pawn_id, sub: roll|shoot}` de actietaal voor artillerie-bewegen
+  en -schieten (union-actietype, D14; RETREAT bestaat niet, D9). ROLL = 1 vak,
+  kosten uit `campaign.kanon_actie_kost` {roll 1, shoot 1}; dracht uit
+  `campaign.kanon_dracht_max` (6, Leeuw +1, D8); dode zone en vuurlijn-
+  blokkade ongewijzigd. MOVE/SHOOT voor een kanon worden onder campaign
+  geweigerd en blijven het 4.1.x-pad; melee blijft voor elk type een gewone
+  MELEE-actie (bewust: de kanon-taal dekt bewegen en schieten).
 - Serialisatie-formaat uitgebreid (pools/spawn-commits): alle goldens
   geregenereerd (formaatwijziging, geen 4.1-regelwijziging — simcheck 5/5
   en de volledige suite bewijzen gedragsbehoud).

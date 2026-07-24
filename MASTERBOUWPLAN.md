@@ -508,7 +508,7 @@ Initiatief-bod: CP-inzet telt mee/niet mee volgens spec.
 **CHECK:** reducer-tests: cap per kaart; CP-saldo kan nooit negatief; view verbergt vijandelijke inzet
 tot reveal (leak-canary); golden replay met CP-inzet.
 
-### ☐ F2.4 — CANNON_ACT (stamina-kanon)
+### ☑ F2.4 — CANNON_ACT (stamina-kanon)
 
 **Werk:** artillerie krijgt de expliciete actie `CANNON_ACT{piece, ROLL dir | SHOOT target}` (RETREAT geschrapt in F2.1)
 met de stamina-pot als actiebron (formaliseert de huidige huisregel); dracht/kosten uit config

@@ -79,6 +79,9 @@ static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: 
 			_do_spawn(state, action, player_id, events)
 		Actions.BET_CP:
 			_do_bet_cp(state, action, player_id, events)
+		Actions.CANNON_ACT:
+			ok = _do_cannon_act(state, action, events)
+			fout = "Ongeldige kanon-actie"
 		Actions.RESIGN:
 			_do_resign(state, player_id, events)
 		Actions.CLAIM_TIMEOUT:
@@ -504,6 +507,48 @@ static func _do_skip_wolf(state: GameState, events: Array) -> void:
 	# Geen action_performed-event: het oude skip-pad emitte dat ook nooit.
 	state.pending_wolf_step_pawn = -1
 	_post_action(state, events)
+
+
+## F2.4 — CANNON_ACT (v4.2): ROLL hergebruikt apply_move (1 vak; een
+## afwijkende rol-kost boekt het verschil bij), SHOOT hergebruikt apply_shot
+## (dracht en schot-kost zijn al campaign-bewust in Rules). RETREAT bestaat
+## niet (D9). Melee blijft voor artillerie een gewone MELEE-actie.
+static func _do_cannon_act(state: GameState, action: Dictionary, events: Array) -> bool:
+	var pawn_id: int = int(action.pawn_id)
+	var pawn: Pawn = state.pawns.get(pawn_id, null)
+	if pawn == null:
+		return false
+	var kost: Dictionary = state.rules.campaign.get("kanon_actie_kost", {"roll": 1, "shoot": 1})
+	match String(action.sub):
+		"roll":
+			var kost_roll: int = int(kost.get("roll", 1))
+			if pawn.remaining_stamina < kost_roll:
+				return false
+			var from_pos: Vector2i = pawn.position
+			if not Rules.apply_move(state, pawn_id, action.target):
+				return false
+			var extra: int = kost_roll - 1  # apply_move boekte al 1 stap
+			if extra > 0:
+				pawn.remaining_stamina = maxi(0, pawn.remaining_stamina - extra)
+			_ev(events, EV_ACTION, {
+				"action": {"type": "cannon_act", "sub": "roll", "pawn_id": pawn_id,
+					"from": from_pos, "target": action.target},
+				"result": {"success": true},
+			})
+			_post_action(state, events)
+			return true
+		"shoot":
+			var result: Dictionary = Rules.apply_shot(state, pawn_id, int(action.target_id))
+			if not result.success:
+				return false
+			_ev(events, EV_ACTION, {
+				"action": {"type": "cannon_act", "sub": "shoot", "pawn_id": pawn_id,
+					"target_id": int(action.target_id)},
+				"result": result,
+			})
+			_post_action(state, events)
+			return true
+	return false
 
 
 # =========================================================================

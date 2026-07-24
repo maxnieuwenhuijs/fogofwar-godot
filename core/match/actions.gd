@@ -23,6 +23,7 @@ const RESIGN := "resign"
 const CLAIM_TIMEOUT := "claim_timeout"
 const SPAWN := "spawn"  # v4.2 (F2.2): blinde spawn-inzet; lege lijst = bewust niets
 const BET_CP := "bet_cp"  # v4.2 (F2.3): blinde CP-inzet vóór de eigen define (D1: +1 kaartbudget per CP)
+const CANNON_ACT := "cannon_act"  # v4.2 (F2.4): kanon-actie, union met sub "roll"|"shoot" (RETREAT bestaat niet, D9)
 
 ## Per type: de verplichte payload-velden (voor is_wellformed en from_dict).
 const _FIELDS := {
@@ -40,6 +41,7 @@ const _FIELDS := {
 	CLAIM_TIMEOUT: [],
 	SPAWN: ["spawns"],
 	BET_CP: ["amount"],
+	CANNON_ACT: ["pawn_id", "sub"],  # sub-specifiek: roll -> target, shoot -> target_id (union, D14)
 }
 
 ## Velden die een Vector2i dragen (serialisatie ↔ [x, y]).
@@ -92,6 +94,12 @@ static func make_spawn(spawns: Array) -> Dictionary:
 static func make_bet_cp(amount: int) -> Dictionary:
 	return {"type": BET_CP, "amount": amount}
 
+static func make_cannon_roll(pawn_id: int, target: Vector2i) -> Dictionary:
+	return {"type": CANNON_ACT, "pawn_id": pawn_id, "sub": "roll", "target": target}
+
+static func make_cannon_shoot(pawn_id: int, target_id: int) -> Dictionary:
+	return {"type": CANNON_ACT, "pawn_id": pawn_id, "sub": "shoot", "target_id": target_id}
+
 
 # --- Structuurcontrole ---------------------------------------------------------
 
@@ -124,6 +132,17 @@ static func is_wellformed(a) -> bool:
 				return false
 	if a.has("amount") and not (a.amount is int):
 		return false
+	# Union-validatie CANNON_ACT (D14): per sub-waarde zijn andere velden verplicht.
+	if t == CANNON_ACT:
+		match String(a.sub):
+			"roll":
+				if not a.has("target") or not (a.target is Vector2i):
+					return false
+			"shoot":
+				if not a.has("target_id"):
+					return false
+			_:
+				return false
 	return true
 
 

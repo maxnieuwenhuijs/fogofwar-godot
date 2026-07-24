@@ -270,6 +270,19 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.4 AFGEROND (24 juli) — CANNON_ACT (stamina-kanon).** Union-actietype
+  (D14) met sub roll|shoot; is_wellformed valideert per sub (RETREAT is
+  per constructie misvormd, D9). ROLL hergebruikt apply_move (afwijkende
+  kost boekt bij), SHOOT hergebruikt apply_shot; Rules._shot_ranges en
+  shot_cost zijn campaign-bewust (kanon_dracht_max/kanon_actie_kost —
+  dode zone en blokkade ongewijzigd). Onder campaign weigeren MOVE/SHOOT
+  artillerie (volle poort EN fast-gate) en genereert legal_actions
+  cannon_act-varianten; melee blijft MELEE (bewuste keuze, genoteerd in
+  CHANGELOG). 4.1-compat expliciet getest. Golden #15 "kanon_act" (roll +
+  standbeeld-schot; P2 overleeft via bord+pool). CHECKS: 1151 asserts
+  groen (CannonTests: 12 tests) - simcheck 5/5 - vosview - fuzz 100
+  schoon - bench 7.8/s. Volgende: F2.5 (agents leren v4.2).
+
 - **F2.3 AFGEROND (24 juli) — BET_CP in de match.** Blinde CP-inzet als
   apart actietype (D14) voor de eigen define: state.cp (init cp_start=6,
   D13), cp_bets/cp_bet_done per ronde, saldo direct verbrand (D2, ook

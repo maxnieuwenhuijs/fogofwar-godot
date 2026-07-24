@@ -64,6 +64,8 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 			return _check_spawn(state, action, player_id)
 		Actions.BET_CP:
 			return _check_bet_cp(state, action, player_id)
+		Actions.CANNON_ACT:
+			return _check_cannon_act(state, action, player_id)
 	return _nee("Onbekend actietype")
 
 
@@ -87,6 +89,38 @@ static func _check_bet_cp(state: GameState, action: Dictionary, player_id: int) 
 	if amount > expected_define_count(state, player_id):
 		return _nee("Meer CP dan kaarten deze ronde")
 	return _ok()
+
+
+## F2.4 — CANNON_ACT (D8/D9/D14): onder campaign is dit de actietaal voor
+## artillerie-bewegen en -schieten (melee blijft een gewone MELEE-actie).
+## ROLL = 1 vak, SHOOT via de bestaande vuurlijnen met campaign-dracht;
+## kosten uit campaign.kanon_actie_kost. RETREAT bestaat niet (D9).
+static func _check_cannon_act(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
+	if not state.rules.campaign_actief():
+		return _nee("Kanon-acties bestaan alleen onder campaign")
+	var gate := _action_turn(state, player_id)
+	if not gate.legal:
+		return gate
+	var pawn: Pawn = state.pawns.get(int(action.pawn_id), null)
+	if pawn == null or pawn.owner_id != player_id or pawn.is_eliminated or not pawn.is_active:
+		return _nee("Ongeldige pion")
+	if pawn.unit_type != Constants.UnitType.ARTILLERY:
+		return _nee("Alleen artillerie kent kanon-acties")
+	var kost: Dictionary = state.rules.campaign.get("kanon_actie_kost", {"roll": 1, "shoot": 1})
+	match String(action.sub):
+		"roll":
+			if pawn.remaining_stamina < int(kost.get("roll", 1)):
+				return _nee("Onvoldoende stamina")
+			if not Rules.get_valid_move_costs(state, pawn.id).has(action.target):
+				return _nee("Ongeldige rol-bestemming")
+			return _ok()
+		"shoot":
+			if pawn.remaining_stamina < int(kost.get("shoot", 1)):
+				return _nee("Onvoldoende stamina")
+			if not Rules.get_valid_shot_targets(state, pawn.id).has(int(action.target_id)):
+				return _nee("Ongeldig doelwit")
+			return _ok()
+	return _nee("Onbekende kanon-subactie")
 
 
 ## F2.2 — blinde spawn-inzet: fase, nog niet ingediend, cap, saldo per type,
@@ -181,6 +215,9 @@ static func gate_check(state: GameState, action: Dictionary, player_id: int) -> 
 			var pawn: Pawn = state.pawns.get(int(action.pawn_id), null)
 			if pawn == null or pawn.owner_id != player_id:
 				return _nee("Ongeldige pion")
+			if String(action.type) == Actions.MOVE and state.rules.campaign_actief() \
+					and pawn.unit_type == Constants.UnitType.ARTILLERY:
+				return _nee("Kanon beweegt via CANNON_ACT")  # F2.4/B3
 			return _ok()
 		Actions.MELEE:
 			var gate_m := _action_turn(state, player_id)
@@ -197,6 +234,21 @@ static func gate_check(state: GameState, action: Dictionary, player_id: int) -> 
 			var sh: Pawn = state.pawns.get(int(action.shooter_id), null)
 			if sh == null or sh.owner_id != player_id:
 				return _nee("Ongeldige schutter")
+			if state.rules.campaign_actief() and sh.unit_type == Constants.UnitType.ARTILLERY:
+				return _nee("Kanon schiet via CANNON_ACT")  # F2.4/B3
+			return _ok()
+		Actions.CANNON_ACT:
+			# Goedkope poort: campaign/beurt/eigendom/type; de dure legaliteit
+			# (rol-bestemming, vuurlijn, kosten) dwingt de reducer atomair af.
+			if not state.rules.campaign_actief():
+				return _nee("Kanon-acties bestaan alleen onder campaign")
+			var gate_c := _action_turn(state, player_id)
+			if not gate_c.legal:
+				return gate_c
+			var kanon: Pawn = state.pawns.get(int(action.pawn_id), null)
+			if kanon == null or kanon.owner_id != player_id \
+					or kanon.unit_type != Constants.UnitType.ARTILLERY:
+				return _nee("Ongeldige pion")
 			return _ok()
 		Actions.WOLF_STEP:
 			if state.phase != Phase.Type.ACTION or state.current_player != player_id:
@@ -291,6 +343,8 @@ static func _check_move(state: GameState, action: Dictionary, player_id: int) ->
 	var pawn: Pawn = state.pawns.get(int(action.pawn_id), null)
 	if pawn == null or pawn.owner_id != player_id:
 		return _nee("Ongeldige pion")
+	if state.rules.campaign_actief() and pawn.unit_type == Constants.UnitType.ARTILLERY:
+		return _nee("Kanon beweegt via CANNON_ACT")  # F2.4/B3
 	if not Rules.get_valid_move_paths(state, pawn.id).has(action.target):
 		return _nee("Ongeldige zet")
 	return _ok()
@@ -315,6 +369,8 @@ static func _check_shoot(state: GameState, action: Dictionary, player_id: int) -
 	var shooter: Pawn = state.pawns.get(int(action.shooter_id), null)
 	if shooter == null or shooter.owner_id != player_id:
 		return _nee("Ongeldige schutter")
+	if state.rules.campaign_actief() and shooter.unit_type == Constants.UnitType.ARTILLERY:
+		return _nee("Kanon schiet via CANNON_ACT")  # F2.4/B3
 	if not Rules.get_valid_shot_targets(state, shooter.id).has(int(action.target_id)):
 		return _nee("Ongeldig schot")
 	return _ok()
@@ -423,12 +479,16 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 		# moves en charges — apply berekent het volle pad alleen voor de
 		# daadwerkelijk gekozen zet.
 		var costs: Dictionary = Rules.get_valid_move_costs(state, pawn.id)
+		# F2.4/B3: onder campaign is CANNON_ACT de actietaal voor artillerie-
+		# bewegen en -schieten; melee blijft voor elk type een MELEE-actie.
+		var kanon_v42: bool = state.rules.campaign_actief() \
+			and pawn.unit_type == Constants.UnitType.ARTILLERY
 		for target in costs:
-			out.append(Actions.make_move(pawn.id, target))
+			out.append(Actions.make_cannon_roll(pawn.id, target) if kanon_v42 else Actions.make_move(pawn.id, target))
 		for defender_id in Rules.get_valid_melee_targets(state, pawn.id):
 			out.append(Actions.make_melee(pawn.id, defender_id))
 		for target_id in Rules.get_valid_shot_targets(state, pawn.id):
-			out.append(Actions.make_shoot(pawn.id, target_id))
+			out.append(Actions.make_cannon_shoot(pawn.id, target_id) if kanon_v42 else Actions.make_shoot(pawn.id, target_id))
 		if pawn.unit_type == Constants.UnitType.CAVALRY:
 			out.append_array(_enumerate_charges(state, pawn, costs))
 	return out

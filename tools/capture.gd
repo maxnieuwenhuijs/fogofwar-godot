@@ -1559,6 +1559,7 @@ func _make_goldens() -> void:
 	_golden_cycluslimiet_remise(dir)
 	_golden_spawn_geblokkeerd(dir)
 	_golden_cp_inzet(dir)
+	_golden_kanon_act(dir)
 	print("[GOLDENS] klaar")
 
 
@@ -1708,5 +1709,24 @@ func _golden_cp_inzet(dir: String) -> void:
 		[Actions.make_bet_cp(1), 1],
 		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 2}]), 1],
 		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 1}]), 2],
+	])
+
+
+func _golden_kanon_act(dir: String) -> void:
+	# v4.2 (F2.4): kanon rolt 1 vak en schiet dan een standbeeld kapot via
+	# CANNON_ACT (P2 kan niets, dus P1 houdt de beurt). P2 verliest NIET:
+	# bord + pool telt (F2.2). RETREAT bestaat niet (D9).
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var kanon := _golden_actieve_pion(s, 1, Vector2i(5, 6), Constants.UnitType.ARTILLERY, 2, 3, 2)
+	var doel: Pawn = s._spawn_pawn(2, Vector2i(5, 3))  # standbeeld in de vuurlijn
+	s._spawn_pawn(2, Vector2i(10, 10))
+	s._spawn_pawn(1, Vector2i(0, 10))
+	s.init_pools()
+	_golden_opnemen(dir + "kanon_act.json", s, [
+		[Actions.make_cannon_roll(kanon.id, Vector2i(5, 5)), 1],
+		[Actions.make_cannon_shoot(kanon.id, doel.id), 1],
 	])
 
