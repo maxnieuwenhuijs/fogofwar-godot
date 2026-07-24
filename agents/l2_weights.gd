@@ -39,9 +39,32 @@ func decide(view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictionar
 	var ph: int = s.phase
 	if ph == Phase.Type.PLACEMENT:
 		return Actions.make_place(ai.choose_placement(s))
+	# F2.5 (v4.2): spawn maximaal — de laatste legal-optie is de volste inzet.
+	if ph == Phase.Type.CYCLE_SPAWN:
+		var volste: Dictionary = legal[0]
+		for a in legal:
+			if String(a.type) == Actions.SPAWN and (a.spawns as Array).size() > (volste.spawns as Array).size():
+				volste = a
+		return volste
 	if Phase.is_define(ph):
+		# F2.5-heuristiek (masterplan): CP op de ronde-3-kaarten. Eerst blind
+		# bieden; de volgende decide-beurt verdikt generate_cards de eerste
+		# `bet` kaarten met het extra budgetpunt (hp).
+		if int(view.get("round_number", 1)) == 3 and not bool(view.get("own_cp_bet_done", true)):
+			var saldo: int = int(view.cp.get(str(player_id), 0)) if view.has("cp") else 0
+			for a in legal:
+				if String(a.type) == Actions.BET_CP and int(a.amount) > 0 and int(a.amount) <= saldo:
+					return a
 		var cards: Array = ai.generate_cards(s)
-		return Actions.make_define_cards(cards) if not cards.is_empty() else legal[0]
+		if cards.is_empty():
+			return legal[0]
+		var bet: int = int(view.get("own_cp_bet", 0))
+		for i in mini(bet, cards.size()):
+			cards[i].hp = int(cards[i].hp) + 1  # het CP-budgetpunt (D1)
+		var actie := Actions.make_define_cards(cards)
+		if Validator.is_legal(s, actie, player_id).legal:
+			return actie
+		return legal[0]
 	if Phase.is_reveal(ph):
 		return Actions.make_ack_reveal()
 	if Phase.is_linking(ph):
@@ -54,5 +77,26 @@ func decide(view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictionar
 			var stap: Dictionary = ai.choose_wolf_step(s)
 			return Actions.make_wolf_step(stap.target) if stap.has("target") else Actions.make_skip_wolf_step()
 		var actie: Dictionary = Agent.legacy_to_action(ai.choose_action(s))
-		return actie if not actie.is_empty() else legal[0]
+		if actie.is_empty():
+			return legal[0]
+		# F2.5/B3: onder campaign spreekt artillerie CANNON_ACT — vertaal de
+		# legacy move/shot van de eval naar de kanon-taal.
+		actie = _vertaal_kanon(s, actie)
+		return actie
 	return legal[0]
+
+
+## MOVE/SHOOT van een artilleriepion onder campaign -> cannon_roll/shoot.
+func _vertaal_kanon(s: GameState, actie: Dictionary) -> Dictionary:
+	if not s.rules.campaign_actief():
+		return actie
+	match String(actie.type):
+		Actions.MOVE:
+			var pion: Pawn = s.pawns.get(int(actie.pawn_id), null)
+			if pion != null and pion.unit_type == Constants.UnitType.ARTILLERY:
+				return Actions.make_cannon_roll(int(actie.pawn_id), actie.target)
+		Actions.SHOOT:
+			var schutter: Pawn = s.pawns.get(int(actie.shooter_id), null)
+			if schutter != null and schutter.unit_type == Constants.UnitType.ARTILLERY:
+				return Actions.make_cannon_shoot(int(actie.shooter_id), int(actie.target_id))
+	return actie

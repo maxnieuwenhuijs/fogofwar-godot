@@ -518,7 +518,7 @@ MOVE/SHOOT-paden voor artillerie blijven werken onder 4.1.x-config.
 **CHECK:** tests voor alle drie subacties + dode zone + blokkade onder v4.2-config; 4.1.x-goldens
 ongewijzigd groen.
 
-### ☐ F2.5 — Agents leren v4.2
+### ☑ F2.5 — Agents leren v4.2
 
 **Werk:** zonder dit meet F2.6 ruis: L0 kiest de nieuwe acties al legaal-random (gratis via
 `legal_actions`), maar L1 krijgt heuristieken (spawn richting front/haven; CP op de ronde-3-kaart;
@@ -529,6 +529,12 @@ gewichten. Daarna hertraining per doctrine onder v4.2-config (met seeds + conver
 **CHECK:** L1/L2 spelen 50 v4.2-partijen waarin aantoonbaar gespawnd/geboden wordt (metrics: >0 spawns
 en >0 CP-inzet per partij gemiddeld); hertrainde gewichten verslaan de niet-v4.2-bewuste gewichten (>55%
 op vaste seeds).
+**STATUS (24 juli):** deel 1 ruim gehaald (L1: 22 spawns + 12 CP per partij; L2: 40 + 12; 0 illegaal,
+72 partijen elk). Deel 2 (hertraining >55%) wacht op een lange trainingsrun — infrastructuur staat en is
+bewezen (train-CLI met rules-arg, v4.2-minigeneratie gedraaid); Max start hem via
+`-- train 120 6 6 <factie> <seed> arena/arena_configs/rules_v42_campaign.json`. De leerbare
+par.7.3-features (spawn-drempel, CP-timing als gewichten) zijn doorgeschoven naar de eval-verdieping
+in F8 — de huidige heuristieken dekken de F2.6-meetbaarheid.
 
 ### ☐ F2.6 — Arena-hermeting + UI onder v4.2
 

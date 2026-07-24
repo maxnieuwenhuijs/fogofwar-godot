@@ -29,6 +29,7 @@ func _init() -> void:
 		_per_speler[p] = {
 			"actions": 0, "damage": 0, "kills": 0, "overkill": 0,
 			"shots": 0, "melees": 0, "charges": 0, "moves": 0, "wolf_steps": 0,
+			"spawns": 0, "cp_bet": 0,  # F2.5: v4.2-meetpunten (CHECK-eis)
 		}
 
 
@@ -42,6 +43,9 @@ func before_action(state: GameState, _player: int, actie: Dictionary) -> void:
 			target_id = int(actie.target_id)
 		Actions.CHARGE:
 			target_id = int(actie.defender_id)
+		Actions.CANNON_ACT:
+			if String(actie.sub) == "shoot":
+				target_id = int(actie.target_id)
 	if target_id >= 0:
 		var target: Pawn = state.pawns.get(target_id, null)
 		if target != null:
@@ -66,6 +70,25 @@ func after_action(state: GameState, player: int, actie: Dictionary, events: Arra
 			_verwerk_gevecht(state, player, actie, events)
 		Actions.LINK:
 			_verwerk_koppeling(state, player, actie)
+		Actions.BET_CP:
+			_per_speler[player].cp_bet += int(actie.amount)
+		Actions.SPAWN:
+			# De reveal (bij de laatste commit) draagt de toegekende spawns
+			# voor BEIDE spelers; geweigerde spawns tellen bewust niet mee.
+			for ev in events:
+				if String(ev.type) == Reducer.EV_SPAWNS_REVEALED:
+					for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
+						_per_speler[pid].spawns += (ev.payload[str(pid)].spawned as Array).size()
+		Actions.CANNON_ACT:
+			stats.actions += 1
+			if String(actie.sub) == "shoot":
+				_verwerk_gevecht(state, player, actie, events)
+				stats.shots += 1
+				var kanon: Pawn = state.pawns.get(int(actie.pawn_id), null)
+				if kanon != null and kanon.unit_type == Constants.UnitType.ARTILLERY:
+					_cannon_shots[kanon.id] = int(_cannon_shots.get(kanon.id, 0)) + 1
+			else:
+				stats.moves += 1
 		_:
 			pass
 	if t == Actions.SHOOT:
@@ -103,7 +126,7 @@ func _verwerk_gevecht(state: GameState, player: int, actie: Dictionary, events: 
 						aanvaller_id = int(actie.attacker_id)
 					Actions.SHOOT:
 						aanvaller_id = int(actie.shooter_id)
-					Actions.CHARGE:
+					Actions.CHARGE, Actions.CANNON_ACT:
 						aanvaller_id = int(actie.pawn_id)
 				var aanvaller: Pawn = state.pawns.get(aanvaller_id, null)
 				if aanvaller != null and aanvaller.is_active:

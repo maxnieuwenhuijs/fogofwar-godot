@@ -270,6 +270,26 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.5 AFGEROND (24 juli) — agents leren v4.2.** L1: spawn maximaal
+  (volste sample-optie), CP alleen op de ronde-3-kaarten (masterplan-
+  heuristiek; wants_view nu ook in define-fases voor round_number),
+  kanonschot telt mee in kill/schade-takken en cannon_roll in de haven-tak.
+  L2: zelfde spawn/bet-heuristiek + verdikt zijn generate_cards-kaarten met
+  het CP-punt (validatie op de reconstructie) + vertaalt legacy move/shot
+  van de eval naar cannon_roll/shoot onder campaign. Agent.reconstruct_state
+  kent nu pools/cp/bets/spawn_done (dekt de laatste review-melding van
+  F2.2). Validator._sample_card_sets maakt bet-kaarten budget+1 (anders
+  verbrandde de sample-flow de inzet onbenut). MatchRunner (trainer-pad):
+  rules-param, CYCLE_SPAWN/BET_CP-afhandeling, kanon-vertaling; AgentRunner
+  init_pools. Trainer-CLI: 6e arg = rules-json (v4.2-trainen), live bewezen
+  met een minigeneratie onder 4.2.0. ArenaMetrics telt spawns/cp_bet (+
+  cannon_act in schoten/statue-kills). CHECK deel 1: L1 22 spawns + 12 CP
+  per partij, L2 40 + 12 (elk 72 partijen, 0 illegaal). Deel 2 (hertraining
+  >55%) = lange run voor Max: paneel/CLI met rules_v42_campaign.json.
+  CHECKS: 1162 asserts groen (V42AgentTests: 4) - simcheck 5/5 - fuzz 100
+  schoon - bench 5.3/s (iets lager door define-views, boven het 5-doel).
+  Volgende: F2.6 (arena-hermeting + UI onder v4.2).
+
 - **F2.4 AFGEROND (24 juli) — CANNON_ACT (stamina-kanon).** Union-actietype
   (D14) met sub roll|shoot; is_wellformed valideert per sub (RETREAT is
   per constructie misvormd, D9). ROLL hergebruikt apply_move (afwijkende

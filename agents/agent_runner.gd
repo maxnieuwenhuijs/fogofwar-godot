@@ -46,6 +46,7 @@ func _init(agent1: Agent, agent2: Agent, doctrine1: int = Constants.Doctrine.MEN
 	_state.doctrines[Constants.PLAYER_1] = doctrine1
 	_state.doctrines[Constants.PLAYER_2] = doctrine2
 	_state.phase = Phase.Type.PLACEMENT
+	_state.init_pools()  # F2.5: pools + CP onder een campaign-config
 
 
 func state() -> GameState:

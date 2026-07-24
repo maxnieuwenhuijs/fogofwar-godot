@@ -14,8 +14,30 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	if legal.is_empty():
 		return {}
 	var eerste_type: String = String(legal[0].type)
+	# F2.5 (v4.2): spawn maximaal (de laatste optie is de volste inzet) en
+	# CP alleen op de ronde-3-kaarten (masterplan-heuristiek) — de samples
+	# maken de eerste `bet` kaarten dan vanzelf budget+1.
+	if eerste_type == Actions.SPAWN:
+		var volste: Dictionary = legal[0]
+		for a in legal:
+			if (a.spawns as Array).size() > (volste.spawns as Array).size():
+				volste = a
+		return volste
+	if eerste_type == Actions.BET_CP:
+		var beste_bet: Dictionary = legal[0]  # amount 0
+		if int(view.get("round_number", 1)) == 3:
+			for a in legal:
+				if String(a.type) == Actions.BET_CP and int(a.amount) > int(beste_bet.amount):
+					beste_bet = a
+		if int(beste_bet.amount) > 0:
+			return beste_bet
+		# Geen inzet waard: sla de bet over en definieer meteen.
+		for a in legal:
+			if String(a.type) == Actions.DEFINE_CARDS:
+				return a
+		return beste_bet
 	# Setup-fasen (place/define/ack/link) en de Wolf-stap: eerste optie.
-	if eerste_type not in [Actions.MOVE, Actions.MELEE, Actions.SHOOT, Actions.CHARGE]:
+	if eerste_type not in [Actions.MOVE, Actions.MELEE, Actions.SHOOT, Actions.CHARGE, Actions.CANNON_ACT]:
 		return legal[0]
 	var pawns: Dictionary = view.pawns
 	# 1) Pak een kill (bekende schade >= bekende resterende HP).
@@ -28,13 +50,15 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	var haven: Array = Constants.get_haven_for_player(player_id)
 	for a in legal:
 		var t: String = String(a.type)
-		if t != Actions.MOVE and t != Actions.CHARGE:
+		var is_stap: bool = t == Actions.MOVE or t == Actions.CHARGE \
+			or (t == Actions.CANNON_ACT and String(a.sub) == "roll")
+		if not is_stap:
 			continue
 		var pd: Dictionary = pawns.get(str(int(a.pawn_id)), {})
 		if pd.is_empty():
 			continue
 		var van: Array = pd.position
-		var doel: Vector2i = a.target if t == Actions.MOVE else a.move_target
+		var doel: Vector2i = a.move_target if t == Actions.CHARGE else a.target
 		var winst: int = _haven_afstand(int(van[0]), int(van[1]), haven) \
 			- _haven_afstand(doel.x, doel.y, haven)
 		if winst > beste_winst:
@@ -42,10 +66,11 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 			beste = a
 	if not beste.is_empty():
 		return beste
-	# 3) Doe schade (melee of schot), anders 4) random.
+	# 3) Doe schade (melee of schot, incl. kanonschot), anders 4) random.
 	for a in legal:
 		var t: String = String(a.type)
-		if t == Actions.MELEE or t == Actions.SHOOT:
+		if t == Actions.MELEE or t == Actions.SHOOT \
+				or (t == Actions.CANNON_ACT and String(a.sub) == "shoot"):
 			return a
 	return legal[decide_rng.randi_range(0, legal.size() - 1)]
 
@@ -59,6 +84,11 @@ func _is_kill(pawns: Dictionary, a: Dictionary) -> bool:
 			doel_id = int(a.defender_id)
 		Actions.SHOOT:
 			aanvaller_id = int(a.shooter_id)
+			doel_id = int(a.target_id)
+		Actions.CANNON_ACT:
+			if String(a.sub) != "shoot":
+				return false
+			aanvaller_id = int(a.pawn_id)
 			doel_id = int(a.target_id)
 		Actions.CHARGE:
 			if int(a.defender_id) == -1:
@@ -86,4 +116,6 @@ func _haven_afstand(x: int, y: int, haven: Array) -> int:
 
 
 func wants_view(phase: int) -> bool:
-	return phase == Phase.Type.ACTION  # setup-fasen: eerste legale optie, geen view nodig
+	# F2.5: de define-view is nodig voor round_number (CP op de ronde-3-kaart);
+	# 3x per cyclus, dus verwaarloosbaar naast de F1.3-winst in de actiefase.
+	return phase == Phase.Type.ACTION or Phase.is_define(phase)

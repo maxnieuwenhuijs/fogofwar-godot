@@ -50,6 +50,11 @@ func _ready() -> void:
 		# F0.1: optionele run-seed als 5e argument; zonder seed varieert de run
 		# (exploratie), mét seed is de hele trainingsrun reproduceerbaar.
 		var train_seed: int = int(targs[ti + 5]) if targs.size() > ti + 5 else int(Time.get_ticks_msec())
+		# F2.5: optioneel 6e argument = pad naar een rules-json (bv.
+		# arena/arena_configs/rules_v42_campaign.json) — trainen onder v4.2.
+		if targs.size() > ti + 6:
+			_train_rules = RulesConfig.load_from_file(String(targs[ti + 6]))
+			print("[TRAIN] Regels: %s (%s)" % [String(targs[ti + 6]), _train_rules.rules_version])
 		_run_training(minutes, pop, games, faction, train_seed)
 		get_tree().quit()
 		return
@@ -962,6 +967,9 @@ func _ready() -> void:
 
 const TRAIN_AI := preload("res://scripts/ai/AIMedium.gd")
 
+## F2.5 — optionele custom regels voor de hele trainingsrun (null = 4.1.x).
+var _train_rules: RulesConfig = null
+
 # Convergentiecheck (bouwplan §7.4, F1.6): elke CONV_INTERVAL factie-generaties
 # speelt de huidige kampioen head-to-head tegen die van CONV_INTERVAL terug.
 const CONV_INTERVAL := 5
@@ -1328,7 +1336,7 @@ func _arena_games_threaded(jobs: Array, ai_script) -> Array:
 		var a2 = ai_j if job.i_is_p1 else ai_i
 		var d1: int = job.di if job.i_is_p1 else job.dj
 		var d2: int = job.dj if job.i_is_p1 else job.di
-		var runner := MatchRunner.new(a1, a2, d1, d2)
+		var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
 		runner.max_steps = 600  # snelle tiebreak bij patstelling (meten, geen training)
 		while not runner.done:
 			runner.step()
@@ -1380,7 +1388,7 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	var a2 = oa if cand_is_p1 else ca
 	var d1: int = cand_d if cand_is_p1 else opp_d
 	var d2: int = opp_d if cand_is_p1 else cand_d
-	var runner := MatchRunner.new(a1, a2, d1, d2)
+	var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
 	# Patstellingen kosten anders tot 2500 stappen per potje; echte partijen zijn
 	# rond ~350 klaar. De tiebreak (materiaal → haven) geeft hetzelfde leersignaal.
 	runner.max_steps = 900
@@ -1416,7 +1424,7 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 	oa.weights = oud_w.duplicate()
 	var a1 = na if nieuw_is_p1 else oa
 	var a2 = oa if nieuw_is_p1 else na
-	var runner := MatchRunner.new(a1, a2, d, d, seed_val)
+	var runner := MatchRunner.new(a1, a2, d, d, seed_val, _train_rules)
 	runner.max_steps = 900
 	while not runner.done:
 		runner.step()

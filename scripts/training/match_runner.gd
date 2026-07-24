@@ -17,7 +17,7 @@ var _guard: int = 0
 var max_steps: int = 2500
 
 
-func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS, seed_val: int = 0) -> void:
+func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS, seed_val: int = 0, rules: RulesConfig = null) -> void:
 	ai1 = controller1
 	ai2 = controller2
 	ai1.player_id = Constants.PLAYER_1
@@ -28,11 +28,14 @@ func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, d
 	ai1.rng = match_rng.fork("p1")
 	ai2.rng = match_rng.fork("p2")
 	_state = GameState.new()
+	if rules != null:
+		_state.rules = rules  # F2.5: trainer/sim onder een custom (v4.2-)config
 	_state.doctrines[Constants.PLAYER_1] = doctrine1
 	_state.doctrines[Constants.PLAYER_2] = doctrine2
 	_state.phase = Phase.Type.PLACEMENT
 	Reducer.apply(_state, Actions.make_place(ai1.choose_placement(_state)), Constants.PLAYER_1)
 	Reducer.apply(_state, Actions.make_place(ai2.choose_placement(_state)), Constants.PLAYER_2)
+	_state.init_pools()
 
 
 func state() -> GameState:
@@ -55,13 +58,40 @@ func step() -> void:
 		winner = _state.winner
 		return
 	var cur = ai1 if _state.current_player == Constants.PLAYER_1 else ai2
-	if Phase.is_define(ph):
-		if _state.cards_defined[Constants.PLAYER_1].size() == 0 \
-				and Validator.expected_define_count(_state, Constants.PLAYER_1) > 0:
-			Reducer.apply(_state, Actions.make_define_cards(ai1.generate_cards(_state)), Constants.PLAYER_1)
-		if _state.cards_defined[Constants.PLAYER_2].size() == 0 \
-				and Validator.expected_define_count(_state, Constants.PLAYER_2) > 0:
-			Reducer.apply(_state, Actions.make_define_cards(ai2.generate_cards(_state)), Constants.PLAYER_2)
+	if ph == Phase.Type.CYCLE_SPAWN:
+		# F2.5 (v4.2): volste inzet uit de sample-opties (max spawnen).
+		for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if _state.spawn_done.get(pid, false):
+				continue
+			var opties: Array = Validator.legal_actions(_state, pid)
+			var volste: Dictionary = Actions.make_spawn([])
+			for a in opties:
+				if String(a.type) == Actions.SPAWN and (a.spawns as Array).size() > (volste.spawns as Array).size():
+					volste = a
+			Reducer.apply(_state, volste, pid)
+	elif Phase.is_define(ph):
+		for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if _state.cards_defined[pid].size() > 0 \
+					or Validator.expected_define_count(_state, pid) == 0:
+				continue
+			var bot = ai1 if pid == Constants.PLAYER_1 else ai2
+			# F2.5-heuristiek: CP op de ronde-3-kaarten (masterplan); daarna
+			# krijgen de eerste `bet` kaarten het extra budgetpunt op hp.
+			var bet: int = 0
+			if _state.rules.campaign_actief() and _state.round_number == 3 \
+					and not _state.cp_bet_done.get(pid, false):
+				bet = mini(int(_state.cp.get(pid, 0)), Validator.expected_define_count(_state, pid))
+				if bet > 0:
+					Reducer.apply(_state, Actions.make_bet_cp(bet), pid)
+			var cards: Array = bot.generate_cards(_state)
+			for i in mini(bet, cards.size()):
+				cards[i].hp = int(cards[i].hp) + 1
+			var res: Dictionary = Reducer.apply(_state, Actions.make_define_cards(cards), pid)
+			if not res.ok and bet > 0:
+				# Terugvallen op de onverdikte set (bet is dan verbrand, D2).
+				for i in mini(bet, cards.size()):
+					cards[i].hp = int(cards[i].hp) - 1
+				Reducer.apply(_state, Actions.make_define_cards(cards), pid)
 	elif Phase.is_reveal(ph):
 		# Per-speler ACK (F0.4b); de runner bevestigt voor beide bots.
 		Reducer.apply(_state, Actions.make_ack_reveal(), Constants.PLAYER_1)
@@ -84,13 +114,23 @@ func step() -> void:
 			if act.is_empty():
 				done = true
 			else:
+				# F2.5/B3: onder campaign spreekt artillerie CANNON_ACT.
+				var camp: bool = _state.rules.campaign_actief()
 				match String(act.type):
 					"move":
-						Reducer.apply(_state, Actions.make_move(int(act.pawn_id), act.target), _state.current_player)
+						var loper: Pawn = _state.pawns.get(int(act.pawn_id), null)
+						if camp and loper != null and loper.unit_type == Constants.UnitType.ARTILLERY:
+							Reducer.apply(_state, Actions.make_cannon_roll(int(act.pawn_id), act.target), _state.current_player)
+						else:
+							Reducer.apply(_state, Actions.make_move(int(act.pawn_id), act.target), _state.current_player)
 					"attack":
 						Reducer.apply(_state, Actions.make_melee(int(act.attacker_id), int(act.defender_id)), _state.current_player)
 					"shot":
-						Reducer.apply(_state, Actions.make_shoot(int(act.shooter_id), int(act.target_id)), _state.current_player)
+						var schutter: Pawn = _state.pawns.get(int(act.shooter_id), null)
+						if camp and schutter != null and schutter.unit_type == Constants.UnitType.ARTILLERY:
+							Reducer.apply(_state, Actions.make_cannon_shoot(int(act.shooter_id), int(act.target_id)), _state.current_player)
+						else:
+							Reducer.apply(_state, Actions.make_shoot(int(act.shooter_id), int(act.target_id)), _state.current_player)
 					"charge":
 						Reducer.apply(_state, Actions.make_charge(int(act.pawn_id), act.move_target, int(act.defender_id)), _state.current_player)
 	if _state.phase == Phase.Type.GAME_OVER:

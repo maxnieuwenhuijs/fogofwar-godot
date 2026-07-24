@@ -522,14 +522,21 @@ static func _sample_card_sets(state: GameState, player_id: int) -> Array:
 	var n: int = expected_define_count(state, player_id)
 	var speed_max: int = int(doctrine.speed_max)
 	var cap: int = state.rules.per_stat_cap
+	# F2.5: een ingezette CP-bet (F2.3) geeft de eerste `bets` kaarten budget+1
+	# — anders zou een sample-define de verbrande inzet onbenut laten.
+	var bets: int = int(state.cp_bets.get(player_id, 0))
 	var sets: Array = []
 	for pref in [["hp", "stamina", "attack"], ["attack", "hp", "stamina"], ["stamina", "attack", "hp"]]:
 		var card: Dictionary = _fill_card(budget, speed_max, cap, pref)
 		if card.is_empty():
 			continue
+		var dik: Dictionary = _fill_card(budget + 1, speed_max, cap, pref) if bets > 0 else {}
 		var cards: Array = []
-		for _i in n:
-			cards.append(card.duplicate())
+		for i in n:
+			if i < bets and not dik.is_empty():
+				cards.append(dik.duplicate())
+			else:
+				cards.append(card.duplicate())
 		sets.append(cards)
 	return sets
 

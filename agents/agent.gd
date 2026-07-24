@@ -108,6 +108,24 @@ static func reconstruct_state(view: Dictionary) -> GameState:
 		s.haven_touches[int(String(key))] = {}
 		for pid in view.haven_touches[key]:
 			s.haven_touches[int(String(key))][int(pid)] = true
+	# F2.5 (v4.2) — pool/CP-reconstructie: eigen waarden exact; vijandelijke
+	# saldi zijn het "?"-sentinel (D12) en blijven dan gewoon weg — de
+	# validator-checks voor EIGEN acties lezen alleen de eigen kant.
+	for key in view.get("pools", {}):
+		if view.pools[key] is Dictionary:
+			var p: Dictionary = view.pools[key]
+			s.pools[int(String(key))] = {"inf": int(p.get("inf", 0)), "cav": int(p.get("cav", 0)), "art": int(p.get("art", 0))}
+	for key in view.get("cp", {}):
+		if not (view.cp[key] is String):
+			s.cp[int(String(key))] = int(view.cp[key])
+	if int(view.get("own_cp_bet", 0)) > 0:
+		s.cp_bets[viewer] = int(view.own_cp_bet)
+	if bool(view.get("own_cp_bet_done", false)):
+		s.cp_bet_done[viewer] = true
+	if bool(view.get("own_spawn_done", false)):
+		s.spawn_done[viewer] = true
+	if bool(view.get("enemy_has_spawned", false)):
+		s.spawn_done[enemy] = true
 	# De vijand heeft mogelijk gedefinieerd (commit-gate-signaal), maar wat is
 	# geheim: markeer met een placeholder zodat fase-logica niet doorschuift.
 	if bool(view.get("enemy_has_defined", false)) and s.cards_defined[enemy].is_empty() \
