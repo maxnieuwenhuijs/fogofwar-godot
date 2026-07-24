@@ -74,6 +74,16 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	# de reveal: alleen de eigen commit plus een boolean van de ander.
 	var pool_zichtbaar: bool = not redacted \
 		or (state.rules.campaign_actief() and bool(state.rules.campaign.get("pool_zichtbaar", false)))
+	# Review-fix (F2.2): de rules-dict draagt het campaign-blok integraal mee,
+	# en een expliciete startpool daarin (F3-pad: gecodeerde campagne-schade)
+	# zou het "?"-sentinel omzeilen — de tegenstander kan het saldo dan de
+	# hele match exact bijhouden. Redigeer de kopie; cached_dict zelf is
+	# gedeeld en ALLEEN-LEZEN, dus nooit in-place muteren.
+	var rules_d: Dictionary = state.rules.cached_dict()
+	if not pool_zichtbaar and state.rules.campaign_actief() \
+			and state.rules.campaign.get("pools", null) != null:
+		rules_d = rules_d.duplicate(true)
+		rules_d.campaign["pools"] = HIDDEN
 	var pools_d: Dictionary = {}
 	if state.pools.has(player_id):
 		pools_d[str(player_id)] = (state.pools[player_id] as Dictionary).duplicate()
@@ -98,7 +108,7 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"initiative_player": state.initiative_player,
 		"winner": state.winner,
 		"pending_wolf_step_pawn": state.pending_wolf_step_pawn,
-		"rules": state.rules.cached_dict(),
+		"rules": rules_d,
 		"doctrines": {str(player_id): state.doctrine_of(player_id), str(enemy): state.doctrine_of(enemy)},
 		"pawns": pawns_d,
 		"cards": cards_d,

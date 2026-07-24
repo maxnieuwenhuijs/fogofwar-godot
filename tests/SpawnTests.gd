@@ -157,6 +157,25 @@ func test_vijandelijke_pool_verborgen_in_view() -> void:
 	assert_true(zichtbaar.pools[str(2)] is Dictionary)
 
 
+func test_expliciete_startpool_lekt_niet_via_rules() -> void:
+	# Review-fix F2.2: view.pools verbergt de vijand-pool, maar het campaign-
+	# blok in view.rules droeg een expliciete startpool (F3-pad) integraal mee.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {"pools": {
+		"1": {"inf": 5, "cav": 2, "art": 1}, "2": {"inf": 9, "cav": 0, "art": 0}}}})
+	s._spawn_pawn(1, Vector2i(5, 8))
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s.init_pools()
+	var view1: Dictionary = View.for_player(s, 1)
+	assert_eq(view1.rules.campaign.pools, "?", "expliciete startpool geredigeerd in view.rules")
+	assert_eq(view1.pools[str(2)], "?", "en het saldo-sentinel blijft staan")
+	# Full-state-ablatie en pool_zichtbaar=true zien hem wel.
+	var open: Dictionary = View.for_player(s, 1, false)
+	assert_true(open.rules.campaign.pools is Dictionary)
+	# De gedeelde cached_dict is NIET gemuteerd door de redactie.
+	assert_true(s.rules.cached_dict().campaign.pools is Dictionary, "cached_dict blijft ongeredigeerd")
+
+
 func test_win_kijkt_naar_bord_plus_pool() -> void:
 	var s := _spawn_fase_staat()
 	# P2 heeft geen actieve pion op het bord (alleen een standbeeld dat we
