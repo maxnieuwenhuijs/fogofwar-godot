@@ -5,8 +5,9 @@
 > code-extractie + kruischeck tegen `spelregels-v4.1.md`). Elke regel draagt zijn
 > codebron. Wijkt dit document af van de code, dan is dat een bug in één van beide
 > en hoort er een entry in `spelregels-CHANGELOG.md` bij.
-> **Deel B** is het 4.2.0-concept (campagne-economie): alles daarin is **TE
-> BEVESTIGEN** tot de F2.1-ontwerpsessie het vastklikt.
+> **Deel B** is de **definitieve 4.2.0-spec** (campagne-economie), vastgeklikt
+> in de F2.1-ontwerpsessie met Max op 24 juli 2026. Besluitonderbouwing:
+> `docs/F2.1-beslisagenda.md`. Implementatie volgt in F2.2-F2.6.
 
 ---
 
@@ -213,38 +214,90 @@ naar de engine-klokken migreert:
 
 ---
 
-# DEEL B — 4.2.0-concept (campagne-economie) — ALLES TE BEVESTIGEN
+# DEEL B — 4.2.0 DEFINITIEF (campagne-economie)
 
-> Bron: bouwplan §2.1/§2.4 via MASTERBOUWPLAN F2. Elk punt krijgt in F2.1 een
-> definitief besluit + config-knop-naam. Een match zonder `campaign`-config
-> speelt exact 4.1.x.
+> Vastgeklikt in de F2.1-ontwerpsessie met Max (24 juli 2026); volledige
+> besluitonderbouwing in `docs/F2.1-beslisagenda.md` (D1-D14). Een match zonder
+> `campaign`-blok speelt exact 4.1.x; activering bumpt rules_version naar 4.2.0.
+> Alle `campaign.*`-knoppen bestaan alleen binnen dat blok.
 
-## B1. Commandopunten (CP) — TE BEVESTIGEN
-- `state.cp[player]`; start 6 per campagneduel (CP-tabel: haven 8, eliminatie 4,
-  raadstem 1 — campagnelaag).
-- **BET_CP{0..3}**: blinde inzet per setup-ronde naast DEFINE_CARDS (zelfde
-  commit-gate), cap +1 per kaart. TE BEVESTIGEN: wat een CP op een kaart precies
-  doet (+1 op een stat naar keuze bij koppeling?), en of ingezette CP verbranden
-  of terugkeren. Telt CP-inzet mee in het initiatief-bod?
+## B1. Commandopunten (CP) — DEFINITIEF
+- `state.cp[player]`; elk duel start met exact `campaign.cp_start` (**6**),
+  onafhankelijk van de campagnestand (`campaign.cp_start_mode = "vast"`, D13).
+- **Effect (D1):** 1 CP op een kaart = **+1 budgetpunt bij het definiëren** van
+  die kaart: de speler verdeelt het extra punt zelf over de stats
+  (`campaign.cp_effect_mode = "define_budget"`). Validator: som(stats) ≤
+  doctrine-budget + cp_op_kaart.
+- **Inzet (D4):** max **1 CP per kaart, geen plafond** — het maximum per ronde
+  is dus het aantal daadwerkelijk gedefinieerde kaarten (Muis 4, Leeuw 2; onder
+  4.1.10-hr eventueel minder). `campaign.cp_inzet_max = "per_kaart"`.
+- **Levensloop (D2):** ingezet = **verbrand**, ook als de kaart nooit gekoppeld
+  raakt (`campaign.cp_refund = "none"`). Verdientabel (startwaarden, F2.6/F7.3
+  mogen bijstellen op data): `campaign.cp_start = 6`, `campaign.cp_haven = 8`,
+  `campaign.cp_eliminatie = 4`, `campaign.cp_raadstem = 1`.
+- **Bijschrijving (D13):** verdiensten worden bij de trigger als ledger-event
+  geschreven maar landen op de **campagnelaag**; pas in een volgend duel
+  uitgeefbaar (`campaign.cp_bijschrijving = "campagnelaag"`).
+- **Initiatief (D3):** géén aparte bod-regel. Het extra budgetpunt telt, als de
+  speler het in Aanval stopt, vanzelf mee in het bestaande aanvalsbod.
+- **Protocol (D14):** `BET_CP` is een **apart actietype** naast DEFINE_CARDS
+  (zelfde commit-gate); DEFINE_CARDS blijft byte-identiek aan 4.1.x.
 
-## B2. Pionnen-pool + SPAWN — TE BEVESTIGEN
-- `state.pools[player] = {inf, cav, art}` (init uit config/campagne; poolfactor
-  3.0 — TE BEVESTIGEN: 3.0 × wat precies).
-- Nieuwe fasen `CYCLE_SPAWN` (vóór de define-rondes) en `RESET` (expliciet).
-- **SPAWN{[(type, cel)] ≤3}** per cyclus, blind + simultaan (commit-gate).
-  TE BEVESTIGEN: spawnvakken (thuisrijen?). Dood = weg (pool muteert niet);
-  eliminatie-winst kijkt naar bord + pool.
+## B2. Pionnen-pool + SPAWN — DEFINITIEF
+- `state.pools[player] = {inf, cav, art}`; init = `campaign.poolfactor`
+  (**3.0**) × de doctrine-legersamenstelling **per type** (D5). De engine
+  krijgt de startpool als expliciete waarde in het campaign-blok aangeleverd;
+  wie hem vult (config of campagnestand) is een F3.0-besluit.
+- **Verliezen (D5):** duel-verliezen boeken af van de campagne-pool
+  (`campaign.pool_afboeking = true`). Binnen de match geldt **dood = weg**,
+  zonder uitzondering (RETREAT bestaat niet, zie B3).
+- Nieuwe fasen `CYCLE_SPAWN` (vóór de define-rondes) en `RESET` (zichtbare
+  fase zonder spelerinput; pool-/CP-administratie landt in het event-log, D7).
+  Nieuwe fase-waarden achteraan de enum (replays blijven heel).
+- **SPAWN (D6/D7):** blind + simultaan (commit-gate), vanaf **cyclus 2**
+  (`campaign.spawn_vanaf_cyclus = 2`; cyclus 1 = de vertrouwde volledige
+  PLACEMENT). Max **3 totaal** per cyclus over alle types
+  (`campaign.spawn_max = 3`), alleen op de **eigen achterste rij**
+  (`campaign.spawn_vakken = "achterste_rij"`, D6 — bewust de harde rem op
+  hoekfort-aanvulling). Bezet vak bij reveal = die spawn geweigerd, pion
+  blijft in de pool. Spawn kost 1 pool-punt, geen CP.
+- **Eliminatie-winst** kijkt naar bord + pool: je verliest pas als beide leeg
+  zijn.
 
-## B3. Kanon-actiepot (CANNON_ACT) — TE BEVESTIGEN
-- **CANNON_ACT{piece, ROLL dir | SHOOT target | RETREAT}** met de stamina-pot als
-  actiebron (formaliseert de huidige huisregel). TE BEVESTIGEN: dracht-model
-  (bouwplan zegt vast max 5; huidige engine 6), ROLL = 1 vak, RETREAT = inrukken?
+## B3. Kanon-acties (CANNON_ACT) — DEFINITIEF
+- **CANNON_ACT{piece, ROLL dir | SHOOT target}** — één union-actietype met
+  sub-veld (D14). **RETREAT bestaat niet** (besluit Max: geen spelelement).
+- Kosten uit de bestaande per-pion stamina-cyclusvoorraad (`stamina_model =
+  "pool"`): `campaign.kanon_actie_kost = {roll: 1, shoot: 1}`; ROLL = 1 vak.
+  `campaign != null` + `stamina_model = "one_action"` wordt bij
+  config-validatie geweigerd (D9).
+- **Dracht (D8):** `campaign.kanon_dracht_max = 6`, Leeuw-bonus +1 blijft
+  (7). Dode zone blijft: afstand 1 nooit beschietbaar (`art_min_range = 2`).
+- Onder campaign is CANNON_ACT dé actietaal voor artillerie; MOVE/SHOOT
+  blijven het 4.1.x-pad.
 
-## B4. Klokken — TE BEVESTIGEN
-- `clock {bank_sec, increment_sec, reconnect_grace_sec}` in rules_config;
-  deadline-gevolgen per fase (setup → default-loadout, actiefase → bank/forfeit).
-  Implementatie F0.8; getallen TE BEVESTIGEN.
+## B4. Klokken — DEFINITIEF
+- `clock {bank_sec, increment_sec, reconnect_grace_sec}` top-level in
+  rules_config; engine-default blijft `{0, 0, 20}` (bank 0 = klok uit =
+  4.1-gedrag). **Campagne-standaard (D10): bank 180, increment 5, grace 60**;
+  deadline-trap: eerst bank opmaken, dan forfeit; setup-deadline geeft de
+  gekozen preset als default-loadout (preset-statverdelingen: F2.6).
 
-## B5. SKIP — TE BEVESTIGEN
-- `SKIP`-actie alleen als de engine geen legale actie vindt (voorkomt deadlocks
-  onder v4.2-fasen).
+## B5. SKIP — DEFINITIEF
+- **Geen aparte SKIP-actie** (D11): de engine slaat automatisch over wie niets
+  legaals heeft (bestaand gate-patroon); "bewust niets spawnen" = SPAWN met
+  lege lijst (`campaign.skip_mode = "auto"`). Wederzijds "niemand kan iets" =
+  cyclus-einde richting cycle_limit, zoals nu.
+
+## B6. Zichtbaarheid — DEFINITIEF
+- **Vijandelijke pool-voorraad én CP-saldo zijn verborgen** (D12, besluit Max:
+  fog voorop): het bord is openbaar, maar reserves en CP van de tegenstander
+  lees je alleen uit battlereports of van teamgenoten (campagnelaag, F3-eis).
+  Lopende blinde inzetten en spawnkeuzes sowieso verborgen tot reveal.
+  `campaign.pool_zichtbaar = false`. View redigeert `pools`/`cp` van de
+  vijand; de leak-canary wordt hierop uitgebreid (F2.2).
+
+## B7. Naamgeving
+- Config-knoppen in snake_case (D14): `campaign.kanon_dracht_max`,
+  `campaign.kanon_actie_kost`, enz. MASTERBOUWPLAN F2.4/F2.6 volgt deze
+  spelling.

@@ -270,6 +270,24 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.1 AFGEROND (24 juli) — v4.2-economie definitief.** Ontwerpsessie met
+  Max via de beslisagenda (docs/F2.1-beslisagenda.md, gebouwd door een
+  multi-agent-werkgroep: 3 bron-lezers + synthese + adversariele toets die
+  D13/D14 nog aan het net trok). Alle 14 punten besloten; docs/spelregels-
+  v4.2.md Deel B is nu de definitieve spec (0x "TE BEVESTIGEN", elke regel
+  een campaign.*-knop). Kern: CP = +1 kaartbudget bij definieren (1 per
+  kaart, geen plafond, verbrand, initiatief loopt vanzelf via de stats);
+  pool = 3x comp per type met campagne-afboeking; spawn max 3 vanaf cyclus 2
+  ALLEEN op de achterste rij (Max' hoekfort-rem); CANNON_ACT = ROLL+SHOOT
+  (RETREAT geschrapt: "geen spelelement"); vijandelijke pool/CP VERBORGEN
+  (fog voorop; battlereports/teamgenoten = F3-eis); klok-campagnestandaard
+  180/5/60. Nachtrun-data (61.560 partijen, fuzz 10k schoon): Muis 41.7
+  (+16.7 door de gen-2-adoptie!), maar Wolf zakte naar 16.7 — volgende
+  trainingsronde is aan Max (paneel-knop). Meetkwaliteit: seeded tie-break-
+  loting in L2 (vlag, default uit; matrix_l2.json aan) — zelfde seeds
+  identiek, andere seeds echte spreiding. Volgende: F2.2 (pools/CYCLE_SPAWN/
+  SPAWN in de reducer).
+
 - **F1.6 AFGEROND (23 juli) — vervolg + slot:** trainer-gate was het echte
   blok: de absolute adoptie-eis (>=8/12 = 67% winrate) is voor een zwakke
   factie onhaalbaar — 2x een run met 0 adopties, ook met betere kandidaten.

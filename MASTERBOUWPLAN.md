@@ -474,7 +474,7 @@ convergentiecheck gerapporteerd; alle goldens bewust ge-bumpt waar regels wijzig
 Doel: MatchCore spreekt de volledige v4.2-actieset uit het bouwplan. Alles config-gated: een match
 zonder `campaign`-blok speelt exact 4.1.x.
 
-### ☐ F2.1 — spelregels-v4.2.md definitief
+### ☑ F2.1 — spelregels-v4.2.md definitief
 
 **Werk:** Deel B uit F0.0 samen met Max doornemen en vastklikken: CP-tabel (start 6, haven 8, eliminatie
 4, raadstem 1 — bouwplan §2.4), inzet per ronde (0..3, cap +1 per kaart — wat doet een CP op een kaart
@@ -510,9 +510,9 @@ tot reveal (leak-canary); golden replay met CP-inzet.
 
 ### ☐ F2.4 — CANNON_ACT (stamina-kanon)
 
-**Werk:** artillerie krijgt de expliciete actie `CANNON_ACT{piece, ROLL dir | SHOOT target | RETREAT}`
+**Werk:** artillerie krijgt de expliciete actie `CANNON_ACT{piece, ROLL dir | SHOOT target}` (RETREAT geschrapt in F2.1)
 met de stamina-pot als actiebron (formaliseert de huidige huisregel); dracht/kosten uit config
-(`kanonDrachtMax`, `kanonActieKost`). UI: actiepot-badge op het kanon (bouwplan §4.1). Oude
+(`campaign.kanon_dracht_max`, `campaign.kanon_actie_kost`). UI: actiepot-badge op het kanon (bouwplan §4.1). Oude
 MOVE/SHOOT-paden voor artillerie blijven werken onder 4.1.x-config.
 
 **CHECK:** tests voor alle drie subacties + dode zone + blokkade onder v4.2-config; 4.1.x-goldens
@@ -533,7 +533,7 @@ op vaste seeds).
 ### ☐ F2.6 — Arena-hermeting + UI onder v4.2
 
 **Werk:** `arena_configs/v42_default.json`; volledige matrix + §8.2-metrics onder v4.2; sweep over de
-nieuwe knoppen (CP-tabel ±, poolfactor 2.5/3.0, kanonDrachtMax 5/6). UI: spawn-UI (hergebruik
+nieuwe knoppen (CP-tabel ±, poolfactor 2.5/3.0, kanon_dracht_max 5/6). UI: spawn-UI (hergebruik
 placement-flow), CP-toggle in de kaartwaaier, actiepot-badge, en het **MatchSetup**-scherm uit bouwplan
 §4.1: 3 kaarten met sliders + presets Aanvallend/Gebalanceerd/Verdedigend, waarbij **preset = ook de
 timeout-default** (koppelt aan de F0.8 default-loadout).
