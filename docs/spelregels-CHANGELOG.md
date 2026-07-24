@@ -20,6 +20,15 @@ byte-identiek 4.1.10-hr; activering van het blok zet `rules_version` op 4.2.0.
   niet verslagen).
 - **View** (D12): vijandelijke pool is het "?"-sentinel (tenzij
   `pool_zichtbaar`); de lopende spawn-inzet is geheim tot de reveal.
+- **F2.3 — BET_CP** (zelfde 4.2.0-lijn): blinde CP-inzet als apart actietype
+  vóór de eigen kaartdefinitie (D14), 0..min(saldo, kaarten die ronde);
+  direct verbrand, ook ongebruikt (D2). Effect (D1): elke ingezette CP staat
+  precies 1 kaart met budget+1 toe (define-validatie, max 1 per kaart, D4).
+  Initiatief loopt vanzelf via de stats (D3, geen aparte bod-regel).
+  Ledger-events: cp_bet (blind), cp_admin bij de reveal (server/log-only,
+  D12) en cp_earned bij haven-/eliminatie-winst (tarief 8/4, D13 — saldo
+  blijft onaangeraakt, de campagnepot boekt bij). View: eigen saldo/inzet
+  zichtbaar, vijandelijk saldo "?" en inzet onzichtbaar tot de reveal.
 - Serialisatie-formaat uitgebreid (pools/spawn-commits): alle goldens
   geregenereerd (formaatwijziging, geen 4.1-regelwijziging — simcheck 5/5
   en de volledige suite bewijzen gedragsbehoud).

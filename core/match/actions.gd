@@ -22,6 +22,7 @@ const SKIP_WOLF_STEP := "skip_wolf_step"
 const RESIGN := "resign"
 const CLAIM_TIMEOUT := "claim_timeout"
 const SPAWN := "spawn"  # v4.2 (F2.2): blinde spawn-inzet; lege lijst = bewust niets
+const BET_CP := "bet_cp"  # v4.2 (F2.3): blinde CP-inzet vóór de eigen define (D1: +1 kaartbudget per CP)
 
 ## Per type: de verplichte payload-velden (voor is_wellformed en from_dict).
 const _FIELDS := {
@@ -38,6 +39,7 @@ const _FIELDS := {
 	RESIGN: [],
 	CLAIM_TIMEOUT: [],
 	SPAWN: ["spawns"],
+	BET_CP: ["amount"],
 }
 
 ## Velden die een Vector2i dragen (serialisatie ↔ [x, y]).
@@ -87,6 +89,9 @@ static func make_spawn(spawns: Array) -> Dictionary:
 	# spawns: [{type: UnitType, pos: Vector2i}, ...] — mag leeg (bewust niets).
 	return {"type": SPAWN, "spawns": spawns}
 
+static func make_bet_cp(amount: int) -> Dictionary:
+	return {"type": BET_CP, "amount": amount}
+
 
 # --- Structuurcontrole ---------------------------------------------------------
 
@@ -117,6 +122,8 @@ static func is_wellformed(a) -> bool:
 		for c in a.cards:
 			if not (c is Dictionary) or not c.has("hp") or not c.has("stamina") or not c.has("attack"):
 				return false
+	if a.has("amount") and not (a.amount is int):
+		return false
 	return true
 
 

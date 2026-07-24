@@ -2,170 +2,171 @@
 	"entries": [
 		{
 			"action": {
-				"attacker_id": 1,
-				"defender_id": 2,
-				"type": "melee"
+				"amount": 1,
+				"type": "bet_cp"
 			},
 			"events": [
 				{
 					"payload": {
-						"action": {
-							"attacker_id": 1,
-							"defender_id": 2,
-							"type": "attack"
-						},
-						"result": {
-							"attacker_alive": true,
-							"attacker_eliminated": false,
-							"attacker_from_pos": [
-								4,
-								1
-							],
-							"charge_from": [
-								0,
-								0
-							],
-							"damage": 1,
-							"defender_pos": [
-								3,
-								1
-							],
-							"eliminated": false,
-							"forced_move": false,
-							"is_shot": false,
-							"move_target": [
-								0,
-								0
-							],
-							"moved": false,
-							"retaliation": true,
-							"retaliation_damage": 1,
-							"success": true,
-							"wolf_step_available": true
-						}
+						"player_id": 1
 					},
 					"seq": 0,
-					"type": "action_applied"
+					"type": "cp_bet"
 				},
 				{
 					"payload": {},
 					"seq": 1,
 					"type": "state_updated"
-				},
-				{
-					"payload": {
-						"pawn_id": 1
-					},
-					"seq": 2,
-					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "5de55c9a31bb2823e0e9a4b6cba887d6bece7757caf1ceef17cd2b5094fd7812",
+			"hash": "d882325c59edfd8f93645b8879f44e824c53560a6d203408f00806d40a3b216c",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784906363.492
+			"ts": 1784906363.585
 		},
 		{
 			"action": {
-				"target": [
-					4,
-					0
+				"cards": [
+					{
+						"attack": 2,
+						"hp": 5,
+						"stamina": 1
+					}
 				],
-				"type": "wolf_step"
+				"type": "define_cards"
 			},
 			"events": [
 				{
-					"payload": {
-						"action": {
-							"from": [
-								4,
-								1
-							],
-							"pawn_id": 1,
-							"target": [
-								4,
-								0
-							],
-							"type": "wolf_step"
-						},
-						"result": {
-							"success": true
-						}
-					},
+					"payload": {},
 					"seq": 0,
-					"type": "action_applied"
-				},
+					"type": "state_updated"
+				}
+			],
+			"hash": "d73e9450bd92787a6ff4708954ebb42d20f39420615d5c0447c65c6f602d6b8e",
+			"player_id": 1,
+			"seq": 1,
+			"ts": 1784906363.585
+		},
+		{
+			"action": {
+				"cards": [
+					{
+						"attack": 1,
+						"hp": 5,
+						"stamina": 1
+					}
+				],
+				"type": "define_cards"
+			},
+			"events": [
 				{
 					"payload": {},
-					"seq": 1,
+					"seq": 0,
 					"type": "state_updated"
 				},
 				{
 					"payload": {
-						"new_phase": 12,
-						"old_phase": 11
+						"bets": {
+							"1": 1,
+							"2": 0
+						},
+						"saldi": {
+							"1": 5,
+							"2": 6
+						}
+					},
+					"seq": 1,
+					"type": "cp_admin"
+				},
+				{
+					"payload": {
+						"new_phase": 3,
+						"old_phase": 2
 					},
 					"seq": 2,
 					"type": "phase_changed"
 				},
 				{
 					"payload": {
+						"totals_p1": {
+							"attack": 2,
+							"bid": 0.25,
+							"hp": 5,
+							"stamina": 1
+						},
+						"totals_p2": {
+							"attack": 1,
+							"bid": 0.0,
+							"hp": 5,
+							"stamina": 1
+						},
 						"winner": 1
 					},
 					"seq": 3,
-					"type": "game_over"
+					"type": "cards_revealed"
 				}
 			],
-			"hash": "0c131ba5a26cd8e6a119be0ab6daf4d47c2da406bcaeec716aee4a1ec84145d2",
-			"player_id": 1,
-			"seq": 1,
-			"ts": 1784906363.493
+			"hash": "e0c604e5ef15257e7c001d7b43edf89a4a80be798872f7c4a2e27c1f5334d8b5",
+			"player_id": 2,
+			"seq": 2,
+			"ts": 1784906363.586
 		}
 	],
-	"final_hash": "0c131ba5a26cd8e6a119be0ab6daf4d47c2da406bcaeec716aee4a1ec84145d2",
+	"final_hash": "e0c604e5ef15257e7c001d7b43edf89a4a80be798872f7c4a2e27c1f5334d8b5",
 	"final_state": {
 		"all_cards": {
 			"0": {
-				"attack": 1,
-				"hp": 3,
+				"attack": 2,
+				"hp": 5,
 				"id": 0,
-				"linked_pawn_id": 1,
+				"linked_pawn_id": -1,
 				"owner_id": 1,
 				"round_number": 1,
-				"stamina": 2
+				"stamina": 1
 			},
 			"1": {
 				"attack": 1,
 				"hp": 5,
 				"id": 1,
-				"linked_pawn_id": 2,
+				"linked_pawn_id": -1,
 				"owner_id": 2,
 				"round_number": 1,
-				"stamina": 2
+				"stamina": 1
 			}
 		},
 		"cards_defined": {
-			"1": [],
-			"2": []
+			"1": [
+				0
+			],
+			"2": [
+				1
+			]
 		},
 		"cards_revealed": {
-			"1": [],
-			"2": []
+			"1": [
+				0
+			],
+			"2": [
+				1
+			]
 		},
 		"clocks": {},
-		"cp": {},
+		"cp": {
+			"1": 5,
+			"2": 6
+		},
 		"cp_bet_done": {
-			"1": false,
+			"1": true,
 			"2": false
 		},
 		"cp_bets": {
-			"1": 0,
+			"1": 1,
 			"2": 0
 		},
 		"current_player": 1,
 		"cycle": 1,
 		"doctrines": {
-			"1": 4,
+			"1": 0,
 			"2": 0
 		},
 		"haven_touches": {
@@ -175,7 +176,7 @@
 		"initiative_player": 1,
 		"last_initiative_winner": 1,
 		"next_card_id": 2,
-		"next_pawn_id": 4,
+		"next_pawn_id": 2,
 		"pawns": {
 			"0": {
 				"attack_value": 0,
@@ -189,53 +190,17 @@
 				"max_stamina": 0,
 				"owner_id": 1,
 				"position": [
-					0,
-					0
+					5,
+					9
 				],
 				"remaining_stamina": 0,
 				"unit_type": 0
 			},
 			"1": {
-				"attack_value": 1,
-				"card_revealed": true,
-				"current_hp": 2,
-				"id": 1,
-				"is_active": true,
-				"is_eliminated": false,
-				"linked_card_id": 0,
-				"max_hp": 3,
-				"max_stamina": 2,
-				"owner_id": 1,
-				"position": [
-					4,
-					0
-				],
-				"remaining_stamina": 1,
-				"unit_type": 0
-			},
-			"2": {
-				"attack_value": 1,
-				"card_revealed": true,
-				"current_hp": 4,
-				"id": 2,
-				"is_active": true,
-				"is_eliminated": false,
-				"linked_card_id": 1,
-				"max_hp": 5,
-				"max_stamina": 2,
-				"owner_id": 2,
-				"position": [
-					3,
-					1
-				],
-				"remaining_stamina": 2,
-				"unit_type": 0
-			},
-			"3": {
 				"attack_value": 0,
 				"card_revealed": true,
 				"current_hp": 0,
-				"id": 3,
+				"id": 1,
 				"is_active": false,
 				"is_eliminated": false,
 				"linked_card_id": -1,
@@ -243,20 +208,31 @@
 				"max_stamina": 0,
 				"owner_id": 2,
 				"position": [
-					10,
-					10
+					5,
+					1
 				],
 				"remaining_stamina": 0,
 				"unit_type": 0
 			}
 		},
 		"pending_wolf_step_pawn": -1,
-		"phase": 12,
+		"phase": 3,
 		"placements_done": {
 			"1": false,
 			"2": false
 		},
-		"pools": {},
+		"pools": {
+			"1": {
+				"art": 9,
+				"cav": 18,
+				"inf": 39
+			},
+			"2": {
+				"art": 9,
+				"cav": 18,
+				"inf": 39
+			}
+		},
 		"reveal_acks": {
 			"1": false,
 			"2": false
@@ -267,7 +243,30 @@
 			"art_move": 1,
 			"art_range": 6,
 			"art_shot_cost": 1,
-			"campaign": null,
+			"campaign": {
+				"cp_bijschrijving": "campagnelaag",
+				"cp_effect_mode": "define_budget",
+				"cp_eliminatie": 4,
+				"cp_haven": 8,
+				"cp_inzet_max": "per_kaart",
+				"cp_raadstem": 1,
+				"cp_refund": "none",
+				"cp_start": 6,
+				"cp_start_mode": "vast",
+				"kanon_actie_kost": {
+					"roll": 1,
+					"shoot": 1
+				},
+				"kanon_dracht_max": 6,
+				"pool_afboeking": true,
+				"pool_zichtbaar": false,
+				"poolfactor": 3.0,
+				"pools": null,
+				"skip_mode": "auto",
+				"spawn_max": 3,
+				"spawn_vakken": "achterste_rij",
+				"spawn_vanaf_cyclus": 2
+			},
 			"clock": {
 				"bank_sec": 0,
 				"increment_sec": 0,
@@ -290,7 +289,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.1.10-hr",
+			"rules_version": "4.2.0",
 			"stamina_model": "pool",
 			"statue_threshold": 0,
 			"tiebreak": "material_haven_proximity"
@@ -304,32 +303,13 @@
 			"2": false
 		},
 		"turn_deadline": 0,
-		"winner": 1
+		"winner": -1
 	},
 	"meta": {
 		"created": "2026-07-24T17:19:23",
 		"formaat": 1,
 		"initial_state": {
-			"all_cards": {
-				"0": {
-					"attack": 1,
-					"hp": 3,
-					"id": 0,
-					"linked_pawn_id": 1,
-					"owner_id": 1,
-					"round_number": 1,
-					"stamina": 2
-				},
-				"1": {
-					"attack": 1,
-					"hp": 5,
-					"id": 1,
-					"linked_pawn_id": 2,
-					"owner_id": 2,
-					"round_number": 1,
-					"stamina": 2
-				}
-			},
+			"all_cards": {},
 			"cards_defined": {
 				"1": [],
 				"2": []
@@ -339,7 +319,10 @@
 				"2": []
 			},
 			"clocks": {},
-			"cp": {},
+			"cp": {
+				"1": 6,
+				"2": 6
+			},
 			"cp_bet_done": {
 				"1": false,
 				"2": false
@@ -351,7 +334,7 @@
 			"current_player": 1,
 			"cycle": 1,
 			"doctrines": {
-				"1": 4,
+				"1": 0,
 				"2": 0
 			},
 			"haven_touches": {
@@ -360,8 +343,8 @@
 			},
 			"initiative_player": 1,
 			"last_initiative_winner": 1,
-			"next_card_id": 2,
-			"next_pawn_id": 4,
+			"next_card_id": 0,
+			"next_pawn_id": 2,
 			"pawns": {
 				"0": {
 					"attack_value": 0,
@@ -375,53 +358,17 @@
 					"max_stamina": 0,
 					"owner_id": 1,
 					"position": [
-						0,
-						0
+						5,
+						9
 					],
 					"remaining_stamina": 0,
 					"unit_type": 0
 				},
 				"1": {
-					"attack_value": 1,
-					"card_revealed": true,
-					"current_hp": 3,
-					"id": 1,
-					"is_active": true,
-					"is_eliminated": false,
-					"linked_card_id": 0,
-					"max_hp": 3,
-					"max_stamina": 2,
-					"owner_id": 1,
-					"position": [
-						4,
-						1
-					],
-					"remaining_stamina": 2,
-					"unit_type": 0
-				},
-				"2": {
-					"attack_value": 1,
-					"card_revealed": true,
-					"current_hp": 5,
-					"id": 2,
-					"is_active": true,
-					"is_eliminated": false,
-					"linked_card_id": 1,
-					"max_hp": 5,
-					"max_stamina": 2,
-					"owner_id": 2,
-					"position": [
-						3,
-						1
-					],
-					"remaining_stamina": 2,
-					"unit_type": 0
-				},
-				"3": {
 					"attack_value": 0,
 					"card_revealed": true,
 					"current_hp": 0,
-					"id": 3,
+					"id": 1,
 					"is_active": false,
 					"is_eliminated": false,
 					"linked_card_id": -1,
@@ -429,20 +376,31 @@
 					"max_stamina": 0,
 					"owner_id": 2,
 					"position": [
-						10,
-						10
+						5,
+						1
 					],
 					"remaining_stamina": 0,
 					"unit_type": 0
 				}
 			},
 			"pending_wolf_step_pawn": -1,
-			"phase": 11,
+			"phase": 2,
 			"placements_done": {
 				"1": false,
 				"2": false
 			},
-			"pools": {},
+			"pools": {
+				"1": {
+					"art": 9,
+					"cav": 18,
+					"inf": 39
+				},
+				"2": {
+					"art": 9,
+					"cav": 18,
+					"inf": 39
+				}
+			},
 			"reveal_acks": {
 				"1": false,
 				"2": false
@@ -453,7 +411,30 @@
 				"art_move": 1,
 				"art_range": 6,
 				"art_shot_cost": 1,
-				"campaign": null,
+				"campaign": {
+					"cp_bijschrijving": "campagnelaag",
+					"cp_effect_mode": "define_budget",
+					"cp_eliminatie": 4,
+					"cp_haven": 8,
+					"cp_inzet_max": "per_kaart",
+					"cp_raadstem": 1,
+					"cp_refund": "none",
+					"cp_start": 6,
+					"cp_start_mode": "vast",
+					"kanon_actie_kost": {
+						"roll": 1,
+						"shoot": 1
+					},
+					"kanon_dracht_max": 6,
+					"pool_afboeking": true,
+					"pool_zichtbaar": false,
+					"poolfactor": 3.0,
+					"pools": null,
+					"skip_mode": "auto",
+					"spawn_max": 3,
+					"spawn_vakken": "achterste_rij",
+					"spawn_vanaf_cyclus": 2
+				},
 				"clock": {
 					"bank_sec": 0,
 					"increment_sec": 0,
@@ -476,7 +457,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.1.10-hr",
+				"rules_version": "4.2.0",
 				"stamina_model": "pool",
 				"statue_threshold": 0,
 				"tiebreak": "material_haven_proximity"
@@ -492,6 +473,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.1.10-hr"
+		"rules_version": "4.2.0"
 	}
 }

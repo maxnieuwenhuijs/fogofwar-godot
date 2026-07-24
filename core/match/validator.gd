@@ -62,7 +62,31 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 			return _ok()
 		Actions.SPAWN:
 			return _check_spawn(state, action, player_id)
+		Actions.BET_CP:
+			return _check_bet_cp(state, action, player_id)
 	return _nee("Onbekend actietype")
+
+
+## F2.3 — blinde CP-inzet (D1/D4): vóór de eigen define in dezelfde ronde,
+## 0..min(saldo, te definiëren kaarten). De inzet is direct verbrand (D2);
+## het effect (kaarten met budget+1) valideert _check_define ertegen.
+static func _check_bet_cp(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
+	if not Phase.is_define(state.phase):
+		return _nee("Niet in definitie fase")
+	if not state.rules.campaign_actief():
+		return _nee("Geen campagne-match")
+	if state.cp_bet_done.get(player_id, false):
+		return _nee("Al CP ingezet deze ronde")
+	if state.cards_defined.get(player_id, []).size() > 0:
+		return _nee("CP inzetten kan alleen vóór je kaartdefinitie")
+	var amount: int = int(action.amount)
+	if amount < 0:
+		return _nee("Ongeldige inzet")
+	if amount > int(state.cp.get(player_id, 0)):
+		return _nee("Onvoldoende CP")
+	if amount > expected_define_count(state, player_id):
+		return _nee("Meer CP dan kaarten deze ronde")
+	return _ok()
 
 
 ## F2.2 — blinde spawn-inzet: fase, nog niet ingediend, cap, saldo per type,
@@ -148,7 +172,7 @@ static func gate_check(state: GameState, action: Dictionary, player_id: int) -> 
 			return _check_place(state, action, player_id)
 		Actions.DEFINE_CARDS:
 			return _check_define(state, action, player_id)
-		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT, Actions.SPAWN:
+		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT, Actions.SPAWN, Actions.BET_CP:
 			return is_legal(state, action, player_id)  # al goedkoop: geen dure checks
 		Actions.MOVE, Actions.CHARGE:
 			var gate := _action_turn(state, player_id)
@@ -217,10 +241,21 @@ static func _check_define(state: GameState, action: Dictionary, player_id: int) 
 		return _nee("Geen vrije pionnen — deze ronde sla je over")
 	if action.cards.size() != expected:
 		return _nee("Moet %d kaarten definiëren" % expected)
+	# F2.3 (D1): elke ingezette CP staat precies 1 kaart met budget+1 toe
+	# (max 1 CP per kaart, D4). Zonder campaign/bet is dit exact het 4.1-pad.
+	var budget: int = int(doctrine.budget)
+	var cp_kaarten: int = 0
 	for c in action.cards:
-		if not Card.is_valid_stats(int(c.hp), int(c.stamina), int(c.attack),
-				doctrine.budget, doctrine.speed_max, state.rules.per_stat_cap):
-			return _nee("Ongeldige statistieken (som moet %d zijn, elk minstens 1)" % int(doctrine.budget))
+		if Card.is_valid_stats(int(c.hp), int(c.stamina), int(c.attack),
+				budget, doctrine.speed_max, state.rules.per_stat_cap):
+			continue
+		if Card.is_valid_stats(int(c.hp), int(c.stamina), int(c.attack),
+				budget + 1, doctrine.speed_max, state.rules.per_stat_cap):
+			cp_kaarten += 1
+			continue
+		return _nee("Ongeldige statistieken (som moet %d zijn, elk minstens 1)" % budget)
+	if cp_kaarten > int(state.cp_bets.get(player_id, 0)):
+		return _nee("Kaart boven budget zonder CP-inzet")
 	return _ok()
 
 
@@ -347,6 +382,12 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 	if Phase.is_define(state.phase):
 		if state.cards_defined.get(player_id, []).size() == 0 \
 				and expected_define_count(state, player_id) > 0:
+			# F2.3: vóór de define mag een blinde CP-inzet (0 of maximaal).
+			if state.rules.campaign_actief() and not state.cp_bet_done.get(player_id, false):
+				out.append(Actions.make_bet_cp(0))
+				var maximaal: int = mini(int(state.cp.get(player_id, 0)), expected_define_count(state, player_id))
+				if maximaal > 0:
+					out.append(Actions.make_bet_cp(maximaal))
 			for cards in _sample_card_sets(state, player_id):
 				out.append(Actions.make_define_cards(cards))
 		return out

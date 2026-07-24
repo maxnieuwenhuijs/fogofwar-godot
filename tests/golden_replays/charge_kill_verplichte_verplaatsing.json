@@ -81,13 +81,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "530e0900238399c6080c92a4e93265c4a6edbdd70c0d4742e214a0bcfa84d429",
+			"hash": "74e05874a5ff951c6d99ee2ff184b7391cec5c5ab8d93d90b583bfffda752cd8",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784891689.642
+			"ts": 1784906363.508
 		}
 	],
-	"final_hash": "530e0900238399c6080c92a4e93265c4a6edbdd70c0d4742e214a0bcfa84d429",
+	"final_hash": "74e05874a5ff951c6d99ee2ff184b7391cec5c5ab8d93d90b583bfffda752cd8",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -118,6 +118,15 @@
 			"2": []
 		},
 		"clocks": {},
+		"cp": {},
+		"cp_bet_done": {
+			"1": false,
+			"2": false
+		},
+		"cp_bets": {
+			"1": 0,
+			"2": 0
+		},
 		"current_player": 1,
 		"cycle": 2,
 		"doctrines": {
@@ -245,7 +254,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-24T13:14:49",
+		"created": "2026-07-24T17:19:23",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -277,6 +286,15 @@
 				"2": []
 			},
 			"clocks": {},
+			"cp": {},
+			"cp_bet_done": {
+				"1": false,
+				"2": false
+			},
+			"cp_bets": {
+				"1": 0,
+				"2": 0
+			},
 			"current_player": 1,
 			"cycle": 1,
 			"doctrines": {

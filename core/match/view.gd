@@ -92,6 +92,14 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	var eigen_spawns: Array = []
 	for e in state.spawn_commits.get(player_id, []):
 		eigen_spawns.append({"type": int(e.type), "pos": [e.pos.x, e.pos.y]})
+	# F2.3 — CP-saldi volgen dezelfde D12-regel als de pool; de lopende
+	# vijandelijke inzet is altijd geheim (geen enemy-bet-veld: de hoogte
+	# wordt na de reveal vanzelf afleesbaar uit de kaarten).
+	var cp_d: Dictionary = {}
+	if state.cp.has(player_id):
+		cp_d[str(player_id)] = int(state.cp[player_id])
+	if state.cp.has(enemy):
+		cp_d[str(enemy)] = int(state.cp[enemy]) if pool_zichtbaar else HIDDEN
 	var defined_ids: Array = []
 	for c in state.cards_defined.get(player_id, []):
 		defined_ids.append(c.id)
@@ -132,6 +140,9 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"own_spawn_commit": eigen_spawns,
 		"own_spawn_done": bool(state.spawn_done.get(player_id, false)),
 		"enemy_has_spawned": bool(state.spawn_done.get(enemy, false)),
+		"cp": cp_d,
+		"own_cp_bet": int(state.cp_bets.get(player_id, 0)),
+		"own_cp_bet_done": bool(state.cp_bet_done.get(player_id, false)),
 		"enemy_defined_ids_hidden": redacted,
 	}
 

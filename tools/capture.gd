@@ -1558,6 +1558,7 @@ func _make_goldens() -> void:
 	_golden_kaart_vervalt_zonder_pion(dir)
 	_golden_cycluslimiet_remise(dir)
 	_golden_spawn_geblokkeerd(dir)
+	_golden_cp_inzet(dir)
 	print("[GOLDENS] klaar")
 
 
@@ -1689,5 +1690,23 @@ func _golden_spawn_geblokkeerd(dir: String) -> void:
 			{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(5, 10)},
 		]), 1],
 		[Actions.make_spawn([]), 2],
+	])
+
+
+func _golden_cp_inzet(dir: String) -> void:
+	# v4.2 (F2.3): blinde CP-inzet -> kaart met budget+1 -> reveal met
+	# cp_admin-ledger; het extra punt in Aanval wint het initiatief (D3).
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.phase = Phase.Type.SETUP_1_DEFINE
+	s.current_player = 1
+	s._spawn_pawn(1, Vector2i(5, 9))
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s.init_pools()
+	var b: int = int(s.doctrine_data_of(1).budget)
+	_golden_opnemen(dir + "cp_inzet.json", s, [
+		[Actions.make_bet_cp(1), 1],
+		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 2}]), 1],
+		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 1}]), 2],
 	])
 

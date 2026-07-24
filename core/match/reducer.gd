@@ -30,6 +30,11 @@ const EV_CYCLE_ADMIN := "cycle_admin"         # F2.2: {cycle, pools} — ledger-
 	# (zoals views); post-match is het log wel de battlereport-bron.
 const EV_SPAWN_COMMITTED := "spawn_committed" # F2.2: {player_id} (inhoud blijft blind)
 const EV_SPAWNS_REVEALED := "spawns_revealed" # F2.2: {spawned, geweigerd} per speler
+const EV_CP_BET := "cp_bet"                   # F2.3: {player_id} (hoogte blijft blind tot reveal)
+const EV_CP_ADMIN := "cp_admin"               # F2.3: {bets, saldi} bij de reveal — net als
+	# cycle_admin server/log-only (D12): de F4-event-stream redigeert per speler.
+const EV_CP_EARNED := "cp_earned"             # F2.3/D13: {player_id, reden, amount} — ledger-event
+	# voor de campagnelaag; NIET in-match uitgeefbaar (saldo blijft onaangeraakt).
 
 
 static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: int = -1) -> Dictionary:
@@ -72,6 +77,8 @@ static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: 
 			_do_skip_wolf(state, events)
 		Actions.SPAWN:
 			_do_spawn(state, action, player_id, events)
+		Actions.BET_CP:
+			_do_bet_cp(state, action, player_id, events)
 		Actions.RESIGN:
 			_do_resign(state, player_id, events)
 		Actions.CLAIM_TIMEOUT:
@@ -145,10 +152,33 @@ static func _check_define_gate(state: GameState, events: Array) -> void:
 	_enter_reveal(state, events)
 
 
+## F2.3 — blinde CP-inzet (D1/D2): saldo direct verbrand, hoogte blind tot
+## de reveal. Het effect (kaarten met budget+1) dwingt de define-check af.
+static func _do_bet_cp(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	var amount: int = int(action.amount)
+	state.cp[player_id] = int(state.cp.get(player_id, 0)) - amount
+	state.cp_bets[player_id] = amount
+	state.cp_bet_done[player_id] = true
+	_ev(events, EV_CP_BET, {"player_id": player_id})
+	_ev(events, EV_STATE, {})
+
+
 static func _enter_reveal(state: GameState, events: Array) -> void:
 	state.cards_revealed[Constants.PLAYER_1] = state.cards_defined[Constants.PLAYER_1].duplicate()
 	state.cards_revealed[Constants.PLAYER_2] = state.cards_defined[Constants.PLAYER_2].duplicate()
 	state.reveal_acks = {Constants.PLAYER_1: false, Constants.PLAYER_2: false}
+	# F2.3 — CP-ledger-moment bij de reveal (server/log-only, zie EV_CP_ADMIN).
+	if state.rules.campaign_actief():
+		_ev(events, EV_CP_ADMIN, {
+			"bets": {
+				str(Constants.PLAYER_1): int(state.cp_bets.get(Constants.PLAYER_1, 0)),
+				str(Constants.PLAYER_2): int(state.cp_bets.get(Constants.PLAYER_2, 0)),
+			},
+			"saldi": {
+				str(Constants.PLAYER_1): int(state.cp.get(Constants.PLAYER_1, 0)),
+				str(Constants.PLAYER_2): int(state.cp.get(Constants.PLAYER_2, 0)),
+			},
+		})
 	_set_phase(state, Phase.reveal_for_round(state.round_number), events)
 	# Initiatief is deterministisch; hier alvast berekend voor het reveal-event.
 	var init: Dictionary = Rules.compute_initiative(state)
@@ -504,9 +534,25 @@ static func _check_game_over(state: GameState, events: Array) -> bool:
 	if winner == -1:
 		return false
 	state.winner = winner
+	_earn_cp_for_win(state, winner, events)
 	_set_phase(state, Phase.Type.GAME_OVER, events)
 	_ev(events, EV_GAME_OVER, {"winner": winner})
 	return true
+
+
+## F2.3/D13 — verdiensten-ledger bij een reguliere winst (haven of eliminatie,
+## de twee tarieven uit de CP-tabel). Alleen het event: het saldo blijft
+## onaangeraakt (niet in-match uitgeefbaar; de campagnelaag boekt het bij).
+## Resign/tiebreak/timeout kennen bewust geen tarief.
+static func _earn_cp_for_win(state: GameState, winner: int, events: Array) -> void:
+	if not state.rules.campaign_actief():
+		return
+	if Rules.count_pawns_in_haven(state, winner) >= state.rules.pawns_in_haven_to_win:
+		_ev(events, EV_CP_EARNED, {"player_id": winner, "reden": "haven",
+			"amount": int(state.rules.campaign.get("cp_haven", 8))})
+	else:
+		_ev(events, EV_CP_EARNED, {"player_id": winner, "reden": "eliminatie",
+			"amount": int(state.rules.campaign.get("cp_eliminatie", 4))})
 
 
 ## Beurtwissel: strikte afwisseling waar mogelijk; kan niemand meer iets,

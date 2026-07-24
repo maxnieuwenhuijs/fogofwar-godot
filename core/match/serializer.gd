@@ -29,6 +29,9 @@ static func state_to_dict(state: GameState) -> Dictionary:
 	var pools_d: Dictionary = {}
 	var spawn_commits_d: Dictionary = {}
 	var spawn_done_d: Dictionary = {}
+	var cp_d: Dictionary = {}
+	var cp_bets_d: Dictionary = {}
+	var cp_bet_done_d: Dictionary = {}
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		var key := str(player_id)
 		defined_ids[key] = []
@@ -48,6 +51,10 @@ static func state_to_dict(state: GameState) -> Dictionary:
 			commits.append({"type": int(e.type), "pos": [e.pos.x, e.pos.y]})
 		spawn_commits_d[key] = commits
 		spawn_done_d[key] = bool(state.spawn_done.get(player_id, false))
+		if state.cp.has(player_id):
+			cp_d[key] = int(state.cp[player_id])
+		cp_bets_d[key] = int(state.cp_bets.get(player_id, 0))
+		cp_bet_done_d[key] = bool(state.cp_bet_done.get(player_id, false))
 	return {
 		"phase": state.phase,
 		"cycle": state.cycle,
@@ -71,6 +78,9 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		"pools": pools_d,
 		"spawn_commits": spawn_commits_d,
 		"spawn_done": spawn_done_d,
+		"cp": cp_d,
+		"cp_bets": cp_bets_d,
+		"cp_bet_done": cp_bet_done_d,
 		"next_pawn_id": state._next_pawn_id,
 		"next_card_id": state._next_card_id,
 	}
@@ -131,6 +141,13 @@ static func state_from_dict(d: Dictionary) -> GameState:
 			s.spawn_commits[player_id] = commits
 		if bool(d.get("spawn_done", {}).get(key, false)):
 			s.spawn_done[player_id] = true
+		if d.get("cp", {}).has(key):
+			s.cp[player_id] = int(d.cp[key])
+		var bet: int = int(d.get("cp_bets", {}).get(key, 0))
+		if bet != 0:
+			s.cp_bets[player_id] = bet
+		if bool(d.get("cp_bet_done", {}).get(key, false)):
+			s.cp_bet_done[player_id] = true
 	s._next_pawn_id = int(d.get("next_pawn_id", 0))
 	s._next_card_id = int(d.get("next_card_id", 0))
 	return s

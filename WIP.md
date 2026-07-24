@@ -270,6 +270,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.3 AFGEROND (24 juli) — BET_CP in de match.** Blinde CP-inzet als
+  apart actietype (D14) voor de eigen define: state.cp (init cp_start=6,
+  D13), cp_bets/cp_bet_done per ronde, saldo direct verbrand (D2, ook
+  ongebruikt), validator eist bet-voor-define en 0..min(saldo, kaarten);
+  define-check staat per ingezette CP precies 1 kaart met budget+1 toe
+  (D1/D4, budget+2 kan nooit). Initiatief werkt vanzelf via de stats (D3,
+  expliciet getest). Events: cp_bet (blind, geen hoogte), cp_admin bij de
+  reveal en cp_earned bij haven/eliminatie-winst (8/4, saldo onaangeraakt
+  — campagnepot). View: eigen saldo/inzet zichtbaar, vijand-saldo "?"
+  (zelfde D12-knop als de pool). Golden #14 "cp_inzet" (bet -> dikke kaart
+  -> reveal met initiatiefwinst). CHECKS: 1124 asserts groen (CpTests: 13
+  tests) - simcheck 5/5 - play - vosview - fuzz 100 schoon. Volgende:
+  F2.4 (CANNON_ACT, zonder RETREAT).
+
 - **F2.2 review-naspel (24 juli):** adversariele 4-dimensies-review op de
   diff vond 1 bevestigde lek + 2 door mij nabeoordeelde punten. GEFIXT:
   (a) expliciete startpool lekte integraal via view.rules.campaign.pools

@@ -498,7 +498,7 @@ herzien: eliminatie-winst kijkt naar bord+pool.
 gelijktijdigheid (view van de ander toont niets tot beide binnen — leak-canary uitgebreid); golden
 replay "spawn-geblokkeerd".
 
-### ☐ F2.3 — CP in de match: BET_CP
+### ☑ F2.3 — CP in de match: BET_CP
 
 **Werk:** `state.cp[player]`; `BET_CP{0..3}` als blinde keuze per setup-ronde naast DEFINE_CARDS
 (zelfde commit-gate); effect volgens F2.1-besluit (bv. +1 stat op een kaart, cap 1/kaart); ingezette

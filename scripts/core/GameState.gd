@@ -60,6 +60,14 @@ var pools: Dictionary = {}
 var spawn_commits: Dictionary = {}
 var spawn_done: Dictionary = {}
 
+# F2.3 (v4.2) — commandopunten. cp[speler] = saldo (init cp_start; leeg dict =
+# geen campaign). cp_bets[speler] = de blinde inzet van de HUIDIGE setup-ronde
+# (D1: elke ingezette CP staat 1 kaart met budget+1 toe); cp_bet_done markeert
+# "ingediend" (bet 0 is een geldige keuze). Inzet is direct verbrand (D2).
+var cp: Dictionary = {}
+var cp_bets: Dictionary = {}
+var cp_bet_done: Dictionary = {}
+
 var winner: int = -1
 
 var _next_pawn_id: int = 0
@@ -96,15 +104,20 @@ func setup_initial_pawns() -> void:
 	init_pools()
 
 
-## F2.2 — startpool onder campaign: expliciete waarde uit het campaign-blok
-## wint (D5, de campagnelaag levert hem in F3 aan); anders poolfactor x de
-## doctrine-comp per type. Zonder campaign blijft pools leeg (4.1-gedrag).
+## F2.2/F2.3 — campagne-init: startpool (expliciete waarde uit het campaign-
+## blok wint (D5, de campagnelaag levert hem in F3 aan); anders poolfactor x
+## de doctrine-comp per type) én het CP-startsaldo (D13: altijd exact
+## cp_start). Zonder campaign blijft alles leeg (4.1-gedrag).
 func init_pools() -> void:
 	if not rules.campaign_actief():
 		return
 	var expliciet = rules.campaign.get("pools", null)
 	var factor: float = float(rules.campaign.get("poolfactor", 3.0))
 	pools = {}
+	cp = {
+		Constants.PLAYER_1: int(rules.campaign.get("cp_start", 6)),
+		Constants.PLAYER_2: int(rules.campaign.get("cp_start", 6)),
+	}
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		if expliciet is Dictionary and expliciet.has(str(player_id)):
 			var e: Dictionary = expliciet[str(player_id)]
@@ -318,6 +331,8 @@ func reset_for_new_cycle() -> void:
 	pending_wolf_step_pawn = -1
 	spawn_commits = {}
 	spawn_done = {}
+	cp_bets = {}
+	cp_bet_done = {}
 	cycle += 1
 	round_number = 1
 
@@ -326,6 +341,8 @@ func reset_for_new_round() -> void:
 	cards_defined[Constants.PLAYER_2] = []
 	cards_revealed[Constants.PLAYER_1] = []
 	cards_revealed[Constants.PLAYER_2] = []
+	cp_bets = {}
+	cp_bet_done = {}
 
 func clone() -> GameState:
 	var copy := GameState.new()
@@ -349,6 +366,9 @@ func clone() -> GameState:
 	copy.pools = pools.duplicate(true)
 	copy.spawn_commits = spawn_commits.duplicate(true)
 	copy.spawn_done = spawn_done.duplicate()
+	copy.cp = cp.duplicate()
+	copy.cp_bets = cp_bets.duplicate()
+	copy.cp_bet_done = cp_bet_done.duplicate()
 	copy._next_pawn_id = _next_pawn_id
 	copy._next_card_id = _next_card_id
 	copy.board = []
