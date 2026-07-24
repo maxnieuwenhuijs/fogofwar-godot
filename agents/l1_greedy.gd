@@ -14,15 +14,24 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	if legal.is_empty():
 		return {}
 	var eerste_type: String = String(legal[0].type)
-	# F2.5 (v4.2): spawn maximaal (de laatste optie is de volste inzet) en
-	# CP alleen op de ronde-3-kaarten (masterplan-heuristiek) — de samples
-	# maken de eerste `bet` kaarten dan vanzelf budget+1.
+	# F2.6 (besluit Max: bots gaan voor de winst): spawn alleen om VERLIEZEN
+	# aan te vullen tot de startgrootte — max spawnen verstopte het bord en
+	# strandde de eigen haven-race. CP alleen op de ronde-3-kaarten.
 	if eerste_type == Actions.SPAWN:
-		var volste: Dictionary = legal[0]
+		var comp: Array = Constants.doctrine_data(int(view.doctrines[str(player_id)])).comp
+		var doel_groot: int = int(comp[0]) + int(comp[1]) + int(comp[2])
+		var op_bord: int = 0
+		for key in view.pawns:
+			if int(view.pawns[key].owner_id) == player_id:
+				op_bord += 1
+		var spawn_max: int = int((view.rules.campaign as Dictionary).get("spawn_max", 3))
+		var gewenst: int = clampi(doel_groot - op_bord, 0, spawn_max)
+		var beste_spawn: Dictionary = legal[0]
 		for a in legal:
-			if (a.spawns as Array).size() > (volste.spawns as Array).size():
-				volste = a
-		return volste
+			var n: int = (a.spawns as Array).size()
+			if n <= gewenst and n > (beste_spawn.spawns as Array).size():
+				beste_spawn = a
+		return beste_spawn
 	if eerste_type == Actions.BET_CP:
 		var beste_bet: Dictionary = legal[0]  # amount 0
 		if int(view.get("round_number", 1)) == 3:
@@ -116,6 +125,8 @@ func _haven_afstand(x: int, y: int, haven: Array) -> int:
 
 
 func wants_view(phase: int) -> bool:
-	# F2.5: de define-view is nodig voor round_number (CP op de ronde-3-kaart);
-	# 3x per cyclus, dus verwaarloosbaar naast de F1.3-winst in de actiefase.
-	return phase == Phase.Type.ACTION or Phase.is_define(phase)
+	# F2.5/F2.6: de define-view is nodig voor round_number (CP op de ronde-3-
+	# kaart) en de spawn-view voor de aanvul-telling; beide zeldzaam naast de
+	# F1.3-winst in de actiefase.
+	return phase == Phase.Type.ACTION or Phase.is_define(phase) \
+		or phase == Phase.Type.CYCLE_SPAWN

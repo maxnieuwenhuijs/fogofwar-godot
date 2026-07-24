@@ -32,6 +32,7 @@ func start_new_game(doctrine_p1: int = Constants.Doctrine.MENS, doctrine_p2: int
 	state.doctrines[Constants.PLAYER_2] = doctrine_p2
 	state.cycle = 1
 	state.round_number = 1
+	state.init_pools()  # F2.5: pools + CP onder een campaign-config (anders no-op)
 	_transition_to(Phase.Type.PLACEMENT)
 	state_updated.emit(state)
 
@@ -93,6 +94,19 @@ func submit_wolf_step(player_id: int, target: Vector2i) -> bool:
 ## Opgeven (F0.4c) — vanuit de UI (opgeven-knop in het hulpmenu).
 func submit_resign(player_id: int) -> bool:
 	return _apply_action(player_id, Actions.make_resign())
+
+## F2.5/F2.6 — v4.2-submits (spawn-UI, CP-toggle, kanon-acties).
+func submit_spawn(player_id: int, spawns: Array) -> bool:
+	return _apply_action(player_id, Actions.make_spawn(spawns))
+
+func submit_bet_cp(player_id: int, amount: int) -> bool:
+	return _apply_action(player_id, Actions.make_bet_cp(amount))
+
+func submit_cannon_roll(player_id: int, pawn_id: int, target: Vector2i) -> bool:
+	return _apply_action(player_id, Actions.make_cannon_roll(pawn_id, target))
+
+func submit_cannon_shoot(player_id: int, pawn_id: int, target_id: int) -> bool:
+	return _apply_action(player_id, Actions.make_cannon_shoot(pawn_id, target_id))
 
 ## Timeout claimen (F0.8) — offline is game.gd de klok-autoriteit en geeft
 ## die zijn eigen now_ms mee; online wordt dat de server (F4).

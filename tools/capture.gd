@@ -1495,11 +1495,30 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 		var st: GameState = GameSession.state
 		var ph: int = st.phase
 		var cur = a1 if st.current_player == 1 else a2
-		if Phase.is_define(ph):
-			if st.cards_defined[1].size() == 0 and Validator.expected_define_count(st, 1) > 0:
-				GameSession.submit_define_cards(1, a1.generate_cards(st))
-			if st.cards_defined[2].size() == 0 and Validator.expected_define_count(st, 2) > 0:
-				GameSession.submit_define_cards(2, a2.generate_cards(st))
+		if ph == Phase.Type.CYCLE_SPAWN:
+			# F2.6 (besluit Max): winst-gericht — alleen verliezen aanvullen.
+			for pid in [1, 2]:
+				if st.spawn_done.get(pid, false):
+					continue
+				GameSession.submit_spawn(pid, Validator.aanvul_spawn_actie(st, pid).spawns)
+		elif Phase.is_define(ph):
+			for pid in [1, 2]:
+				if st.cards_defined[pid].size() > 0 or Validator.expected_define_count(st, pid) == 0:
+					continue
+				var bot = a1 if pid == 1 else a2
+				# F2.5-heuristiek: CP op de ronde-3-kaarten (zoals MatchRunner).
+				var bet: int = 0
+				if st.rules.campaign_actief() and st.round_number == 3 and not st.cp_bet_done.get(pid, false):
+					bet = mini(int(st.cp.get(pid, 0)), Validator.expected_define_count(st, pid))
+					if bet > 0:
+						GameSession.submit_bet_cp(pid, bet)
+				var cards: Array = bot.generate_cards(st)
+				for i in mini(bet, cards.size()):
+					cards[i].hp = int(cards[i].hp) + 1
+				if not GameSession.submit_define_cards(pid, cards) and bet > 0:
+					for i in mini(bet, cards.size()):
+						cards[i].hp = int(cards[i].hp) - 1
+					GameSession.submit_define_cards(pid, cards)
 		elif Phase.is_reveal(ph):
 			GameSession.acknowledge_reveal()
 		elif Phase.is_linking(ph):
@@ -1527,13 +1546,23 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 					st.get_active_pawns_for(st.current_player).size()])
 				break
 			acts += 1
+			# F2.5/B3: onder campaign spreekt artillerie CANNON_ACT.
+			var sim_camp: bool = st.rules.campaign_actief()
 			match String(act.type):
 				"move":
-					GameSession.submit_move(st.current_player, act.pawn_id, act.target)
+					var loper: Pawn = st.pawns.get(int(act.pawn_id), null)
+					if sim_camp and loper != null and loper.unit_type == Constants.UnitType.ARTILLERY:
+						GameSession.submit_cannon_roll(st.current_player, act.pawn_id, act.target)
+					else:
+						GameSession.submit_move(st.current_player, act.pawn_id, act.target)
 				"attack":
 					GameSession.submit_attack(st.current_player, act.attacker_id, act.defender_id)
 				"shot":
-					GameSession.submit_shot(st.current_player, act.shooter_id, act.target_id)
+					var schutter: Pawn = st.pawns.get(int(act.shooter_id), null)
+					if sim_camp and schutter != null and schutter.unit_type == Constants.UnitType.ARTILLERY:
+						GameSession.submit_cannon_shoot(st.current_player, act.shooter_id, act.target_id)
+					else:
+						GameSession.submit_shot(st.current_player, act.shooter_id, act.target_id)
 				"charge":
 					GameSession.submit_charge(st.current_player, act.pawn_id, act.move_target, act.defender_id)
 	var uitkomst := {"winner": GameSession.state.winner, "cyclus": GameSession.state.cycle, "acties": acts, "guard": guard}

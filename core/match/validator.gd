@@ -154,6 +154,27 @@ static func _check_spawn(state: GameState, action: Dictionary, player_id: int) -
 	return _ok()
 
 
+## F2.6 — winst-gerichte spawn-keuze voor bots (besluit Max: bots gaan voor
+## de winst, de cycluslimiet is een vangnet): vul alleen VERLIEZEN aan tot de
+## doctrine-startgrootte. Maximaal spawnen verstopte het bord, strandde de
+## haven-race en duwde 67% van de partijen de tiebreak in.
+static func aanvul_spawn_actie(state: GameState, player_id: int) -> Dictionary:
+	var comp: Array = state.doctrine_data_of(player_id).comp
+	var doel_groot: int = int(comp[0]) + int(comp[1]) + int(comp[2])
+	var op_bord: int = 0
+	for pawn in state.pawns.values():
+		if pawn.owner_id == player_id and not pawn.is_eliminated:
+			op_bord += 1
+	var gewenst: int = clampi(doel_groot - op_bord, 0, int(state.rules.campaign.get("spawn_max", 3)))
+	if gewenst == 0:
+		return Actions.make_spawn([])
+	var vol: Array = []
+	for s in _sample_spawn_sets(state, player_id):
+		if (s as Array).size() > vol.size():
+			vol = s
+	return Actions.make_spawn(vol.slice(0, gewenst))
+
+
 ## Deterministische spawn-opties voor legal_actions/agents: niets spawnen,
 ## 1 pion, en de volle inzet (tot spawn_max) — vrije achterste-rij-cellen van
 ## het centrum naar buiten, types op beschikbaarheid (inf > cav > art).

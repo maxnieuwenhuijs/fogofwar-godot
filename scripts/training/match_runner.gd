@@ -59,16 +59,11 @@ func step() -> void:
 		return
 	var cur = ai1 if _state.current_player == Constants.PLAYER_1 else ai2
 	if ph == Phase.Type.CYCLE_SPAWN:
-		# F2.5 (v4.2): volste inzet uit de sample-opties (max spawnen).
+		# F2.6 (besluit Max): winst-gericht — alleen verliezen aanvullen.
 		for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
 			if _state.spawn_done.get(pid, false):
 				continue
-			var opties: Array = Validator.legal_actions(_state, pid)
-			var volste: Dictionary = Actions.make_spawn([])
-			for a in opties:
-				if String(a.type) == Actions.SPAWN and (a.spawns as Array).size() > (volste.spawns as Array).size():
-					volste = a
-			Reducer.apply(_state, volste, pid)
+			Reducer.apply(_state, Validator.aanvul_spawn_actie(_state, pid), pid)
 	elif Phase.is_define(ph):
 		for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
 			if _state.cards_defined[pid].size() > 0 \

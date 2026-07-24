@@ -39,13 +39,10 @@ func decide(view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictionar
 	var ph: int = s.phase
 	if ph == Phase.Type.PLACEMENT:
 		return Actions.make_place(ai.choose_placement(s))
-	# F2.5 (v4.2): spawn maximaal — de laatste legal-optie is de volste inzet.
+	# F2.6 (besluit Max: bots gaan voor de winst): spawn alleen om verliezen
+	# aan te vullen tot de startgrootte (op de eigen reconstructie bepaald).
 	if ph == Phase.Type.CYCLE_SPAWN:
-		var volste: Dictionary = legal[0]
-		for a in legal:
-			if String(a.type) == Actions.SPAWN and (a.spawns as Array).size() > (volste.spawns as Array).size():
-				volste = a
-		return volste
+		return Validator.aanvul_spawn_actie(s, player_id)
 	if Phase.is_define(ph):
 		# F2.5-heuristiek (masterplan): CP op de ronde-3-kaarten. Eerst blind
 		# bieden; de volgende decide-beurt verdikt generate_cards de eerste
