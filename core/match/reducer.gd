@@ -24,7 +24,10 @@ const EV_TURN := "turn_changed"               # {player_id}
 const EV_PHASE := "phase_changed"             # {new_phase, old_phase}
 const EV_CYCLE_STARTED := "cycle_started"     # {cycle}
 const EV_GAME_OVER := "game_over"             # {winner}
-const EV_CYCLE_ADMIN := "cycle_admin"         # F2.2: {cycle, pools} — ledger-moment in RESET
+const EV_CYCLE_ADMIN := "cycle_admin"         # F2.2: {cycle, pools} — ledger-moment in RESET.
+	# LET OP (D12/F4): de payload bevat BEIDE pools en is server/log-only —
+	# de F4-event-stream naar clients MOET dit event per speler redigeren
+	# (zoals views); post-match is het log wel de battlereport-bron.
 const EV_SPAWN_COMMITTED := "spawn_committed" # F2.2: {player_id} (inhoud blijft blind)
 const EV_SPAWNS_REVEALED := "spawns_revealed" # F2.2: {spawned, geweigerd} per speler
 
@@ -313,18 +316,20 @@ static func _do_spawn(state: GameState, action: Dictionary, player_id: int, even
 
 
 ## Auto-commit (skip_mode "auto", D11): wie geen pool meer heeft, kan niets
-## kiezen en dient automatisch een lege inzet in. Beide binnen → reveal.
+## kiezen. Review-fix F2.2: die lege inzet wordt pas geregistreerd op het
+## moment dat de gate ROND is — een instant-commit bij de fase-start zou via
+## enemy_has_spawned verklikken dat de pool leeg is (D12-lek via timing).
 static func _check_spawn_gate(state: GameState, events: Array) -> void:
 	if state.phase != Phase.Type.CYCLE_SPAWN:
 		return
 	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
-		if not state.spawn_done.get(speler, false) and state.pool_total(speler) == 0:
+		if not state.spawn_done.get(speler, false) and state.pool_total(speler) > 0:
+			return  # wachten op de blinde inzet van deze speler
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if not state.spawn_done.get(speler, false):
 			state.spawn_commits[speler] = []
 			state.spawn_done[speler] = true
 			_ev(events, EV_SPAWN_COMMITTED, {"player_id": speler})
-	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
-		if not state.spawn_done.get(speler, false):
-			return  # wachten op de blinde inzet van deze speler
 	_reveal_spawns(state, events)
 
 

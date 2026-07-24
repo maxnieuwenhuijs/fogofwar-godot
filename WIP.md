@@ -270,6 +270,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.2 review-naspel (24 juli):** adversariele 4-dimensies-review op de
+  diff vond 1 bevestigde lek + 2 door mij nabeoordeelde punten. GEFIXT:
+  (a) expliciete startpool lekte integraal via view.rules.campaign.pools
+  (omzeilde het ?-sentinel; nu geredigeerd op een kopie, canary-test erbij);
+  (b) auto-commit bij lege pool gebeurde instant bij fase-start -> de
+  tegenstander las "pool leeg" af aan enemy_has_spawned (timing-lek); de
+  lege inzet wordt nu pas geregistreerd zodra de gate rond is. GENOTEERD:
+  cycle_admin-event bevat beide pools en is server/log-only -> de F4-event-
+  stream MOET per speler redigeren (comment bij het event); en
+  Agent.reconstruct_state neemt pools/spawn-velden nog niet mee -> F2.5-taak
+  (v4.2-agents). Review-run zelf strandde deels op de maand-limiet van het
+  Claude-abonnement (6/8 subagents); de 3 onbeoordeelde meldingen zijn
+  handmatig nagelopen. CHECKS na fixes: 1076 asserts groen - simcheck 5/5.
+
 - **F2.2 AFGEROND (24 juli) — pools, CYCLE_SPAWN en SPAWN in de reducer.**
   Config-gated: zonder campaign-blok byte-identiek 4.1.10-hr (suite bewijst
   het); met blok rules_version 4.2.0. Nieuw: Phase.RESET + Phase.CYCLE_SPAWN

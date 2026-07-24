@@ -230,6 +230,21 @@ func test_lege_pools_auto_commit() -> void:
 	assert_eq(s.phase, Phase.Type.SETUP_1_DEFINE, "beide pools leeg -> auto-commit + direct door (D11)")
 
 
+func test_lege_pool_verklikt_niet_via_timing() -> void:
+	# Review-fix F2.2: auto-commit bij fase-start zou via enemy_has_spawned
+	# direct verraden dat de vijandelijke pool leeg is (D12-lek via timing).
+	var opzet: Dictionary = _campagne_op_cycluseinde()
+	var s: GameState = opzet.s
+	s.pools[2] = {"inf": 0, "cav": 0, "art": 0}
+	assert_true(Reducer.apply(s, Actions.make_move(opzet.mover.id, Vector2i(5, 7)), 1).ok)
+	assert_eq(s.phase, Phase.Type.CYCLE_SPAWN, "fase wacht op P1 (met voorraad)")
+	var view1: Dictionary = View.for_player(s, 1)
+	assert_false(bool(view1.enemy_has_spawned), "lege P2-pool lekt niet via een instant-commit")
+	# Zodra P1 indient rondt de gate af (P2 auto-leeg) en volgt de reveal.
+	assert_true(Reducer.apply(s, Actions.make_spawn([]), 1).ok)
+	assert_eq(s.phase, Phase.Type.SETUP_1_DEFINE)
+
+
 func test_spawn_serialisatie_roundtrip() -> void:
 	var s := _spawn_fase_staat()
 	assert_true(Reducer.apply(s, Actions.make_spawn([
