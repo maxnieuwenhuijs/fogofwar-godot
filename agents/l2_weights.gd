@@ -13,6 +13,7 @@ const AIScript := preload("res://scripts/ai/AIMedium.gd")
 
 var _ai = null
 var _profiel_geladen: bool = false
+var tie_break_loting: bool = false  # arena-config zet dit aan (meet-spreiding)
 
 
 func _get_ai(view: Dictionary):
@@ -20,6 +21,7 @@ func _get_ai(view: Dictionary):
 		_ai = AIScript.new()
 	_ai.player_id = player_id
 	_ai.rng = rng
+	_ai.tie_break_loting = tie_break_loting
 	if not _profiel_geladen:
 		_profiel_geladen = true
 		var doctrine: int = int(view.doctrines.get(str(player_id), Constants.Doctrine.MENS))

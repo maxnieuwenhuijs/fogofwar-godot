@@ -85,6 +85,9 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 			var a2: Agent = _maak_agent(String(config.get("agents", {}).get("p2", "l1")))
 			a1.full_state = bool(config.get("full_state", {}).get("p1", false))
 			a2.full_state = bool(config.get("full_state", {}).get("p2", false))
+			for a in [a1, a2]:
+				if a is AgentL2:
+					a.tie_break_loting = bool(config.get("tie_break_loting", false))
 			var runner := AgentRunner.new(a1, a2, d1, d2, seed_val, rules)
 			runner.max_steps = max_steps
 			var metrics := ArenaMetrics.new()

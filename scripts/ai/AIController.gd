@@ -7,6 +7,10 @@ var player_id: int = Constants.PLAYER_2
 ## is; MatchRunner/sim/arena zetten hier hun eigen (afgeleide) seed op.
 var rng: SeededRng = SeededRng.new(1337)
 
+## Tie-break-loting (arena-meetkwaliteit): loot tussen topzetten met gelijke
+## eval-score. Default UIT — goldens, simcheck en het live spel zijn identiek.
+var tie_break_loting: bool = false
+
 ## Evaluatie-gewichten — instelbaar zodat de Trainer ze kan leren (self-play).
 var weights: Dictionary = default_weights()
 
@@ -553,11 +557,20 @@ func best_greedy_action(state: GameState) -> Dictionary:
 		return {}
 	var best: Dictionary = actions[0]
 	var best_val: int = -2147483647
+	var toppers: Array = []
 	for a in actions:
 		var v: int = evaluate(simulate(state, a), player_id)
 		if v > best_val:
 			best_val = v
 			best = a
+			toppers = [a]
+		elif tie_break_loting and v == best_val:
+			toppers.append(a)
+	# F2-meetkwaliteit: loot (seeded) tussen gelijkwaardige topzetten, zodat
+	# arena-herhalingen met verschillende seeds echte spreiding meten i.p.v.
+	# 93x dezelfde partij. Default UIT: goldens/simcheck blijven byte-identiek.
+	if tie_break_loting and toppers.size() > 1:
+		return toppers[rng.randi_range(0, toppers.size() - 1)]
 	return best
 
 
