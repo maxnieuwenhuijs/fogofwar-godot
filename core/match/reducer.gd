@@ -24,6 +24,9 @@ const EV_TURN := "turn_changed"               # {player_id}
 const EV_PHASE := "phase_changed"             # {new_phase, old_phase}
 const EV_CYCLE_STARTED := "cycle_started"     # {cycle}
 const EV_GAME_OVER := "game_over"             # {winner}
+const EV_CYCLE_ADMIN := "cycle_admin"         # F2.2: {cycle, pools} — ledger-moment in RESET
+const EV_SPAWN_COMMITTED := "spawn_committed" # F2.2: {player_id} (inhoud blijft blind)
+const EV_SPAWNS_REVEALED := "spawns_revealed" # F2.2: {spawned, geweigerd} per speler
 
 
 static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: int = -1) -> Dictionary:
@@ -64,6 +67,8 @@ static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: 
 			fout = "Ongeldige Wolf-stap"
 		Actions.SKIP_WOLF_STEP:
 			_do_skip_wolf(state, events)
+		Actions.SPAWN:
+			_do_spawn(state, action, player_id, events)
 		Actions.RESIGN:
 			_do_resign(state, player_id, events)
 		Actions.CLAIM_TIMEOUT:
@@ -274,10 +279,77 @@ static func _start_new_cycle(state: GameState, events: Array) -> void:
 		_set_phase(state, Phase.Type.GAME_OVER, events)
 		_ev(events, EV_GAME_OVER, {"winner": state.winner})
 		return
+	# F2.2 (v4.2): onder campaign eerst de zichtbare RESET-administratiefase
+	# (ledger-moment, geen spelerinput) en daarna de blinde spawn-fase.
+	if state.rules.campaign_actief() \
+			and state.cycle >= int(state.rules.campaign.get("spawn_vanaf_cyclus", 2)):
+		_set_phase(state, Phase.Type.RESET, events)
+		_ev(events, EV_CYCLE_ADMIN, {"cycle": state.cycle, "pools": state.pools.duplicate(true)})
+		_set_phase(state, Phase.Type.CYCLE_SPAWN, events)
+		_ev(events, EV_STATE, {})
+		_check_spawn_gate(state, events)
+		return
+	_begin_define_rounds(state, events)
+
+
+## Nieuwe cyclus, define-rondes in (het 4.1-pad, en het vervolg na de spawns).
+static func _begin_define_rounds(state: GameState, events: Array) -> void:
 	_set_phase(state, Phase.Type.SETUP_1_DEFINE, events)
 	_ev(events, EV_CYCLE_STARTED, {"cycle": state.cycle})
 	_ev(events, EV_STATE, {})
 	_check_define_gate(state, events)
+
+
+# =========================================================================
+# F2.2 — blinde spawn-fase (commit-gate zoals DEFINE)
+# =========================================================================
+
+static func _do_spawn(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	state.spawn_commits[player_id] = action.spawns.duplicate(true)
+	state.spawn_done[player_id] = true
+	_ev(events, EV_SPAWN_COMMITTED, {"player_id": player_id})
+	_ev(events, EV_STATE, {})
+	_check_spawn_gate(state, events)
+
+
+## Auto-commit (skip_mode "auto", D11): wie geen pool meer heeft, kan niets
+## kiezen en dient automatisch een lege inzet in. Beide binnen → reveal.
+static func _check_spawn_gate(state: GameState, events: Array) -> void:
+	if state.phase != Phase.Type.CYCLE_SPAWN:
+		return
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if not state.spawn_done.get(speler, false) and state.pool_total(speler) == 0:
+			state.spawn_commits[speler] = []
+			state.spawn_done[speler] = true
+			_ev(events, EV_SPAWN_COMMITTED, {"player_id": speler})
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if not state.spawn_done.get(speler, false):
+			return  # wachten op de blinde inzet van deze speler
+	_reveal_spawns(state, events)
+
+
+## Gelijktijdige onthulling: commits toepassen in vaste volgorde (P1, P2).
+## Een vak dat intussen bezet raakte weigert die ene spawn — de pion blijft
+## in de pool (D6). Spelers spawnen op hun EIGEN achterste rij, dus onderlinge
+## botsingen bestaan niet; dit vangt de race met bestaande pionnen.
+static func _reveal_spawns(state: GameState, events: Array) -> void:
+	var uitkomst: Dictionary = {}
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		var gespawned: Array = []
+		var geweigerd: Array = []
+		for e in state.spawn_commits.get(speler, []):
+			var t: int = int(e.type)
+			var pos: Vector2i = e.pos
+			if state.is_tile_empty(pos) and state.pool_count(speler, t) > 0:
+				var pawn: Pawn = state._spawn_pawn(speler, pos, t)
+				state.pool_take(speler, t)
+				gespawned.append({"pawn_id": pawn.id, "type": t, "pos": [pos.x, pos.y]})
+			else:
+				geweigerd.append({"type": t, "pos": [pos.x, pos.y]})
+		uitkomst[str(speler)] = {"spawned": gespawned, "geweigerd": geweigerd}
+	_ev(events, EV_SPAWNS_REVEALED, uitkomst)
+	_ev(events, EV_STATE, {})
+	_begin_define_rounds(state, events)
 
 
 ## RESIGN (F0.4c): opgeven kan in elke speelbare fase; de tegenstander wint.
@@ -513,6 +585,12 @@ static func _do_claim_timeout(state: GameState, _claimant: int, now_ms: int, eve
 				var sets: Array = Validator._sample_card_sets(state, speler)
 				if not sets.is_empty():
 					_merge_sub_apply(state, Actions.make_define_cards(sets[0]), speler, now_ms, events)
+		return
+	if ph == Phase.Type.CYCLE_SPAWN:
+		# F2.2: de trage spawner dient automatisch een lege inzet in.
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if not state.spawn_done.get(speler, false):
+				_merge_sub_apply(state, Actions.make_spawn([]), speler, now_ms, events)
 		return
 	if Phase.is_reveal(ph):
 		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:

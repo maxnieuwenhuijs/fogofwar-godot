@@ -60,7 +60,79 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 			if state.turn_deadline <= 0:
 				return _nee("Geen actieve deadline")
 			return _ok()
+		Actions.SPAWN:
+			return _check_spawn(state, action, player_id)
 	return _nee("Onbekend actietype")
+
+
+## F2.2 — blinde spawn-inzet: fase, nog niet ingediend, cap, saldo per type,
+## vakken op de EIGEN ACHTERSTE RIJ (D6) en uniek binnen de inzet. Bewust GEEN
+## bezet-vak-check hier: de inzet is blind en D6 zegt "geweigerd bij reveal,
+## inzet blijft in de pool" — de weigering hoort bij de onthulling (reducer).
+static func _check_spawn(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
+	if state.phase != Phase.Type.CYCLE_SPAWN:
+		return _nee("Niet in de spawn-fase")
+	if not state.rules.campaign_actief():
+		return _nee("Geen campagne-match")
+	if state.spawn_done.get(player_id, false):
+		return _nee("Al ingediend")
+	var spawns: Array = action.spawns
+	if spawns.size() > int(state.rules.campaign.get("spawn_max", 3)):
+		return _nee("Meer spawns dan toegestaan")
+	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
+	var telling: Dictionary = {}
+	var dubbel: Dictionary = {}
+	for e in spawns:
+		var t: int = int(e.type)
+		var pos: Vector2i = e.pos
+		if not Constants.is_on_board(pos) or pos.y != achterste:
+			return _nee("Spawnvak niet op de eigen achterste rij")
+		if dubbel.has(pos):
+			return _nee("Dubbel spawnvak in de inzet")
+		dubbel[pos] = true
+		telling[t] = int(telling.get(t, 0)) + 1
+		if telling[t] > state.pool_count(player_id, t):
+			return _nee("Onvoldoende pool-voorraad")
+	return _ok()
+
+
+## Deterministische spawn-opties voor legal_actions/agents: niets spawnen,
+## 1 pion, en de volle inzet (tot spawn_max) — vrije achterste-rij-cellen van
+## het centrum naar buiten, types op beschikbaarheid (inf > cav > art).
+static func _sample_spawn_sets(state: GameState, player_id: int) -> Array:
+	var out: Array = [[]]
+	if state.pool_total(player_id) == 0:
+		return out
+	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
+	var vrij: Array = []
+	for x in [5, 4, 6, 3, 7, 2, 8, 1, 9, 0, 10]:
+		var pos := Vector2i(x, achterste)
+		if state.is_tile_empty(pos):
+			vrij.append(pos)
+	if vrij.is_empty():
+		return out
+	var saldo: Array = [
+		state.pool_count(player_id, Constants.UnitType.INFANTRY),
+		state.pool_count(player_id, Constants.UnitType.CAVALRY),
+		state.pool_count(player_id, Constants.UnitType.ARTILLERY),
+	]
+	var maximum: int = mini(int(state.rules.campaign.get("spawn_max", 3)), vrij.size())
+	var vol: Array = []
+	for i in maximum:
+		var t: int = -1
+		for kandidaat in [Constants.UnitType.INFANTRY, Constants.UnitType.CAVALRY, Constants.UnitType.ARTILLERY]:
+			if saldo[kandidaat] > 0:
+				t = kandidaat
+				break
+		if t == -1:
+			break
+		saldo[t] -= 1
+		vol.append({"type": t, "pos": vrij[i]})
+	if not vol.is_empty():
+		out.append([vol[0]])
+		if vol.size() > 1:
+			out.append(vol)
+	return out
 
 
 ## F1.3 — de SNELLE poort voor de reducer: structuur, fase, beurt, eigendom.
@@ -76,7 +148,7 @@ static func gate_check(state: GameState, action: Dictionary, player_id: int) -> 
 			return _check_place(state, action, player_id)
 		Actions.DEFINE_CARDS:
 			return _check_define(state, action, player_id)
-		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT:
+		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT, Actions.SPAWN:
 			return is_legal(state, action, player_id)  # al goedkoop: geen dure checks
 		Actions.MOVE, Actions.CHARGE:
 			var gate := _action_turn(state, player_id)
@@ -267,6 +339,11 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 			if not state.placements_done.get(player_id, false):
 				out.append(Actions.make_place(state.default_placement(player_id)))
 			return out
+	if state.phase == Phase.Type.CYCLE_SPAWN:
+		if not state.spawn_done.get(player_id, false):
+			for spawns in _sample_spawn_sets(state, player_id):
+				out.append(Actions.make_spawn(spawns))
+		return out
 	if Phase.is_define(state.phase):
 		if state.cards_defined.get(player_id, []).size() == 0 \
 				and expected_define_count(state, player_id) > 0:

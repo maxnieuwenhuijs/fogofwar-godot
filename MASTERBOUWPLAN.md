@@ -486,7 +486,7 @@ vindt). Dit is een ontwerpsessie-stap, geen codestap.
 
 **CHECK:** document bevat geen "TE BEVESTIGEN" meer; elke regel heeft een config-knop-naam.
 
-### ☐ F2.2 — Pools, CYCLE_SPAWN en SPAWN in de reducer
+### ☑ F2.2 — Pools, CYCLE_SPAWN en SPAWN in de reducer
 
 **Werk:** fase-enum uitbreiden conform bouwplan §2.1: `CYCLE_SPAWN` vóór de define-rondes en `RESET` als
 expliciete fase. `state.pools[player] = {inf, cav, art}` (init uit config/campagne); `SPAWN{[(type,

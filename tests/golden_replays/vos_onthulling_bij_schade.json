@@ -60,13 +60,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b050ea61a166fec21f1042e420df361360cccf508dce46fe1e5d9b927074438f",
+			"hash": "c63cefbbf49ba1e9f715fa016dc4f9caa805f7234619432f2bbbe4f2be820eda",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784811904.615
+			"ts": 1784891689.645
 		}
 	],
-	"final_hash": "b050ea61a166fec21f1042e420df361360cccf508dce46fe1e5d9b927074438f",
+	"final_hash": "c63cefbbf49ba1e9f715fa016dc4f9caa805f7234619432f2bbbe4f2be820eda",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -175,6 +175,7 @@
 			"1": false,
 			"2": false
 		},
+		"pools": {},
 		"reveal_acks": {
 			"1": false,
 			"2": false
@@ -213,11 +214,19 @@
 			"statue_threshold": 0,
 			"tiebreak": "material_haven_proximity"
 		},
+		"spawn_commits": {
+			"1": [],
+			"2": []
+		},
+		"spawn_done": {
+			"1": false,
+			"2": false
+		},
 		"turn_deadline": 0,
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-23T15:05:04",
+		"created": "2026-07-24T13:14:49",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -327,6 +336,7 @@
 				"1": false,
 				"2": false
 			},
+			"pools": {},
 			"reveal_acks": {
 				"1": false,
 				"2": false
@@ -364,6 +374,14 @@
 				"stamina_model": "pool",
 				"statue_threshold": 0,
 				"tiebreak": "material_haven_proximity"
+			},
+			"spawn_commits": {
+				"1": [],
+				"2": []
+			},
+			"spawn_done": {
+				"1": false,
+				"2": false
 			},
 			"turn_deadline": 0,
 			"winner": -1

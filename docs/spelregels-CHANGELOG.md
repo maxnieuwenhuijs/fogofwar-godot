@@ -1,5 +1,29 @@
 # Spelregels — CHANGELOG
 
+## 4.2.0 — juli 2026 (F2.2: pools + CYCLE_SPAWN, config-gated door het campaign-blok)
+
+**Eerste v4.2-stap in de engine** (spec: F2.1-ontwerpsessie met Max, 24 juli;
+`docs/spelregels-v4.2.md` Deel B). Een match zonder `campaign`-blok speelt
+byte-identiek 4.1.10-hr; activering van het blok zet `rules_version` op 4.2.0.
+
+- **Pionnen-pool** per speler {inf, cav, art}: 3.0 × doctrine-comp per type
+  (D5), of expliciet aangeleverd via `campaign.pools`.
+- **Fase-flow bij cycluseinde** (vanaf `spawn_vanaf_cyclus`, D7): zichtbare
+  `RESET`-fase (ledger-event `cycle_admin`, geen spelerinput) → blinde
+  `CYCLE_SPAWN` met commit-gate zoals DEFINE. Nieuwe fase-waarden achteraan
+  de enum: bestaande replays behouden hun ints.
+- **SPAWN** (max `spawn_max`=3 totaal, alleen de eigen achterste rij, D6):
+  blind en simultaan; een spawn op een bezet vak wordt pas bij de reveal
+  geweigerd en de pion blijft in de pool. Pool-loze spelers auto-committen
+  leeg (D11). Nieuwe pionnen komen als ongekoppelde standbeelden binnen.
+- **Winconditie**: eliminatie kijkt naar bord + pool (met reserves ben je
+  niet verslagen).
+- **View** (D12): vijandelijke pool is het "?"-sentinel (tenzij
+  `pool_zichtbaar`); de lopende spawn-inzet is geheim tot de reveal.
+- Serialisatie-formaat uitgebreid (pools/spawn-commits): alle goldens
+  geregenereerd (formaatwijziging, geen 4.1-regelwijziging — simcheck 5/5
+  en de volledige suite bewijzen gedragsbehoud).
+
 ## 4.1.10-hr — juli 2026 (regelwijziging: kaartdefinitie begrensd door vrije pionnen)
 
 **Regel (besluit Max):** je definieert per setup-ronde hoogstens zoveel kaarten

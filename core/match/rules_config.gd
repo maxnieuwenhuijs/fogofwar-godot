@@ -56,6 +56,51 @@ var doctrines: Dictionary = {}
 # --- v4.2-campagneblok (F2); null = v4.1-gedrag ---
 var campaign = null
 
+## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
+## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
+## rules_version naar 4.2.0; zonder blok speelt de engine exact 4.1.x.
+const CAMPAIGN_DEFAULTS := {
+	"cp_start": 6,                       # D2/D13: vast duel-budget
+	"cp_haven": 8, "cp_eliminatie": 4, "cp_raadstem": 1,
+	"cp_effect_mode": "define_budget",   # D1: +1 kaartbudget bij definiëren
+	"cp_inzet_max": "per_kaart",         # D4: 1 per kaart, geen plafond
+	"cp_refund": "none",                 # D2: ingezet = verbrand
+	"cp_start_mode": "vast",             # D13
+	"cp_bijschrijving": "campagnelaag",  # D13: verdiensten naar de campagnepot
+	"poolfactor": 3.0,                   # D5: x doctrine-comp per type
+	"pool_afboeking": true,              # D5: duel-verliezen raken de campagne-pool
+	"pools": null,                       # expliciete startpool {"1": {inf,cav,art}, "2": ...} wint van poolfactor
+	"spawn_max": 3,                      # D6: totaal per cyclus, over alle types
+	"spawn_vanaf_cyclus": 2,             # D7: cyclus 1 = volledige PLACEMENT
+	"spawn_vakken": "achterste_rij",     # D6: harde hoekfort-rem
+	"kanon_dracht_max": 6,               # D8 (handhaving F2.4)
+	"kanon_actie_kost": {"roll": 1, "shoot": 1},  # D9, RETREAT bestaat niet (F2.4)
+	"pool_zichtbaar": false,             # D12: vijandelijke pool/CP verborgen
+	"skip_mode": "auto",                 # D11
+}
+
+
+func campaign_actief() -> bool:
+	return campaign is Dictionary
+
+
+## Recursief: hele floats (JSON-artefact) terug naar int; dicts krijgen
+## string-sleutels (JSON-vorm). Poolfactor blijft bewust float (aparte tak).
+static func _diep_int(v):
+	if v is Dictionary:
+		var uit: Dictionary = {}
+		for k in v:
+			uit[str(k)] = _diep_int(v[k])
+		return uit
+	if v is Array:
+		var lijst: Array = []
+		for e in v:
+			lijst.append(_diep_int(e))
+		return lijst
+	if v is float and v == floorf(v):
+		return int(v)
+	return v
+
 
 static func defaults() -> RulesConfig:
 	return RulesConfig.new()
@@ -121,7 +166,7 @@ func to_dict() -> Dictionary:
 		"tiebreak": tiebreak,
 		"clock": clock.duplicate(),
 		"doctrines": doctrines.duplicate(true),
-		"campaign": campaign,
+		"campaign": (campaign as Dictionary).duplicate(true) if campaign is Dictionary else null,
 	}
 
 
@@ -163,7 +208,36 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		for k in docs:
 			var ik: Variant = int(String(k)) if String(k).is_valid_int() else k
 			c.doctrines[ik] = (docs[k] as Dictionary).duplicate(true) if docs[k] is Dictionary else docs[k]
-	c.campaign = d.get("campaign", null)
+	var camp = d.get("campaign", null)
+	if camp is Dictionary:
+		# Normaliseren: ontbrekende knoppen krijgen de F2.1-besluitwaarden.
+		# Sub-dicts gaan door _diep_int (JSON leest ints als floats terug;
+		# zonder normalisatie divergeert de Zobrist-hash na een roundtrip).
+		var blok: Dictionary = {}
+		for k in CAMPAIGN_DEFAULTS:
+			var dv = CAMPAIGN_DEFAULTS[k]
+			var v = camp.get(k, dv)
+			if dv is bool:
+				blok[k] = bool(v)
+			elif dv is int:
+				blok[k] = int(v)
+			elif dv is float:
+				blok[k] = float(v)
+			elif dv is String:
+				blok[k] = String(v)
+			else:
+				blok[k] = _diep_int(v)
+		c.campaign = blok
+		# D9-validatie: CANNON_ACT put uit de per-pion stamina-cyclusvoorraad;
+		# het one_action-model heeft geen pot en wordt onder campaign geweigerd.
+		if c.stamina_model == "one_action":
+			push_error("RulesConfig: campaign vereist stamina_model 'pool' — one_action geweigerd, teruggezet naar pool")
+			c.stamina_model = "pool"
+		# Activering van het campaign-blok IS de regelversie-overgang (B7).
+		if c.rules_version.begins_with("4.1"):
+			c.rules_version = "4.2.0"
+	else:
+		c.campaign = null
 	return c
 
 

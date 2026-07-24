@@ -15,6 +15,11 @@ enum Type {
 	SETUP_3_LINKING,
 	ACTION,
 	GAME_OVER,
+	# v4.2 (F2.2) — achteraan toegevoegd zodat bestaande replays/goldens hun
+	# int-waarden houden. RESET: zichtbare administratiefase zonder spelerinput;
+	# CYCLE_SPAWN: blinde simultane spawn-keuze (commit-gate zoals DEFINE).
+	RESET,
+	CYCLE_SPAWN,
 }
 
 static func is_define(phase: int) -> bool:

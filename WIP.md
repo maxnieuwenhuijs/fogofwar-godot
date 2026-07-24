@@ -270,6 +270,21 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.2 AFGEROND (24 juli) — pools, CYCLE_SPAWN en SPAWN in de reducer.**
+  Config-gated: zonder campaign-blok byte-identiek 4.1.10-hr (suite bewijst
+  het); met blok rules_version 4.2.0. Nieuw: Phase.RESET + Phase.CYCLE_SPAWN
+  (achteraan de enum, replays heel), state.pools {inf,cav,art} (3x comp per
+  type of expliciet), blinde SPAWN met commit-gate (cap 3, eigen achterste
+  rij, bezet vak geweigerd BIJ REVEAL met pool-behoud, auto-commit bij lege
+  pool), win op bord+pool, view-redactie D12 (vijand-pool = "?", inzet geheim
+  tot reveal, enemy_has_spawned-boolean), cycle_admin-ledger-event in RESET.
+  Vangst onderweg: campaign-subdicts verloren int-typen na JSON-roundtrip
+  (Zobrist-hash divergeerde) -> _diep_int-normalisatie in RulesConfig.
+  Golden #13 "spawn_geblokkeerd" (move -> cycluseinde -> RESET -> blinde
+  commits -> reveal met weigering); alle goldens geregenereerd (formaat).
+  CHECKS: 1067 asserts groen (SpawnTests nieuw, 14 tests) - simcheck 5/5 -
+  play - vosview - fuzz 150 schoon - bench 6.8/s. Volgende: F2.3 (BET_CP).
+
 - **F2.1 AFGEROND (24 juli) — v4.2-economie definitief.** Ontwerpsessie met
   Max via de beslisagenda (docs/F2.1-beslisagenda.md, gebouwd door een
   multi-agent-werkgroep: 3 bron-lezers + synthese + adversariele toets die

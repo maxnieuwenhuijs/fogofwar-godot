@@ -21,6 +21,7 @@ const WOLF_STEP := "wolf_step"
 const SKIP_WOLF_STEP := "skip_wolf_step"
 const RESIGN := "resign"
 const CLAIM_TIMEOUT := "claim_timeout"
+const SPAWN := "spawn"  # v4.2 (F2.2): blinde spawn-inzet; lege lijst = bewust niets
 
 ## Per type: de verplichte payload-velden (voor is_wellformed en from_dict).
 const _FIELDS := {
@@ -36,6 +37,7 @@ const _FIELDS := {
 	SKIP_WOLF_STEP: [],
 	RESIGN: [],
 	CLAIM_TIMEOUT: [],
+	SPAWN: ["spawns"],
 }
 
 ## Velden die een Vector2i dragen (serialisatie ↔ [x, y]).
@@ -81,6 +83,10 @@ static func make_resign() -> Dictionary:
 static func make_claim_timeout() -> Dictionary:
 	return {"type": CLAIM_TIMEOUT}
 
+static func make_spawn(spawns: Array) -> Dictionary:
+	# spawns: [{type: UnitType, pos: Vector2i}, ...] — mag leeg (bewust niets).
+	return {"type": SPAWN, "spawns": spawns}
+
 
 # --- Structuurcontrole ---------------------------------------------------------
 
@@ -97,13 +103,14 @@ static func is_wellformed(a) -> bool:
 	for field in _VEC_FIELDS:
 		if a.has(field) and not (a[field] is Vector2i):
 			return false
-	if a.has("placements"):
-		if not (a.placements is Array):
-			return false
-		for entry in a.placements:
-			if not (entry is Dictionary) or not entry.has("type") or not entry.has("pos") \
-					or not (entry.pos is Vector2i):
+	for lijstveld in ["placements", "spawns"]:
+		if a.has(lijstveld):
+			if not (a[lijstveld] is Array):
 				return false
+			for entry in a[lijstveld]:
+				if not (entry is Dictionary) or not entry.has("type") or not entry.has("pos") \
+						or not (entry.pos is Vector2i):
+					return false
 	if a.has("cards"):
 		if not (a.cards is Array):
 			return false
@@ -121,7 +128,7 @@ static func to_dict(a: Dictionary) -> Dictionary:
 		var v = a[k]
 		if v is Vector2i:
 			out[k] = [v.x, v.y]
-		elif k == "placements":
+		elif k == "placements" or k == "spawns":
 			var lst: Array = []
 			for entry in v:
 				lst.append({"type": int(entry.type), "pos": [entry.pos.x, entry.pos.y]})
@@ -141,7 +148,7 @@ static func from_dict(d: Dictionary) -> Dictionary:
 		var v = d[k]
 		if _VEC_FIELDS.has(k) and v is Array and v.size() == 2:
 			out[k] = Vector2i(int(v[0]), int(v[1]))
-		elif k == "placements" and v is Array:
+		elif (k == "placements" or k == "spawns") and v is Array:
 			var lst: Array = []
 			for entry in v:
 				var p = entry.pos

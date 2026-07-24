@@ -1557,6 +1557,7 @@ func _make_goldens() -> void:
 	_golden_vos_onthulling_bij_schade(dir)
 	_golden_kaart_vervalt_zonder_pion(dir)
 	_golden_cycluslimiet_remise(dir)
+	_golden_spawn_geblokkeerd(dir)
 	print("[GOLDENS] klaar")
 
 
@@ -1666,4 +1667,27 @@ func _golden_cycluslimiet_remise(dir: String) -> void:
 	s._spawn_pawn(2, Vector2i(5, 3))
 	_golden_opnemen(dir + "cycluslimiet_remise.json", s,
 		[[Actions.make_move(mover.id, Vector2i(5, 7)), 1]])
+
+
+func _golden_spawn_geblokkeerd(dir: String) -> void:
+	# v4.2 (F2.2): cycluseinde onder campaign → RESET (administratie) → blinde
+	# CYCLE_SPAWN. P1 mikt met zijn tweede spawn op een bezet achterste-rij-vak:
+	# bij de reveal wordt die ene spawn geweigerd en blijft de pion in de pool
+	# (D6). Eindstaat: SETUP_1_DEFINE van cyclus 2 met 1 nieuwe P1-pion.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})  # F2.1-defaults, versie 4.2.0
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var mover := _golden_actieve_pion(s, 1, Vector2i(5, 8), Constants.UnitType.INFANTRY, 3, 1, 1)
+	s._spawn_pawn(1, Vector2i(5, 10))  # bezet het doelvak van de tweede spawn
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s.init_pools()
+	_golden_opnemen(dir + "spawn_geblokkeerd.json", s, [
+		[Actions.make_move(mover.id, Vector2i(5, 7)), 1],
+		[Actions.make_spawn([
+			{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(4, 10)},
+			{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(5, 10)},
+		]), 1],
+		[Actions.make_spawn([]), 2],
+	])
 

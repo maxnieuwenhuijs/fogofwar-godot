@@ -68,6 +68,20 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 				cd.linked_pawn_id = -1  # de koppeling is het geheim, niet de kaart
 			cards_d[str(id)] = cd
 		# anders: gedefinieerd maar nog niet onthuld → bestaat niet in deze view
+	# F2.2 — pool-saldi: eigen altijd zichtbaar; de vijandelijke pool is het
+	# "?"-sentinel (D12: fog voorop) tenzij campaign.pool_zichtbaar of de
+	# B8-ablatie (redacted=false). De lopende spawn-INZET is altijd geheim tot
+	# de reveal: alleen de eigen commit plus een boolean van de ander.
+	var pool_zichtbaar: bool = not redacted \
+		or (state.rules.campaign_actief() and bool(state.rules.campaign.get("pool_zichtbaar", false)))
+	var pools_d: Dictionary = {}
+	if state.pools.has(player_id):
+		pools_d[str(player_id)] = (state.pools[player_id] as Dictionary).duplicate()
+	if state.pools.has(enemy):
+		pools_d[str(enemy)] = (state.pools[enemy] as Dictionary).duplicate() if pool_zichtbaar else HIDDEN
+	var eigen_spawns: Array = []
+	for e in state.spawn_commits.get(player_id, []):
+		eigen_spawns.append({"type": int(e.type), "pos": [e.pos.x, e.pos.y]})
 	var defined_ids: Array = []
 	for c in state.cards_defined.get(player_id, []):
 		defined_ids.append(c.id)
@@ -104,6 +118,10 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 			str(player_id): state.haven_touches.get(player_id, {}).keys(),
 			str(enemy): state.haven_touches.get(enemy, {}).keys(),
 		},
+		"pools": pools_d,
+		"own_spawn_commit": eigen_spawns,
+		"own_spawn_done": bool(state.spawn_done.get(player_id, false)),
+		"enemy_has_spawned": bool(state.spawn_done.get(enemy, false)),
 		"enemy_defined_ids_hidden": redacted,
 	}
 

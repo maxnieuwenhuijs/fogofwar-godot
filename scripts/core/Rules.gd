@@ -38,8 +38,11 @@ static func check_win(state: GameState) -> int:
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		if count_pawns_in_haven(state, player_id) >= state.rules.pawns_in_haven_to_win:
 			return player_id
-	var p1_alive: int = state.count_alive_pawns_for(Constants.PLAYER_1)
-	var p2_alive: int = state.count_alive_pawns_for(Constants.PLAYER_2)
+	# F2.2 (v4.2): eliminatie kijkt naar bord + pool — met reserves ben je nog
+	# niet verslagen (je spawnt volgende cyclus). Zonder campaign is de pool 0
+	# en is dit exact het 4.1-gedrag.
+	var p1_alive: int = state.count_alive_pawns_for(Constants.PLAYER_1) + state.pool_total(Constants.PLAYER_1)
+	var p2_alive: int = state.count_alive_pawns_for(Constants.PLAYER_2) + state.pool_total(Constants.PLAYER_2)
 	if p1_alive == 0 and p2_alive > 0:
 		return Constants.PLAYER_2
 	if p2_alive == 0 and p1_alive > 0:

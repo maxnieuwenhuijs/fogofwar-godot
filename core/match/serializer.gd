@@ -26,6 +26,9 @@ static func state_to_dict(state: GameState) -> Dictionary:
 	var acks: Dictionary = {}
 	var placements: Dictionary = {}
 	var doctrines: Dictionary = {}
+	var pools_d: Dictionary = {}
+	var spawn_commits_d: Dictionary = {}
+	var spawn_done_d: Dictionary = {}
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		var key := str(player_id)
 		defined_ids[key] = []
@@ -38,6 +41,13 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		acks[key] = bool(state.reveal_acks.get(player_id, false))
 		placements[key] = bool(state.placements_done.get(player_id, false))
 		doctrines[key] = int(state.doctrine_of(player_id))
+		if state.pools.has(player_id):
+			pools_d[key] = (state.pools[player_id] as Dictionary).duplicate()
+		var commits: Array = []
+		for e in state.spawn_commits.get(player_id, []):
+			commits.append({"type": int(e.type), "pos": [e.pos.x, e.pos.y]})
+		spawn_commits_d[key] = commits
+		spawn_done_d[key] = bool(state.spawn_done.get(player_id, false))
 	return {
 		"phase": state.phase,
 		"cycle": state.cycle,
@@ -58,6 +68,9 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		"placements_done": placements,
 		"reveal_acks": acks,
 		"haven_touches": touches,
+		"pools": pools_d,
+		"spawn_commits": spawn_commits_d,
+		"spawn_done": spawn_done_d,
 		"next_pawn_id": state._next_pawn_id,
 		"next_card_id": state._next_card_id,
 	}
@@ -107,6 +120,17 @@ static func state_from_dict(d: Dictionary) -> GameState:
 		s.haven_touches[player_id] = {}
 		for pid in d.get("haven_touches", {}).get(key, []):
 			s.haven_touches[player_id][int(pid)] = true
+		if d.get("pools", {}).has(key):
+			var p: Dictionary = d.pools[key]
+			s.pools[player_id] = {"inf": int(p.get("inf", 0)), "cav": int(p.get("cav", 0)), "art": int(p.get("art", 0))}
+		var commits: Array = []
+		for e in d.get("spawn_commits", {}).get(key, []):
+			var pos = e.pos
+			commits.append({"type": int(e.type), "pos": Vector2i(int(pos[0]), int(pos[1])) if pos is Array else pos})
+		if not commits.is_empty():
+			s.spawn_commits[player_id] = commits
+		if bool(d.get("spawn_done", {}).get(key, false)):
+			s.spawn_done[player_id] = true
 	s._next_pawn_id = int(d.get("next_pawn_id", 0))
 	s._next_card_id = int(d.get("next_card_id", 0))
 	return s

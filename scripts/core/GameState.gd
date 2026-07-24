@@ -52,6 +52,14 @@ var pending_wolf_step_pawn: int = -1
 var clocks: Dictionary = {}
 var turn_deadline: int = 0
 
+# F2.2 (v4.2) — pionnen-pool per speler {inf, cav, art}; leeg dict = geen
+# campaign (4.1-gedrag). spawn_commits[speler] = de blinde spawn-inzet
+# (Array [{type, pos}]); spawn_done[speler] markeert "ingediend" — een lege
+# inzet is een geldige keuze, dus size==0 kan hier geen commit-signaal zijn.
+var pools: Dictionary = {}
+var spawn_commits: Dictionary = {}
+var spawn_done: Dictionary = {}
+
 var winner: int = -1
 
 var _next_pawn_id: int = 0
@@ -85,6 +93,53 @@ func doctrine_data_of(player_id: int) -> Dictionary:
 func setup_initial_pawns() -> void:
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		apply_placement(player_id, default_placement(player_id))
+	init_pools()
+
+
+## F2.2 — startpool onder campaign: expliciete waarde uit het campaign-blok
+## wint (D5, de campagnelaag levert hem in F3 aan); anders poolfactor x de
+## doctrine-comp per type. Zonder campaign blijft pools leeg (4.1-gedrag).
+func init_pools() -> void:
+	if not rules.campaign_actief():
+		return
+	var expliciet = rules.campaign.get("pools", null)
+	var factor: float = float(rules.campaign.get("poolfactor", 3.0))
+	pools = {}
+	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if expliciet is Dictionary and expliciet.has(str(player_id)):
+			var e: Dictionary = expliciet[str(player_id)]
+			pools[player_id] = {"inf": int(e.get("inf", 0)), "cav": int(e.get("cav", 0)), "art": int(e.get("art", 0))}
+		else:
+			var comp: Array = doctrine_data_of(player_id).comp
+			pools[player_id] = {
+				"inf": int(floor(comp[0] * factor)),
+				"cav": int(floor(comp[1] * factor)),
+				"art": int(floor(comp[2] * factor)),
+			}
+
+
+## Totale pool-voorraad van een speler (0 zonder campaign).
+func pool_total(player_id: int) -> int:
+	var p: Dictionary = pools.get(player_id, {})
+	return int(p.get("inf", 0)) + int(p.get("cav", 0)) + int(p.get("art", 0))
+
+
+## Pool-saldo per unit-type (sleutels: Constants.UnitType).
+func pool_count(player_id: int, unit_type: int) -> int:
+	var p: Dictionary = pools.get(player_id, {})
+	match unit_type:
+		Constants.UnitType.INFANTRY:
+			return int(p.get("inf", 0))
+		Constants.UnitType.CAVALRY:
+			return int(p.get("cav", 0))
+		Constants.UnitType.ARTILLERY:
+			return int(p.get("art", 0))
+	return 0
+
+
+func pool_take(player_id: int, unit_type: int) -> void:
+	var sleutel: String = ["inf", "cav", "art"][unit_type]
+	pools[player_id][sleutel] = int(pools[player_id][sleutel]) - 1
 
 ## Plaats de pionnen van één speler volgens een placement-lijst [{type, pos}, ...].
 func apply_placement(player_id: int, placements: Array) -> void:
@@ -261,6 +316,8 @@ func reset_for_new_cycle() -> void:
 	cards_revealed[Constants.PLAYER_1] = []
 	cards_revealed[Constants.PLAYER_2] = []
 	pending_wolf_step_pawn = -1
+	spawn_commits = {}
+	spawn_done = {}
 	cycle += 1
 	round_number = 1
 
@@ -289,6 +346,9 @@ func clone() -> GameState:
 	copy.pending_wolf_step_pawn = pending_wolf_step_pawn
 	copy.clocks = clocks.duplicate(true)
 	copy.turn_deadline = turn_deadline
+	copy.pools = pools.duplicate(true)
+	copy.spawn_commits = spawn_commits.duplicate(true)
+	copy.spawn_done = spawn_done.duplicate()
 	copy._next_pawn_id = _next_pawn_id
 	copy._next_card_id = _next_card_id
 	copy.board = []
