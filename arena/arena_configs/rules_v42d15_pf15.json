@@ -11,7 +11,7 @@
   "cp_inzet_max": "per_kaart",
   "cp_raadstem": 1,
   "cp_refund": "none",
-  "cp_start": 6,
+  "cp_start": 10,
   "cp_start_mode": "vast",
   "kanon_actie_kost": {
    "roll": 1,

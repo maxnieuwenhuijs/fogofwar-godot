@@ -222,7 +222,7 @@ naar de engine-klokken migreert:
 > Alle `campaign.*`-knoppen bestaan alleen binnen dat blok.
 
 ## B1. Commandopunten (CP) — DEFINITIEF
-- `state.cp[player]`; elk duel start met exact `campaign.cp_start` (**6**),
+- `state.cp[player]`; elk duel start met exact `campaign.cp_start` (**10**, besluit Max 25 juli),
   onafhankelijk van de campagnestand (`campaign.cp_start_mode = "vast"`, D13).
 - **Effect (D1):** 1 CP op een kaart = **+1 budgetpunt bij het definiëren** van
   die kaart: de speler verdeelt het extra punt zelf over de stats
@@ -233,11 +233,19 @@ naar de engine-klokken migreert:
   4.1.10-hr eventueel minder). `campaign.cp_inzet_max = "per_kaart"`.
 - **Levensloop (D2):** ingezet = **verbrand**, ook als de kaart nooit gekoppeld
   raakt (`campaign.cp_refund = "none"`). Verdientabel (startwaarden, F2.6/F7.3
-  mogen bijstellen op data): `campaign.cp_start = 6`, `campaign.cp_haven = 8`,
+  mogen bijstellen op data): `campaign.cp_start = 10`, `campaign.cp_haven = 8`,
   `campaign.cp_eliminatie = 4`, `campaign.cp_raadstem = 1`.
 - **Bijschrijving (D13):** verdiensten worden bij de trigger als ledger-event
   geschreven maar landen op de **campagnelaag**; pas in een volgend duel
   uitgeefbaar (`campaign.cp_bijschrijving = "campagnelaag"`).
+- **Restant en testament (besluit Max, 25 juli):** CP die je aan het
+  duel-einde over hebt verdampt NIET: in campagnemodus vloeit het restant
+  terug naar de campagnelaag en is daar **overdraagbaar** (doneren aan
+  teamgenoten of zelf houden, F3; donatiecaps per ronde gelden). Wie uit de
+  campagne valt laat na via het **testament** (F3.0-spec): maximaal de helft
+  van je bezit, maximaal 2 ontvangers, binnen de timer — anders verbrandt
+  het. De campagnelaag leest het duel-restant uit `final_state.cp` (zit in
+  elke replay/battlereport); losse matches kennen geen restant.
 - **Initiatief (D3):** géén aparte bod-regel. Het extra budgetpunt telt, als de
   speler het in Aanval stopt, vanzelf mee in het bestaande aanvalsbod.
 - **Protocol (D14):** `BET_CP` is een **apart actietype** naast DEFINE_CARDS

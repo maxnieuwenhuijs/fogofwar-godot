@@ -62,7 +62,7 @@ func test_matchrunner_trainerpad_speelt_v42() -> void:
 	var start_pool: int = (int(comp[0]) + int(comp[1]) + int(comp[2])) * 3
 	assert_true(s.pool_total(1) < start_pool or s.pool_total(2) < start_pool,
 		"minstens een kant heeft uit de pool gespawnd")
-	assert_true(int(s.cp.get(1, 6)) < 6 or int(s.cp.get(2, 6)) < 6,
+	assert_true(int(s.cp.get(1, 10)) < 10 or int(s.cp.get(2, 10)) < 10,
 		"minstens een kant heeft CP geboden (ronde-3-heuristiek)")
 
 

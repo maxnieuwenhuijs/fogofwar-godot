@@ -717,16 +717,34 @@ func _build_pawn_views() -> void:
 		child.queue_free()
 	_pawn_views.clear()
 	for pawn in GameSession.state.pawns.values():
-		var pv: PawnView = PAWN_SCENE.instantiate()
-		pv.pawn_id = pawn.id
-		pv.team = Constants.Team.RED if pawn.owner_id == Constants.PLAYER_1 else Constants.Team.BLUE
-		pv.position = tile_position(pawn.position.x, pawn.position.y) + Vector3(0.0, PAWN_Y, 0.0)
-		_pawns_root.add_child(pv)
-		# Kijk naar de vijand: rood naar z=0 (-z), blauw naar z=10 (+z).
-		pv.face_dir(Vector2i(0, -1) if pawn.owner_id == Constants.PLAYER_1 else Vector2i(0, 1))
-		pv.set_unit_type(pawn.unit_type)
-		_pawn_views[pawn.id] = pv
+		_maak_pawn_view(pawn)
 	_build_health_bars()
+
+
+func _maak_pawn_view(pawn: Pawn) -> void:
+	var pv: PawnView = PAWN_SCENE.instantiate()
+	pv.pawn_id = pawn.id
+	pv.team = Constants.Team.RED if pawn.owner_id == Constants.PLAYER_1 else Constants.Team.BLUE
+	pv.position = tile_position(pawn.position.x, pawn.position.y) + Vector3(0.0, PAWN_Y, 0.0)
+	_pawns_root.add_child(pv)
+	# Kijk naar de vijand: rood naar z=0 (-z), blauw naar z=10 (+z).
+	pv.face_dir(Vector2i(0, -1) if pawn.owner_id == Constants.PLAYER_1 else Vector2i(0, 1))
+	pv.set_unit_type(pawn.unit_type)
+	_pawn_views[pawn.id] = pv
+
+
+## F2.6-bugfix (speeltest Max): gespawnde pionnen bestonden wel in de engine
+## maar kregen geen 3D-view of hp-balk — onzichtbaar en onklikbaar, waardoor
+## koppelen op een spawn onmogelijk was en de partij voor de mens vastliep.
+func _sync_new_pawn_views() -> void:
+	var nieuw_gezien := false
+	for pawn in GameSession.state.pawns.values():
+		if pawn.is_eliminated or _pawn_views.has(pawn.id):
+			continue
+		_maak_pawn_view(pawn)
+		nieuw_gezien = true
+	if nieuw_gezien:
+		_build_health_bars()  # herbouwt alle balken, incl. de nieuwe pionnen
 
 
 const HP_COLS := 5
@@ -812,6 +830,7 @@ func _update_health_bars() -> void:
 
 func _refresh_all() -> void:
 	var state: GameState = GameSession.state
+	_sync_new_pawn_views()  # F2.6: verse spawns direct zichtbaar en klikbaar
 	_update_piece_counts()
 	for pid in _pawn_views:
 		var pv: PawnView = _pawn_views[pid]

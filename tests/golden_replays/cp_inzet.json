@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "d882325c59edfd8f93645b8879f44e824c53560a6d203408f00806d40a3b216c",
+			"hash": "c704fc762cfa4adfa2bd621e7e79caacbb3a99b6b589db7e493636177e4e130f",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784913109.144
+			"ts": 1784964767.364
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "d73e9450bd92787a6ff4708954ebb42d20f39420615d5c0447c65c6f602d6b8e",
+			"hash": "dcd84758ddca51eab5ffd0284703ce65046f3c37225195bc8c5bffbe06f3649d",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784913109.144
+			"ts": 1784964767.364
 		},
 		{
 			"action": {
@@ -71,8 +71,8 @@
 							"2": 0
 						},
 						"saldi": {
-							"1": 5,
-							"2": 6
+							"1": 9,
+							"2": 10
 						}
 					},
 					"seq": 1,
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "e0c604e5ef15257e7c001d7b43edf89a4a80be798872f7c4a2e27c1f5334d8b5",
+			"hash": "903e8b799bffcd3abcc7cd128dcb6b45d65fd5f7dcf6de890efc0ab5ba3f3e29",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1784913109.144
+			"ts": 1784964767.364
 		}
 	],
-	"final_hash": "e0c604e5ef15257e7c001d7b43edf89a4a80be798872f7c4a2e27c1f5334d8b5",
+	"final_hash": "903e8b799bffcd3abcc7cd128dcb6b45d65fd5f7dcf6de890efc0ab5ba3f3e29",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -152,8 +152,8 @@
 		},
 		"clocks": {},
 		"cp": {
-			"1": 5,
-			"2": 6
+			"1": 9,
+			"2": 10
 		},
 		"cp_bet_done": {
 			"1": true,
@@ -251,7 +251,7 @@
 				"cp_inzet_max": "per_kaart",
 				"cp_raadstem": 1,
 				"cp_refund": "none",
-				"cp_start": 6,
+				"cp_start": 10,
 				"cp_start_mode": "vast",
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -306,7 +306,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-24T19:11:49",
+		"created": "2026-07-25T09:32:47",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -320,8 +320,8 @@
 			},
 			"clocks": {},
 			"cp": {
-				"1": 6,
-				"2": 6
+				"1": 10,
+				"2": 10
 			},
 			"cp_bet_done": {
 				"1": false,
@@ -419,7 +419,7 @@
 					"cp_inzet_max": "per_kaart",
 					"cp_raadstem": 1,
 					"cp_refund": "none",
-					"cp_start": 6,
+					"cp_start": 10,
 					"cp_start_mode": "vast",
 					"kanon_actie_kost": {
 						"roll": 1,

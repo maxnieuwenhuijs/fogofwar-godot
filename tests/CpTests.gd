@@ -33,8 +33,8 @@ func _kaart(s: GameState, speler: int, extra: int) -> Dictionary:
 
 func test_cp_start_saldo() -> void:
 	var s := _define_staat()
-	assert_eq(int(s.cp[1]), 6, "D13: duel start met exact cp_start")
-	assert_eq(int(s.cp[2]), 6)
+	assert_eq(int(s.cp[1]), 10, "D13: duel start met exact cp_start")
+	assert_eq(int(s.cp[2]), 10)
 
 
 func test_bet_boven_saldo_geweigerd_saldo_nooit_negatief() -> void:
@@ -86,10 +86,10 @@ func test_cap_1_cp_per_kaart() -> void:
 func test_bet_verbrandt_ook_ongebruikt() -> void:
 	var s := _define_staat()
 	assert_true(Reducer.apply(s, Actions.make_bet_cp(1), 1).ok)
-	assert_eq(int(s.cp[1]), 5, "D2: inzet direct verbrand")
+	assert_eq(int(s.cp[1]), 9, "D2: inzet direct verbrand")
 	# Define zonder dikke kaart: de CP komt NIET terug.
 	assert_true(Reducer.apply(s, Actions.make_define_cards([_kaart(s, 1, 0)]), 1).ok)
-	assert_eq(int(s.cp[1]), 5, "geen refund voor ongebruikte inzet")
+	assert_eq(int(s.cp[1]), 9, "geen refund voor ongebruikte inzet")
 
 
 func test_dikke_kaart_met_bet_en_reveal_flow() -> void:
@@ -104,7 +104,7 @@ func test_dikke_kaart_met_bet_en_reveal_flow() -> void:
 		if String(ev.type) == Reducer.EV_CP_ADMIN:
 			admin = ev.payload
 	assert_eq(int(admin.bets["1"]), 1, "cp_admin-ledger draagt de bets")
-	assert_eq(int(admin.saldi["1"]), 5)
+	assert_eq(int(admin.saldi["1"]), 9)
 
 
 func test_initiatief_via_stats_d3() -> void:
@@ -125,7 +125,7 @@ func test_view_verbergt_vijandelijke_cp_en_inzet() -> void:
 	var s := _define_staat()
 	assert_true(Reducer.apply(s, Actions.make_bet_cp(1), 1).ok)
 	var view2: Dictionary = View.for_player(s, 2)
-	assert_eq(view2.cp[str(2)], 6, "eigen saldo zichtbaar")
+	assert_eq(view2.cp[str(2)], 10, "eigen saldo zichtbaar")
 	assert_eq(view2.cp[str(1)], "?", "D12: vijandelijk saldo verborgen")
 	assert_eq(int(view2.own_cp_bet), 0, "own_cp_bet is de EIGEN inzet, niet die van de ander")
 	assert_false(view2.has("enemy_cp_bet"), "vijandelijke inzet bestaat niet in de view")
@@ -133,7 +133,7 @@ func test_view_verbergt_vijandelijke_cp_en_inzet() -> void:
 	assert_eq(int(view1.own_cp_bet), 1)
 	# Full-state-ablatie ziet alles.
 	var open: Dictionary = View.for_player(s, 2, false)
-	assert_eq(int(open.cp[str(1)]), 5)
+	assert_eq(int(open.cp[str(1)]), 9)
 
 
 func test_cp_serialisatie_roundtrip_mid_bet() -> void:
@@ -142,7 +142,7 @@ func test_cp_serialisatie_roundtrip_mid_bet() -> void:
 	var d: Dictionary = Serializer.state_to_dict(s)
 	var terug: GameState = Serializer.state_from_dict(d)
 	assert_eq(JSON.stringify(Serializer.state_to_dict(terug)), JSON.stringify(d), "roundtrip byte-identiek")
-	assert_eq(int(terug.cp[1]), 5)
+	assert_eq(int(terug.cp[1]), 9)
 	assert_eq(int(terug.cp_bets.get(1, 0)), 1)
 	assert_true(bool(terug.cp_bet_done.get(1, false)))
 

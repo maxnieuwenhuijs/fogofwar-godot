@@ -537,9 +537,14 @@ op vaste seeds).
 **STATUS (24 juli):** deel 1 ruim gehaald (L1: 22 spawns + 12 CP per partij; L2: 40 + 12; 0 illegaal,
 72 partijen elk). Deel 2 (hertraining >55%) wacht op een lange trainingsrun — infrastructuur staat en is
 bewezen (train-CLI met rules-arg, v4.2-minigeneratie gedraaid); Max start hem via
-`-- train 120 6 6 <factie> <seed> arena/arena_configs/rules_v42_campaign.json`. De leerbare
-par.7.3-features (spawn-drempel, CP-timing als gewichten) zijn doorgeschoven naar de eval-verdieping
-in F8 — de huidige heuristieken dekken de F2.6-meetbaarheid.
+`-- train 120 6 6 <factie> <seed> arena/arena_configs/rules_v42_campaign.json`. OPDRACHT MAX (25 juli,
+tijdens de eerste speeltest): de leerbare par.7.3-features zijn NIET
+F8-uitstelwerk maar een echte taak — de AI moet spawning en CP-inzet leren
+(gewichten, niet alleen vuistregels), en in F3 ook de campagne-scope: sparen,
+overdragen en team-uitruil als geleerd gedrag (decide_campaign). Plan:
+(a) spawn-drempel/CP-timing als extra AIMedium-gewichten + hertraining onder
+rules_v42_campaign (de train-CLI kan het al), (b) in F3 de campagne-agent met
+donatie/testament-beslissingen op de campagne-ledger.
 
 ### ☐ F2.6 — Arena-hermeting + UI onder v4.2
 

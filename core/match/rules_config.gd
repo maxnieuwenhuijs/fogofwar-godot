@@ -60,7 +60,7 @@ var campaign = null
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
 ## rules_version naar 4.2.0; zonder blok speelt de engine exact 4.1.x.
 const CAMPAIGN_DEFAULTS := {
-	"cp_start": 6,                       # D2/D13: vast duel-budget
+	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
 	"cp_haven": 8, "cp_eliminatie": 4, "cp_raadstem": 1,
 	"cp_effect_mode": "define_budget",   # D1: +1 kaartbudget bij definiëren
 	"cp_inzet_max": "per_kaart",         # D4: 1 per kaart, geen plafond

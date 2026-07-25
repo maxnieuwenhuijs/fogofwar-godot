@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "be90a1190ee5d4e9b23f701061eb5098c5cbe3b740024a391b7d1afc625fefa0",
+			"hash": "84e6ec76daa23c7105c7b67b078e4a39c9b7d8d803af9228b324e9717ac1d6cc",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784913109.159
+			"ts": 1784964767.38
 		},
 		{
 			"action": {
@@ -113,13 +113,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d11d4e419c19fcc59959d5b936bc02a47a3830d1f59fd8c00e3fb794325c20e1",
+			"hash": "fe134e0936ec09933fc719603f9210685ae06c1fb20543bcd1086944559c1cb9",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784913109.159
+			"ts": 1784964767.38
 		}
 	],
-	"final_hash": "d11d4e419c19fcc59959d5b936bc02a47a3830d1f59fd8c00e3fb794325c20e1",
+	"final_hash": "fe134e0936ec09933fc719603f9210685ae06c1fb20543bcd1086944559c1cb9",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -142,8 +142,8 @@
 		},
 		"clocks": {},
 		"cp": {
-			"1": 6,
-			"2": 6
+			"1": 10,
+			"2": 10
 		},
 		"cp_bet_done": {
 			"1": false,
@@ -277,7 +277,7 @@
 				"cp_inzet_max": "per_kaart",
 				"cp_raadstem": 1,
 				"cp_refund": "none",
-				"cp_start": 6,
+				"cp_start": 10,
 				"cp_start_mode": "vast",
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -332,7 +332,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-24T19:11:49",
+		"created": "2026-07-25T09:32:47",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -356,8 +356,8 @@
 			},
 			"clocks": {},
 			"cp": {
-				"1": 6,
-				"2": 6
+				"1": 10,
+				"2": 10
 			},
 			"cp_bet_done": {
 				"1": false,
@@ -491,7 +491,7 @@
 					"cp_inzet_max": "per_kaart",
 					"cp_raadstem": 1,
 					"cp_refund": "none",
-					"cp_start": 6,
+					"cp_start": 10,
 					"cp_start_mode": "vast",
 					"kanon_actie_kost": {
 						"roll": 1,

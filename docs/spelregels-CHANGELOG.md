@@ -2,6 +2,12 @@
 
 ## 4.2.0 — juli 2026 (F2.2: pools + CYCLE_SPAWN, config-gated door het campaign-blok)
 
+**Bijstelling 25 juli (besluit Max, na de eerste speeltest):** `cp_start`
+6 → **10** (kort 5 geprobeerd: "je burnt er snel doorheen"). En overgebleven
+duel-CP verdampt niet — in campagnemodus vloeit het restant terug naar de
+campagnelaag en is daar overdraagbaar (F3-eis; de laag leest `final_state.cp`);
+bij uitvallen geldt het F3-testament (max helft, max 2 ontvangers, timer).
+
 **Eerste v4.2-stap in de engine** (spec: F2.1-ontwerpsessie met Max, 24 juli;
 `docs/spelregels-v4.2.md` Deel B). Een match zonder `campaign`-blok speelt
 byte-identiek 4.1.10-hr; activering van het blok zet `rules_version` op 4.2.0.

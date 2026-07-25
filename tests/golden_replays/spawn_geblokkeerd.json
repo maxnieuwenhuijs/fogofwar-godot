@@ -77,10 +77,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "76842208c9ddcd081121c2c27a5290352f4ce1eb306295b202440c3ad5c8dce0",
+			"hash": "0bc20a9d9bfa35c01515e99782eeaca0a377435f7f401d6bbe4a12dd00d0fbf4",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784913109.129
+			"ts": 1784964767.348
 		},
 		{
 			"action": {
@@ -116,10 +116,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "0b44f79e3fe162e9f220c2b5d441bf272e5ade8366037ddc66c3e13995be4d58",
+			"hash": "2bd76ed35c0fef3e62bfa5cecc59c7bead1bb22bd4d09f45c63983dca3f0b786",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784913109.13
+			"ts": 1784964767.349
 		},
 		{
 			"action": {
@@ -196,13 +196,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "bc39817f4b37d20afd902c5b2c171473d51c687d9fd00295ce8c49105ce7609f",
+			"hash": "d672820926253c9eceeee7545424c82b823eb0be0b5280228297179b2a4c9e31",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1784913109.13
+			"ts": 1784964767.349
 		}
 	],
-	"final_hash": "bc39817f4b37d20afd902c5b2c171473d51c687d9fd00295ce8c49105ce7609f",
+	"final_hash": "d672820926253c9eceeee7545424c82b823eb0be0b5280228297179b2a4c9e31",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -225,8 +225,8 @@
 		},
 		"clocks": {},
 		"cp": {
-			"1": 6,
-			"2": 6
+			"1": 10,
+			"2": 10
 		},
 		"cp_bet_done": {
 			"1": false,
@@ -360,7 +360,7 @@
 				"cp_inzet_max": "per_kaart",
 				"cp_raadstem": 1,
 				"cp_refund": "none",
-				"cp_start": 6,
+				"cp_start": 10,
 				"cp_start_mode": "vast",
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -430,7 +430,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-24T19:11:49",
+		"created": "2026-07-25T09:32:47",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -454,8 +454,8 @@
 			},
 			"clocks": {},
 			"cp": {
-				"1": 6,
-				"2": 6
+				"1": 10,
+				"2": 10
 			},
 			"cp_bet_done": {
 				"1": false,
@@ -571,7 +571,7 @@
 					"cp_inzet_max": "per_kaart",
 					"cp_raadstem": 1,
 					"cp_refund": "none",
-					"cp_start": 6,
+					"cp_start": 10,
 					"cp_start_mode": "vast",
 					"kanon_actie_kost": {
 						"roll": 1,

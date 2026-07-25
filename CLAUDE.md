@@ -64,5 +64,7 @@ F0 + F1 volledig af. F2 (v4.2-economie): F2.1-F2.5 af, F2.6 deel A (metingen)
 af op het D15-besluit na, **deel B (spawn-UI, CP-toggle, actiepot-badge,
 MatchSetup) is de eerstvolgende bouwklus** — daarna speelt Max zijn eerste
 v4.2-duel (de F2.6-MAX-check). Daarna F3: de teamcampagne (donaties per lid
-bepalen de duel-pool; eliminatie telt door over wedstrijden; battlereports
-zijn de info-bron over vijandelijke voorraad — zie B16/D15-context).
+bepalen de duel-pool en CP; duel-restant CP vloeit terug en is overdraagbaar;
+uitvallers laten na via het testament (max helft, max 2 ontvangers, timer);
+eliminatie telt door over wedstrijden; battlereports zijn de info-bron over
+vijandelijke voorraad — zie B16/D15-context). cp_start = 10 (25 juli).
