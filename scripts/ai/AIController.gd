@@ -181,6 +181,15 @@ static func default_weights() -> Dictionary:
 		"aff_art_spd": 0.9,
 		"aff_art_atk": 1.2,
 		"link_advance": 0.4, # voorkeur voor pionnen dichter bij de doelhaven
+		# --- v4.2-economie (leerbaar, F2.6/opdracht Max): spawn- en CP-beleid.
+		# spawn_drempel: spawn zodra bord-leger < drempel × startgrootte
+		# (1.0 = altijd aanvullen, lager = zuiniger met de reserve).
+		"spawn_drempel": 1.0,
+		# cp_bet_rN: gewenste CP-inzet per setup-ronde (geklemd op saldo en
+		# kaartaantal). Default = de bewezen heuristiek: alles op ronde 3.
+		"cp_bet_r1": 0.01,
+		"cp_bet_r2": 0.01,
+		"cp_bet_r3": 3.0,
 	}
 
 # =========================================================================
@@ -324,6 +333,43 @@ func choose_link(state: GameState) -> Dictionary:
 				best_score = score
 				best = {"card_id": c.id, "pawn_id": p.id}
 	return best
+
+
+## F2.6 (v4.2, leerbaar) — spawn-beleid: vul aan tot spawn_drempel × de
+## doctrine-startgrootte (1.0 = het oude aanvul-gedrag; lager = reserve
+## sparen voor later — precies wat de campagne-scope moet gaan leren).
+func choose_spawn(state: GameState) -> Array:
+	if not state.rules.campaign_actief():
+		return []
+	var comp: Array = state.doctrine_data_of(player_id).comp
+	var doel_groot: int = int(comp[0]) + int(comp[1]) + int(comp[2])
+	var drempel: float = clampf(float(weights.get("spawn_drempel", 1.0)), 0.0, 1.5)
+	var gewenst_leger: int = int(round(doel_groot * drempel))
+	var op_bord: int = 0
+	for pawn in state.pawns.values():
+		if pawn.owner_id == player_id and not pawn.is_eliminated:
+			op_bord += 1
+	var tekort: int = gewenst_leger - op_bord
+	var cap: int = mini(int(state.rules.campaign.get("spawn_max", 3)), state.spawns_over(player_id))
+	var gewenst: int = clampi(tekort, 0, cap)
+	if gewenst == 0:
+		return []
+	var vol: Array = []
+	for s in Validator._sample_spawn_sets(state, player_id):
+		if (s as Array).size() > vol.size():
+			vol = s
+	return vol.slice(0, gewenst)
+
+
+## F2.6 (v4.2, leerbaar) — CP-beleid: gewenste inzet per setup-ronde
+## (cp_bet_r1..r3), geklemd op saldo en het kaartaantal van deze ronde.
+func choose_cp_bet(state: GameState) -> int:
+	if not state.rules.campaign_actief() or state.cp_bet_done.get(player_id, false):
+		return 0
+	var wens: float = float(weights.get("cp_bet_r%d" % state.round_number, 0.0))
+	var maximaal: int = mini(int(state.cp.get(player_id, 0)),
+		Validator.expected_define_count(state, player_id))
+	return clampi(int(round(wens)), 0, maximaal)
 
 
 ## Affiniteit van een kaart voor een piontype (tunebare aff_*-gewichten).

@@ -39,19 +39,16 @@ func decide(view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictionar
 	var ph: int = s.phase
 	if ph == Phase.Type.PLACEMENT:
 		return Actions.make_place(ai.choose_placement(s))
-	# F2.6 (besluit Max: bots gaan voor de winst): spawn alleen om verliezen
-	# aan te vullen tot de startgrootte (op de eigen reconstructie bepaald).
+	# Leerbaar spawn-beleid (spawn_drempel) op de eigen reconstructie.
 	if ph == Phase.Type.CYCLE_SPAWN:
-		return Validator.aanvul_spawn_actie(s, player_id)
+		return Actions.make_spawn(ai.choose_spawn(s))
 	if Phase.is_define(ph):
-		# F2.5-heuristiek (masterplan): CP op de ronde-3-kaarten. Eerst blind
-		# bieden; de volgende decide-beurt verdikt generate_cards de eerste
-		# `bet` kaarten met het extra budgetpunt (hp).
-		if int(view.get("round_number", 1)) == 3 and not bool(view.get("own_cp_bet_done", true)):
-			var saldo: int = int(view.cp.get(str(player_id), 0)) if view.has("cp") else 0
-			for a in legal:
-				if String(a.type) == Actions.BET_CP and int(a.amount) > 0 and int(a.amount) <= saldo:
-					return a
+		# Leerbaar CP-beleid (cp_bet_r1..r3): eerst blind bieden; de volgende
+		# decide-beurt verdikt generate_cards de eerste `bet` kaarten (hp).
+		if not bool(view.get("own_cp_bet_done", true)):
+			var bet_wens: int = ai.choose_cp_bet(s)
+			if bet_wens > 0:
+				return Actions.make_bet_cp(bet_wens)
 		var cards: Array = ai.generate_cards(s)
 		if cards.is_empty():
 			return legal[0]

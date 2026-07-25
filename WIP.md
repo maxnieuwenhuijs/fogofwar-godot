@@ -270,6 +270,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **Leerbaar spawn/CP-beleid GEBOUWD (25 juli, opdracht Max).** Vier nieuwe
+  trainbare gewichten in AIController: spawn_drempel (1.0 = aanvullen tot
+  vol; lager = reserve sparen) en cp_bet_r1/r2/r3 (inzet-wens per ronde,
+  default alles op r3). choose_spawn/choose_cp_bet vervangen de vaste
+  heuristieken in MatchRunner (trainer!), de sim-runner, AgentL2 en de
+  spel-AI in game.gd — defaults zijn bewezen gedragsneutraal (v4.2-sim
+  byte-identiek). De trainer muteert ze vanaf nu gewoon mee; bestaande
+  profielen krijgen de defaults bij het laden (merge). Paneel-knop
+  "Training v4.2 (6 facties)" erbij (traint onder rules_v42_campaign =
+  de 1v1-setting). Volgende leerslag: campagne-scope (sparen over
+  wedstrijden, doneren/testament) bij F3's decide_campaign.
+  CHECKS: 1177 asserts groen (leerbaarheids-test: extreme gewichten geven
+  ander gedrag) - simcheck 5/5.
+
 - **F2.6 deel B GEBOUWD (25 juli) — het v4.2-duel is speelbaar.** Na Max'
   sturing ("bouw gewoon het spel"; D15 geparkeerd als B16, sweeps gestopt):
   de mens-vs-AI-flow spreekt nu volledig v4.2. Nieuw in game.gd (12 edits):

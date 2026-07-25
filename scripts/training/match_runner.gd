@@ -59,25 +59,24 @@ func step() -> void:
 		return
 	var cur = ai1 if _state.current_player == Constants.PLAYER_1 else ai2
 	if ph == Phase.Type.CYCLE_SPAWN:
-		# F2.6 (besluit Max): winst-gericht — alleen verliezen aanvullen.
+		# Leerbaar (opdracht Max): het spawn-beleid komt uit de gewichten
+		# (spawn_drempel) — zo traint de arena zuinig vs gulzig aanvullen.
 		for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
 			if _state.spawn_done.get(pid, false):
 				continue
-			Reducer.apply(_state, Validator.aanvul_spawn_actie(_state, pid), pid)
+			var spawner = ai1 if pid == Constants.PLAYER_1 else ai2
+			Reducer.apply(_state, Actions.make_spawn(spawner.choose_spawn(_state)), pid)
 	elif Phase.is_define(ph):
 		for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
 			if _state.cards_defined[pid].size() > 0 \
 					or Validator.expected_define_count(_state, pid) == 0:
 				continue
 			var bot = ai1 if pid == Constants.PLAYER_1 else ai2
-			# F2.5-heuristiek: CP op de ronde-3-kaarten (masterplan); daarna
-			# krijgen de eerste `bet` kaarten het extra budgetpunt op hp.
-			var bet: int = 0
-			if _state.rules.campaign_actief() and _state.round_number == 3 \
-					and not _state.cp_bet_done.get(pid, false):
-				bet = mini(int(_state.cp.get(pid, 0)), Validator.expected_define_count(_state, pid))
-				if bet > 0:
-					Reducer.apply(_state, Actions.make_bet_cp(bet), pid)
+			# Leerbaar CP-beleid (cp_bet_r1..r3); de eerste `bet` kaarten
+			# krijgen daarna het extra budgetpunt op hp.
+			var bet: int = bot.choose_cp_bet(_state)
+			if bet > 0:
+				Reducer.apply(_state, Actions.make_bet_cp(bet), pid)
 			var cards: Array = bot.generate_cards(_state)
 			for i in mini(bet, cards.size()):
 				cards[i].hp = int(cards[i].hp) + 1

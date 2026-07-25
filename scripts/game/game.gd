@@ -951,12 +951,9 @@ func _on_define_confirmed(_cards: Array) -> void:
 	GameSession.submit_define_cards(_human_id, dicts)
 	# F2.6 (v4.2): AI-bet op de ronde-3-kaarten (zelfde heuristiek als de arena).
 	var st_ai: GameState = GameSession.state
-	var ai_bet: int = 0
-	if st_ai.rules.campaign_actief() and st_ai.round_number == 3 \
-			and not st_ai.cp_bet_done.get(_ai_id, false):
-		ai_bet = mini(int(st_ai.cp.get(_ai_id, 0)), Validator.expected_define_count(st_ai, _ai_id))
-		if ai_bet > 0:
-			GameSession.submit_bet_cp(_ai_id, ai_bet)
+	var ai_bet: int = _ai.choose_cp_bet(st_ai)
+	if ai_bet > 0:
+		GameSession.submit_bet_cp(_ai_id, ai_bet)
 	var ai_cards: Array = _ai.generate_cards(GameSession.state)
 	for i in mini(ai_bet, ai_cards.size()):
 		ai_cards[i].hp = int(ai_cards[i].hp) + 1
@@ -1173,7 +1170,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		_refresh_all()
 		_update_hud("Versterkingen")
 		if not GameSession.state.spawn_done.get(_ai_id, false):
-			GameSession.submit_spawn(_ai_id, Validator.aanvul_spawn_actie(GameSession.state, _ai_id).spawns)
+			GameSession.submit_spawn(_ai_id, _ai.choose_spawn(GameSession.state))
 		if GameSession.state.phase == Phase.Type.CYCLE_SPAWN \
 				and not GameSession.state.spawn_done.get(_human_id, false):
 			_show_spawn_overlay()

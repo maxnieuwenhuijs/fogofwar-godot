@@ -1496,22 +1496,21 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 		var ph: int = st.phase
 		var cur = a1 if st.current_player == 1 else a2
 		if ph == Phase.Type.CYCLE_SPAWN:
-			# F2.6 (besluit Max): winst-gericht — alleen verliezen aanvullen.
+			# Leerbaar (opdracht Max): spawn-beleid uit de gewichten.
 			for pid in [1, 2]:
 				if st.spawn_done.get(pid, false):
 					continue
-				GameSession.submit_spawn(pid, Validator.aanvul_spawn_actie(st, pid).spawns)
+				var spawner = a1 if pid == 1 else a2
+				GameSession.submit_spawn(pid, spawner.choose_spawn(st))
 		elif Phase.is_define(ph):
 			for pid in [1, 2]:
 				if st.cards_defined[pid].size() > 0 or Validator.expected_define_count(st, pid) == 0:
 					continue
 				var bot = a1 if pid == 1 else a2
-				# F2.5-heuristiek: CP op de ronde-3-kaarten (zoals MatchRunner).
-				var bet: int = 0
-				if st.rules.campaign_actief() and st.round_number == 3 and not st.cp_bet_done.get(pid, false):
-					bet = mini(int(st.cp.get(pid, 0)), Validator.expected_define_count(st, pid))
-					if bet > 0:
-						GameSession.submit_bet_cp(pid, bet)
+				# Leerbaar CP-beleid (cp_bet_r1..r3).
+				var bet: int = bot.choose_cp_bet(st)
+				if bet > 0:
+					GameSession.submit_bet_cp(pid, bet)
 				var cards: Array = bot.generate_cards(st)
 				for i in mini(bet, cards.size()):
 					cards[i].hp = int(cards[i].hp) + 1

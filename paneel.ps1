@@ -26,7 +26,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War - paneel"
-$form.Size = New-Object System.Drawing.Size(400, 475)
+$form.Size = New-Object System.Drawing.Size(400, 520)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -92,8 +92,23 @@ $null = Maak-Knop "Training (6 facties)" 135 {
     Start-Process "$repo\train_ai.bat" -WorkingDirectory $repo -ArgumentList ([string][int]$numTrain.Value)
 }
 
+# --- Training onder de v4.2-regels (1v1-setting; leert spawn/CP-beleid) ------
+$null = Maak-Knop "Training v4.2 (6 facties)" 180 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    $min = [int]$numTrain.Value
+    $basisSeed = [int]([DateTimeOffset]::Now.ToUnixTimeSeconds() % 900000000)
+    $i = 0
+    foreach ($f in @("mens", "muis", "leeuw", "beer", "wolf", "vos")) {
+        Start-Process $godot -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList @(
+            "--headless", "--path", ".", "res://tools/capture.tscn", "--",
+            "train", $min, 6, 6, $f, ($basisSeed + $i),
+            "arena/arena_configs/rules_v42_campaign.json")
+        $i += 1
+    }
+}
+
 # --- Snelle arena-test (quick_l1, ~2 min) ------------------------------------
-$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 180 {
+$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 225 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
@@ -101,7 +116,7 @@ $null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 180 {
 }
 
 # --- Volledige L2-matrix (~40 min) -------------------------------------------
-$null = Maak-Knop "Volledige L2-matrix (~40 min)" 225 {
+$null = Maak-Knop "Volledige L2-matrix (~40 min)" 270 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
@@ -109,14 +124,14 @@ $null = Maak-Knop "Volledige L2-matrix (~40 min)" 225 {
 }
 
 # --- Fuzz-vangnet (500 partijen) ---------------------------------------------
-$null = Maak-Knop "Fuzz-check (500 partijen)" 270 {
+$null = Maak-Knop "Fuzz-check (500 partijen)" 315 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process $godot -WorkingDirectory $repo -ArgumentList @(
         "--headless", "--path", ".", "res://arena/arena.tscn", "--", "--fuzz", "500")
 }
 
 # --- Dashboard bouwen + openen ------------------------------------------------
-$null = Maak-Knop "Dashboard verversen + openen" 315 {
+$null = Maak-Knop "Dashboard verversen + openen" 360 {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
@@ -127,7 +142,7 @@ $null = Maak-Knop "Dashboard verversen + openen" 315 {
 }
 
 # --- Alles stoppen -------------------------------------------------------------
-$btnStop = Maak-Knop "STOP alle runs" 370 {
+$btnStop = Maak-Knop "STOP alle runs" 415 {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null

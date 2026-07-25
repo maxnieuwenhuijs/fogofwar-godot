@@ -91,6 +91,37 @@ func test_koppel_voorrang_spawn_rij() -> void:
 	assert_eq(int(link41.pawn_id), front.id, "4.1: dichtst bij de haven wint zoals altijd")
 
 
+func test_spawn_en_cp_beleid_uit_gewichten() -> void:
+	# Opdracht Max: spawn/CP zijn LEERBAAR — extreme gewichten geven ander
+	# gedrag, de defaults reproduceren exact de oude heuristiek.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.phase = Phase.Type.CYCLE_SPAWN
+	s.cycle = 2
+	s._spawn_pawn(1, Vector2i(5, 8))
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s.init_pools()
+	var ai = AIMediumScript.new()
+	ai.player_id = 1
+	assert_eq((ai.choose_spawn(s) as Array).size(), 3, "default 1.0: maximaal aanvullen bij groot tekort")
+	ai.weights["spawn_drempel"] = 0.01
+	assert_eq((ai.choose_spawn(s) as Array).size(), 0, "lage drempel spaart de reserve")
+	var d := GameState.new()
+	d.rules = RulesConfig.from_dict({"campaign": {}})
+	d.phase = Phase.Type.SETUP_1_DEFINE
+	d._spawn_pawn(1, Vector2i(5, 9))
+	d._spawn_pawn(2, Vector2i(5, 1))
+	d.init_pools()
+	var bieder = AIMediumScript.new()
+	bieder.player_id = 1
+	assert_eq(bieder.choose_cp_bet(d), 0, "default biedt niet in ronde 1")
+	bieder.weights["cp_bet_r1"] = 2.0
+	assert_eq(bieder.choose_cp_bet(d), 1, "geleerde r1-wens, geklemd op het kaartaantal")
+	d.round_number = 3
+	d.phase = Phase.Type.SETUP_3_DEFINE
+	assert_eq(bieder.choose_cp_bet(d), 1, "ronde-3-default: maximaal (geklemd)")
+
+
 func test_l0_speelt_v42_legaal() -> void:
 	# L0 kiest random uit legal_actions — de nieuwe acties zijn gratis gedekt.
 	var uit: Dictionary = _speel(AgentL0.new(), AgentL0.new(), 4244)
