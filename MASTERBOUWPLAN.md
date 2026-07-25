@@ -102,6 +102,11 @@ Per bouwplan-onderdeel: wat er al staat, wat er mist. Status: ✅ = staat er, �
 | B10 | **Arena-data leeft in jsonl-bestanden** (`results/`), niet in de `arena_runs`/`arena_games`-MySQL-tabellen uit bouwplan §5.1 — die tabellen komen pas als F7-rapportage ze echt nodig heeft. | De arena draait (F1) vóór er een database bestaat (F4); bestanden zijn gratis reproduceerbaar en diff-baar. |
 | B11 | **Imperfecte informatie in L2/L3:** F1 start met een puntschatting (verwachtingswaarde over de onthulde kaartenset) voor onbekende Vos-stats; het bouwplan-§7.2-model (determinized sampling N=16) is een expliciete upgrade-stap zodra de arena aantoont dat de puntschatting L3 merkbaar zwakker maakt (F8, eerder mag). | Sampling ×16 vermenigvuldigt de rekentijd; eerst meten of het nodig is. |
 | B12 | **Client-telemetrie = het server-event-log** (acties, think_ms, uitkomsten); er komt géén apart `Telemetry.gd`-autoload in v1. De **web-replay-viewer** uit bouwplan §3 schuift naar F8 (client-replay + `-- replay` dekken de behoefte tot die tijd). | Event sourcing ís de telemetrie (bouwplan §1); geen dubbele meetlaag bouwen. |
+| B13 | **Geen automatische jobs op Max' machine** (besluit 23 juli): nachtrun/training worden altijd handmatig gestart — via `paneel.ps1` ("FogOfWar Paneel.bat") of de CLI. De Taakplanner-registratie is teruggedraaid; automatisch plannen hoort bij de VPS-cron (F4). | Max houdt zelf de regie over 8-uurs-belasting van zijn machine. |
+| B14 | **De v4.2-regels zijn definitief** (F2.1-sessie 24 juli, D1-D14 in `docs/F2.1-beslisagenda.md`; spec = `docs/spelregels-v4.2.md` Deel B). Kern: CP = +1 kaartbudget bij definiëren, pool = 3× comp per type, spawn max 3 alleen op de eigen achterste rij vanaf cyclus 2, CANNON_ACT = roll+shoot (RETREAT bestaat niet), vijandelijke pool/CP verborgen. | Ontwerpsessie met Max; alles config-gated door het campaign-blok. |
+| B15 | **Bots spelen winst-gericht** (besluit Max 24 juli): spawnen alleen om verliezen aan te vullen tot de startgrootte (`Validator.aanvul_spawn_actie`), nooit maximaal — max-spawnen verstopte het bord en duwde 67-76% van de partijen de cycluslimiet-tiebreak in. De cycluslimiet is méétgereedschap/vangnet, geen doel. | "Ze kunnen toch gewoon voor de winst gaan" — de bots moeten het spel spelen, niet de noodrem. |
+| B16 | **D15 open: het natuurlijke duel-einde onder v4.2** (losse matches). Sweeps (poolfactor 1.5/2/2.5, haven-1) beslissen de losse-match-default. Campagne-context (Max, 25 juli): teams verdelen CP/reinforcements per lid (doneren of houden) → de duel-pool komt uit de teamlaag (expliciete `campaign.pools`), en over meerdere wedstrijden is eliminatie een prima overwinning (verliezen tellen door). | Tiebreak-druk is vooral een losse-match-kwestie; de teamlaag (F3) levert de echte schaarste. |
+| B17 | **Elke nacht meet beide werelden**: de nachtrun draait batches om-en-om op de 4.1-matrix én de v4.2-matrix, naar aparte run-mappen (dashboard-trend matcht op agents+matchups+rules en mengt nooit). | Eén nacht = trainings-effect (4.1) én economie-monitoring (v4.2). |
 
 **Doelstructuur in de repo** (groeit per fase; bestaande mappen blijven tot hun vervanger af is):
 
@@ -538,11 +543,18 @@ in F8 — de huidige heuristieken dekken de F2.6-meetbaarheid.
 
 ### ☐ F2.6 — Arena-hermeting + UI onder v4.2
 
-**Werk:** `arena_configs/v42_default.json`; volledige matrix + §8.2-metrics onder v4.2; sweep over de
-nieuwe knoppen (CP-tabel ±, poolfactor 2.5/3.0, kanon_dracht_max 5/6). UI: spawn-UI (hergebruik
-placement-flow), CP-toggle in de kaartwaaier, actiepot-badge, en het **MatchSetup**-scherm uit bouwplan
-§4.1: 3 kaarten met sliders + presets Aanvallend/Gebalanceerd/Verdedigend, waarbij **preset = ook de
-timeout-default** (koppelt aan de F0.8 default-loadout).
+**STATUS (25 juli): deel A (metingen) grotendeels AF** — `v42_default.json` bestaat, sim-CLI speelt
+v4.2 uit, de nachtrun meet elke nacht beide matrices (B17), en de eerste volle v4.2-L2-meting (22.680
+partijen) staat: alle doctrines binnen 25-75, spawns 36/partij, CP 12/partij, MAAR 76% eindigt op de
+cycluslimiet-tiebreak → D15-sweeps (poolfactor 1.5/2/2.5, haven-1) lopen; besluit volgt op die data
+(B16). Knop-sweeps op L1 bleken ongevoelig (partijen te kort); L2 is de meetlat. **Deel B (UI) is de
+openstaande klus** — daarna kan Max zijn eerste v4.2-duel spelen (= de MAX-check).
+
+**Werk (rest):** UI: spawn-UI (hergebruik placement-flow), CP-toggle in de kaartwaaier, actiepot-badge,
+en het **MatchSetup**-scherm uit bouwplan §4.1: 3 kaarten met sliders + presets
+Aanvallend/Gebalanceerd/Verdedigend, waarbij **preset = ook de timeout-default** (koppelt aan de F0.8
+default-loadout). Plus het D15-besluit verwerken (poolfactor/haven/cycluslimiet-default voor losse
+matches). GameSession heeft de v4.2-submits al (submit_spawn/submit_bet_cp/submit_cannon_*).
 
 **CHECK (Claude):** arena-rapport v4.2 bestaat; `-- sim ... --rules v42_default.json` speelt uit; alle
 4.1.x-goldens én nieuwe 4.2-goldens groen; capture-shot van MatchSetup + spawn-UI.
