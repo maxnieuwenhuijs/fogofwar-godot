@@ -1,0 +1,56 @@
+{
+ "art_min_range": 2,
+ "art_move": 1,
+ "art_range": 6,
+ "art_shot_cost": 1,
+ "campaign": {
+  "cp_bijschrijving": "campagnelaag",
+  "cp_effect_mode": "define_budget",
+  "cp_eliminatie": 4,
+  "cp_haven": 8,
+  "cp_inzet_max": "per_kaart",
+  "cp_raadstem": 1,
+  "cp_refund": "none",
+  "cp_start": 6,
+  "cp_start_mode": "vast",
+  "kanon_actie_kost": {
+   "roll": 1,
+   "shoot": 1
+  },
+  "kanon_dracht_max": 6,
+  "pool_afboeking": true,
+  "pool_zichtbaar": false,
+  "poolfactor": 1.5,
+  "pools": null,
+  "skip_mode": "auto",
+  "spawn_max": 3,
+  "spawn_vakken": "achterste_rij",
+  "spawn_vanaf_cyclus": 2
+ },
+ "clock": {
+  "bank_sec": 0,
+  "increment_sec": 0,
+  "reconnect_grace_sec": 20
+ },
+ "cycle_limit": 12,
+ "doctrines": {},
+ "fire_blocked": true,
+ "fire_hits_inactive": true,
+ "haven_score_cumulative": false,
+ "inf_shot_cost": 1,
+ "inf_shot_full_attack": true,
+ "inf_shot_over_pawn": false,
+ "inf_shot_range": 2,
+ "pawns_in_haven_to_win": 2,
+ "per_stat_cap": 0,
+ "retaliation": {
+  "art": 0,
+  "cav": 2,
+  "inf": 1
+ },
+ "rounds_per_cycle": 3,
+ "rules_version": "4.2.0+pf15",
+ "stamina_model": "pool",
+ "statue_threshold": 0,
+ "tiebreak": "material_haven_proximity"
+}
