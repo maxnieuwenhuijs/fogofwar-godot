@@ -572,7 +572,7 @@ matches). GameSession heeft de v4.2-submits al (submit_spawn/submit_bet_cp/submi
 Doel: de volledige campagne-loop lokaal, offline, tegen 15 bots — het goedkoopste bewijs van het hele
 campagne-ontwerp (bouwplan §6).
 
-### ☐ F3.0 — campagne-spec.md definitief
+### ☑ F3.0 — campagne-spec.md definitief
 
 **Werk:** `docs/campagne-spec.md` schrijven (draft door Claude uit bouwplan §2.2/§9.2, daarna sessie met
 Max): teams van 8 (live-8) / 16 (async), raadsronde-flow, nominatieregels (niemand 2× per raadsronde;

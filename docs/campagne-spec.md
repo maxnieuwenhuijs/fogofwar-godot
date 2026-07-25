@@ -1,0 +1,132 @@
+# Fog of War — Campagne-spec (F3.0)
+
+> **Status: DEFINITIEF** — vastgeklikt in de F3.0-ontwerpsessie met Max
+> (25 juli 2026, besluiten C1-C8). Bronnen: masterplan F3-sectie, de
+> F2.1-besluiten (D1-D14 + bijstellingen) en Max' speeltest-uitspraken.
+>
+> **De C-besluiten:** C1 twee teams van 8 · C2 je neemt je volledige bezit
+> mee het duel in · C3 uitvallen = duel verloren én voorraad te klein voor
+> een nieuwe startopstelling · C4 burgeroorlog zodra een team is
+> uitgeschakeld · C5 punten: haven 3 / eliminatie 2 / tiebreak 1 / verlies 0,
+> teambonus +2 per lid (ook doden) · C6 flow: raad → doneren → duels ·
+> C7 duel-start: doctrine-comp opstellen (gecapt op voorraad), rest =
+> spawn-reserve · C8 de 15-spawns-per-potje-cap geldt ook in campagne-duels.
+
+## 1. Opzet
+
+- Een campagne is een reeks **raadsrondes** met 1v1-duels (v4.2-regels, de
+  match-engine) tussen leden van twee teams, tot er een **kampioen** is.
+- **Bezetting (C1):** solo-campagne = de mens + 15 bots, twee teams van 8
+  (het async-16-model; live-varianten zijn F5-werk).
+- Elke speler heeft een **campagne-bezit**: pionnen-voorraad (per type),
+  CP-saldo en punten. Alles loopt als **ledger-events** (reason:
+  start/donate/testament/loss/spawn/win_haven/win_eliminatie/restant/…);
+  een saldo is altijd de som van het ledger, nooit een muteerbaar veld.
+
+## 2. De raadsronde
+
+Flow per ronde (C6):
+
+1. **Raad**: nominaties + stemmen bepalen wie duelleert.
+2. **Donatie-venster**: leden schuiven pionnen/CP naar de genomineerden.
+3. **Duels** (parallel of na elkaar; solo: bot-duels op vol tempo).
+4. **Battlereports + ledger-verwerking**, dan de volgende ronde.
+
+Regels (vastgelegd, masterplan):
+
+- **Nominatie:** niemand wordt 2× per raadsronde genomineerd; aantal duels
+  per ronde = min(2, kleinste teamgrootte); het kleinste team (tiebreak:
+  minste punten) nomineert eerst; een team met 1 overlevende nomineert
+  zichzelf.
+- **Stemmen:** default beslist de teammeerderheid; bij staking van stemmen
+  wint de stem van de speler met de **kleinste pool** (die draagt het
+  grootste risico).
+- **Timers (solo):** bots beslissen direct; de raad wacht op de mens met een
+  zachte 60s-timer (skipbaar). Online-deadlines: F5.
+
+## 3. Economie per duel (de v4.2-koppeling)
+
+- **Duel-inzet (C2/C7):** een genomineerde neemt zijn **volledige
+  campagne-bezit** mee: hij stelt zijn doctrine-startleger op (gecapt op de
+  voorraad — minder dan je comp betekent kleiner beginnen), de rest van de
+  voorraad is de spawn-reserve (`campaign.pools`), en zijn hele CP-saldo is
+  `cp_start`. Rijk = sterk; donaties doen er maximaal toe.
+- **Spawn-cap (C8):** de limiet van 15 spawns per potje geldt ook in
+  campagne-duels (max 3 per cyclus, eigen achterste rij — de vaste
+  v4.2-regels).
+- **Duel-verliezen boeken af** van de campagne-voorraad (besluit Max);
+  gesneuveld = weg. Spawns in het duel komen uit dezelfde voorraad.
+- **CP-restant** van het duel vloeit terug naar de campagnepot en is daar
+  overdraagbaar (besluit Max, 25 juli). Haven-winst +8 CP, eliminatie-winst
+  +4 CP (ledger; D13).
+- **Losse-match-setting** (buiten de campagne): 10 CP, poolfactor 1.5,
+  max 15 spawns per potje (besluit Max, 25 juli).
+
+## 4. Donaties en testament
+
+- **Donatiecaps:** max 10 pionnen en 3 CP per ontvanger per raadsronde
+  (masterplan). Doneren of houden is per lid een vrije keuze (besluit Max).
+- **Testament:** wie uit de campagne valt (C3: een duel verloren én de
+  voorraad kan geen nieuwe startopstelling meer vullen) laat na: maximaal
+  de **helft**
+  van zijn bezit, aan maximaal **2 ontvangers**, binnen de timer; timeout of
+  forfeit = alles **verbrandt**.
+- **Eliminatie telt door** over wedstrijden (besluit Max): een leeggevochten
+  tegenstander is een volwaardige overwinning.
+
+## 5. Punten en de burgeroorlog
+
+- **Punten (C5)** meten roem, los van de CP/pion-economie: duelwinst via de
+  haven 3, via eliminatie 2, via de tiebreak 1, verlies 0. Teamwinst-bonus
+  aan het einde: +2 per lid, **ook voor gesneuvelde teamgenoten** (de doden
+  droegen bij).
+- **Burgeroorlog (C4):** zodra één team volledig is uitgeschakeld vechten
+  de overlevenden van het winnende team onderling om
+  het kampioenschap: knock-out-bracket, seeding op punten → CP → pool;
+  vrijloting voor de hoogste seed bij oneven aantal; **geen raad, geen
+  donaties/ruil** meer.
+- De **kampioen** is de winnaar van de burgeroorlog-finale.
+
+## 6. Informatie en fog (D12-lijn)
+
+- Het **grootboek** (ledger) is publiek: punten, donaties en testamenten zijn
+  voor iedereen zichtbaar ("Among Us-gevoel").
+- **Vijandelijke voorraad en CP zijn verborgen** — in duels (D12) én op de
+  campagnekaart. De informatiebron is het **battlereport**: wat er in een
+  duel gespawnd, verloren en verdiend is, is na afloop publiek leesbaar
+  (besluit Max: "dat moet je lezen uit de battlereports of van je teammaten
+  horen"). Team-chat/stem-details zijn team-only; wie dood is ziet alles.
+- Bot-duels leveren een MatchReport-kaartje mét opgeslagen match-log
+  (replaybaar).
+
+## 7. Bijlage: testgevallen (F3.1-contract)
+
+| Regel | Testgeval |
+|---|---|
+| Nominatie-limiet (niet 2× per ronde) | `test_nominatie_niet_dubbel` |
+| Duels/ronde = min(2, kleinste team) | `test_duels_per_ronde` |
+| Kleinste team nomineert eerst | `test_nominatie_volgorde` |
+| 1 overlevende nomineert zichzelf | `test_zelfnominatie` |
+| Stem-default teammeerderheid | `test_stem_meerderheid` |
+| Staking → kleinste pool beslist | `test_stem_staking` |
+| Donatiecap 10 pionnen/ontvanger/ronde | `test_donatiecap_pionnen` |
+| Donatiecap 3 CP/ontvanger/ronde | `test_donatiecap_cp` |
+| Testament ≤ helft | `test_testament_helft` |
+| Testament ≤ 2 ontvangers | `test_testament_ontvangers` |
+| Testament-timeout = verbranden | `test_testament_timeout` |
+| Forfeit-keten | `test_forfeit` |
+| Duel-verliezen → pool-afboeking | `test_pool_afboeking` |
+| CP-restant → campagnepot | `test_cp_restant` |
+| Haven/eliminatie-CP naar ledger | `test_cp_verdiensten` |
+| Punten ook voor doden (teambonus) | `test_punten_doden` |
+| Burgeroorlog-seeding punten→CP→pool | `test_seeding` |
+| Vrijloting hoogste seed | `test_vrijloting` |
+| Geen donaties in de burgeroorlog | `test_burgeroorlog_geen_ruil` |
+| Ledger-fold = eindstand | `test_ledger_fold` |
+| Ledger-invariant (som + bord constant behalve verbranding) | `test_ledger_invariant` |
+| Punten-tarieven 3/2/1/0 + teambonus doden | `test_punten_tarieven` |
+| Flow raad → doneren → duels | `test_ronde_flow` |
+| Duel-start: comp gecapt op voorraad, rest reserve | `test_duel_start_verdeling` |
+| Kleiner starten bij armoede (voorraad < comp) | `test_arm_start` |
+| Spawn-cap 15 ook in campagne-duels | `test_campagne_spawn_cap` |
+| Uitvals-conditie C3 (verlies + te kleine voorraad) | `test_uitvallen` |

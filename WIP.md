@@ -270,6 +270,18 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.0 AFGEROND (25 juli) — campagne-spec definitief.** Ontwerpsessie met
+  Max (besluiten C1-C8): twee teams van 8; je neemt je VOLLEDIGE bezit mee
+  het duel in (comp opstellen gecapt op voorraad, rest = spawn-reserve;
+  armoede = kleiner starten); uitvallen = duel verloren en voorraad te klein
+  voor een nieuwe startopstelling (dan testament); burgeroorlog zodra een
+  team is uitgeschakeld (seeding punten->CP->pool, geen raad/ruil); punten
+  haven 3 / eliminatie 2 / tiebreak 1 / verlies 0 + teambonus +2 ook voor
+  doden; ronde-flow raad -> doneren -> duels; de 15-spawn-cap geldt ook in
+  campagne-duels. docs/campagne-spec.md is DEFINITIEF (0x TE BEVESTIGEN,
+  28 testgevallen als F3.1-contract). Volgende: F3.1 CampaignCore
+  (cstate/cactions/creducer/cview/crules + ledger).
+
 - **Leerbaar spawn/CP-beleid GEBOUWD (25 juli, opdracht Max).** Vier nieuwe
   trainbare gewichten in AIController: spawn_drempel (1.0 = aanvullen tot
   vol; lager = reserve sparen) en cp_bet_r1/r2/r3 (inzet-wens per ronde,
