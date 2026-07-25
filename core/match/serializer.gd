@@ -32,6 +32,7 @@ static func state_to_dict(state: GameState) -> Dictionary:
 	var cp_d: Dictionary = {}
 	var cp_bets_d: Dictionary = {}
 	var cp_bet_done_d: Dictionary = {}
+	var spawn_totaal_d: Dictionary = {}
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		var key := str(player_id)
 		defined_ids[key] = []
@@ -55,6 +56,7 @@ static func state_to_dict(state: GameState) -> Dictionary:
 			cp_d[key] = int(state.cp[player_id])
 		cp_bets_d[key] = int(state.cp_bets.get(player_id, 0))
 		cp_bet_done_d[key] = bool(state.cp_bet_done.get(player_id, false))
+		spawn_totaal_d[key] = int(state.spawn_totaal.get(player_id, 0))
 	return {
 		"phase": state.phase,
 		"cycle": state.cycle,
@@ -81,6 +83,7 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		"cp": cp_d,
 		"cp_bets": cp_bets_d,
 		"cp_bet_done": cp_bet_done_d,
+		"spawn_totaal": spawn_totaal_d,
 		"next_pawn_id": state._next_pawn_id,
 		"next_card_id": state._next_card_id,
 	}
@@ -148,6 +151,9 @@ static func state_from_dict(d: Dictionary) -> GameState:
 			s.cp_bets[player_id] = bet
 		if bool(d.get("cp_bet_done", {}).get(key, false)):
 			s.cp_bet_done[player_id] = true
+		var st_tot: int = int(d.get("spawn_totaal", {}).get(key, 0))
+		if st_tot != 0:
+			s.spawn_totaal[player_id] = st_tot
 	s._next_pawn_id = int(d.get("next_pawn_id", 0))
 	s._next_card_id = int(d.get("next_card_id", 0))
 	return s

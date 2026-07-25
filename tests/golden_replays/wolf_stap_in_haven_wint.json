@@ -60,10 +60,10 @@
 					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "5de55c9a31bb2823e0e9a4b6cba887d6bece7757caf1ceef17cd2b5094fd7812",
+			"hash": "9f00692cf2266c3846f470c2b348772f48c4f8c8fee9d2b66d0f6029d7f9187e",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784964767.269
+			"ts": 1784965854.411
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "0c131ba5a26cd8e6a119be0ab6daf4d47c2da406bcaeec716aee4a1ec84145d2",
+			"hash": "9c2f71e042510e6890821a0e71c472bf8d48ce482e636a5c6018eccff82b1b21",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784964767.269
+			"ts": 1784965854.411
 		}
 	],
-	"final_hash": "0c131ba5a26cd8e6a119be0ab6daf4d47c2da406bcaeec716aee4a1ec84145d2",
+	"final_hash": "9c2f71e042510e6890821a0e71c472bf8d48ce482e636a5c6018eccff82b1b21",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -303,11 +303,15 @@
 			"1": false,
 			"2": false
 		},
+		"spawn_totaal": {
+			"1": 0,
+			"2": 0
+		},
 		"turn_deadline": 0,
 		"winner": 1
 	},
 	"meta": {
-		"created": "2026-07-25T09:32:47",
+		"created": "2026-07-25T09:50:54",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -488,6 +492,10 @@
 			"spawn_done": {
 				"1": false,
 				"2": false
+			},
+			"spawn_totaal": {
+				"1": 0,
+				"2": 0
 			},
 			"turn_deadline": 0,
 			"winner": -1

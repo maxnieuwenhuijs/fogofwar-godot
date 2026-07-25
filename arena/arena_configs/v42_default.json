@@ -20,10 +20,11 @@
   "kanon_dracht_max": 6,
   "pool_afboeking": true,
   "pool_zichtbaar": false,
-  "poolfactor": 3.0,
+  "poolfactor": 1.5,
   "pools": null,
   "skip_mode": "auto",
   "spawn_max": 3,
+  "spawn_totaal_max": 15,
   "spawn_vakken": "achterste_rij",
   "spawn_vanaf_cyclus": 2
  },

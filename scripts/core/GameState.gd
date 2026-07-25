@@ -59,6 +59,9 @@ var turn_deadline: int = 0
 var pools: Dictionary = {}
 var spawn_commits: Dictionary = {}
 var spawn_done: Dictionary = {}
+# Totaal geslaagde spawns per speler dit POTJE (besluit Max: max
+# campaign.spawn_totaal_max = 15) — telt niet per cyclus terug.
+var spawn_totaal: Dictionary = {}
 
 # F2.3 (v4.2) — commandopunten. cp[speler] = saldo (init cp_start; leeg dict =
 # geen campaign). cp_bets[speler] = de blinde inzet van de HUIDIGE setup-ronde
@@ -153,6 +156,15 @@ func pool_count(player_id: int, unit_type: int) -> int:
 func pool_take(player_id: int, unit_type: int) -> void:
 	var sleutel: String = ["inf", "cav", "art"][unit_type]
 	pools[player_id][sleutel] = int(pools[player_id][sleutel]) - 1
+	spawn_totaal[player_id] = int(spawn_totaal.get(player_id, 0)) + 1
+
+
+## Hoeveel spawns dit potje nog mogen (campaign.spawn_totaal_max, besluit Max).
+func spawns_over(player_id: int) -> int:
+	if not rules.campaign_actief():
+		return 0
+	var limiet: int = int(rules.campaign.get("spawn_totaal_max", 15))
+	return maxi(0, limiet - int(spawn_totaal.get(player_id, 0)))
 
 ## Plaats de pionnen van één speler volgens een placement-lijst [{type, pos}, ...].
 func apply_placement(player_id: int, placements: Array) -> void:
@@ -366,6 +378,7 @@ func clone() -> GameState:
 	copy.pools = pools.duplicate(true)
 	copy.spawn_commits = spawn_commits.duplicate(true)
 	copy.spawn_done = spawn_done.duplicate()
+	copy.spawn_totaal = spawn_totaal.duplicate()
 	copy.cp = cp.duplicate()
 	copy.cp_bets = cp_bets.duplicate()
 	copy.cp_bet_done = cp_bet_done.duplicate()

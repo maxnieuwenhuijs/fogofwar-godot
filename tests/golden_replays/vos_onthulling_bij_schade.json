@@ -60,13 +60,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0ad74f6ac264178169925bc268bbd3abdbcea7a9b8cf3a0688458e61a9f8a0db",
+			"hash": "8b33d743d5b46e56003d85c57f4b356cc05d43705579a847aaa7858e54ba05c7",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784964767.301
+			"ts": 1784965854.442
 		}
 	],
-	"final_hash": "0ad74f6ac264178169925bc268bbd3abdbcea7a9b8cf3a0688458e61a9f8a0db",
+	"final_hash": "8b33d743d5b46e56003d85c57f4b356cc05d43705579a847aaa7858e54ba05c7",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -231,11 +231,15 @@
 			"1": false,
 			"2": false
 		},
+		"spawn_totaal": {
+			"1": 0,
+			"2": 0
+		},
 		"turn_deadline": 0,
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-25T09:32:47",
+		"created": "2026-07-25T09:50:54",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -400,6 +404,10 @@
 			"spawn_done": {
 				"1": false,
 				"2": false
+			},
+			"spawn_totaal": {
+				"1": 0,
+				"2": 0
 			},
 			"turn_deadline": 0,
 			"winner": -1

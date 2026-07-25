@@ -174,10 +174,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "33af323a0579c7eebf5427a801f1c6fd1ec0ad7fe0e127908271da1dd4436be8",
+			"hash": "232bf6e0d405d7f11330884fa2aaa7048ecd773cc473aebb84a9d25fb08dff2c",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784964720.033
+			"ts": 1784965813.834
 		},
 		{
 			"action": {
@@ -373,10 +373,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "ed679811e36cd3f75c591f02d017d9d95eb59ddd6398c0513248ea1263b999de",
+			"hash": "bc7df043a56cb1236f1ea078fc836db95065b06cf04f99b10ba9c24ca0273eb7",
 			"player_id": 2,
 			"seq": 1,
-			"ts": 1784964720.033
+			"ts": 1784965813.835
 		},
 		{
 			"action": {
@@ -406,10 +406,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "0b23b7373e919425b90fe7379975e00474d6f8ce239d20f6130477b029d042ea",
+			"hash": "2ac605eae1a754e4edbf12586123048c17e3abbaef72c8aacff29b53b969a5a1",
 			"player_id": 1,
 			"seq": 2,
-			"ts": 1784964720.035
+			"ts": 1784965813.836
 		},
 		{
 			"action": {
@@ -466,20 +466,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "e88608e5409cdba2870645d4b8674936a99b74b4bb6e455439076c5ff903991d",
+			"hash": "3bf3f76dc0c982450752f69dc47c8bb219c514a342e415981c80397e2d6051c6",
 			"player_id": 2,
 			"seq": 3,
-			"ts": 1784964720.035
+			"ts": 1784965813.837
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "921b7a3f1d31a696c8d901862c6f545ab92fb95ddbcbe2875ac8ed3bdbd31b26",
+			"hash": "e0e7e13b661f88f4183c07ce9d68b2ab9f33aacc15094d163818941d35bc3cd7",
 			"player_id": 1,
 			"seq": 4,
-			"ts": 1784964720.037
+			"ts": 1784965813.838
 		},
 		{
 			"action": {
@@ -502,10 +502,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8de5e89a4d1893a9d0ca418925d4e3c3b280910b1a09049b2c5b5250b655da61",
+			"hash": "9d098455cf77fd2b86acb204990f43bb8fb3b86dc76f1808be1b864d8801c782",
 			"player_id": 2,
 			"seq": 5,
-			"ts": 1784964720.037
+			"ts": 1784965813.838
 		},
 		{
 			"action": {
@@ -527,10 +527,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "dcaaaa2cd3cf26017228e798cffc51c34624905393e2a8f694c5bb112a3b2c63",
+			"hash": "4a476662256540dc01b607d2aef9c2c489af4a3b25b41b1ba637629fd54df487",
 			"player_id": 1,
 			"seq": 6,
-			"ts": 1784964720.038
+			"ts": 1784965813.865
 		},
 		{
 			"action": {
@@ -552,10 +552,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c2826527da6c78a4bf61e970d280e1a29138fc5cbfa0b87e8f60928e2ec311eb",
+			"hash": "a76b129b19807111f83f6bbacf73b795deadfbf0f9ad530c1f116ea1df64afd0",
 			"player_id": 2,
 			"seq": 7,
-			"ts": 1784964720.039
+			"ts": 1784965813.867
 		},
 		{
 			"action": {
@@ -577,10 +577,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6d78965cecff6f86a7d5c952c41414e14719f58308ca8be4e2647f53a3249a8c",
+			"hash": "3c129034a0b7041ee6d3181ca70bfcd595bb3fdc8942b8814df494ff8cda3b86",
 			"player_id": 1,
 			"seq": 8,
-			"ts": 1784964720.04
+			"ts": 1784965813.96
 		},
 		{
 			"action": {
@@ -602,10 +602,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "917b275aba5197c3a8fb1200fbb5244fc75e91cbf3309eb213c9199fa1df99f4",
+			"hash": "53737b3a40caf81a3cd9e1f288dd4b2d2aa381ba8bfd9030f9adcc6579e49774",
 			"player_id": 2,
 			"seq": 9,
-			"ts": 1784964720.041
+			"ts": 1784965813.962
 		},
 		{
 			"action": {
@@ -627,10 +627,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "fd90f2c233d216b67e0099fb8ee3b1f862835e4165b500dda608ea80c41f1ebe",
+			"hash": "09a1e3653b009337d8f62ab3e4e447d42b58a7cad87f023b845da42d434d0c4f",
 			"player_id": 1,
 			"seq": 10,
-			"ts": 1784964720.041
+			"ts": 1784965813.964
 		},
 		{
 			"action": {
@@ -653,10 +653,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "576318c004319e666500adca731b44e3a7ced611c0e5b71bf1cfa1aefde529ca",
+			"hash": "da4550a3cf0bfe8cc057d6f592d510350a67cd91066f1dcbf7af240e7636ec38",
 			"player_id": 2,
 			"seq": 11,
-			"ts": 1784964720.042
+			"ts": 1784965813.965
 		},
 		{
 			"action": {
@@ -686,10 +686,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "582aa3dbb94f244e83f8c0672cf3002b7063554328c41845faa279d549698183",
+			"hash": "97c65c574f1cc558a426c289aad9d0e878b1dfe5dbc00fd0f9a402dbdd30e86b",
 			"player_id": 1,
 			"seq": 12,
-			"ts": 1784964720.043
+			"ts": 1784965813.968
 		},
 		{
 			"action": {
@@ -746,20 +746,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "f89da8e7e61663369860700fab712ffffcfcfaff40e783a2a2085678d2ccf572",
+			"hash": "8c2fbba90b62a2a6ac21646e036d76a9638b5c82b550dd11bdf2247cc4eb843d",
 			"player_id": 2,
 			"seq": 13,
-			"ts": 1784964720.043
+			"ts": 1784965813.968
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "8d53468c83c539793aac6a0c087236c4b275714492484657ad98332988be40d1",
+			"hash": "aeeaf1fd79d688d077a5a74a5fe6fee67d3e305ee3b21d6a5f3aad4a8f10c7ef",
 			"player_id": 1,
 			"seq": 14,
-			"ts": 1784964720.045
+			"ts": 1784965813.969
 		},
 		{
 			"action": {
@@ -782,10 +782,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "fce08fcab15c0bed69a841622f741ec0da4af9b5f817e21506dfa84436229c86",
+			"hash": "dc10e209267e570915d4fa13fe8d0d375cf32efe9a00226226aba1e68c2ff2fd",
 			"player_id": 2,
 			"seq": 15,
-			"ts": 1784964720.045
+			"ts": 1784965813.97
 		},
 		{
 			"action": {
@@ -807,10 +807,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "28a6a8bb465e9ba9c1eb08c1a8c6b7f42781288fb2fdab8eaad2ee53ed437a1a",
+			"hash": "78bccd780d8d2c441f0c7b2fef264890613b185d96df2f1349c423c3ddde2d05",
 			"player_id": 1,
 			"seq": 16,
-			"ts": 1784964720.046
+			"ts": 1784965813.971
 		},
 		{
 			"action": {
@@ -832,10 +832,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "aefd7b4ef6207bfdba41fa818c77dceb2545c52a53272a627658c7b4c777809a",
+			"hash": "264c27bcc0fc2fcf646815ce617034d08875a371c815f4f4b5d05de59001b16c",
 			"player_id": 2,
 			"seq": 17,
-			"ts": 1784964720.047
+			"ts": 1784965813.973
 		},
 		{
 			"action": {
@@ -857,10 +857,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8367b6f4d1a88ebee6b76f747dd1dfbf94a550cab61521fb2e636e57293b212b",
+			"hash": "c3cee1672dd1d7d42348910d999d9d35cb698a8a2bd06a8f5794b08e4245d338",
 			"player_id": 1,
 			"seq": 18,
-			"ts": 1784964720.048
+			"ts": 1784965813.975
 		},
 		{
 			"action": {
@@ -882,10 +882,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "94742a320ea5439b2cade0582e96e6708c429b367cdf14377a002440801e644f",
+			"hash": "8d7afc029fc87f7471b0b5840aa439a65b2664d1748418ab016935cc0632ef8f",
 			"player_id": 2,
 			"seq": 19,
-			"ts": 1784964720.049
+			"ts": 1784965813.976
 		},
 		{
 			"action": {
@@ -907,10 +907,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3e7243eafbb7e72f84a71e75b72a5a5940101ff4b58190098a819ffac021ab4c",
+			"hash": "c0b28f65f88c079804943e432e6d2b764d6295b9491403b04b09231338ad13a9",
 			"player_id": 1,
 			"seq": 20,
-			"ts": 1784964720.05
+			"ts": 1784965813.978
 		},
 		{
 			"action": {
@@ -933,10 +933,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "4862e7fa281d5bf642ae23f1198932155a84a4af91d78e34e879766640d6598d",
+			"hash": "a3c882941727453a1b908c1143d3c251c00a17576e91051f073afcc8be3cbef2",
 			"player_id": 2,
 			"seq": 21,
-			"ts": 1784964720.051
+			"ts": 1784965813.979
 		},
 		{
 			"action": {
@@ -966,10 +966,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "c95713540cf756d7dc7490f554f5ded4b421002e6c1bdc45d58a55e44aeb033e",
+			"hash": "d0cfe0ef6ce30e4831c92f4c493fc5f404a7d6f0c188e55fc5cb000738ff3691",
 			"player_id": 1,
 			"seq": 22,
-			"ts": 1784964720.052
+			"ts": 1784965813.981
 		},
 		{
 			"action": {
@@ -1026,20 +1026,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "d676d775d26568bbffbdb237acb8385027528a1c6bb0a0f3e4542a2f00651e3e",
+			"hash": "ab17258cb5fc4934932575817fb9f4873d1bf22fc3a10cd48ee9fdba58c35a5a",
 			"player_id": 2,
 			"seq": 23,
-			"ts": 1784964720.052
+			"ts": 1784965813.981
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "bf265fd7d4ddd8002cebdcc764cfa4016535f6901067b731de9fb1feac1e8025",
+			"hash": "1791d8bbfddce5e646626a7cd6ad704e31929442751293c9e6cc7cfa0de40ef6",
 			"player_id": 1,
 			"seq": 24,
-			"ts": 1784964720.053
+			"ts": 1784965813.983
 		},
 		{
 			"action": {
@@ -1062,10 +1062,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5edcdef9118ed853da5d53614c98e5d681c97f1a967712881729d751cfa5ba7c",
+			"hash": "245355197d760efc65c514a1715aa44228dcd86c5d6c65409e97996b56c680ab",
 			"player_id": 2,
 			"seq": 25,
-			"ts": 1784964720.053
+			"ts": 1784965813.984
 		},
 		{
 			"action": {
@@ -1087,10 +1087,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "122a486b951bcfe0ecec7258c87a08a3d549beeb4b7c870c82801b1b9510acf6",
+			"hash": "0ed24181cead9dfe638ff5851f98c2989f22d604d8699d7c1902ee70072c959d",
 			"player_id": 1,
 			"seq": 26,
-			"ts": 1784964720.054
+			"ts": 1784965813.985
 		},
 		{
 			"action": {
@@ -1112,10 +1112,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ad2624dc4f5361bec58d23239190f45be3c557e5c11634e694cf7713d9a4e663",
+			"hash": "3583f64bed84094545a4198e5f5f6f84370425ada65115515d5a9471acc3d296",
 			"player_id": 2,
 			"seq": 27,
-			"ts": 1784964720.055
+			"ts": 1784965813.987
 		},
 		{
 			"action": {
@@ -1137,10 +1137,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a7497315a474a4596d1f73dd89af37c4974eeaabc536a65ae5efa21ee3d15a06",
+			"hash": "1615a4d9a298d41dbef8e82dd9334ccbfba2707b5e2ccb4afd6400634cc3a202",
 			"player_id": 1,
 			"seq": 28,
-			"ts": 1784964720.056
+			"ts": 1784965813.989
 		},
 		{
 			"action": {
@@ -1162,10 +1162,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9eae61a87a41555c32cf50fc330155ba23d98fa9d3da5daf8c6bf89ce61bc304",
+			"hash": "2013e832988a28b6f5340ad36a1dd8df73975c3099936467e21dc8ada048f469",
 			"player_id": 2,
 			"seq": 29,
-			"ts": 1784964720.057
+			"ts": 1784965813.99
 		},
 		{
 			"action": {
@@ -1187,10 +1187,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cd72b2008f34774d55a79c2963e9106ad7dcd84b5270583d14e019755b5d5e62",
+			"hash": "b5953203445468952f2f23caf68a602f2a4637f478292f725832b8affcd9c9a3",
 			"player_id": 1,
 			"seq": 30,
-			"ts": 1784964720.058
+			"ts": 1784965813.991
 		},
 		{
 			"action": {
@@ -1220,10 +1220,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2cb60f8f343aea5e649f97ccb9f6407eef69b16c7c4c54c8940f6b1350d4fecc",
+			"hash": "ced071ede10dfd5f647f37b31808db3121ee81c1fcdc869ebb759cf6266ee34d",
 			"player_id": 2,
 			"seq": 31,
-			"ts": 1784964720.058
+			"ts": 1784965813.993
 		},
 		{
 			"action": {
@@ -1269,10 +1269,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e2f3e3183a6a7a50cfdc4f7c3809d34732f3b00c1b1086ad8352f0046d2ce357",
+			"hash": "0c21e89f339b5905d0a393a3342ae69932a622aa960da3926ea48dd95bb53929",
 			"player_id": 1,
 			"seq": 32,
-			"ts": 1784964720.084
+			"ts": 1784965814.019
 		},
 		{
 			"action": {
@@ -1318,10 +1318,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e63faf350fa617c4fa4dfa4e4c13f91f9aa56e012bcda1c457dbf8a29c7f47c6",
+			"hash": "26cb2f7037cfc82972f1e708d080004c1b084eb149628c0fefc6bbc84207915b",
 			"player_id": 2,
 			"seq": 33,
-			"ts": 1784964720.108
+			"ts": 1784965814.046
 		},
 		{
 			"action": {
@@ -1367,10 +1367,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "abb35e106f518872b339ccf3d13091a9296e6ab85eed5c9b8c52eea5a682ae1e",
+			"hash": "3abd1623bac92f9c616c8f46be886f9b813e569eb5077d386e3b0f3a38001d8e",
 			"player_id": 1,
 			"seq": 34,
-			"ts": 1784964720.129
+			"ts": 1784965814.069
 		},
 		{
 			"action": {
@@ -1416,10 +1416,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9f09cc598f08f015a935fb5a15d27b6652992025e8b507fc1aae81df0680bdee",
+			"hash": "9343ed7833398e99e708715a8003971ae3725af7f9e1472ee7594e01a0f84a4c",
 			"player_id": 2,
 			"seq": 35,
-			"ts": 1784964720.145
+			"ts": 1784965814.087
 		},
 		{
 			"action": {
@@ -1465,10 +1465,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "add585af9c16db57e2a0033c6f121b13d1eb7d56e56c8ee57b946d41d8c5f232",
+			"hash": "e034141c7afc06ce5c25ebbe5c633afbb6abbc9f5c84764b8d9e9523e2c946ad",
 			"player_id": 1,
 			"seq": 36,
-			"ts": 1784964720.164
+			"ts": 1784965814.106
 		},
 		{
 			"action": {
@@ -1514,10 +1514,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6087d3ff96b8db5f3b3ae6857c6f8ce51788832ae460976135ed74ff3a9ee364",
+			"hash": "380edd9c1d81576f50cfda3294544cbb94023b59d0c6c34797adc6a883d08892",
 			"player_id": 2,
 			"seq": 37,
-			"ts": 1784964720.178
+			"ts": 1784965814.12
 		},
 		{
 			"action": {
@@ -1563,10 +1563,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "791aa20ead1077c3fbb699797a2935e2462444494216fcf2038c934d6666d0c8",
+			"hash": "57c32b292d250c7d9afa445e6a1b8e9b976ab7782fd780a3a8cee3b4fa1530f4",
 			"player_id": 1,
 			"seq": 38,
-			"ts": 1784964720.196
+			"ts": 1784965814.138
 		},
 		{
 			"action": {
@@ -1612,10 +1612,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1ca73d8bf4b9bcdc22f10c9ba7c111618d3d36bc732584b9ef7562f38c53f9fd",
+			"hash": "c9c35b8c6536d61b8ea51f658941c18c5dfd724539c78535350e3c58dfd94af5",
 			"player_id": 2,
 			"seq": 39,
-			"ts": 1784964720.205
+			"ts": 1784965814.15
 		},
 		{
 			"action": {
@@ -1661,10 +1661,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8bb7ee965b2d0585469158efc7a502f36b2ee543ca35a53e3c7cbd4c2d31d8bb",
+			"hash": "da15afe8d276bd251222927156fe456511007ca89f2a6cba913cd4e0704fd6ea",
 			"player_id": 1,
 			"seq": 40,
-			"ts": 1784964720.22
+			"ts": 1784965814.164
 		},
 		{
 			"action": {
@@ -1710,10 +1710,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "18652538a5142224b8c6e1190edfc1f206cc9515dd875faf9d74ae123a55a621",
+			"hash": "7e08cab731becb4c6739b20155315d7e4ec99fbd8363d13031a78f9e089f0bec",
 			"player_id": 2,
 			"seq": 41,
-			"ts": 1784964720.229
+			"ts": 1784965814.174
 		},
 		{
 			"action": {
@@ -1759,10 +1759,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "da292ab002b78bc4621f7f6a0de62772b133e8739bd4981e76d518f22a38deed",
+			"hash": "1b0ae3f684c9a08f1603ecb14c890aa08f0169115ff4bb5b937429b08ec7c4f7",
 			"player_id": 1,
 			"seq": 42,
-			"ts": 1784964720.238
+			"ts": 1784965814.183
 		},
 		{
 			"action": {
@@ -1808,10 +1808,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "276a0a0eda2cb9169decbd5d9575b02921c70f1b0c3eaed7922cb899e130fa6a",
+			"hash": "3e6f90d5f77aec02642ce6d71ca8c9efb70423991b11e33d0db4ff1883a2e5a2",
 			"player_id": 2,
 			"seq": 43,
-			"ts": 1784964720.247
+			"ts": 1784965814.193
 		},
 		{
 			"action": {
@@ -1857,10 +1857,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "29d566f2edc9b155a8211adeda0109d457c262f6c30f4f8bf814185d5d83bde8",
+			"hash": "ed47d59f7e555de2a59876ecad5b67504818f1bdb58a32e51cc587434b84e1be",
 			"player_id": 1,
 			"seq": 44,
-			"ts": 1784964720.257
+			"ts": 1784965814.203
 		},
 		{
 			"action": {
@@ -1922,10 +1922,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5ee235eae77c2b61d7577d5fbc08c969dd1ab30e767c76b71f070b56c9a3c18e",
+			"hash": "80b7561f6285e8fca877ff98983ea441106ce7f4bfefecfd554999b89c068995",
 			"player_id": 2,
 			"seq": 45,
-			"ts": 1784964720.265
+			"ts": 1784965814.213
 		},
 		{
 			"action": {
@@ -1971,10 +1971,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3804f3ff11c8016cf3bdd37570a43f7b1177c661ab35d0290a85824aed5c4e8e",
+			"hash": "fbc60f75364630a9d4b643ddaca7c6f28cb5b1e6d4a5e73c0445a3435af2b177",
 			"player_id": 1,
 			"seq": 46,
-			"ts": 1784964720.431
+			"ts": 1784965814.283
 		},
 		{
 			"action": {
@@ -2020,10 +2020,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4eaf57dba91162be9ee69f8d2b0a62df38ac597fd41e5605cc6bb5a2ca46fa08",
+			"hash": "8194e408a88c635a62b2b58084e82455ba151874b0f105a9a2130aad6ca1caac",
 			"player_id": 2,
 			"seq": 47,
-			"ts": 1784964720.438
+			"ts": 1784965814.291
 		},
 		{
 			"action": {
@@ -2069,10 +2069,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "16897b7405632dfb2383945a293404f5ec0e6e812b39bfc18dc59708853afbe6",
+			"hash": "844bb13158a2b15be8230075bd73c23eb3507cdd2c16353bfcc604adab0410ba",
 			"player_id": 1,
 			"seq": 48,
-			"ts": 1784964720.447
+			"ts": 1784965814.301
 		},
 		{
 			"action": {
@@ -2118,10 +2118,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e4611e03d8264a3f73e0278458505433e76dc2cebfe12f19e669b910307b498b",
+			"hash": "560c06ec2059cc670119bd18244fdb53cc766d25cc6ffd9ee45825d0aa2d57e8",
 			"player_id": 2,
 			"seq": 49,
-			"ts": 1784964720.452
+			"ts": 1784965814.308
 		},
 		{
 			"action": {
@@ -2167,10 +2167,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "194e144b511a533c6a3ad8f7acad388d7b1decd763ca35759dd7bc042965243f",
+			"hash": "6415f615d23e9f90eb729a215e91a3daf383c7e2096a8a3ba2b1391725db2a1e",
 			"player_id": 1,
 			"seq": 50,
-			"ts": 1784964720.459
+			"ts": 1784965814.315
 		},
 		{
 			"action": {
@@ -2216,10 +2216,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "43de274020b1c1055518d7936b8b45c7dc18b86609b976f096de0183d9ad64bb",
+			"hash": "0cbb36f8c277cf534bd8f5cde645d176e13a795ae21f126f0a14cc9f0f80de55",
 			"player_id": 2,
 			"seq": 51,
-			"ts": 1784964720.464
+			"ts": 1784965814.323
 		},
 		{
 			"action": {
@@ -2265,10 +2265,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5fda3d957b077376615830bf0574723e267ba22e9e760b768d64116f6b28c9b0",
+			"hash": "5ad00796a8e95c08d3c01fccc73067b7fcd2bf475fdd265fc654236a054a4296",
 			"player_id": 1,
 			"seq": 52,
-			"ts": 1784964720.47
+			"ts": 1784965814.329
 		},
 		{
 			"action": {
@@ -2314,10 +2314,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cf9eaf426febbeae23da493b1077c6d4c072d6673775d618d887ef5b3ffd1273",
+			"hash": "f618c3a744ed2038d5a97fd7da10223750b3b98c723e8cb93eb5ba438cab0af6",
 			"player_id": 2,
 			"seq": 53,
-			"ts": 1784964720.475
+			"ts": 1784965814.334
 		},
 		{
 			"action": {
@@ -2363,10 +2363,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5f957ed03c626cf8e88b5dc03462f8634e2a978f2c0affb683b799adefd92bf9",
+			"hash": "674613b464f8e01e8f3725ea221b212e0e9cda07cca4a8ce3d1e1900012a474e",
 			"player_id": 1,
 			"seq": 54,
-			"ts": 1784964720.479
+			"ts": 1784965814.34
 		},
 		{
 			"action": {
@@ -2412,10 +2412,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f65a2188da47221aec8b2ec543ec77e7dee570ec300c96d725ba489852f248ca",
+			"hash": "a3e1f9b50e632c30b3309515aabf26a44b27509563602f0dd155ac8bfda33fa5",
 			"player_id": 2,
 			"seq": 55,
-			"ts": 1784964720.481
+			"ts": 1784965814.344
 		},
 		{
 			"action": {
@@ -2461,10 +2461,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6fd2d954a7db1e36e7bb91a95a521809e79cd08a867503993a375a3bd8696a83",
+			"hash": "6f4efad32d7a17fa51b1babba7a81ef949af647ce46a9272720b9bac227cf252",
 			"player_id": 1,
 			"seq": 56,
-			"ts": 1784964720.484
+			"ts": 1784965814.348
 		},
 		{
 			"action": {
@@ -2510,10 +2510,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "85e5d111401c7d12cf397d196cf83b8cacfcb96c0243fc44da86d0e215df3533",
+			"hash": "a93e3ca8f2e6991193860f5873663278cd41637049ca0a9087a530eaac98955f",
 			"player_id": 2,
 			"seq": 57,
-			"ts": 1784964720.487
+			"ts": 1784965814.351
 		},
 		{
 			"action": {
@@ -2572,10 +2572,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "cb70538e3ee237d3eb7cdc5c1e437fe54b95195167d3921111d10a9be2ae7ea4",
+			"hash": "4a2d4053cfdb40be1aaf2b0125946587f3469572a9e939b2c44d27419355e145",
 			"player_id": 2,
 			"seq": 58,
-			"ts": 1784964720.488
+			"ts": 1784965814.354
 		},
 		{
 			"action": {
@@ -2605,10 +2605,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "52f1fa61128cfc6f4d00f8533c2a07dadd507cedcd9a5f83f5e7e4d5f93760f9",
+			"hash": "7120233fa8e51fd4d57719dc31020d8fec480abcdcfa3cde96c5699b1f38acb7",
 			"player_id": 1,
 			"seq": 59,
-			"ts": 1784964720.49
+			"ts": 1784965814.357
 		},
 		{
 			"action": {
@@ -2665,20 +2665,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "5067d9607e375728940f92c7f60aad5ec307e5ee5222d7dc94882e99002952a2",
+			"hash": "333551d8e38c1120ddb17137e57b882a6d04a9a399540cc16a9b2e7ece8c9df6",
 			"player_id": 2,
 			"seq": 60,
-			"ts": 1784964720.49
+			"ts": 1784965814.359
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "20819195e9ee4178dc4729e1c9c98dbebe86bc924eb2f60d95a0d4fa3523029d",
+			"hash": "2093369105e6ce2c6e2f943f342a0e6f36723f41050f7fc918e43b5e583f7617",
 			"player_id": 1,
 			"seq": 61,
-			"ts": 1784964720.491
+			"ts": 1784965814.36
 		},
 		{
 			"action": {
@@ -2701,10 +2701,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "574794036b84c6186bffae495473666b8b42ce60a80b79d497ecaf318ea7f027",
+			"hash": "564ddeb6fa9de3487a62e6cea45ae64912afe4d90a0ce62ac8f2b15e1b6cd603",
 			"player_id": 2,
 			"seq": 62,
-			"ts": 1784964720.492
+			"ts": 1784965814.36
 		},
 		{
 			"action": {
@@ -2726,10 +2726,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "111a80a0d30076b18584b544c48c91d65915ebb334e0d191aabd158bd2ea2977",
+			"hash": "959b06373935efc70932f676626eea3cec6402eeb28422cfc049e082e7b26c36",
 			"player_id": 1,
 			"seq": 63,
-			"ts": 1784964720.493
+			"ts": 1784965814.362
 		},
 		{
 			"action": {
@@ -2751,10 +2751,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ca22acfc0ff7e50fd60fb1b893b9f712ed4fa3f1c6522f73db0134b83904c3aa",
+			"hash": "bbd4db4a97559977987fb74f38ed65d61234b8c1165a28bf1a2d879a636494cf",
 			"player_id": 2,
 			"seq": 64,
-			"ts": 1784964720.493
+			"ts": 1784965814.364
 		},
 		{
 			"action": {
@@ -2776,10 +2776,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "79a40a6da29ae58578b8d14cb25a77c85fe15d280c2a2a4846728786f99387fe",
+			"hash": "b7844989261384e01fb6ce1f9308eaa0df196175fa01f4d5e370a1c408c17c10",
 			"player_id": 1,
 			"seq": 65,
-			"ts": 1784964720.494
+			"ts": 1784965814.366
 		},
 		{
 			"action": {
@@ -2801,10 +2801,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "82315a1ca73ad334d349bebcaad793aac348a08d5614ef4f5c1525cbae975f1e",
+			"hash": "8ede1044849893b69cc32ac7c63030607b9815b6a2d11c9831d2afec2e65f3ca",
 			"player_id": 2,
 			"seq": 66,
-			"ts": 1784964720.495
+			"ts": 1784965814.367
 		},
 		{
 			"action": {
@@ -2826,10 +2826,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9fcad4a6454e363f7243c270e6b10de87b375596dd67a17802edfcd9ec6ff6e5",
+			"hash": "2f4918c643dc930d6362811a061f93b3653eb5655b82d871f53d9be16ce56354",
 			"player_id": 1,
 			"seq": 67,
-			"ts": 1784964720.496
+			"ts": 1784965814.369
 		},
 		{
 			"action": {
@@ -2852,10 +2852,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "ca73aa08e58cdd31873f9154c554523aea8ef3a3d54f23314a649f42f21ffe77",
+			"hash": "d56f4c3c6daa808052853919cd281df6c277d16db9d848974c148a5bfb390c3f",
 			"player_id": 2,
 			"seq": 68,
-			"ts": 1784964720.496
+			"ts": 1784965814.37
 		},
 		{
 			"action": {
@@ -2885,10 +2885,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "8b501ba724863f7c8798c8d069b86460997d15e8f0fc801d3404885e92ea6016",
+			"hash": "b543bd52729474957e4e29f33af824a3882ea2ac5a6d21c034a0dfa95975f962",
 			"player_id": 1,
 			"seq": 69,
-			"ts": 1784964720.497
+			"ts": 1784965814.371
 		},
 		{
 			"action": {
@@ -2945,20 +2945,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "eaa57d2e491581f03ddda8b7815348d5e5cc964910fbd0b1c5ef77d36c8bc19b",
+			"hash": "85bf606f8107afa7580378ed7d72d57f315cf0ee663c1449eb427add00dd1316",
 			"player_id": 2,
 			"seq": 70,
-			"ts": 1784964720.498
+			"ts": 1784965814.372
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "6a53b1f2760958ccf62e45caee700b24b0f65456c12cbac62542615a04fa0c25",
+			"hash": "75d15fbe62e73854950388272ca6180978375eb74f45f051e790348176666e36",
 			"player_id": 1,
 			"seq": 71,
-			"ts": 1784964720.499
+			"ts": 1784965814.373
 		},
 		{
 			"action": {
@@ -2981,10 +2981,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ed2a5a547c62d75a0878efecc654cac502edf8fdd2f1b5a5c17801d0b4e6ab5c",
+			"hash": "4b953895c9dc0ccecc468bcfc001db92517bc3a49168405723e1ced490d5bc42",
 			"player_id": 2,
 			"seq": 72,
-			"ts": 1784964720.5
+			"ts": 1784965814.374
 		},
 		{
 			"action": {
@@ -3006,10 +3006,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e4402c00eeccafc233e44a33ebcfe1e448dbf43ab5dff01e96a7a18d9ddfd1f7",
+			"hash": "fefa3b6778bb1e97517b145b59624ffecb54aecbadad4a5ca47f69c7340d4e8d",
 			"player_id": 1,
 			"seq": 73,
-			"ts": 1784964720.501
+			"ts": 1784965814.376
 		},
 		{
 			"action": {
@@ -3031,10 +3031,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d2eb884a7becaa0dc71aeca98d4a018c1da458aea12872834664a93d38c180e4",
+			"hash": "e7dca04dac83c53e1ceedf52070c81d4c70333ce8bff90e80ba7fb4d15e61fb8",
 			"player_id": 2,
 			"seq": 74,
-			"ts": 1784964720.502
+			"ts": 1784965814.377
 		},
 		{
 			"action": {
@@ -3056,10 +3056,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3b7136f0711acf7ff0d95397c2ec91fdc14b95b32977b130f83f2a7e26bb32bc",
+			"hash": "191e9dd55cd6dbe5640bc5b6c4e6d91616b9d653d04950950d72c82de4249593",
 			"player_id": 1,
 			"seq": 75,
-			"ts": 1784964720.503
+			"ts": 1784965814.379
 		},
 		{
 			"action": {
@@ -3081,10 +3081,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "44095665d787791337301113eb226187d63102b91a259aa68b684c42c099dba0",
+			"hash": "c8f73ce7fd20b9b07a5716d941fbedf99185fa426fa37ed16c336b55557587ac",
 			"player_id": 2,
 			"seq": 76,
-			"ts": 1784964720.503
+			"ts": 1784965814.381
 		},
 		{
 			"action": {
@@ -3106,10 +3106,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "93680210e128b850adc46985f283679ff8f54cf199f72468735070eda69aeff2",
+			"hash": "2356298f5bed82796faaae6e6f319850e035ac082b9afd40d819bb339af332e0",
 			"player_id": 1,
 			"seq": 77,
-			"ts": 1784964720.505
+			"ts": 1784965814.383
 		},
 		{
 			"action": {
@@ -3132,10 +3132,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "3df25ee9960d3c70f7a85b692462930798bd3abb0ae36a41df453bb151472484",
+			"hash": "93af7870fcc2945f2e43530a4aac5c1dc6b1e318345ef57a594d62b6e094e215",
 			"player_id": 2,
 			"seq": 78,
-			"ts": 1784964720.506
+			"ts": 1784965814.384
 		},
 		{
 			"action": {
@@ -3165,10 +3165,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "55f63191e38ed061b68001b799dd70e63f6aa5b78f916db1b27cd1088635de37",
+			"hash": "a540b4b91ad916e39b9206045b222056031cd735cf79fbe15e8a4090572b003a",
 			"player_id": 1,
 			"seq": 79,
-			"ts": 1784964720.506
+			"ts": 1784965814.386
 		},
 		{
 			"action": {
@@ -3225,20 +3225,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "4951590d31ec694831d875a2bb668ca3820c1d4cf54cf51107719a1564bff76c",
+			"hash": "3b78c1ceb6f05ddeb6e28698c32ae4a2314d03d2bcc9189e750b216bad60db95",
 			"player_id": 2,
 			"seq": 80,
-			"ts": 1784964720.507
+			"ts": 1784965814.387
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "fbff32a1d9c264cdb6649b6951707548a41f838cd66ed73a86aaf5fb4b4d89c3",
+			"hash": "06433df48bb55e910ac61ea8e8ddc758ac4aa4621716cff4c6c9e312539c6b2f",
 			"player_id": 1,
 			"seq": 81,
-			"ts": 1784964720.508
+			"ts": 1784965814.388
 		},
 		{
 			"action": {
@@ -3261,10 +3261,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f72fb35024cbcba35c20bef1647c7bf990b133779fce0bffa50a4e12020a7b72",
+			"hash": "d28338e18013e4f034fad79d87f48a19c7b45b36cf43fc1ac17ae5f6325bf975",
 			"player_id": 2,
 			"seq": 82,
-			"ts": 1784964720.509
+			"ts": 1784965814.388
 		},
 		{
 			"action": {
@@ -3286,10 +3286,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b38e9c65940c612a15d066bff62f8691261afdac6ddced905b20cad0ab9ba4a9",
+			"hash": "de36114a2c12c02cfbe74d150fe2b1956f4d85432ab8ed7aef3c78b0530a506e",
 			"player_id": 1,
 			"seq": 83,
-			"ts": 1784964720.51
+			"ts": 1784965814.39
 		},
 		{
 			"action": {
@@ -3311,10 +3311,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "45c4ad039bcfa5fa7d5538df1a5bd64786d004497d0467296a032c3b0839632e",
+			"hash": "f1f495784994610768a2369d4def3d5ec5a3cfea3e90ac89cffaaf59b2e74bc5",
 			"player_id": 2,
 			"seq": 84,
-			"ts": 1784964720.511
+			"ts": 1784965814.391
 		},
 		{
 			"action": {
@@ -3336,10 +3336,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "694e514c56d920db59f760bfb69c6e2de8013823cf8ebfe79f8a61b802391a3d",
+			"hash": "4b3e0f78f87bf6349bafcad23f7dd7cfecfe6980ce84c906867e2ec2fc1f4ae5",
 			"player_id": 1,
 			"seq": 85,
-			"ts": 1784964720.512
+			"ts": 1784965814.393
 		},
 		{
 			"action": {
@@ -3361,10 +3361,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7d8436507366d1acf3e430ab2f50e0e72379d96b3722b8c30ccecb25f944bce7",
+			"hash": "0536553fe804b31d936a7eac0bb224883ec7ebaaeb3b04cc0e1086c1f05906f7",
 			"player_id": 2,
 			"seq": 86,
-			"ts": 1784964720.512
+			"ts": 1784965814.395
 		},
 		{
 			"action": {
@@ -3386,10 +3386,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3294020f4c9785752881b5ff71225e20dd7c56b493108a52bf062098d379a2f2",
+			"hash": "4a44a9c378cf0cdba00bfeb04e5be9e6baa29e24ce9f71a892e49ef71595f6d7",
 			"player_id": 1,
 			"seq": 87,
-			"ts": 1784964720.513
+			"ts": 1784965814.397
 		},
 		{
 			"action": {
@@ -3419,10 +3419,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7c13702ef0bb71740d3b5b34fca5d21a52d447011e075e8c60d1f2f2c46361e1",
+			"hash": "8101cb55e8d54e17e64b80fb2bc36202d35b74b8c630591ece69293577680a1b",
 			"player_id": 2,
 			"seq": 88,
-			"ts": 1784964720.514
+			"ts": 1784965814.399
 		},
 		{
 			"action": {
@@ -3484,10 +3484,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1654859d7396f896a1edfb4e5080ac27bc60f9fa3d0b9d4d781cbe80230c97f8",
+			"hash": "74dcb54ef2f030ecb5f182a04b35cea148c995623e3f0845deb6c4ff2a6d1bc0",
 			"player_id": 1,
 			"seq": 89,
-			"ts": 1784964720.553
+			"ts": 1784965814.439
 		},
 		{
 			"action": {
@@ -3533,10 +3533,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cdb5e163a8d4be7356ac88626d3237c4f5198e2f69ac73cc6d2dbaa901ed6e93",
+			"hash": "168a6fcac1fea72ccea1c010cce4de9a72d6d6c21b579fcccbd3454390db9912",
 			"player_id": 2,
 			"seq": 90,
-			"ts": 1784964720.583
+			"ts": 1784965814.469
 		},
 		{
 			"action": {
@@ -3582,10 +3582,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "20b0eb32f9476d0762d820a91dad2ee85f9f9f0db5e87289dcb1ffc486fdc1db",
+			"hash": "a2d751ec565e190ffbed90f7b95ebf1b27f94b448521865917f8879185faacd9",
 			"player_id": 1,
 			"seq": 91,
-			"ts": 1784964720.616
+			"ts": 1784965814.504
 		},
 		{
 			"action": {
@@ -3631,10 +3631,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8d0f097ba9da786370aa43b5106f7ae65f7e13ee68e7bbd04a9b672494f034fc",
+			"hash": "ce3b7fcf8f8e2b04fed929d4bed7a4e4b75617e80f726dfd8806986530355d82",
 			"player_id": 2,
 			"seq": 92,
-			"ts": 1784964720.638
+			"ts": 1784965814.527
 		},
 		{
 			"action": {
@@ -3680,10 +3680,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8eca729206fee8388bc472a312bb5eba5ac06c75f30c7de48cdca702192cef8f",
+			"hash": "ff0af92eb01e2df4d6e0bf2d4bb80bfce98e97647157aa99d010b84d8c3cbc95",
 			"player_id": 1,
 			"seq": 93,
-			"ts": 1784964720.665
+			"ts": 1784965814.554
 		},
 		{
 			"action": {
@@ -3729,10 +3729,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6d6e156d00dc343be4b4cd7c5f4d4176de53a3e1f0e6d11342aee646b2ceaecf",
+			"hash": "e09df0c3ce362ca143e867f5e2f0c25447ff0a62ca28bc51f3c08c030a490d30",
 			"player_id": 2,
 			"seq": 94,
-			"ts": 1784964720.68
+			"ts": 1784965814.57
 		},
 		{
 			"action": {
@@ -3778,10 +3778,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3001d5d3639eba092ffb1b564092e566b7a9f15b9699515137e4b472ab3bcbbf",
+			"hash": "9620bff49b91577305c23cf2c73d643e02fbd3f37e62a3a40641710b1da2dc49",
 			"player_id": 1,
 			"seq": 95,
-			"ts": 1784964720.703
+			"ts": 1784965814.595
 		},
 		{
 			"action": {
@@ -3827,10 +3827,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6a486637b89d5fb8cb2cfb82db72bd0d304798daf3277979dcee97392cfc0439",
+			"hash": "fbe0d76112a2f8d8020ceacec1391c12263139173571027de9b35595150c52c8",
 			"player_id": 2,
 			"seq": 96,
-			"ts": 1784964720.722
+			"ts": 1784965814.612
 		},
 		{
 			"action": {
@@ -3892,10 +3892,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f2341f66d6da36d2331348dd79a4f640d550801610698f241a7857dd9099cdb6",
+			"hash": "928b8164fa55a3d3f6add7534f4e84f9f374a74f900d45f3c38e55d5fef6b835",
 			"player_id": 1,
 			"seq": 97,
-			"ts": 1784964720.745
+			"ts": 1784965814.635
 		},
 		{
 			"action": {
@@ -3957,10 +3957,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cb9f97f121e76c9492d1a1452d3bb7bbf128934530c43521e9cf4f5f4f4b25c3",
+			"hash": "2dc67e630dbe7cafbf7026353804e98730e96dfdb0379c054fcf5b9f16359712",
 			"player_id": 2,
 			"seq": 98,
-			"ts": 1784964720.762
+			"ts": 1784965814.65
 		},
 		{
 			"action": {
@@ -4006,10 +4006,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "00c3507443db926b6778dca735c4a4cf2b264bbad71047be01d350b6efc4c56a",
+			"hash": "85fd2617375a4fc49dbba1a49c9ff4726757879aaf6c0d3f12db080ba823805f",
 			"player_id": 1,
 			"seq": 99,
-			"ts": 1784964720.782
+			"ts": 1784965814.67
 		},
 		{
 			"action": {
@@ -4055,10 +4055,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6aace7edef2264d2ea21989366fe889b336f749bdaf86fe2e4a07b6be1f37708",
+			"hash": "098a04da4c00535ed0b16d1748e06fea1c9a904a473eb0d9b0964c2062768531",
 			"player_id": 2,
 			"seq": 100,
-			"ts": 1784964720.795
+			"ts": 1784965814.683
 		},
 		{
 			"action": {
@@ -4104,10 +4104,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ccdda4b94c5117a8327b7f9779a011884bb8132b16ec19dbff48b1882a22197a",
+			"hash": "07ba798ffe95b7e35edba71fa7a288332a1122099a479e5cd0890ec0026494f7",
 			"player_id": 1,
 			"seq": 101,
-			"ts": 1784964720.815
+			"ts": 1784965814.7
 		},
 		{
 			"action": {
@@ -4153,10 +4153,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9c9ecf31996935b32d98e07f0fbe35f80139a487c3fc1ddbbc8e4997c1ba8ae7",
+			"hash": "feff625f2f3d05279eb072628c60e6ab831e1d72deac6dee4187a31986c7def8",
 			"player_id": 2,
 			"seq": 102,
-			"ts": 1784964720.827
+			"ts": 1784965814.711
 		},
 		{
 			"action": {
@@ -4202,10 +4202,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "82740f7401da4308c82584b9b45624218a802d57e03ec81f4d0374e2fec1266f",
+			"hash": "b9819ae2d2195f3f882a085df449d1af1de24a0b29c36edf4c7a297c4321e873",
 			"player_id": 1,
 			"seq": 103,
-			"ts": 1784964720.846
+			"ts": 1784965814.728
 		},
 		{
 			"action": {
@@ -4251,10 +4251,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "fdcf54f4c152d38d05189b3f6b2e7cfbbf77868ef29967675b4336c9ab8241bf",
+			"hash": "c9109626b5414ed39a451f828d4d36a0deabc21d30b2660492a8f75c9510deec",
 			"player_id": 2,
 			"seq": 104,
-			"ts": 1784964720.852
+			"ts": 1784965814.735
 		},
 		{
 			"action": {
@@ -4300,10 +4300,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ce93a4284f95c8f08520b15821d573595a8af5a18e17d467aedaa79ba1bdc6ba",
+			"hash": "217744b5cded670133750f8846afb94e20f7353e95729f86334eb15d73672491",
 			"player_id": 1,
 			"seq": 105,
-			"ts": 1784964720.866
+			"ts": 1784965814.748
 		},
 		{
 			"action": {
@@ -4349,10 +4349,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6ab90d0cb2f37afd040e9e8d423c0ba7698884540e940d5e44ce0e6143cfb3b4",
+			"hash": "518f4192a9ebffbdab192da236a2d2c579172bf0588194c93aeecb9e7f12917f",
 			"player_id": 2,
 			"seq": 106,
-			"ts": 1784964720.873
+			"ts": 1784965814.757
 		},
 		{
 			"action": {
@@ -4414,10 +4414,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "939c1063810af3b005bdb3300b5ba1f88f0459de7e3275b9eaa69be069192ef6",
+			"hash": "602aa58769f50275a92c28859403152100d4aafc9d2a774084803056ddc64f41",
 			"player_id": 1,
 			"seq": 107,
-			"ts": 1784964720.883
+			"ts": 1784965814.766
 		},
 		{
 			"action": {
@@ -4463,10 +4463,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5a726a6aa9da300b620a8f3596e4065dbfb2c39ae01e4205660058384bd8f0da",
+			"hash": "58256a370a19e2e1ac29280f6d818b19beded9e41027689553b0dcb13813f0f9",
 			"player_id": 2,
 			"seq": 108,
-			"ts": 1784964720.889
+			"ts": 1784965814.773
 		},
 		{
 			"action": {
@@ -4512,10 +4512,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0beeb40027b644e3d833011ed77ac564cacad80d5cdf916a01d0b8391538aa84",
+			"hash": "0785a6512b2831969fb0af10da1961eb6578de8f2df4f63918a4b03afd29bddd",
 			"player_id": 1,
 			"seq": 109,
-			"ts": 1784964720.898
+			"ts": 1784965814.781
 		},
 		{
 			"action": {
@@ -4561,10 +4561,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "837cd7c7ccff8b3a96ed07763215eb97ca710114d6fd32a618cb7e1f243d0ce8",
+			"hash": "8f795174e48b26d9fb335598b6023f646461efe5f5076eee58629a59c22b62a4",
 			"player_id": 2,
 			"seq": 110,
-			"ts": 1784964720.902
+			"ts": 1784965814.786
 		},
 		{
 			"action": {
@@ -4610,10 +4610,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "aadac5e1a07f617160c37369a65655db258f9b5a3c22407f10f4d8ba35aeca65",
+			"hash": "6bd010d77f4bc019ba815fdd9e0b2c1c5ad85d2e8b5252b0ccadf4e47b08d83f",
 			"player_id": 1,
 			"seq": 111,
-			"ts": 1784964720.907
+			"ts": 1784965814.792
 		},
 		{
 			"action": {
@@ -4659,10 +4659,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7a7147025bf90ac93574f6d9c3a2b6fbafa97f33cc3d45419f9a12446ae1bde6",
+			"hash": "d9ff5fcf124d03a92f0cc39654a18c2fb2700a1ba8e6dfc936a1db9ce07f1c54",
 			"player_id": 2,
 			"seq": 112,
-			"ts": 1784964720.911
+			"ts": 1784965814.796
 		},
 		{
 			"action": {
@@ -4708,10 +4708,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3b09e9e95e8580f247eb6f20d13b034b7f9fc71329870182c1899d5b0d675a55",
+			"hash": "457e3c0628563b4994bed94f89c19fd365cffc2793953ebfcc638fde6108c531",
 			"player_id": 1,
 			"seq": 113,
-			"ts": 1784964720.915
+			"ts": 1784965814.801
 		},
 		{
 			"action": {
@@ -4757,10 +4757,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3f561fe145557cd7599d717430a10a3f1bb9468d5e871011466f3e829772e895",
+			"hash": "af0bb19a722ed851ca38fe36951f58c4773608a6bc12153f15e07ac5a101aaf2",
 			"player_id": 2,
 			"seq": 114,
-			"ts": 1784964720.918
+			"ts": 1784965814.804
 		},
 		{
 			"action": {
@@ -4806,10 +4806,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "607c152cd313b5d0381b9509491a5edf37e9f4ac8867f91cdd7299812c829ab8",
+			"hash": "e705abdd180f1bbd16b014a36cc9f7b7de94bb72323be840e7ce7a6a2821b062",
 			"player_id": 1,
 			"seq": 115,
-			"ts": 1784964720.92
+			"ts": 1784965814.807
 		},
 		{
 			"action": {
@@ -4855,10 +4855,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "68d2a9e45346644be3025263d1477f59d6d194200f1dc47815385f26dbb74e7a",
+			"hash": "9e20cbb6ed4910a4b85dd61294a32665eb74419a4583659180d98b05b867dcf6",
 			"player_id": 2,
 			"seq": 116,
-			"ts": 1784964720.923
+			"ts": 1784965814.811
 		},
 		{
 			"action": {
@@ -4917,10 +4917,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "08a560f7429979cbef038136ee4e3d49d3f91b3a23268b6c20cd97fbe216e732",
+			"hash": "a30969ba37e355289f53449b0d48d580999b4e50fe3bab941edfa70295c6c3fb",
 			"player_id": 2,
 			"seq": 117,
-			"ts": 1784964720.924
+			"ts": 1784965814.813
 		},
 		{
 			"action": {
@@ -4950,10 +4950,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "41b7dc60cc4d793b8b3c25d3715456530316c079884ea840edba482f624e72fd",
+			"hash": "929e943366d1c066ec781bfb15179773f3ad47834f13dbd180472dab950aea81",
 			"player_id": 1,
 			"seq": 118,
-			"ts": 1784964720.927
+			"ts": 1784965814.817
 		},
 		{
 			"action": {
@@ -5010,20 +5010,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "c859396db4d8ffb070410770e1af092de7e8555df24941a9d3ee66d2a3b21a3b",
+			"hash": "dc30ee15248dddc7e6fcaccfacc4e6ba329d81d5dd3c627016e36d8ba2c1f33d",
 			"player_id": 2,
 			"seq": 119,
-			"ts": 1784964720.928
+			"ts": 1784965814.819
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "b87af1043079f30427af7dc20ddefba64ba7790a458c74a129434e43e782f1d1",
+			"hash": "66b61389cf5042bb4bf6a300d480cf1551ff98005ea90b5ced51243f5afe155c",
 			"player_id": 1,
 			"seq": 120,
-			"ts": 1784964720.929
+			"ts": 1784965814.82
 		},
 		{
 			"action": {
@@ -5046,10 +5046,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "406391339cfe173726d5253aee0bcd8e673baf1597f3dd6b5e1ddef2e6918b9a",
+			"hash": "c2ad8389fed354336409fc498ff084f7e2c4a99261b3028dbc61cf043a632983",
 			"player_id": 2,
 			"seq": 121,
-			"ts": 1784964720.93
+			"ts": 1784965814.82
 		},
 		{
 			"action": {
@@ -5071,10 +5071,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4dc155ada3c90b14359d1879d2cd2cfe6283f47ece35d9d269e4b61544d319ef",
+			"hash": "a4870537152cc10434bf8b2b2b66657f6a3666ccc9bb38f860a17152c29cc115",
 			"player_id": 1,
 			"seq": 122,
-			"ts": 1784964720.931
+			"ts": 1784965814.822
 		},
 		{
 			"action": {
@@ -5096,10 +5096,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "86e63fabd5521415515d6fc09ee061d9744080d1a2bca00f91b6b5572c406d81",
+			"hash": "eb79fc4915ab034976305270f8dc715d4f3f73e1eed3166963c205c17860eceb",
 			"player_id": 2,
 			"seq": 123,
-			"ts": 1784964720.932
+			"ts": 1784965814.824
 		},
 		{
 			"action": {
@@ -5121,10 +5121,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "51a81ed4fabe7d8c78134250da94478defb7064e71e513a3c4c2e8fb7b55bfe3",
+			"hash": "1d89eb5ef9d87adf39fe3b47e205c8da1d8233a7fe32cb95c7004cd686161fb0",
 			"player_id": 1,
 			"seq": 124,
-			"ts": 1784964720.933
+			"ts": 1784965814.825
 		},
 		{
 			"action": {
@@ -5146,10 +5146,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "11743caa3b0276fa16b6a7077c5c4c60d850313f6265f0ed5b6537cb0ed7f328",
+			"hash": "ba264e37d4291efd6260b248b00166811c6695ce72211c69752c8338f63b33c6",
 			"player_id": 2,
 			"seq": 125,
-			"ts": 1784964720.934
+			"ts": 1784965814.827
 		},
 		{
 			"action": {
@@ -5171,10 +5171,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3cc0e241a3ad010d220e83adab4ba65306bd18c5d6751cf73731ce1f27d86a3f",
+			"hash": "9bcb66b2c4161e521281bebf05091220dfcd9dc4b0eca314cc544cda27616c36",
 			"player_id": 1,
 			"seq": 126,
-			"ts": 1784964720.935
+			"ts": 1784965814.828
 		},
 		{
 			"action": {
@@ -5197,10 +5197,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "fe06ccb25f4e145656f5eec026fbfbf4339e9b9b1c0dd6d4124ff0896dddb48b",
+			"hash": "23567ca32976066c099469727bc48114866078974e5591cc8c08520dafeb5a46",
 			"player_id": 2,
 			"seq": 127,
-			"ts": 1784964720.936
+			"ts": 1784965814.83
 		},
 		{
 			"action": {
@@ -5230,10 +5230,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "e8a133e34732edc54fb51da7ec59351a31bcdc6547beff468d915e1f950060ee",
+			"hash": "9c11b86f83bc54e5c18cbe6af36d3978b6e0eb75ef1b04f59b872b656d5de3d3",
 			"player_id": 1,
 			"seq": 128,
-			"ts": 1784964720.936
+			"ts": 1784965814.832
 		},
 		{
 			"action": {
@@ -5290,20 +5290,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "96d8f25fdde7234ddca776934dcad30aa824c6982d46d7cfd6a5fa4ac8d95516",
+			"hash": "9fbbda9ecf187b9834d454fc446c128ca01d248ba78b42a58b94bc92a35a0fc9",
 			"player_id": 2,
 			"seq": 129,
-			"ts": 1784964720.937
+			"ts": 1784965814.833
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "cec06a9b73b50ea0fc270f74d94e29295184678e74450d1cfbc5d844848bd0d2",
+			"hash": "08a7b0dfd0e605073000b2b048253f2d26ee7e3303980a3e159a8d6d1fb2838f",
 			"player_id": 1,
 			"seq": 130,
-			"ts": 1784964720.939
+			"ts": 1784965814.834
 		},
 		{
 			"action": {
@@ -5326,10 +5326,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6a34fd88884119f521cbff631277c50f6f7b9f97da6e4aef23dbad2de563165d",
+			"hash": "cbcd054a2392a061e5de5f45532531473391c378728a5179c2eeb15c62d69680",
 			"player_id": 2,
 			"seq": 131,
-			"ts": 1784964720.939
+			"ts": 1784965814.834
 		},
 		{
 			"action": {
@@ -5351,10 +5351,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a682e3cb64809400907f13294621a7ec6cfe1f3686bfbd211435e799b6c544a2",
+			"hash": "2cc1c86757d9e09c01a57d9bbc9a28a8829f99e6d6638d60c4e9d92076d6bffa",
 			"player_id": 1,
 			"seq": 132,
-			"ts": 1784964720.94
+			"ts": 1784965814.836
 		},
 		{
 			"action": {
@@ -5376,10 +5376,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5793acf6bcded2636318bc8ce070e81dc928e27a9d81a7e7d0744b86a8b9a62b",
+			"hash": "91b1fff045849114f64df2402752c8d5f2723216e5a33b6661fae82d697b40c5",
 			"player_id": 2,
 			"seq": 133,
-			"ts": 1784964720.942
+			"ts": 1784965814.837
 		},
 		{
 			"action": {
@@ -5401,10 +5401,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b4939e6c0f488418964a5c6facd7e33c162c67168e5430ab6b067cd2244d04dd",
+			"hash": "7a101543d16f5addb7769bb4a32e9f9c9187ecbf4cc16fe4318bdadd916c41cd",
 			"player_id": 1,
 			"seq": 134,
-			"ts": 1784964720.943
+			"ts": 1784965814.839
 		},
 		{
 			"action": {
@@ -5426,10 +5426,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "83a771bc68200f8c0c84d73f916b578425faa133a3ccf8ea8494e1e5dcd1869d",
+			"hash": "79f095eb685d3ea1732159626cc25988b5931f46db7206fb1c885ae252cd376b",
 			"player_id": 2,
 			"seq": 135,
-			"ts": 1784964720.943
+			"ts": 1784965814.84
 		},
 		{
 			"action": {
@@ -5451,10 +5451,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "078d058e6176d3c3640ba66d36aa0c0f8ec08095ea2e1b48bbed77ec11c0f0e3",
+			"hash": "2e67f94fa9e955d4301fad91c10d1eb8fb5608cc3bd84112224349f86dc8ec7a",
 			"player_id": 1,
 			"seq": 136,
-			"ts": 1784964720.945
+			"ts": 1784965814.842
 		},
 		{
 			"action": {
@@ -5477,10 +5477,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "3bd2758d47d703fc7a6da0a8b2b7555d12d538f40aa081821484736de763fcf7",
+			"hash": "a707d4e2be13d7aa90493b6f0a299961f628f46a04a7cfddc90a2fce96e6def0",
 			"player_id": 2,
 			"seq": 137,
-			"ts": 1784964720.946
+			"ts": 1784965814.844
 		},
 		{
 			"action": {
@@ -5510,10 +5510,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "610f897d8231387322efbd8adde1a4946edb14ba6dacc6400fc49ffd2baeb370",
+			"hash": "5b0ba88ef3db08c0a3b72f41afa53aba10d578fb186e47f6bb6bca69b6faa8c6",
 			"player_id": 1,
 			"seq": 138,
-			"ts": 1784964720.947
+			"ts": 1784965814.845
 		},
 		{
 			"action": {
@@ -5570,20 +5570,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "7a54b8b40a9df64db2d6716becb6930dc9e88903dc83e789762a4828a9096b0d",
+			"hash": "68b9adce09207e787e945c5d6031c40ea8a56a84069dc869f3698c7a44fc371f",
 			"player_id": 2,
 			"seq": 139,
-			"ts": 1784964720.948
+			"ts": 1784965814.846
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "6de1475838a0b54c362335639a47250c62c100164efe108e4ea56965db0fb0d5",
+			"hash": "2b16b9d00d19972011cf333a13c08bfc7ece5e5d90b4fea2c7ef0dd28ac157cb",
 			"player_id": 1,
 			"seq": 140,
-			"ts": 1784964720.949
+			"ts": 1784965814.847
 		},
 		{
 			"action": {
@@ -5606,10 +5606,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "01c5381abe3d01779117d5637dcf65592b5e331fe1380b43b1f956be788e8afa",
+			"hash": "8560f5fc037b23f690c2ea9bdeeed4c3d5d7d08d96c91667143ef36d1d1edb12",
 			"player_id": 2,
 			"seq": 141,
-			"ts": 1784964720.95
+			"ts": 1784965814.847
 		},
 		{
 			"action": {
@@ -5631,10 +5631,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2163b84149cf8f776c9faf83726308bb16d576dfde6d9c6b3bf6b0c4125b9239",
+			"hash": "d6b6705515706a3fc4efeac0d15d10f57e0b793b262f51dc4934c45cf1f5c859",
 			"player_id": 1,
 			"seq": 142,
-			"ts": 1784964720.951
+			"ts": 1784965814.85
 		},
 		{
 			"action": {
@@ -5656,10 +5656,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "36a287a5397c39f8b99fa364e08b6f22915b01cd93876f8a48d2409beb35ad7f",
+			"hash": "418ec08e3b91a4734224cd4b84926209e23f8bceba0538ec17e7dfc97f150199",
 			"player_id": 2,
 			"seq": 143,
-			"ts": 1784964720.952
+			"ts": 1784965814.851
 		},
 		{
 			"action": {
@@ -5681,10 +5681,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9262b0835de169019575561cea003214096bcffc1fdf76d140f3d536790e9f9e",
+			"hash": "f8d92a062eeef888487a902dee67d19db549ea49f21bd217975d9e042feb931e",
 			"player_id": 1,
 			"seq": 144,
-			"ts": 1784964720.953
+			"ts": 1784965814.853
 		},
 		{
 			"action": {
@@ -5706,10 +5706,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "80f0170a329505595a4a0eb4d6749b75123b6f831ff8cf2ab0f0353eca8ec857",
+			"hash": "1895e6d79c0f840a665664565ed5f3ed0ef926ccf199c2ae923f24fc55c93c47",
 			"player_id": 2,
 			"seq": 145,
-			"ts": 1784964720.954
+			"ts": 1784965814.854
 		},
 		{
 			"action": {
@@ -5731,10 +5731,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "bb37b5636dd33aab02689ff2e65b02faab6e67abe337cc3238e99569acf14ac9",
+			"hash": "3df80ed98fed93c025a1175a34b98c02af858780e9d53ca03aa540d4d95659fa",
 			"player_id": 1,
 			"seq": 146,
-			"ts": 1784964720.955
+			"ts": 1784965814.856
 		},
 		{
 			"action": {
@@ -5764,10 +5764,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e7d63a50dc8f1ccd8c0fe278dd5a07534f040bc0fb4f2a13c910f799ad03f223",
+			"hash": "ba5cefac36b77f127522ea20488ddeafc5648d26146204999ec43c310b5428aa",
 			"player_id": 2,
 			"seq": 147,
-			"ts": 1784964720.956
+			"ts": 1784965814.857
 		},
 		{
 			"action": {
@@ -5813,10 +5813,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "502e3e238d355debbb6716e877f1829eda4521bb6b0f9ec806d4f84d1b6a3191",
+			"hash": "2f5ca6f547044511b57545e3471d8b5aa249ebd5740c8b68c02356d3a97f5d68",
 			"player_id": 1,
 			"seq": 148,
-			"ts": 1784964721.012
+			"ts": 1784965814.904
 		},
 		{
 			"action": {
@@ -5862,10 +5862,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c46bb4026f55959404fc5e2600e637cb9b081129a5c33c1c1048ebafe6b6ca48",
+			"hash": "e10f0c37dfbb9927936c6d25de74f4b7b4cbef8209f82fcbfebf99c6c316c23f",
 			"player_id": 2,
 			"seq": 149,
-			"ts": 1784964721.056
+			"ts": 1784965814.941
 		},
 		{
 			"action": {
@@ -5935,10 +5935,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2df756010e5d420545dbe307f739cfafc3cc8e5d0b8a343947d9b0499c572c49",
+			"hash": "951bcb7fcac07f0fce1339ffb45930cd7a87d1b79d110440fca0e23946698141",
 			"player_id": 1,
 			"seq": 150,
-			"ts": 1784964721.103
+			"ts": 1784965814.982
 		},
 		{
 			"action": {
@@ -5984,10 +5984,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "574e48de60c134f169217806044a2ed366c8ed9185c68a9c53addaed6c908ee0",
+			"hash": "71c6fc72f01101379eb3be19c0a5fb8c516742cda75eb36b88a05cdbd9fc1593",
 			"player_id": 2,
 			"seq": 151,
-			"ts": 1784964721.136
+			"ts": 1784965815.009
 		},
 		{
 			"action": {
@@ -6033,10 +6033,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "23f85e072e69a82429942c47712bd30c721dd4504953d6c3bec2cdbd5700def0",
+			"hash": "19de3dc4aa6764e3115fcba8f1f137d7ff85d29b67b9f1a58ba00388583bbf9c",
 			"player_id": 1,
 			"seq": 152,
-			"ts": 1784964721.183
+			"ts": 1784965815.041
 		},
 		{
 			"action": {
@@ -6098,10 +6098,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d92c211dad26e58e04c06dd5a1a0079cbabd2d93297f853b3cf0cdf4350c0f9a",
+			"hash": "5b748ea72557b2c1ba49695f20eb2a92658d76174d202f0ea89bb90e4dbfcf99",
 			"player_id": 2,
 			"seq": 153,
-			"ts": 1784964721.206
+			"ts": 1784965815.06
 		},
 		{
 			"action": {
@@ -6147,10 +6147,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "fc026dc63d0f2c8968597700b10a5d1c4be2c7c70072c88cdc8872cb15ad2cd2",
+			"hash": "27613d476143f2c6c78b257ff4cf2ee98cb6f53d9a5354c7687870e93159257d",
 			"player_id": 1,
 			"seq": 154,
-			"ts": 1784964721.249
+			"ts": 1784965815.089
 		},
 		{
 			"action": {
@@ -6196,10 +6196,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5e2177480a91c2abcea570c2caa6f4c127c679d4cdf3d8a7ebfedfb591d8ed79",
+			"hash": "7bde5a4a72c2a1b5b3d418f3d7d228d8a88931ad3f81a468eb4d69b26ccaa4e3",
 			"player_id": 2,
 			"seq": 155,
-			"ts": 1784964721.277
+			"ts": 1784965815.106
 		},
 		{
 			"action": {
@@ -6245,10 +6245,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0a9f75975289b0c98a9f25b39d6266663e5b7399656c4f1e0a8e7f6caf3cbbe4",
+			"hash": "bb98c498ab4c5915df92e3f2119bb3e54c6a7368159ed85de0b69ca39cd3cb74",
 			"player_id": 1,
 			"seq": 156,
-			"ts": 1784964721.312
+			"ts": 1784965815.13
 		},
 		{
 			"action": {
@@ -6310,10 +6310,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d3ad4d0309235bb733f2d63c8ef4e1ae7cb8b866f7eaeb2003b1fb2885e50586",
+			"hash": "74d36f087ed31fe8bd7cecc2186b353fee3a72f0393a4a0056470e2880bcc3ca",
 			"player_id": 2,
 			"seq": 157,
-			"ts": 1784964721.328
+			"ts": 1784965815.145
 		},
 		{
 			"action": {
@@ -6375,10 +6375,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "af61841afa86ac001c772a8e36216d4ea66d84f9204274cfde1778f980c195c9",
+			"hash": "66f1a7d194781eb4cd3467b82c486930b982b2ed2a068aff917f6182b3b10d79",
 			"player_id": 1,
 			"seq": 158,
-			"ts": 1784964721.346
+			"ts": 1784965815.163
 		},
 		{
 			"action": {
@@ -6424,10 +6424,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "72ed6d6346491ff1364fcedf940d18f5cd3579c9c3ed7ac53372ad84d4bfd07b",
+			"hash": "150cb900ca3e0aec8931954f9877340f455591aa9a8f797b4150386bdb4d09a2",
 			"player_id": 2,
 			"seq": 159,
-			"ts": 1784964721.361
+			"ts": 1784965815.177
 		},
 		{
 			"action": {
@@ -6473,10 +6473,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "840a3e9f8a73a08b7fe89bd742bd59700590180a95527d3d13bca49a0bcb2520",
+			"hash": "24b54b6d0ab0b0c380983ecc24c607a3215cb8fa9b1d309583d8f84963476790",
 			"player_id": 1,
 			"seq": 160,
-			"ts": 1784964721.374
+			"ts": 1784965815.189
 		},
 		{
 			"action": {
@@ -6538,10 +6538,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "383f473c0f96490603895d0e1f67aedd48e9ac76f996dfa95438b8217c57df01",
+			"hash": "2745466bb99f13937a0ad10ff8750cc7ea7ef1481e1f31b530b5376ac5604531",
 			"player_id": 2,
 			"seq": 161,
-			"ts": 1784964721.385
+			"ts": 1784965815.2
 		},
 		{
 			"action": {
@@ -6587,10 +6587,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1420e900d021d0f3facf480cf8aeb3dc6e276be6bbbb0ee031b4c0a30bb82c43",
+			"hash": "e6b4950058af91e0ccc94952cf596b048d93d0b9781ee31e23357da98fdb4b7c",
 			"player_id": 1,
 			"seq": 162,
-			"ts": 1784964721.397
+			"ts": 1784965815.212
 		},
 		{
 			"action": {
@@ -6636,10 +6636,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c3f6fe012c224567b055fb668b0f0997bae5785d460a62b8e42721465ceca4fc",
+			"hash": "1be389d590c40a5ec7387b4429e173c86501d2dfa91b500cfea5b6ad6d38b517",
 			"player_id": 2,
 			"seq": 163,
-			"ts": 1784964721.407
+			"ts": 1784965815.222
 		},
 		{
 			"action": {
@@ -6685,10 +6685,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c898d0fa571e09fab2214e5d3d1f59f0b594ba254cce38af62a4193bf51ce0a1",
+			"hash": "00c0b1da92ee750e1751b8e3bc19de10685d0ad42ce05f5f9a401e8100104f9e",
 			"player_id": 1,
 			"seq": 164,
-			"ts": 1784964721.414
+			"ts": 1784965815.23
 		},
 		{
 			"action": {
@@ -6734,10 +6734,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e876ddc3d68095369f0ff105ae823b43c9bea723e9d244e2ed5eb415b1e6ef64",
+			"hash": "2b075538b660230f31b898ff0283d8c435da2d0b45d1b28d85a2214fc7f72cd7",
 			"player_id": 2,
 			"seq": 165,
-			"ts": 1784964721.423
+			"ts": 1784965815.239
 		},
 		{
 			"action": {
@@ -6783,10 +6783,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "308a735016b751cee8fb4a6bb214251c82830b4725e4d2b69f82235f5f0a0501",
+			"hash": "042aaa07f7df484db275d3d43f9db8136716c88dc21bdde9ae44077216df73bc",
 			"player_id": 1,
 			"seq": 166,
-			"ts": 1784964721.432
+			"ts": 1784965815.246
 		},
 		{
 			"action": {
@@ -6832,10 +6832,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "26c12a0bd2bbcafe2edd1f2a105d65b8618307f11efbdf089d51b00868825938",
+			"hash": "213987ac452931944979220866db9d1a8c567feaaf6e37b3907617fd8a0c5679",
 			"player_id": 2,
 			"seq": 167,
-			"ts": 1784964721.441
+			"ts": 1784965815.255
 		},
 		{
 			"action": {
@@ -6881,10 +6881,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "918e1416f6c260efe7499277f6f7e5618f6c91c49b8a3204426dac3ef398cc2d",
+			"hash": "f36fa7b84f99b3da967caff93a17c78a1d8450f1158d2e962247a6614ee99053",
 			"player_id": 1,
 			"seq": 168,
-			"ts": 1784964721.447
+			"ts": 1784965815.261
 		},
 		{
 			"action": {
@@ -6930,10 +6930,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "17a16aaa764c1b9b9671ef05e31811bd80e67d7739ccdc4c63fdcce73e834e61",
+			"hash": "1dc0699518147712ee5f5ea94a0442d712d3d2787b9c54d41785e47190196ffa",
 			"player_id": 2,
 			"seq": 169,
-			"ts": 1784964721.454
+			"ts": 1784965815.27
 		},
 		{
 			"action": {
@@ -6979,10 +6979,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "611bf86d05fea8b0e65f8c4fb16406f4c00830b92fe8f965b08306b3a0e173db",
+			"hash": "7c8ee6958bdb83b808b3913892afc9cd5c8184ef341364ce54cb603f944115eb",
 			"player_id": 1,
 			"seq": 170,
-			"ts": 1784964721.459
+			"ts": 1784965815.274
 		},
 		{
 			"action": {
@@ -7028,10 +7028,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b18339a423af6a4f8d9a6138d5fc82aa63077eb4d27d70ffcecbffd5c79f9fa6",
+			"hash": "d18f59f17e6d1ed6cf2f7d9c38613442f3d86dc50a770a74ac7809f2a39516d2",
 			"player_id": 2,
 			"seq": 171,
-			"ts": 1784964721.464
+			"ts": 1784965815.279
 		},
 		{
 			"action": {
@@ -7077,10 +7077,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "edb32296fa7f9a2b2b508fd7baa590c8f9eddd8f6e3623dd1bf28fa5313f6a40",
+			"hash": "72d38a2ee2c32ffc93045608a5bc58e08b635d746dcc9e2c857ed43539bf1940",
 			"player_id": 1,
 			"seq": 172,
-			"ts": 1784964721.467
+			"ts": 1784965815.282
 		},
 		{
 			"action": {
@@ -7126,10 +7126,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4045e79f2a6701f3ffe7592f7be761be19e7c93184ff60daec9510dd822ab750",
+			"hash": "bc2ec4df6645162ee99cf4f9bf479132b960b258c0adfe01ee367e0ec0bbff01",
 			"player_id": 2,
 			"seq": 173,
-			"ts": 1784964721.47
+			"ts": 1784965815.287
 		},
 		{
 			"action": {
@@ -7175,10 +7175,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1e2996468d23acf54e79a9976ffe8d70554fa129c4af1b40c3e3735596dd07f0",
+			"hash": "349947d97a1179e7e812a16c34dcb4e2d83a5a992a1371fa3e19d50f9a995001",
 			"player_id": 1,
 			"seq": 174,
-			"ts": 1784964721.472
+			"ts": 1784965815.29
 		},
 		{
 			"action": {
@@ -7224,10 +7224,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "371d4c6c46782696bdbd912d97c561fd7ce764a827d7f70356d8dff44b416fde",
+			"hash": "34b91eec328b17341d288df73cdd7721f933eb3bca01148cd522c188a3d88f6b",
 			"player_id": 2,
 			"seq": 175,
-			"ts": 1784964721.478
+			"ts": 1784965815.295
 		},
 		{
 			"action": {
@@ -7273,10 +7273,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1a55a37f49f538ac81ae06c39962fd8080987f1cd06f70cd3d780e43240b5997",
+			"hash": "2255e7d3c5a913d10f36e6143c8c1675d5e7895f74941c98643c4e26be8d9b2b",
 			"player_id": 2,
 			"seq": 176,
-			"ts": 1784964721.481
+			"ts": 1784965815.298
 		},
 		{
 			"action": {
@@ -7322,10 +7322,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d71daca7fe1ae4e89c80a014f2421d51aa82c7be131f800a384093b58d2d8fb0",
+			"hash": "63c276d9ce71c872dae201e4a78d8a8472cfaf88e50310a2c751eb1be2f1bbde",
 			"player_id": 2,
 			"seq": 177,
-			"ts": 1784964721.483
+			"ts": 1784965815.3
 		},
 		{
 			"action": {
@@ -7384,10 +7384,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "4984acda5cf8dba769cc7bd54be6e509e764865cd4fd61b36880f5bc3be12c08",
+			"hash": "f15868d8a8ff1bac799a42601fc6e3adeda245596063bb2c45eadb808046dadc",
 			"player_id": 2,
 			"seq": 178,
-			"ts": 1784964721.485
+			"ts": 1784965815.303
 		},
 		{
 			"action": {
@@ -7417,10 +7417,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "d337c800706bce951384c53d4b9f96c0edccf0ad948428455862983cd815b5c1",
+			"hash": "83b95e94a285ca04bb7ba63709ba1a1aa0b117291818f3196b7bd1370e7e7db1",
 			"player_id": 1,
 			"seq": 179,
-			"ts": 1784964721.488
+			"ts": 1784965815.308
 		},
 		{
 			"action": {
@@ -7477,20 +7477,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "d11b21726d637e25850be8cdbac697ec7fd2c042a0a011dea1c2c3d8839b50c3",
+			"hash": "82aaf6129079ecdadf50cd5b9b4313c37951cd96c2de0771583f83665254ae57",
 			"player_id": 2,
 			"seq": 180,
-			"ts": 1784964721.488
+			"ts": 1784965815.309
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "31646183af86eb4885cabe4bd97d0ee61b924ba8234bdd7874dbf1b0b89d8be6",
+			"hash": "56df233d3870a827ec1826e8979f645efbbb21654578621a1d7abacdddc18668",
 			"player_id": 1,
 			"seq": 181,
-			"ts": 1784964721.49
+			"ts": 1784965815.31
 		},
 		{
 			"action": {
@@ -7513,10 +7513,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b381b561718b7ba4aa7e8d67f22cddd6b86038e992e7dec7ea6064ec16114094",
+			"hash": "ca7aad6f9b23d1ba27ce5aa08505f99e75ac940a8d2c00efafee2524a984486c",
 			"player_id": 2,
 			"seq": 182,
-			"ts": 1784964721.49
+			"ts": 1784965815.311
 		},
 		{
 			"action": {
@@ -7538,10 +7538,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7b1bca1369300b6198e0f03f1c0e7ff6d1ef01d5d4074a67f38aad831ccbdc25",
+			"hash": "3553baaf133835afb75f6fc78ea8003f998e3d93eaa44c6279d3fcd549cefb8e",
 			"player_id": 1,
 			"seq": 183,
-			"ts": 1784964721.492
+			"ts": 1784965815.312
 		},
 		{
 			"action": {
@@ -7563,10 +7563,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8299cd19716f1078980eb1505f481e05f0405da0faa2f86cb36ab0e7eca3eacf",
+			"hash": "3fc0630295b6f62cbd43fd1684e528c8e4fcf7dad468ebe5bafc150f26ca90bf",
 			"player_id": 2,
 			"seq": 184,
-			"ts": 1784964721.493
+			"ts": 1784965815.314
 		},
 		{
 			"action": {
@@ -7588,10 +7588,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "726228507fda3e1028b020de5e9e13060053feafe25d39a4019df9312a2937c7",
+			"hash": "064dd96c216bc68feace2eb10c6a32f986f0aeb0dfdc5fe9519d8aa2a0a72939",
 			"player_id": 1,
 			"seq": 185,
-			"ts": 1784964721.494
+			"ts": 1784965815.316
 		},
 		{
 			"action": {
@@ -7613,10 +7613,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "29c53478b63803405e0c515c022e77e985ca37709862b46f157e48091db91d43",
+			"hash": "7f1c068c81e84a6c95fe61f152db2d3b29cc0ef7df0c8b8e7ea6647323215342",
 			"player_id": 2,
 			"seq": 186,
-			"ts": 1784964721.495
+			"ts": 1784965815.317
 		},
 		{
 			"action": {
@@ -7638,10 +7638,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b233c9f38c0c1030a73b399acfbf3f43f574b1fd7e7da688919145fcf83d6012",
+			"hash": "de72bf69a6ff33a4f0eb0c168c89487ba2468c626424c6f59419c139135b76e0",
 			"player_id": 1,
 			"seq": 187,
-			"ts": 1784964721.496
+			"ts": 1784965815.319
 		},
 		{
 			"action": {
@@ -7664,10 +7664,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "ac80178f312d9613e4f754beb1cdfc16d2cee495d2a7b0615a3a60d3c9749be2",
+			"hash": "47e4504ed8717eb2ffd9cd7d4b2a35c295c6e44841da119f7aa07c370856a359",
 			"player_id": 2,
 			"seq": 188,
-			"ts": 1784964721.497
+			"ts": 1784965815.321
 		},
 		{
 			"action": {
@@ -7697,10 +7697,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "766f1a8fa85cba4d32c44fb38381ea84f4f541d80af886728a68d6379a179616",
+			"hash": "4bd5dff971d1b67607c5fbc4db9c4d1332321f915a97d7a923805ee3a3e768c5",
 			"player_id": 1,
 			"seq": 189,
-			"ts": 1784964721.498
+			"ts": 1784965815.323
 		},
 		{
 			"action": {
@@ -7757,20 +7757,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "a3d304666081fd58407972df0ee6bdc8f288de7a4c3bc2a6fac7ce8d69f11932",
+			"hash": "78f2d1ecb59797d5254f2193fa757c16a1917733b424a32503b065ed6cb2f56e",
 			"player_id": 2,
 			"seq": 190,
-			"ts": 1784964721.499
+			"ts": 1784965815.323
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "98856a2b0b4a76752a3a8b271ac48df3edbf8fe0bdf90470c3b195c27774375e",
+			"hash": "e455bb28d4934135b2075a98fefafd0ece272e66fcd2891b486dcb8d741c43aa",
 			"player_id": 1,
 			"seq": 191,
-			"ts": 1784964721.501
+			"ts": 1784965815.325
 		},
 		{
 			"action": {
@@ -7793,10 +7793,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "689f78d40d44b589be1ae1c5ae797e2f17aa9ea86ff64e8ef6c19498b2f3ba7f",
+			"hash": "fb59bbddb04f5aa0efbf60979255336e34d34278d12998625592f17818024f87",
 			"player_id": 2,
 			"seq": 192,
-			"ts": 1784964721.502
+			"ts": 1784965815.326
 		},
 		{
 			"action": {
@@ -7818,10 +7818,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2dfdbbe779cfe7eb7c31189e8ef6692843f6d571f853c391814b8594ebc6acad",
+			"hash": "2a3fa569eea098859343ca953ad209c1cfe0a929bb01b6cf1e2ba8ac65f04359",
 			"player_id": 1,
 			"seq": 193,
-			"ts": 1784964721.503
+			"ts": 1784965815.328
 		},
 		{
 			"action": {
@@ -7843,10 +7843,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "13e816bf208c467c01429e0697ae9059c2b3546f6c0728852ffa7d1186d4ad05",
+			"hash": "87a3255962015feafe92bf68bb2126422f3fc1bba54fd18184505db7594f4095",
 			"player_id": 2,
 			"seq": 194,
-			"ts": 1784964721.505
+			"ts": 1784965815.33
 		},
 		{
 			"action": {
@@ -7868,10 +7868,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5e62b9b5f3cda520d4c1e322f83a1a7545e7186c81815407c82e9e536321ec22",
+			"hash": "4f62a58003c6547f85a8db838362e8f6df4a7d95a85c469d6a64ceb6d10c5720",
 			"player_id": 1,
 			"seq": 195,
-			"ts": 1784964721.505
+			"ts": 1784965815.332
 		},
 		{
 			"action": {
@@ -7893,10 +7893,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "37c7615874471830acc065a53e930d2b3ec4922df00bea912880ebba866d602e",
+			"hash": "1046de31b3695e036c6b5a4e3d08cc4c03f3fe00a20b27ee848460807e46ff65",
 			"player_id": 2,
 			"seq": 196,
-			"ts": 1784964721.506
+			"ts": 1784965815.333
 		},
 		{
 			"action": {
@@ -7918,10 +7918,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "083d65c209af58e9b43968c0681af66ae1ac3623faa69192e345bed63d33420a",
+			"hash": "3c7c6f7a0f704c702cf884ea320038ce8a12b2505d96fdd3ec654dc537194c8b",
 			"player_id": 1,
 			"seq": 197,
-			"ts": 1784964721.507
+			"ts": 1784965815.335
 		},
 		{
 			"action": {
@@ -7944,10 +7944,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "9a3651568161b005aa3da94da85fdba16392b89803bb1121c3bb378b1ad28612",
+			"hash": "fac2774f29abf2e634d14345279e4158689a14dae07f873f5dc5ca8971f0cb48",
 			"player_id": 2,
 			"seq": 198,
-			"ts": 1784964721.51
+			"ts": 1784965815.336
 		},
 		{
 			"action": {
@@ -7977,10 +7977,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "1d29aabeaf2f12ac8b3e1e150ac8710bf7b5396da795ab9c57ef22f300e2186f",
+			"hash": "3b885faa513056b998de201eb84b625172d4da3aeae1c2a0ddba314da838da8c",
 			"player_id": 1,
 			"seq": 199,
-			"ts": 1784964721.511
+			"ts": 1784965815.338
 		},
 		{
 			"action": {
@@ -8037,20 +8037,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "58909a2517605ea34c2b1db09770a0096a8f2cd1691565b25ad3fc8ce990a473",
+			"hash": "1522fd2b31430268e60430d8724dd71e5f2e2472cf0cc7cc80edd5ceebac7a0f",
 			"player_id": 2,
 			"seq": 200,
-			"ts": 1784964721.512
+			"ts": 1784965815.339
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "a2b2c6ba97095954b5f838b2aee8aebfcecdcaf12e2638eb4bd3e460dba90d4b",
+			"hash": "029358746abc3086c37c56ec2dd3ca5cdcc06733f24f0f76e0c2e5774d134e28",
 			"player_id": 1,
 			"seq": 201,
-			"ts": 1784964721.513
+			"ts": 1784965815.341
 		},
 		{
 			"action": {
@@ -8073,10 +8073,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "69dedb4b50afabf8c4a89e324f0ada8632824cccf011b377a24b92cac3697bd3",
+			"hash": "18e4dadd29554d5aadcf13fdcfc2764e773e10bebf7ed51359efbb339176d7d8",
 			"player_id": 2,
 			"seq": 202,
-			"ts": 1784964721.513
+			"ts": 1784965815.341
 		},
 		{
 			"action": {
@@ -8098,10 +8098,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "bea6fb5a052d840c1f6a25edc798948c8c5d68e58676595938ed7ca056761d7c",
+			"hash": "14d83ae521cbe895251bf4b01a3a3c36f3feec285e651186dd1de57c97fb79c0",
 			"player_id": 1,
 			"seq": 203,
-			"ts": 1784964721.515
+			"ts": 1784965815.343
 		},
 		{
 			"action": {
@@ -8123,10 +8123,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c980f79006be670af2c78d4215a4ac1455b763ce1d34b974dbfec19663c36ce3",
+			"hash": "4917df385813e8d631953380244203216022647ed11527b0aaada63d9ab02235",
 			"player_id": 2,
 			"seq": 204,
-			"ts": 1784964721.516
+			"ts": 1784965815.344
 		},
 		{
 			"action": {
@@ -8148,10 +8148,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "45f6abe3ad44085979dc35e2be4146091baa583d14c47fccf998cd4ee170865f",
+			"hash": "f921e246cc3b4c1a35845dcf222cda7be95cde10cb214c5cb282e2afbf5513d5",
 			"player_id": 1,
 			"seq": 205,
-			"ts": 1784964721.517
+			"ts": 1784965815.346
 		},
 		{
 			"action": {
@@ -8173,10 +8173,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "272890c5b340e0dfe194951eb4c2a4b8b9ed6d769ab1c7b393ccb157bb3f0b55",
+			"hash": "58021f7a19ba6676d25ac7fbaa474a95bbf86ffb6c2a2fac43da07af900b7ff2",
 			"player_id": 2,
 			"seq": 206,
-			"ts": 1784964721.518
+			"ts": 1784965815.348
 		},
 		{
 			"action": {
@@ -8198,10 +8198,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "938b888ccc0066711090124e2a8b805e6c41e6b9232adcce17ae89a50b5bb81a",
+			"hash": "edeb7a0e1c0816362c7d79edadccf898abd53b627ae871dcc8b4b077d58883fb",
 			"player_id": 1,
 			"seq": 207,
-			"ts": 1784964721.519
+			"ts": 1784965815.35
 		},
 		{
 			"action": {
@@ -8231,10 +8231,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a9089ed4eaa8426afaadeffd8b3c3e07f338048f053f241fda4607037ec8ab05",
+			"hash": "5e390b8025d5f812f62cf27bd610a233393f90a1ecaa0fd14f4b401a0711fbb6",
 			"player_id": 2,
 			"seq": 208,
-			"ts": 1784964721.52
+			"ts": 1784965815.352
 		},
 		{
 			"action": {
@@ -8280,10 +8280,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "262bd03617b7f124d7cfbefe62d3cdf75210106427a129be7093e54e702fdb61",
+			"hash": "538b895cfd9dc96c3353bdbe710852e17bebc36a17e9e8ec8f101769afbc27be",
 			"player_id": 1,
 			"seq": 209,
-			"ts": 1784964721.577
+			"ts": 1784965815.398
 		},
 		{
 			"action": {
@@ -8353,10 +8353,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f40bb66a59d8cb04b5aa9f93de074e4caed69a5c9295637814bac90406ca025a",
+			"hash": "229dae0d7c839acfdbc84bb4cc4e6c59caa9348e68455f449c833cee79366f22",
 			"player_id": 2,
 			"seq": 210,
-			"ts": 1784964721.642
+			"ts": 1784965815.451
 		},
 		{
 			"action": {
@@ -8402,10 +8402,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6b8f6f8129bffc9e5d1cc4e7ef4981a8c1f459a9b3b3da9685c4a7aa84de3e10",
+			"hash": "a0cc5c652776560d25876f0d8ceec6b53b3c4afba09bfffeb9f2fa24cb81d4d1",
 			"player_id": 1,
 			"seq": 211,
-			"ts": 1784964721.687
+			"ts": 1784965815.492
 		},
 		{
 			"action": {
@@ -8451,10 +8451,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2d421e3bc279a898091b238d375b34d3451ca3aeb22e9790ba199498f5551d81",
+			"hash": "fb1dd6d81fe1fd0d2188894500b9e804ba0c5360c71a4b24953da5b54d88de7e",
 			"player_id": 2,
 			"seq": 212,
-			"ts": 1784964721.727
+			"ts": 1784965815.526
 		},
 		{
 			"action": {
@@ -8500,10 +8500,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b84be6cd15702599ccf49bc3c19c3cdaf44546ed4eadaa1c183bd8aa9253563e",
+			"hash": "5ee6cf11fb26280502246cac134531d7491c0f8397302598ca9fe4cb70ae81b8",
 			"player_id": 1,
 			"seq": 213,
-			"ts": 1784964721.767
+			"ts": 1784965815.559
 		},
 		{
 			"action": {
@@ -8549,10 +8549,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d8b83f588159b7b9b53b6693680e32e5bde665d2efc5e88b75ef519920f341ee",
+			"hash": "e756f20e87360d3503ca55023b093d5c7f255c366235c632370e2196afe220ed",
 			"player_id": 2,
 			"seq": 214,
-			"ts": 1784964721.804
+			"ts": 1784965815.59
 		},
 		{
 			"action": {
@@ -8598,10 +8598,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3a74688fba5bb0ae99cd2d98ead44c85e238798f815e0f7859b4fc27846a5ccf",
+			"hash": "f7b3da7a4047b61f1f49bb369ae948cc3745731a3fbd3483d06d91961a4e9774",
 			"player_id": 1,
 			"seq": 215,
-			"ts": 1784964721.84
+			"ts": 1784965815.621
 		},
 		{
 			"action": {
@@ -8647,10 +8647,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3af386d00da27619db07d7e3f87beac7041a86ae84b8a80f13cb13effe051614",
+			"hash": "786bfaf93d1ebb6909e1ba4c8189017af748532b22c65f2a58a945ae58704f90",
 			"player_id": 2,
 			"seq": 216,
-			"ts": 1784964721.873
+			"ts": 1784965815.651
 		},
 		{
 			"action": {
@@ -8696,10 +8696,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1cd42b58b825bcc46b5ddf614fdd1911708ab1935feb9775fa725b4b6d20a8c7",
+			"hash": "380a653ed03269618d15ea1b742da782b0151cc42612a724a5f4846059c12ada",
 			"player_id": 1,
 			"seq": 217,
-			"ts": 1784964721.896
+			"ts": 1784965815.672
 		},
 		{
 			"action": {
@@ -8745,10 +8745,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "823e4c3ce975ec026b76df51488396b0601ddc0a34ee9980b1628e86911f0c95",
+			"hash": "cd77057e3285aa11d208541b98f3b702cb9c1f35fcb406e4d8b931fc14962780",
 			"player_id": 2,
 			"seq": 218,
-			"ts": 1784964721.926
+			"ts": 1784965815.699
 		},
 		{
 			"action": {
@@ -8794,10 +8794,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ebd1d00b68bca03b126881934480a7d79917a7547f55a8ad4b02762ee9699af2",
+			"hash": "6dca4bdbf60dd2d5afb157b71732b14f345cdb5908413233d4f443a72058f155",
 			"player_id": 1,
 			"seq": 219,
-			"ts": 1784964721.945
+			"ts": 1784965815.717
 		},
 		{
 			"action": {
@@ -8843,10 +8843,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "177aa6f0e86d3c91a2e6b57af13e3f448217a8255ffe24f768c1e75f2a6142a1",
+			"hash": "d6dcd7a06b15c51ba5ca4578b4bb4536a9c3e14e0f4ab43c2aaf23503fdbd09c",
 			"player_id": 2,
 			"seq": 220,
-			"ts": 1784964721.969
+			"ts": 1784965815.74
 		},
 		{
 			"action": {
@@ -8892,10 +8892,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e68d2e79722a3115173e8f85382ea731ed99e69c6309b37e4fe391de7f392086",
+			"hash": "1ea0fa966ddb7902b5616a7048eca02d8f628b7597a86d4c0672c31f6b0537ec",
 			"player_id": 1,
 			"seq": 221,
-			"ts": 1784964721.989
+			"ts": 1784965815.756
 		},
 		{
 			"action": {
@@ -8941,10 +8941,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f06bd05de6f8c14edfff0ccf3e40457be932571338142721d7ab63882f74106b",
+			"hash": "99d65fa21a6d8bbd0c4e76bad1fef19958be8d1f7169b7741d609cfe4b77ae47",
 			"player_id": 2,
 			"seq": 222,
-			"ts": 1784964722.012
+			"ts": 1784965815.777
 		},
 		{
 			"action": {
@@ -8990,10 +8990,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0b2fb91783015d0ee28a8a0c7d2969acf6d094e5fd08b24c860ac2fa39fb6e31",
+			"hash": "772b1418369b45305b231e058729b4fa70cb2a2d7184544a7dad65c3b9b3455c",
 			"player_id": 1,
 			"seq": 223,
-			"ts": 1784964722.03
+			"ts": 1784965815.794
 		},
 		{
 			"action": {
@@ -9039,10 +9039,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "975eb330a7cf6fbc66c6639e9df84f74061a73691be08f7dd9cffe4108b20b21",
+			"hash": "ec45e87b8b18d6fbf290702dc14498f94778c8d01c6bfadf4ad228f7372b7856",
 			"player_id": 2,
 			"seq": 224,
-			"ts": 1784964722.048
+			"ts": 1784965815.811
 		},
 		{
 			"action": {
@@ -9088,10 +9088,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "241996b401b84e35d68ea5e069bf428a67375219427c3f07de0cc5eacde69666",
+			"hash": "667ac9b4209952f6bbdf4ca702dbed30afffb2dcdd064448d62313cb36eb1d94",
 			"player_id": 1,
 			"seq": 225,
-			"ts": 1784964722.063
+			"ts": 1784965815.826
 		},
 		{
 			"action": {
@@ -9137,10 +9137,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4c001a1362bac51f9750d994ac8721f75c833abab9f238c7b78d845bfde784b9",
+			"hash": "97a4e000e70a377cbfa8472a3df26daab953ba336c62501733f2af93207b5b04",
 			"player_id": 2,
 			"seq": 226,
-			"ts": 1784964722.076
+			"ts": 1784965815.837
 		},
 		{
 			"action": {
@@ -9186,10 +9186,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2f083d4defd87074097a5366a2ba0469c43c83c76f5840795f5c70e9d5c489b5",
+			"hash": "ba9a49a11c04d963307101f81ccbd2bd1dcbc3fb9b3792280d213714ec09ca1c",
 			"player_id": 1,
 			"seq": 227,
-			"ts": 1784964722.091
+			"ts": 1784965815.849
 		},
 		{
 			"action": {
@@ -9235,10 +9235,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f980ea453404c6423a13a5a7e8636249976ba58b881c490107cf0fb8f698853f",
+			"hash": "73aecc77911959ddffb2b363082c09cea37a33b35bac190a2918a92dc7a52cb5",
 			"player_id": 2,
 			"seq": 228,
-			"ts": 1784964722.106
+			"ts": 1784965815.859
 		},
 		{
 			"action": {
@@ -9300,10 +9300,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f55071489b305d2b9b133648501a0c91a7a0d3d3d2f8410a2c29e4c80d481131",
+			"hash": "ad5d840814ae1aaf18d9c248d75b9876ee742b5cb83b0ec4cd63f8b67830d856",
 			"player_id": 1,
 			"seq": 229,
-			"ts": 1784964722.12
+			"ts": 1784965815.87
 		},
 		{
 			"action": {
@@ -9349,10 +9349,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "511e05b8c13c60f39dab8dfe1c22553b4ca44d5b175c42d5e10761816f859a8e",
+			"hash": "3737fc8783f266c25731406715228b42b61db2f25baae87591797c5b2f5c6c75",
 			"player_id": 2,
 			"seq": 230,
-			"ts": 1784964722.133
+			"ts": 1784965815.88
 		},
 		{
 			"action": {
@@ -9398,10 +9398,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f504a00e6a64921c1c89fb95c2b131cdf9aeb09641da2df81c1262b541429dc1",
+			"hash": "b617e0925120b3cd40ae4ec2f8978983c984d2ffa1916eadbe133108f3093e90",
 			"player_id": 1,
 			"seq": 231,
-			"ts": 1784964722.147
+			"ts": 1784965815.887
 		},
 		{
 			"action": {
@@ -9463,10 +9463,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a77fb05426770ce0726c13844e6895d675f734d5064f67d718112a22cc46f0e3",
+			"hash": "bfb5678fc042b020ef317189582761a86f55bd093eaecc98abf17618a58a2fa3",
 			"player_id": 2,
 			"seq": 232,
-			"ts": 1784964722.165
+			"ts": 1784965815.898
 		},
 		{
 			"action": {
@@ -9512,10 +9512,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6c1a33c723689745f7d3e0f3e89ca5aed77e0acf5cdd9bff2285d39f11664933",
+			"hash": "d17e59af3ff0ffaa49d270f749190b82494f5bc3f1e3cf2b9f2628efc015e353",
 			"player_id": 1,
 			"seq": 233,
-			"ts": 1784964722.173
+			"ts": 1784965815.906
 		},
 		{
 			"action": {
@@ -9561,10 +9561,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "43bcf521975e09be257e562d30afa9ddfbadd02363d300faff28fefba731a542",
+			"hash": "105d9888dab7c36df8a93a975fb9cfdc435f89f49b42b02bd9672408d55670b8",
 			"player_id": 2,
 			"seq": 234,
-			"ts": 1784964722.183
+			"ts": 1784965815.914
 		},
 		{
 			"action": {
@@ -9610,10 +9610,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "30dc4f239672408fbe6807bdc0a3afa81424a8c6a74508c8944b0e4a02d272de",
+			"hash": "c94f16e741b1c627c297b32b3a9640da56ebfa16f82c47c92e32ddda94f43fda",
 			"player_id": 1,
 			"seq": 235,
-			"ts": 1784964722.188
+			"ts": 1784965815.919
 		},
 		{
 			"action": {
@@ -9659,10 +9659,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ae1056e804e9c0c5ee1e84d097d01e52cef8a5016b92ea7d8ebbfc53c6912b04",
+			"hash": "ff485a49c62e78a4b7e6cb7818bb24e571119eb6a737c640a7716e6aa381565c",
 			"player_id": 2,
 			"seq": 236,
-			"ts": 1784964722.195
+			"ts": 1784965815.925
 		},
 		{
 			"action": {
@@ -9708,10 +9708,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d7ba9c441a03ebd685560ac49d5a1b865d1e41b84ddbb6ebffdcf9ad1a261317",
+			"hash": "776d950c554cb30aaff21692cbd0a53b96e811f79fff745ca125ffb12641d5f9",
 			"player_id": 1,
 			"seq": 237,
-			"ts": 1784964722.2
+			"ts": 1784965815.929
 		},
 		{
 			"action": {
@@ -9757,10 +9757,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "dacea2136dbf9634302f3926384a7abcdd37f0434d98149496337628fce43ce1",
+			"hash": "c77d920e07cb6f526bee0e6205c32029fa924264038f45a2fcfebb01f67670a2",
 			"player_id": 2,
 			"seq": 238,
-			"ts": 1784964722.207
+			"ts": 1784965815.934
 		},
 		{
 			"action": {
@@ -9806,10 +9806,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "70f1741d71a316f8938b8575c21e20c649d9121f1fc9502719d33a0f7cedfe5a",
+			"hash": "e973a49e8b97e2c590d3bc8410e4648920795796f81b3ead4550160fecaf9a9f",
 			"player_id": 1,
 			"seq": 239,
-			"ts": 1784964722.21
+			"ts": 1784965815.938
 		},
 		{
 			"action": {
@@ -9855,10 +9855,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "43921f89ef97b74f7b143f8e6d34d2fe97e65bb0f8d3498b0075dce47a3805b7",
+			"hash": "492f36b376765f3ba4de11cec12073c9343431ced62e48a326039f6b1b1904b1",
 			"player_id": 2,
 			"seq": 240,
-			"ts": 1784964722.214
+			"ts": 1784965815.942
 		},
 		{
 			"action": {
@@ -9904,10 +9904,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "63f1fad29768c3d9f09c92667fcdc8a4f4a7ca6abda21688fce9a558076e8a0d",
+			"hash": "ab6ad88b18e84c12e2ddf70f8f617ff7a0edd3d2a6e49e5ff6875f92415f8e81",
 			"player_id": 2,
 			"seq": 241,
-			"ts": 1784964722.222
+			"ts": 1784965815.946
 		},
 		{
 			"action": {
@@ -9953,10 +9953,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9dc6bc8be19fb9e3f2632c0383856479ba8fe2f492f1e7c9245c1896ed95ede9",
+			"hash": "fbf700dc8672054c9292a00584ca0a64818d3cd8c6ed46a604b814976123db3c",
 			"player_id": 2,
 			"seq": 242,
-			"ts": 1784964722.225
+			"ts": 1784965815.95
 		},
 		{
 			"action": {
@@ -10015,10 +10015,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "dca14e5d43ae5f0a8a71734d29fc4d7db37a8f4897b95b89c64e820e49130368",
+			"hash": "390046a65dcc943c3b50de412d76d4a0c724c4fc5b09a70504ade5d13cd667d3",
 			"player_id": 2,
 			"seq": 243,
-			"ts": 1784964722.229
+			"ts": 1784965815.953
 		},
 		{
 			"action": {
@@ -10048,10 +10048,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "b7a5a59bc850014f939027e371c5a85466bf853140cf1dd21e0fac59b32c2daf",
+			"hash": "9560dae292e44e818f9136b566419512a89bd1e8866a83dd4759701cf7f6279a",
 			"player_id": 1,
 			"seq": 244,
-			"ts": 1784964722.231
+			"ts": 1784965815.956
 		},
 		{
 			"action": {
@@ -10108,20 +10108,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "2629ae88da30e7455ab18d013862659e1b16bb669fcfa3e19f3cbd2c5d53c36f",
+			"hash": "d692d499dcf53794951f5fc981662feeac3e1b1e60e64ebee573b01fb79808ce",
 			"player_id": 2,
 			"seq": 245,
-			"ts": 1784964722.233
+			"ts": 1784965815.957
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "0f11a1c346533c05aed7c5b1f0142c957ec3b2d3c0e00525ece47f8ae1cf62f7",
+			"hash": "7f346aec40138009f7e644eb43d191460f136cb1a09c00ab47a0d4c631ff97ab",
 			"player_id": 1,
 			"seq": 246,
-			"ts": 1784964722.236
+			"ts": 1784965815.959
 		},
 		{
 			"action": {
@@ -10144,10 +10144,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "85b94d5af699b9842ca0fb8b24305a12c4bdd9520c00a75dd9f9cf2045c8191f",
+			"hash": "1146d87a15f2a112883c9b903ac1610e66b885aead9cfe03e93b6b5ed7ef1656",
 			"player_id": 2,
 			"seq": 247,
-			"ts": 1784964722.238
+			"ts": 1784965815.96
 		},
 		{
 			"action": {
@@ -10169,10 +10169,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d214683c6e180bd4b6e664afaaf7fdfb3d8d4dd5be7231bd3f04f938af23a5b4",
+			"hash": "086bb79c98569bb791263df6564d2418d1c169eab8216be86dd924835815fa4f",
 			"player_id": 1,
 			"seq": 248,
-			"ts": 1784964722.24
+			"ts": 1784965815.961
 		},
 		{
 			"action": {
@@ -10194,10 +10194,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2ad3173f9cd269d8bcbd0c4547c3e2cea5b97493d86d9582f06e744f759a9381",
+			"hash": "4adcbe778f5f58b8d15b73b5b6fab0848268302cc6a10add13e5d0165d8af0bb",
 			"player_id": 2,
 			"seq": 249,
-			"ts": 1784964722.241
+			"ts": 1784965815.963
 		},
 		{
 			"action": {
@@ -10219,10 +10219,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7ef46f008388f1db492a64450bb4bbc078dbe1dc218c6aed93408e9f0822ddd7",
+			"hash": "2cae8f19d7a7b956d2c915daa3480ad8371ed388d1f9081432803a0bd14ae4f1",
 			"player_id": 1,
 			"seq": 250,
-			"ts": 1784964722.243
+			"ts": 1784965815.964
 		},
 		{
 			"action": {
@@ -10244,10 +10244,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9abf499e28b02ea6e39ed16011c87c494435707c97a71ed9fb6859c434ac404d",
+			"hash": "dcbffbcc54c7891d09e1291fb0a908aa6ccaded00a3d4a4618575649f810dd3f",
 			"player_id": 2,
 			"seq": 251,
-			"ts": 1784964722.245
+			"ts": 1784965815.967
 		},
 		{
 			"action": {
@@ -10269,10 +10269,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "78d0a15d6c5971762857a961d76a40ae24c0dba7914a5642d618bcd17f2b9c45",
+			"hash": "40d80c8fd369288380f2755819e26951f2e2c92aca06d55af1596ec6d6f97a17",
 			"player_id": 1,
 			"seq": 252,
-			"ts": 1784964722.246
+			"ts": 1784965815.968
 		},
 		{
 			"action": {
@@ -10295,10 +10295,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "47b9ab2c6cf09392fafd3ed3863d35630df6ec3e31903654ecbe7661504872b2",
+			"hash": "1b9a6dfb681a9a67d2a4afc3589399e387001c26310931c65f3a2258a6415513",
 			"player_id": 2,
 			"seq": 253,
-			"ts": 1784964722.247
+			"ts": 1784965815.969
 		},
 		{
 			"action": {
@@ -10328,10 +10328,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "94afde4ce437bfd153f59689e6261a84fd9e2f088c802232cdc3a59eb8f2a572",
+			"hash": "21d5588c01ebc432552becb234e019570a6ef352a1d3607b738c97af85228009",
 			"player_id": 1,
 			"seq": 254,
-			"ts": 1784964722.25
+			"ts": 1784965815.971
 		},
 		{
 			"action": {
@@ -10388,20 +10388,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "21ee2721139301aac58832f34b4cd929ce5cf1a5fbe0788e7dd6f221f87e2f84",
+			"hash": "fb08ab134ac7b1b926207a4e7afbb8e6a444054eace18270428086e81f21cb1f",
 			"player_id": 2,
 			"seq": 255,
-			"ts": 1784964722.251
+			"ts": 1784965815.972
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "0d621eb40bf25958648488feab2938eb92f4c32982320264f8cf2d4ab882ad33",
+			"hash": "1fd895f1d13cee5065cab94e9f33ecbc1a23a1ef5d33ccb20e9cb62625bb25bc",
 			"player_id": 1,
 			"seq": 256,
-			"ts": 1784964722.253
+			"ts": 1784965815.973
 		},
 		{
 			"action": {
@@ -10424,10 +10424,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "607caf842f6760280e7e63bb38199056e8c260dbcd339fe54d0aa6ae316e02a7",
+			"hash": "6018115b49b8c889ea5250656610506f0b5a096fddf81c54b0b98c72d2aa5a47",
 			"player_id": 2,
 			"seq": 257,
-			"ts": 1784964722.253
+			"ts": 1784965815.974
 		},
 		{
 			"action": {
@@ -10449,10 +10449,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2756232ca868c49c8d6d4ab3de3a20de0cc62aa2340850b0693f9ba45a83c8de",
+			"hash": "171c4d24b7bc3b4139673dbfb8dc6f4b3108241c5ec53afc8b8a9353ab32a942",
 			"player_id": 1,
 			"seq": 258,
-			"ts": 1784964722.255
+			"ts": 1784965815.976
 		},
 		{
 			"action": {
@@ -10474,10 +10474,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "26d7d1481118e0acfc857154af2fa861fba528182bd04a9e86723aec5a625ce8",
+			"hash": "5627cc844dae7f5d72647e8de3ce71fd5666a673147d64e0901c5f547f308cc9",
 			"player_id": 2,
 			"seq": 259,
-			"ts": 1784964722.257
+			"ts": 1784965815.978
 		},
 		{
 			"action": {
@@ -10499,10 +10499,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f626c6b81b89c80d8031ae07acb5630fe0fa79f9db65694563554ab06b5b8129",
+			"hash": "4efb66d7a4ec1d667e70c75a58dd063254cc6c081fba7b778ca1d46b8b6b264d",
 			"player_id": 1,
 			"seq": 260,
-			"ts": 1784964722.26
+			"ts": 1784965815.979
 		},
 		{
 			"action": {
@@ -10524,10 +10524,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cebedb5ab9b2359c411d9dc42a4566048e6f1b5dd95594bdb3eb06d620efd2c6",
+			"hash": "d7c6eec723695d453c0a4b7239c84be45b6372b2ccf4653ebd9bd749b90ae827",
 			"player_id": 2,
 			"seq": 261,
-			"ts": 1784964722.261
+			"ts": 1784965815.981
 		},
 		{
 			"action": {
@@ -10549,10 +10549,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3a6ca70095d6e50ac6e0ffd3e3f69a3bb85531802651f28a892c7514d519edeb",
+			"hash": "5e6e18e64169fefec950a2263c51aec12f7d2a1bacd5459214bdf05c1331d7cf",
 			"player_id": 1,
 			"seq": 262,
-			"ts": 1784964722.263
+			"ts": 1784965815.983
 		},
 		{
 			"action": {
@@ -10575,10 +10575,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "684282dcf94778e084d77b7ce3f673a6e4e77e1f41c070840aba39b3eb7949ec",
+			"hash": "cab0dceadbdd0232332c5a9561649b0cd8feed1b843ba101b260c37f17e50005",
 			"player_id": 2,
 			"seq": 263,
-			"ts": 1784964722.265
+			"ts": 1784965815.984
 		},
 		{
 			"action": {
@@ -10608,10 +10608,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "6721062cc71c2090234f73691c5302701038498d501c1782870168c93e3a7c36",
+			"hash": "cd39d427edac44d8328c3a7772eb48047cf4c574ba72ec4adb8d93403ab52531",
 			"player_id": 1,
 			"seq": 264,
-			"ts": 1784964722.266
+			"ts": 1784965815.986
 		},
 		{
 			"action": {
@@ -10668,20 +10668,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "fc7fb016a32c106d40b31c81289693a9cfc350827685dc4278c9cc927d88986f",
+			"hash": "fc25a9c8500fd2e1aff39e91e65803ce93fd4f1016ed204adf48cbbcdba2a698",
 			"player_id": 2,
 			"seq": 265,
-			"ts": 1784964722.268
+			"ts": 1784965815.987
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "a592f21b2ba9737e3e5fff2b626b73950641144a6b1bf738f9b87f9e1af435f3",
+			"hash": "3b31211dc547e642918d0334fae5d5ef4816bfb1598d5dd8fb78efa5a18d2414",
 			"player_id": 1,
 			"seq": 266,
-			"ts": 1784964722.27
+			"ts": 1784965815.987
 		},
 		{
 			"action": {
@@ -10704,10 +10704,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0cd950026e2a6c714a98ecc6dc6785f62b1847037a4597af0670f9266181c2cb",
+			"hash": "13397d1a1076aa5c24589a62feebe8f4ce7b31c82804adf0aaa49a88c79c4a59",
 			"player_id": 2,
 			"seq": 267,
-			"ts": 1784964722.271
+			"ts": 1784965815.989
 		},
 		{
 			"action": {
@@ -10729,10 +10729,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8ba66fcb67ab8fcedaf64e927171d5df6aad8693a9aaf1339970f9001c207c6e",
+			"hash": "09a41825234f763bd460a34ade15244e4a20ea46505c757ea09270fc515e0623",
 			"player_id": 1,
 			"seq": 268,
-			"ts": 1784964722.273
+			"ts": 1784965815.991
 		},
 		{
 			"action": {
@@ -10754,10 +10754,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0c5097ce1a4c325762cb62256f86dc19653cfd15fad370fc653240e9701c7428",
+			"hash": "ee0862ff32392a67d3e9d71c78ab4ac3877ff6a2beeca3b88ba28bc0b662b3ec",
 			"player_id": 2,
 			"seq": 269,
-			"ts": 1784964722.274
+			"ts": 1784965815.992
 		},
 		{
 			"action": {
@@ -10779,10 +10779,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "660e150bb9a908dfe87f40e06723648bad177e52ef3a7d947f0b0880d8ceccd7",
+			"hash": "2e678454750cff8cb9c7b904e22fdfd64d7da52f8bd853358d9e3129e4918c48",
 			"player_id": 1,
 			"seq": 270,
-			"ts": 1784964722.276
+			"ts": 1784965815.994
 		},
 		{
 			"action": {
@@ -10804,10 +10804,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c52661a73a76b6dd7d3c31c6c25c799b1668a70550d299400b3643090ad87def",
+			"hash": "b5390532c7e6ce86c8da1521c5345acf2d207319dba981b1eb929944b2440ff0",
 			"player_id": 2,
 			"seq": 271,
-			"ts": 1784964722.277
+			"ts": 1784965815.995
 		},
 		{
 			"action": {
@@ -10829,10 +10829,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "239e2a82a5737480aeaef86571541e45089b1ddbc5f36f97a543063d69f79fb5",
+			"hash": "5698a63098b4f5fc1ada73052283dd2f27720f1c38ee10d3d62e7e2c6d6a2269",
 			"player_id": 1,
 			"seq": 272,
-			"ts": 1784964722.278
+			"ts": 1784965815.998
 		},
 		{
 			"action": {
@@ -10862,10 +10862,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5b6cc62ed10b4aca92287052045288aa14a426b229042dd6e32045cdd24488b3",
+			"hash": "3aa60104401400b794019a26da5e1598ff3395b4f4531554ea5030c6e7a3226f",
 			"player_id": 2,
 			"seq": 273,
-			"ts": 1784964722.279
+			"ts": 1784965815.999
 		},
 		{
 			"action": {
@@ -10911,10 +10911,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0d7ee9cc39266bf641a1b7b852e7be54fb3943a254ac62e63e79055a2ced3fa4",
+			"hash": "8f54f64c2310477c02c362f883a7bdec3b606129b347d63c74f5b90323c43bfe",
 			"player_id": 1,
 			"seq": 274,
-			"ts": 1784964722.352
+			"ts": 1784965816.056
 		},
 		{
 			"action": {
@@ -10960,10 +10960,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2b5d5ac79be88c7325c1a889b324c0c389fd5cebd6a4c8b05d828a6cc6064e18",
+			"hash": "ef98e3bca1a6f77d6d958f61a77d155e18a62f755c4066d35e9cfb595981f2e9",
 			"player_id": 2,
 			"seq": 275,
-			"ts": 1784964722.431
+			"ts": 1784965816.102
 		},
 		{
 			"action": {
@@ -11009,10 +11009,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0fcf1bf389f70afee748eaf6bcf3fae664e726c47f96773b6b61663515b51319",
+			"hash": "09c9efd5618672a0ee9a02197e8629657ed7733f945a5e615185e5b2040a050b",
 			"player_id": 1,
 			"seq": 276,
-			"ts": 1784964722.497
+			"ts": 1784965816.147
 		},
 		{
 			"action": {
@@ -11074,10 +11074,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "bcad1810c58952d53d49bb5263f70f7ace311eb8a32cfb78a0380e835835dd58",
+			"hash": "e6e38154f274d1a6c4887dd0ce3bdb8d7ceae97e33952fc7e8748aba5120d543",
 			"player_id": 2,
 			"seq": 277,
-			"ts": 1784964722.54
+			"ts": 1784965816.179
 		},
 		{
 			"action": {
@@ -11123,10 +11123,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f02f3b13298c109dc809da3b229e9d187a41a4371ad808ec8a93229480bd73ac",
+			"hash": "3d14cb8bc833c4842926bc26bc6412ed94281ef62aa4f1bd6402d5dad06a4fec",
 			"player_id": 1,
 			"seq": 278,
-			"ts": 1784964722.592
+			"ts": 1784965816.219
 		},
 		{
 			"action": {
@@ -11188,10 +11188,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "84102a42157a7e0221eb00c23bc2242baf5b57fa18697b444287b7f522258009",
+			"hash": "7fc3aecb6d0fa27ee0167738bfdbb1213080ff52c3d16e9d746f9ff94e091d78",
 			"player_id": 2,
 			"seq": 279,
-			"ts": 1784964722.631
+			"ts": 1784965816.249
 		},
 		{
 			"action": {
@@ -11237,10 +11237,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "419b8adeb0346e3b4dfcce9005913e0363355a22a5e06ed4bf5a99a08ee7c9c1",
+			"hash": "b66b2514d6a3b2e17b3a79dac39d514a6db32f598ea73c5087b95e98836e0c3c",
 			"player_id": 1,
 			"seq": 280,
-			"ts": 1784964722.676
+			"ts": 1784965816.284
 		},
 		{
 			"action": {
@@ -11286,10 +11286,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "70be876c68179c30229b31a6a80f072f49840d22701cd78b13c10559261a85f9",
+			"hash": "202456bab8354fbf14a0be1f67eb693faed5188c498eed2840a18f46f4e3bc1c",
 			"player_id": 2,
 			"seq": 281,
-			"ts": 1784964722.71
+			"ts": 1784965816.311
 		},
 		{
 			"action": {
@@ -11359,10 +11359,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b09c594fde6afea411d2c2ccaea790ef136affbad099c345a7c71fe47e5978b0",
+			"hash": "781084afdc2dee5861f747e024553847594eacedef68237a711b018e3242e90a",
 			"player_id": 1,
 			"seq": 282,
-			"ts": 1784964722.745
+			"ts": 1784965816.339
 		},
 		{
 			"action": {
@@ -11408,10 +11408,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6556b6aea7cc25d53e8d8ad62d449ad29bf324ec0b019527e406c4f9f4c9bc15",
+			"hash": "8df4c86399a746ef7550d7f75cc5ad291949de0787976117287ded5f74e7aee5",
 			"player_id": 2,
 			"seq": 283,
-			"ts": 1784964722.769
+			"ts": 1784965816.358
 		},
 		{
 			"action": {
@@ -11457,10 +11457,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a0b2221f6c118640e26d0318b14af3323e5b8e2f2a55feee07fbc821cf61471d",
+			"hash": "db4149f99e36bc88e4da2f6e29621daf12c148570c06171923d613b33b6d174d",
 			"player_id": 1,
 			"seq": 284,
-			"ts": 1784964722.788
+			"ts": 1784965816.373
 		},
 		{
 			"action": {
@@ -11506,10 +11506,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d60ec4b04f456043e61381a4054a0ceb997f8306716229616e5868e21b9d2c19",
+			"hash": "8f6a1a664c61be6ae9d9be6efe327e56601abbc14a29c35dc3cbad69c66a2972",
 			"player_id": 2,
 			"seq": 285,
-			"ts": 1784964722.806
+			"ts": 1784965816.387
 		},
 		{
 			"action": {
@@ -11555,10 +11555,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a47702034e68d774fce287aab0e350613cd836e4c57e26f8e66c3c256f5524fa",
+			"hash": "a5216d539ba064d482caec4289c00e3a5ea78a8e4900e37c570215eb59ccb9e0",
 			"player_id": 1,
 			"seq": 286,
-			"ts": 1784964722.818
+			"ts": 1784965816.397
 		},
 		{
 			"action": {
@@ -11620,10 +11620,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "bb157249a99e9355d76bc5f9f2a8c6a79e8e53b5c92ddc73a641c9fe11373cc4",
+			"hash": "db8aec8a6d5d3381b160cc2d87f2976762b0cdd0126f80333e1670696914f784",
 			"player_id": 2,
 			"seq": 287,
-			"ts": 1784964722.837
+			"ts": 1784965816.412
 		},
 		{
 			"action": {
@@ -11669,10 +11669,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b105b7cc57c9bf92ad7d0f0c780a84d706960b16f7099da4fec726e071998c4b",
+			"hash": "ecdac1d96871be4f6edc225cb85da6af0d1aab691f0571eead06a702c9fa09fd",
 			"player_id": 1,
 			"seq": 288,
-			"ts": 1784964722.849
+			"ts": 1784965816.423
 		},
 		{
 			"action": {
@@ -11718,10 +11718,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "216859c28b189b83fdf86ce39e98bcd67ad8b4322675be06fb337ffcb7685bc9",
+			"hash": "9e5990c2e4896b2973009979042c4d41dff2dd8e8467b99bee4cf67b44b7e5e5",
 			"player_id": 2,
 			"seq": 289,
-			"ts": 1784964722.864
+			"ts": 1784965816.435
 		},
 		{
 			"action": {
@@ -11767,10 +11767,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7845f2a82c4f1bbafcf72d615bb6b26e86bf4d6b48fbfb85fff919797346a40c",
+			"hash": "31999f1b07a5925525709e5b0393ad77ae8a7af448a7d8cc544232d30612117c",
 			"player_id": 1,
 			"seq": 290,
-			"ts": 1784964722.873
+			"ts": 1784965816.443
 		},
 		{
 			"action": {
@@ -11816,10 +11816,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6b38bec081c61134b4ed64dd4e12bc596bf1ff7a8eac75bdde24ddd8b6889232",
+			"hash": "086df7ffd2eac9469f547f2e6b1ae5b4460373e3918d752626586c4a079841b1",
 			"player_id": 2,
 			"seq": 291,
-			"ts": 1784964722.889
+			"ts": 1784965816.456
 		},
 		{
 			"action": {
@@ -11865,10 +11865,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "dfc7db5b5e64a30413ec1f068702a5470ad0fed3799cc8fe08b90097453031bd",
+			"hash": "4855e08e3a31f9539c9adcdcdc0d8c8f207685455f21e5eeba8b2aa8477c4329",
 			"player_id": 1,
 			"seq": 292,
-			"ts": 1784964722.896
+			"ts": 1784965816.462
 		},
 		{
 			"action": {
@@ -11914,10 +11914,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "20d03e1ce6f281d85270cd46c9e764098e468dc3ca26b2f0fe859e6c906d5f6c",
+			"hash": "cc23168e3cf230327ba05c0e4051d8123c852ec8591dda8c440c20af27cd5b1a",
 			"player_id": 2,
 			"seq": 293,
-			"ts": 1784964722.91
+			"ts": 1784965816.475
 		},
 		{
 			"action": {
@@ -11963,10 +11963,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c625996ffaab3a61f1c5968eb92cad1a8e7dbd984114dff943cf2ade9fbbcb8f",
+			"hash": "299c4084bc8f8447a0fd1d5f06d7932d5862b9bf301a9bf6e2bf9f8f0d3b15c2",
 			"player_id": 1,
 			"seq": 294,
-			"ts": 1784964722.916
+			"ts": 1784965816.48
 		},
 		{
 			"action": {
@@ -12012,10 +12012,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ec1b904e4bcf5dae086ff48894c2275bfbc685c69ad12f233cd351ee522de306",
+			"hash": "7a913a43bde2a1ce0948d3bce0773bb814cbf24b9c88fdc4b8c3903b5f4cd50e",
 			"player_id": 2,
 			"seq": 295,
-			"ts": 1784964722.926
+			"ts": 1784965816.491
 		},
 		{
 			"action": {
@@ -12061,10 +12061,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f593e385df88da9a337ed3af89d98b60c6b4837bb43a7defd11f450364ef8b28",
+			"hash": "c9c63ca9ac8330474f651c11912057c9198d06cbdc2e45d1fa0fbb5a9204b308",
 			"player_id": 1,
 			"seq": 296,
-			"ts": 1784964722.931
+			"ts": 1784965816.497
 		},
 		{
 			"action": {
@@ -12110,10 +12110,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9b1d0091e5c8896108cd54e3d439ca8f6d7956ff81c0deb3fc0cd42ee2001ed1",
+			"hash": "8b416157d3933240d9df20a35e2b786e2c5f7a055e33595b5f334ef3d3bfbe06",
 			"player_id": 2,
 			"seq": 297,
-			"ts": 1784964722.942
+			"ts": 1784965816.507
 		},
 		{
 			"action": {
@@ -12159,10 +12159,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "92e5c54b485b22d2798d07a9548c8a7d4014b4a0f52893e1d69de8c08ca9b45d",
+			"hash": "3410b37c7e4ec4d35ee94ce64bedfe84bbf2b6aa00871dce70f950764157b90f",
 			"player_id": 1,
 			"seq": 298,
-			"ts": 1784964722.944
+			"ts": 1784965816.51
 		},
 		{
 			"action": {
@@ -12208,10 +12208,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2ffb3b05da3a081b0d09001ddad7d57f997f0cb44166f294512fa6fe0e507968",
+			"hash": "63ee93d5161ae02327d272d8aa3f9b5f0caa78efe88c2b9666fe70d3d0563fe3",
 			"player_id": 2,
 			"seq": 299,
-			"ts": 1784964722.954
+			"ts": 1784965816.519
 		},
 		{
 			"action": {
@@ -12257,10 +12257,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0503a79d4124f83862bbf2bfa9ff1176aebcc0e47f0c9bf659a72d5a42b087a7",
+			"hash": "c22585a554f46bd045672d328b44e549907632028da85a2c282836e311c5f38a",
 			"player_id": 2,
 			"seq": 300,
-			"ts": 1784964722.964
+			"ts": 1784965816.527
 		},
 		{
 			"action": {
@@ -12306,10 +12306,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3a01e1a7f9686caa71ee44ee880d5bb8af3ca641e249b0a6964ba485f14d4c16",
+			"hash": "3db633920d22830aaf9a049e0b0585a6a7d710b3d7e72bd3810872c9ceb5a52b",
 			"player_id": 2,
 			"seq": 301,
-			"ts": 1784964722.971
+			"ts": 1784965816.535
 		},
 		{
 			"action": {
@@ -12355,10 +12355,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "81f600fa14b249bd2ce4da283ece197ac67babd4ba2dceda31e8b909010aab17",
+			"hash": "890683b25e521c23dba88f187107b7e96b19fecc40a0b00823a6bd29fc7944b4",
 			"player_id": 2,
 			"seq": 302,
-			"ts": 1784964722.978
+			"ts": 1784965816.541
 		},
 		{
 			"action": {
@@ -12417,10 +12417,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "a6aba12cd795913bb51f12c31d2cc226e93c0b668905b124ee0e22fe8cfa07ab",
+			"hash": "99a226b3bb9c2b0cef7466ef56a4fcad628a17f970533cd81ad30e834d22e34f",
 			"player_id": 2,
 			"seq": 303,
-			"ts": 1784964722.982
+			"ts": 1784965816.545
 		},
 		{
 			"action": {
@@ -12450,10 +12450,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "c91f41dd1e01d26e13a21fd3e1e53e45cd81a8146c572aa9e0c9611e215b517e",
+			"hash": "11e33657e20661e33d566d682702e8fff965e17dae0cb023c559d94f1fc22796",
 			"player_id": 1,
 			"seq": 304,
-			"ts": 1784964722.984
+			"ts": 1784965816.548
 		},
 		{
 			"action": {
@@ -12510,20 +12510,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "7595e653fb0d1db2d41be11e78004a0f731860fed2e02a054a00d84a8ce43c5a",
+			"hash": "3cb8f0241be80fae28a8152545f6fdad82b39fd829200ff39e7f7985fc5bfc1c",
 			"player_id": 2,
 			"seq": 305,
-			"ts": 1784964722.985
+			"ts": 1784965816.549
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "292b943e9578d2a5a0127728dbe72372d3c3e2ae220bf69dec8eee467be70170",
+			"hash": "3dcc0a1b49c6bfb5568070c9f58e9f98aad9a1685e487437683e54dbe1ba521c",
 			"player_id": 1,
 			"seq": 306,
-			"ts": 1784964722.987
+			"ts": 1784965816.55
 		},
 		{
 			"action": {
@@ -12546,10 +12546,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f0beb8a76dad31d747ebb16c22395d15bcd31f6c939fe7db3ed82d3925b98060",
+			"hash": "9eec685eccb61679ef6f77f5ba7ba1e7a07a4e507a32541c7375ac219da82305",
 			"player_id": 2,
 			"seq": 307,
-			"ts": 1784964722.988
+			"ts": 1784965816.551
 		},
 		{
 			"action": {
@@ -12571,10 +12571,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c73fe551daf1ffceaf917e93ec63a5400c5479fc0562ebf313eb9649f5775a33",
+			"hash": "1109fd086883cca5b96929090bb65025b094be355b075a448170f2312269f45d",
 			"player_id": 1,
 			"seq": 308,
-			"ts": 1784964722.99
+			"ts": 1784965816.554
 		},
 		{
 			"action": {
@@ -12596,10 +12596,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "302b763d20f26bf823bbae25f8f6ff89116f71c5189d31d9f6d742e088506afb",
+			"hash": "f7ebfd70850097e060128e0f466b2bf8756b63e40f5973c8f96ed1bf52e274e4",
 			"player_id": 2,
 			"seq": 309,
-			"ts": 1784964722.991
+			"ts": 1784965816.555
 		},
 		{
 			"action": {
@@ -12621,10 +12621,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9567db9843138f44eb787f6310280d77b9bad3cd153f8f3b67cc196c3e5b3a06",
+			"hash": "e0d5267a4715ca09d4aa2892555b5cff038fd3432b2fe19605448ff711ed92e7",
 			"player_id": 1,
 			"seq": 310,
-			"ts": 1784964722.993
+			"ts": 1784965816.557
 		},
 		{
 			"action": {
@@ -12646,10 +12646,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "496d67675ab94de958acad47b1a14dd6c1f716f4a533542441491b466de44485",
+			"hash": "9a3a6a5e64a61b12841e389f0f580fa6588552c4933d109ece7631746d76160c",
 			"player_id": 2,
 			"seq": 311,
-			"ts": 1784964722.993
+			"ts": 1784965816.559
 		},
 		{
 			"action": {
@@ -12671,10 +12671,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f5a969257a1c13530171c9401fb66b8cdcc4f223548135b5df80c27a4152c53d",
+			"hash": "c96886ebd25adcbdc72d4ade6296a7178dcae1b4d36a2054fc612626ce3a79fa",
 			"player_id": 1,
 			"seq": 312,
-			"ts": 1784964722.995
+			"ts": 1784965816.56
 		},
 		{
 			"action": {
@@ -12697,10 +12697,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "6f731dd8384cc9a4973a75d6300b5c739a4c6c29e646f163678ffe045ad46558",
+			"hash": "ee67627246e19b9c6c54ceca0d9b9bfba3848600ed2462926d3ad3b1910555dd",
 			"player_id": 2,
 			"seq": 313,
-			"ts": 1784964722.996
+			"ts": 1784965816.562
 		},
 		{
 			"action": {
@@ -12730,10 +12730,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "990aefce0cbf6f54840bdd3d7c340a17ddeedfda1f20f178206ce2da3bc552a7",
+			"hash": "93b51721c189acccfabad6f3f074f76e753a6ac3c80fb22badf0f1acc4035abe",
 			"player_id": 1,
 			"seq": 314,
-			"ts": 1784964722.997
+			"ts": 1784965816.563
 		},
 		{
 			"action": {
@@ -12790,20 +12790,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "9716f2bb7418fbdf149408b4c37f5af5545edf426729524045f9aaf64f06e1d7",
+			"hash": "94cf816d6445d2f9ebda1ed60431d6263a34904fd1edc9a312d35c859d518096",
 			"player_id": 2,
 			"seq": 315,
-			"ts": 1784964722.998
+			"ts": 1784965816.564
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "d3f0b990950389da556794cd52be31bfe42b30b5c272135e9fed3f093480e602",
+			"hash": "06ade1a1a77a93d549d33dba257ddd8f6340362aa40339708f6c5016482cd054",
 			"player_id": 1,
 			"seq": 316,
-			"ts": 1784964723.0
+			"ts": 1784965816.566
 		},
 		{
 			"action": {
@@ -12826,10 +12826,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a9411a7459afbf2bb36cd109d7d6847da79f112764996b257f0e849aef0d20fc",
+			"hash": "b54476fa55670c2dcff42fbd416f36de72476104424d4b2bfd16b7197503efa0",
 			"player_id": 2,
 			"seq": 317,
-			"ts": 1784964723.001
+			"ts": 1784965816.567
 		},
 		{
 			"action": {
@@ -12851,10 +12851,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a6e90f91df479d907f3b335bf5831c0bae8a9afc5ead74c181f2c0b11eae1a8d",
+			"hash": "7671d5eafd8d31e0cf515553cdd4f6d6e62d6c17023343d5e509d00067d6b724",
 			"player_id": 1,
 			"seq": 318,
-			"ts": 1784964723.003
+			"ts": 1784965816.569
 		},
 		{
 			"action": {
@@ -12876,10 +12876,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "11920e778a12438105c823d2bf13f946c6aa26446c07b714efac45d7fa614522",
+			"hash": "ad28f0b294c9e7828b5f0f53889d10968d7be11d0576f457a1ecfb685da78ee9",
 			"player_id": 2,
 			"seq": 319,
-			"ts": 1784964723.005
+			"ts": 1784965816.571
 		},
 		{
 			"action": {
@@ -12901,10 +12901,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "faf4e8d80675bb3029b4064b9ee5a06c580738f280844f0e79ed411392c730ab",
+			"hash": "a1768b98fc939a24c1d07702686688a39f50321d9358a4367578267eef821c85",
 			"player_id": 1,
 			"seq": 320,
-			"ts": 1784964723.006
+			"ts": 1784965816.572
 		},
 		{
 			"action": {
@@ -12926,10 +12926,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e335c19a11b47234cde28fec7f8f33e3d009b23818e92d981138166be4c21400",
+			"hash": "9aeb1ffad7f6b375411f69da34641c89b8e1a428f3bbbbed5079ea7d670d71e3",
 			"player_id": 2,
 			"seq": 321,
-			"ts": 1784964723.007
+			"ts": 1784965816.574
 		},
 		{
 			"action": {
@@ -12951,10 +12951,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "516d7c22e1c8f4a4d1472a575dc3e221ba7e763fcc5100ff3d3ed7d1dc52b518",
+			"hash": "fe7941b99693180f74e87dcdba36a7a8b2ed9f4fd37f4faf534f021280360713",
 			"player_id": 1,
 			"seq": 322,
-			"ts": 1784964723.009
+			"ts": 1784965816.576
 		},
 		{
 			"action": {
@@ -12977,10 +12977,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "1077c8fd6b6ea19b530c2302a63ea1fc37bb1cf32be5da0c9630af2cf972b454",
+			"hash": "092a7c52ba45ae1ab00f2cc566bb55780dfa9354d4346b9249b90c37976c5ec5",
 			"player_id": 2,
 			"seq": 323,
-			"ts": 1784964723.01
+			"ts": 1784965816.578
 		},
 		{
 			"action": {
@@ -13010,10 +13010,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "717f20e532a46c77bb65fee001fc7910e331e7ea06167e4ce0b6a22bf0c991f0",
+			"hash": "89859f1c413eed2870504aecb753fcc87e19e11dcde9f3a599fbfef12220ab6c",
 			"player_id": 1,
 			"seq": 324,
-			"ts": 1784964723.011
+			"ts": 1784965816.579
 		},
 		{
 			"action": {
@@ -13070,20 +13070,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "85125761d33ea5030d79c926f4209fcbe0368dcf596e57f6f855fcde90c80fca",
+			"hash": "3fca6297adec8a1e19a9b53b324bb5a5b18af208913799e3b54543d199dcd359",
 			"player_id": 2,
 			"seq": 325,
-			"ts": 1784964723.013
+			"ts": 1784965816.58
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "e6f319c310ced13b096fcd2a562bf6cacef08df91450ff629b7ff4c3c0b057f0",
+			"hash": "c7b9168bbcf707afd379cf9118f317f154d863252a5b55aeb0fd482e30e4f64c",
 			"player_id": 1,
 			"seq": 326,
-			"ts": 1784964723.014
+			"ts": 1784965816.581
 		},
 		{
 			"action": {
@@ -13106,10 +13106,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "36b22604df47d5241204e0470f6616383a103e4536212a8ced6bd0bf3adda4ae",
+			"hash": "473f6a182885e7c54f959a68b107fe48e69e1bd431d629448a93b676702c5a00",
 			"player_id": 2,
 			"seq": 327,
-			"ts": 1784964723.015
+			"ts": 1784965816.582
 		},
 		{
 			"action": {
@@ -13131,10 +13131,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b60ec955de215f66348a3a0b08645309394a74cf8f8475cb822ac76f4ffda2ad",
+			"hash": "fe5eab2a4ae9791524e27a7caf4e51505ca7ba1caf423bdc277f31a79686367b",
 			"player_id": 1,
 			"seq": 328,
-			"ts": 1784964723.016
+			"ts": 1784965816.584
 		},
 		{
 			"action": {
@@ -13156,10 +13156,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ceb78c05248cd5a726a5a6d26e9c49c5d2fc0f0b3a0fd8e734a1fb5d88264346",
+			"hash": "863860395a6febd854835819bc3290ceb1b1ff80147fe8b8d118c81d11b82ed2",
 			"player_id": 2,
 			"seq": 329,
-			"ts": 1784964723.018
+			"ts": 1784965816.586
 		},
 		{
 			"action": {
@@ -13181,10 +13181,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7abf18561c47aa18b7aa0fad7dea799631ac8c5345a4e06589e283994dcaa53b",
+			"hash": "98c9c79d3371844a0d9dfe56a12a4f85f6d63f95050c17d5c939f91d6397ec6e",
 			"player_id": 1,
 			"seq": 330,
-			"ts": 1784964723.019
+			"ts": 1784965816.588
 		},
 		{
 			"action": {
@@ -13206,10 +13206,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "45cd42e4202af4a64dd5d25699ca387f7f8738c72dbe60cbfc9c1ff8a130afbf",
+			"hash": "564d42acf303d3a84ebe646e91385b472431fac85f91dfaeb9fd11ff170347a6",
 			"player_id": 2,
 			"seq": 331,
-			"ts": 1784964723.02
+			"ts": 1784965816.589
 		},
 		{
 			"action": {
@@ -13231,10 +13231,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "87a8e054fbdc9682db37d40ab16f5f7c135251cc793524de3132591b95271cb0",
+			"hash": "a3f3b07eeeb45febf0433e8cfc241a6243546396adcdec4a7468458f1479ec83",
 			"player_id": 1,
 			"seq": 332,
-			"ts": 1784964723.022
+			"ts": 1784965816.591
 		},
 		{
 			"action": {
@@ -13264,10 +13264,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "034eb8b9d58a8906f685ee81b20fa77b4c05cf2a3df0d3176a5336fa362d15ed",
+			"hash": "16d8e3e74003ba1d2c1512cdefb4479d61baa43782c891bf76ca549dff9fc6a2",
 			"player_id": 2,
 			"seq": 333,
-			"ts": 1784964723.023
+			"ts": 1784965816.593
 		},
 		{
 			"action": {
@@ -13313,10 +13313,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1bc96461e4a3a5011756d3605aba350cc934787d452795febb218b65dff2f0a5",
+			"hash": "9c309c846d380041c48aea9116890f53bad070cb63b8ab121aaae798f78f5dd2",
 			"player_id": 1,
 			"seq": 334,
-			"ts": 1784964723.082
+			"ts": 1784965816.641
 		},
 		{
 			"action": {
@@ -13362,10 +13362,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "29aafab76f9cda658f35d73a38c9bb30dc77a78861254cebbd029143e57a6bb9",
+			"hash": "8f17c89afd7d51b540af86e3df058fb5fe688f18a9cc3e2174c2b8fdc2d4971c",
 			"player_id": 2,
 			"seq": 335,
-			"ts": 1784964723.155
+			"ts": 1784965816.695
 		},
 		{
 			"action": {
@@ -13411,10 +13411,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5ac21eb1fcdbdf3b4a91619f92d750d11d061c6f19e3c4064c22b06f278cbf02",
+			"hash": "5c818dbefeba1fee9bda41a7880e77f54b7ff4bfff79d7303181cec409d001e5",
 			"player_id": 1,
 			"seq": 336,
-			"ts": 1784964723.205
+			"ts": 1784965816.739
 		},
 		{
 			"action": {
@@ -13460,10 +13460,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9acfb6cb76137e239baab6ed6e106342305151ee70ef211c971b4625c25234fe",
+			"hash": "c211186660212148495859f5dd228498b15e828a987c1a70161b76ec04a2975d",
 			"player_id": 2,
 			"seq": 337,
-			"ts": 1784964723.255
+			"ts": 1784965816.783
 		},
 		{
 			"action": {
@@ -13509,10 +13509,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c0f248d3f7882cc12bb1853cc6e17356cb1b6ba76c2da9461973b73a35ed391d",
+			"hash": "390b96043c90e87ebd5d689542171472baef04dcbee522ee61c6f30f66a0e26c",
 			"player_id": 1,
 			"seq": 338,
-			"ts": 1784964723.299
+			"ts": 1784965816.82
 		},
 		{
 			"action": {
@@ -13558,10 +13558,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b23cd740149bb7ce3a697eb2ac4125a12cf1d9ac6fce29caf471ef5908db59b1",
+			"hash": "81e20031ab389265f4a9f067e23029f55a2b35fcad700e9cee0b8ea2972f224b",
 			"player_id": 2,
 			"seq": 339,
-			"ts": 1784964723.337
+			"ts": 1784965816.852
 		},
 		{
 			"action": {
@@ -13623,10 +13623,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6e43d6c78c584a170fa62e005168c29eb7e63ff18321311fa113a4254490698d",
+			"hash": "4c3b335bfe941403d47e185d883af7319c08f24408a3069462ce05a103ea540e",
 			"player_id": 1,
 			"seq": 340,
-			"ts": 1784964723.362
+			"ts": 1784965816.874
 		},
 		{
 			"action": {
@@ -13672,10 +13672,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "aa418225cb3ab75ec4ed1bcedf6d0f986d708369f9d8a81c8a598bda7ca0fdcf",
+			"hash": "1c723bc233cb5ce42f749f4b030d503b302829211cacf750e95905059d927937",
 			"player_id": 2,
 			"seq": 341,
-			"ts": 1784964723.396
+			"ts": 1784965816.903
 		},
 		{
 			"action": {
@@ -13721,10 +13721,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "eaded7e9e76acf57434cc07f4c1af7daf0fd088b6b7a4220e19ed17d6c4290be",
+			"hash": "582e51b6ce5f31a835cc32e33ff9d803efd2df0d02545bda5c46cc150134b478",
 			"player_id": 1,
 			"seq": 342,
-			"ts": 1784964723.42
+			"ts": 1784965816.923
 		},
 		{
 			"action": {
@@ -13770,10 +13770,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0f0510e3a3b37eacb01d3792a103544b855f754ec3cfa2ce0a79cf57330db8e6",
+			"hash": "301901b077a5685a76cbc5c071969e270313d96a23282da65305a2f14ff1cd1b",
 			"player_id": 2,
 			"seq": 343,
-			"ts": 1784964723.448
+			"ts": 1784965816.946
 		},
 		{
 			"action": {
@@ -13819,10 +13819,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "dd49631783f0ac03363cd8e8e38c606cdf065c26f4b029310f55c37067051bf7",
+			"hash": "a02548ef87c6d87c3175512d76c4715a20be0a40d19a3528b248199b5cb529cc",
 			"player_id": 1,
 			"seq": 344,
-			"ts": 1784964723.468
+			"ts": 1784965816.965
 		},
 		{
 			"action": {
@@ -13868,10 +13868,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "26f6c89a46dfd832d951be6cac4eeddc4de2727fbafa0cf6182d20acb982932a",
+			"hash": "24fa6a169f228045f56e74247822949143c05156ba320ce6cbfc4b61c19416bd",
 			"player_id": 2,
 			"seq": 345,
-			"ts": 1784964723.491
+			"ts": 1784965816.984
 		},
 		{
 			"action": {
@@ -13917,10 +13917,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2bcc3e3e7473bfad5c2ef13de64eedb9c30d9cd11b91e2d9341bf625faa54356",
+			"hash": "9c97066cb0ee22003a3593dadb4748c932af7defb4e50a2f328ebd7b7120b684",
 			"player_id": 1,
 			"seq": 346,
-			"ts": 1784964723.504
+			"ts": 1784965816.996
 		},
 		{
 			"action": {
@@ -13966,10 +13966,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "012cb2ff86613353f4dcf5d0699d1dd949b33ac4c5fc09bfe1f67a89fa25b624",
+			"hash": "448f6014cdf5519315847d457198e24c9434007d8b20e32bca15e309cb6dd401",
 			"player_id": 2,
 			"seq": 347,
-			"ts": 1784964723.519
+			"ts": 1784965817.011
 		},
 		{
 			"action": {
@@ -14015,10 +14015,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3546522a2e5385cea37643ac402e14c513696902e9870d630c78b32bf73ba4de",
+			"hash": "be9baa446fac55d9ad155160197a17b8b5af906aa32a249412b09466222dee48",
 			"player_id": 1,
 			"seq": 348,
-			"ts": 1784964723.527
+			"ts": 1784965817.018
 		},
 		{
 			"action": {
@@ -14064,10 +14064,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1137c12ad5024425022ce49544d58ff3ea4c29e1075b6681a31c14eecdb80efe",
+			"hash": "f567cc9affc618b2d333ff01280755ee4e16b896e1f0ca420fb8d1834cab6555",
 			"player_id": 2,
 			"seq": 349,
-			"ts": 1784964723.551
+			"ts": 1784965817.033
 		},
 		{
 			"action": {
@@ -14113,10 +14113,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ef0be422d48c932566d0682729da5a5a3db2b548863dead7e55cabe82ddd7b8e",
+			"hash": "814e8ad46410ed260b83ccbcab92f369120642fc2e63e81559c405006bc46cb7",
 			"player_id": 1,
 			"seq": 350,
-			"ts": 1784964723.557
+			"ts": 1784965817.039
 		},
 		{
 			"action": {
@@ -14162,10 +14162,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d9360f7e924390a036e1921b99b83fe77551b3a530162ac1d152925818814dd0",
+			"hash": "36f11049ad9708eaf10ef84f9f7e3d150372c392371bb53d2f3c036419753265",
 			"player_id": 2,
 			"seq": 351,
-			"ts": 1784964723.572
+			"ts": 1784965817.051
 		},
 		{
 			"action": {
@@ -14211,10 +14211,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "566446bc0a8f29942a72202e384b33fa6278f30a15b4d0ebe21f743550fd0948",
+			"hash": "478683493298e458337627e5a0e6eed425ab5a5c648a4bad76a3e0b3c0e068da",
 			"player_id": 1,
 			"seq": 352,
-			"ts": 1784964723.575
+			"ts": 1784965817.055
 		},
 		{
 			"action": {
@@ -14260,10 +14260,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2596cc2b453cc0ad1acddd8ebe4e1973975c8e5f9a639042fe64164d908f7ea1",
+			"hash": "d3578d5809a57b79ff699edcf50f8673bb6c9647b491cc8810d7656924c28bca",
 			"player_id": 2,
 			"seq": 353,
-			"ts": 1784964723.586
+			"ts": 1784965817.062
 		},
 		{
 			"action": {
@@ -14309,10 +14309,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "21672d00e322acb6f74adff40b426f7f82b4a06ee2deb7bd391beba321cc5e42",
+			"hash": "e20ab483a81701ddf51c36ed715ecbd2bda6bbe8242cb463b198b4acd8aa632d",
 			"player_id": 1,
 			"seq": 354,
-			"ts": 1784964723.591
+			"ts": 1784965817.065
 		},
 		{
 			"action": {
@@ -14358,10 +14358,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "914e223a864bd92b362f14ab8f95f1d0048e420a3ae1e5f52a744d0f75ae1a51",
+			"hash": "427b2ee5df736af4f60cf03ce1bde85a4f329e4cecf04b64797bc791acd053f9",
 			"player_id": 2,
 			"seq": 355,
-			"ts": 1784964723.599
+			"ts": 1784965817.072
 		},
 		{
 			"action": {
@@ -14407,10 +14407,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "72870bf53fb42bd1696029feca58e711995cedb2f81fcc9c304a89eac48e685f",
+			"hash": "5d30694a7a52b4b770aafa03f7bd6c7d079fa96022038e6272f5175f7d5a2cae",
 			"player_id": 1,
 			"seq": 356,
-			"ts": 1784964723.602
+			"ts": 1784965817.075
 		},
 		{
 			"action": {
@@ -14472,10 +14472,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7503a1d29fba801598e9c21dea0407ee4a1728687001cf25c894e78806b87f34",
+			"hash": "9fc26bffe2d17890ca0a9a8b882ca5dcb397e133e22fa647c53f90a562bd351a",
 			"player_id": 2,
 			"seq": 357,
-			"ts": 1784964723.609
+			"ts": 1784965817.082
 		},
 		{
 			"action": {
@@ -14534,10 +14534,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "dc7e96a893666346cf811d9c3961367b2e72bec68c63454e64d69c2cf58b3a95",
+			"hash": "af68a4cc4cb3e9ac29d22cb74e3346e82cc103087b455e5b343c657ad9caa535",
 			"player_id": 2,
 			"seq": 358,
-			"ts": 1784964723.613
+			"ts": 1784965817.086
 		},
 		{
 			"action": {
@@ -14567,10 +14567,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "31f85571b39be47795640dac06a7b670dfacaa819052749a42e45ce55ee89bbc",
+			"hash": "c4aa4f81b06dbdf37d98e29fbbb62b1c472ab59fbc69ba0d184673b1b914d18d",
 			"player_id": 1,
 			"seq": 359,
-			"ts": 1784964723.616
+			"ts": 1784965817.09
 		},
 		{
 			"action": {
@@ -14627,20 +14627,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "b4b2c2cf02ec43c3f5d545a005918643efb00f9a49d815b04ac6028022f85ce2",
+			"hash": "9b3ceaa3fcd68b96141147573fe21a420dcfd5f015faceab2332b3dec558bc5e",
 			"player_id": 2,
 			"seq": 360,
-			"ts": 1784964723.618
+			"ts": 1784965817.091
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "f3f2bb63cdd5009ffe065e32bf5d8e0560127b1015062db4eb49fa10f20380cd",
+			"hash": "47959e5fd95b1ddd6b44f673fa49a0c159ce3df885e06e5a53fde1481f56c2d0",
 			"player_id": 1,
 			"seq": 361,
-			"ts": 1784964723.621
+			"ts": 1784965817.092
 		},
 		{
 			"action": {
@@ -14663,10 +14663,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "db47d42e99bae6b641e3002e21b41c5cf4e34f37f0480179f6619b08ee114eb7",
+			"hash": "00c12a4b39bd2a049c974fcd3f5fc3dc6987019765576d2864428d3eb23f7bfa",
 			"player_id": 2,
 			"seq": 362,
-			"ts": 1784964723.623
+			"ts": 1784965817.094
 		},
 		{
 			"action": {
@@ -14688,10 +14688,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "059ce2b58de7a2ddf864fbd32d7aa9212f7c04ed18ef7b70242d4b10d0348caa",
+			"hash": "19ab46d04ed179ab97a4b22719e8a2eec7783913dba992a4628500a28d28adf8",
 			"player_id": 1,
 			"seq": 363,
-			"ts": 1784964723.624
+			"ts": 1784965817.096
 		},
 		{
 			"action": {
@@ -14713,10 +14713,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8e7264a84ec16255bd64b4b3577e3e9f3a8497ab7b9afeeac50937eb2637f0eb",
+			"hash": "fcc952c4ca503a406ffa8ab9013d1d4451ca7147a9caaaef00ea029998078d45",
 			"player_id": 2,
 			"seq": 364,
-			"ts": 1784964723.627
+			"ts": 1784965817.097
 		},
 		{
 			"action": {
@@ -14738,10 +14738,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "61de68946366672bde0b4fc7861396460e94b51c494e684ab7c0e60fa50d72ea",
+			"hash": "ded7871bc531e616465b91c273df1e7d494569b1ca8bf5028e7c5f18725058f9",
 			"player_id": 1,
 			"seq": 365,
-			"ts": 1784964723.628
+			"ts": 1784965817.099
 		},
 		{
 			"action": {
@@ -14763,10 +14763,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b44f957bbee3ac51701ab8b5d625adc21bb0bcec3175c1ff532ba345b096d2d0",
+			"hash": "a91163140a2ad5ed679dc3c45955534ce2b030bf47f39ba944e958600632f2a1",
 			"player_id": 2,
 			"seq": 366,
-			"ts": 1784964723.631
+			"ts": 1784965817.1
 		},
 		{
 			"action": {
@@ -14788,10 +14788,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2c26ccad8a6c7a765c8f12dc35f0770ecb5d717de44f4273d7d198e0d5a708f4",
+			"hash": "dd9c0c396b3feb261f39354e52e9b2e1876ae11cc6ad41721b1a2f10da7493dc",
 			"player_id": 1,
 			"seq": 367,
-			"ts": 1784964723.632
+			"ts": 1784965817.102
 		},
 		{
 			"action": {
@@ -14814,10 +14814,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "92420141b97081deb97b3220e0a16877b88274e59c56d2762127e7d8ef7dd127",
+			"hash": "59de84ac2e1e893ab917c747deff534992ef5330b5bb1b1013b19d723a69cbc5",
 			"player_id": 2,
 			"seq": 368,
-			"ts": 1784964723.635
+			"ts": 1784965817.105
 		},
 		{
 			"action": {
@@ -14847,10 +14847,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "41f5b682bf66e300a19ef632853fe22ce8752880484e1fbffa266b6fde25d756",
+			"hash": "92a286fdd16ed8c11f2b0a4b60578701e23c090b3aeb1e439a7f44b3d594c28e",
 			"player_id": 1,
 			"seq": 369,
-			"ts": 1784964723.637
+			"ts": 1784965817.106
 		},
 		{
 			"action": {
@@ -14907,20 +14907,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "1c1dda51cee19bf61645dd45d90e572d0ef27012b5943a02f021cdd281aa7d50",
+			"hash": "59b1e84788d68e44f7be6a0dfe94ecb98163d52766b33f4b873c9a51b476697e",
 			"player_id": 2,
 			"seq": 370,
-			"ts": 1784964723.639
+			"ts": 1784965817.107
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "68c80970cc082d58683cc4c9efeac1acd620098b5429fd4be0e026645aeb423d",
+			"hash": "b6330452ce66cf77540c5079ea25049b2c2b7b4f566fb37557b6bd4d096df535",
 			"player_id": 1,
 			"seq": 371,
-			"ts": 1784964723.64
+			"ts": 1784965817.109
 		},
 		{
 			"action": {
@@ -14943,10 +14943,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "870b8d7219c4e4e3239e99f9ce527518cde1729e266edd9a0c3f962ba12944f8",
+			"hash": "4eeccfb59089f3527c67268aeec543d04ea50aa4e578dc4dbcbd0756f4b3c235",
 			"player_id": 2,
 			"seq": 372,
-			"ts": 1784964723.643
+			"ts": 1784965817.109
 		},
 		{
 			"action": {
@@ -14968,10 +14968,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "07e1d4ab82cd1fdfe8baf87a4ffed5f1d196c17814bc1e79d531d4814b9e7ebf",
+			"hash": "d82be25f07effe99eaae9311d8ed2ab51239f16555b86ce2fead3a6f7ffd2e86",
 			"player_id": 1,
 			"seq": 373,
-			"ts": 1784964723.645
+			"ts": 1784965817.111
 		},
 		{
 			"action": {
@@ -14993,10 +14993,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6a33ad44699735c651db0c08f62f6496df9667d936b11d0b574f30ad49407f57",
+			"hash": "09397f0626452e474281ec78c70a83883bdafdf41fea82984d029ce663aca172",
 			"player_id": 2,
 			"seq": 374,
-			"ts": 1784964723.649
+			"ts": 1784965817.114
 		},
 		{
 			"action": {
@@ -15018,10 +15018,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1154b2a0ecff37c617f3fe17b490ae6188d98ba6caf58d4d18354102a09d3cba",
+			"hash": "87b14a2f129ee2ec1f034c5c9d659e0f08f43115aea4eea95e2a951b618848bf",
 			"player_id": 1,
 			"seq": 375,
-			"ts": 1784964723.651
+			"ts": 1784965817.116
 		},
 		{
 			"action": {
@@ -15043,10 +15043,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4ad39d89ad60248d6d69508d16b56dee5f7c130f52e2e30778f0ae0da9577783",
+			"hash": "83c2b99fb6ced9f013491a30f76a1d15b1ac545815954b52b6d01140448973d2",
 			"player_id": 2,
 			"seq": 376,
-			"ts": 1784964723.653
+			"ts": 1784965817.117
 		},
 		{
 			"action": {
@@ -15068,10 +15068,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ac7388fc1d16320161b41f79c35f77f887c2479b2679a384676580e2d130822a",
+			"hash": "d73958832ea1fc14995976e61c0e9056d15e09626db0f0ce87905c93b318d425",
 			"player_id": 1,
 			"seq": 377,
-			"ts": 1784964723.654
+			"ts": 1784965817.119
 		},
 		{
 			"action": {
@@ -15094,10 +15094,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "5e2d551972c3300d85f55161a33f8ff28051de49c5fe53acdf7d191124f2efc4",
+			"hash": "54fd3a01d76ede855d4c22ae5f253c83b0651a54f16c48ad4ed2e834244fd5f6",
 			"player_id": 2,
 			"seq": 378,
-			"ts": 1784964723.657
+			"ts": 1784965817.12
 		},
 		{
 			"action": {
@@ -15127,10 +15127,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5fd71eb740f66778e3223fbe2b239c2f0eaeb6e34ea4fad319362f7dfeda312d",
+			"hash": "69b3c94046170e6c68f0eb944b2f9477b7ed3fc94f416f5ab83fbdf298405828",
 			"player_id": 1,
 			"seq": 379,
-			"ts": 1784964723.659
+			"ts": 1784965817.122
 		},
 		{
 			"action": {
@@ -15187,20 +15187,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "7786659ecee34672254148a7e0d371f53796545b3a8cd9e2d8e3fabd66fa5669",
+			"hash": "33694edac0b48b6750dc6ba597c9292ac111c952ce066d07011a2ea894bbb57a",
 			"player_id": 2,
 			"seq": 380,
-			"ts": 1784964723.661
+			"ts": 1784965817.123
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "20498fc59f68e8ee1d50044c6466abde2bd66fa8c034c355262941e12a280dac",
+			"hash": "0942d42eefc80e4b05e414b4cfc4f99ef0d7f12e986f662a2752a9e4fd359397",
 			"player_id": 1,
 			"seq": 381,
-			"ts": 1784964723.663
+			"ts": 1784965817.125
 		},
 		{
 			"action": {
@@ -15223,10 +15223,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e97ac272f95d5f850d95f0ea08c721ad4e4886a5e708221354f3c3708c3180f3",
+			"hash": "0578faaf461915053c18facd95eb5e251d84cc46cf28a04940f6534ec93f0d04",
 			"player_id": 2,
 			"seq": 382,
-			"ts": 1784964723.666
+			"ts": 1784965817.126
 		},
 		{
 			"action": {
@@ -15248,10 +15248,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9bd879256be84e00e18d9d567994ad22bc090310449fa7a8f44376f4e9f115c4",
+			"hash": "82831ba409ba9b99d05bb0961f3dad1ffc511e4611d1702db7b873ecc1075376",
 			"player_id": 1,
 			"seq": 383,
-			"ts": 1784964723.668
+			"ts": 1784965817.127
 		},
 		{
 			"action": {
@@ -15273,10 +15273,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f498e80a09b7ced152624b28022a9d60022b1cbe96a73b97cc806bb84b6f0802",
+			"hash": "38212d92e6a437cce6a4817045be62d06c79c71c7225e106ee03492ad882ca1c",
 			"player_id": 2,
 			"seq": 384,
-			"ts": 1784964723.672
+			"ts": 1784965817.13
 		},
 		{
 			"action": {
@@ -15298,10 +15298,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "251091f88f680f8edc45c27fe9150f0a11b17926ac6632320cac0bba936aa241",
+			"hash": "522c3a092276ca97c4cb17b20682146d88ddef4eea652be1894581d4fe85c6dd",
 			"player_id": 1,
 			"seq": 385,
-			"ts": 1784964723.675
+			"ts": 1784965817.132
 		},
 		{
 			"action": {
@@ -15323,10 +15323,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "fc243b5d022d18b84264425715692e1b84d38974659a65e07c83711c2d15386d",
+			"hash": "8461d662f0f53592b04d0e18a5d1f7d734640a43ba1d06b6e4652f456003c02b",
 			"player_id": 2,
 			"seq": 386,
-			"ts": 1784964723.677
+			"ts": 1784965817.133
 		},
 		{
 			"action": {
@@ -15348,10 +15348,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ad0ebfda3f97756710e62935c4a89296183fb71e67607b47f045a13a3df74619",
+			"hash": "8f10fec1734c53055c5c13a98470a45d1796f093769ad68edc3a4f5bb2a6de3e",
 			"player_id": 1,
 			"seq": 387,
-			"ts": 1784964723.68
+			"ts": 1784965817.135
 		},
 		{
 			"action": {
@@ -15381,10 +15381,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9a51007da063a139cec4fcadacb39aa5f0998b1bad3d35dbc4bc7889f509bb60",
+			"hash": "19911fd80be19d2b44a0d5bda4699defce782d6fb3ae640104f8d1bc72480d53",
 			"player_id": 2,
 			"seq": 388,
-			"ts": 1784964723.682
+			"ts": 1784965817.137
 		},
 		{
 			"action": {
@@ -15430,10 +15430,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "077a36abf92a290189a755e4a65831d82dcd227179911f54fbaba76e2c5b4ba8",
+			"hash": "24b53d61f064c961a35491cd218b6f70e53f68b2d0dcff613160dffbcdf3b4d6",
 			"player_id": 1,
 			"seq": 389,
-			"ts": 1784964723.763
+			"ts": 1784965817.195
 		},
 		{
 			"action": {
@@ -15479,10 +15479,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "aa0b593bbd8134d78f3050d9af58dbff12c168d4bd7e847cca87ba33041d366b",
+			"hash": "e55165b6a32564ee67d958206837327bd616a92a90e1b18d155350493963d79f",
 			"player_id": 2,
 			"seq": 390,
-			"ts": 1784964723.84
+			"ts": 1784965817.261
 		},
 		{
 			"action": {
@@ -15528,10 +15528,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "025a38078507c864c23fdf2cf6581bad8e63ebab6782bb67ad4a2c3c8348d57a",
+			"hash": "2330353ad44477a13526d6824a01f15c1a4201dc05f57059b9c5973d9e3f0da8",
 			"player_id": 1,
 			"seq": 391,
-			"ts": 1784964723.904
+			"ts": 1784965817.317
 		},
 		{
 			"action": {
@@ -15577,10 +15577,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "944797bf7016778698f7a478f88140e35106a132715a932cc769ddd9f6fd77b7",
+			"hash": "58d528d7d3bd527ecbf1ec0ff6de60e4d97be61959af7a378e9211fea0d1d630",
 			"player_id": 2,
 			"seq": 392,
-			"ts": 1784964723.97
+			"ts": 1784965817.374
 		},
 		{
 			"action": {
@@ -15626,10 +15626,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6057d3f7b4a95b7bb8a3d4d5f2619b6bf87cb254b24ce4effb4a52de051eb860",
+			"hash": "b29abc48ce823683a04d7101644078c0547237f2bdf6604e6f0c54d8e7797340",
 			"player_id": 1,
 			"seq": 393,
-			"ts": 1784964724.027
+			"ts": 1784965817.421
 		},
 		{
 			"action": {
@@ -15675,10 +15675,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "35b80cb1e7fbdadb21799f54e6209a9de2f1ebca550b5fcff8c63213d210f85f",
+			"hash": "31e9dd31fe94f0594901a0bf85398844efbbf704daa833ca00ac007e9bd6bb7a",
 			"player_id": 2,
 			"seq": 394,
-			"ts": 1784964724.089
+			"ts": 1784965817.471
 		},
 		{
 			"action": {
@@ -15724,10 +15724,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "aa52240e0390d0b7fe24dfb8f5dfcf392ebc48cae70db88f4b922c3a61dfaec3",
+			"hash": "d1fb3c7d4c3ef61e95437498e201c777a9b36cd96b9e391952e6d1803147a2cb",
 			"player_id": 1,
 			"seq": 395,
-			"ts": 1784964724.129
+			"ts": 1784965817.502
 		},
 		{
 			"action": {
@@ -15789,10 +15789,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c05e98a87ec651c85eb293fdfe2b776a248513774ceb6d2a158de82d727cfa7a",
+			"hash": "bf584f6a88ebb926a6f07d0622b14dc5bc989645c6160e9ce20cb6de80bd6f4f",
 			"player_id": 2,
 			"seq": 396,
-			"ts": 1784964724.197
+			"ts": 1784965817.557
 		},
 		{
 			"action": {
@@ -15838,10 +15838,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2df37faa63d7fd057befd748670e38feb3889c3d96564469f12f295925e704cc",
+			"hash": "6dc95a5620c38d3d4981c944ab261e3099fa97a970d69dd630d0815fde410c3b",
 			"player_id": 1,
 			"seq": 397,
-			"ts": 1784964724.231
+			"ts": 1784965817.584
 		},
 		{
 			"action": {
@@ -15887,10 +15887,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "aadb5797eff545876942d018a9120ce3e1bb144b56285dd0094a0d7cef9ed439",
+			"hash": "fb5b6ba7a09b172633ff9180a969cbe50a0b90e485deaa74a5111808e3bf9fb1",
 			"player_id": 2,
 			"seq": 398,
-			"ts": 1784964724.298
+			"ts": 1784965817.635
 		},
 		{
 			"action": {
@@ -15936,10 +15936,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "22a4440397a5113d6746d8cd58cb1a7fe4a0008fc3cb739df1987d1cfe06b3bf",
+			"hash": "8031d0c275f8b942ce9975ed446727f015273ed058aeebe2f7e83b2163789e8f",
 			"player_id": 1,
 			"seq": 399,
-			"ts": 1784964724.334
+			"ts": 1784965817.657
 		},
 		{
 			"action": {
@@ -15985,10 +15985,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8c3831b019cc02be3060df11e506267d2cfcdcf9ccddd5441ea7fb6e5a8dbec1",
+			"hash": "0b32d03faa92bd07460a2297ae2ef7a4fc2b3154cd9bb4d067400e59d71d7ecc",
 			"player_id": 2,
 			"seq": 400,
-			"ts": 1784964724.388
+			"ts": 1784965817.694
 		},
 		{
 			"action": {
@@ -16034,10 +16034,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "af7e4b0840b59e3c188911c3d230176974efbdfc19381aade461922d8af5dde3",
+			"hash": "0522989f7372b19320653dfa2795e8b0867a6098f7f0581a1395d9ff09a455fa",
 			"player_id": 1,
 			"seq": 401,
-			"ts": 1784964724.41
+			"ts": 1784965817.71
 		},
 		{
 			"action": {
@@ -16099,10 +16099,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "abb7fe371e42e928fcdf355d0525e4ee915db9d9f2835633f30bf5ac97f9f7fc",
+			"hash": "e219617607a5f11e8cbd68457a25d7154e9427970cb5e622a800caf2f81f82a5",
 			"player_id": 2,
 			"seq": 402,
-			"ts": 1784964724.468
+			"ts": 1784965817.747
 		},
 		{
 			"action": {
@@ -16148,10 +16148,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f78738dc85f7c2c45d93ee8dba3e6008bf5a98031b569ee65616ef3a7080bae6",
+			"hash": "7bcaf54deb59c733f40260d47d1633180f62b754453821d13b3b18676c685eaa",
 			"player_id": 1,
 			"seq": 403,
-			"ts": 1784964724.475
+			"ts": 1784965817.754
 		},
 		{
 			"action": {
@@ -16197,10 +16197,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "08df51a2c214bb33e93a456c4f235b5b0c0138cbf7ee6cb38f9e776ed3066961",
+			"hash": "b755b4a63508b3027dbfba31b800ae0d279b1896e2747e1468438a7db60c8601",
 			"player_id": 2,
 			"seq": 404,
-			"ts": 1784964724.509
+			"ts": 1784965817.785
 		},
 		{
 			"action": {
@@ -16262,10 +16262,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8ff9e634b9d4586b358c65044ee6e13f55ebab0d070ff2a7dd1dbd17a27e38db",
+			"hash": "c9bc28caa67a943c872190288f12f7fcb4ed157e41e5a6be46cdaf54b5fc90b1",
 			"player_id": 1,
 			"seq": 405,
-			"ts": 1784964724.514
+			"ts": 1784965817.792
 		},
 		{
 			"action": {
@@ -16311,10 +16311,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "152801c935bd4fd9c0e25ee970ed681f28b601d93c2af010a94e8b12856d1f0b",
+			"hash": "0ef16c7b9e9c335e711800a70813b3bb6196f36ed889d89db190cb9948f9641e",
 			"player_id": 2,
 			"seq": 406,
-			"ts": 1784964724.549
+			"ts": 1784965817.824
 		},
 		{
 			"action": {
@@ -16360,10 +16360,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7c7810f7df31f6c2e7b4da2037170fc8b84df1527901469fb043645570e5df80",
+			"hash": "030dda81a50b11460f122f1c0c4e27cd3cba295637c292189ddc3d1690f99cd5",
 			"player_id": 1,
 			"seq": 407,
-			"ts": 1784964724.555
+			"ts": 1784965817.83
 		},
 		{
 			"action": {
@@ -16425,10 +16425,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4808ae60092f86991abe86b6ea8feb4abd74ab70d1d22b28765d362dbd3807e4",
+			"hash": "8d96866fa6ec4e54f15e7663a4aa47210ec339d35bec9f522cbb060a1a2eda96",
 			"player_id": 2,
 			"seq": 408,
-			"ts": 1784964724.587
+			"ts": 1784965817.857
 		},
 		{
 			"action": {
@@ -16474,10 +16474,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1026945c76631194e0269a98b042697a97610fb11b622bd2088469035ee045b2",
+			"hash": "fb589113ae18e8ffbd3429d5e893c3fc609755bd3a39cd095375167946b5891e",
 			"player_id": 1,
 			"seq": 409,
-			"ts": 1784964724.591
+			"ts": 1784965817.864
 		},
 		{
 			"action": {
@@ -16523,10 +16523,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9fbbb6c74d054d5d998d480ef9662b6df514e454a6ae9754697d09f0c299910d",
+			"hash": "4dd9f0f617426a8462fe42ee95b0166f404fda42071998e5eb540c4f01fe4896",
 			"player_id": 2,
 			"seq": 410,
-			"ts": 1784964724.621
+			"ts": 1784965817.891
 		},
 		{
 			"action": {
@@ -16572,10 +16572,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f508972c0c6b8fde1ff59a43abbdffad36a60d9fc2f6df210288ea17e76d85d7",
+			"hash": "d0f0c769b5d296587d21c71cde95ba80a7fc7c6303d5d8dfde1b6be240f8c7e4",
 			"player_id": 2,
 			"seq": 411,
-			"ts": 1784964724.639
+			"ts": 1784965817.91
 		},
 		{
 			"action": {
@@ -16621,10 +16621,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5319f8aef656869670d8074d556406fc9ee6a64a460a11637e9f407f76eb0e62",
+			"hash": "0d5a7dd444be92bbe6ef27ce5d6b8264d78ebc6e4d3140241672de0cc47f3e6a",
 			"player_id": 2,
 			"seq": 412,
-			"ts": 1784964724.654
+			"ts": 1784965817.924
 		},
 		{
 			"action": {
@@ -16670,10 +16670,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9a4056567b18d7447fcc3004acc1038cb4c0b8b179d80a1153e84aa83ee2021b",
+			"hash": "cee8210d0118c4a192cefeb6ff755ef7027b6aa4afaf1b9d854fc4f61f11b235",
 			"player_id": 2,
 			"seq": 413,
-			"ts": 1784964724.669
+			"ts": 1784965817.937
 		},
 		{
 			"action": {
@@ -16719,10 +16719,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "462283836919adc3f9f61676dfd01ac5b5084d5e29829f61de8d45c916a9864d",
+			"hash": "5c8a2c02eb7b614b37b290f883c7af763e6c95bafc8d4cbc1e85723256360b09",
 			"player_id": 2,
 			"seq": 414,
-			"ts": 1784964724.678
+			"ts": 1784965817.947
 		},
 		{
 			"action": {
@@ -16768,10 +16768,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c3b26bbb2ca7580e3e0f7597477e0a26ed899bf7bf4f3b8ccc7f4470518f157d",
+			"hash": "ea303b2527fca287bd58d1d59c7655786d35a24c2e2f5971d193f04ab25e27de",
 			"player_id": 2,
 			"seq": 415,
-			"ts": 1784964724.687
+			"ts": 1784965817.956
 		},
 		{
 			"action": {
@@ -16817,10 +16817,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "bb9f633d92356d018214ffc6f17cb4fe6972756ca6bfd52e4c33ed1efc75c55b",
+			"hash": "3fcab02f36abc0c6d52edbcc8417073e25ebbba17434c5efce47af9de7159f84",
 			"player_id": 2,
 			"seq": 416,
-			"ts": 1784964724.693
+			"ts": 1784965817.963
 		},
 		{
 			"action": {
@@ -16879,10 +16879,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "120bd0b280b56bec32c1d57cf219fb93f41341aa9bf9f5377fc5ecb2a7125c9d",
+			"hash": "ba8b7bb134fcb5dfffaf50ac8a08667cc72b7be333be5be497cbb874fe3354ca",
 			"player_id": 2,
 			"seq": 417,
-			"ts": 1784964724.695
+			"ts": 1784965817.966
 		},
 		{
 			"action": {
@@ -16912,10 +16912,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "fe5a0d445d2e1542ae1d79189a9c08edd1f052368b53af185f90262e7a9eccea",
+			"hash": "0bc3509178dacb7ce0858afc1410e13a2ea8e7a386ae2e949cf8864982c7a9a3",
 			"player_id": 1,
 			"seq": 418,
-			"ts": 1784964724.698
+			"ts": 1784965817.97
 		},
 		{
 			"action": {
@@ -16972,20 +16972,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "29d9cb1d440083e49d76228278a550847f452c52cbaeaff261e1f4a4f820f8c0",
+			"hash": "12f83f0c000fb613f189c69ae216c9483cdfd0a026127e0503f20ccfdf87d0f7",
 			"player_id": 2,
 			"seq": 419,
-			"ts": 1784964724.699
+			"ts": 1784965817.971
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "23ffc93f5dbd2f4947d41e637e5c23b983e9def8e42fc29b9506bc3d4d5765c4",
+			"hash": "937a0a392f2bc7f6a1603bff6b1d7c5f32d0df21dc31d9caf96bb5888242b640",
 			"player_id": 1,
 			"seq": 420,
-			"ts": 1784964724.701
+			"ts": 1784965817.973
 		},
 		{
 			"action": {
@@ -17008,10 +17008,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "41c4a0eaec5926778a5986512c8581d3a906db255cf92999eb8976202bf15429",
+			"hash": "321b7b6385256cbb0f74d6ca0996db2987f74316ba9deda02ffb3d7959d1b844",
 			"player_id": 2,
 			"seq": 421,
-			"ts": 1784964724.702
+			"ts": 1784965817.974
 		},
 		{
 			"action": {
@@ -17033,10 +17033,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3df90351a57779282324c33f64573d174567e4073f7b309c80aefd2c6120de43",
+			"hash": "a5645c16937da8ccc9ea2c291cbfd1c2391915e127ecb67851443841a1348160",
 			"player_id": 1,
 			"seq": 422,
-			"ts": 1784964724.704
+			"ts": 1784965817.977
 		},
 		{
 			"action": {
@@ -17058,10 +17058,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f9cb35427abda69f4d1d38ad9a8acd027419d0df6cd00a66336fbb8adab0a0a2",
+			"hash": "f34b51202ab01d8569cfb79f3d697824d986f1a6cbfc53b953b08dc669fafc2e",
 			"player_id": 2,
 			"seq": 423,
-			"ts": 1784964724.705
+			"ts": 1784965817.978
 		},
 		{
 			"action": {
@@ -17083,10 +17083,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "52f8db64f14bcd93b4a66d35c9e31f03c626fbaf0a1f74fc79ab9b6881ce1a5e",
+			"hash": "21443bcfbdc9e15252772436e4a8c7e13346707db0d056e6446bc2276e11e956",
 			"player_id": 1,
 			"seq": 424,
-			"ts": 1784964724.707
+			"ts": 1784965817.981
 		},
 		{
 			"action": {
@@ -17108,10 +17108,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "14d3fac5b819d61922a3d87aef49de8174148e5286466281a9892915c659fe9b",
+			"hash": "a8a4f2a6ff04a42e6b6c1dc5ee2cacc3d553a827429a965a1fbe5c82c6137846",
 			"player_id": 2,
 			"seq": 425,
-			"ts": 1784964724.708
+			"ts": 1784965817.982
 		},
 		{
 			"action": {
@@ -17133,10 +17133,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9f0e849c03872fcc64eb5739e7e415281e71e997b4a1e312ed70cd62f5d29e63",
+			"hash": "de5a761edc12ecb6257015a4c14cda9603c215e98080b2ff5c4032b4d20729d0",
 			"player_id": 1,
 			"seq": 426,
-			"ts": 1784964724.71
+			"ts": 1784965817.984
 		},
 		{
 			"action": {
@@ -17159,10 +17159,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "50e2c5e3c1c55539393fedef14cd1c007071903f40062d768402e88e414c09d6",
+			"hash": "ab4fd1b689d16cd39f8dfba8fd1d3dac6413b3800e4f586f2e0acb05c7c7df33",
 			"player_id": 2,
 			"seq": 427,
-			"ts": 1784964724.711
+			"ts": 1784965817.986
 		},
 		{
 			"action": {
@@ -17192,10 +17192,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "d6c2a686c5ab273051485e456f5fb651fb65d753e10a9a84694fe41b05e05b76",
+			"hash": "6227814cefcb0d6bc3032991906e982d58796fe77372476ab3d1f4abb3bbc44a",
 			"player_id": 1,
 			"seq": 428,
-			"ts": 1784964724.713
+			"ts": 1784965817.989
 		},
 		{
 			"action": {
@@ -17252,20 +17252,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "421bf52cb2750b2926bc721c2dd4a40766be79a876fc3a5c49117efbf85398db",
+			"hash": "34babc0c7884c17f3965ebfc8bf3b099f80bb44a5bcb2ae31a326e3e14474011",
 			"player_id": 2,
 			"seq": 429,
-			"ts": 1784964724.715
+			"ts": 1784965817.99
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "f788eaca07e5f7f94653494e9049a52623e531f4f17f0e3593aad42c4b654ed6",
+			"hash": "f309902e6cf558afab46701db9c41da0001d34c9602247b0a685ca40ab06b131",
 			"player_id": 1,
 			"seq": 430,
-			"ts": 1784964724.716
+			"ts": 1784965817.992
 		},
 		{
 			"action": {
@@ -17288,10 +17288,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7983a66ada4fe4ea07ead07b3812b705e4dde432bcd8dc8e20b4bdc5d24295be",
+			"hash": "8ae3800b19d07c9483d26b7065576af735ffe09aeaa821c3e9acb32825259a10",
 			"player_id": 2,
 			"seq": 431,
-			"ts": 1784964724.718
+			"ts": 1784965817.993
 		},
 		{
 			"action": {
@@ -17313,10 +17313,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b4a9bc6753c15c34d6ced067ab71f194db6e3adbf0fc69ee589d12357b8b79eb",
+			"hash": "47bd36669b928eb839c0c36b2b8382af8846fecdad3cbfe80d0667d3e32f55a1",
 			"player_id": 1,
 			"seq": 432,
-			"ts": 1784964724.719
+			"ts": 1784965817.995
 		},
 		{
 			"action": {
@@ -17338,10 +17338,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3f1ea71f8bf28bb5f511c147649868c94238567aac3a45f877a92f8f2016555e",
+			"hash": "d6f055c82f00dfc0df92c3937f54c5893ae8ec5a51be6c65dada0924428d22c5",
 			"player_id": 2,
 			"seq": 433,
-			"ts": 1784964724.721
+			"ts": 1784965817.998
 		},
 		{
 			"action": {
@@ -17363,10 +17363,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1e4e51596e28bd8acc20093932cf71c89bac487f3be74d5c68db43c7da94b5c1",
+			"hash": "519c44e5f8826ad804543ef4dcb29cc8facf319767d5ca2a3422652e67b8de72",
 			"player_id": 1,
 			"seq": 434,
-			"ts": 1784964724.723
+			"ts": 1784965817.999
 		},
 		{
 			"action": {
@@ -17388,10 +17388,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0989ad83cc25994531f1110c7993da4e93cd90a69f514403d78694accf576c0f",
+			"hash": "88018f00b8a79c3d3090992518532602849267ccec1c7b149acd6130eafd4993",
 			"player_id": 2,
 			"seq": 435,
-			"ts": 1784964724.724
+			"ts": 1784965818.002
 		},
 		{
 			"action": {
@@ -17413,10 +17413,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5fbcbef1e8a61c1394e95e18435c6fd4f18fbd726d1d937cbc668911e67a54af",
+			"hash": "467a6774d538ef524a87648851cd08ef232db64962be9d69b9a7f51a4bc888bb",
 			"player_id": 1,
 			"seq": 436,
-			"ts": 1784964724.727
+			"ts": 1784965818.005
 		},
 		{
 			"action": {
@@ -17439,10 +17439,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "925bdfa53cbf79be3b6514089317ae88ecbca8f3787c0dd2588e32992b7b8cc7",
+			"hash": "200b7c90ad3deaaf1b89468e4fe610c1e3bb9de5a3929b3af3b85b7bd33b9241",
 			"player_id": 2,
 			"seq": 437,
-			"ts": 1784964724.729
+			"ts": 1784965818.007
 		},
 		{
 			"action": {
@@ -17472,10 +17472,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "cf2ba41e031bf1d104dfc38da7684b9fb36f0fcf5554c9c033a3f8323256981e",
+			"hash": "352917e279d6950f2125f1ea4e9d499bc111e5e0585e6e0e47e037e5e204431b",
 			"player_id": 1,
 			"seq": 438,
-			"ts": 1784964724.732
+			"ts": 1784965818.009
 		},
 		{
 			"action": {
@@ -17532,20 +17532,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "172fcd96a192b52464f716a9612ff1cfecbdecfc7b9595ba315b0732e69fd46a",
+			"hash": "c9ce54203801d060519a2c78bf60e74a82ded4e5c9e7553f034020340e14827c",
 			"player_id": 2,
 			"seq": 439,
-			"ts": 1784964724.733
+			"ts": 1784965818.01
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "7fa0b131c8391ea5a7c406d2237ecdfe628ef70b0a8c25ddffb007917bbb829d",
+			"hash": "5763221900c9bdec637ae1ba2e98783c334fe426351021e0efd7cbf963d6d239",
 			"player_id": 1,
 			"seq": 440,
-			"ts": 1784964724.734
+			"ts": 1784965818.011
 		},
 		{
 			"action": {
@@ -17568,10 +17568,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d1ccb1bff023d0297ee01979ed8a04c555ffce23a509a895eb0c9d82b599eeba",
+			"hash": "a06cce0129bafde2edacd6ebf816d029705218a6348400cf03e06543bf7e8357",
 			"player_id": 2,
 			"seq": 441,
-			"ts": 1784964724.735
+			"ts": 1784965818.012
 		},
 		{
 			"action": {
@@ -17593,10 +17593,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a74aaabf6adaf20167bf151edaf4252f169b246fc82433da9043f2c82d13e7f3",
+			"hash": "48500ada68a91cbe9666bdca3a569ff07c4ce397771ae1499e8884fcaa100206",
 			"player_id": 1,
 			"seq": 442,
-			"ts": 1784964724.737
+			"ts": 1784965818.015
 		},
 		{
 			"action": {
@@ -17618,10 +17618,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "adcd0baba054cef462cf611c1e7173881fef832e4220ceddd1fc1ae37f8090fe",
+			"hash": "20529b78c94d5402bcda2a4c64c4bfcf4090c7ce580fd79be3ca3125338e1684",
 			"player_id": 2,
 			"seq": 443,
-			"ts": 1784964724.739
+			"ts": 1784965818.018
 		},
 		{
 			"action": {
@@ -17643,10 +17643,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "77da3cda7475a952a35c52c8ac0e466b2febe95d2918bd50da50df88afaa1dbf",
+			"hash": "c95018e6f3596903655b9abab2456777b486c7a41cb9b797b41301cbf50a6925",
 			"player_id": 1,
 			"seq": 444,
-			"ts": 1784964724.74
+			"ts": 1784965818.019
 		},
 		{
 			"action": {
@@ -17668,10 +17668,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "482ce333cc2e416241d209434f5fc481eb14ab0f27bf61b9326ff97131052867",
+			"hash": "910d138d0e176b5c6afc7a964ed64dadded174c36ffec524fad7aa15340f2750",
 			"player_id": 2,
 			"seq": 445,
-			"ts": 1784964724.742
+			"ts": 1784965818.021
 		},
 		{
 			"action": {
@@ -17693,10 +17693,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a001e758e7b9114c58afa61a52fee6d9538369fc88a1543859173df805afe5f6",
+			"hash": "3b276f2db4562e6531ccad82e228831dca9bd0353395aaf0f2532bd3a6ef0e8a",
 			"player_id": 1,
 			"seq": 446,
-			"ts": 1784964724.744
+			"ts": 1784965818.023
 		},
 		{
 			"action": {
@@ -17726,10 +17726,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "500dcdb785ef15fb7dbc17844cb1d31ba73bda6c0149aa146e4e14c399a9884f",
+			"hash": "352cb2b5bbc6d6b473d6c9d453e074a83211e56da358ca4fb5bca6fbc7781551",
 			"player_id": 2,
 			"seq": 447,
-			"ts": 1784964724.746
+			"ts": 1784965818.026
 		},
 		{
 			"action": {
@@ -17775,10 +17775,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0b99aa5b30d38b53d556378916735bff24be5b6ab187b467f8dc7276ece84eeb",
+			"hash": "596d6bd1ae3a1b74d7138447c1fc8954ee0d20627643ac4d50e1a4662ef9441f",
 			"player_id": 1,
 			"seq": 448,
-			"ts": 1784964724.83
+			"ts": 1784965818.085
 		},
 		{
 			"action": {
@@ -17848,10 +17848,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "64bb45246f772af8b56edaa2fb533c42325a4bd16410e544cf2c28d4a11efbdc",
+			"hash": "735e62d34ac7fb00d474fda9ac79fa43e88e3a607ae20484fa9593fed5c4ac1a",
 			"player_id": 2,
 			"seq": 449,
-			"ts": 1784964724.926
+			"ts": 1784965818.156
 		},
 		{
 			"action": {
@@ -17897,10 +17897,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d5e12ec3ee0decbf2a839dc581018fa84b84f1b9330cee08df623de78d4f5d5b",
+			"hash": "03fcffed0fcfb430fb3a73ddf44089935e95742f572191ab183be77ea7b24515",
 			"player_id": 1,
 			"seq": 450,
-			"ts": 1784964724.972
+			"ts": 1784965818.2
 		},
 		{
 			"action": {
@@ -17962,10 +17962,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "dc6cc9ec0703c9dd4167ba193e1210076f72ffd9429a1198826a471405b7d4bc",
+			"hash": "5068ccab7001e1b33173bd3ce8e42dc1eb4fee0ca150ec61d2f88b09f578664b",
 			"player_id": 2,
 			"seq": 451,
-			"ts": 1784964725.038
+			"ts": 1784965818.252
 		},
 		{
 			"action": {
@@ -18011,10 +18011,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "88856250567fba6f32cb7e8c6260e29e3cbf43faddab1ff9f6bf2598e07f0ad9",
+			"hash": "a2a0934b862546c3388dea0b3a81f06a504b4f99dfa4c52d68aa5fda04340d1f",
 			"player_id": 1,
 			"seq": 452,
-			"ts": 1784964725.07
+			"ts": 1784965818.284
 		},
 		{
 			"action": {
@@ -18076,10 +18076,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "5718156803cec7c162c8385607a2486177f3bc28d70f63798d3b02775a565d4f",
+			"hash": "b59ea96dbb07bab3ac57e12b77d4c30bc576892a51fd87112761cb96e1a5a491",
 			"player_id": 2,
 			"seq": 453,
-			"ts": 1784964725.124
+			"ts": 1784965818.333
 		},
 		{
 			"action": {
@@ -18125,10 +18125,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "71fc64c3dc978ab8be6b955125f2948bd62cb886a9f5e3427d223d3cc09fb2ce",
+			"hash": "c15dda223bb703ce87f26b5811d2fc529bd2989c32643e585970f1fd34f1c108",
 			"player_id": 1,
 			"seq": 454,
-			"ts": 1784964725.157
+			"ts": 1784965818.357
 		},
 		{
 			"action": {
@@ -18174,10 +18174,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ad9bedccea2bfae021b283569ff1684269557e8ff181ef113edebe3acfcc85d6",
+			"hash": "133546ca99a73b8241bf0389bea735bd2031b87b50b3843c638fdb21c444b833",
 			"player_id": 2,
 			"seq": 455,
-			"ts": 1784964725.21
+			"ts": 1784965818.406
 		},
 		{
 			"action": {
@@ -18223,10 +18223,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3a44b31f6c9a10897c10cf86102beb608225f312f638af0497b9f6cbf7082a63",
+			"hash": "830049bc386f841e19c2e1eb3fb5a754fd09b95c43644a1e3fafc88d796b0f3f",
 			"player_id": 1,
 			"seq": 456,
-			"ts": 1784964725.227
+			"ts": 1784965818.425
 		},
 		{
 			"action": {
@@ -18288,10 +18288,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "2e97dbf37430fca02a466ca13d6aa06f40b30acbe2909ed97338bbbe85ed8aff",
+			"hash": "2b3a699fb10181ae5d1410bc3414a5ea72c75eab53874c0bc8d3e5446e66f258",
 			"player_id": 2,
 			"seq": 457,
-			"ts": 1784964725.275
+			"ts": 1784965818.47
 		},
 		{
 			"action": {
@@ -18337,10 +18337,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "85cc9f2d2f620fe26d4d958faf3ab70b14c4fcd7e8936d25a0e217805e330bcd",
+			"hash": "93f08254819f2cdf69ce6fb2ed2282eec3ee5c1e0ada86f8aa823e79619f2fa9",
 			"player_id": 1,
 			"seq": 458,
-			"ts": 1784964725.291
+			"ts": 1784965818.485
 		},
 		{
 			"action": {
@@ -18386,10 +18386,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0e8a6e28796487a14ad05ca1d3ec236fdba9859176a8ed0204e3df904888c0f5",
+			"hash": "6de1eb80d3b6161d158f1dea02fae84417ac11c2d5e44d284fe7a4b3a18a9741",
 			"player_id": 2,
 			"seq": 459,
-			"ts": 1784964725.339
+			"ts": 1784965818.531
 		},
 		{
 			"action": {
@@ -18435,10 +18435,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "64d24cace19c2b92f66fab15dde5e90c83501c861b63518f97f77ab21c162840",
+			"hash": "3bd6773649dc82e5573a18166df0fc1dd4e136c96944622bd683b7b675b58148",
 			"player_id": 1,
 			"seq": 460,
-			"ts": 1784964725.351
+			"ts": 1784965818.543
 		},
 		{
 			"action": {
@@ -18484,10 +18484,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cd6d0a0687c8befb31cd9606788ef2d4587790393e68fbdfb2391b92a7863d45",
+			"hash": "415469f9e70a0dd5921d84a3c726cb5480ac4a08c6b9942bbd1b917eaf741163",
 			"player_id": 2,
 			"seq": 461,
-			"ts": 1784964725.389
+			"ts": 1784965818.575
 		},
 		{
 			"action": {
@@ -18533,10 +18533,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "472a3568f54e6d63708f2bbe805e3f9d80dfec824251669b3cfe810ad4c9b2f8",
+			"hash": "6d71e72759d9d7da2ea48dee6d5fc197b020017b3bfe8609fbfe52a7b2b7a384",
 			"player_id": 1,
 			"seq": 462,
-			"ts": 1784964725.392
+			"ts": 1784965818.58
 		},
 		{
 			"action": {
@@ -18582,10 +18582,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4df1dd26cc3c0c67d72d485123f4e0336fbc14ff4bcd025bad9896ed714ac5ad",
+			"hash": "839a51ae82a78307ee6326f6daad54c5f4a6b43e823d611ce0ff461f221e1034",
 			"player_id": 2,
 			"seq": 463,
-			"ts": 1784964725.426
+			"ts": 1784965818.607
 		},
 		{
 			"action": {
@@ -18631,10 +18631,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cfd2a70dfab654f08310c5697401d4d377017575bce36dbc4dcee980b6887c89",
+			"hash": "7309e02ecf82f0548186af85fbc0daf819b6e68067790c341d43aecb0e39de8f",
 			"player_id": 2,
 			"seq": 464,
-			"ts": 1784964725.452
+			"ts": 1784965818.631
 		},
 		{
 			"action": {
@@ -18696,10 +18696,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0ba4f9da2bebc1c478988d18018f6cc74cab006cfd78d7e5756ad98cad431e16",
+			"hash": "91522f8c9c22755907d48aa8a1e81fb9fb8e23b2c9108d9ed4080dda9244fe4c",
 			"player_id": 2,
 			"seq": 465,
-			"ts": 1784964725.472
+			"ts": 1784965818.647
 		},
 		{
 			"action": {
@@ -18745,10 +18745,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "29cad8f6d36423da1910e2813265cb94be45c3f21406ec168be094195c5b90d4",
+			"hash": "8be03f997892fe22752619e3bc12df2c77f501319b1869d3f1bb1d7a1d8ce349",
 			"player_id": 2,
 			"seq": 466,
-			"ts": 1784964725.49
+			"ts": 1784965818.664
 		},
 		{
 			"action": {
@@ -18810,10 +18810,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b208935ac50a7992a7a59f88fb5e50198ab69ad96018e895bf4425d0ef321ef5",
+			"hash": "c6fcf56abd247d1a85329802def539852af8fe415a7f645e35db843fa30d4cdd",
 			"player_id": 2,
 			"seq": 467,
-			"ts": 1784964725.505
+			"ts": 1784965818.676
 		},
 		{
 			"action": {
@@ -18859,10 +18859,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c89d5c48d3ae2ead1a11be275c6ac07a1857f10c2e861941a7cbd89fdcd72f26",
+			"hash": "55caa9bffd2ddeb077cd4d06fbfb2a1bf7355e172646664c0219bfad7b0ea193",
 			"player_id": 2,
 			"seq": 468,
-			"ts": 1784964725.515
+			"ts": 1784965818.686
 		},
 		{
 			"action": {
@@ -18908,10 +18908,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "a944fd9fbcdff99518993d22a1e780834cf10843c73e47096a00631013c7a68c",
+			"hash": "b17de5a228de64e6540f9f2e75e88627dc6ae733ad544e1cb3fc03a0072612fa",
 			"player_id": 2,
 			"seq": 469,
-			"ts": 1784964725.527
+			"ts": 1784965818.695
 		},
 		{
 			"action": {
@@ -18957,10 +18957,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4dbf25c58a518abf6f718adf213b740f6aabe422ac6d8ad88e8b35148eeb89d6",
+			"hash": "5e4a34f8598d59f214152d4125d5b49d053214540f3821ce9c0681fee60f348a",
 			"player_id": 2,
 			"seq": 470,
-			"ts": 1784964725.534
+			"ts": 1784965818.701
 		},
 		{
 			"action": {
@@ -19006,10 +19006,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "62f51b1e706f96df172131d75d7ed64267f9037cfb87504c06596640d9b41f16",
+			"hash": "641322c135f4c7a0b25657b3e6c5ec445a9270dfb189b43188d17026c998571d",
 			"player_id": 2,
 			"seq": 471,
-			"ts": 1784964725.538
+			"ts": 1784965818.706
 		},
 		{
 			"action": {
@@ -19055,10 +19055,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "56a3b50c49430a425701d15ca3fb16e8157843bd572e48904cfcbbe5075a32ca",
+			"hash": "117e6b2ae683d564aa84d04b687bdc02088d9d9fcfec42261abbf9d33707900f",
 			"player_id": 2,
 			"seq": 472,
-			"ts": 1784964725.542
+			"ts": 1784965818.71
 		},
 		{
 			"action": {
@@ -19117,10 +19117,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "9dc82983868a48c981b639742a3b6574b7b71229387fd83e79c3cbe24dad74fb",
+			"hash": "2c8d30e59d1825dad8a59c62d13011ae17f3b24f3f801e5404d5ebeac07657ef",
 			"player_id": 2,
 			"seq": 473,
-			"ts": 1784964725.545
+			"ts": 1784965818.713
 		},
 		{
 			"action": {
@@ -19150,10 +19150,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "32a92710f82d0021584e94b898fa6856f5214870230cd5fa05e9875b84a42bc1",
+			"hash": "417109f30d7501b52229efe70cd05fe2967168347905c87c88f743803423d24d",
 			"player_id": 1,
 			"seq": 474,
-			"ts": 1784964725.548
+			"ts": 1784965818.718
 		},
 		{
 			"action": {
@@ -19210,20 +19210,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "8887945a7764bafce6f418d0e46c16832ea2f11a379e5b894c125840ffa2dd90",
+			"hash": "c1f6e82e9f48d70dcbfef97626b3987a3bb2d2b3d9688c2878e90bd9a5435642",
 			"player_id": 2,
 			"seq": 475,
-			"ts": 1784964725.549
+			"ts": 1784965818.719
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "b49eab353d07a8c9525b5dbb4e962f37cc52180ecc72506eab16495c7f5ed14d",
+			"hash": "7b3369e17295e39cd47f8317a86bda8219f25f4dce69fe17b6cfa69edce05686",
 			"player_id": 1,
 			"seq": 476,
-			"ts": 1784964725.551
+			"ts": 1784965818.72
 		},
 		{
 			"action": {
@@ -19246,10 +19246,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c6a34d6936d9d13728a99ef986c947951a73f0d9daa212c4b812fdc18e81108b",
+			"hash": "18a0aa4fff8c0435840c6831857641115b32e1893aa0ced0f07ad6e0edf074c9",
 			"player_id": 2,
 			"seq": 477,
-			"ts": 1784964725.552
+			"ts": 1784965818.722
 		},
 		{
 			"action": {
@@ -19271,10 +19271,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1e0f955d7b98c0e21b6a101d0f4e32972770377830c9144d8ac8979998e26c8e",
+			"hash": "99f56f7235f340086c07ce231c5eb47c90abd215ad67694f2889737d567202ba",
 			"player_id": 1,
 			"seq": 478,
-			"ts": 1784964725.554
+			"ts": 1784965818.724
 		},
 		{
 			"action": {
@@ -19296,10 +19296,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "4f58277e49b3872e39a6da3049e414759aaf6ab1a5bfd500d18242564ea338ff",
+			"hash": "adf65b8f30a16ea8b4645b6337fc6ebd45f2f7837fb455a0d71cbfeda04364a2",
 			"player_id": 2,
 			"seq": 479,
-			"ts": 1784964725.555
+			"ts": 1784965818.726
 		},
 		{
 			"action": {
@@ -19321,10 +19321,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "78506a30293320c5a21c0c0e2c5c4055831d0bdd1d868ea63bf9ae82b440129c",
+			"hash": "aa74c6162a198d52180b212187ef4f8fd6bc4f1ca3b19e34cbbbf5c042c20376",
 			"player_id": 1,
 			"seq": 480,
-			"ts": 1784964725.557
+			"ts": 1784965818.728
 		},
 		{
 			"action": {
@@ -19346,10 +19346,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "c9debb29f962493b6cea6c572a5d2f7a3dcdb8b04dba4dabed0487e53355e1ca",
+			"hash": "5cf761ba240085ab47a1b35f798850f79c0840344fb83dc9a2fb86495b3f100e",
 			"player_id": 2,
 			"seq": 481,
-			"ts": 1784964725.559
+			"ts": 1784965818.729
 		},
 		{
 			"action": {
@@ -19371,10 +19371,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "103d56e1c9ef19228dbf44f9e984af4a150b2e0ce7910c3c5a0e72a566497b99",
+			"hash": "a092c86ef7646f77c8fd7edd244cf34c498b87c4774e55791b23ddabef55497f",
 			"player_id": 1,
 			"seq": 482,
-			"ts": 1784964725.56
+			"ts": 1784965818.731
 		},
 		{
 			"action": {
@@ -19397,10 +19397,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "791933c694068297623d8bee7f9c724ff42fd69664b58037f5113558dd9dbe56",
+			"hash": "90efc703e8b29999e8bfb03f23014edc43407ba94ec6b2ebe647cf253d46096b",
 			"player_id": 2,
 			"seq": 483,
-			"ts": 1784964725.561
+			"ts": 1784965818.733
 		},
 		{
 			"action": {
@@ -19430,10 +19430,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "d904b7d0461382892cba49f256b93e04e8e78ff275817c5a09ba7ee72363191f",
+			"hash": "786c13cf8043c8210eddc21486ea7433f0e336fc3649611dbccc631520f71122",
 			"player_id": 1,
 			"seq": 484,
-			"ts": 1784964725.564
+			"ts": 1784965818.734
 		},
 		{
 			"action": {
@@ -19490,20 +19490,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "1bea55f1c0e55d4f8d686161f26746354c9fffe50456683dd3df4a4ef9ff0439",
+			"hash": "f1b79b5f369776639e3fbd2acfb982216c80a7bffafe8d410f0e49cc6a111d42",
 			"player_id": 2,
 			"seq": 485,
-			"ts": 1784964725.565
+			"ts": 1784965818.736
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "c40ba1ee9075f70311b9015cb65430e8fd89986d18505b4cbd1f4f1ed09d4037",
+			"hash": "bd26e25c6ad4f16283e0b20750de4858200adf6a7dc40bff62e944bbe2322e38",
 			"player_id": 1,
 			"seq": 486,
-			"ts": 1784964725.567
+			"ts": 1784965818.737
 		},
 		{
 			"action": {
@@ -19526,10 +19526,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b89a6cbecfc15b444a2682a2e928a3f6e0520cb81afc4e2975bbcf98fdb0dedc",
+			"hash": "0c92584aea4abe479b92c10cd74f120d70dc31ef7c794080b74ef5e80e6fab07",
 			"player_id": 2,
 			"seq": 487,
-			"ts": 1784964725.568
+			"ts": 1784965818.739
 		},
 		{
 			"action": {
@@ -19551,10 +19551,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "99a8bdffa63a7a9574bf092c3f6bfa5fb8c1188298d4e1b8083672b35dc02c0f",
+			"hash": "84b9043a870488c3b037586fe21ce464fad8001eaa99c30456878f6f74257865",
 			"player_id": 1,
 			"seq": 488,
-			"ts": 1784964725.57
+			"ts": 1784965818.741
 		},
 		{
 			"action": {
@@ -19576,10 +19576,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "97467cac7241897198aa837af1590d4c0e741d670b02cec5294616ea0984cf3a",
+			"hash": "13a65416b9b2eec82a210ed0647e01f1a8129c492be4aba7fd95698a37c55b2b",
 			"player_id": 2,
 			"seq": 489,
-			"ts": 1784964725.571
+			"ts": 1784965818.742
 		},
 		{
 			"action": {
@@ -19601,10 +19601,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "57b95ae4fa0f159b04fe9179cc273ee01ed5d531cc07ba3d9bbcfa2860077238",
+			"hash": "2e3f7726135c3637cb4b83722c3daf5d123c7e42fa1f951ceb8f331609ccc0aa",
 			"player_id": 1,
 			"seq": 490,
-			"ts": 1784964725.573
+			"ts": 1784965818.745
 		},
 		{
 			"action": {
@@ -19626,10 +19626,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "70459a6923a4feee81f5acebe7fc5db3ee13ae3a3255286fec8d70e954c537b7",
+			"hash": "d54825351691249bdc4c8879e95d84c8e6cf7cad3f774b02d346460e746bf9f7",
 			"player_id": 2,
 			"seq": 491,
-			"ts": 1784964725.574
+			"ts": 1784965818.746
 		},
 		{
 			"action": {
@@ -19651,10 +19651,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e5c26f0f7689549ccefd392f1d5bbfa90b5a2a2828b96ec8143644d64f0e2a9e",
+			"hash": "ba616bed81bea71f32933cf7e10d01ac093bb080b379f9d0fae41a87aae14f00",
 			"player_id": 1,
 			"seq": 492,
-			"ts": 1784964725.576
+			"ts": 1784965818.748
 		},
 		{
 			"action": {
@@ -19677,10 +19677,10 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "22e64ca3805af4bdf3693bc644b14ac89d4b904abfdd7526e3006f1910ffbf3a",
+			"hash": "e0896446142b28d7bd085ae8a711b7023f213c0e535085d5bb7bab7fc6a0e171",
 			"player_id": 2,
 			"seq": 493,
-			"ts": 1784964725.577
+			"ts": 1784965818.75
 		},
 		{
 			"action": {
@@ -19737,20 +19737,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "23a950a94d9ac727dab77667078a028888e74b1ea171f871d37c30d389f9a44a",
+			"hash": "47139d702c801b14e39e3a1dc6e3756e7e01be88cb9e7493aedb7b47846c6ef6",
 			"player_id": 2,
 			"seq": 494,
-			"ts": 1784964725.58
+			"ts": 1784965818.752
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "10028748b5a0de9ebacab3bd69c141728401d4586d6affa65c2d4538266889de",
+			"hash": "0636d605caa34ccae38e127e0fbd6ae25a114d823e441c3ffff1cf231c652941",
 			"player_id": 1,
 			"seq": 495,
-			"ts": 1784964725.582
+			"ts": 1784965818.753
 		},
 		{
 			"action": {
@@ -19773,10 +19773,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3ed4c3d542d246128e697fabeb07b6c991470f038c810cebd14d3bf8116b849d",
+			"hash": "f6b455812d94a9ec8a95c97a769fe891c3ab9d6af5fda6fa6e8c4c3362065e63",
 			"player_id": 2,
 			"seq": 496,
-			"ts": 1784964725.583
+			"ts": 1784965818.755
 		},
 		{
 			"action": {
@@ -19798,10 +19798,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f37b79af5abec60bf619c37b2d5f873ffdd138d29264284e3cde4d1c367179f3",
+			"hash": "ece0535bc1b61901fdd54fc08c4b86a55c5fccb7c3c2c83343dcb0f15cc38417",
 			"player_id": 2,
 			"seq": 497,
-			"ts": 1784964725.584
+			"ts": 1784965818.756
 		},
 		{
 			"action": {
@@ -19823,10 +19823,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "94ab46e602e13bcad078494b395d332760a9b259522070ae68a968f833d692d6",
+			"hash": "d06acfece36fc9d497135d8bb870e134d5af6cd144e10be5e6e201e1534fdb19",
 			"player_id": 2,
 			"seq": 498,
-			"ts": 1784964725.586
+			"ts": 1784965818.757
 		},
 		{
 			"action": {
@@ -19856,10 +19856,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "cc5365aaf321068395819c0aee5073c90d1f6bbce1e7641e772082092c6e3dac",
+			"hash": "37f6e636c471a7802021824a1cc6d68ee65a93350173fc067bd450984b1aa5df",
 			"player_id": 2,
 			"seq": 499,
-			"ts": 1784964725.587
+			"ts": 1784965818.759
 		},
 		{
 			"action": {
@@ -19905,10 +19905,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "416dd521911d9d1378b16bcf91a828b56d6db271a5f573dc01d8501f12925aa0",
+			"hash": "cc14ad7888ff470b60fb026045c4db125a35a32c3599f0dcaf40e2ca91a235f3",
 			"player_id": 2,
 			"seq": 500,
-			"ts": 1784964725.673
+			"ts": 1784965818.832
 		},
 		{
 			"action": {
@@ -19954,10 +19954,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "30b73d66dd325008db5959a9897b89651b1e4288cfeab178077bf129fc11e0a0",
+			"hash": "93f657e29d4a4125585e554c22f409e30ae208513c8d989e935aed0109786916",
 			"player_id": 1,
 			"seq": 501,
-			"ts": 1784964725.738
+			"ts": 1784965818.885
 		},
 		{
 			"action": {
@@ -20003,10 +20003,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "627ab1d7ecb7296dc9de2fe1a92cadcecf35298a7066f002c8e73d6b37c6169c",
+			"hash": "da44857f7acac23a9eaa7bc244f3cdb458d256850891d82705f6290914fc53f0",
 			"player_id": 2,
 			"seq": 502,
-			"ts": 1784964725.811
+			"ts": 1784965818.948
 		},
 		{
 			"action": {
@@ -20052,10 +20052,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "70c07e2c70b5d598a9560a408b9e0cbfe11884d6fe913a4b2e36e026c3422ff7",
+			"hash": "2ef846fd74649fd4254900deb06301fae10b0b1119ebf860d5d67a1cac1df1fb",
 			"player_id": 1,
 			"seq": 503,
-			"ts": 1784964725.857
+			"ts": 1784965818.987
 		},
 		{
 			"action": {
@@ -20125,10 +20125,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b1b7fd2e981e11a206909cb0ad3e8fa67e1e43acabb2ddeec221fd5e7ecaccdd",
+			"hash": "2d0cd5eb888a436f266a5cb444da14baeb82b1d1663bc0cf4806d1e438261d17",
 			"player_id": 2,
 			"seq": 504,
-			"ts": 1784964725.926
+			"ts": 1784965819.045
 		},
 		{
 			"action": {
@@ -20174,10 +20174,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "d2f85880ff12241be633555f7d63aa2bbbc03c1baafedf13301221854319c49c",
+			"hash": "b7a7c13d64bcf4929e47b59a24c27a8659cf557567563f8eec750b5685d2258a",
 			"player_id": 1,
 			"seq": 505,
-			"ts": 1784964725.954
+			"ts": 1784965819.064
 		},
 		{
 			"action": {
@@ -20223,10 +20223,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "76db9202a0967c08dd8e7e2ec18e5f7bce6a446deed4fb08d979277614323cc1",
+			"hash": "65c1d7b66a776e6d240b85e34e56705f3c0367b26e4cf9eee8c6d4abb524c896",
 			"player_id": 2,
 			"seq": 506,
-			"ts": 1784964726.023
+			"ts": 1784965819.106
 		},
 		{
 			"action": {
@@ -20272,10 +20272,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "43882d9264a5434f4a4bfca8434ce5fec5c4639fbc39d3dc93d12fb34051511d",
+			"hash": "056c4e51746c5fb5377c11c5492cdfa6d03dc94859a9d46e0caf7206e2b9743b",
 			"player_id": 1,
 			"seq": 507,
-			"ts": 1784964726.046
+			"ts": 1784965819.121
 		},
 		{
 			"action": {
@@ -20321,10 +20321,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1d5658288f5a3fe1ce149f4aea2d304c65a6a0188395589bdc8319fa81830d1b",
+			"hash": "bd1fe03e465045573d1cb853f3bc5da85dba09d3fa20f1782d6697e6146979d9",
 			"player_id": 2,
 			"seq": 508,
-			"ts": 1784964726.108
+			"ts": 1784965819.157
 		},
 		{
 			"action": {
@@ -20370,10 +20370,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "43eba9cd3570df4b605695ab88b86c71db8145cabd9cdc1bfb121878322521cf",
+			"hash": "816af9446c601fdc5bdaddd52be1a576c9e373d3aa7f64521e6b5bb085962d88",
 			"player_id": 1,
 			"seq": 509,
-			"ts": 1784964726.121
+			"ts": 1784965819.167
 		},
 		{
 			"action": {
@@ -20435,10 +20435,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "db4c9b94c37acc9ddd12de3a5f05af474261c47260b475b51b87d7ffd82f890a",
+			"hash": "5619061fa335f7f494e1bd022f1e38be1c5f52998a970a480b5126e62ceb5b6e",
 			"player_id": 2,
 			"seq": 510,
-			"ts": 1784964726.158
+			"ts": 1784965819.199
 		},
 		{
 			"action": {
@@ -20484,10 +20484,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f6d636e3c5167c15e77575eadec3378e891a64dfc1988e984e5a0688f6e8296c",
+			"hash": "532bdaf7c344ad571246c9cfe85244ea715f71b41e1895fb71657a5e49e04ae2",
 			"player_id": 1,
 			"seq": 511,
-			"ts": 1784964726.167
+			"ts": 1784965819.208
 		},
 		{
 			"action": {
@@ -20533,10 +20533,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e7c4f4c4fbd631b625645e7cef9428b0753dca99905317e56cda4d9e534de485",
+			"hash": "76814ba2798343f54d8bf6e15a4e9f35b9756bbaf32cf6bbf3e587af098c0c7b",
 			"player_id": 2,
 			"seq": 512,
-			"ts": 1784964726.199
+			"ts": 1784965819.234
 		},
 		{
 			"action": {
@@ -20582,10 +20582,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "e25efccbc709fbcf8f3bfeff404fcb0b2b15b19a059a9980e949f8e74c2e69ec",
+			"hash": "4ea75d27a2304052346a961f875259f762fbbedb5a6e6350313e6c29211e2403",
 			"player_id": 1,
 			"seq": 513,
-			"ts": 1784964726.206
+			"ts": 1784965819.241
 		},
 		{
 			"action": {
@@ -20655,13 +20655,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "91f7681f9ca186a577179307a92f50b9a2d4941dd90c267c307e0a38d47ea812",
+			"hash": "5064343e4fb884a3fba9b0ad448598ea25d9418d0b7ec5d26c63b306050d0990",
 			"player_id": 2,
 			"seq": 514,
-			"ts": 1784964726.232
+			"ts": 1784965819.262
 		}
 	],
-	"final_hash": "91f7681f9ca186a577179307a92f50b9a2d4941dd90c267c307e0a38d47ea812",
+	"final_hash": "5064343e4fb884a3fba9b0ad448598ea25d9418d0b7ec5d26c63b306050d0990",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -22983,11 +22983,15 @@
 			"1": false,
 			"2": false
 		},
+		"spawn_totaal": {
+			"1": 0,
+			"2": 0
+		},
 		"turn_deadline": 0,
 		"winner": 2
 	},
 	"meta": {
-		"created": "2026-07-25T09:32:00",
+		"created": "2026-07-25T09:50:13",
 		"d1": "Varken",
 		"d2": "Krokodil",
 		"formaat": 1,
@@ -23078,6 +23082,10 @@
 			"spawn_done": {
 				"1": false,
 				"2": false
+			},
+			"spawn_totaal": {
+				"1": 0,
+				"2": 0
 			},
 			"turn_deadline": 0,
 			"winner": -1

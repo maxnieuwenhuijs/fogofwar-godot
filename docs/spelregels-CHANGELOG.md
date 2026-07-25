@@ -3,7 +3,11 @@
 ## 4.2.0 — juli 2026 (F2.2: pools + CYCLE_SPAWN, config-gated door het campaign-blok)
 
 **Bijstelling 25 juli (besluit Max, na de eerste speeltest):** `cp_start`
-6 → **10** (kort 5 geprobeerd: "je burnt er snel doorheen"). En overgebleven
+6 → **10** (kort 5 geprobeerd: "je burnt er snel doorheen"); `poolfactor`
+3.0 → **1.5** (reinforcements = startleger × 1.5) en NIEUW
+`spawn_totaal_max` = **15** spawns per potje (de 1v1-setting, te testen).
+Koppel-gedrag: onder campaign krijgen achterrij-pionnen koppel-voorrang
+zodat de spawn-rij vrijloopt (standbeelden blokkeerden hem permanent). En overgebleven
 duel-CP verdampt niet — in campagnemodus vloeit het restant terug naar de
 campagnelaag en is daar overdraagbaar (F3-eis; de laag leest `final_state.cp`);
 bij uitvallen geldt het F3-testament (max helft, max 2 ontvangers, timer).

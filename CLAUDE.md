@@ -67,4 +67,6 @@ v4.2-duel (de F2.6-MAX-check). Daarna F3: de teamcampagne (donaties per lid
 bepalen de duel-pool en CP; duel-restant CP vloeit terug en is overdraagbaar;
 uitvallers laten na via het testament (max helft, max 2 ontvangers, timer);
 eliminatie telt door over wedstrijden; battlereports zijn de info-bron over
-vijandelijke voorraad — zie B16/D15-context). cp_start = 10 (25 juli).
+vijandelijke voorraad — zie B16/D15-context). 1v1-setting (25 juli): cp_start 10,
+poolfactor 1.5, spawn_totaal_max 15 per potje; achterrij-pionnen krijgen
+koppel-voorrang onder campaign (spawn-rij vrijspelen).

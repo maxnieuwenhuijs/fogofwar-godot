@@ -916,7 +916,8 @@ func _show_spawn_overlay() -> void:
 	var body := "\n".join([
 		"Reserve: %d soldaten · %d cavalerie · %d kanonnen." % [
 			int(pool.get("inf", 0)), int(pool.get("cav", 0)), int(pool.get("art", 0))],
-		"Spawns landen als standbeelden op je achterste rij (max %d per cyclus)." % int(st.rules.campaign.get("spawn_max", 3)),
+		"Spawns landen als standbeelden op je achterste rij (max %d per cyclus, nog %d dit potje)." % [
+			int(st.rules.campaign.get("spawn_max", 3)), st.spawns_over(_human_id)],
 		"De AI kiest blind tegelijk; daarna volgt de onthulling.",
 	])
 	var opties: Array = ["Niets spawnen"]

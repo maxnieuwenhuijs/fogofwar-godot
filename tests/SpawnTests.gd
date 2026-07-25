@@ -53,12 +53,33 @@ func test_campaign_weigert_one_action_stamina() -> void:
 	assert_eq(c.stamina_model, "pool", "D9: one_action onder campaign teruggezet naar pool")
 
 
-func test_pool_init_is_3x_comp_per_type() -> void:
+func test_pool_init_is_1_5x_comp_per_type() -> void:
+	# D5-bijstelling (besluit Max 25 juli): reinforcements = startleger x 1.5.
 	var s := _spawn_fase_staat()
 	var comp: Array = s.doctrine_data_of(1).comp
-	assert_eq(s.pool_count(1, Constants.UnitType.INFANTRY), int(comp[0]) * 3)
-	assert_eq(s.pool_count(1, Constants.UnitType.CAVALRY), int(comp[1]) * 3)
-	assert_eq(s.pool_count(1, Constants.UnitType.ARTILLERY), int(comp[2]) * 3)
+	assert_eq(s.pool_count(1, Constants.UnitType.INFANTRY), int(floor(int(comp[0]) * 1.5)))
+	assert_eq(s.pool_count(1, Constants.UnitType.CAVALRY), int(floor(int(comp[1]) * 1.5)))
+	assert_eq(s.pool_count(1, Constants.UnitType.ARTILLERY), int(floor(int(comp[2]) * 1.5)))
+
+
+func test_spawn_totaal_max_per_potje() -> void:
+	# Besluit Max: max 15 spawns per potje, ongeacht pool of cycli.
+	var s := _spawn_fase_staat()
+	s.spawn_totaal[1] = 14  # 14 al gedaan dit potje
+	assert_eq(s.spawns_over(1), 1)
+	var res: Dictionary = Reducer.apply(s, Actions.make_spawn([
+		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(3, 10)},
+		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(4, 10)},
+	]), 1)
+	assert_false(res.ok, "2 spawns met nog 1 over dit potje")
+	assert_eq(res.error, "Spawn-limiet van het potje bereikt")
+	assert_true(Reducer.apply(s, Actions.make_spawn([
+		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(3, 10)},
+	]), 1).ok, "de laatste toegestane spawn mag nog")
+	assert_true(Reducer.apply(s, Actions.make_spawn([]), 2).ok)
+	assert_eq(int(s.spawn_totaal[1]), 15, "teller staat op de potje-limiet")
+	assert_eq(s.spawns_over(1), 0, "op = op — samples geven alleen nog de lege inzet")
+	assert_eq(Validator._sample_spawn_sets(s, 1).size(), 1)
 
 
 func test_expliciete_startpool_wint_van_poolfactor() -> void:
@@ -207,7 +228,7 @@ func test_flow_reset_spawn_define() -> void:
 	assert_true(Reducer.apply(s, Actions.make_spawn([]), 2).ok)
 	assert_eq(s.phase, Phase.Type.SETUP_1_DEFINE, "na de reveal beginnen de define-rondes")
 	assert_eq(s.pawns.size(), pionnen_voor + 1)
-	assert_eq(s.pool_count(1, Constants.UnitType.CAVALRY), int(s.doctrine_data_of(1).comp[1]) * 3 - 1)
+	assert_eq(s.pool_count(1, Constants.UnitType.CAVALRY), int(floor(int(s.doctrine_data_of(1).comp[1]) * 1.5)) - 1)
 
 
 func test_zonder_campaign_geen_spawn_fase() -> void:

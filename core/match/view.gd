@@ -139,6 +139,7 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"pools": pools_d,
 		"own_spawn_commit": eigen_spawns,
 		"own_spawn_done": bool(state.spawn_done.get(player_id, false)),
+		"own_spawns_over": state.spawns_over(player_id),
 		"enemy_has_spawned": bool(state.spawn_done.get(enemy, false)),
 		"cp": cp_d,
 		"own_cp_bet": int(state.cp_bets.get(player_id, 0)),

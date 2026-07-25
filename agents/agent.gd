@@ -124,6 +124,11 @@ static func reconstruct_state(view: Dictionary) -> GameState:
 		s.cp_bet_done[viewer] = true
 	if bool(view.get("own_spawn_done", false)):
 		s.spawn_done[viewer] = true
+	# Potje-teller terugrekenen uit het restant (own_spawns_over), anders stelt
+	# de agent inzetten voor die de spawn_totaal_max-limiet schenden.
+	if s.rules.campaign_actief() and view.has("own_spawns_over"):
+		var limiet: int = int(s.rules.campaign.get("spawn_totaal_max", 15))
+		s.spawn_totaal[viewer] = maxi(0, limiet - int(view.own_spawns_over))
 	if bool(view.get("enemy_has_spawned", false)):
 		s.spawn_done[enemy] = true
 	# De vijand heeft mogelijk gedefinieerd (commit-gate-signaal), maar wat is

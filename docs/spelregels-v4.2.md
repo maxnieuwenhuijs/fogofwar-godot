@@ -253,7 +253,8 @@ naar de engine-klokken migreert:
 
 ## B2. Pionnen-pool + SPAWN — DEFINITIEF
 - `state.pools[player] = {inf, cav, art}`; init = `campaign.poolfactor`
-  (**3.0**) × de doctrine-legersamenstelling **per type** (D5). De engine
+  (**1.5** sinds 25 juli, besluit Max: reinforcements = startleger × 1.5)
+  × de doctrine-legersamenstelling **per type** (D5). De engine
   krijgt de startpool als expliciete waarde in het campaign-blok aangeleverd;
   wie hem vult (config of campagnestand) is een F3.0-besluit.
 - **Verliezen (D5):** duel-verliezen boeken af van de campagne-pool
@@ -265,7 +266,9 @@ naar de engine-klokken migreert:
 - **SPAWN (D6/D7):** blind + simultaan (commit-gate), vanaf **cyclus 2**
   (`campaign.spawn_vanaf_cyclus = 2`; cyclus 1 = de vertrouwde volledige
   PLACEMENT). Max **3 totaal** per cyclus over alle types
-  (`campaign.spawn_max = 3`), alleen op de **eigen achterste rij**
+  (`campaign.spawn_max = 3`) en maximaal **15 per potje**
+  (`campaign.spawn_totaal_max = 15`, besluit Max 25 juli, te testen),
+  alleen op de **eigen achterste rij**
   (`campaign.spawn_vakken = "achterste_rij"`, D6 — bewust de harde rem op
   hoekfort-aanvulling). Bezet vak bij reveal = die spawn geweigerd, pion
   blijft in de pool. Spawn kost 1 pool-punt, geen CP.

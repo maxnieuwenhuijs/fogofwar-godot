@@ -305,12 +305,21 @@ func choose_link(state: GameState) -> Dictionary:
 	# (kaartstats × type-gewichten) plus een bonus voor pionnen dichter bij de haven.
 	var my_haven: Array = Constants.get_haven_for_player(player_id)
 	var advance: float = float(weights.get("link_advance", 0.4))
+	# F2.6 (v4.2, besluit Max): de spawn-rij moet vrijgespeeld worden — onder
+	# campaign krijgen pionnen op de EIGEN ACHTERSTE RIJ koppel-voorrang, zodat
+	# standbeelden daar geactiveerd worden en wegmarcheren (anders blokkeren ze
+	# elke toekomstige spawn). Leerbaar maken is de vervolgstap (trainings-
+	# opdracht in het masterplan); deze vaste bonus is stap 1.
+	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
+	var spawnrij_bonus: float = 25.0 if state.rules.campaign_actief() else 0.0
 	var best: Dictionary = {}
 	var best_score: float = -1e18
 	for c in cards:
 		for p in pool:
 			var score: float = _link_affinity(c, p.unit_type) \
 				+ advance * float(Constants.BOARD_SIZE - _min_dist(p.position, my_haven))
+			if p.position.y == achterste:
+				score += spawnrij_bonus
 			if score > best_score:
 				best_score = score
 				best = {"card_id": c.id, "pawn_id": p.id}

@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "84e6ec76daa23c7105c7b67b078e4a39c9b7d8d803af9228b324e9717ac1d6cc",
+			"hash": "1319d9c54014519695fa250e3adbca8d85f9092dbfd673067f24bb00e39e0fa2",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784964767.38
+			"ts": 1784965854.52
 		},
 		{
 			"action": {
@@ -113,13 +113,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "fe134e0936ec09933fc719603f9210685ae06c1fb20543bcd1086944559c1cb9",
+			"hash": "0334d4a2386456218ad71d48634e2b5b90bc10a92b37748ef2882827a2e088fa",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784964767.38
+			"ts": 1784965854.52
 		}
 	],
-	"final_hash": "fe134e0936ec09933fc719603f9210685ae06c1fb20543bcd1086944559c1cb9",
+	"final_hash": "0334d4a2386456218ad71d48634e2b5b90bc10a92b37748ef2882827a2e088fa",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -249,14 +249,14 @@
 		},
 		"pools": {
 			"1": {
-				"art": 9,
-				"cav": 18,
-				"inf": 39
+				"art": 4,
+				"cav": 9,
+				"inf": 19
 			},
 			"2": {
-				"art": 9,
-				"cav": 18,
-				"inf": 39
+				"art": 4,
+				"cav": 9,
+				"inf": 19
 			}
 		},
 		"reveal_acks": {
@@ -286,10 +286,11 @@
 				"kanon_dracht_max": 6,
 				"pool_afboeking": true,
 				"pool_zichtbaar": false,
-				"poolfactor": 3.0,
+				"poolfactor": 1.5,
 				"pools": null,
 				"skip_mode": "auto",
 				"spawn_max": 3,
+				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
 				"spawn_vanaf_cyclus": 2
 			},
@@ -328,11 +329,15 @@
 			"1": false,
 			"2": false
 		},
+		"spawn_totaal": {
+			"1": 0,
+			"2": 0
+		},
 		"turn_deadline": 0,
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-25T09:32:47",
+		"created": "2026-07-25T09:50:54",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -463,14 +468,14 @@
 			},
 			"pools": {
 				"1": {
-					"art": 9,
-					"cav": 18,
-					"inf": 39
+					"art": 4,
+					"cav": 9,
+					"inf": 19
 				},
 				"2": {
-					"art": 9,
-					"cav": 18,
-					"inf": 39
+					"art": 4,
+					"cav": 9,
+					"inf": 19
 				}
 			},
 			"reveal_acks": {
@@ -500,10 +505,11 @@
 					"kanon_dracht_max": 6,
 					"pool_afboeking": true,
 					"pool_zichtbaar": false,
-					"poolfactor": 3.0,
+					"poolfactor": 1.5,
 					"pools": null,
 					"skip_mode": "auto",
 					"spawn_max": 3,
+					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",
 					"spawn_vanaf_cyclus": 2
 				},
@@ -541,6 +547,10 @@
 			"spawn_done": {
 				"1": false,
 				"2": false
+			},
+			"spawn_totaal": {
+				"1": 0,
+				"2": 0
 			},
 			"turn_deadline": 0,
 			"winner": -1

@@ -137,6 +137,8 @@ static func _check_spawn(state: GameState, action: Dictionary, player_id: int) -
 	var spawns: Array = action.spawns
 	if spawns.size() > int(state.rules.campaign.get("spawn_max", 3)):
 		return _nee("Meer spawns dan toegestaan")
+	if spawns.size() > state.spawns_over(player_id):
+		return _nee("Spawn-limiet van het potje bereikt")
 	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
 	var telling: Dictionary = {}
 	var dubbel: Dictionary = {}
@@ -165,7 +167,7 @@ static func aanvul_spawn_actie(state: GameState, player_id: int) -> Dictionary:
 	for pawn in state.pawns.values():
 		if pawn.owner_id == player_id and not pawn.is_eliminated:
 			op_bord += 1
-	var gewenst: int = clampi(doel_groot - op_bord, 0, int(state.rules.campaign.get("spawn_max", 3)))
+	var gewenst: int = clampi(doel_groot - op_bord, 0, mini(int(state.rules.campaign.get("spawn_max", 3)), state.spawns_over(player_id)))
 	if gewenst == 0:
 		return Actions.make_spawn([])
 	var vol: Array = []
@@ -180,7 +182,7 @@ static func aanvul_spawn_actie(state: GameState, player_id: int) -> Dictionary:
 ## het centrum naar buiten, types op beschikbaarheid (inf > cav > art).
 static func _sample_spawn_sets(state: GameState, player_id: int) -> Array:
 	var out: Array = [[]]
-	if state.pool_total(player_id) == 0:
+	if state.pool_total(player_id) == 0 or state.spawns_over(player_id) == 0:
 		return out
 	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
 	var vrij: Array = []
@@ -195,7 +197,7 @@ static func _sample_spawn_sets(state: GameState, player_id: int) -> Array:
 		state.pool_count(player_id, Constants.UnitType.CAVALRY),
 		state.pool_count(player_id, Constants.UnitType.ARTILLERY),
 	]
-	var maximum: int = mini(int(state.rules.campaign.get("spawn_max", 3)), vrij.size())
+	var maximum: int = mini(mini(int(state.rules.campaign.get("spawn_max", 3)), vrij.size()), state.spawns_over(player_id))
 	var vol: Array = []
 	for i in maximum:
 		var t: int = -1

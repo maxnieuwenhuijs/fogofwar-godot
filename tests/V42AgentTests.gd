@@ -59,11 +59,36 @@ func test_matchrunner_trainerpad_speelt_v42() -> void:
 	var s: GameState = runner.state()
 	assert_true(s.cycle > 1, "de partij haalt minstens cyclus 2 (spawn-fase gedraaid)")
 	var comp: Array = s.doctrine_data_of(1).comp
-	var start_pool: int = (int(comp[0]) + int(comp[1]) + int(comp[2])) * 3
+	var start_pool: int = int(floor(int(comp[0]) * 1.5)) + int(floor(int(comp[1]) * 1.5)) + int(floor(int(comp[2]) * 1.5))
 	assert_true(s.pool_total(1) < start_pool or s.pool_total(2) < start_pool,
 		"minstens een kant heeft uit de pool gespawnd")
 	assert_true(int(s.cp.get(1, 10)) < 10 or int(s.cp.get(2, 10)) < 10,
 		"minstens een kant heeft CP geboden (ronde-3-heuristiek)")
+
+
+func test_koppel_voorrang_spawn_rij() -> void:
+	# Besluit Max (speeltest 25 juli): de spawn-rij moet vrijgespeeld worden —
+	# achterrij-pionnen krijgen onder campaign koppel-voorrang, anders
+	# blokkeren eeuwige standbeelden daar elke toekomstige spawn.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.phase = Phase.linking_for_round(1)
+	s.current_player = 1
+	s.initiative_player = 1
+	var front: Pawn = s._spawn_pawn(1, Vector2i(5, 7))
+	var achter: Pawn = s._spawn_pawn(1, Vector2i(5, 10))
+	var kaart := Card.new(s.next_card_id(), 1, 1, 3, 2, 1)
+	s.all_cards[kaart.id] = kaart
+	s.cards_revealed[1] = [kaart]
+	s._spawn_pawn(2, Vector2i(5, 0))
+	var ai = AIMediumScript.new()
+	ai.player_id = 1
+	var link: Dictionary = ai.choose_link(s)
+	assert_eq(int(link.pawn_id), achter.id, "achterrij-pion krijgt koppel-voorrang onder campaign")
+	# Zonder campaign wint de front-pion (haven-afstand): 4.1-gedrag ongewijzigd.
+	s.rules = RulesConfig.new()
+	var link41: Dictionary = ai.choose_link(s)
+	assert_eq(int(link41.pawn_id), front.id, "4.1: dichtst bij de haven wint zoals altijd")
 
 
 func test_l0_speelt_v42_legaal() -> void:

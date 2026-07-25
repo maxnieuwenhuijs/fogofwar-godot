@@ -67,10 +67,11 @@ const CAMPAIGN_DEFAULTS := {
 	"cp_refund": "none",                 # D2: ingezet = verbrand
 	"cp_start_mode": "vast",             # D13
 	"cp_bijschrijving": "campagnelaag",  # D13: verdiensten naar de campagnepot
-	"poolfactor": 3.0,                   # D5: x doctrine-comp per type
+	"poolfactor": 1.5,                   # D5: x doctrine-comp per type (3.0 -> 1.5, besluit Max 25 juli)
 	"pool_afboeking": true,              # D5: duel-verliezen raken de campagne-pool
 	"pools": null,                       # expliciete startpool {"1": {inf,cav,art}, "2": ...} wint van poolfactor
 	"spawn_max": 3,                      # D6: totaal per cyclus, over alle types
+	"spawn_totaal_max": 15,              # besluit Max 25 juli: max 15 spawns per potje (te testen)
 	"spawn_vanaf_cyclus": 2,             # D7: cyclus 1 = volledige PLACEMENT
 	"spawn_vakken": "achterste_rij",     # D6: harde hoekfort-rem
 	"kanon_dracht_max": 6,               # D8 (handhaving F2.4)
