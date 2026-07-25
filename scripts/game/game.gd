@@ -45,6 +45,7 @@ var _placement_ghost: Node3D = null       # semi-doorzichtig stuk onder de muis
 var _placement_ghost_type: int = -1
 var _human_doctrine: int = Constants.Doctrine.MENS
 var _ai_doctrine: int = Constants.Doctrine.MENS
+var _campaign_mode: bool = false  # F2.6: v4.2-campagne-duel (economie)
 var _hovered_pawn_id: int = -1
 var _hp_layer: Control = null
 var _hp_bars: Dictionary = {}        # pawn_id -> {holder, blocks}
@@ -168,7 +169,15 @@ func _stop_phase_timer() -> void:
 func _on_phase_timeout() -> void:
 	var ph: int = GameSession.state.phase
 	if Phase.is_define(ph) and GameSession.state.cards_defined[_human_id].size() == 0:
+		if GameSession.state.rules.campaign_actief() and not _card_hand.visible:
+			# CP-bod-overlay stond nog open: zonder inzet door naar de waaier.
+			_overlay.hide()
+			_open_define_hand(int(GameSession.state.cp_bets.get(_human_id, 0)))
 		_card_hand._on_confirm_pressed()  # auto-bevestig (altijd geldig)
+	elif ph == Phase.Type.CYCLE_SPAWN and not GameSession.state.spawn_done.get(_human_id, false):
+		_overlay.hide()
+		_update_hud("Tijd om — versterkingen automatisch aangevuld")
+		GameSession.submit_spawn(_human_id, Validator.aanvul_spawn_actie(GameSession.state, _human_id).spawns)
 	elif Phase.is_linking(ph):
 		_auto_link_human = true
 		if GameSession.state.current_player == _human_id:
@@ -216,11 +225,17 @@ func _auto_action_human() -> void:
 	_update_hud("Tijd om — het spel koos een zet voor je")
 	match String(action.type):
 		"move":
-			GameSession.submit_move(_human_id, action.pawn_id, action.target)
+			if _kanon_v42(int(action.pawn_id)):
+				GameSession.submit_cannon_roll(_human_id, action.pawn_id, action.target)
+			else:
+				GameSession.submit_move(_human_id, action.pawn_id, action.target)
 		"attack":
 			GameSession.submit_attack(_human_id, action.attacker_id, action.defender_id)
 		"shot":
-			GameSession.submit_shot(_human_id, action.shooter_id, action.target_id)
+			if _kanon_v42(int(action.shooter_id)):
+				GameSession.submit_cannon_shoot(_human_id, action.shooter_id, action.target_id)
+			else:
+				GameSession.submit_shot(_human_id, action.shooter_id, action.target_id)
 		"charge":
 			GameSession.submit_charge(_human_id, action.pawn_id, action.move_target, action.defender_id)
 
@@ -377,6 +392,25 @@ func _on_opponent_choice(index: int) -> void:
 		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[randi() % Constants.DOCTRINE_DATA.size()]
 	else:
 		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[index - 1]
+	_show_ruleset_choice()
+
+
+## F2.6 - regelset-keuze: klassiek 4.1 of het v4.2-campagne-duel (economie).
+func _show_ruleset_choice() -> void:
+	_overlay.show_choice(
+		"Welke regels?",
+		"\n".join([
+			"Klassiek: het vertrouwde duel (4.1).",
+			"",
+			"Campagne-duel (v4.2): reserves en spawnen op je achterste rij,",
+			"blinde CP-inzet op je kaarten en het stamina-kanon (rollen/schieten).",
+		]),
+		["Klassiek (4.1)", "Campagne-duel (v4.2)"],
+		_on_ruleset_choice, Color.WHITE, true)
+
+
+func _on_ruleset_choice(index: int) -> void:
+	_campaign_mode = index == 1
 	_start_match(ai_difficulty)
 
 
@@ -393,7 +427,10 @@ func _start_match(difficulty: int) -> void:
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
 	ai_difficulty = difficulty
 	_setup_ai()
-	GameSession.start_new_game(_human_doctrine, _ai_doctrine)
+	var regels: RulesConfig = null
+	if _campaign_mode:
+		regels = RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
+	GameSession.start_new_game(_human_doctrine, _ai_doctrine, regels)
 	_show_placement_overlay()
 
 
@@ -811,14 +848,102 @@ func _refresh_all() -> void:
 		pv.set_selected(pid == _selected_pawn_id)
 
 
+# --- v4.2 (F2.6): CP-bod, versterkingen en de kanon-taal ----------------------
+
+## Blinde CP-inzet (D1): elke CP maakt 1 kaart deze ronde budget+1.
+func _show_cp_overlay() -> void:
+	var st: GameState = GameSession.state
+	var saldo: int = int(st.cp.get(_human_id, 0))
+	var maximaal: int = mini(saldo, Validator.expected_define_count(st, _human_id))
+	var opties: Array = []
+	for n in maximaal + 1:
+		opties.append("Geen CP inzetten" if n == 0 else "%d CP (+%d kaartbudget)" % [n, n])
+	_overlay.show_choice(
+		"CP inzetten? (saldo %d)" % saldo,
+		"\n".join([
+			"Blind bod: de AI ziet je inzet niet tot de onthulling.",
+			"Elke ingezette CP geeft 1 kaart deze ronde +1 budgetpunt.",
+			"Ingezet = verbrand, ook als je het punt niet gebruikt.",
+		]),
+		opties, _on_cp_choice, Color.WHITE, true)
+
+
+func _on_cp_choice(index: int) -> void:
+	_overlay.hide()
+	if index > 0:
+		GameSession.submit_bet_cp(_human_id, index)
+	_open_define_hand(index)
+
+
+## Kaartwaaier openen; de eerste `bonus` kaarten dragen het CP-budgetpunt.
+func _open_define_hand(bonus: int) -> void:
+	var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
+	# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
+	# engine deze ronde zelf over en schuift de fase vanzelf door).
+	var kaart_aantal: int = Validator.expected_define_count(GameSession.state, _human_id)
+	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus)
+	_card_hand.open_for_define()
+	var uitleg := "Definieer je kaarten (%d× budget %d)" % [kaart_aantal, int(doctrine.budget)]
+	if bonus > 0:
+		uitleg += " · %d kaart(en) met +1 CP-punt" % bonus
+	_update_hud(uitleg + " — HP = leven · Speed = stappen/acties · Aanval = schade")
+
+
+## Versterkingen (v4.2): blinde aanvul-keuze; spawns landen op de achterste rij.
+func _show_spawn_overlay() -> void:
+	var st: GameState = GameSession.state
+	var pool: Dictionary = st.pools.get(_human_id, {})
+	var suggestie: Array = Validator.aanvul_spawn_actie(st, _human_id).spawns
+	var body := "\n".join([
+		"Reserve: %d soldaten · %d cavalerie · %d kanonnen." % [
+			int(pool.get("inf", 0)), int(pool.get("cav", 0)), int(pool.get("art", 0))],
+		"Spawns landen als standbeelden op je achterste rij (max %d per cyclus)." % int(st.rules.campaign.get("spawn_max", 3)),
+		"De AI kiest blind tegelijk; daarna volgt de onthulling.",
+	])
+	var opties: Array = ["Niets spawnen"]
+	if not suggestie.is_empty():
+		opties = ["Verliezen aanvullen (%d)" % suggestie.size(), "Niets spawnen"]
+	_overlay.show_choice("Versterkingen", body, opties, _on_spawn_choice, Color.WHITE, true)
+
+
+func _on_spawn_choice(index: int) -> void:
+	_overlay.hide()
+	var suggestie: Array = Validator.aanvul_spawn_actie(GameSession.state, _human_id).spawns
+	var inzet: Array = []
+	if index == 0 and not suggestie.is_empty():
+		inzet = suggestie
+	GameSession.submit_spawn(_human_id, inzet)
+
+
+## F2.4/B3: onder campaign spreekt artillerie CANNON_ACT (roll/shoot).
+func _kanon_v42(pawn_id: int) -> bool:
+	if not GameSession.state.rules.campaign_actief():
+		return false
+	var p: Pawn = GameSession.state.pawns.get(pawn_id, null)
+	return p != null and p.unit_type == Constants.UnitType.ARTILLERY
+
+
 # --- Define ------------------------------------------------------------------
 
 func _on_define_confirmed(_cards: Array) -> void:
 	var dicts: Array = _card_hand.get_defined_dicts()
 	_card_hand.visible = false
 	GameSession.submit_define_cards(_human_id, dicts)
+	# F2.6 (v4.2): AI-bet op de ronde-3-kaarten (zelfde heuristiek als de arena).
+	var st_ai: GameState = GameSession.state
+	var ai_bet: int = 0
+	if st_ai.rules.campaign_actief() and st_ai.round_number == 3 \
+			and not st_ai.cp_bet_done.get(_ai_id, false):
+		ai_bet = mini(int(st_ai.cp.get(_ai_id, 0)), Validator.expected_define_count(st_ai, _ai_id))
+		if ai_bet > 0:
+			GameSession.submit_bet_cp(_ai_id, ai_bet)
 	var ai_cards: Array = _ai.generate_cards(GameSession.state)
-	GameSession.submit_define_cards(_ai_id, ai_cards)
+	for i in mini(ai_bet, ai_cards.size()):
+		ai_cards[i].hp = int(ai_cards[i].hp) + 1
+	if not GameSession.submit_define_cards(_ai_id, ai_cards) and ai_bet > 0:
+		for i in mini(ai_bet, ai_cards.size()):
+			ai_cards[i].hp = int(ai_cards[i].hp) - 1
+		GameSession.submit_define_cards(_ai_id, ai_cards)
 
 
 # --- Reveal (initiatief-bod, v4.1 §4.3-B) -------------------------------------
@@ -1008,19 +1133,31 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			_clear_footprints()  # nieuwe cyclus: vers slagveld
 			_uncouple_cascade()  # gekoppelde stukken poffen snel terug naar base
 		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
-		var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
-		# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
-		# engine deze ronde zelf over en schuift de fase vanzelf door).
-		var kaart_aantal: int = Validator.expected_define_count(GameSession.state, _human_id)
-		_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max))
-		_card_hand.open_for_define()
-		_update_hud("Definieer je kaarten (%d× budget %d) — HP = leven · Speed = stappen/acties · Aanval = schade" % [
-			kaart_aantal, int(doctrine.budget)])
+		# F2.6 (v4.2): eerst de blinde CP-inzet (D1), dan de kaartwaaier.
+		var st_def: GameState = GameSession.state
+		if st_def.rules.campaign_actief() and not st_def.cp_bet_done.get(_human_id, false) \
+				and int(st_def.cp.get(_human_id, 0)) > 0 \
+				and Validator.expected_define_count(st_def, _human_id) > 0:
+			_show_cp_overlay()
+		else:
+			_open_define_hand(int(st_def.cp_bets.get(_human_id, 0)))
 		_start_phase_timer(PHASE_TIME_LIMIT)
 	elif Phase.is_linking(new_phase):
 		_auto_link_human = false
 		_highlight_own_unlinked_pawns()  # ringen meteen aan, niet pas na kaart-klik
 		_start_phase_timer(PHASE_TIME_LIMIT)
+	elif new_phase == Phase.Type.CYCLE_SPAWN:
+		# F2.6 (v4.2): versterkingen - AI dient blind zijn aanvul-inzet in,
+		# de mens kiest via de overlay. Beide binnen -> gelijktijdige reveal.
+		_card_hand.visible = false
+		_refresh_all()
+		_update_hud("Versterkingen")
+		if not GameSession.state.spawn_done.get(_ai_id, false):
+			GameSession.submit_spawn(_ai_id, Validator.aanvul_spawn_actie(GameSession.state, _ai_id).spawns)
+		if GameSession.state.phase == Phase.Type.CYCLE_SPAWN \
+				and not GameSession.state.spawn_done.get(_human_id, false):
+			_show_spawn_overlay()
+			_start_phase_timer(PHASE_TIME_LIMIT)
 	else:
 		_card_hand.visible = false
 
@@ -1075,11 +1212,17 @@ func _ai_action_turn() -> void:
 		return
 	match String(action.type):
 		"move":
-			GameSession.submit_move(_ai_id, action.pawn_id, action.target)
+			if _kanon_v42(int(action.pawn_id)):
+				GameSession.submit_cannon_roll(_ai_id, action.pawn_id, action.target)
+			else:
+				GameSession.submit_move(_ai_id, action.pawn_id, action.target)
 		"attack":
 			GameSession.submit_attack(_ai_id, action.attacker_id, action.defender_id)
 		"shot":
-			GameSession.submit_shot(_ai_id, action.shooter_id, action.target_id)
+			if _kanon_v42(int(action.shooter_id)):
+				GameSession.submit_cannon_shoot(_ai_id, action.shooter_id, action.target_id)
+			else:
+				GameSession.submit_shot(_ai_id, action.shooter_id, action.target_id)
 		"charge":
 			GameSession.submit_charge(_ai_id, action.pawn_id, action.move_target, action.defender_id)
 
@@ -2123,7 +2266,10 @@ func _on_pawn_clicked(pawn_id: int) -> void:
 	elif _selected_pawn_id >= 0 and _valid_charges.has(pawn_id):
 		GameSession.submit_charge(_human_id, _selected_pawn_id, _valid_charges[pawn_id], pawn_id)
 	elif _selected_pawn_id >= 0 and _valid_shots.has(pawn_id):
-		GameSession.submit_shot(_human_id, _selected_pawn_id, pawn_id)
+		if _kanon_v42(_selected_pawn_id):
+			GameSession.submit_cannon_shoot(_human_id, _selected_pawn_id, pawn_id)
+		else:
+			GameSession.submit_shot(_human_id, _selected_pawn_id, pawn_id)
 
 
 func _update_piece_counts() -> void:
@@ -2134,6 +2280,10 @@ func _update_piece_counts() -> void:
 	var total_blue: int = Constants.pawn_total(state.doctrine_of(Constants.PLAYER_2))
 	_count_label.text = "[color=#f07068]● %d/%d[/color]    [color=#5a9cff]● %d/%d[/color]" % [
 		red, total_red, blue, total_blue]
+	# F2.6 (v4.2): eigen reserve + CP-saldo (D12: die van de AI blijven geheim).
+	if state.rules.campaign_actief():
+		_count_label.text += "    [color=#bbbbbb]Reserve %d · CP %d[/color]" % [
+			state.pool_total(_human_id), int(state.cp.get(_human_id, 0))]
 
 
 func _deselect() -> void:
@@ -2151,7 +2301,10 @@ func _deselect() -> void:
 
 func _on_tile_clicked(coord: Vector2i) -> void:
 	if _selected_pawn_id >= 0 and _valid_moves.has(coord):
-		GameSession.submit_move(_human_id, _selected_pawn_id, coord)
+		if _kanon_v42(_selected_pawn_id):
+			GameSession.submit_cannon_roll(_human_id, _selected_pawn_id, coord)
+		else:
+			GameSession.submit_move(_human_id, _selected_pawn_id, coord)
 
 
 func _select_pawn(pawn_id: int) -> void:

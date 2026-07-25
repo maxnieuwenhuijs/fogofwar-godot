@@ -43,7 +43,9 @@ func _ready() -> void:
 
 
 ## Stel de hand in op de doctrine van de speler (aantal × budget, Speed-limiet).
-func configure(card_count: int, budget: int, speed_max: int = 0) -> void:
+## F2.6 (v4.2): bonus_kaarten = aantal kaarten met budget+1 (de blinde CP-inzet,
+## D1) - de eerste kaarten in de waaier dragen het extra punt.
+func configure(card_count: int, budget: int, speed_max: int = 0, bonus_kaarten: int = 0) -> void:
 	_budget = budget
 	_speed_max = speed_max
 	if card_count != _card_count:
@@ -52,9 +54,9 @@ func configure(card_count: int, budget: int, speed_max: int = 0) -> void:
 			card.queue_free()
 		_cards = []
 		_build_cards()
-	for card in _cards:
-		card.data.budget = _budget
-		card.data.speed_max = _speed_max
+	for i in _cards.size():
+		_cards[i].data.budget = _budget + (1 if i < bonus_kaarten else 0)
+		_cards[i].data.speed_max = _speed_max
 
 
 func _build_cards() -> void:

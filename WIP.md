@@ -270,6 +270,23 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F2.6 deel B GEBOUWD (25 juli) — het v4.2-duel is speelbaar.** Na Max'
+  sturing ("bouw gewoon het spel"; D15 geparkeerd als B16, sweeps gestopt):
+  de mens-vs-AI-flow spreekt nu volledig v4.2. Nieuw in game.gd (12 edits):
+  regelset-keuze bij de matchstart (Klassiek 4.1 / Campagne-duel v4.2 via
+  v42_default.json), CP-bod-overlay voor de kaartwaaier (blind, opties 0..max,
+  timeout = zonder inzet door), kaartwaaier met per-kaart CP-budget
+  (card_hand.configure kreeg bonus_kaarten: eerste N kaarten budget+1),
+  versterkingen-overlay in CYCLE_SPAWN (aanvullen/niets; AI dient blind
+  aanvul-inzet in; timeout vult automatisch aan), kanon-vertaling op alle
+  4 submit-plekken (klik/timer/AI: artillerie -> submit_cannon_roll/shoot
+  onder campaign), AI-bet-heuristiek ronde 3, en Reserve+CP in de HUD-teller
+  (alleen eigen kant, D12). CHECKS: play-mode draait, 1162 asserts groen,
+  simcheck 5/5. OPEN: de MAX-check — een echt potje spelen (spawn, CP-inzet
+  en kanon-act moeten kloppend voelen); daarna F2.6 afvinken. MatchSetup-
+  presets (Aanvallend/Gebalanceerd/Verdedigend) doorgeschoven: de bestaande
+  moeilijkheids+doctrine+regelset-flow dekt de matchstart.
+
 - **F2.5 AFGEROND (24 juli) — agents leren v4.2.** L1: spawn maximaal
   (volste sample-optie), CP alleen op de ronde-3-kaarten (masterplan-
   heuristiek; wants_view nu ook in define-fases voor round_number),
