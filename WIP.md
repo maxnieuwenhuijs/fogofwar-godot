@@ -270,6 +270,19 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **Campagne-fitness in de trainer (26 juli) — "lange termijn denken".**
+  Onder v4.2-regels traint `_train_match` niet meer op kale winst maar op
+  het campagne-puntensysteem: haven 3 > eliminatie 2 > tiebreak 1 >
+  verlies 0, genormaliseerd + spaarbonus (0.15 × restleger-fractie + 0.05
+  × CP-fractie, óók voor de verliezer — in de campagne houd je wat
+  overleeft, dus sparen loont altijd). 4.1-training ongewijzigd
+  (win-based). De relatieve gate blijft geldig: kandidaat en referentie
+  scoren op dezelfde schaal. Trainingsconfig rules_v42_campaign.json:
+  cycle_limit 12→20 (echte winst kost 5-16 cycli; met 12 trainde je deels
+  op het tiebreak-vangnet). Rooktest: fitness fractioneel (2.4/6 etc.),
+  gate werkt, één generatie ±10-15 min per factie → nachtrun ≈ 30-45
+  generaties per factie. Max start training zelf via het paneel (B13).
+
 - **C9 GEBOUWD (26 juli) — playtest-iteratie 1: volle rondes + nieuwe hub.**
   Max' eerste playtest-feedback, direct verwerkt. Regels: ronde 1 = LOTING
   (nieuwe systeem-actie, alle 16 random 1v1-paren als data in het log,

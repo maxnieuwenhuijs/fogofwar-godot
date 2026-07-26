@@ -1550,11 +1550,47 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	while not runner.done:
 		runner.step()
 	var winner: int = runner.winner
-	runner.dispose()
-	if winner == -1:
-		return 0.5
 	var cand_side: int = Constants.PLAYER_1 if cand_is_p1 else Constants.PLAYER_2
-	return 1.0 if winner == cand_side else 0.0
+	var score: float
+	if _train_rules != null and _train_rules.campaign_actief():
+		score = _campagne_score(runner.state(), cand_side, winner)
+	else:
+		score = 0.5 if winner == -1 else (1.0 if winner == cand_side else 0.0)
+	runner.dispose()
+	return score
+
+
+## Campagne-fitness (26 juli, Max: "lange termijn denken"): onder v4.2-regels
+## traint de bot op het campagne-puntensysteem in plaats van kale winst.
+## Haven (3) > eliminatie (2) > tiebreak (1) > verlies (0), plus een kleine
+## spaarbonus: restleger en gespaarde CP gaan in de campagne mee naar het
+## volgende duel — óók voor de verliezer (die houdt zijn rest). Zo leert de
+## bot winnen ZONDER zichzelf leeg te vechten. Genormaliseerd naar [0, 1];
+## de relatieve adoptie-gate vergelijkt kandidaat en referentie op dezelfde
+## schaal, dus de gate-marge blijft geldig.
+func _campagne_score(s: GameState, kant: int, winner: int) -> float:
+	var punten: float = 0.0
+	if winner == -1:
+		punten = 1.0  # remise: beide het tiebreak-punt
+	elif winner == kant:
+		if Rules.count_pawns_in_haven(s, winner) >= s.rules.pawns_in_haven_to_win:
+			punten = 3.0
+		else:
+			var verliezer: int = Constants.opponent(winner)
+			if s.count_alive_pawns_for(verliezer) + s.pool_total(verliezer) == 0:
+				punten = 2.0
+			else:
+				punten = 1.0
+	var comp: Array = s.doctrine_data_of(kant).comp
+	var factor: float = float(s.rules.campaign.get("poolfactor", 1.5))
+	var start_totaal: int = 0
+	for t in 3:
+		start_totaal += int(comp[t]) + int(floor(int(comp[t]) * factor))
+	var rest: int = s.count_alive_pawns_for(kant) + s.pool_total(kant)
+	var rest_fractie: float = clampf(float(rest) / maxf(1.0, float(start_totaal)), 0.0, 1.0)
+	var cp_start: float = maxf(1.0, float(s.rules.campaign.get("cp_start", 10)))
+	var cp_fractie: float = clampf(float(s.cp.get(kant, 0)) / cp_start, 0.0, 1.0)
+	return (punten / 3.0 + 0.15 * rest_fractie + 0.05 * cp_fractie) / 1.2
 
 
 ## Convergentie-potjes: spiegel-partijen (beide kanten factie d) met VASTE

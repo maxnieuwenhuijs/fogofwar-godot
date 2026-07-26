@@ -43,7 +43,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   → `results/dashboard.html`; vergelijken: `python tools/dashboard/compare_runs.py A B`.
 - Training: `train_ai.bat [min]` (6 facties, 4.1) of per factie met v4.2-regels:
   `<godot> --headless --path . res://tools/capture.tscn -- train <min> 6 6 <factie> <seed> arena/arena_configs/rules_v42_campaign.json`
-  (trainer heeft een relatieve adoptie-gate + convergentiecheck).
+  (trainer heeft een relatieve adoptie-gate + convergentiecheck; onder
+  v4.2-regels traint hij op campagne-fitness: haven 3 > eliminatie 2 >
+  tiebreak 1 > verlies 0 + spaarbonus restleger/CP — één generatie duurt
+  met cycle_limit 20 zo'n 10-15 min per factie).
 - Fuzz: `<godot> --headless --path . res://arena/arena.tscn -- --fuzz [games] [seed]`
   (`--fuzz-selftest` = test-de-tester).
 
