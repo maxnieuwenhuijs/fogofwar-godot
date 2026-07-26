@@ -624,7 +624,7 @@ Barks: quick-chat-ids gepost als campagne-events op triggers (nominatie, donatie
 voor 5 benoemde triggers (o.a. nominatie-van-teamgenoot, testament-naar-vijand) elk ≥1 bark-event van de
 betrokken persoonlijkheid — assert op log-inhoud, niet op UI.
 
-### ☐ F3.3 — Campagne-UI (mobile-first)
+### ☑ F3.3 — Campagne-UI (mobile-first)
 
 **STATUS (25 juli): kern GEBOUWD** — `scripts/ui/campaign/campaign_hub.gd` + `scenes/campaign/campaign.tscn`:
 de CampagneHub met tijdlijn (barks + battlereports), eigen saldi, en de fase-panelen raad-ballot /
@@ -635,7 +635,8 @@ echte bord** — autoload `CampaignBridge` draagt de SoloDriver over de scene-wi
 v4.2-duel met campagne-bezit (mens = bord-P1) en boekt de uitslag terug als MATCH_RESULT; hoofdmenu
 kreeg "Solo-campagne (v4.2)". **26 juli (2): Grootboek (sorteerbare tabel, `LedgerScreen`),
 BracketView in het burgeroorlog-paneel en klikbare battlereports met verliezen + CP-delta; shot-modes
-`ledger` en `bracket`.** REST: touch-equivalenten voor rechtermuis-acties (online-plan-voorwerk).
+`ledger` en `bracket`. Touch-equivalent: contextuele knop linksonder op het bord (ongedaan /
+overslaan / deselecteer) — F3.3 AF.**
 
 **Bestanden:** `ui/screens/campaign_hub`, `ledger_screen`, `council_screen`, `donate_sheet`,
 `testament_screen`, `match_report`, components (`FactionIcon`, `PoolBadge`, `CPBadge`, `TimerBar`,

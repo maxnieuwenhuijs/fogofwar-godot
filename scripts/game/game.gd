@@ -100,6 +100,7 @@ func _ready() -> void:
 	_instructions = INSTRUCTIONS_SCRIPT.new()
 	$UI.add_child(_instructions)
 	_build_help_button()
+	_bouw_context_knop()
 	_hp_layer = Control.new()
 	_hp_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hp_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -116,6 +117,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_update_screen_shake(delta)
 	_update_health_bars()
+	_update_context_knop()
 	if _timer_active:
 		_timer_left -= delta
 		if _timer_left <= 0.0:
@@ -341,6 +343,57 @@ func _build_help_button() -> void:
 
 var _help_resume_timer: bool = false
 var _help_time_left: float = 0.0
+var _context_knop: Button
+
+
+## F3.3-rest — touch-equivalent voor de rechtermuis-acties: één contextuele
+## knop linksonder (ongedaan / overslaan / deselecteer). Rechtermuis blijft
+## gewoon werken; dit is dezelfde actie voor vingers.
+func _bouw_context_knop() -> void:
+	_context_knop = Button.new()
+	_context_knop.name = "ContextKnop"
+	_context_knop.visible = false
+	_context_knop.custom_minimum_size = Vector2(180, 64)
+	_context_knop.add_theme_font_size_override("font_size", 20)
+	_context_knop.anchors_preset = Control.PRESET_BOTTOM_LEFT
+	_context_knop.anchor_top = 1.0
+	_context_knop.anchor_bottom = 1.0
+	_context_knop.offset_left = 20.0
+	_context_knop.offset_top = -84.0
+	_context_knop.offset_right = 200.0
+	_context_knop.offset_bottom = -20.0
+	_context_knop.pressed.connect(_on_context_knop)
+	$UI.add_child(_context_knop)
+
+
+func _update_context_knop() -> void:
+	if _context_knop == null:
+		return
+	if _placement_mode:
+		_context_knop.text = "Ongedaan"
+		_context_knop.visible = true
+		return
+	if _wolf_step_mode:
+		_context_knop.text = "Overslaan"
+		_context_knop.visible = true
+		return
+	var st: GameState = GameSession.state
+	if st != null and st.phase == Phase.Type.ACTION and _selected_pawn_id >= 0 \
+			and st.current_player == _human_id:
+		_context_knop.text = "Deselecteer"
+		_context_knop.visible = true
+		return
+	_context_knop.visible = false
+
+
+func _on_context_knop() -> void:
+	if _placement_mode:
+		_undo_placement()
+	elif _wolf_step_mode:
+		_end_wolf_step_mode()
+		GameSession.skip_wolf_step(_human_id)
+	elif _selected_pawn_id >= 0:
+		_deselect()
 
 
 func _on_help_pressed() -> void:

@@ -270,6 +270,14 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.3 AFGEROND (26 juli) — touch-equivalent voor rechtermuis-acties.**
+  Eén contextuele knop linksonder op het bord ("ContextKnop", 64px hoog)
+  die meebeweegt met de modus: "Ongedaan" tijdens zelf opstellen,
+  "Overslaan" bij de gratis Wolf-stap, "Deselecteer" bij een selectie in
+  de actiefase. Rechtermuis blijft werken; dit is dezelfde actie voor
+  vingers (mobile-first, online-plan-voorwerk). Daarmee is het hele
+  F3-UI-blok af. CHECKS: play, vosview PASS, 1459 asserts groen.
+
 - **F3.3-rest GEBOUWD (26 juli) — Grootboek, BracketView, MatchReport-detail.**
   `LedgerScreen` (scripts/ui/campaign/): het volledige, openbare
   campagne-ledger als sorteerbare tabel (naam/team/status/soldaten/
