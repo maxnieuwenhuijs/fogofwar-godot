@@ -33,7 +33,7 @@
   "increment_sec": 0,
   "reconnect_grace_sec": 20
  },
- "cycle_limit": 12,
+ "cycle_limit": 20,
  "doctrines": {},
  "fire_blocked": true,
  "fire_hits_inactive": true,
