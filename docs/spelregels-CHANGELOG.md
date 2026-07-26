@@ -4,7 +4,8 @@
 
 - **Ronde 1 = loting:** alle 16 spelers worden random 1v1 gepaird (nieuwe
   campagne-actie `loting`, systeem-only, paren als data in het log). Geen
-  raad in ronde 1.
+  raad en geen donatie-venster in ronde 1 (iedereen heeft zijn
+  factie-start): na de loting direct de duels in.
 - **Ronde 2+ = iedereen vecht:** `duels_per_ronde_max` 2 -> 8; aantal duels
   = kleinste teamgrootte; de raad stemt de matchups om-en-om; overtal rust.
 - **Donaties:** aan elke levende teamgenoot (was: alleen genomineerden) —

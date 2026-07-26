@@ -27,8 +27,10 @@
 
 Flow per ronde (C6, aangescherpt door **C9**, Max 26 juli):
 
-1. **Ronde 1 — de loting:** geen raad; het lot paart álle 16 spelers in
-   random 1v1's (cross-team). De paren gaan als `loting`-actie het log in
+1. **Ronde 1 — de loting:** geen raad én geen donatie-venster; het lot
+   paart álle 16 spelers in random 1v1's (cross-team) en de duels beginnen
+   direct — iedereen start immers met zijn eigen factie-bezit, er valt
+   niets te herverdelen. De paren gaan als `loting`-actie het log in
    (systeem-actie, speler -1) zodat de replay deterministisch blijft.
 2. **Ronde 2+ — raad:** nominaties + stemmen bepalen de paren; **iedereen
    die een tegenstander kan krijgen vecht** (aantal duels = kleinste

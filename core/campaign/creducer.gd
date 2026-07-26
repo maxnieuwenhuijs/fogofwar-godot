@@ -98,7 +98,9 @@ static func _do_loting(c: CState, action: Dictionary, speler: int, events: Array
 		c.al_genomineerd[p1] = true
 		c.al_genomineerd[p2] = true
 		_ev(events, EV_DUEL, {"p1": p1, "p2": p2, "duel": c.duels_deze_ronde.size() - 1})
-	_zet_fase(c, CState.Fase.DONATIE, events)
+	# Geen donatie-venster in ronde 1 (Max, 26 juli): iedereen start met zijn
+	# factie-bezit, er valt niets zinnigs te herverdelen — direct het bord op.
+	_zet_fase(c, CState.Fase.DUELS, events)
 	return ""
 
 

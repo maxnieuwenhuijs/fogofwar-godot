@@ -125,10 +125,11 @@ func test_c9_loting_ronde_1() -> void:
 		"dubbel geloot lid geweigerd")
 	assert_false(CReducer.apply(c, CActions.make_loting([[0, 3]]), -1).ok,
 		"loting moet iedereen paren")
-	# De geldige loting: 3 duels, iedereen genomineerd, door naar doneren.
+	# De geldige loting: 3 duels, iedereen genomineerd, direct het bord op
+	# (geen donatie-venster in ronde 1 — iedereen heeft zijn factie-start).
 	assert_true(CReducer.apply(c, CActions.make_loting(paren), -1).ok, "geldige loting")
 	assert_eq(c.duels_deze_ronde.size(), 3, "iedereen vecht in ronde 1")
-	assert_eq(c.fase, CState.Fase.DONATIE, "na de loting: donatie-venster")
+	assert_eq(c.fase, CState.Fase.DUELS, "na de loting: direct de duels in")
 	for sid in 6:
 		assert_true(c.al_genomineerd.has(sid), "speler %d is gepaird" % sid)
 

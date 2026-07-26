@@ -152,7 +152,7 @@ func test_c9_loting_in_solo_campagne() -> void:
 	var driver := SoloDriver.new(808, -1, 6)
 	driver.duel_ai = "easy"
 	driver.stap()
-	assert_eq(driver.c.fase, CState.Fase.DONATIE, "loting sluit de nominatie meteen")
+	assert_eq(driver.c.fase, CState.Fase.DUELS, "loting -> direct de duels in (geen donaties in ronde 1)")
 	assert_eq(driver.c.duels_deze_ronde.size(), 3, "3v3: iedereen vecht in ronde 1")
 	assert_eq(String((driver.clog.entries[0].action as Dictionary).type), "loting",
 		"de loting staat als data in het log (replaybaar)")
