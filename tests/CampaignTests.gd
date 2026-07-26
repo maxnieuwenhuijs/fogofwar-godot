@@ -9,10 +9,13 @@ func _class_name() -> String:
 
 
 ## 6 spelers (ids 0..5): team 0 = {0,1,2}, team 1 = {3,4,5}, allen MENS.
+## ronde1_loting staat hier UIT: deze suite test de raad-machinerie (stemmen,
+## staking, defaults) — de C9-loting heeft eigen tests hieronder.
 func _mini(duels_max: int = 1) -> CState:
 	var c := CState.new()
 	c.rules = CRules.new()
 	c.rules.duels_per_ronde_max = duels_max
+	c.rules.ronde1_loting = false
 	var lijst: Array = []
 	for i in 6:
 		lijst.append({"naam": "S%d" % i, "doctrine": Constants.Doctrine.MENS})
@@ -95,6 +98,52 @@ func test_zelfnominatie_laatste_overlevende() -> void:
 	assert_false(res.ok, "een vijand als eigen vechter kan sowieso niet")
 
 
+## C9-helper: verse staat MET loting aan (zoals echte campagnes).
+func _mini_loting() -> CState:
+	var c := CState.new()
+	c.rules = CRules.new()
+	var lijst: Array = []
+	for i in 6:
+		lijst.append({"naam": "S%d" % i, "doctrine": Constants.Doctrine.MENS})
+	c.setup(lijst, c.rules)
+	return c
+
+
+func test_c9_loting_ronde_1() -> void:
+	var c := _mini_loting()
+	# Stemmen in ronde 1 is er niet meer.
+	assert_false(CReducer.apply(c, CActions.make_nominate(0, 3), 0).ok,
+		"ronde 1 wordt geloot, niet gestemd")
+	# Alleen het systeem mag loten.
+	var paren: Array = [[0, 3], [1, 4], [2, 5]]
+	assert_false(CReducer.apply(c, CActions.make_loting(paren), 0).ok,
+		"een speler kan de loting niet indienen")
+	# Ongeldige lotingen: binnen een team, dubbel lid, onvolledig.
+	assert_false(CReducer.apply(c, CActions.make_loting([[0, 1], [2, 3], [4, 5]]), -1).ok,
+		"paar binnen een team geweigerd")
+	assert_false(CReducer.apply(c, CActions.make_loting([[0, 3], [0, 4], [2, 5]]), -1).ok,
+		"dubbel geloot lid geweigerd")
+	assert_false(CReducer.apply(c, CActions.make_loting([[0, 3]]), -1).ok,
+		"loting moet iedereen paren")
+	# De geldige loting: 3 duels, iedereen genomineerd, door naar doneren.
+	assert_true(CReducer.apply(c, CActions.make_loting(paren), -1).ok, "geldige loting")
+	assert_eq(c.duels_deze_ronde.size(), 3, "iedereen vecht in ronde 1")
+	assert_eq(c.fase, CState.Fase.DONATIE, "na de loting: donatie-venster")
+	for sid in 6:
+		assert_true(c.al_genomineerd.has(sid), "speler %d is gepaird" % sid)
+
+
+func test_c9_volle_rondes_default() -> void:
+	# De nieuwe standaard: duels per ronde = kleinste teamgrootte (cap 8).
+	var c := _mini_loting()
+	assert_eq(c.rules.duels_per_ronde_max, 8, "nieuwe default: iedereen vecht")
+	assert_eq(c.duels_per_ronde(), 3, "min(cap, kleinste team) = 3 bij 3v3")
+	# Compat: een oud campagne-dict zonder de nieuwe sleutels foldt oud gedrag.
+	var oud := CRules.from_dict({"team_size": 8})
+	assert_eq(oud.duels_per_ronde_max, 2, "oude saves: max 2 duels per ronde")
+	assert_false(oud.ronde1_loting, "oude saves: geen loting")
+
+
 func test_donatiecaps_en_regels() -> void:
 	var c := _mini()
 	_stem_unaniem(c, 0, 3)
@@ -109,9 +158,9 @@ func test_donatiecaps_en_regels() -> void:
 	# Cap CP: 2 zat er al, nog 2 = 4 > 3 -> geweigerd.
 	var teveel_cp: Dictionary = CReducer.apply(c, CActions.make_donate(0, 0, 0, 0, 2), 2)
 	assert_false(teveel_cp.ok, "donatiecap 3 CP per ontvanger per ronde")
-	# Niet-genomineerde ontvanger -> geweigerd.
-	assert_false(CReducer.apply(c, CActions.make_donate(1, 1, 0, 0, 0), 2).ok,
-		"doneren kan alleen aan een genomineerde")
+	# C9 (26 juli): doneren mag aan élke levende teamgenoot, ook niet-genomineerd.
+	assert_true(CReducer.apply(c, CActions.make_donate(1, 1, 0, 0, 0), 2).ok,
+		"doneren aan een niet-genomineerde teamgenoot mag (C9)")
 	# Vijand -> geweigerd.
 	assert_false(CReducer.apply(c, CActions.make_donate(3, 1, 0, 0, 0), 1).ok,
 		"doneren aan de vijand kan niet")

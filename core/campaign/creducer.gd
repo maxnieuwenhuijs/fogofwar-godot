@@ -32,6 +32,8 @@ static func apply(c: CState, action: Dictionary, speler: int) -> Dictionary:
 	match String(action.type):
 		CActions.NOMINATE:
 			fout = _do_nominate(c, action, speler, events)
+		CActions.LOTING:
+			fout = _do_loting(c, action, speler, events)
 		CActions.DONATE:
 			fout = _do_donate(c, action, speler, events)
 		CActions.KLAAR_MET_DONEREN:
@@ -55,9 +57,56 @@ static func _nee(reden: String) -> Dictionary:
 
 # --- Nominatie (v1: stemmen in een keer) --------------------------------------
 
+## C9 — ronde 1: het lot bepaalt de paren. Alleen het systeem (speler -1)
+## mag de loting indienen; de paren zelf zitten in de actie zodat de replay
+## deterministisch is. Elke actieve speler precies één keer, paren cross-team.
+static func _do_loting(c: CState, action: Dictionary, speler: int, events: Array) -> String:
+	if c.fase != CState.Fase.NOMINATIE:
+		return "Niet in de nominatie-fase"
+	if not c.rules.ronde1_loting or c.ronde != 1:
+		return "Loting is alleen ronde 1"
+	if speler != -1:
+		return "De loting is van de campagne zelf"
+	if not c.duels_deze_ronde.is_empty():
+		return "Er zijn al duels"
+	var paren: Array = action.paren
+	var gezien: Dictionary = {}
+	for paar in paren:
+		if not (paar is Array) or (paar as Array).size() != 2:
+			return "Misvormd lotingspaar"
+		var a := int((paar as Array)[0])
+		var b := int((paar as Array)[1])
+		var sp_a: Dictionary = c.spelers.get(a, {})
+		var sp_b: Dictionary = c.spelers.get(b, {})
+		if sp_a.is_empty() or sp_b.is_empty():
+			return "Onbekende speler in de loting"
+		if String(sp_a.status) != "actief" or String(sp_b.status) != "actief":
+			return "Gevallen speler in de loting"
+		if int(sp_a.team) == int(sp_b.team):
+			return "Lotingspaar binnen een team"
+		if gezien.has(a) or gezien.has(b):
+			return "Speler dubbel geloot"
+		gezien[a] = true
+		gezien[b] = true
+	var verwacht: int = c.actieve_leden(0).size() + c.actieve_leden(1).size()
+	if gezien.size() != verwacht:
+		return "De loting moet alle actieve spelers paren"
+	for paar in paren:
+		var p1 := int((paar as Array)[0])
+		var p2 := int((paar as Array)[1])
+		c.duels_deze_ronde.append({"p1": p1, "p2": p2, "klaar": false})
+		c.al_genomineerd[p1] = true
+		c.al_genomineerd[p2] = true
+		_ev(events, EV_DUEL, {"p1": p1, "p2": p2, "duel": c.duels_deze_ronde.size() - 1})
+	_zet_fase(c, CState.Fase.DONATIE, events)
+	return ""
+
+
 static func _do_nominate(c: CState, action: Dictionary, speler: int, events: Array) -> String:
 	if c.fase != CState.Fase.NOMINATIE:
 		return "Niet in de nominatie-fase"
+	if c.rules.ronde1_loting and c.ronde == 1:
+		return "Ronde 1 wordt geloot, niet gestemd"
 	var lid: Dictionary = c.spelers.get(speler, {})
 	if lid.is_empty() or String(lid.status) != "actief":
 		return "Geen actieve speler"
@@ -135,12 +184,9 @@ static func _do_donate(c: CState, action: Dictionary, speler: int, events: Array
 	var doel: Dictionary = c.spelers.get(naar, {})
 	if doel.is_empty() or String(doel.status) != "actief" or int(doel.team) != int(lid.team):
 		return "Doneren kan alleen aan een actief eigen teamlid"
-	var genomineerd := false
-	for duel in c.duels_deze_ronde:
-		if int(duel.p1) == naar or int(duel.p2) == naar:
-			genomineerd = true
-	if not genomineerd:
-		return "Doneren kan alleen aan een genomineerde"
+	# C9 (26 juli): iedereen vecht, dus doneren mag aan élke levende teamgenoot
+	# (voorheen alleen aan genomineerden — de nieuwe regel is een superset,
+	# oude logs blijven geldig folden).
 	if naar == speler:
 		return "Aan jezelf doneren heeft geen zin"
 	var inf: int = maxi(0, int(action.inf))
@@ -317,6 +363,8 @@ static func _verbrand_alles(c: CState, events: Array, speler: int) -> void:
 static func _do_tick(c: CState, events: Array) -> String:
 	match c.fase:
 		CState.Fase.NOMINATIE:
+			if c.rules.ronde1_loting and c.ronde == 1:
+				return "Ronde 1 wacht op de loting"
 			# Wie niet stemde krijgt de default: sterkste eigen (grootste pool,
 			# nog niet genomineerd) tegen de zwakste vijand (kleinste pool).
 			var eigen_leden: Array = c.actieve_leden(c.nominatie_team)

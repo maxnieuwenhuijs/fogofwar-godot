@@ -1,5 +1,23 @@
 # Spelregels — CHANGELOG
 
+## Campagne C9 — 26 juli 2026 (playtest Max: volle rondes, geen cycluslimiet)
+
+- **Ronde 1 = loting:** alle 16 spelers worden random 1v1 gepaird (nieuwe
+  campagne-actie `loting`, systeem-only, paren als data in het log). Geen
+  raad in ronde 1.
+- **Ronde 2+ = iedereen vecht:** `duels_per_ronde_max` 2 -> 8; aantal duels
+  = kleinste teamgrootte; de raad stemt de matchups om-en-om; overtal rust.
+- **Donaties:** aan elke levende teamgenoot (was: alleen genomineerden) —
+  een superset, oude logs blijven geldig.
+- **Cycluslimiet campagne-duels:** 6 -> 0 (uit). Duels eindigen op haven of
+  eliminatie, zoals een los potje; de bot-simulatie houdt alleen een ruime
+  noodstop (max_steps 3000). Reden: met limiet 6 eindigde vrijwel elk duel
+  in het tiebreak-vangnet (echte winst kost 5-16 cycli) en stierf er
+  niemand, waardoor campagnes 34-44 rondes duurden.
+- **Compat:** oude campagne-saves folden onder hun eigen regels
+  (`CRules.from_dict` valt terug op max 2 duels / geen loting); de hub
+  start bij een pre-C9-save een verse campagne.
+
 ## 4.2.0 — juli 2026 (F2.2: pools + CYCLE_SPAWN, config-gated door het campaign-blok)
 
 **Bijstelling 25 juli (besluit Max, na de eerste speeltest):** `cp_start`

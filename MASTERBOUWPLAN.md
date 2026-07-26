@@ -670,6 +670,17 @@ duel verliest hooguit de laatste actie.
 hub hervat automatisch `user://campaigns/solo/`. Match-logs per duel volgen bij de
 game-scene-koppeling (F3.3-rest) — de battlereport-cijfers zitten al in het campagne-log.*
 
+### ☑ F3.5 — Playtest-iteratie 1 (C9, 26 juli)
+
+**Max' feedback na de eerste solo-playtest:** (1) bots wonnen vrijwel alleen via tiebreak → oorzaak:
+cycluslimiet 6 op campagne-duels (echte winst kost 5-16 cycli) → limiet eruit (0 = uit, noodstop
+max_steps 3000). (2) Nieuwe rondestructuur **C9**: ronde 1 = loting (alle 16 random 1v1, systeem-actie
+`loting`, paren als data in het log), ronde 2+ = iedereen vecht (duels = kleinste teamgrootte, raad
+stemt de paren), doneren aan elke levende teamgenoot. (3) Hub-UI herbouwd: teamkolommen met bolletjes
+(links eigen, rechts vijand, saldo per lid), chatlog eronder. Compat: pre-C9-saves folden onder hun
+oude regels (from_dict-fallbacks); de hub start dan vers. Spec + CHANGELOG bijgewerkt. Meetgereedschap:
+`-- duelstats [ai] [seeds] [spelers]` (methode-verdeling per cycluslimiet).
+
 ---
 
 ## 8. FASE F4 — Online duels

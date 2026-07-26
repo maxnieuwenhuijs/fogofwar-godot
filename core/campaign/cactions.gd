@@ -7,6 +7,7 @@ extends RefCounted
 # wint, staking -> kleinste pool beslist). VOTE als losse actie is F5-werk.
 
 const NOMINATE := "nominate"        # {eigen, vijand}
+const LOTING := "loting"            # {paren: [[team0-lid, team1-lid], ...]} — C9, ronde 1, systeem
 const DONATE := "donate"            # {naar, inf, cav, art, cp}
 const KLAAR_MET_DONEREN := "klaar_met_doneren"  # {} — sluit jouw donatie-venster
 const MATCH_RESULT := "match_result"  # {duel, winnaar, methode, verliezen:{"<id>":{inf,cav,art}}, cp_delta:{"<id>": n}}
@@ -15,6 +16,7 @@ const TICK_DEADLINE := "tick_deadline"  # {} — defaults afdwingen (ook in het 
 
 const _FIELDS := {
 	NOMINATE: ["eigen", "vijand"],
+	LOTING: ["paren"],
 	DONATE: ["naar", "inf", "cav", "art", "cp"],
 	KLAAR_MET_DONEREN: [],
 	MATCH_RESULT: ["duel", "winnaar", "methode", "verliezen", "cp_delta"],
@@ -25,6 +27,9 @@ const _FIELDS := {
 
 static func make_nominate(eigen: int, vijand: int) -> Dictionary:
 	return {"type": NOMINATE, "eigen": eigen, "vijand": vijand}
+
+static func make_loting(paren: Array) -> Dictionary:
+	return {"type": LOTING, "paren": paren}
 
 static func make_donate(naar: int, inf: int, cav: int, art: int, cp: int) -> Dictionary:
 	return {"type": DONATE, "naar": naar, "inf": inf, "cav": cav, "art": art, "cp": cp}
@@ -53,5 +58,7 @@ static func is_wellformed(a) -> bool:
 		if not a.has(field):
 			return false
 	if t == TESTAMENT and not (a.verdeling is Array):
+		return false
+	if t == LOTING and not (a.paren is Array):
 		return false
 	return true

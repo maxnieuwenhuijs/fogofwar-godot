@@ -270,6 +270,23 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **C9 GEBOUWD (26 juli) — playtest-iteratie 1: volle rondes + nieuwe hub.**
+  Max' eerste playtest-feedback, direct verwerkt. Regels: ronde 1 = LOTING
+  (nieuwe systeem-actie, alle 16 random 1v1-paren als data in het log,
+  geen raad), ronde 2+ = iedereen vecht (duels_per_ronde_max 2→8, aantal
+  = kleinste team, raad stemt de paren om-en-om), doneren aan élke levende
+  teamgenoot (superset, oude logs geldig), cycluslimiet op campagne-duels
+  6→0 (uit — vrijwel alles eindigde in het tiebreak-vangnet omdat echte
+  winst 5-16 cycli kost; noodstop max_steps 3000 blijft). Compat:
+  CRules.from_dict valt voor ontbrekende sleutels terug op de oude
+  waarden, dus pre-C9-saves folden ongewijzigd; de hub start dan een
+  verse campagne. UI: hub herbouwd naar Max' schets — links 8 bolletjes
+  eigen team, rechts de vijand (initiaal in teamkleur, geel randje =
+  vecht nu, grijs = gevallen, saldo-regel per lid), chatlog eronder,
+  fase-paneel onderaan. Meetmodus `-- duelstats` toegevoegd (methode-
+  verdeling per cycluslimiet). CHECKS: 1473 asserts groen (nieuwe
+  loting/volle-ronde/donatie-tests), hub-shot 0 fouten.
+
 - **F3.3 AFGEROND (26 juli) — touch-equivalent voor rechtermuis-acties.**
   Eén contextuele knop linksonder op het bord ("ContextKnop", 64px hoog)
   die meebeweegt met de modus: "Ongedaan" tijdens zelf opstellen,

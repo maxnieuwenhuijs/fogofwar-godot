@@ -49,7 +49,8 @@ func _ready() -> void:
 			hub.mens_id = 0
 			add_child(hub)
 			await get_tree().create_timer(1.2).timeout
-			for node_naam in ["Header", "Saldi", "Tijdlijn", "FasePaneel", "GrootboekKnop"]:
+			for node_naam in ["Header", "Saldi", "Tijdlijn", "FasePaneel", "GrootboekKnop",
+					"TeamLinks", "TeamRechts"]:
 				if hub.find_child(node_naam, true, false) == null:
 					shot_fouten += 1
 					print("[SHOT] node ontbreekt: %s" % node_naam)
@@ -57,6 +58,11 @@ func _ready() -> void:
 			if kop == null or not kop.text.contains("Ronde"):
 				shot_fouten += 1
 				print("[SHOT] header toont geen ronde")
+			for kolom_naam in ["TeamLinks", "TeamRechts"]:
+				var tk: VBoxContainer = hub.find_child(kolom_naam, true, false)
+				if tk == null or tk.get_child_count() < 9:
+					shot_fouten += 1
+					print("[SHOT] %s mist teamrijen (titel + 8 leden)" % kolom_naam)
 		elif scherm == "ledger":
 			var ldriver := SoloDriver.new(shot_seed, 0)
 			var lscherm: Control = load("res://scripts/ui/campaign/ledger_screen.gd").new()
@@ -142,6 +148,41 @@ func _ready() -> void:
 		var totaal := (Time.get_ticks_msec() - t0) / 1000.0
 		print("[SOLO] klaar: %d/%d runs OK in %.1f s" % [n_runs - fouten, n_runs, totaal])
 		get_tree().quit(0 if fouten == 0 and determinist else 1)
+		return
+	if "duelstats" in OS.get_cmdline_user_args():
+		# F3-tuning: methode-verdeling van campagne-duels per cycluslimiet.
+		# Gebruik: -- duelstats [ai] [seeds] [spelers] — meet hoe vaak duels
+		# echt beslist worden (haven/eliminatie) versus de tiebreak-vangnet.
+		var dargs := OS.get_cmdline_user_args()
+		var di := dargs.find("duelstats")
+		var d_ai: String = String(dargs[di + 1]) if dargs.size() > di + 1 else "medium"
+		var d_seeds: int = int(dargs[di + 2]) if dargs.size() > di + 2 else 2
+		var d_spelers: int = int(dargs[di + 3]) if dargs.size() > di + 3 else 6
+		for limiet in [6, 12, 24, 0]:
+			var telling := {"tiebreak": 0, "haven": 0, "eliminatie": 0, "remise": 0}
+			var rondes := 0
+			var duels := 0
+			var t0d := Time.get_ticks_msec()
+			for s_i in d_seeds:
+				var dd := SoloDriver.new(1000 + s_i, -1, d_spelers)
+				dd.duel_ai = d_ai
+				dd.duel_cycle_limit = limiet
+				dd.duel_max_steps = 4000 if limiet == 0 else 200 + limiet * 80
+				dd.run_headless(1600)
+				rondes += dd.c.ronde
+				duels += dd.duels_gespeeld
+				for e in dd.feed:
+					if String(e.get("type", "")) == "report":
+						if int(e.winnaar) == -1:
+							telling.remise = int(telling.remise) + 1
+						else:
+							telling[String(e.methode)] = int(telling[String(e.methode)]) + 1
+			print("[DUELSTATS] limiet=%s ai=%s: haven %d · eliminatie %d · tiebreak %d · remise %d — gem %.1f rondes, %.1f duels per campagne · %.1f s" % [
+				"uit" if limiet == 0 else str(limiet), d_ai, int(telling.haven),
+				int(telling.eliminatie), int(telling.tiebreak), int(telling.remise),
+				float(rondes) / d_seeds, float(duels) / d_seeds,
+				(Time.get_ticks_msec() - t0d) / 1000.0])
+		get_tree().quit(0)
 		return
 	if "train" in OS.get_cmdline_user_args():
 		# Headless auto-trainer (CMA-lite), géén dashboard nodig.

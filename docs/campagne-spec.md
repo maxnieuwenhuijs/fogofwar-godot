@@ -25,19 +25,32 @@
 
 ## 2. De raadsronde
 
-Flow per ronde (C6):
+Flow per ronde (C6, aangescherpt door **C9**, Max 26 juli):
 
-1. **Raad**: nominaties + stemmen bepalen wie duelleert.
-2. **Donatie-venster**: leden schuiven pionnen/CP naar de genomineerden.
-3. **Duels** (parallel of na elkaar; solo: bot-duels op vol tempo).
-4. **Battlereports + ledger-verwerking**, dan de volgende ronde.
+1. **Ronde 1 — de loting:** geen raad; het lot paart álle 16 spelers in
+   random 1v1's (cross-team). De paren gaan als `loting`-actie het log in
+   (systeem-actie, speler -1) zodat de replay deterministisch blijft.
+2. **Ronde 2+ — raad:** nominaties + stemmen bepalen de paren; **iedereen
+   die een tegenstander kan krijgen vecht** (aantal duels = kleinste
+   teamgrootte, cap `duels_per_ronde_max` = 8). Overtal van het grotere
+   team heeft een ronde rust.
+3. **Donatie-venster**: leden schuiven pionnen/CP naar **elke levende
+   teamgenoot** (C9; caps per ontvanger blijven).
+4. **Duels** (solo: bot-duels op vol tempo, het mens-duel op het bord;
+   **zonder cycluslimiet** — een duel eindigt op haven of eliminatie, de
+   simulatie heeft alleen een ruime technische noodstop).
+5. **Battlereports + ledger-verwerking**, dan de volgende ronde.
 
 Regels (vastgelegd, masterplan):
 
-- **Nominatie:** niemand wordt 2× per raadsronde genomineerd; aantal duels
-  per ronde = min(2, kleinste teamgrootte); het kleinste team (tiebreak:
-  minste punten) nomineert eerst; een team met 1 overlevende nomineert
-  zichzelf.
+- **Nominatie (ronde 2+):** niemand wordt 2× per raadsronde genomineerd;
+  aantal duels per ronde = min(duels_per_ronde_max=8, kleinste
+  teamgrootte); het kleinste team (tiebreak: minste punten) nomineert
+  eerst; een team met 1 overlevende nomineert zichzelf.
+- **Compat:** campagne-logs van vóór C9 dragen hun oude regels
+  (`duels_per_ronde_max` 2, geen loting) in de begin-snapshot en folden
+  ongewijzigd; `CRules.from_dict` valt voor ontbrekende sleutels terug op
+  de oude waarden.
 - **Stemmen:** default beslist de teammeerderheid; bij staking van stemmen
   wint de stem van de speler met de **kleinste pool** (die draagt het
   grootste risico).

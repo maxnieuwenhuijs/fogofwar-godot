@@ -147,6 +147,17 @@ func test_mens_duel_pauzeert_en_bord_uitslag_boekt() -> void:
 	assert_true(bool(uitkomst.ok), "ook met bord-uitslagen replayt het log")
 
 
+func test_c9_loting_in_solo_campagne() -> void:
+	# C9: ronde 1 loot het systeem — iedereen vecht, de paren staan in het log.
+	var driver := SoloDriver.new(808, -1, 6)
+	driver.duel_ai = "easy"
+	driver.stap()
+	assert_eq(driver.c.fase, CState.Fase.DONATIE, "loting sluit de nominatie meteen")
+	assert_eq(driver.c.duels_deze_ronde.size(), 3, "3v3: iedereen vecht in ronde 1")
+	assert_eq(String((driver.clog.entries[0].action as Dictionary).type), "loting",
+		"de loting staat als data in het log (replaybaar)")
+
+
 func test_grootboek_sortering() -> void:
 	# F3.3-rest: het Grootboek sorteert stabiel op elke kolom.
 	var driver := _speel(555)  # uitgespeelde campagne: ook gevallen spelers

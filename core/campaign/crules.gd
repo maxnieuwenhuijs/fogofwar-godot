@@ -5,7 +5,8 @@ extends RefCounted
 # Zelfde filosofie als RulesConfig: één set knoppen per campagne, onveranderlijk.
 
 var team_size: int = 8                    # C1: twee teams van 8
-var duels_per_ronde_max: int = 2          # min(dit, kleinste teamgrootte)
+var duels_per_ronde_max: int = 8          # min(dit, kleinste teamgrootte) — 8 = iedereen vecht
+var ronde1_loting: bool = true            # C9: ronde 1 = random 1v1-paren, geen raad
 
 # Startbezit per speler (de 1v1-setting als campagne-standaard):
 var start_poolfactor: float = 1.5         # voorraad = comp x factor (afgerond omlaag)
@@ -36,6 +37,7 @@ func to_dict() -> Dictionary:
 	return {
 		"team_size": team_size,
 		"duels_per_ronde_max": duels_per_ronde_max,
+		"ronde1_loting": ronde1_loting,
 		"start_poolfactor": start_poolfactor,
 		"start_cp": start_cp,
 		"donatie_cap_pionnen": donatie_cap_pionnen,
@@ -54,7 +56,11 @@ func to_dict() -> Dictionary:
 static func from_dict(d: Dictionary) -> CRules:
 	var c := CRules.new()
 	c.team_size = int(d.get("team_size", c.team_size))
-	c.duels_per_ronde_max = int(d.get("duels_per_ronde_max", c.duels_per_ronde_max))
+	# Compat: oude campagnes (voor 26 juli) misten deze sleutels — die logs
+	# moeten onder hun eigen, oude regels blijven folden (max 2 duels, geen
+	# loting). Nieuwe campagnes schrijven de nieuwe waarden altijd uit.
+	c.duels_per_ronde_max = int(d.get("duels_per_ronde_max", 2))
+	c.ronde1_loting = bool(d.get("ronde1_loting", false))
 	c.start_poolfactor = float(d.get("start_poolfactor", c.start_poolfactor))
 	c.start_cp = int(d.get("start_cp", c.start_cp))
 	c.donatie_cap_pionnen = int(d.get("donatie_cap_pionnen", c.donatie_cap_pionnen))

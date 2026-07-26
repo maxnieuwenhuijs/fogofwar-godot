@@ -16,9 +16,11 @@ const AIEasyScript := preload("res://scripts/ai/AIEasy.gd")
 
 ## Duel-botniveau: "medium" (standaard) of "easy" (snelle tests/CI);
 ## de limieten zijn instelbaar zodat checks korte duels kunnen draaien.
+## Cycluslimiet 0 = uit (26 juli, Max): duels spelen uit tot haven of
+## eliminatie, net als een los potje; max_steps is de technische noodstop.
 var duel_ai: String = "medium"
-var duel_cycle_limit: int = 6
-var duel_max_steps: int = 700
+var duel_cycle_limit: int = 0
+var duel_max_steps: int = 3000
 
 var c: CState = CState.new()
 var clog: CLog = CLog.new()
@@ -118,6 +120,15 @@ func _pas_toe(action: Dictionary, speler: int) -> bool:
 	return res.ok
 
 
+## Fisher-Yates met de campagne-rng (Array.shuffle() zou de globale rng pakken).
+func _schud(lijst: Array, rng: SeededRng) -> void:
+	for i in range(lijst.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var tmp = lijst[i]
+		lijst[i] = lijst[j]
+		lijst[j] = tmp
+
+
 func _bark(speler: int, trigger: String, wie: String = "") -> void:
 	var agent: CampaignAgent = agents[speler]
 	var tekst: String = agent.bark(trigger)
@@ -136,7 +147,9 @@ func wacht_op_mens() -> bool:
 		return false
 	match c.fase:
 		CState.Fase.NOMINATIE:
-			return int(c.spelers[mens_id].team) == c.nominatie_team 				and not c.nominatie_stemmen.has(mens_id)
+			if c.rules.ronde1_loting and c.ronde == 1:
+				return false  # C9: ronde 1 loot het systeem, niemand stemt
+			return int(c.spelers[mens_id].team) == c.nominatie_team and not c.nominatie_stemmen.has(mens_id)
 		CState.Fase.DONATIE:
 			return not c.donatie_klaar.has(mens_id)
 		CState.Fase.TESTAMENT:
@@ -179,6 +192,24 @@ func submit_mens_testament(verdeling: Array) -> bool:
 
 
 func _stap_nominatie() -> void:
+	# C9 — ronde 1: het lot paart iedereen, geen raad. De paren komen uit de
+	# campagne-rng (deterministisch per seed) en gaan als data het log in.
+	if c.rules.ronde1_loting and c.ronde == 1:
+		if c.duels_deze_ronde.is_empty():
+			var a_leden: Array = c.actieve_leden(0)
+			var b_leden: Array = c.actieve_leden(1)
+			var rng: SeededRng = _rng.fork("loting")
+			_schud(a_leden, rng)
+			_schud(b_leden, rng)
+			var paren: Array = []
+			for i in mini(a_leden.size(), b_leden.size()):
+				paren.append([int(a_leden[i]), int(b_leden[i])])
+			if _pas_toe(CActions.make_loting(paren), -1):
+				feed.append({"type": "bark", "speler": -1, "naam": "De Loting",
+					"trigger": "loting",
+					"tekst": "Ronde 1: het lot bepaalt de paren — iedereen het bord op!",
+					"ronde": c.ronde})
+		return
 	var team: int = c.nominatie_team
 	for sid in c.actieve_leden(team):
 		if sid == mens_id or c.nominatie_stemmen.has(sid) or c.fase != CState.Fase.NOMINATIE:

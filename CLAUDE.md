@@ -68,7 +68,10 @@ mens-duel op het echte bord (autoload `CampaignBridge`, hoofdmenu-optie
 "Solo-campagne (v4.2)"). **De F3-MAX-check is nu speelbaar: solo-campagne
 begin→kampioen.** Grootboek-scherm, BracketView, MatchReport-detail en de
 touch-contextknop op het bord zijn er ook (26 juli): het F3-UI-blok is af.
-REST F3: campagneduur-tuning (34-44 rondes, hangt aan duel-dodelijkheid) is
-een open ontwerpgesprek met Max, na zijn acceptatie-playtest. Daarna F4 (online).
+Playtest-iteratie C9 (26 juli, Max): ronde 1 = loting (16 random 1v1-paren
+als log-data), ronde 2+ = iedereen vecht (raad stemt paren), doneren aan elke
+teamgenoot, cycluslimiet op campagne-duels UIT (was 6 → alles tiebreak);
+hub-UI = teamkolommen met bolletjes + chatlog. Pre-C9-saves folden onder hun
+oude regels (from_dict-fallback), de hub start dan vers. Daarna F4 (online).
 1v1-setting (25 juli): cp_start 10, poolfactor 1.5, spawn_totaal_max 15 per
 potje; achterrij-pionnen krijgen koppel-voorrang onder campaign.

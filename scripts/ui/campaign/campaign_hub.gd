@@ -15,12 +15,18 @@ const SAVE_PAD := "user://campaigns/solo/campagne.jsonl"
 
 var _header: Label
 var _saldi: Label
+var _team_links: VBoxContainer
+var _team_rechts: VBoxContainer
 var _tijdlijn: VBoxContainer
 var _scroll: ScrollContainer
 var _paneel: VBoxContainer
 var _thread: Thread
 var _bezig: bool = false
 var _feed_getoond: int = 0
+
+const KLEUR_EIGEN := Color(0.30, 0.55, 0.95)
+const KLEUR_VIJAND := Color(0.90, 0.35, 0.35)
+const KLEUR_DOOD := Color(0.42, 0.40, 0.44)
 
 
 func _ready() -> void:
@@ -35,6 +41,8 @@ func _ready() -> void:
 			driver = SoloDriver.hervat(SAVE_PAD, mens_id)
 			if driver != null and driver.c.fase == CState.Fase.KLAAR:
 				driver = null  # uitgespeelde campagne: nieuwe starten
+			elif driver != null and not driver.c.rules.ronde1_loting:
+				driver = null  # oude regelset (voor C9): vers beginnen
 		if driver == null:
 			driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
 				mens_id, 16, SAVE_PAD)
@@ -83,6 +91,22 @@ func _bouw_layout() -> void:
 		scherm.open(driver.c, mens_id))
 	balk.add_child(grootboek)
 	kolom.add_child(balk)
+	# F3.5-UI — twee teamkolommen: links jouw team, rechts de vijand; elk lid
+	# een bolletje met naam, leger (soldaten·cavalerie·kanonnen), CP en punten.
+	var teams := HBoxContainer.new()
+	teams.name = "Teams"
+	teams.add_theme_constant_override("separation", 10)
+	_team_links = VBoxContainer.new()
+	_team_links.name = "TeamLinks"
+	_team_links.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_team_links.add_theme_constant_override("separation", 2)
+	teams.add_child(_team_links)
+	_team_rechts = VBoxContainer.new()
+	_team_rechts.name = "TeamRechts"
+	_team_rechts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_team_rechts.add_theme_constant_override("separation", 2)
+	teams.add_child(_team_rechts)
+	kolom.add_child(teams)
 	_scroll = ScrollContainer.new()
 	_scroll.name = "Tijdlijn"
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -154,8 +178,87 @@ func _ververs() -> void:
 		String(mijn.get("naam", "?")), int(mijn.get("team", 0)),
 		int(pool.inf), int(pool.cav), int(pool.art), c.cp_van(mens_id), c.punten_van(mens_id),
 		"" if String(mijn.get("status", "")) == "actief" else "  [UITGEVALLEN — je ziet nu alles]"]
+	_ververs_teams()
 	_ververs_tijdlijn()
 	_bouw_fase_paneel()
+
+
+## F3.5-UI — de teamkolommen: per lid een bolletje + naam + saldi-regel.
+func _ververs_teams() -> void:
+	var c: CState = driver.c
+	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	var vecht_nu: Dictionary = {}
+	for duel in c.duels_deze_ronde:
+		if not bool(duel.klaar):
+			vecht_nu[int(duel.p1)] = true
+			vecht_nu[int(duel.p2)] = true
+	for gegevens in [[_team_links, mijn_team, "JOUW TEAM"], [_team_rechts, 1 - mijn_team, "DE VIJAND"]]:
+		var houder: VBoxContainer = gegevens[0]
+		var team: int = int(gegevens[1])
+		for kind in houder.get_children():
+			kind.queue_free()
+		var titel := Label.new()
+		titel.text = String(gegevens[2])
+		titel.add_theme_font_size_override("font_size", 12)
+		titel.add_theme_color_override("font_color",
+			KLEUR_EIGEN if team == mijn_team else KLEUR_VIJAND)
+		houder.add_child(titel)
+		for sid in c.spelers:
+			if int(c.spelers[sid].team) != team:
+				continue
+			houder.add_child(_team_rij(c, int(sid), team == mijn_team, vecht_nu.has(int(sid))))
+
+
+func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
+	var sp: Dictionary = c.spelers[sid]
+	var dood: bool = String(sp.status) != "actief"
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", 6)
+	var bol := Panel.new()
+	bol.custom_minimum_size = Vector2(20, 20)
+	var stijl := StyleBoxFlat.new()
+	stijl.bg_color = KLEUR_DOOD if dood else (KLEUR_EIGEN if eigen else KLEUR_VIJAND)
+	stijl.set_corner_radius_all(10)
+	if vecht and not dood:
+		stijl.border_color = Color(0.98, 0.85, 0.4)
+		stijl.set_border_width_all(2)
+	bol.add_theme_stylebox_override("panel", stijl)
+	var initiaal := Label.new()
+	initiaal.text = String(sp.naam).substr(0, 1)
+	initiaal.add_theme_font_size_override("font_size", 11)
+	initiaal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	initiaal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	initiaal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bol.add_child(initiaal)
+	rij.add_child(bol)
+	var tekst := VBoxContainer.new()
+	tekst.add_theme_constant_override("separation", 0)
+	var naam := Label.new()
+	var markering := ""
+	if sid == mens_id:
+		markering = " (jij)"
+	if vecht and not dood:
+		markering += "  [VECHT]"
+	naam.text = String(sp.naam) + markering
+	naam.add_theme_font_size_override("font_size", 13)
+	if dood:
+		naam.add_theme_color_override("font_color", KLEUR_DOOD)
+	elif sid == mens_id:
+		naam.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
+	tekst.add_child(naam)
+	var saldo := Label.new()
+	if dood:
+		saldo.text = "gevallen"
+	else:
+		var pool: Dictionary = c.pool_van(sid)
+		saldo.text = "%d·%d·%d · %d CP · %d pt" % [int(pool.inf), int(pool.cav),
+			int(pool.art), c.cp_van(sid), c.punten_van(sid)]
+	saldo.add_theme_font_size_override("font_size", 11)
+	saldo.add_theme_color_override("font_color",
+		KLEUR_DOOD if dood else Color(0.72, 0.78, 0.86))
+	tekst.add_child(saldo)
+	rij.add_child(tekst)
+	return rij
 
 
 func _ververs_tijdlijn() -> void:
@@ -298,18 +401,16 @@ func _paneel_duel(c: CState) -> void:
 
 func _paneel_donatie(c: CState) -> void:
 	var titel := Label.new()
-	titel.text = "Doneer aan je genomineerde teamgenoot (max 10 pionnen / 3 CP), of houd alles."
+	titel.text = "Doneer aan een teamgenoot (max 10 pionnen / 3 CP per ontvanger), of houd alles."
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_paneel.add_child(titel)
 	var mijn_team: int = int(c.spelers[mens_id].team)
 	var doelen := OptionButton.new()
 	doelen.name = "DoneerDoel"
-	for duel in c.duels_deze_ronde:
-		for kant in ["p1", "p2"]:
-			var sid := int(duel[kant])
-			if sid != mens_id and int(c.spelers[sid].team) == mijn_team \
-					and String(c.spelers[sid].status) == "actief":
-				doelen.add_item(String(c.spelers[sid].naam), sid)
+	# C9: doneren mag aan elke levende teamgenoot.
+	for sid in c.actieve_leden(mijn_team):
+		if int(sid) != mens_id:
+			doelen.add_item(String(c.spelers[int(sid)].naam), int(sid))
 	var rij := HBoxContainer.new()
 	rij.add_theme_constant_override("separation", 6)
 	var invoer: Dictionary = {}
