@@ -24,6 +24,11 @@ var _feed_getoond: int = 0
 
 
 func _ready() -> void:
+	if driver == null and CampaignBridge.driver != null \
+			and CampaignBridge.driver.c.fase != CState.Fase.KLAAR:
+		# F3.4b: terug van het bord (of een andere scene-wissel) — zelfde campagne.
+		driver = CampaignBridge.driver
+		mens_id = driver.mens_id
 	if driver == null:
 		# Hervat de lopende solo-campagne als die er is; anders vers beginnen.
 		if FileAccess.file_exists(SAVE_PAD):
@@ -33,6 +38,7 @@ func _ready() -> void:
 		if driver == null:
 			driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
 				mens_id, 16, SAVE_PAD)
+	CampaignBridge.driver = driver
 	_bouw_layout()
 	_ververs()
 	_werk_door()
@@ -198,6 +204,8 @@ func _bouw_fase_paneel() -> void:
 			_paneel_donatie(c)
 		CState.Fase.TESTAMENT:
 			_paneel_testament(c)
+		CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
+			_paneel_duel(c)
 
 
 func _paneel_nominatie(c: CState) -> void:
@@ -224,6 +232,22 @@ func _paneel_nominatie(c: CState) -> void:
 		if eigen.selected >= 0 and vijand.selected >= 0:
 			driver.submit_mens_nominatie(eigen.get_selected_id(), vijand.get_selected_id())
 			_werk_door())
+
+
+## F3.4b — het mens-duel speelt op het echte bord: de brug zet de config klaar.
+func _paneel_duel(c: CState) -> void:
+	var d: Dictionary = driver.mens_duel()
+	if d.is_empty():
+		return
+	var vijand: int = int(d.p2) if int(d.p1) == mens_id else int(d.p1)
+	var titel := Label.new()
+	titel.text = "JOUW DUEL: jij tegen %s. Je hele bezit gaat mee het bord op — wat je verliest ben je kwijt, wat je spaart neem je mee." % String(c.spelers[vijand].naam)
+	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_paneel.add_child(titel)
+	var knop := _knop("Speel het duel op het bord", func() -> void:
+		if CampaignBridge.start_mens_duel():
+			get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
+	knop.name = "SpeelDuelKnop"
 
 
 func _paneel_donatie(c: CState) -> void:

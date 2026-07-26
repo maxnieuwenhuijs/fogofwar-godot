@@ -93,6 +93,60 @@ func test_autosave_na_elke_actie_foldbaar() -> void:
 		assert_true(bool(CLog.fold(data.meta.begin, data.entries).ok), "en foldbaar")
 
 
+func test_mens_duel_pauzeert_en_bord_uitslag_boekt() -> void:
+	# F3.4b: de driver pauzeert op het mens-duel; het "bord" (hier: een runner
+	# met exact de brug-config) speelt het uit en de uitslag boekt terug.
+	var easy := preload("res://scripts/ai/AIEasy.gd")
+	var driver := SoloDriver.new(2026, 0, 6)
+	driver.duel_ai = "easy"
+	driver.duel_cycle_limit = 4
+	driver.duel_max_steps = 400
+	var op_bord := 0
+	var vangnet := 0
+	while driver.c.fase != CState.Fase.KLAAR and vangnet < 900:
+		vangnet += 1
+		if not driver.wacht_op_mens():
+			driver.stap()
+			continue
+		match driver.c.fase:
+			CState.Fase.NOMINATIE:
+				var eigen_ll: Array = []
+				for lid in driver.c.actieve_leden(int(driver.c.spelers[0].team)):
+					if not driver.c.al_genomineerd.has(lid):
+						eigen_ll.append(lid)
+				var vij_ll: Array = []
+				for lid in driver.c.actieve_leden(1 - int(driver.c.spelers[0].team)):
+					if not driver.c.al_genomineerd.has(lid):
+						vij_ll.append(lid)
+				var eigen: int = 0 if driver.c.actieve_leden(int(driver.c.spelers[0].team)).size() == 1 else int(eigen_ll[0])
+				assert_true(driver.submit_mens_nominatie(eigen, int(vij_ll[0])), "mens-stem geldig")
+			CState.Fase.DONATIE:
+				driver.submit_mens_klaar_met_doneren()
+			CState.Fase.TESTAMENT:
+				driver.submit_mens_testament([])
+			CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
+				var d: Dictionary = driver.mens_duel()
+				assert_true(int(d.p1) == 0 or int(d.p2) == 0, "de pauze is echt het mens-duel")
+				op_bord += 1
+				var b: int = int(d.p2) if int(d.p1) == 0 else int(d.p1)
+				var cp_a: int = driver.c.cp_van(0)
+				var cp_b: int = driver.c.cp_van(b)
+				var rules: RulesConfig = driver.duel_rules_voor(0, b)
+				var runner := MatchRunner.new(easy.new(), easy.new(),
+					int(driver.c.spelers[0].doctrine), int(driver.c.spelers[b].doctrine),
+					4242 + op_bord, rules)
+				runner.max_steps = 400
+				while not runner.done:
+					runner.step()
+				assert_true(driver.verwerk_duel_uitslag(int(d.idx), 0, b, cp_a, cp_b,
+					runner.state(), runner.winner), "bord-uitslag boekt in de campagne")
+	assert_eq(driver.c.fase, CState.Fase.KLAAR, "campagne met mens-duels speelt uit")
+	assert_true(op_bord > 0, "de mens heeft echt op het bord gevochten (%d duels)" % op_bord)
+	assert_true(driver.c.winnaar != -1)
+	var uitkomst: Dictionary = CLog.fold(driver.clog.meta.begin, driver.clog.entries)
+	assert_true(bool(uitkomst.ok), "ook met bord-uitslagen replayt het log")
+
+
 func test_arm_start_comp_gecapt() -> void:
 	# C7: een duel-config met minder voorraad dan comp start kleiner.
 	var rules := RulesConfig.from_dict({"campaign": {

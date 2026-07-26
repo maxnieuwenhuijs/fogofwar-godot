@@ -107,7 +107,10 @@ func _ready() -> void:
 	# Achter de kaarten/overlay/HUD renderen (blokjes mogen die niet bedekken).
 	$UI.move_child(_hp_layer, 0)
 	_card_hand.visible = false
-	_show_difficulty_menu()
+	if CampaignBridge.duel_actief:
+		_start_campagne_duel()  # F3.4b: de hub heeft dit duel klaargezet
+	else:
+		_show_difficulty_menu()
 
 
 func _process(delta: float) -> void:
@@ -255,21 +258,32 @@ func _show_difficulty_menu() -> void:
 	_overlay.show_choice(
 		"Kies je tegenstander",
 		"Tegen welke AI wil je oefenen?",
-		["Easy", "Medium", "Hard", "Ultra — god mode", "Speluitleg", "AI Trainer bekijken", "Model-tuner"],
+		["Easy", "Medium", "Hard", "Ultra — god mode", "Solo-campagne (v4.2)", "Speluitleg", "AI Trainer bekijken", "Model-tuner"],
 		_on_menu_choice,
 	)
 
 
 func _on_menu_choice(index: int) -> void:
 	if index == 4:
-		_show_rules_overlay(func() -> void: _show_difficulty_menu())
+		get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn")
 	elif index == 5:
+		_show_rules_overlay(func() -> void: _show_difficulty_menu())
+	elif index == 6:
 		get_tree().change_scene_to_file("res://scenes/training/Trainer.tscn")
-	elif index >= 6:
+	elif index >= 7:
 		get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
 	else:
 		ai_difficulty = index
 		_show_doctrine_menu()
+
+
+## F3.4b — een campagne-duel vanuit de hub: config komt van de brug, geen menu's.
+func _start_campagne_duel() -> void:
+	_campaign_mode = true
+	_human_doctrine = CampaignBridge.doctrine_mens()
+	_ai_doctrine = CampaignBridge.doctrine_vijand()
+	ai_difficulty = 1  # medium — hetzelfde niveau als de gesimuleerde bot-duels
+	_start_match(ai_difficulty)
 
 
 ## Open het uitleg-tabscherm (scripts/ui/instructions.gd). back = terugknop-actie.
@@ -428,7 +442,9 @@ func _start_match(difficulty: int) -> void:
 	ai_difficulty = difficulty
 	_setup_ai()
 	var regels: RulesConfig = null
-	if _campaign_mode:
+	if CampaignBridge.duel_actief:
+		regels = CampaignBridge.duel_rules()  # F3.4b: bezit/CP uit de campagne
+	elif _campaign_mode:
 		regels = RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
 	GameSession.start_new_game(_human_doctrine, _ai_doctrine, regels)
 	_show_placement_overlay()
@@ -2176,6 +2192,16 @@ func _on_game_over(winner_id: int) -> void:
 	Audio.stop_music()  # sting krijgt de ruimte; ambience loopt door
 	Audio.play("win_fanfare" if winner_id == _human_id else "lose_sting", 0.3)
 	_update_hud("%s wint!" % _player_name(winner_id))
+	if CampaignBridge.duel_actief:
+		# F3.4b: uitslag terugboeken en naar de hub — de campagne gaat door.
+		_overlay.show_choice(
+			"%s wint!" % _player_name(winner_id),
+			"Dit duel telt voor de campagne: verliezen, CP en punten gaan mee terug.",
+			["Terug naar de campagne"],
+			func(_i: int) -> void:
+				CampaignBridge.rond_af(GameSession.state, winner_id)
+				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
+		return
 	_overlay.show_choice(
 		"%s wint!" % _player_name(winner_id),
 		"Het spel is afgelopen.",
@@ -2597,6 +2623,8 @@ func _phase_label(phase: int) -> String:
 
 
 func _player_name(player_id: int) -> String:
+	if player_id != _human_id and CampaignBridge.duel_actief:
+		return "%s (AI)" % CampaignBridge.naam_vijand()  # F3.4b: de campagne-vijand
 	return "Rood (jij)" if player_id == _human_id else "Blauw (AI)"
 
 

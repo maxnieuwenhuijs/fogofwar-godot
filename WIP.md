@@ -270,6 +270,23 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.4b GEBOUWD (26 juli) — het mens-duel op het echte bord.** Het
+  sluitstuk van F3: als de mens genomineerd is, pauzeert de SoloDriver
+  (wacht_op_mens dekt nu ook DUELS/BURGEROORLOG via `mens_duel()` — alleen
+  als het mens-duel het eerstvolgende open duel is), de hub toont "Speel
+  het duel op het bord" en de nieuwe autoload **CampaignBridge** draagt de
+  driver over de scene-wissel heen: duel-config uit `duel_rules_voor()`
+  (mens = bord-P1, comp gecapt op voorraad, rest reserve, CP per speler),
+  game.gd start zonder menu's direct het v4.2-duel tegen medium-AI met de
+  échte vijandsnaam, en na game-over boekt `verwerk_duel_uitslag()` (nu
+  gedeeld tussen bot-pad en bord-pad) verliezen/CP-delta/methode als
+  MATCH_RESULT terug en keert de scene terug naar de hub — autosave loopt
+  gewoon door. Hoofdmenu kreeg "Solo-campagne (v4.2)". Opgeven op het bord
+  = tiebreak-winst voor de vijand (v1). CHECKS: 1429 asserts groen (nieuwe
+  SoloTest speelt een hele campagne waarin élk mens-duel via het
+  bord-pad loopt en het log daarna replayt), play + shot 0 fouten.
+  **Hiermee is de F3-MAX-check speelbaar: solo-campagne begin→kampioen.**
+
 - **F3.4 AFGEROND (26 juli) — persistentie & hervatten ("durf te sluiten").**
   CLog kreeg `autosave_pad`: setup schrijft de meta-regel (incl. seed +
   beginstand), elke record appendt één jsonl-regel en sluit het bestand —

@@ -630,9 +630,11 @@ betrokken persoonlijkheid — assert op log-inhoud, niet op UI.
 de CampagneHub met tijdlijn (barks + battlereports), eigen saldi, en de fase-panelen raad-ballot /
 doneer-paneel (steppers + caps) / testament in één scherm; bots draaien op een thread (UI bevriest
 niet); SoloDriver heeft mens-pauzepunten + submit_mens_*-methodes. De `-- shot <scherm>`-modus bestaat
-(fixture + PNG + node-asserts; headless slaat de PNG over). REST: los grootboek-scherm (sorteerbare
-tabel), BracketView, MatchReport-detail, touch-equivalenten — plus F3.4: de mens-DUELS koppelen aan de
-game-scene (nu wordt ook het mens-duel gesimuleerd).
+(fixture + PNG + node-asserts; headless slaat de PNG over). **26 juli: het mens-DUEL speelt op het
+echte bord** — autoload `CampaignBridge` draagt de SoloDriver over de scene-wissel, game.gd start het
+v4.2-duel met campagne-bezit (mens = bord-P1) en boekt de uitslag terug als MATCH_RESULT; hoofdmenu
+kreeg "Solo-campagne (v4.2)". REST: los grootboek-scherm (sorteerbare tabel), BracketView,
+MatchReport-detail, touch-equivalenten.
 
 **Bestanden:** `ui/screens/campaign_hub`, `ledger_screen`, `council_screen`, `donate_sheet`,
 `testament_screen`, `match_report`, components (`FactionIcon`, `PoolBadge`, `CPBadge`, `TimerBar`,

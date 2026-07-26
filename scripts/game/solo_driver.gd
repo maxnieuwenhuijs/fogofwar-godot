@@ -141,7 +141,25 @@ func wacht_op_mens() -> bool:
 			return not c.donatie_klaar.has(mens_id)
 		CState.Fase.TESTAMENT:
 			return c.pending_testamenten.has(mens_id)
+		CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
+			return not mens_duel().is_empty()
 	return false
+
+
+## F3.4b — het eerste open duel waar de mens in zit: {idx, p1, p2}, anders {}.
+## Alleen als het ook echt het eerstvolgende duel is (duels spelen op volgorde);
+## een bot-duel dat eerder in de rij staat, speelt eerst.
+func mens_duel() -> Dictionary:
+	if mens_id < 0 or not (c.fase == CState.Fase.DUELS or c.fase == CState.Fase.BURGEROORLOG):
+		return {}
+	for idx in c.duels_deze_ronde.size():
+		var duel: Dictionary = c.duels_deze_ronde[idx]
+		if bool(duel.klaar):
+			continue
+		if int(duel.p1) == mens_id or int(duel.p2) == mens_id:
+			return {"idx": idx, "p1": int(duel.p1), "p2": int(duel.p2)}
+		return {}
+	return {}
 
 
 func submit_mens_nominatie(eigen: int, vijand: int) -> bool:
@@ -211,6 +229,8 @@ func _stap_duels() -> void:
 		if open_idx == -1:
 			return
 		var duel: Dictionary = c.duels_deze_ronde[open_idx]
+		if mens_id >= 0 and (int(duel.p1) == mens_id or int(duel.p2) == mens_id):
+			return  # F3.4b: het mens-duel speelt op het echte bord (via de brug)
 		_speel_duel(open_idx, int(duel.p1), int(duel.p2))
 
 
@@ -231,41 +251,38 @@ func _stap_testament() -> void:
 		_pas_toe(CActions.make_tick_deadline(), -1)  # rest verbrandt (spec)
 
 
-## Bot-vs-bot-duel op vol tempo: het campagne-bezit van beide vechters wordt
-## de duel-config (C2/C7); de uitkomst gaat als MATCH_RESULT + battlereport terug.
-func _speel_duel(idx: int, a: int, b: int) -> void:
-	_duel_teller += 1
+## De duel-config voor a-vs-b uit het campagne-bezit (C2/C7): comp gecapt op
+## voorraad, rest wordt reserve, CP per speler. Bord-P1 = a, bord-P2 = b —
+## de mens-duel-brug geeft daarom altijd de mens als a mee.
+func duel_rules_voor(a: int, b: int) -> RulesConfig:
 	var bezit_a: Dictionary = c.pool_van(a)
 	var bezit_b: Dictionary = c.pool_van(b)
 	var comp_a: Array = Constants.doctrine_data(int(c.spelers[a].doctrine)).comp
 	var comp_b: Array = Constants.doctrine_data(int(c.spelers[b].doctrine)).comp
 	var start_a: Array = [mini(int(comp_a[0]), int(bezit_a.inf)), mini(int(comp_a[1]), int(bezit_a.cav)), mini(int(comp_a[2]), int(bezit_a.art))]
 	var start_b: Array = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
-	var cp_a: int = c.cp_van(a)
-	var cp_b: int = c.cp_van(b)
-	var rules := RulesConfig.from_dict({"cycle_limit": duel_cycle_limit, "campaign": {
+	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit, "campaign": {
 		"comp_override": {"1": start_a, "2": start_b},
 		"pools": {
 			"1": {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]},
 			"2": {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]},
 		},
-		"cp": {"1": cp_a, "2": cp_b},
+		"cp": {"1": c.cp_van(a), "2": c.cp_van(b)},
 	}})
-	var ai_script = AIEasyScript if duel_ai == "easy" else AIMediumScript
-	var runner := MatchRunner.new(ai_script.new(), ai_script.new(),
-		int(c.spelers[a].doctrine), int(c.spelers[b].doctrine),
-		_rng.fork("duel_%d" % _duel_teller).randi_range(1, 1 << 30), rules)
-	runner.max_steps = duel_max_steps
-	while not runner.done:
-		runner.step()
-	var s: GameState = runner.state()
+
+
+## Vertaal een uitgespeelde duel-staat naar MATCH_RESULT + battlereport.
+## a = bord-P1, b = bord-P2; cp_a/cp_b = campagne-CP bij de start van het duel.
+## Gedeeld door de bot-duels én het mens-duel op het echte bord (F3.4b).
+func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
+		s: GameState, winnaar_kant: int) -> bool:
 	# Methode bepalen (zoals de arena-metrics).
 	var methode := "tiebreak"
-	if runner.winner != -1:
-		if Rules.count_pawns_in_haven(s, runner.winner) >= s.rules.pawns_in_haven_to_win:
+	if winnaar_kant != -1:
+		if Rules.count_pawns_in_haven(s, winnaar_kant) >= s.rules.pawns_in_haven_to_win:
 			methode = "haven"
 		else:
-			var verliezer_kant: int = Constants.opponent(runner.winner)
+			var verliezer_kant: int = Constants.opponent(winnaar_kant)
 			if s.count_alive_pawns_for(verliezer_kant) + s.pool_total(verliezer_kant) == 0:
 				methode = "eliminatie"
 	# Verliezen per type = geëlimineerde pionnen (dood = weg, C-besluiten).
@@ -278,20 +295,40 @@ func _speel_duel(idx: int, a: int, b: int) -> void:
 		verliezen[eigenaar][sleutel] = int(verliezen[eigenaar][sleutel]) + 1
 	# CP-delta: eindsaldo - startsaldo, plus het winst-tarief (D13).
 	var winnaar_id: int = -1
-	if runner.winner == Constants.PLAYER_1:
+	if winnaar_kant == Constants.PLAYER_1:
 		winnaar_id = a
-	elif runner.winner == Constants.PLAYER_2:
+	elif winnaar_kant == Constants.PLAYER_2:
 		winnaar_id = b
 	var cp_delta: Dictionary = {
 		str(a): int(s.cp.get(Constants.PLAYER_1, cp_a)) - cp_a,
 		str(b): int(s.cp.get(Constants.PLAYER_2, cp_b)) - cp_b,
 	}
 	if winnaar_id != -1:
-		var tarief: int = int(s.rules.campaign.get("cp_haven", 8)) if methode == "haven" \
-			else int(s.rules.campaign.get("cp_eliminatie", 4)) if methode == "eliminatie" else 0
+		var tarief: int = 0
+		if methode == "haven":
+			tarief = int(s.rules.campaign.get("cp_haven", 8))
+		elif methode == "eliminatie":
+			tarief = int(s.rules.campaign.get("cp_eliminatie", 4))
 		cp_delta[str(winnaar_id)] = int(cp_delta[str(winnaar_id)]) + tarief
 	duels_gespeeld += 1
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
 		"cycli": s.cycle})
-	_pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta), -1)
+	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta), -1)
+
+
+## Bot-vs-bot-duel op vol tempo: het campagne-bezit van beide vechters wordt
+## de duel-config (C2/C7); de uitkomst gaat als MATCH_RESULT + battlereport terug.
+func _speel_duel(idx: int, a: int, b: int) -> void:
+	_duel_teller += 1
+	var cp_a: int = c.cp_van(a)
+	var cp_b: int = c.cp_van(b)
+	var rules := duel_rules_voor(a, b)
+	var ai_script = AIEasyScript if duel_ai == "easy" else AIMediumScript
+	var runner := MatchRunner.new(ai_script.new(), ai_script.new(),
+		int(c.spelers[a].doctrine), int(c.spelers[b].doctrine),
+		_rng.fork("duel_%d" % _duel_teller).randi_range(1, 1 << 30), rules)
+	runner.max_steps = duel_max_steps
+	while not runner.done:
+		runner.step()
+	verwerk_duel_uitslag(idx, a, b, cp_a, cp_b, runner.state(), runner.winner)

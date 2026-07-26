@@ -58,15 +58,16 @@ staat (incl. pools/cp), `GameSession.gd` is de signal-shim voor de UI
 (game.gd, 2441-regel monoliet). `agents/` = L0-L3 op views;
 `arena/` = runner/metrics/fuzz; `tools/capture.gd` = CLI-modes + trainer.
 
-## Waar we zijn (25 juli 2026)
+## Waar we zijn (26 juli 2026)
 
-F0 + F1 volledig af. F2 (v4.2-economie): F2.1-F2.5 af, F2.6 deel A (metingen)
-af op het D15-besluit na, **deel B (spawn-UI, CP-toggle, actiepot-badge,
-MatchSetup) is de eerstvolgende bouwklus** — daarna speelt Max zijn eerste
-v4.2-duel (de F2.6-MAX-check). Daarna F3: de teamcampagne (donaties per lid
-bepalen de duel-pool en CP; duel-restant CP vloeit terug en is overdraagbaar;
-uitvallers laten na via het testament (max helft, max 2 ontvangers, timer);
-eliminatie telt door over wedstrijden; battlereports zijn de info-bron over
-vijandelijke voorraad — zie B16/D15-context). 1v1-setting (25 juli): cp_start 10,
-poolfactor 1.5, spawn_totaal_max 15 per potje; achterrij-pionnen krijgen
-koppel-voorrang onder campaign (spawn-rij vrijspelen).
+F0 + F1 + F2 af (v4.2-duel speelbaar; D15 geparkeerd, B16). F3 grotendeels af:
+C1-C8-spec, CampaignCore (ledger, CReducer, CView, CLog), SoloDriver + 8
+persoonlijkheden, CampagneHub-UI, persistentie (append-only jsonl-autosave in
+`user://campaigns/solo/`, hervatten = fold, "durf te sluiten") én het
+mens-duel op het echte bord (autoload `CampaignBridge`, hoofdmenu-optie
+"Solo-campagne (v4.2)"). **De F3-MAX-check is nu speelbaar: solo-campagne
+begin→kampioen.** REST F3: grootboek-scherm, BracketView, MatchReport-detail,
+touch-equivalenten; campagneduur-tuning (34-44 rondes, hangt aan
+duel-dodelijkheid) is een open ontwerpgesprek met Max. Daarna F4 (online).
+1v1-setting (25 juli): cp_start 10, poolfactor 1.5, spawn_totaal_max 15 per
+potje; achterrij-pionnen krijgen koppel-voorrang onder campaign.

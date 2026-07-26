@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 Constants="*res://scripts/core/constants.gd"
 GameSession="*res://scripts/core/GameSession.gd"
 Audio="*res://scripts/core/audio_manager.gd"
+CampaignBridge="*res://scripts/game/campaign_bridge.gd"
 
 [display]
 
