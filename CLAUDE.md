@@ -66,8 +66,8 @@ persoonlijkheden, CampagneHub-UI, persistentie (append-only jsonl-autosave in
 `user://campaigns/solo/`, hervatten = fold, "durf te sluiten") én het
 mens-duel op het echte bord (autoload `CampaignBridge`, hoofdmenu-optie
 "Solo-campagne (v4.2)"). **De F3-MAX-check is nu speelbaar: solo-campagne
-begin→kampioen.** REST F3: grootboek-scherm, BracketView, MatchReport-detail,
-touch-equivalenten; campagneduur-tuning (34-44 rondes, hangt aan
+begin→kampioen.** Grootboek-scherm, BracketView en MatchReport-detail zijn er
+ook (26 juli). REST F3: touch-equivalenten; campagneduur-tuning (34-44 rondes, hangt aan
 duel-dodelijkheid) is een open ontwerpgesprek met Max. Daarna F4 (online).
 1v1-setting (25 juli): cp_start 10, poolfactor 1.5, spawn_totaal_max 15 per
 potje; achterrij-pionnen krijgen koppel-voorrang onder campaign.

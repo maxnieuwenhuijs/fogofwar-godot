@@ -36,26 +36,64 @@ func _ready() -> void:
 		var shi := shargs.find("shot")
 		var scherm: String = String(shargs[shi + 1]) if shargs.size() > shi + 1 else "campaign_hub"
 		var shot_seed: int = int(shargs[shi + 2]) if shargs.size() > shi + 2 else 42
-		if scherm != "campaign_hub":
+		if not ["campaign_hub", "ledger", "bracket"].has(scherm):
 			print("[SHOT] onbekend scherm: %s" % scherm)
 			get_tree().quit(1)
 			return
-		var sdriver := SoloDriver.new(shot_seed, 0)
-		sdriver.duel_ai = "easy"
-		var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
-		hub.driver = sdriver
-		hub.mens_id = 0
-		add_child(hub)
-		await get_tree().create_timer(1.2).timeout
 		var shot_fouten := 0
-		for node_naam in ["Header", "Saldi", "Tijdlijn", "FasePaneel"]:
-			if hub.find_child(node_naam, true, false) == null:
+		if scherm == "campaign_hub":
+			var sdriver := SoloDriver.new(shot_seed, 0)
+			sdriver.duel_ai = "easy"
+			var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+			hub.driver = sdriver
+			hub.mens_id = 0
+			add_child(hub)
+			await get_tree().create_timer(1.2).timeout
+			for node_naam in ["Header", "Saldi", "Tijdlijn", "FasePaneel", "GrootboekKnop"]:
+				if hub.find_child(node_naam, true, false) == null:
+					shot_fouten += 1
+					print("[SHOT] node ontbreekt: %s" % node_naam)
+			var kop: Label = hub.find_child("Header", true, false)
+			if kop == null or not kop.text.contains("Ronde"):
 				shot_fouten += 1
-				print("[SHOT] node ontbreekt: %s" % node_naam)
-		var kop: Label = hub.find_child("Header", true, false)
-		if kop == null or not kop.text.contains("Ronde"):
-			shot_fouten += 1
-			print("[SHOT] header toont geen ronde")
+				print("[SHOT] header toont geen ronde")
+		elif scherm == "ledger":
+			var ldriver := SoloDriver.new(shot_seed, 0)
+			var lscherm: Control = load("res://scripts/ui/campaign/ledger_screen.gd").new()
+			add_child(lscherm)
+			lscherm.open(ldriver.c, 0)
+			await get_tree().create_timer(0.5).timeout
+			for node_naam in ["Grootboek", "GrootboekTabel", "GrootboekSluit"]:
+				if lscherm.find_child(node_naam, true, false) == null:
+					shot_fouten += 1
+					print("[SHOT] node ontbreekt: %s" % node_naam)
+			var tabel: VBoxContainer = lscherm.find_child("GrootboekTabel", true, false)
+			if tabel == null or tabel.get_child_count() != 16:
+				shot_fouten += 1
+				print("[SHOT] grootboek-tabel mist rijen")
+		elif scherm == "bracket":
+			var bc := CState.new()
+			var blijst: Array = []
+			for i in 6:
+				blijst.append({"naam": "Speler%d" % i, "doctrine": 0})
+			bc.setup(blijst, CRules.new())
+			bc.fase = CState.Fase.BURGEROORLOG
+			bc.duels_deze_ronde = [{"p1": 0, "p2": 3, "klaar": false}]
+			bc.bracket = [[1, 4]]
+			var bview: VBoxContainer = load("res://scripts/ui/campaign/bracket_view.gd").new()
+			add_child(bview)
+			bview.vul(bc)
+			await get_tree().create_timer(0.5).timeout
+			if bview.get_child_count() < 4:
+				shot_fouten += 1
+				print("[SHOT] bracket toont te weinig regels")
+			var vs_gezien := false
+			for kind in bview.get_children():
+				if kind is Label and (kind as Label).text.contains("vs"):
+					vs_gezien = true
+			if not vs_gezien:
+				shot_fouten += 1
+				print("[SHOT] bracket toont geen duel-paren")
 		var tex := get_viewport().get_texture()
 		if tex != null and tex.get_image() != null:
 			tex.get_image().save_png("res://_shot_%s.png" % scherm)

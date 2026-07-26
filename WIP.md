@@ -270,6 +270,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.3-rest GEBOUWD (26 juli) — Grootboek, BracketView, MatchReport-detail.**
+  `LedgerScreen` (scripts/ui/campaign/): het volledige, openbare
+  campagne-ledger als sorteerbare tabel (naam/team/status/soldaten/
+  cavalerie/kanonnen/totaal/CP/punten; mens geel, gevallenen gedimd;
+  statische `rijen()`-helper is puur en getest). Hub kreeg een
+  "Grootboek"-knop. `BracketView`: bij de burgeroorlog toont het
+  fase-paneel wie NU op het bord staat, wie in de wachtrij wacht en wie
+  nog leeft. Battlereport-kaartjes in de tijdlijn zijn nu klikbaar →
+  dialoog met verliezen per type én CP-delta per speler (cp_delta zit
+  nu ook in de feed). Shot-modes uitgebreid: `-- shot ledger` (16 rijen)
+  en `-- shot bracket` (synthetische burgeroorlog-fixture). REST F3.3:
+  touch-equivalenten voor rechtermuis-acties (hoort bij het
+  online-plan-voorwerk). CHECKS: suite groen, shots 3× 0 fouten.
+
 - **F3.4b GEBOUWD (26 juli) — het mens-duel op het echte bord.** Het
   sluitstuk van F3: als de mens genomineerd is, pauzeert de SoloDriver
   (wacht_op_mens dekt nu ook DUELS/BURGEROORLOG via `mens_duel()` — alleen

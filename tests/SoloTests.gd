@@ -147,6 +147,27 @@ func test_mens_duel_pauzeert_en_bord_uitslag_boekt() -> void:
 	assert_true(bool(uitkomst.ok), "ook met bord-uitslagen replayt het log")
 
 
+func test_grootboek_sortering() -> void:
+	# F3.3-rest: het Grootboek sorteert stabiel op elke kolom.
+	var driver := _speel(555)  # uitgespeelde campagne: ook gevallen spelers
+	for kolom in ["punten", "pool", "cp", "inf"]:
+		var rijen: Array = LedgerScreen.rijen(driver.c, kolom)
+		assert_eq(rijen.size(), 6, "elke speler een rij")
+		for i in range(1, rijen.size()):
+			assert_true(int(rijen[i - 1][kolom]) >= int(rijen[i][kolom]),
+				"kolom %s aflopend" % kolom)
+	var op_naam: Array = LedgerScreen.rijen(driver.c, "naam")
+	for i in range(1, op_naam.size()):
+		assert_true(String(op_naam[i - 1].naam) <= String(op_naam[i].naam), "naam oplopend")
+	var op_status: Array = LedgerScreen.rijen(driver.c, "status")
+	var gevallen_gezien := false
+	for rij in op_status:
+		if String(rij.status) != "actief":
+			gevallen_gezien = true
+		else:
+			assert_true(not gevallen_gezien, "actieve spelers boven de gevallenen")
+
+
 func test_arm_start_comp_gecapt() -> void:
 	# C7: een duel-config met minder voorraad dan comp start kleiner.
 	var rules := RulesConfig.from_dict({"campaign": {

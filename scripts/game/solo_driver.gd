@@ -313,7 +313,7 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 	duels_gespeeld += 1
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
-		"cycli": s.cycle})
+		"cp_delta": cp_delta, "cycli": s.cycle})
 	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta), -1)
 
 

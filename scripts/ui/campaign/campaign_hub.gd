@@ -72,6 +72,17 @@ func _bouw_layout() -> void:
 	_saldi.add_theme_font_size_override("font_size", 14)
 	_saldi.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
 	kolom.add_child(_saldi)
+	var balk := HBoxContainer.new()
+	balk.add_theme_constant_override("separation", 8)
+	var grootboek := Button.new()
+	grootboek.name = "GrootboekKnop"
+	grootboek.text = "Grootboek"
+	grootboek.pressed.connect(func() -> void:
+		var scherm := LedgerScreen.new()
+		add_child(scherm)
+		scherm.open(driver.c, mens_id))
+	balk.add_child(grootboek)
+	kolom.add_child(balk)
 	_scroll = ScrollContainer.new()
 	_scroll.name = "Tijdlijn"
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -167,11 +178,41 @@ func _ververs_tijdlijn() -> void:
 			label.text = "R%d · BATTLEREPORT: %s vs %s — %s, %d cycli" % [
 				int(e.ronde), p1n, p2n, uitslag, int(e.cycli)]
 			label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.6))
+			# F3.3-rest: tik het kaartje voor het volledige rapport.
+			kaart.tooltip_text = "Tik voor het volledige battlereport"
+			kaart.gui_input.connect(func(ev: InputEvent) -> void:
+				if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
+					_toon_report(e))
 		kaart.add_child(label)
 		_tijdlijn.add_child(kaart)
 	await get_tree().process_frame
 	if is_inside_tree():
 		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
+
+
+## F3.3-rest — MatchReport-detail: het hele battlereport in een dialoog.
+func _toon_report(e: Dictionary) -> void:
+	var c: CState = driver.c
+	var regels: Array = []
+	var uitslag := "Remise — beide een tiebreak-punt."
+	if int(e.winnaar) != -1:
+		uitslag = "%s wint via %s." % [String(c.spelers[int(e.winnaar)].naam), String(e.methode)]
+	regels.append("%s vs %s, ronde %d — %s (%d cycli)" % [
+		String(c.spelers[int(e.p1)].naam), String(c.spelers[int(e.p2)].naam),
+		int(e.ronde), uitslag, int(e.cycli)])
+	regels.append("")
+	var cp_delta: Dictionary = e.get("cp_delta", {})
+	for sid in [int(e.p1), int(e.p2)]:
+		var v: Dictionary = (e.verliezen as Dictionary).get(str(sid), {})
+		regels.append("%s: -%d soldaten, -%d cavalerie, -%d kanonnen · CP %+d" % [
+			String(c.spelers[sid].naam), int(v.get("inf", 0)), int(v.get("cav", 0)),
+			int(v.get("art", 0)), int(cp_delta.get(str(sid), 0))])
+	var dlg := AcceptDialog.new()
+	dlg.title = "Battlereport"
+	dlg.dialog_text = "\n".join(regels)
+	dlg.ok_button_text = "Sluiten"
+	add_child(dlg)
+	dlg.popup_centered()
 
 
 func _wis_paneel() -> void:
@@ -192,6 +233,11 @@ func _bouw_fase_paneel() -> void:
 	var c: CState = driver.c
 	if c.fase == CState.Fase.KLAAR:
 		return
+	if c.fase == CState.Fase.BURGEROORLOG:
+		var bv := BracketView.new()
+		bv.name = "BracketView"
+		bv.vul(c)
+		_paneel.add_child(bv)
 	if not driver.wacht_op_mens():
 		var info := Label.new()
 		info.text = "De bots zijn bezig..." if _bezig else "Wachten op de volgende fase."

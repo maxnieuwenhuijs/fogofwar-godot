@@ -633,8 +633,9 @@ niet); SoloDriver heeft mens-pauzepunten + submit_mens_*-methodes. De `-- shot <
 (fixture + PNG + node-asserts; headless slaat de PNG over). **26 juli: het mens-DUEL speelt op het
 echte bord** — autoload `CampaignBridge` draagt de SoloDriver over de scene-wissel, game.gd start het
 v4.2-duel met campagne-bezit (mens = bord-P1) en boekt de uitslag terug als MATCH_RESULT; hoofdmenu
-kreeg "Solo-campagne (v4.2)". REST: los grootboek-scherm (sorteerbare tabel), BracketView,
-MatchReport-detail, touch-equivalenten.
+kreeg "Solo-campagne (v4.2)". **26 juli (2): Grootboek (sorteerbare tabel, `LedgerScreen`),
+BracketView in het burgeroorlog-paneel en klikbare battlereports met verliezen + CP-delta; shot-modes
+`ledger` en `bracket`.** REST: touch-equivalenten voor rechtermuis-acties (online-plan-voorwerk).
 
 **Bestanden:** `ui/screens/campaign_hub`, `ledger_screen`, `council_screen`, `donate_sheet`,
 `testament_screen`, `match_report`, components (`FactionIcon`, `PoolBadge`, `CPBadge`, `TimerBar`,
