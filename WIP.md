@@ -270,6 +270,28 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.2 AFGEROND (25 juli) — SoloDriver + persoonlijkheden.** De campagne
+  LEEFT: 16 bots spelen van raadsronde tot kampioen. agents/campaign/:
+  Personalities (8 archetypes met gewichten + temperatuur + barks: trouwe
+  generaal, rat, gierigaard, berserker, strateeg, opportunist, twijfelaar,
+  kamikaze) en CampaignAgent (beslist op de CVIEW; leest andermans voorraad
+  door het publieke grootboek op te tellen - de Among Us-skill).
+  scripts/game/solo_driver.gd: fase-orkestratie, bot-duels via MatchRunner
+  met het echte campagne-bezit (comp_override + pools + cp per speler -
+  nieuwe campaign-keys; C7 arm-start werkt), MATCH_RESULT met battlereport
+  (methode/verliezen/cp_delta incl. winst-tarief), barks + rapporten in de
+  feed, alles door CReducer + CLog (replay byte-identiek). CLI: capture
+  `-- solocheck [seeds]`. Bugfix onderweg: de duel-lus overleefde de
+  lijst-vervanging bij rondewissel niet. CHECK: suite 1328 groen (SoloTests:
+  5, kleine 6-speler-campagnes op easy); 20-seeds-run: 17/20 kampioen +
+  determinisme OK; de 3 uitschieters zijn CONVERGENTIE-caps, geen deadlocks
+  (ronde 120 nog actief): kunstmatig korte check-duels geven tiebreak-rijke
+  uitkomsten -> weinig doden -> trage uitputting. Met normale duel-limieten
+  convergeert alles (34-44 rondes, ~2.5 min/campagne op easy). SIGNAAL voor
+  Max: campagneduur hangt aan duel-dodelijkheid (tuning na de eerste
+  speelervaring; 60s-wall-clock-doel uit het masterplan is met de rijke
+  v4.2-duels niet realistisch en losgelaten). Volgende: F3.3 (campagne-UI).
+
 - **F3.1 AFGEROND (25 juli) — CampaignCore.** core/campaign/: crules
   (alle spec-knoppen als data), cstate (LEDGER als bron van waarheid:
   saldi = som van events, nooit muteerbare velden; serialisatie roundtrip

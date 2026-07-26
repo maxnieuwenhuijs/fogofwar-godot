@@ -70,6 +70,8 @@ const CAMPAIGN_DEFAULTS := {
 	"poolfactor": 1.5,                   # D5: x doctrine-comp per type (3.0 -> 1.5, besluit Max 25 juli)
 	"pool_afboeking": true,              # D5: duel-verliezen raken de campagne-pool
 	"pools": null,                       # expliciete startpool {"1": {inf,cav,art}, "2": ...} wint van poolfactor
+	"cp": null,                          # F3: expliciet CP-saldo per speler {"1": n, "2": n} wint van cp_start
+	"comp_override": null,               # F3/C7: startleger per speler {"1": [inf,cav,art], ...} (arm = kleiner starten)
 	"spawn_max": 3,                      # D6: totaal per cyclus, over alle types
 	"spawn_totaal_max": 15,              # besluit Max 25 juli: max 15 spawns per potje (te testen)
 	"spawn_vanaf_cyclus": 2,             # D7: cyclus 1 = volledige PLACEMENT

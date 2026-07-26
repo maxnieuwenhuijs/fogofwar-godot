@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1319d9c54014519695fa250e3adbca8d85f9092dbfd673067f24bb00e39e0fa2",
+			"hash": "606ac61d3e7c43dd7739d38911edcb929c8de296def179834b051fad2f0e0ddd",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1784965854.52
+			"ts": 1785051442.913
 		},
 		{
 			"action": {
@@ -113,13 +113,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "0334d4a2386456218ad71d48634e2b5b90bc10a92b37748ef2882827a2e088fa",
+			"hash": "7d1d09d44891b5fb1af2408fe75945927a6c782aec140f366b8f6d527922260a",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1784965854.52
+			"ts": 1785051442.914
 		}
 	],
-	"final_hash": "0334d4a2386456218ad71d48634e2b5b90bc10a92b37748ef2882827a2e088fa",
+	"final_hash": "7d1d09d44891b5fb1af2408fe75945927a6c782aec140f366b8f6d527922260a",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -270,6 +270,8 @@
 			"art_range": 6,
 			"art_shot_cost": 1,
 			"campaign": {
+				"comp_override": null,
+				"cp": null,
 				"cp_bijschrijving": "campagnelaag",
 				"cp_effect_mode": "define_budget",
 				"cp_eliminatie": 4,
@@ -337,7 +339,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-25T09:50:54",
+		"created": "2026-07-26T09:37:22",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -489,6 +491,8 @@
 				"art_range": 6,
 				"art_shot_cost": 1,
 				"campaign": {
+					"comp_override": null,
+					"cp": null,
 					"cp_bijschrijving": "campagnelaag",
 					"cp_effect_mode": "define_budget",
 					"cp_eliminatie": 4,

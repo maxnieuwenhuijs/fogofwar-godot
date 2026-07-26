@@ -130,6 +130,8 @@
     border-radius: 0 4px 4px 0; padding: 9px 12px; max-width: 980px;
     white-space: pre-wrap; user-select: text; cursor: text;
   }
+  .promptgroup + .promptgroup { margin-top: 12px; }
+  .promptgroup.musket .prompttekst { border-left-color: #c98b3a; }
   .pknop.open { border-color: var(--accent); color: var(--accent); }
   .typekop td {
     background: var(--panel2); text-align: left; font-size: 12px; font-weight: 600;
@@ -255,11 +257,11 @@ mouse: {
   infantry_hp: "Single character, enormously fat, round-bellied, short and squat anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako. Clean neutral studio background, single figure only, no text.",
   infantry_atk: "Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_mix: "Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  cavalry_base: "Single character, towering powerful anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
-  cavalry_spd: "Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
-  cavalry_hp: "Single character, towering, colossally fat, round and squat anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance. Clean neutral studio background, single figure only, no text.",
-  cavalry_atk: "Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth. Clean neutral studio background, single figure only, no text.",
-  cavalry_mix: "Single character, towering sturdy anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps. Clean neutral studio background, single figure only, no text.",
+  cavalry_base: "Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a powerful war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the war rabbit has long ears laid back, strong muscular hind legs and a leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text.",
+  cavalry_spd: "Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a whip-thin, greyhound-lean, long-limbed racing war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the lean war rabbit has long ears laid back, extremely long slender legs and a light leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text.",
+  cavalry_hp: "Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a colossally fat, round and squat heavy war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the massive war rabbit has thick fur, stout legs and dark steel armor plates over its leather war-harness, low stance. Clean neutral studio background, the rider and mount only, no text.",
+  cavalry_atk: "Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a monstrously muscular, hulking, battle-scarred war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the muscular war rabbit has huge powerful hind legs, bared buck teeth and a heavy leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text.",
+  cavalry_mix: "Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a sturdy war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the war rabbit has long ears, solid legs and a leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text.",
 },
 pig: {
   infantry_base: "Single character, plump, chubby build anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
@@ -347,6 +349,35 @@ crocodile: {
   artillery_mix: "Single prop, Napoleonic field cannon with a folded dark grey tarp on the weathered dark wooden carriage, with a small anthropomorphic lizard gunner crouched on the carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
 },
 };
+
+/* Musketten per infanterie-character: silhouet (archetype) x factie-twist.
+   Alleen infanterie krijgt een musket; cavalerie/artillerie niet. */
+const MUSKET_SIL = {
+  base: "a standard-length Napoleonic flintlock musket with a fixed bayonet",
+  spd:  "an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings",
+  hp:   "a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands",
+  atk:  "a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike",
+  mix:  "a compact plain short-barrelled carbine",
+};
+const MUSKET_FLAVOR = {
+  mouse:     "plain dark iron and worn pale wood",
+  pig:       "chunky dark wood with heavy brass fittings",
+  lion:      "officer-grade dark walnut with ornate gilded pewter engraving",
+  bear:      "frost-worn dark iron with a fur-wrapped grip",
+  wolf:      "scavenged mismatched parts with scrap-metal repairs and a rope-bound stock",
+  crocodile: "matte dark iron wrapped in dark grey camouflage cloth",
+};
+function musketPrompt(facId, arch) {
+  const sil = MUSKET_SIL[arch], flav = MUSKET_FLAVOR[facId];
+  if (!sil || !flav) return null;
+  return `Single prop, ${sil}, ${flav}. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text.`;
+}
+function promptGroepHtml(label, tekst, isMusket) {
+  return `<div class="promptgroup${isMusket ? " musket" : ""}">
+    <div class="pkop"><span>${label}</span><button class="pknop" data-copy="1">kopieer</button></div>
+    <div class="prompttekst">${esc(tekst)}</div>
+  </div>`;
+}
 
 /* Startstand (23 juli 2026): alles wat al op disk staat, aangevinkt.
    Alleen gebruikt bij de allereerste keer openen; daarna telt localStorage. */
@@ -489,31 +520,29 @@ function bouw() {
           cellen += `<td><input type="checkbox" class="${s.optioneel || optRij ? "opt" : ""}" data-key="${key}" ${aan ? "checked" : ""} title="${esc(s.titel)}"></td>`;
         }
         const prompt = PROMPTS[f.id] && PROMPTS[f.id][unit];
+        const musket = t.id === "infantry" ? musketPrompt(f.id, arch) : null;
+        const heeftPrompt = prompt || musket;
         const noteKey = `${f.id}.${unit}`;
         const prId = `pr-${f.id}-${unit}`;
+        const knopTekst = (prompt && musket) ? "prompts &#9662;" : "prompt &#9662;";
         html += `
           <tr class="${optRij ? "optioneel" : ""}${alleKlaar && !optRij ? " done" : ""}" data-rij="${f.id}.${unit}">
             <td class="unit">${unit}${optRij ? `<span class="tag">optioneel</span>` : ""}</td>
             ${cellen}
-            <td>${prompt ? `<button class="pknop" data-toggle="${prId}">prompt &#9662;</button>` : `<span class="na">-</span>`}</td>
+            <td>${heeftPrompt ? `<button class="pknop" data-toggle="${prId}">${knopTekst}</button>` : `<span class="na">-</span>`}</td>
             <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
           </tr>`;
-        if (prompt) html += `
-          <tr class="promptrij" id="${prId}" hidden>
-            <td colspan="${STAPPEN.length + 3}">
-              <div class="promptbox">
-                <div class="pkop">
-                  <span>Generatie-prompt ${f.naam} / ${unit}</span>
-                  <button class="pknop" data-prompt="${f.id}|${unit}">kopieer</button>
-                </div>
-                <div class="prompttekst">${esc(prompt)}</div>
-              </div>
-            </td>
-          </tr>`;
+        if (heeftPrompt) {
+          let box = `<div class="promptbox">`;
+          if (prompt) box += promptGroepHtml(`Model-prompt ${f.naam} / ${unit}`, prompt, false);
+          if (musket) box += promptGroepHtml(`Musket ${f.naam} / ${unit}_musket`, musket, true);
+          box += `</div>`;
+          html += `<tr class="promptrij" id="${prId}" hidden><td colspan="${STAPPEN.length + 3}">${box}</td></tr>`;
+        }
       }
     }
     html += `</tbody></table></div>`;
-    html += `<div class="legenda"><b>Blauwe vinkjes</b> = optioneel (telt niet mee in de voortgang). Volgorde per model: genereren, Mixamo-rig, delen splitsen (armL armR body hat legL legR tail), clips + fix-pass, 2 exports (glb + _gibs.glb), team-textures, 1024-import, Godot + tuner. Zie MODEL-WISHLIST.md par. 4.</div>`;
+    html += `<div class="legenda"><b>Blauwe vinkjes</b> = optioneel (telt niet mee in de voortgang). Volgorde per model: genereren, Mixamo-rig, delen splitsen (armL armR body hat legL legR tail), clips + fix-pass, 2 exports (glb + _gibs.glb), team-textures, 1024-import, Godot + tuner. Zie MODEL-WISHLIST.md par. 4. <b>Musket</b> (oranje prompt, alleen infanterie): eigen wapen per archetype (spd = lang/dun, hp = dubbelloops, atk = groot-kaliber + bajonet, base = standaard, mix = karabijn), met factie-materiaal. Zie par. 3c.</div>`;
     html += `</div>`;
     sec.innerHTML = html;
     main.appendChild(sec);
@@ -617,11 +646,13 @@ function koppelEvents() {
       tg.innerHTML = open ? "prompt &#9652;" : "prompt &#9662;";
       return;
     }
-    const pk = ev.target.closest("button[data-prompt]");
+    const pk = ev.target.closest("button[data-copy]");
     if (pk) {
-      const [fac, unit] = pk.dataset.prompt.split("|");
-      const tekst = PROMPTS[fac][unit];
-      const klaarMelding = () => toast("Prompt gekopieerd: " + fac + "/" + unit);
+      const groep = pk.closest(".promptgroup");
+      if (!groep) return;
+      const tekst = groep.querySelector(".prompttekst").textContent;
+      const label = groep.querySelector(".pkop span").textContent;
+      const klaarMelding = () => toast("Gekopieerd: " + label);
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(tekst).then(klaarMelding, () => fallbackKopie(tekst, klaarMelding));
       } else {

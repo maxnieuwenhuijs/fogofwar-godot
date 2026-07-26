@@ -29,6 +29,46 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 
+	if "solocheck" in OS.get_cmdline_user_args():
+		# F3.2-CHECK: N volledige solo-campagnes headless (16 bots) -> kampioen,
+		# geen deadlocks; plus een determinisme-paar op de eerste seed.
+		var sargs := OS.get_cmdline_user_args()
+		var si := sargs.find("solocheck")
+		var n_runs: int = int(sargs[si + 1]) if sargs.size() > si + 1 else 5
+		var t0 := Time.get_ticks_msec()
+		var fouten := 0
+		for i in n_runs:
+			var seed_val: int = 42000 + i
+			var driver := SoloDriver.new(seed_val)
+			driver.duel_ai = "easy"  # snelle duels: de check meet flow/determinisme, niet AI-kwaliteit
+			driver.duel_cycle_limit = 4
+			driver.duel_max_steps = 400
+			var kampioen: int = driver.run_headless()
+			var duur := (Time.get_ticks_msec() - t0) / 1000.0
+			if kampioen == -1:
+				fouten += 1
+				print("[SOLO] seed %d: DEADLOCK (fase %d, ronde %d)" % [seed_val, driver.c.fase, driver.c.ronde])
+			else:
+				print("[SOLO] seed %d: kampioen %s (%d duels, %d rondes, feed %d) · %.1f s" % [
+					seed_val, driver.c.spelers[kampioen].naam, driver.duels_gespeeld,
+					driver.c.ronde, driver.feed.size(), duur])
+		var d1 := SoloDriver.new(42000)
+		d1.duel_ai = "easy"
+		d1.duel_cycle_limit = 4
+		d1.duel_max_steps = 400
+		var d2 := SoloDriver.new(42000)
+		d2.duel_ai = "easy"
+		d2.duel_cycle_limit = 4
+		d2.duel_max_steps = 400
+		var k1: int = d1.run_headless()
+		var k2: int = d2.run_headless()
+		var determinist: bool = k1 == k2 and d1.clog.entries.size() == d2.clog.entries.size()
+		print("[SOLO] determinisme: %s (kampioen %d==%d, log %d==%d)" % [
+			"OK" if determinist else "FAIL", k1, k2, d1.clog.entries.size(), d2.clog.entries.size()])
+		var totaal := (Time.get_ticks_msec() - t0) / 1000.0
+		print("[SOLO] klaar: %d/%d runs OK in %.1f s" % [n_runs - fouten, n_runs, totaal])
+		get_tree().quit(0 if fouten == 0 and determinist else 1)
+		return
 	if "train" in OS.get_cmdline_user_args():
 		# Headless auto-trainer (CMA-lite), géén dashboard nodig.
 		# Gebruik: -- train [minuten] [populatie] [potjes-per-kandidaat] [factie]

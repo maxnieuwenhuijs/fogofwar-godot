@@ -98,7 +98,15 @@ func doctrine_of(player_id: int) -> int:
 func doctrine_data_of(player_id: int) -> Dictionary:
 	# Config-overrides (rules.doctrines) gaan bovenop DOCTRINE_DATA;
 	# zonder overrides is dit het snelle pad (geen merge).
-	return rules.doctrine_data(doctrine_of(player_id))
+	var data: Dictionary = rules.doctrine_data(doctrine_of(player_id))
+	# F3/C7 — per-speler startleger uit de campagnelaag (arm = kleiner starten).
+	if rules.campaign_actief():
+		var override = rules.campaign.get("comp_override", null)
+		if override is Dictionary and override.has(str(player_id)):
+			data = data.duplicate()
+			var c = override[str(player_id)]
+			data.comp = [int(c[0]), int(c[1]), int(c[2])]
+	return data
 
 ## Standaard-opstelling voor beide spelers (gebruikt door tests, AI en auto-plaatsing).
 func setup_initial_pawns() -> void:
@@ -117,10 +125,13 @@ func init_pools() -> void:
 	var expliciet = rules.campaign.get("pools", null)
 	var factor: float = float(rules.campaign.get("poolfactor", 3.0))
 	pools = {}
-	cp = {
-		Constants.PLAYER_1: int(rules.campaign.get("cp_start", 6)),
-		Constants.PLAYER_2: int(rules.campaign.get("cp_start", 6)),
-	}
+	var cp_expliciet = rules.campaign.get("cp", null)
+	cp = {}
+	for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if cp_expliciet is Dictionary and cp_expliciet.has(str(pid)):
+			cp[pid] = int(cp_expliciet[str(pid)])
+		else:
+			cp[pid] = int(rules.campaign.get("cp_start", 6))
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		if expliciet is Dictionary and expliciet.has(str(player_id)):
 			var e: Dictionary = expliciet[str(player_id)]

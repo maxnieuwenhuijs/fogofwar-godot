@@ -604,7 +604,7 @@ stem-defaults/staking, donatiecaps hard, testament-varianten incl. timeout-verbr
 burgeroorlog-seeding + vrijloting, punten ook voor doden. Campagne-log fold-test: replay = identieke
 eindstand. Ledger-invariant: som(pion-ledger) + bord = constant behalve expliciete verbranding.
 
-### ☐ F3.2 — SoloDriver + 15 persoonlijkheden
+### ☑ F3.2 — SoloDriver + 15 persoonlijkheden
 
 **Bestanden:** `agents/campaign/campaign_agent.gd`, `personalities.gd`, `game/solo_driver.gd`.
 
