@@ -198,7 +198,9 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 		return "Winnaar hoort niet bij dit duel"
 	var methode: String = String(action.methode)
 	# Verliezen en CP-mutaties boeken (het battlereport levert de getallen).
-	for sid_str in action.verliezen:
+	# Op oplopende speler-id, NIET op dict-volgorde: het log reist als JSON
+	# (autosave/F4-upload) en key-volgorde mag het ledger nooit veranderen.
+	for sid_str in _gesorteerde_ids(action.verliezen):
 		var sid := int(String(sid_str))
 		if sid != p1 and sid != p2:
 			return "Verliezen voor een speler buiten het duel"
@@ -208,7 +210,7 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 		var va: int = maxi(0, int(v.get("art", 0)))
 		if vi + vc + va > 0:
 			_boek_ev(c, events, "loss", sid, -vi, -vc, -va, 0, 0)
-	for sid_str in action.cp_delta:
+	for sid_str in _gesorteerde_ids(action.cp_delta):
 		var sid := int(String(sid_str))
 		if sid != p1 and sid != p2:
 			return "CP-delta voor een speler buiten het duel"
@@ -441,6 +443,14 @@ static func _zet_fase(c: CState, nieuw: int, events: Array) -> void:
 	var oud: int = c.fase
 	c.fase = nieuw
 	_ev(events, EV_FASE, {"nieuw": nieuw, "oud": oud})
+
+
+## Dict-keys (speler-ids, int of String) op oplopende id — volgorde-stabiel
+## ongeacht hoe de actie is aangeleverd (in-memory dan wel JSON-geparsed).
+static func _gesorteerde_ids(d: Dictionary) -> Array:
+	var keys: Array = d.keys()
+	keys.sort_custom(func(a, b) -> bool: return int(String(a)) < int(String(b)))
+	return keys
 
 
 static func _boek_ev(c: CState, events: Array, reason: String, speler: int,

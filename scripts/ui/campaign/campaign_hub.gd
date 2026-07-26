@@ -10,6 +10,9 @@ extends Control
 var driver: SoloDriver
 var mens_id: int = 0
 
+## F3.4 — vaste solo-savegame-slot; elke campagne-actie staat direct op schijf.
+const SAVE_PAD := "user://campaigns/solo/campagne.jsonl"
+
 var _header: Label
 var _saldi: Label
 var _tijdlijn: VBoxContainer
@@ -22,7 +25,14 @@ var _feed_getoond: int = 0
 
 func _ready() -> void:
 	if driver == null:
-		driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000, mens_id)
+		# Hervat de lopende solo-campagne als die er is; anders vers beginnen.
+		if FileAccess.file_exists(SAVE_PAD):
+			driver = SoloDriver.hervat(SAVE_PAD, mens_id)
+			if driver != null and driver.c.fase == CState.Fase.KLAAR:
+				driver = null  # uitgespeelde campagne: nieuwe starten
+		if driver == null:
+			driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
+				mens_id, 16, SAVE_PAD)
 	_bouw_layout()
 	_ververs()
 	_werk_door()

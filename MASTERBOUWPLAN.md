@@ -653,7 +653,7 @@ met PNG; de headless F3.2-campagnerun gekoppeld aan de UI (driver-integratietest
 verschijnt minstens één keer).
 **MAX:** volledige solo-campagne handmatig spelen begin→kampioen zonder netwerk (dé F3-acceptatie).
 
-### ☐ F3.4 — Persistentie & hervatten
+### ☑ F3.4 — Persistentie & hervatten
 
 **Werk:** savegame = campagne-event-log + match-logs (`user://campaigns/<id>/`); hervatten = fold; "durf
 te sluiten"-garantie (elke actie direct gepersisteerd). Voorbereid op F4-sync: het log is het
@@ -661,6 +661,10 @@ uploadformaat (B6; endpoint komt in F4.5).
 
 **CHECK:** campagne halverwege afsluiten + herstarten → identieke staat (fold-hash); kill -9 tijdens een
 duel verliest hooguit de laatste actie.
+
+*Gedaan (26 juli): campagne-log als append-only jsonl (`CLog.autosave_pad`), `SoloDriver.hervat()`,
+hub hervat automatisch `user://campaigns/solo/`. Match-logs per duel volgen bij de
+game-scene-koppeling (F3.3-rest) — de battlereport-cijfers zitten al in het campagne-log.*
 
 ---
 

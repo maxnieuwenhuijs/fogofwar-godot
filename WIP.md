@@ -270,6 +270,25 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.4 AFGEROND (26 juli) — persistentie & hervatten ("durf te sluiten").**
+  CLog kreeg `autosave_pad`: setup schrijft de meta-regel (incl. seed +
+  beginstand), elke record appendt één jsonl-regel en sluit het bestand —
+  een kill verliest dus hooguit de actie die nog onderweg was. Terugweg:
+  `CLog.laad_jsonl` + `SoloDriver.hervat(pad)` (fold op de beginstand;
+  `_duel_teller`/`duels_gespeeld` uit de MATCH_RESULT-entries; feed start
+  met een hervat-kaartje — barks van vóór de herstart zijn presentatie, de
+  agents her-seeden van de campagne-seed). De CampagneHub hervat bij het
+  openen automatisch `user://campaigns/solo/campagne.jsonl` (uitgespeeld =
+  vers beginnen). Vangst van de CHECK-test: Godot's `JSON.stringify`
+  sorteert keys, waardoor MATCH_RESULT-dicts (`verliezen`/`cp_delta`) na
+  een disk-roundtrip in andere volgorde foldden dan live → CReducer boekt
+  nu op oplopende speler-id (`_gesorteerde_ids`), zodat key-volgorde het
+  ledger nooit kan veranderen — precies wat de F4-upload (JSON-transport,
+  B6) straks nodig heeft. Match-logs per duel volgen bij de echte
+  game-scene-koppeling (F3.3-rest). CHECKS: halverwege sluiten + hervatten
+  → byte-identieke staat; bestand na élke actie leesbaar én foldbaar;
+  hervatte campagne speelt uit tot kampioen; volle suite groen.
+
 - **F3.3 kern GEBOUWD (25 juli) — de CampagneHub.** Een mobile-first
   scherm dat de hele solo-campagne draagt: tijdlijn met barks en
   battlereports (nieuwste onderaan, autoscroll), eigen pool/CP/punten in

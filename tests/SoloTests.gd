@@ -59,6 +59,40 @@ func test_barks_vuren_op_triggers() -> void:
 		"de raad produceert barks in het log")
 
 
+func test_autosave_en_hervatten_identiek() -> void:
+	# F3.4-CHECK: halverwege "afsluiten" en hervatten -> byte-identieke staat.
+	var pad := "user://test_campagne_f34.jsonl"
+	var driver := SoloDriver.new(9911, -1, 6, pad)
+	driver.duel_ai = "easy"
+	for _i in 6:
+		if driver.c.fase != CState.Fase.KLAAR:
+			driver.stap()
+	var staat_voor: String = JSON.stringify(driver.c.to_dict())
+	var entries_voor: int = driver.clog.entries.size()
+	driver = null  # "afsluiten": alleen het bestand blijft over
+	var terug: SoloDriver = SoloDriver.hervat(pad, -1)
+	assert_true(terug != null, "autosave laadt en foldt")
+	assert_eq(JSON.stringify(terug.c.to_dict()), staat_voor, "hervatte staat is byte-identiek")
+	assert_eq(terug.clog.entries.size(), entries_voor, "log volledig terug")
+	terug.duel_ai = "easy"
+	terug.run_headless()
+	assert_eq(terug.c.fase, CState.Fase.KLAAR, "na hervatten speelt de campagne gewoon uit")
+	assert_true(terug.c.winnaar != -1)
+
+
+func test_autosave_na_elke_actie_foldbaar() -> void:
+	# Kill-garantie: op elk moment is het bestand een geldige, foldbare save.
+	var pad := "user://test_campagne_f34b.jsonl"
+	var driver := SoloDriver.new(9912, -1, 6, pad)
+	driver.duel_ai = "easy"
+	for _i in 4:
+		if driver.c.fase != CState.Fase.KLAAR:
+			driver.stap()
+		var data: Dictionary = CLog.laad_jsonl(pad)
+		assert_true(bool(data.ok), "bestand leesbaar na elke stap")
+		assert_true(bool(CLog.fold(data.meta.begin, data.entries).ok), "en foldbaar")
+
+
 func test_arm_start_comp_gecapt() -> void:
 	# C7: een duel-config met minder voorraad dan comp start kleiner.
 	var rules := RulesConfig.from_dict({"campaign": {

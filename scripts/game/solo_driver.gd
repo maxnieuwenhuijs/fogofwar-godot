@@ -33,9 +33,10 @@ var _duel_teller: int = 0
 var n_spelers: int = 16
 
 
-func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16) -> void:
+func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosave_pad: String = "") -> void:
 	mens_id = p_mens_id
 	n_spelers = p_n_spelers
+	clog.autosave_pad = autosave_pad
 	_rng = SeededRng.new(seed_val)
 	var lobby: Array = Personalities.maak_lobby(n_spelers, _rng.fork("lobby"))
 	var doctrines: Array = Constants.DOCTRINE_DATA.keys()
@@ -55,6 +56,35 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16) -> voi
 		agent.profiel = lobby[i].profiel
 		agent.rng = _rng.fork("agent_%d" % i)
 		agents[i] = agent
+
+
+## F3.4 — hervatten vanaf een autosave: fold het log op de beginstand.
+## De agents worden opnieuw geseed (zelfde campagne-seed); hun rng-stroom
+## begint dus vers — de STAAT is byte-identiek (de CHECK-garantie), het
+## vervolg is deterministisch-per-hervatting. De feed start met een
+## hervat-kaartje (barks/rapporten van voor de herstart zijn presentatie).
+static func hervat(pad: String, p_mens_id: int = -1) -> SoloDriver:
+	var data: Dictionary = CLog.laad_jsonl(pad)
+	if not bool(data.ok):
+		return null
+	var m: Dictionary = data.meta
+	var driver := SoloDriver.new(int(m.get("seed", 1)), p_mens_id,
+		(m.begin.spelers as Dictionary).size(), "")
+	var uitkomst: Dictionary = CLog.fold(m.begin, data.entries)
+	if not bool(uitkomst.ok):
+		return null
+	driver.c = uitkomst.cstate
+	driver.clog.meta = m
+	driver.clog.entries = data.entries.duplicate(true)
+	driver.clog.autosave_pad = pad
+	for e in data.entries:
+		if String((e.action as Dictionary).get("type", "")) == CActions.MATCH_RESULT:
+			driver._duel_teller += 1
+			driver.duels_gespeeld += 1
+	driver.feed.append({"type": "bark", "speler": -1, "naam": "Systeem",
+		"trigger": "hervat", "tekst": "Campagne hervat in ronde %d." % driver.c.ronde,
+		"ronde": driver.c.ronde})
+	return driver
 
 
 ## Speel de hele campagne uit (headless). Retourneert de kampioen (-1 = vastgelopen).
