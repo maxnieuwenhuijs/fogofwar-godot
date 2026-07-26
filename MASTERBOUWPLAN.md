@@ -586,7 +586,7 @@ de pool af? TE BEVESTIGEN), timers/deadlines per fase (live-8 vs async-16 versch
 
 **CHECK:** spec compleet zonder "TE BEVESTIGEN"; elke regel heeft een testgeval-naam in een bijlage.
 
-### ☐ F3.1 — CampaignCore
+### ☑ F3.1 — CampaignCore
 
 **Bestanden:** `core/campaign/cstate.gd`, `cactions.gd`, `creducer.gd`, `cview.gd`, `crules.gd`.
 

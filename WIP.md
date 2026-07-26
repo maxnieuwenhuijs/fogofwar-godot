@@ -270,6 +270,23 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.1 AFGEROND (25 juli) — CampaignCore.** core/campaign/: crules
+  (alle spec-knoppen als data), cstate (LEDGER als bron van waarheid:
+  saldi = som van events, nooit muteerbare velden; serialisatie roundtrip
+  byte-identiek), cactions (NOMINATE=stem v1, DONATE, KLAAR_MET_DONEREN,
+  MATCH_RESULT, TESTAMENT, TICK_DEADLINE — deadlines als actie zodat
+  defaults in het log staan), creducer (nominatie-telling met staking ->
+  kleinste pool; donatiecaps hard; C3-uitvallen; testament helft/2/timeout-
+  verbranding; punten 3/2/1/0 + remise = beide tiebreak; teambonus ook
+  doden; burgeroorlog-seeding punten->CP->pool met vrijloting en knock-out
+  zonder ruil; kampioen-kroning), cview (grootboek publiek, stemmen
+  team-only, doden zien alles, eigen saldi kant-en-klaar) en clog
+  (campagne-log met fold-replay). v1-keuzes gedocumenteerd in creducer:
+  nomineren = stemmen; remise-bracket: hoogste seed door; burgeroorlog-
+  verliezer verbrandt restant. CHECKS: 1273 asserts groen (CampaignTests:
+  15 tests over het spec-contract, incl. log-fold byte-identiek) -
+  simcheck 5/5. Volgende: F3.2 (SoloDriver + 15 persoonlijkheden).
+
 - **F3.0 AFGEROND (25 juli) — campagne-spec definitief.** Ontwerpsessie met
   Max (besluiten C1-C8): twee teams van 8; je neemt je VOLLEDIGE bezit mee
   het duel in (comp opstellen gecapt op voorraad, rest = spawn-reserve;
