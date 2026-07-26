@@ -26,7 +26,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War - paneel"
-$form.Size = New-Object System.Drawing.Size(400, 520)
+$form.Size = New-Object System.Drawing.Size(400, 565)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -92,23 +92,49 @@ $null = Maak-Knop "Training (6 facties)" 135 {
     Start-Process "$repo\train_ai.bat" -WorkingDirectory $repo -ArgumentList ([string][int]$numTrain.Value)
 }
 
-# --- Training onder de v4.2-regels (1v1-setting; leert spawn/CP-beleid) ------
-$null = Maak-Knop "Training v4.2 (6 facties)" 180 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    $min = [int]$numTrain.Value
+# --- Gedeelde starter: 6 parallelle v4.2-trainers, met logbestanden ----------
+# Gebruikt de console-Godot + stdout-redirect zodat de [TRAIN]-voortgang per
+# factie leesbaar terugkomt in results\training_<stamp>\train_<factie>.log
+# (de gewone exe is stil). Valt terug op de stille start als de console-exe
+# er niet is. Gewichten worden sowieso bij elke adoptie opgeslagen.
+function Start-TrainingV42([int]$minuten) {
+    $stamp = Get-Date -Format "yyyyMMdd_HHmm"
+    $logmap = Join-Path $repo ("results\training_" + $stamp)
+    New-Item -ItemType Directory -Force $logmap | Out-Null
+    $console = $godot -replace "\.exe$", "_console.exe"
     $basisSeed = [int]([DateTimeOffset]::Now.ToUnixTimeSeconds() % 900000000)
     $i = 0
     foreach ($f in @("mens", "muis", "leeuw", "beer", "wolf", "vos")) {
-        Start-Process $godot -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList @(
-            "--headless", "--path", ".", "res://tools/capture.tscn", "--",
-            "train", $min, 6, 6, $f, ($basisSeed + $i),
+        $trainArgs = @("--headless", "--path", ".", "res://tools/capture.tscn", "--",
+            "train", $minuten, 6, 6, $f, ($basisSeed + $i),
             "arena/arena_configs/rules_v42_campaign.json")
+        if (Test-Path $console) {
+            Start-Process $console -WorkingDirectory $repo -WindowStyle Hidden `
+                -RedirectStandardOutput (Join-Path $logmap "train_$f.log") `
+                -RedirectStandardError (Join-Path $logmap "train_$f.fouten.log") `
+                -ArgumentList $trainArgs
+        } else {
+            Start-Process $godot -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList $trainArgs
+        }
         $i += 1
     }
 }
 
+# --- Training onder de v4.2-regels (1v1-setting; leert spawn/CP-beleid) ------
+$null = Maak-Knop "Training v4.2 (6 facties)" 180 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    Start-TrainingV42 ([int]$numTrain.Value)
+}
+
+# --- Volle trainingsnacht: een klik, 8 uur campagne-fitness-training ---------
+$btnTrainNacht = Maak-Knop "VOLLE TRAINING-NACHT v4.2 (8u)" 225 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    Start-TrainingV42 480
+}
+$btnTrainNacht.BackColor = [System.Drawing.Color]::Honeydew
+
 # --- Snelle arena-test (quick_l1, ~2 min) ------------------------------------
-$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 225 {
+$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 270 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
@@ -116,7 +142,7 @@ $null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 225 {
 }
 
 # --- Volledige L2-matrix (~40 min) -------------------------------------------
-$null = Maak-Knop "Volledige L2-matrix (~40 min)" 270 {
+$null = Maak-Knop "Volledige L2-matrix (~40 min)" 315 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
@@ -124,14 +150,14 @@ $null = Maak-Knop "Volledige L2-matrix (~40 min)" 270 {
 }
 
 # --- Fuzz-vangnet (500 partijen) ---------------------------------------------
-$null = Maak-Knop "Fuzz-check (500 partijen)" 315 {
+$null = Maak-Knop "Fuzz-check (500 partijen)" 360 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process $godot -WorkingDirectory $repo -ArgumentList @(
         "--headless", "--path", ".", "res://arena/arena.tscn", "--", "--fuzz", "500")
 }
 
 # --- Dashboard bouwen + openen ------------------------------------------------
-$null = Maak-Knop "Dashboard verversen + openen" 360 {
+$null = Maak-Knop "Dashboard verversen + openen" 405 {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
@@ -142,7 +168,7 @@ $null = Maak-Knop "Dashboard verversen + openen" 360 {
 }
 
 # --- Alles stoppen -------------------------------------------------------------
-$btnStop = Maak-Knop "STOP alle runs" 415 {
+$btnStop = Maak-Knop "STOP alle runs" 460 {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null
