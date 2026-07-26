@@ -626,6 +626,14 @@ betrokken persoonlijkheid — assert op log-inhoud, niet op UI.
 
 ### ☐ F3.3 — Campagne-UI (mobile-first)
 
+**STATUS (25 juli): kern GEBOUWD** — `scripts/ui/campaign/campaign_hub.gd` + `scenes/campaign/campaign.tscn`:
+de CampagneHub met tijdlijn (barks + battlereports), eigen saldi, en de fase-panelen raad-ballot /
+doneer-paneel (steppers + caps) / testament in één scherm; bots draaien op een thread (UI bevriest
+niet); SoloDriver heeft mens-pauzepunten + submit_mens_*-methodes. De `-- shot <scherm>`-modus bestaat
+(fixture + PNG + node-asserts; headless slaat de PNG over). REST: los grootboek-scherm (sorteerbare
+tabel), BracketView, MatchReport-detail, touch-equivalenten — plus F3.4: de mens-DUELS koppelen aan de
+game-scene (nu wordt ook het mens-duel gesimuleerd).
+
 **Bestanden:** `ui/screens/campaign_hub`, `ledger_screen`, `council_screen`, `donate_sheet`,
 `testament_screen`, `match_report`, components (`FactionIcon`, `PoolBadge`, `CPBadge`, `TimerBar`,
 `VoteCard`, `LedgerCard`, **`BracketView`** — de burgeroorlog moet zichtbaar zijn); capture.gd.

@@ -62,6 +62,8 @@ func run_headless(max_stappen: int = 400) -> int:
 	var guard := 0
 	while c.fase != CState.Fase.KLAAR and guard < max_stappen:
 		guard += 1
+		if wacht_op_mens():
+			break  # de UI is aan zet (headless met mens_id -1 komt hier nooit)
 		stap()
 	return c.winnaar
 
@@ -97,10 +99,41 @@ func _bark(speler: int, trigger: String, wie: String = "") -> void:
 		"trigger": trigger, "tekst": tekst, "ronde": c.ronde})
 
 
+## Wacht de driver op een beslissing van de mens? (F3.3/F3.4: de UI levert
+## die via submit_* aan; bots gaan intussen gewoon door.)
+func wacht_op_mens() -> bool:
+	if mens_id < 0 or String(c.spelers.get(mens_id, {}).get("status", "")) != "actief":
+		return false
+	match c.fase:
+		CState.Fase.NOMINATIE:
+			return int(c.spelers[mens_id].team) == c.nominatie_team 				and not c.nominatie_stemmen.has(mens_id)
+		CState.Fase.DONATIE:
+			return not c.donatie_klaar.has(mens_id)
+		CState.Fase.TESTAMENT:
+			return c.pending_testamenten.has(mens_id)
+	return false
+
+
+func submit_mens_nominatie(eigen: int, vijand: int) -> bool:
+	return _pas_toe(CActions.make_nominate(eigen, vijand), mens_id)
+
+
+func submit_mens_donatie(naar: int, inf: int, cav: int, art: int, cp: int) -> bool:
+	return _pas_toe(CActions.make_donate(naar, inf, cav, art, cp), mens_id)
+
+
+func submit_mens_klaar_met_doneren() -> bool:
+	return _pas_toe(CActions.make_klaar_met_doneren(), mens_id)
+
+
+func submit_mens_testament(verdeling: Array) -> bool:
+	return _pas_toe(CActions.make_testament(verdeling), mens_id)
+
+
 func _stap_nominatie() -> void:
 	var team: int = c.nominatie_team
 	for sid in c.actieve_leden(team):
-		if c.nominatie_stemmen.has(sid) or c.fase != CState.Fase.NOMINATIE:
+		if sid == mens_id or c.nominatie_stemmen.has(sid) or c.fase != CState.Fase.NOMINATIE:
 			continue
 		var agent: CampaignAgent = agents[sid]
 		var keuze: Dictionary = agent.kies_nominatie(CView.for_player(c, sid))
@@ -123,7 +156,7 @@ func _stap_donatie() -> void:
 		for sid in c.actieve_leden(team):
 			if c.fase != CState.Fase.DONATIE:
 				return
-			if c.donatie_klaar.has(sid):
+			if sid == mens_id or c.donatie_klaar.has(sid):
 				continue
 			var agent: CampaignAgent = agents[sid]
 			for actie in agent.kies_donaties(CView.for_player(c, sid)):
@@ -155,6 +188,8 @@ func _stap_testament() -> void:
 	for sid in c.pending_testamenten.duplicate():
 		if c.fase != CState.Fase.TESTAMENT:
 			return
+		if sid == mens_id:
+			continue  # de UI levert het mens-testament aan
 		var agent: CampaignAgent = agents[sid]
 		var keuze: Dictionary = agent.kies_testament(CView.for_player(c, sid))
 		var gelukt := false
@@ -162,7 +197,7 @@ func _stap_testament() -> void:
 			gelukt = _pas_toe(CActions.make_testament(keuze.verdeling), sid)
 			if gelukt:
 				_bark(sid, "testament_naar_vijand" if bool(keuze.naar_vijand) else "testament")
-	if c.fase == CState.Fase.TESTAMENT:
+	if c.fase == CState.Fase.TESTAMENT and not c.pending_testamenten.has(mens_id):
 		_pas_toe(CActions.make_tick_deadline(), -1)  # rest verbrandt (spec)
 
 

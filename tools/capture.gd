@@ -29,6 +29,42 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 
+	if "shot" in OS.get_cmdline_user_args():
+		# F3.3 — scherm-fixture + PNG + node-asserts: het standaardgereedschap
+		# voor UI-checks (headless: screenshot overslaan, asserts blijven).
+		var shargs := OS.get_cmdline_user_args()
+		var shi := shargs.find("shot")
+		var scherm: String = String(shargs[shi + 1]) if shargs.size() > shi + 1 else "campaign_hub"
+		var shot_seed: int = int(shargs[shi + 2]) if shargs.size() > shi + 2 else 42
+		if scherm != "campaign_hub":
+			print("[SHOT] onbekend scherm: %s" % scherm)
+			get_tree().quit(1)
+			return
+		var sdriver := SoloDriver.new(shot_seed, 0)
+		sdriver.duel_ai = "easy"
+		var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+		hub.driver = sdriver
+		hub.mens_id = 0
+		add_child(hub)
+		await get_tree().create_timer(1.2).timeout
+		var shot_fouten := 0
+		for node_naam in ["Header", "Saldi", "Tijdlijn", "FasePaneel"]:
+			if hub.find_child(node_naam, true, false) == null:
+				shot_fouten += 1
+				print("[SHOT] node ontbreekt: %s" % node_naam)
+		var kop: Label = hub.find_child("Header", true, false)
+		if kop == null or not kop.text.contains("Ronde"):
+			shot_fouten += 1
+			print("[SHOT] header toont geen ronde")
+		var tex := get_viewport().get_texture()
+		if tex != null and tex.get_image() != null:
+			tex.get_image().save_png("res://_shot_%s.png" % scherm)
+			print("[SHOT] screenshot -> _shot_%s.png" % scherm)
+		else:
+			print("[SHOT] headless: geen viewport-texture, screenshot overgeslagen")
+		print("[SHOT] %s: %d fouten" % [scherm, shot_fouten])
+		get_tree().quit(0 if shot_fouten == 0 else 1)
+		return
 	if "solocheck" in OS.get_cmdline_user_args():
 		# F3.2-CHECK: N volledige solo-campagnes headless (16 bots) -> kampioen,
 		# geen deadlocks; plus een determinisme-paar op de eerste seed.

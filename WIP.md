@@ -270,6 +270,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **F3.3 kern GEBOUWD (25 juli) — de CampagneHub.** Een mobile-first
+  scherm dat de hele solo-campagne draagt: tijdlijn met barks en
+  battlereports (nieuwste onderaan, autoscroll), eigen pool/CP/punten in
+  de kop, en het fase-paneel: raad-ballot (eigen + vijand-dropdown),
+  doneer-paneel (4 steppers, caps zichtbaar, "klaar met doneren") en het
+  testament ("helft naar 1 speler" of "alles verbrandt"). Bots (incl.
+  duels) draaien op een thread; de UI pauzeert alleen als JIJ aan zet
+  bent (SoloDriver.wacht_op_mens + submit_mens_*). Nieuw gereedschap:
+  capture `-- shot campaign_hub [seed]` (fixture + node-asserts + PNG
+  buiten headless) — 0 fouten. Kanttekening: het mens-DUEL wordt nog
+  gesimuleerd; de koppeling naar de echte game-scene is F3.4, en losse
+  schermen (grootboek-tabel, BracketView) volgen. CHECKS: 1328 asserts
+  groen - simcheck 5/5 - shot 0 fouten.
+
 - **F3.2 AFGEROND (25 juli) — SoloDriver + persoonlijkheden.** De campagne
   LEEFT: 16 bots spelen van raadsronde tot kampioen. agents/campaign/:
   Personalities (8 archetypes met gewichten + temperatuur + barks: trouwe
