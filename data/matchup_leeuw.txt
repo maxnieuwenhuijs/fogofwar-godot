@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Leeuw
-Generaties: 47 · adopties: 1 · minuten: 120.7
+Generaties: 128 · adopties: 1 · minuten: 482.7
 Winrate van Leeuw tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   54.1%  (282 potjes)
-  vs Muis     71.3%  (282 potjes)
-  vs Leeuw    73.0%  (282 potjes)
-  vs Beer     98.2%  (282 potjes)
-  vs Wolf     87.4%  (282 potjes)
-  vs Krokodil  53.9%  (282 potjes)
+  vs Varken   46.2%  (768 potjes)
+  vs Muis     59.9%  (768 potjes)
+  vs Leeuw    41.2%  (768 potjes)
+  vs Beer     63.3%  (768 potjes)
+  vs Wolf     62.5%  (768 potjes)
+  vs Krokodil  46.4%  (768 potjes)
