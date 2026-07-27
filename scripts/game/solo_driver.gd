@@ -14,13 +14,23 @@ extends RefCounted
 const AIMediumScript := preload("res://scripts/ai/AIMedium.gd")
 const AIEasyScript := preload("res://scripts/ai/AIEasy.gd")
 
-## Duel-botniveau: "medium" (standaard) of "easy" (snelle tests/CI);
-## de limieten zijn instelbaar zodat checks korte duels kunnen draaien.
+## Duel-botniveau: "l1"/"l2" (F1-agents op views via AgentRunner — de snelle
+## arena-route, hub-standaard sinds de hang-fix van 27 juli), of legacy
+## "medium"/"easy" (MatchRunner + oude AI, blijft voor solocheck/duelstats).
 ## Cycluslimiet 0 = uit (26 juli, Max): duels spelen uit tot haven of
 ## eliminatie, net als een los potje; max_steps is de technische noodstop.
 var duel_ai: String = "medium"
 var duel_cycle_limit: int = 0
 var duel_max_steps: int = 3000
+
+## Aparte cycluslimiet voor BOT-duels (-1 = volg duel_cycle_limit). De hub zet
+## dit als vangnet tegen 3000-stappen-grindduels; het MENS-duel (via de brug,
+## duel_rules_voor zonder override) behoudt de volle duel_cycle_limit.
+var bot_duel_cycle_limit: int = -1
+
+## Voortgang voor de UI (dwars door de werk-thread heen leesbaar): welke
+## bot-klus er nu maalt. Leeg = geen langlopend werk.
+var bezig_met: String = ""
 
 var c: CState = CState.new()
 var clog: CLog = CLog.new()
@@ -35,7 +45,9 @@ var _duel_teller: int = 0
 var n_spelers: int = 16
 
 
-func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosave_pad: String = "") -> void:
+## p_mens_doctrine: de gekozen factie van de mens — vast voor de HELE campagne
+## (besluit Max, 27 juli). -1 = de oude round-robin-toewijzing (headless/tests).
+func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosave_pad: String = "", p_mens_doctrine: int = -1) -> void:
 	mens_id = p_mens_id
 	n_spelers = p_n_spelers
 	clog.autosave_pad = autosave_pad
@@ -44,9 +56,12 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosa
 	var doctrines: Array = Constants.DOCTRINE_DATA.keys()
 	var lijst: Array = []
 	for i in n_spelers:
+		var doctrine: int = int(doctrines[i % doctrines.size()])
+		if i == mens_id and p_mens_doctrine >= 0:
+			doctrine = p_mens_doctrine
 		lijst.append({
 			"naam": String(lobby[i].naam) if i != mens_id else "Max",
-			"doctrine": doctrines[i % doctrines.size()],
+			"doctrine": doctrine,
 		})
 	c.setup(lijst, CRules.new())
 	c.nominatie_team = c.kleinste_team()
@@ -143,7 +158,15 @@ func _bark(speler: int, trigger: String, wie: String = "") -> void:
 ## Wacht de driver op een beslissing van de mens? (F3.3/F3.4: de UI levert
 ## die via submit_* aan; bots gaan intussen gewoon door.)
 func wacht_op_mens() -> bool:
-	if mens_id < 0 or String(c.spelers.get(mens_id, {}).get("status", "")) != "actief":
+	if mens_id < 0:
+		return false
+	# Deadlock-fix (27 juli): het testament komt PRECIES als de mens net
+	# "uitgevallen" is — die check moet dus vóór de actief-guard, anders
+	# verschijnt het testament-paneel nooit en staat de campagne muurvast
+	# (_stap_testament laat het mens-testament expliciet aan de UI).
+	if c.fase == CState.Fase.TESTAMENT:
+		return c.pending_testamenten.has(mens_id)
+	if String(c.spelers.get(mens_id, {}).get("status", "")) != "actief":
 		return false
 	match c.fase:
 		CState.Fase.NOMINATIE:
@@ -152,8 +175,6 @@ func wacht_op_mens() -> bool:
 			return int(c.spelers[mens_id].team) == c.nominatie_team and not c.nominatie_stemmen.has(mens_id)
 		CState.Fase.DONATIE:
 			return not c.donatie_klaar.has(mens_id)
-		CState.Fase.TESTAMENT:
-			return c.pending_testamenten.has(mens_id)
 		CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
 			return not mens_duel().is_empty()
 	return false
@@ -285,14 +306,14 @@ func _stap_testament() -> void:
 ## De duel-config voor a-vs-b uit het campagne-bezit (C2/C7): comp gecapt op
 ## voorraad, rest wordt reserve, CP per speler. Bord-P1 = a, bord-P2 = b —
 ## de mens-duel-brug geeft daarom altijd de mens als a mee.
-func duel_rules_voor(a: int, b: int) -> RulesConfig:
+func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 	var bezit_a: Dictionary = c.pool_van(a)
 	var bezit_b: Dictionary = c.pool_van(b)
 	var comp_a: Array = Constants.doctrine_data(int(c.spelers[a].doctrine)).comp
 	var comp_b: Array = Constants.doctrine_data(int(c.spelers[b].doctrine)).comp
 	var start_a: Array = [mini(int(comp_a[0]), int(bezit_a.inf)), mini(int(comp_a[1]), int(bezit_a.cav)), mini(int(comp_a[2]), int(bezit_a.art))]
 	var start_b: Array = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
-	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit, "campaign": {
+	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit, "campaign": {
 		"comp_override": {"1": start_a, "2": start_b},
 		"pools": {
 			"1": {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]},
@@ -350,16 +371,38 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 
 ## Bot-vs-bot-duel op vol tempo: het campagne-bezit van beide vechters wordt
 ## de duel-config (C2/C7); de uitkomst gaat als MATCH_RESULT + battlereport terug.
+## "l1"/"l2" spelen via AgentRunner (de F1-arena-route: view + legal_actions +
+## Reducer.apply — orde-van-grootte sneller dan de legacy MatchRunner-route).
 func _speel_duel(idx: int, a: int, b: int) -> void:
 	_duel_teller += 1
+	bezig_met = "De bots spelen duel %d van %d: %s vs %s..." % [
+		idx + 1, c.duels_deze_ronde.size(),
+		String(c.spelers[a].naam), String(c.spelers[b].naam)]
 	var cp_a: int = c.cp_van(a)
 	var cp_b: int = c.cp_van(b)
-	var rules := duel_rules_voor(a, b)
-	var ai_script = AIEasyScript if duel_ai == "easy" else AIMediumScript
-	var runner := MatchRunner.new(ai_script.new(), ai_script.new(),
-		int(c.spelers[a].doctrine), int(c.spelers[b].doctrine),
-		_rng.fork("duel_%d" % _duel_teller).randi_range(1, 1 << 30), rules)
-	runner.max_steps = duel_max_steps
-	while not runner.done:
-		runner.step()
-	verwerk_duel_uitslag(idx, a, b, cp_a, cp_b, runner.state(), runner.winner)
+	var rules := duel_rules_voor(a, b, bot_duel_cycle_limit)
+	var seed_v: int = _rng.fork("duel_%d" % _duel_teller).randi_range(1, 1 << 30)
+	var eind_staat: GameState
+	var winnaar_kant: int
+	if duel_ai == "l1" or duel_ai == "l2":
+		var runner := AgentRunner.new(_maak_duel_agent(), _maak_duel_agent(),
+			int(c.spelers[a].doctrine), int(c.spelers[b].doctrine), seed_v, rules)
+		runner.max_steps = duel_max_steps
+		runner.run()
+		eind_staat = runner.state()
+		winnaar_kant = runner.winner
+	else:
+		var ai_script = AIEasyScript if duel_ai == "easy" else AIMediumScript
+		var runner := MatchRunner.new(ai_script.new(), ai_script.new(),
+			int(c.spelers[a].doctrine), int(c.spelers[b].doctrine), seed_v, rules)
+		runner.max_steps = duel_max_steps
+		while not runner.done:
+			runner.step()
+		eind_staat = runner.state()
+		winnaar_kant = runner.winner
+	bezig_met = ""
+	verwerk_duel_uitslag(idx, a, b, cp_a, cp_b, eind_staat, winnaar_kant)
+
+
+func _maak_duel_agent() -> Agent:
+	return AgentL2.new() if duel_ai == "l2" else AgentL1.new()

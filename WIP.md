@@ -1058,6 +1058,28 @@ hill-climbing self-play en toont het live:
 
 ## 9. TODO / volgende stappen
 
+- [x] **Solo-hang gefixt (27 juli, laptop)**: de hub bleef "Wachten op de volgende
+      fase." tonen terwijl bot-duels minutenlang maalden (medium-AI, cycluslimiet 0,
+      3000 stappen — en de tussenstand van een lopend duel wordt niet bewaard, dus
+      afsluiten = duel opnieuw). Fix: (1) bot-duels in de hub op **easy** met
+      cycluslimiet-vangnet 24 (`BOT_DUEL_AI`/`BOT_DUEL_CYCLE_LIMIT`,
+      `SoloDriver.bot_duel_cycle_limit` — het MENS-duel houdt cycluslimiet 0 op het
+      echte bord); de hang zat specifiek in medium (verdedigt naar de noodstop);
+      (2) eerlijk busy-label + live voortgang ("De bots spelen duel X van Y:
+      A vs B...") via `SoloDriver.bezig_met`; (3) testament-deadlock:
+      `wacht_op_mens()` checkt pending testamenten nu vóór de actief-guard — een
+      gevallen mens mét bezit kreeg anders nooit het testament-paneel; (4) nieuw:
+      **factiekeuze bij de campagnestart** (vast voor de hele campagne, besluit
+      Max) — keuzescherm in de hub, `SoloDriver.new(..., p_mens_doctrine)`.
+      Regressietests in SoloTests.
+      **DESIGN-BEVINDING (voor de campagne-spec/F3):** bot-duels via de snelle
+      L1-agent (AgentRunner-route, blijft beschikbaar via `duel_ai="l1"`) laten de
+      campagne NOOIT convergeren: haven-rushers winnen zonder slachtoffers, dus
+      niemand zakt door zijn pool en uitvallen (= attritie, C3) gebeurt nooit.
+      Campagne-convergentie leunt dus op bloedige duel-AI's — een expliciete
+      spec-vraag: moet verliezen zonder attritie óók pool kosten (bv. haven-verlies
+      = X pionnen), of blijft "attritie is de klok"?
+
 - [x] ~~REGELS v4.1 IN DE ENGINE~~ — **gedaan**, zie §2b. Resterende v4.1-gaten:
   - [x] **Vrije opstelling UI**: gedaan — "Zelf opstellen" in het opstellingsmenu:
         plaats het schaarste type eerst (kanonnen → paarden, klik op cyaan gemarkeerde

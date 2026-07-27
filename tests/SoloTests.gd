@@ -147,6 +147,61 @@ func test_mens_duel_pauzeert_en_bord_uitslag_boekt() -> void:
 	assert_true(bool(uitkomst.ok), "ook met bord-uitslagen replayt het log")
 
 
+func test_testament_van_gevallen_mens_wacht_op_ui() -> void:
+	# Deadlock-regressie (27 juli): valt de MENS met bezit over, dan is zijn
+	# status al "uitgevallen" op het moment dat het testament opent. De oude
+	# actief-guard in wacht_op_mens() gaf dan false -> de bots sloegen het
+	# mens-testament over (bewust, UI-taak) én de UI kwam nooit -> muurvast.
+	var driver := SoloDriver.new(6001, 0, 6)
+	driver.c.fase = CState.Fase.TESTAMENT
+	driver.c.spelers[0].status = "uitgevallen"
+	driver.c.pending_testamenten.append(0)
+	assert_true(driver.wacht_op_mens(), "gevallen mens met open testament = UI aan zet")
+	# De UI levert het testament aan; de fase moet daarna gewoon doorlopen.
+	assert_true(driver.submit_mens_testament([]), "leeg testament (alles verbrandt) is geldig")
+	assert_true(driver.c.fase != CState.Fase.TESTAMENT, "testament-fase rondt af")
+	assert_true(driver.c.pending_testamenten.is_empty(), "geen open testamenten meer")
+	assert_false(driver.wacht_op_mens(), "de gevallen mens is daarna toeschouwer")
+
+
+func test_l1_route_boekt_duels_deterministisch() -> void:
+	# Hang-fix (27 juli): bot-duels kunnen via AgentRunner + L1/L2 spelen (de
+	# snelle arena-route). LET OP — bevinding uit dezelfde sessie: een VOLLE
+	# campagne convergeert níét op L1 (haven-rushers winnen zonder slachtoffers,
+	# dus niemand zakt ooit door zijn pool; uitvallen = attritie). De hub
+	# gebruikt daarom "easy"; deze test dekt alleen het AgentRunner-pad zelf:
+	# duels spelen, uitslagen boeken, het log foldt, en alles is deterministisch.
+	var a := SoloDriver.new(4243, -1, 6)
+	a.duel_ai = "l1"
+	for _i in 12:
+		if a.c.fase != CState.Fase.KLAAR:
+			a.stap()
+	assert_true(a.duels_gespeeld > 0, "AgentRunner-duels boeken uitslagen (%d)" % a.duels_gespeeld)
+	assert_true(bool(CLog.fold(a.clog.meta.begin, a.clog.entries).ok),
+		"het log met AgentRunner-uitslagen replayt")
+	var b := SoloDriver.new(4243, -1, 6)
+	b.duel_ai = "l1"
+	for _i in 12:
+		if b.c.fase != CState.Fase.KLAAR:
+			b.stap()
+	assert_eq(JSON.stringify(a.c.to_dict()), JSON.stringify(b.c.to_dict()),
+		"byte-identieke staat via AgentRunner (deterministisch per seed)")
+
+
+func test_mens_factie_keuze_vast_voor_campagne() -> void:
+	# Besluit Max (27 juli): bij de campagnestart kies je je factie en die
+	# ben je de hele campagne. De keuze gaat als constructor-param mee en
+	# landt in de begin-staat (dus ook in het log/de autosave).
+	var driver := SoloDriver.new(6002, 0, 6, "", Constants.Doctrine.LEEUW)
+	assert_eq(int(driver.c.spelers[0].doctrine), Constants.Doctrine.LEEUW,
+		"gekozen factie toegepast op de mens")
+	var pool: Dictionary = driver.c.pool_van(0)
+	assert_eq(int(pool.cav), 15, "startpool volgt de gekozen factie (Leeuw: 10 cav x 1.5)")
+	var zonder := SoloDriver.new(6002, 0, 6)
+	assert_eq(int(zonder.c.spelers[0].doctrine), 0,
+		"zonder keuze blijft de oude round-robin (tests/headless ongewijzigd)")
+
+
 func test_c9_loting_in_solo_campagne() -> void:
 	# C9: ronde 1 loot het systeem — iedereen vecht, de paren staan in het log.
 	var driver := SoloDriver.new(808, -1, 6)

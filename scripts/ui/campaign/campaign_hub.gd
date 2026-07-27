@@ -23,6 +23,17 @@ var _paneel: VBoxContainer
 var _thread: Thread
 var _bezig: bool = false
 var _feed_getoond: int = 0
+var _info_label: Label = null
+
+## Bot-duels in de hub: "easy" — eval-gedreven (bloedig, dus de campagne-
+## attritie werkt) én snel (seconden per duel; de hang zat specifiek in
+## "medium", dat naar de 3000-stappen-noodstop verdedigt). NIET "l1": de
+## haven-rusher wint zonder slachtoffers, waardoor niemand ooit door zijn
+## pool zakt en de campagne nooit convergeert (test-bevinding 27 juli).
+const BOT_DUEL_AI := "easy"
+## Vangnet tegen incidentele grind-duels tussen bots; het mens-duel op het
+## echte bord behoudt cycluslimiet 0 (besluit 26 juli).
+const BOT_DUEL_CYCLE_LIMIT := 24
 
 const KLEUR_EIGEN := Color(0.30, 0.55, 0.95)
 const KLEUR_VIJAND := Color(0.90, 0.35, 0.35)
@@ -44,12 +55,63 @@ func _ready() -> void:
 			elif driver != null and not driver.c.rules.ronde1_loting:
 				driver = null  # oude regelset (voor C9): vers beginnen
 		if driver == null:
-			driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
-				mens_id, 16, SAVE_PAD)
+			# Nieuwe campagne: eerst je factie kiezen — die ben je de hele
+			# campagne (besluit Max, 27 juli). De keuze maakt de driver.
+			_toon_factie_keuze()
+			return
+	_start()
+
+
+func _start() -> void:
+	driver.duel_ai = BOT_DUEL_AI
+	driver.bot_duel_cycle_limit = BOT_DUEL_CYCLE_LIMIT
 	CampaignBridge.driver = driver
 	_bouw_layout()
 	_ververs()
 	_werk_door()
+
+
+## Factiekeuze bij een nieuwe campagne: 6 knoppen met naam + pro/con uit
+## DOCTRINE_DATA. De keuze is definitief voor de hele campagne.
+func _toon_factie_keuze() -> void:
+	var achtergrond := ColorRect.new()
+	achtergrond.color = Color(0.08, 0.09, 0.12)
+	achtergrond.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(achtergrond)
+	var kolom := VBoxContainer.new()
+	kolom.name = "FactieKeuze"
+	kolom.set_anchors_preset(Control.PRESET_FULL_RECT)
+	kolom.offset_left = 24
+	kolom.offset_right = -24
+	kolom.offset_top = 40
+	kolom.add_theme_constant_override("separation", 10)
+	achtergrond.add_child(kolom)
+	var titel := Label.new()
+	titel.text = "KIES JE FACTIE"
+	titel.add_theme_font_size_override("font_size", 24)
+	kolom.add_child(titel)
+	var uitleg := Label.new()
+	uitleg.text = "Je factie staat vast voor de hele campagne."
+	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	uitleg.add_theme_color_override("font_color", Color(0.75, 0.8, 0.9))
+	kolom.add_child(uitleg)
+	for doctrine in Constants.DOCTRINE_DATA:
+		var data: Dictionary = Constants.DOCTRINE_DATA[doctrine]
+		var knop := Button.new()
+		knop.name = "Factie_%d" % int(doctrine)
+		knop.text = "%s\n+ %s\n- %s" % [String(data.name), String(data.pro), String(data.con)]
+		knop.clip_text = false
+		knop.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		knop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		knop.pressed.connect(_kies_factie.bind(int(doctrine), achtergrond))
+		kolom.add_child(knop)
+
+
+func _kies_factie(doctrine: int, keuze_scherm: Control) -> void:
+	keuze_scherm.queue_free()
+	driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
+		mens_id, 16, SAVE_PAD, doctrine)
+	_start()
 
 
 func _exit_tree() -> void:
@@ -130,6 +192,10 @@ func _werk_door() -> void:
 	_bezig = true
 	_thread = Thread.new()
 	_thread.start(_werk_thread)
+	# Label-fix (27 juli): _ververs() draaide vóór deze herstart en liet
+	# "Wachten op de volgende fase." staan terwijl de thread maalde — zet het
+	# busy-label expliciet (géén volledige _ververs: de thread muteert de staat).
+	_toon_botwerk_label()
 	_poll_thread()
 
 
@@ -144,6 +210,7 @@ func _werk_thread() -> void:
 
 func _poll_thread() -> void:
 	if _thread.is_alive():
+		_toon_botwerk_label()
 		await get_tree().create_timer(0.15).timeout
 		if is_inside_tree():
 			_poll_thread()
@@ -153,6 +220,16 @@ func _poll_thread() -> void:
 	_ververs()
 	if driver.c.fase != CState.Fase.KLAAR and not driver.wacht_op_mens():
 		_werk_door()
+
+
+## Live voortgang tijdens het botwerk: driver.bezig_met is een String die de
+## werk-thread vervangt (referentie-swap) — veilig genoeg om te tonen zonder
+## de muterende campagnestaat te lezen.
+func _toon_botwerk_label() -> void:
+	if _info_label == null or not is_instance_valid(_info_label):
+		return
+	var voortgang: String = driver.bezig_met
+	_info_label.text = voortgang if voortgang != "" else "De bots zijn bezig..."
 
 
 # --- Weergave -------------------------------------------------------------------
@@ -342,10 +419,12 @@ func _bouw_fase_paneel() -> void:
 		bv.vul(c)
 		_paneel.add_child(bv)
 	if not driver.wacht_op_mens():
-		var info := Label.new()
-		info.text = "De bots zijn bezig..." if _bezig else "Wachten op de volgende fase."
-		_paneel.add_child(info)
+		_info_label = Label.new()
+		_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_info_label.text = "De bots zijn bezig..." if _bezig else "Wachten op de volgende fase."
+		_paneel.add_child(_info_label)
 		return
+	_info_label = null
 	match c.fase:
 		CState.Fase.NOMINATIE:
 			_paneel_nominatie(c)
