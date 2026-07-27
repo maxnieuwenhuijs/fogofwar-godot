@@ -132,7 +132,34 @@ func _pas_toe(action: Dictionary, speler: int) -> bool:
 	var res: Dictionary = CReducer.apply(c, action, speler)
 	if res.ok:
 		clog.record(speler, action)
+		_feed_event(action, speler)
 	return res.ok
+
+
+## 27 juli (Max): élke donatie/testament als leesbare regel in de tijdlijn —
+## ook wat de mens zelf doet. Het ledger is toch openbaar (Among Us-principe).
+func _feed_event(action: Dictionary, speler: int) -> void:
+	var t: String = String(action.type)
+	if t == CActions.DONATE:
+		var delen: Array = []
+		for veld in [["inf", "SOLO_UNIT_INF"], ["cav", "SOLO_UNIT_CAV"], ["art", "SOLO_UNIT_ART"], ["cp", "SOLO_UNIT_CP"]]:
+			var n: int = int(action.get(veld[0], 0))
+			if n > 0:
+				delen.append("%d %s" % [n, tr(String(veld[1]))])
+		feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
+			"tekst": tr("SOLO_FEED_DONATE") % [String(c.spelers[speler].naam),
+				", ".join(delen), String(c.spelers[int(action.naar)].naam)]})
+	elif t == CActions.TESTAMENT:
+		for deel in (action.verdeling as Array):
+			var delen2: Array = []
+			for veld in [["inf", "SOLO_UNIT_INF"], ["cav", "SOLO_UNIT_CAV"], ["art", "SOLO_UNIT_ART"], ["cp", "SOLO_UNIT_CP"]]:
+				var n2: int = int((deel as Dictionary).get(veld[0], 0))
+				if n2 > 0:
+					delen2.append("%d %s" % [n2, tr(String(veld[1]))])
+			if not delen2.is_empty():
+				feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
+					"tekst": tr("SOLO_FEED_TESTAMENT") % [String(c.spelers[speler].naam),
+						", ".join(delen2), String(c.spelers[int((deel as Dictionary).naar)].naam)]})
 
 
 ## Fisher-Yates met de campagne-rng (Array.shuffle() zou de globale rng pakken).

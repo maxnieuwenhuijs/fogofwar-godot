@@ -347,3 +347,13 @@ BARK_KAMIKAZE_NOM_SELF_1,For eternal glory!,Voor de eeuwige roem!
 BARK_KAMIKAZE_DONATE_1,Everything! Take everything!,Alles! Neem alles!
 BARK_KAMIKAZE_WILL_1,Ashes to ashes. My troops go to the bravest.,As tot as. Mijn troepen aan de dappersten.
 BARK_KAMIKAZE_WILL_ENEMY_1,Even my enemy fought more beautifully than my team.,Zelfs mijn vijand vocht mooier dan mijn team.
+HUB_END_CHAMPION,CHAMPION: %s,KAMPIOEN: %s
+HUB_END_SUMMARY,"%d rounds, %d duels. You finished with %d fame points (place %d of %d).","%d rondes, %d duels. Jij eindigde met %d roempunten (plek %d van %d)."
+HUB_END_LEDGER_BTN,View the full ledger,Bekijk het volledige grootboek
+HUB_END_NEW_BTN,Start a new campaign,Start een nieuwe campagne
+SOLO_FEED_DONATE,%s gives %s to %s,%s geeft %s aan %s
+SOLO_FEED_TESTAMENT,"%s bequeaths %s to %s","%s laat %s na aan %s"
+SOLO_UNIT_INF,soldiers,soldaten
+SOLO_UNIT_CAV,cavalry,cavalerie
+SOLO_UNIT_ART,cannons,kanonnen
+SOLO_UNIT_CP,CP,CP

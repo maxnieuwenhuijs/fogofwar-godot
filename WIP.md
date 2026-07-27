@@ -270,6 +270,20 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **BACKLOG hoofdmenu-herstructurering (besluit Max, 27 juli — VOLGENDE
+  BOUWKLUS).** Hoofdmenu wordt: SOLO / MULTIPLAYER (disabled tot F4) /
+  Settings / How to play. SOLO -> "1v1" of "Campagne"; daarna pas de
+  moeilijkheidsvraag — OOK voor de campagne (easy/medium/hard bepaalt
+  duel_ai + bot-niveau in SoloDriver/hub). AI Trainer verdwijnt uit het
+  menu; Model-tuner komt onder Settings. Minder knoppen, logischer flow.
+  Design-docs/wireframes (docs/design/ + UI-DESIGN-BRIEF) moeten mee.
+  Paneel al gedaan: "Training 1v1 (4.1-regels)" vs "Training campagne
+  (v4.2)" (die laatste = campagne-fitness: neemt 1v1-learnings als
+  startpunt en traint lange-termijn/economie incl. factie-tweaks), en
+  VOLLE TRAINING-NACHT draait nu de hele pijplijn automatisch:
+  trainen -> wachten -> arena-meting (4.1+v4.2) -> dashboard
+  (training_nacht.ps1; een knop, alles vanzelf — Max wil minder knoppen).
+
 - **UX-iteratie 2 + wanhoop-modus (27 juli, playtest Max).** Drie
   pakketten. (1) F3.4c: de mens heeft VOORRANG op de bot-simulaties —
   campagne starten = loting-overzicht, aftel, laadscherm, direct je duel;

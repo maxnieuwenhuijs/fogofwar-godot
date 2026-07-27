@@ -87,7 +87,7 @@ $null = Maak-Knop "Korte nachtrun (fuzz + L2-arena)" 90 {
 
 # --- Training (6 parallelle trainers via train_ai.bat), duur instelbaar ------
 $numTrain = Maak-Minuten 135 60
-$null = Maak-Knop "Training (6 facties)" 135 {
+$null = Maak-Knop "Training 1v1 (4.1-regels)" 135 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process "$repo\train_ai.bat" -WorkingDirectory $repo -ArgumentList ([string][int]$numTrain.Value)
 }
@@ -121,15 +121,17 @@ function Start-TrainingV42([int]$minuten) {
 }
 
 # --- Training onder de v4.2-regels (1v1-setting; leert spawn/CP-beleid) ------
-$null = Maak-Knop "Training v4.2 (6 facties)" 180 {
+$null = Maak-Knop "Training campagne (v4.2)" 180 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-TrainingV42 ([int]$numTrain.Value)
 }
 
-# --- Volle trainingsnacht: een klik, 8 uur campagne-fitness-training ---------
+# --- Volle trainingsnacht: een klik = trainen -> arena-meting -> dashboard ---
 $btnTrainNacht = Maak-Knop "VOLLE TRAINING-NACHT v4.2 (8u)" 225 {
     if (-not (Bevestig-BijDrukte)) { return }
-    Start-TrainingV42 480
+    Start-Process powershell -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\training_nacht.ps1",
+        "-TrainMinuten", 420, "-ArenaMinuten", 60)
 }
 $btnTrainNacht.BackColor = [System.Drawing.Color]::Honeydew
 

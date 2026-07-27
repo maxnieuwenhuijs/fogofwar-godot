@@ -366,6 +366,10 @@ func _ververs_tijdlijn() -> void:
 		if String(e.type) == "bark":
 			label.text = tr("HUB_FEED_BARK") % [int(e.ronde), String(e.naam), String(e.tekst)]
 			label.add_theme_color_override("font_color", Color(0.75, 0.8, 0.95))
+		elif String(e.type) == "event":
+			# Donaties/testamenten — ook je eigen acties (27 juli, Max).
+			label.text = "R%d · %s" % [int(e.ronde), String(e.tekst)]
+			label.add_theme_color_override("font_color", Color(0.6, 0.88, 0.65))
 		elif String(e.type) == "report":
 			var c: CState = driver.c
 			var p1n := String(c.spelers[int(e.p1)].naam)
@@ -436,6 +440,7 @@ func _bouw_fase_paneel() -> void:
 	_wis_paneel()
 	var c: CState = driver.c
 	if c.fase == CState.Fase.KLAAR:
+		_paneel_einde(c)
 		return
 	if c.fase == CState.Fase.BURGEROORLOG:
 		var bv := BracketView.new()
@@ -458,6 +463,46 @@ func _bouw_fase_paneel() -> void:
 			_paneel_testament(c)
 		CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
 			_paneel_duel(c)
+
+
+## 27 juli (Max) — het campagne-eindscherm: kampioen, eindstand, opnieuw.
+func _paneel_einde(c: CState) -> void:
+	var titel := Label.new()
+	titel.name = "EindTitel"
+	titel.add_theme_font_size_override("font_size", 22)
+	titel.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
+	titel.text = tr("HUB_END_CHAMPION") % String(c.spelers.get(c.winnaar, {}).get("naam", "?"))
+	_paneel.add_child(titel)
+	var sub := Label.new()
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.add_theme_font_size_override("font_size", 13)
+	var mijn_punten: int = c.punten_van(mens_id)
+	var plek: int = 1
+	for id in c.spelers:
+		if c.punten_van(int(id)) > mijn_punten:
+			plek += 1
+	sub.text = tr("HUB_END_SUMMARY") % [c.ronde, driver.duels_gespeeld, mijn_punten, plek, c.spelers.size()]
+	_paneel.add_child(sub)
+	# Top 3 op roem — de rest staat in het grootboek.
+	var top: Array = LedgerScreen.rijen(c, "punten")
+	for i in mini(3, top.size()):
+		var r := Label.new()
+		r.add_theme_font_size_override("font_size", 12)
+		r.text = "%d. %s — %d %s" % [i + 1, String(top[i].naam), int(top[i].punten), tr("LEDGER_COL_POINTS").to_lower()]
+		if int(top[i].id) == mens_id:
+			r.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
+		_paneel.add_child(r)
+	_knop(tr("HUB_END_LEDGER_BTN"), func() -> void:
+		var scherm := LedgerScreen.new()
+		add_child(scherm)
+		scherm.open(driver.c, mens_id))
+	var opnieuw := _knop(tr("HUB_END_NEW_BTN"), func() -> void:
+		if FileAccess.file_exists(SAVE_PAD):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PAD))
+		CampaignBridge.driver = null
+		CampaignBridge.feed_gezien = 0
+		get_tree().reload_current_scene())
+	opnieuw.name = "NieuweCampagneKnop"
 
 
 func _paneel_nominatie(c: CState) -> void:

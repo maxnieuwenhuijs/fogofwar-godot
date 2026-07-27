@@ -228,3 +228,35 @@ leesbaarheid op 6"-schermen als toets.
 - Geen states die alleen op kleur leunen (kleurenblindheid; vorm/icoon altijd mee).
 - Geen hover-afhankelijke interactie en niets essentieels in schermhoeken die een duim niet haalt.
 - Geen aparte desktop-layout in v1 — portrait schaalt mee, klaar.
+
+
+---
+
+## Playtest-wensen 27 juli (Max) — verwerkt + open voor design
+
+**Al gebouwd (functioneel, wacht op designer-polish):**
+- **Campagne-eindscherm** (hub, fase KLAAR): kampioen groot, samenvatting
+  (rondes/duels/eigen roem + plek), top-3 roem, knoppen "Bekijk het
+  volledige grootboek" en "Start een nieuwe campagne". Design mag hier een
+  echt podium/celebratie-moment van maken.
+- **Alle acties zichtbaar in de chatlog**: donaties en testamenten (ook die
+  van de speler zelf) verschijnen als groene event-regels ("X geeft 3
+  soldaten, 1 CP aan Y"). Battlereport-kaartjes zijn klikbaar -> dialoog
+  met verliezen per type + CP-delta per speler.
+- **Duel-flow**: loting-overzicht (wie-tegen-wie), auto-start met aftel +
+  laadscherm; bots simuleren op de achtergrond; gemiste events druppelen
+  bij terugkomst gefaseerd binnen (fade-in) als afspeel-animatie.
+- **Spawn-moment op het bord**: verse reinforcements "poeffen" een voor een
+  het bord op voordat de kaarten-fase opent (place-tik per pion).
+
+**Nog te bouwen (C11, besluit Max) — design mag voorsorteren:**
+- **Reinforcements = een puntenpot** (soldaat 1 / ruiter 2 / kanon 3):
+  overal een getal i.p.v. drie voorraadjes. Saldi-regel moet expliciet
+  maken: "Veldleger: altijd vol - Versterkingen: N - CP: N - Roem: N"
+  (verwarring "ben ik alles kwijt?" wegnemen).
+- **Doneren via plus-knopjes** achter elke teamgenoot-naam in de
+  teamkolommen ([+1] versterking, [+CP]), caps zichtbaar; geen
+  spinbox-formulier meer.
+- **CP-ruil 2:1** naar versterkingen (knop bij je eigen saldi).
+- **Per-factie budgetten** (tweakbaar): zwakke facties compenseren met
+  meer versterkingen (Muis/Beer) of meer CP (Wolf).
