@@ -49,14 +49,25 @@ func test_barks_vuren_op_triggers() -> void:
 		agent.rng = SeededRng.new(5)
 		for trigger in ["nominatie_teamgenoot", "zelf_nominatie", "donatie", "testament", "testament_naar_vijand"]:
 			assert_true(agent.bark(trigger) != "", "%s heeft een bark voor %s" % [archetype, trigger])
-	# Integratie: een gespeelde campagne bevat nominatie-barks in de feed.
-	var driver := _speel(4242)
-	var triggers: Dictionary = {}
-	for e in driver.feed:
-		if String(e.type) == "bark":
-			triggers[String(e.trigger)] = true
-	assert_true(triggers.has("nominatie_teamgenoot") or triggers.has("zelf_nominatie"),
-		"de raad produceert barks in het log")
+	# Integratie: een campagne MET een raadsronde bevat nominatie-barks.
+	# C10 maakt snelle campagnes mogelijk (ronde 1 + burgeroorlog, geen raad) —
+	# zoek dus deterministisch een seed die ronde 2 haalt; bestaat die niet,
+	# dan is dát de echte vondst (raad zou nooit meer voorkomen).
+	var met_raad: SoloDriver = null
+	for seed_val in [4242, 4243, 4244, 4245, 4246]:
+		var kandidaat := _speel(seed_val)
+		if kandidaat.c.ronde >= 2:
+			met_raad = kandidaat
+			break
+	assert_true(met_raad != null,
+		"minstens 1 van 5 seeds haalt een raadsronde (anders is de raad dood spel)")
+	if met_raad != null:
+		var triggers: Dictionary = {}
+		for e in met_raad.feed:
+			if String(e.type) == "bark":
+				triggers[String(e.trigger)] = true
+		assert_true(triggers.has("nominatie_teamgenoot") or triggers.has("zelf_nominatie"),
+			"de raad produceert barks in het log")
 
 
 func test_autosave_en_hervatten_identiek() -> void:
@@ -196,10 +207,41 @@ func test_mens_factie_keuze_vast_voor_campagne() -> void:
 	assert_eq(int(driver.c.spelers[0].doctrine), Constants.Doctrine.LEEUW,
 		"gekozen factie toegepast op de mens")
 	var pool: Dictionary = driver.c.pool_van(0)
-	assert_eq(int(pool.cav), 15, "startpool volgt de gekozen factie (Leeuw: 10 cav x 1.5)")
+	assert_eq(int(pool.cav), int(floor(10 * driver.c.rules.start_poolfactor)),
+		"reinforcements volgen de gekozen factie (Leeuw: 10 cav x poolfactor)")
 	var zonder := SoloDriver.new(6002, 0, 6)
 	assert_eq(int(zonder.c.spelers[0].doctrine), 0,
 		"zonder keuze blijft de oude round-robin (tests/headless ongewijzigd)")
+
+
+func test_vol_team_start_en_inzet_boeking() -> void:
+	# Besluit Max (27 juli): elk duel start HOE DAN OOK met de volle
+	# samenstelling; de pool is puur reinforcements en slinkt alleen door
+	# INZET (spawns), niet door bord-verliezen.
+	var driver := SoloDriver.new(7001, -1, 6)
+	var comp: Array = Constants.doctrine_data(int(driver.c.spelers[0].doctrine)).comp
+	# Maak speler 0 straatarm: zelfs dan start het bord vol.
+	var arm: Dictionary = driver.c.pool_van(0)
+	driver.c._boek("test", 0, -int(arm.inf), -int(arm.cav), -int(arm.art), 0, 0)
+	var rules: RulesConfig = driver.duel_rules_voor(0, 3)
+	assert_eq((rules.campaign.comp_override["1"] as Array), comp,
+		"vol team op het bord, ook met lege pool")
+	assert_eq(int(rules.campaign.pools["1"].inf), 0, "geen reinforcements = niets te spawnen")
+	# De in-match-reserve is gecapt op de duel-inzetruimte (eliminatie blijft bereikbaar).
+	var rijk: RulesConfig = SoloDriver.new(7002, -1, 6).duel_rules_voor(0, 3)
+	var rp: Dictionary = rijk.campaign.pools["1"]
+	assert_true(int(rp.inf) + int(rp.cav) + int(rp.art) <= driver.c.rules.duel_spawn_totaal_max,
+		"in-match-reserve <= duel_spawn_totaal_max")
+	# Inzet-boeking: 2 gespawnde soldaten kosten pool; verliezen niet.
+	var d2 := SoloDriver.new(7003, -1, 6)
+	var voor: int = d2.c.pool_totaal_van(0)
+	CReducer.apply(d2.c, CActions.make_loting([[0, 3], [1, 4], [2, 5]]), -1)
+	var res: Dictionary = CReducer.apply(d2.c, CActions.make_match_result(
+		0, 3, "haven", {"0": {"inf": 4}, "3": {"inf": 0}},
+		{}, {"0": {"inf": 2}, "3": {"inf": 0, "cav": 0, "art": 0}}), -1)
+	assert_true(res.ok, "match_result met inzet-veld boekt")
+	assert_eq(d2.c.pool_totaal_van(0), voor - 2,
+		"pool daalt met de INZET (2), niet met de verliezen (4)")
 
 
 func test_c9_loting_in_solo_campagne() -> void:

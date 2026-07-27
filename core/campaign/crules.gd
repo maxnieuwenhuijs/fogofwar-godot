@@ -8,8 +8,16 @@ var team_size: int = 8                    # C1: twee teams van 8
 var duels_per_ronde_max: int = 8          # min(dit, kleinste teamgrootte) — 8 = iedereen vecht
 var ronde1_loting: bool = true            # C9: ronde 1 = random 1v1-paren, geen raad
 
-# Startbezit per speler (de 1v1-setting als campagne-standaard):
-var start_poolfactor: float = 1.5         # voorraad = comp x factor (afgerond omlaag)
+# Vol-team-model (besluit Max, 27 juli): elk duel start je HOE DAN OOK met de
+# volledige factie-samenstelling op het bord; de pool is puur REINFORCEMENTS
+# en slinkt alleen door ze in te zetten (spawns), donaties en testamenten.
+# Uitvallen (C3) blijft: duel verloren én reinforcements op.
+var vol_team_start: bool = true
+
+# Startbezit per speler: reinforcements = comp x factor (afgerond omlaag).
+# 0.5 houdt het totale startbezit gelijk aan het oude 1v1-besluit
+# (1x comp veldleger + 0.5x comp reserve = het oude 1.5x); arena-tunebaar.
+var start_poolfactor: float = 0.5
 var start_cp: int = 10
 
 # Donaties (per ontvanger per raadsronde):
@@ -38,6 +46,7 @@ func to_dict() -> Dictionary:
 		"team_size": team_size,
 		"duels_per_ronde_max": duels_per_ronde_max,
 		"ronde1_loting": ronde1_loting,
+		"vol_team_start": vol_team_start,
 		"start_poolfactor": start_poolfactor,
 		"start_cp": start_cp,
 		"donatie_cap_pionnen": donatie_cap_pionnen,
@@ -61,6 +70,10 @@ static func from_dict(d: Dictionary) -> CRules:
 	# loting). Nieuwe campagnes schrijven de nieuwe waarden altijd uit.
 	c.duels_per_ronde_max = int(d.get("duels_per_ronde_max", 2))
 	c.ronde1_loting = bool(d.get("ronde1_loting", false))
+	# Compat: campagnes van voor 27 juli kennen het vol-team-model niet en
+	# moeten onder het oude pool-model (gecapte starts, verliezen-afboeking)
+	# blijven folden; hun opgeslagen poolfactor (1.5) blijft dan ook gelden.
+	c.vol_team_start = bool(d.get("vol_team_start", false))
 	c.start_poolfactor = float(d.get("start_poolfactor", c.start_poolfactor))
 	c.start_cp = int(d.get("start_cp", c.start_cp))
 	c.donatie_cap_pionnen = int(d.get("donatie_cap_pionnen", c.donatie_cap_pionnen))

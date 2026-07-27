@@ -11,6 +11,8 @@ const LOTING := "loting"            # {paren: [[team0-lid, team1-lid], ...]} —
 const DONATE := "donate"            # {naar, inf, cav, art, cp}
 const KLAAR_MET_DONEREN := "klaar_met_doneren"  # {} — sluit jouw donatie-venster
 const MATCH_RESULT := "match_result"  # {duel, winnaar, methode, verliezen:{"<id>":{inf,cav,art}}, cp_delta:{"<id>": n}}
+                                      # + optioneel inzet:{"<id>":{inf,cav,art}} — vol-team-model (27 juli):
+                                      # ingezette reinforcements; aanwezig = díé worden afgeboekt i.p.v. de verliezen
 const TESTAMENT := "testament"      # {verdeling: [{naar, inf, cav, art, cp}]}
 const TICK_DEADLINE := "tick_deadline"  # {} — defaults afdwingen (ook in het log)
 
@@ -37,9 +39,12 @@ static func make_donate(naar: int, inf: int, cav: int, art: int, cp: int) -> Dic
 static func make_klaar_met_doneren() -> Dictionary:
 	return {"type": KLAAR_MET_DONEREN}
 
-static func make_match_result(duel: int, winnaar: int, methode: String, verliezen: Dictionary, cp_delta: Dictionary) -> Dictionary:
-	return {"type": MATCH_RESULT, "duel": duel, "winnaar": winnaar,
+static func make_match_result(duel: int, winnaar: int, methode: String, verliezen: Dictionary, cp_delta: Dictionary, inzet: Dictionary = {}) -> Dictionary:
+	var a := {"type": MATCH_RESULT, "duel": duel, "winnaar": winnaar,
 		"methode": methode, "verliezen": verliezen, "cp_delta": cp_delta}
+	if not inzet.is_empty():
+		a["inzet"] = inzet
+	return a
 
 static func make_testament(verdeling: Array) -> Dictionary:
 	return {"type": TESTAMENT, "verdeling": verdeling}

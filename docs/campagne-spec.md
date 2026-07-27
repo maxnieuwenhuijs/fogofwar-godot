@@ -61,16 +61,30 @@ Regels (vastgelegd, masterplan):
 
 ## 3. Economie per duel (de v4.2-koppeling)
 
-- **Duel-inzet (C2/C7):** een genomineerde neemt zijn **volledige
-  campagne-bezit** mee: hij stelt zijn doctrine-startleger op (gecapt op de
-  voorraad — minder dan je comp betekent kleiner beginnen), de rest van de
-  voorraad is de spawn-reserve (`campaign.pools`), en zijn hele CP-saldo is
-  `cp_start`. Rijk = sterk; donaties doen er maximaal toe.
+> **C10 — vol-team-model (besluit Max, 27 juli; vervangt de C2/C7-capping
+> hieronder voor nieuwe campagnes):** elk duel start je **hoe dan ook met de
+> volledige doctrine-samenstelling** op het bord — het startteam is gratis en
+> gegarandeerd, ook met een lege pool. De campagne-pool is puur
+> **reinforcements** (start: comp × poolfactor, default 0,5) en slinkt
+> uitsluitend door **inzet**: elke reinforcement die je tijdens een duel
+> spawnt wordt van de campagne-pool afgeboekt (gesneuveld of overleefd —
+> ingezet is ingezet). Bord-verliezen van het startteam kosten géén pool.
+> De in-match-spawnvoorraad is de eigen pool, gecapt op de duel-inzetruimte
+> (15). Uitvallen (C3) blijft: **duel verloren én reinforcements op**.
+> Oude campagne-logs (zonder `vol_team_start` in de rules) folden onder het
+> oude model hieronder.
+
+- **Duel-inzet (C2/C7, oud model — alleen nog voor oude logs):** een
+  genomineerde neemt zijn volledige campagne-bezit mee: startleger gecapt op
+  de voorraad (minder dan je comp betekent kleiner beginnen), de rest is de
+  spawn-reserve, en zijn hele CP-saldo is `cp_start`.
 - **Spawn-cap (C8):** de limiet van 15 spawns per potje geldt ook in
   campagne-duels (max 3 per cyclus, eigen achterste rij — de vaste
   v4.2-regels).
-- **Duel-verliezen boeken af** van de campagne-voorraad (besluit Max);
-  gesneuveld = weg. Spawns in het duel komen uit dezelfde voorraad.
+- **Pool-afboeking:** onder C10 boekt de **inzet** af (`reason: "inzet"` in
+  het ledger, via het `inzet`-veld op MATCH_RESULT); onder het oude model
+  boekten de **verliezen** af (`reason: "loss"`). Spawns in het duel komen
+  uit dezelfde voorraad.
 - **CP-restant** van het duel vloeit terug naar de campagnepot en is daar
   overdraagbaar (besluit Max, 25 juli). Haven-winst +8 CP, eliminatie-winst
   +4 CP (ledger; D13).
@@ -141,7 +155,8 @@ Regels (vastgelegd, masterplan):
 | Ledger-invariant (som + bord constant behalve verbranding) | `test_ledger_invariant` |
 | Punten-tarieven 3/2/1/0 + teambonus doden | `test_punten_tarieven` |
 | Flow raad → doneren → duels | `test_ronde_flow` |
-| Duel-start: comp gecapt op voorraad, rest reserve | `test_duel_start_verdeling` |
-| Kleiner starten bij armoede (voorraad < comp) | `test_arm_start` |
+| Duel-start: comp gecapt op voorraad, rest reserve (oud model) | `test_duel_start_verdeling` |
+| Kleiner starten bij armoede (oud model, oude logs) | `test_arm_start` |
 | Spawn-cap 15 ook in campagne-duels | `test_campagne_spawn_cap` |
 | Uitvals-conditie C3 (verlies + te kleine voorraad) | `test_uitvallen` |
+| C10: vol team ook met lege pool + inzet boekt af, verliezen niet | `test_vol_team_start_en_inzet_boeking` |

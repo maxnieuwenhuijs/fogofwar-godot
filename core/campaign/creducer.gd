@@ -245,19 +245,34 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 	if winnaar != -1 and winnaar != p1 and winnaar != p2:
 		return "Winnaar hoort niet bij dit duel"
 	var methode: String = String(action.methode)
-	# Verliezen en CP-mutaties boeken (het battlereport levert de getallen).
-	# Op oplopende speler-id, NIET op dict-volgorde: het log reist als JSON
-	# (autosave/F4-upload) en key-volgorde mag het ledger nooit veranderen.
-	for sid_str in _gesorteerde_ids(action.verliezen):
-		var sid := int(String(sid_str))
-		if sid != p1 and sid != p2:
-			return "Verliezen voor een speler buiten het duel"
-		var v: Dictionary = action.verliezen[sid_str]
-		var vi: int = maxi(0, int(v.get("inf", 0)))
-		var vc: int = maxi(0, int(v.get("cav", 0)))
-		var va: int = maxi(0, int(v.get("art", 0)))
-		if vi + vc + va > 0:
-			_boek_ev(c, events, "loss", sid, -vi, -vc, -va, 0, 0)
+	# Pool-boekingen (op oplopende speler-id, NIET op dict-volgorde: het log
+	# reist als JSON en key-volgorde mag het ledger nooit veranderen).
+	# Vol-team-model (besluit Max, 27 juli): levert het battlereport `inzet`
+	# (ingezette reinforcements), dan boeken we DIE af — bord-verliezen zijn
+	# gratis, want het volle startteam is elk duel gegarandeerd. Oude logs
+	# zonder `inzet` boeken de verliezen en folden dus byte-identiek.
+	if action.has("inzet"):
+		for sid_str in _gesorteerde_ids(action.inzet):
+			var sid := int(String(sid_str))
+			if sid != p1 and sid != p2:
+				return "Inzet voor een speler buiten het duel"
+			var z: Dictionary = action.inzet[sid_str]
+			var zi: int = maxi(0, int(z.get("inf", 0)))
+			var zc: int = maxi(0, int(z.get("cav", 0)))
+			var za: int = maxi(0, int(z.get("art", 0)))
+			if zi + zc + za > 0:
+				_boek_ev(c, events, "inzet", sid, -zi, -zc, -za, 0, 0)
+	else:
+		for sid_str in _gesorteerde_ids(action.verliezen):
+			var sid := int(String(sid_str))
+			if sid != p1 and sid != p2:
+				return "Verliezen voor een speler buiten het duel"
+			var v: Dictionary = action.verliezen[sid_str]
+			var vi: int = maxi(0, int(v.get("inf", 0)))
+			var vc: int = maxi(0, int(v.get("cav", 0)))
+			var va: int = maxi(0, int(v.get("art", 0)))
+			if vi + vc + va > 0:
+				_boek_ev(c, events, "loss", sid, -vi, -vc, -va, 0, 0)
 	for sid_str in _gesorteerde_ids(action.cp_delta):
 		var sid := int(String(sid_str))
 		if sid != p1 and sid != p2:

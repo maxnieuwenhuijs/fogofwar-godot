@@ -54,6 +54,8 @@ func _ready() -> void:
 				driver = null  # uitgespeelde campagne: nieuwe starten
 			elif driver != null and not driver.c.rules.ronde1_loting:
 				driver = null  # oude regelset (voor C9): vers beginnen
+			elif driver != null and not driver.c.rules.vol_team_start:
+				driver = null  # oud pool-model (voor 27 juli): vers beginnen
 		if driver == null:
 			# Nieuwe campagne: eerst je factie kiezen — die ben je de hele
 			# campagne (besluit Max, 27 juli). De keuze maakt de driver.

@@ -40,7 +40,8 @@ func test_start_bezit_via_ledger() -> void:
 	var c := _mini()
 	var comp: Array = Constants.doctrine_data(Constants.Doctrine.MENS).comp
 	var pool: Dictionary = c.pool_van(0)
-	assert_eq(int(pool.inf), int(floor(comp[0] * 1.5)), "start = comp x 1.5 (1v1-setting)")
+	assert_eq(int(pool.inf), int(floor(comp[0] * c.rules.start_poolfactor)),
+		"start = reinforcements = comp x poolfactor (vol-team-model)")
 	assert_eq(c.cp_van(0), 10)
 	assert_eq(c.punten_van(0), 0)
 	assert_eq(c.ledger.size(), 6, "1 start-boeking per speler")
@@ -152,7 +153,7 @@ func test_donatiecaps_en_regels() -> void:
 	assert_true(CReducer.apply(c, CActions.make_donate(0, 5, 2, 0, 2), 1).ok)
 	var pool0: Dictionary = c.pool_van(0)
 	var comp: Array = Constants.doctrine_data(Constants.Doctrine.MENS).comp
-	assert_eq(int(pool0.inf), int(floor(comp[0] * 1.5)) + 5, "donatie bijgeschreven")
+	assert_eq(int(pool0.inf), int(floor(comp[0] * c.rules.start_poolfactor)) + 5, "donatie bijgeschreven")
 	# Cap pionnen: 7 zat er al (5+2), nog 4 erbij = 11 > 10 -> geweigerd.
 	var teveel: Dictionary = CReducer.apply(c, CActions.make_donate(0, 4, 0, 0, 0), 2)
 	assert_false(teveel.ok, "donatiecap 10 pionnen per ontvanger per ronde")
@@ -180,7 +181,8 @@ func test_match_result_punten_en_cp() -> void:
 	assert_eq(c.cp_van(0), 7, "CP-delta verwerkt (10 - 3)")
 	assert_eq(c.cp_van(3), 12)
 	var comp: Array = Constants.doctrine_data(Constants.Doctrine.MENS).comp
-	assert_eq(int(c.pool_van(3).inf), int(floor(comp[0] * 1.5)) - 5, "verliezen afgeboekt")
+	assert_eq(int(c.pool_van(3).inf), int(floor(comp[0] * c.rules.start_poolfactor)) - 5,
+		"oude logs (zonder inzet-veld) boeken verliezen zoals vroeger")
 	assert_eq(c.ronde, 2, "geen uitvallers -> volgende raadsronde")
 	assert_eq(c.fase, CState.Fase.NOMINATIE)
 

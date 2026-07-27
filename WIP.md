@@ -1072,13 +1072,19 @@ hill-climbing self-play en toont het live:
       **factiekeuze bij de campagnestart** (vast voor de hele campagne, besluit
       Max) — keuzescherm in de hub, `SoloDriver.new(..., p_mens_doctrine)`.
       Regressietests in SoloTests.
-      **DESIGN-BEVINDING (voor de campagne-spec/F3):** bot-duels via de snelle
-      L1-agent (AgentRunner-route, blijft beschikbaar via `duel_ai="l1"`) laten de
-      campagne NOOIT convergeren: haven-rushers winnen zonder slachtoffers, dus
-      niemand zakt door zijn pool en uitvallen (= attritie, C3) gebeurt nooit.
-      Campagne-convergentie leunt dus op bloedige duel-AI's — een expliciete
-      spec-vraag: moet verliezen zonder attritie óók pool kosten (bv. haven-verlies
-      = X pionnen), of blijft "attritie is de klok"?
+      **DESIGN-BEVINDING (27 juli):** bot-duels via de snelle L1-agent
+      (AgentRunner-route, blijft beschikbaar via `duel_ai="l1"`) lieten de
+      campagne nooit convergeren: haven-rushers winnen zonder slachtoffers,
+      niemand zakte door zijn pool. → **Beantwoord door C10 (besluit Max,
+      zelfde dag): het vol-team-model.** Elk duel start hoe dan ook met de
+      volle samenstelling; de pool is puur reinforcements (comp × 0.5) en
+      slinkt alleen door INZET (spawns), donaties en testamenten — niet door
+      bord-verliezen. Uitvallen = duel verloren + reinforcements op. Zie
+      docs/campagne-spec.md §3 (C10); `CRules.vol_team_start` gate't oude
+      logs; `inzet`-veld op MATCH_RESULT boekt (`reason: "inzet"`); de hub
+      start oude saves opnieuw. Let op: een zuinige speler die nooit spawnt
+      teert niet uit — de campagne-arena (F7) moet meten of dat een
+      turtle-probleem wordt.
 
 - [x] ~~REGELS v4.1 IN DE ENGINE~~ — **gedaan**, zie §2b. Resterende v4.1-gaten:
   - [x] **Vrije opstelling UI**: gedaan — "Zelf opstellen" in het opstellingsmenu:

@@ -311,16 +311,43 @@ func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 	var bezit_b: Dictionary = c.pool_van(b)
 	var comp_a: Array = Constants.doctrine_data(int(c.spelers[a].doctrine)).comp
 	var comp_b: Array = Constants.doctrine_data(int(c.spelers[b].doctrine)).comp
-	var start_a: Array = [mini(int(comp_a[0]), int(bezit_a.inf)), mini(int(comp_a[1]), int(bezit_a.cav)), mini(int(comp_a[2]), int(bezit_a.art))]
-	var start_b: Array = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
+	var start_a: Array
+	var start_b: Array
+	var pool_a: Dictionary
+	var pool_b: Dictionary
+	if c.rules.vol_team_start:
+		# Vol-team-model (27 juli): het bord start HOE DAN OOK met de volle
+		# samenstelling; de campagne-pool is puur reinforcements en gaat als
+		# in-match-spawnvoorraad mee, gecapt op de duel-inzetruimte zodat de
+		# eliminatie-check (bord + pool) altijd bereikbaar blijft.
+		start_a = comp_a.duplicate()
+		start_b = comp_b.duplicate()
+		pool_a = _duel_reserve(bezit_a)
+		pool_b = _duel_reserve(bezit_b)
+	else:
+		# Oud pool-model (campagnes van voor 27 juli): arm = kleiner starten.
+		start_a = [mini(int(comp_a[0]), int(bezit_a.inf)), mini(int(comp_a[1]), int(bezit_a.cav)), mini(int(comp_a[2]), int(bezit_a.art))]
+		start_b = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
+		pool_a = {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]}
+		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
 	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit, "campaign": {
 		"comp_override": {"1": start_a, "2": start_b},
-		"pools": {
-			"1": {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]},
-			"2": {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]},
-		},
+		"pools": {"1": pool_a, "2": pool_b},
 		"cp": {"1": c.cp_van(a), "2": c.cp_van(b)},
 	}})
+
+
+## De reinforcements die dit duel mee het veld op kunnen: per type het bezit,
+## totaal gecapt op de spawn-ruimte van één duel (duel_spawn_totaal_max) in
+## vaste volgorde inf -> cav -> art (deterministisch).
+func _duel_reserve(bezit: Dictionary) -> Dictionary:
+	var ruimte: int = c.rules.duel_spawn_totaal_max
+	var uit := {"inf": 0, "cav": 0, "art": 0}
+	for sleutel in ["inf", "cav", "art"]:
+		var n: int = mini(int(bezit[sleutel]), ruimte)
+		uit[sleutel] = n
+		ruimte -= n
+	return uit
 
 
 ## Vertaal een uitgespeelde duel-staat naar MATCH_RESULT + battlereport.
@@ -337,7 +364,8 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 			var verliezer_kant: int = Constants.opponent(winnaar_kant)
 			if s.count_alive_pawns_for(verliezer_kant) + s.pool_total(verliezer_kant) == 0:
 				methode = "eliminatie"
-	# Verliezen per type = geëlimineerde pionnen (dood = weg, C-besluiten).
+	# Verliezen per type = geëlimineerde pionnen (voor het battlereport; onder
+	# het vol-team-model kosten die geen pool meer — de inzet doet dat).
 	var verliezen: Dictionary = {str(a): {"inf": 0, "cav": 0, "art": 0}, str(b): {"inf": 0, "cav": 0, "art": 0}}
 	for pawn in s.pawns.values():
 		if not pawn.is_eliminated:
@@ -345,6 +373,19 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 		var eigenaar: String = str(a) if pawn.owner_id == Constants.PLAYER_1 else str(b)
 		var sleutel: String = ["inf", "cav", "art"][pawn.unit_type]
 		verliezen[eigenaar][sleutel] = int(verliezen[eigenaar][sleutel]) + 1
+	# Vol-team-model: ingezette reinforcements = alle ooit-gespawnde pionnen =
+	# totaal pionnen van dit type - de startopstelling (comp_override).
+	var inzet: Dictionary = {}
+	if c.rules.vol_team_start:
+		inzet = {str(a): {"inf": 0, "cav": 0, "art": 0}, str(b): {"inf": 0, "cav": 0, "art": 0}}
+		var totaal: Dictionary = {str(a): [0, 0, 0], str(b): [0, 0, 0]}
+		for pawn in s.pawns.values():
+			var eigenaar: String = str(a) if pawn.owner_id == Constants.PLAYER_1 else str(b)
+			totaal[eigenaar][pawn.unit_type] += 1
+		for kant in [[a, Constants.PLAYER_1], [b, Constants.PLAYER_2]]:
+			var comp: Array = s.doctrine_data_of(int(kant[1])).comp
+			for t in 3:
+				inzet[str(kant[0])][["inf", "cav", "art"][t]] = maxi(0, int(totaal[str(kant[0])][t]) - int(comp[t]))
 	# CP-delta: eindsaldo - startsaldo, plus het winst-tarief (D13).
 	var winnaar_id: int = -1
 	if winnaar_kant == Constants.PLAYER_1:
@@ -365,8 +406,8 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 	duels_gespeeld += 1
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
-		"cp_delta": cp_delta, "cycli": s.cycle})
-	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta), -1)
+		"cp_delta": cp_delta, "inzet": inzet, "cycli": s.cycle})
+	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta, inzet), -1)
 
 
 ## Bot-vs-bot-duel op vol tempo: het campagne-bezit van beide vechters wordt
