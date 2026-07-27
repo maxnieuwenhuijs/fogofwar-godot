@@ -270,6 +270,28 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **UX-iteratie 2 + wanhoop-modus (27 juli, playtest Max).** Drie
+  pakketten. (1) F3.4c: de mens heeft VOORRANG op de bot-simulaties —
+  campagne starten = loting-overzicht, aftel, laadscherm, direct je duel;
+  CampaignBridge simuleert de overige duels op een thread terwijl je op
+  het bord staat; terug in de hub druppelen gemiste battlereports als
+  afspeel-animatie binnen (fade-in, feed_gezien overleeft de wissel);
+  bark-%s-bug gefixt (replace i.p.v. format). (2) Spawn-gevoel:
+  poef-reveal (spawns landen een voor een op het bord, define-hand wacht)
+  + haven-prioriteit bij plaatsing (midden-havens, hoek-havens, dan de
+  rest — zelfde sampler voor bots en mens-suggestie). (3) WANHOOP-MODUS
+  in AIController.evaluate (easy/medium/L2/trainer): onder de 7 eigen
+  pionnen overstemmen havenopmars (6x) en kills (300/vijand) elke
+  voorzichtigheid en vervalt de eigen risico-straf — tiebreaks horen
+  niet te bestaan (Max). Sim-goldens bewust geregenereerd: zelfde
+  winnaars, kortere potjes (bv. muis-wolf 14→11 cycli);
+  golden_sims.json bijgewerkt, simcheck 0 afwijkingen. NOG OPEN (C11,
+  besluit Max 27 juli, volgende klus): reinforcements als één
+  puntenpot (soldaat 1 / ruiter 2 / kanon 3), doneren via plus-knopjes
+  achter namen, CP-ruil 2:1 naar versterkingen, per-factie
+  budget-knoppen (Muis/Beer meer punten, Wolf meer CP), en de
+  saldi-regel moet "veldleger altijd vol" expliciet maken.
+
 - **Campagne-fitness in de trainer (26 juli) — "lange termijn denken".**
   Onder v4.2-regels traint `_train_match` niet meer op kale winst maar op
   het campagne-puntensysteem: haven 3 > eliminatie 2 > tiebreak 1 >

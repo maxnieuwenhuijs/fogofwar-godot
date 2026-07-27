@@ -481,6 +481,14 @@ func evaluate(state: GameState, me: int) -> int:
 	score += (opp_risk - my_risk) * weights.protect
 	score += (my_ranged - opp_ranged) * weights.get("ranged", 40.0)
 	score += (my_reach - opp_reach) * weights.reach
+	# WANHOOP-MODUS (besluit Max, 27 juli): met minder dan 7 eigen pionnen is
+	# afwachten kansloos — een tiebreak hoort niet te bestaan. De agressieve
+	# termen (havenopmars + kills) overstemmen vanaf hier elke voorzichtigheid:
+	# de bot rent blind naar de haven of maakt af wat er nog staat.
+	if my_alive < 7:
+		score += (_prox(my_near[0]) + _prox(my_near[1])) * 6.0
+		score -= float(opp_alive) * 300.0
+		score += float(my_risk) * weights.protect  # risico-straf terugdraaien
 	return int(score)
 
 
