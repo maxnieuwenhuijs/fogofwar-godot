@@ -9,6 +9,14 @@ var driver: SoloDriver = null
 var duel_actief: bool = false
 var _ctx: Dictionary = {}  # {idx, a, b, cp_a, cp_b} — a = de mens = bord-P1
 
+## F3.4c — hoeveel feed-kaartjes de mens al gezien heeft (overleeft de
+## scene-wissel): alles daarna druppelt bij terugkomst gefaseerd binnen.
+var feed_gezien: int = 0
+
+## F3.4c — bot-duels simuleren op een thread terwijl de mens op het bord
+## staat; rond_af wacht de thread af voordat het mens-resultaat boekt.
+var _sim_thread: Thread = null
+
 
 ## Vanuit de hub: het openstaande mens-duel klaarzetten voor het bord.
 func start_mens_duel() -> bool:
@@ -22,6 +30,11 @@ func start_mens_duel() -> bool:
 	_ctx = {"idx": int(d.idx), "a": a, "b": b,
 		"cp_a": driver.c.cp_van(a), "cp_b": driver.c.cp_van(b)}
 	duel_actief = true
+	# De overige duels van de ronde spelen ondertussen op de achtergrond uit;
+	# bij terugkomst in de hub staan de battlereports al klaar.
+	_wacht_op_sim()
+	_sim_thread = Thread.new()
+	_sim_thread.start(driver.simuleer_bot_duels)
 	return true
 
 
@@ -42,9 +55,19 @@ func naam_vijand() -> String:
 	return String(driver.c.spelers[int(_ctx.b)].naam)
 
 
-## Vanuit het bord: de uitslag terugboeken in de campagne.
+## Vanuit het bord: de uitslag terugboeken in de campagne. Wacht eerst de
+## achtergrond-simulatie af (vrijwel altijd al klaar — een mens-duel duurt
+## minuten, bot-duels seconden).
 func rond_af(s: GameState, winnaar_kant: int) -> void:
 	duel_actief = false
+	_wacht_op_sim()
 	driver.verwerk_duel_uitslag(int(_ctx.idx), int(_ctx.a), int(_ctx.b),
 		int(_ctx.cp_a), int(_ctx.cp_b), s, winnaar_kant)
 	_ctx = {}
+
+
+func _wacht_op_sim() -> void:
+	if _sim_thread != null:
+		if _sim_thread.is_started():
+			_sim_thread.wait_to_finish()
+		_sim_thread = null

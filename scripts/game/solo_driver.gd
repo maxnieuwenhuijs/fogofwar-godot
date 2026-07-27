@@ -150,7 +150,9 @@ func _bark(speler: int, trigger: String, wie: String = "") -> void:
 	if tekst == "":
 		return
 	if tekst.contains("%s"):
-		tekst = tekst % wie
+		# Sommige (vertaalde) barks hebben meerdere %s — replace vult ze
+		# allemaal en kan nooit een format-error geven (bug: kale %s in de UI).
+		tekst = tekst.replace("%s", wie)
 	feed.append({"type": "bark", "speler": speler, "naam": agent.naam,
 		"trigger": trigger, "tekst": tekst, "ronde": c.ronde})
 
@@ -180,9 +182,10 @@ func wacht_op_mens() -> bool:
 	return false
 
 
-## F3.4b — het eerste open duel waar de mens in zit: {idx, p1, p2}, anders {}.
-## Alleen als het ook echt het eerstvolgende duel is (duels spelen op volgorde);
-## een bot-duel dat eerder in de rij staat, speelt eerst.
+## F3.4b — het open duel waar de mens in zit: {idx, p1, p2}, anders {}.
+## De mens heeft VOORRANG (27 juli, Max): zodra zijn duel open staat speelt
+## hij eerst en wachten de bot-simulaties — geen minutenlang staren naar
+## "bots zijn bezig" voordat je zelf mag.
 func mens_duel() -> Dictionary:
 	if mens_id < 0 or not (c.fase == CState.Fase.DUELS or c.fase == CState.Fase.BURGEROORLOG):
 		return {}
@@ -192,7 +195,6 @@ func mens_duel() -> Dictionary:
 			continue
 		if int(duel.p1) == mens_id or int(duel.p2) == mens_id:
 			return {"idx": idx, "p1": int(duel.p1), "p2": int(duel.p2)}
-		return {}
 	return {}
 
 
@@ -273,6 +275,8 @@ func _stap_duels() -> void:
 	for _vangnet in 64:
 		if c.fase != fase_start:
 			return
+		if not mens_duel().is_empty():
+			return  # voorrang: de mens speelt eerst op het bord, bots daarna
 		var open_idx := -1
 		for idx in c.duels_deze_ronde.size():
 			if not bool(c.duels_deze_ronde[idx].klaar):
@@ -281,9 +285,35 @@ func _stap_duels() -> void:
 		if open_idx == -1:
 			return
 		var duel: Dictionary = c.duels_deze_ronde[open_idx]
-		if mens_id >= 0 and (int(duel.p1) == mens_id or int(duel.p2) == mens_id):
-			return  # F3.4b: het mens-duel speelt op het echte bord (via de brug)
 		_speel_duel(open_idx, int(duel.p1), int(duel.p2))
+
+
+## F3.4c — bot-duels simuleren TERWIJL de mens op het bord staat (aparte
+## thread via CampaignBridge). Speelt alle open duels behalve het mens-duel.
+## Veilig: de ronde kan pas sluiten als ook het mens-resultaat binnen is
+## (fase blijft DUELS/BURGEROORLOG zolang één duel open staat), en de mens
+## raakt de driver niet aan tot CampaignBridge.rond_af — die eerst deze
+## simulatie laat uitdraaien.
+func simuleer_bot_duels() -> void:
+	var fase_start: int = c.fase
+	for _vangnet in 64:
+		if c.fase != fase_start:
+			return
+		var open_idx := -1
+		for idx in c.duels_deze_ronde.size():
+			var duel: Dictionary = c.duels_deze_ronde[idx]
+			if bool(duel.klaar):
+				continue
+			if int(duel.p1) == mens_id or int(duel.p2) == mens_id:
+				continue
+			open_idx = idx
+			break
+		if open_idx == -1:
+			bezig_met = ""
+			return
+		var duel: Dictionary = c.duels_deze_ronde[open_idx]
+		_speel_duel(open_idx, int(duel.p1), int(duel.p2))
+	bezig_met = ""
 
 
 func _stap_testament() -> void:

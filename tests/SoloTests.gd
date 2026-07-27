@@ -255,6 +255,34 @@ func test_c9_loting_in_solo_campagne() -> void:
 		"de loting staat als data in het log (replaybaar)")
 
 
+func test_bot_duels_simuleren_tijdens_mens_duel() -> void:
+	# F3.4c: terwijl de mens "op het bord staat" spelen de bots hun duels op
+	# de achtergrond uit; de ronde sluit pas als ook het mens-resultaat er is.
+	var driver := SoloDriver.new(3033, 0, 6)
+	driver.duel_ai = "easy"
+	driver.duel_cycle_limit = 4
+	driver.duel_max_steps = 400
+	var vangnet := 0
+	while not driver.wacht_op_mens() and vangnet < 20:
+		vangnet += 1
+		driver.stap()
+	assert_eq(driver.c.fase, CState.Fase.DUELS, "ronde 1: loting -> duels, mens direct aan zet")
+	var fase_voor: int = driver.c.fase
+	driver.simuleer_bot_duels()
+	assert_eq(driver.c.fase, fase_voor, "de ronde blijft open op het mens-duel")
+	var open_bot := 0
+	var mens_open := 0
+	for duel in driver.c.duels_deze_ronde:
+		if bool(duel.klaar):
+			continue
+		if int(duel.p1) == 0 or int(duel.p2) == 0:
+			mens_open += 1
+		else:
+			open_bot += 1
+	assert_eq(open_bot, 0, "alle bot-duels zijn op de achtergrond gesimuleerd")
+	assert_eq(mens_open, 1, "het mens-duel wacht op het bord")
+
+
 func test_grootboek_sortering() -> void:
 	# F3.3-rest: het Grootboek sorteert stabiel op elke kolom.
 	var driver := _speel(555)  # uitgespeelde campagne: ook gevallen spelers

@@ -23,6 +23,9 @@ var _paneel: VBoxContainer
 var _thread: Thread
 var _bezig: bool = false
 var _feed_getoond: int = 0
+var _auto_start_idx: int = -1   # duel-idx waarvoor de auto-start-aftel loopt
+var _auto_stop_idx: int = -1    # duel-idx waarvoor de mens de auto-start annuleerde
+var _duel_start_bezig: bool = false
 var _info_label: Label = null
 
 ## Bot-duels in de hub: "easy" — eval-gedreven (bloedig, dus de campagne-
@@ -67,6 +70,8 @@ func _ready() -> void:
 func _start() -> void:
 	driver.duel_ai = BOT_DUEL_AI
 	driver.bot_duel_cycle_limit = BOT_DUEL_CYCLE_LIMIT
+	if CampaignBridge.driver != driver:
+		CampaignBridge.feed_gezien = 0  # verse of hervatte campagne: teller opnieuw
 	CampaignBridge.driver = driver
 	_bouw_layout()
 	_ververs()
@@ -342,8 +347,17 @@ func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
 
 
 func _ververs_tijdlijn() -> void:
+	# F3.4c — kaartjes die de mens nog niet zag (bv. gesimuleerd terwijl hij
+	# op het bord stond) druppelen gefaseerd binnen: fade-in per kaartje, als
+	# een afspeel-animatie van de gebeurtenissen. Al-geziene kaartjes (her-
+	# opbouw van de hub) verschijnen direct.
+	var al_gezien: int = CampaignBridge.feed_gezien
+	var nieuw_totaal: int = maxi(1, driver.feed.size() - al_gezien)
+	var vertraging_per: float = minf(0.45, 8.0 / float(nieuw_totaal))
+	var onthul_i: int = 0
 	while _feed_getoond < driver.feed.size():
 		var e: Dictionary = driver.feed[_feed_getoond]
+		var vers: bool = _feed_getoond >= al_gezien
 		_feed_getoond += 1
 		var kaart := PanelContainer.new()
 		var label := Label.new()
@@ -368,6 +382,13 @@ func _ververs_tijdlijn() -> void:
 					_toon_report(e))
 		kaart.add_child(label)
 		_tijdlijn.add_child(kaart)
+		if vers:
+			kaart.modulate.a = 0.0
+			var tw := kaart.create_tween()
+			tw.tween_interval(0.15 + vertraging_per * onthul_i)
+			tw.tween_property(kaart, "modulate:a", 1.0, 0.3)
+			onthul_i += 1
+	CampaignBridge.feed_gezien = maxi(CampaignBridge.feed_gezien, driver.feed.size())
 	await get_tree().process_frame
 	if is_inside_tree():
 		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
@@ -466,19 +487,84 @@ func _paneel_nominatie(c: CState) -> void:
 
 
 ## F3.4b — het mens-duel speelt op het echte bord: de brug zet de config klaar.
+## UX (27 juli, Max): de mens heeft voorrang op de bot-simulaties, het paneel
+## toont wie-tegen-wie deze ronde, en het duel start na een korte aftel
+## vanzelf met een laadscherm. "Blijf in de hub" annuleert de auto-start.
 func _paneel_duel(c: CState) -> void:
 	var d: Dictionary = driver.mens_duel()
 	if d.is_empty():
 		return
 	var vijand: int = int(d.p2) if int(d.p1) == mens_id else int(d.p1)
+	var kop := Label.new()
+	kop.text = tr("HUB_DUEL_PAIRS_TITLE")
+	kop.add_theme_font_size_override("font_size", 12)
+	kop.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	_paneel.add_child(kop)
+	for duel in c.duels_deze_ronde:
+		var r := Label.new()
+		var status: String = tr("BRACKET_DONE") if bool(duel.klaar) else tr("BRACKET_NOW_PLAYING")
+		r.text = tr("BRACKET_DUEL_ROW") % [String(c.spelers[int(duel.p1)].naam),
+			String(c.spelers[int(duel.p2)].naam), status]
+		r.add_theme_font_size_override("font_size", 12)
+		if int(duel.p1) == mens_id or int(duel.p2) == mens_id:
+			r.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
+		elif bool(duel.klaar):
+			r.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
+		_paneel.add_child(r)
 	var titel := Label.new()
 	titel.text = tr("HUB_DUEL_TITLE") % String(c.spelers[vijand].naam)
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_paneel.add_child(titel)
 	var knop := _knop(tr("HUB_DUEL_PLAY_BTN"), func() -> void:
-		if CampaignBridge.start_mens_duel():
-			get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
+		_start_mens_duel(vijand))
 	knop.name = "SpeelDuelKnop"
+	if _auto_stop_idx == int(d.idx):
+		return
+	var info := Label.new()
+	info.text = tr("HUB_DUEL_AUTO")
+	info.add_theme_font_size_override("font_size", 12)
+	info.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	_paneel.add_child(info)
+	var blijf := _knop(tr("HUB_DUEL_STAY_BTN"), func() -> void:
+		_auto_stop_idx = int(d.idx)
+		_bouw_fase_paneel())
+	blijf.name = "BlijfKnop"
+	if _auto_start_idx != int(d.idx):
+		_auto_start_idx = int(d.idx)
+		_auto_start_duel(int(d.idx), vijand)
+
+
+func _auto_start_duel(idx: int, vijand: int) -> void:
+	await get_tree().create_timer(2.5).timeout
+	if not is_inside_tree() or _auto_stop_idx == idx:
+		return
+	var d: Dictionary = driver.mens_duel()
+	if d.is_empty() or int(d.idx) != idx:
+		return
+	_start_mens_duel(vijand)
+
+
+## Laadscherm tonen en dan pas de (zware) scene-wissel doen — geen bevroren
+## hub meer tussen klik en bord.
+func _start_mens_duel(vijand: int) -> void:
+	if _duel_start_bezig or not CampaignBridge.start_mens_duel():
+		return
+	_duel_start_bezig = true
+	var lader := ColorRect.new()
+	lader.color = Color(0.05, 0.06, 0.09, 1.0)
+	lader.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var tekst := Label.new()
+	tekst.text = tr("HUB_DUEL_LOADING") % String(driver.c.spelers[vijand].naam)
+	tekst.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tekst.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tekst.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tekst.add_theme_font_size_override("font_size", 22)
+	lader.add_child(tekst)
+	add_child(lader)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_inside_tree():
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 
 
 func _paneel_donatie(c: CState) -> void:
