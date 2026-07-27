@@ -270,6 +270,14 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   3/3 gevangen · 1016 asserts groen (FuzzTests nieuw) · simcheck 5/5 · play ·
   vosview.
 
+- **BACKLOG C12 basis-HP cavalerie (besluit Max, 27 juli).** Ruiter/bigbro
+  krijgt ALTIJD basis-2 HP plus de kaart-HP erbovenop (kaart 1 -> ruiter 3).
+  Bouwen als RulesConfig-knop `basis_hp` per type (default {} = 4.1
+  byte-identiek; v4.2-configs zetten {"cav": 2}). Toepassen waar de pion
+  z'n HP uit de gekoppelde kaart krijgt (link/reveal-pad), UI-blokjes
+  rekenen mee. Logica: in het punten-model kost een ruiter 2 punten en
+  hoort hij taaier te zijn dan een 1-punt-soldaat. Daarna trainen + arena.
+
 - **BACKLOG hoofdmenu-herstructurering (besluit Max, 27 juli — VOLGENDE
   BOUWKLUS).** Hoofdmenu wordt: SOLO / MULTIPLAYER (disabled tot F4) /
   Settings / How to play. SOLO -> "1v1" of "Campagne"; daarna pas de

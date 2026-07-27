@@ -388,6 +388,7 @@ func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 		pool_a = {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]}
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
 	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit, "campaign": {
+		"pool_model": "punten",  # C11: reserve = puntenpot (typed pools op waarde omgezet)
 		"comp_override": {"1": start_a, "2": start_b},
 		"pools": {"1": pool_a, "2": pool_b},
 		"cp": {"1": c.cp_van(a), "2": c.cp_van(b)},

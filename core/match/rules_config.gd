@@ -27,6 +27,7 @@ var haven_score_cumulative: bool = false  # true: "touches" tellen — ooit-aang
 
 # --- Kaartdefinitie ---
 var per_stat_cap: int = 0             # >0: harde bovengrens per losse kaart-stat
+var basis_hp: Dictionary = {}         # C12: basis-HP per type BOVENOP de kaart (bv {"cav": 2}); {} = 4.1-gedrag
 
 # --- Schotparameters ---
 var inf_shot_range: int = 2           # afstand exact N (min = max)
@@ -65,6 +66,8 @@ const CAMPAIGN_DEFAULTS := {
 	"cp_effect_mode": "define_budget",   # D1: +1 kaartbudget bij definiëren
 	"cp_inzet_max": "per_kaart",         # D4: 1 per kaart, geen plafond
 	"cp_refund": "none",                 # D2: ingezet = verbrand
+	"pool_model": "typen",               # C11: "punten" = reserve is een puntenpot (default typed = compat)
+	"spawn_kosten": {"inf": 1, "cav": 2, "art": 3},  # C11: prijs per type in het punten-model
 	"cp_start_mode": "vast",             # D13
 	"cp_bijschrijving": "campagnelaag",  # D13: verdiensten naar de campagnepot
 	"poolfactor": 1.5,                   # D5: x doctrine-comp per type (3.0 -> 1.5, besluit Max 25 juli)
@@ -156,6 +159,7 @@ func to_dict() -> Dictionary:
 		"statue_threshold": statue_threshold,
 		"haven_score_cumulative": haven_score_cumulative,
 		"per_stat_cap": per_stat_cap,
+		"basis_hp": basis_hp,
 		"inf_shot_range": inf_shot_range,
 		"inf_shot_cost": inf_shot_cost,
 		"inf_shot_full_attack": inf_shot_full_attack,
@@ -184,6 +188,10 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 	c.statue_threshold = int(d.get("statue_threshold", c.statue_threshold))
 	c.haven_score_cumulative = bool(d.get("haven_score_cumulative", c.haven_score_cumulative))
 	c.per_stat_cap = int(d.get("per_stat_cap", c.per_stat_cap))
+	var bhp = d.get("basis_hp", {})
+	if bhp is Dictionary:
+		for k in bhp:
+			c.basis_hp[String(k)] = int(bhp[k])
 	c.inf_shot_range = int(d.get("inf_shot_range", c.inf_shot_range))
 	c.inf_shot_cost = int(d.get("inf_shot_cost", c.inf_shot_cost))
 	c.inf_shot_full_attack = bool(d.get("inf_shot_full_attack", c.inf_shot_full_attack))

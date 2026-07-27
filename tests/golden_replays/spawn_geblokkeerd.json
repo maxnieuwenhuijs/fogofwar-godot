@@ -77,10 +77,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "c049b8a7cd26334a838f25f21d0bbc91ecffb672a4c58b8529ae161385cdb4b6",
+			"hash": "726d756f3cb0b5d61c3251bfd6aeec4c3e553fdd19a22221b9fcaca950cce54e",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785051442.884
+			"ts": 1785180165.024
 		},
 		{
 			"action": {
@@ -116,10 +116,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "47a8298022a7d4eee25af3dd57acfcdc085912b6298fef8af8f71c9848efcd5b",
+			"hash": "f0424151c438bd3d721d29166153b850eb0845b9936fd29c0873d9e04284522d",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785051442.884
+			"ts": 1785180165.024
 		},
 		{
 			"action": {
@@ -196,13 +196,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "6605f374aca991520de2b2c7aeef419421d25990499156822425bbe1b6e2c6a9",
+			"hash": "49f9f63fe2e4bd549013bf4a3479ba42c120e72369425d59b4d0f84644a932c1",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1785051442.884
+			"ts": 1785180165.024
 		}
 	],
-	"final_hash": "6605f374aca991520de2b2c7aeef419421d25990499156822425bbe1b6e2c6a9",
+	"final_hash": "49f9f63fe2e4bd549013bf4a3479ba42c120e72369425d59b4d0f84644a932c1",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -352,6 +352,7 @@
 			"art_move": 1,
 			"art_range": 6,
 			"art_shot_cost": 1,
+			"basis_hp": {},
 			"campaign": {
 				"comp_override": null,
 				"cp": null,
@@ -370,10 +371,16 @@
 				},
 				"kanon_dracht_max": 6,
 				"pool_afboeking": true,
+				"pool_model": "typen",
 				"pool_zichtbaar": false,
 				"poolfactor": 1.5,
 				"pools": null,
 				"skip_mode": "auto",
+				"spawn_kosten": {
+					"art": 3,
+					"cav": 2,
+					"inf": 1
+				},
 				"spawn_max": 3,
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
@@ -437,7 +444,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-26T09:37:22",
+		"created": "2026-07-27T21:22:45",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -570,6 +577,7 @@
 				"art_move": 1,
 				"art_range": 6,
 				"art_shot_cost": 1,
+				"basis_hp": {},
 				"campaign": {
 					"comp_override": null,
 					"cp": null,
@@ -588,10 +596,16 @@
 					},
 					"kanon_dracht_max": 6,
 					"pool_afboeking": true,
+					"pool_model": "typen",
 					"pool_zichtbaar": false,
 					"poolfactor": 1.5,
 					"pools": null,
 					"skip_mode": "auto",
+					"spawn_kosten": {
+						"art": 3,
+						"cav": 2,
+						"inf": 1
+					},
 					"spawn_max": 3,
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",

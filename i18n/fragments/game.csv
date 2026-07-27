@@ -119,3 +119,14 @@ PHASE_GAME_OVER,End,Einde
 HUD_PLAYER_CAMPAIGN_AI,%s (AI),%s (AI)
 HUD_PLAYER_YOU,Red (you),Rood (jij)
 HUD_PLAYER_AI,Blue (AI),Blauw (AI)
+MENU_MAIN_TITLE,"FOG OF WAR","FOG OF WAR"
+MENU_MAIN_BODY,"What do you want to play?","Wat wil je spelen?"
+MENU_SOLO,"SOLO","SOLO"
+MENU_SOLO_BODY,"Against the AI: a single duel or the full campaign.","Tegen de AI: een los duel of de volledige campagne."
+MENU_MULTI,"MULTIPLAYER","MULTIPLAYER"
+MENU_MULTI_SOON,"Multiplayer arrives with the online update.","Multiplayer komt met de online-update."
+MENU_SETTINGS,"Settings","Instellingen"
+MENU_SOLO_1V1,"1v1 duel","1v1-duel"
+MENU_SOLO_CAMPAIGN,"Campaign","Campagne"
+MENU_BACK,"Back","Terug"
+MENU_CAMP_DIFF_BODY,"How strong should your board opponents be? Fixed for the whole campaign.","Hoe sterk zijn je bord-tegenstanders? Vast voor de hele campagne."

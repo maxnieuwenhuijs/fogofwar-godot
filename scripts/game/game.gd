@@ -257,32 +257,76 @@ func _show_difficulty_menu() -> void:
 	_clear_highlights()
 	_top_label.text = tr("MENU_TITLE")
 	_prompt_label.text = ""
-	# i18n: de taal-knop toont de ANDERE taal (tikken = wisselen + menu verversen).
-	var taal_optie: String = "Language: English" if Constants.get_language() == "nl" else "Taal: Nederlands"
+	# Hoofdmenu-herstructurering (besluit Max, 27 juli): vier simpele knoppen.
+	# SOLO -> 1v1 of Campagne -> dan pas de moeilijkheid; AI Trainer is uit
+	# het menu, Model-tuner zit onder Instellingen.
 	_overlay.show_choice(
-		tr("MENU_DIFF_TITLE"),
-		tr("MENU_DIFF_BODY"),
-		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_DIFF_ULTRA"), tr("MENU_DIFF_CAMPAIGN"), tr("MENU_RULES_OPTION"), taal_optie, tr("MENU_DIFF_TRAINER"), tr("MENU_DIFF_TUNER")],
-		_on_menu_choice,
+		tr("MENU_MAIN_TITLE"),
+		tr("MENU_MAIN_BODY"),
+		[tr("MENU_SOLO"), tr("MENU_MULTI"), tr("MENU_RULES_OPTION"), tr("MENU_SETTINGS")],
+		_on_hoofdmenu_choice,
 	)
 
 
-func _on_menu_choice(index: int) -> void:
-	if index == 4:
-		get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn")
-	elif index == 5:
-		_show_rules_overlay(func() -> void: _show_difficulty_menu())
-	elif index == 6:
-		# Taalwissel: opslaan + het menu opnieuw opbouwen in de nieuwe taal.
-		Constants.set_language("en" if Constants.get_language() == "nl" else "nl")
+func _on_hoofdmenu_choice(index: int) -> void:
+	if index == 0:
+		_show_solo_menu()
+	elif index == 1:
+		_update_hud(tr("MENU_MULTI_SOON"))
 		_show_difficulty_menu()
-	elif index == 7:
-		get_tree().change_scene_to_file("res://scenes/training/Trainer.tscn")
-	elif index >= 8:
-		get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
+	elif index == 2:
+		_show_rules_overlay(func() -> void: _show_difficulty_menu())
 	else:
-		ai_difficulty = index
-		_show_doctrine_menu()
+		_show_settings_menu()
+
+
+func _show_solo_menu() -> void:
+	_overlay.show_choice(tr("MENU_SOLO"), tr("MENU_SOLO_BODY"),
+		[tr("MENU_SOLO_1V1"), tr("MENU_SOLO_CAMPAIGN"), tr("MENU_BACK")],
+		func(i: int) -> void:
+			if i == 0:
+				_show_1v1_difficulty()
+			elif i == 1:
+				_show_campagne_difficulty()
+			else:
+				_show_difficulty_menu())
+
+
+func _show_1v1_difficulty() -> void:
+	_overlay.show_choice(tr("MENU_DIFF_TITLE"), tr("MENU_DIFF_BODY"),
+		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_DIFF_ULTRA"), tr("MENU_BACK")],
+		func(i: int) -> void:
+			if i >= 4:
+				_show_solo_menu()
+			else:
+				ai_difficulty = i
+				_show_doctrine_menu())
+
+
+## De campagne-moeilijkheid schaalt jouw bord-tegenstander (easy/medium/hard).
+func _show_campagne_difficulty() -> void:
+	_overlay.show_choice(tr("MENU_SOLO_CAMPAIGN"), tr("MENU_CAMP_DIFF_BODY"),
+		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_BACK")],
+		func(i: int) -> void:
+			if i >= 3:
+				_show_solo_menu()
+				return
+			CampaignBridge.campagne_moeilijkheid = i
+			get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
+
+
+func _show_settings_menu() -> void:
+	var taal_optie: String = "Language: English" if Constants.get_language() == "nl" else "Taal: Nederlands"
+	_overlay.show_choice(tr("MENU_SETTINGS"), "",
+		[taal_optie, tr("MENU_DIFF_TUNER"), tr("MENU_BACK")],
+		func(i: int) -> void:
+			if i == 0:
+				Constants.set_language("en" if Constants.get_language() == "nl" else "nl")
+				_show_settings_menu()
+			elif i == 1:
+				get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
+			else:
+				_show_difficulty_menu())
 
 
 ## F3.4b — een campagne-duel vanuit de hub: config komt van de brug, geen menu's.
@@ -290,7 +334,7 @@ func _start_campagne_duel() -> void:
 	_campaign_mode = true
 	_human_doctrine = CampaignBridge.doctrine_mens()
 	_ai_doctrine = CampaignBridge.doctrine_vijand()
-	ai_difficulty = 1  # medium — hetzelfde niveau als de gesimuleerde bot-duels
+	ai_difficulty = clampi(int(CampaignBridge.campagne_moeilijkheid), 0, 2)
 	_start_match(ai_difficulty)
 
 

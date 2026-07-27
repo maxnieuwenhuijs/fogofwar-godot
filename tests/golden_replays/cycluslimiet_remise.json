@@ -52,13 +52,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "c1b1b55473ee6582121e020b9a62cc82c609a10c26c83cada335c6905dbe77f2",
+			"hash": "727f44f293d061aeb03d5fb4147240d985ceb9c0a98b1307984bf31fc9e9eda7",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785051442.867
+			"ts": 1785180165.009
 		}
 	],
-	"final_hash": "c1b1b55473ee6582121e020b9a62cc82c609a10c26c83cada335c6905dbe77f2",
+	"final_hash": "727f44f293d061aeb03d5fb4147240d985ceb9c0a98b1307984bf31fc9e9eda7",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -158,6 +158,7 @@
 			"art_move": 1,
 			"art_range": 6,
 			"art_shot_cost": 1,
+			"basis_hp": {},
 			"campaign": null,
 			"clock": {
 				"bank_sec": 0,
@@ -202,7 +203,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-26T09:37:22",
+		"created": "2026-07-27T21:22:45",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -303,6 +304,7 @@
 				"art_move": 1,
 				"art_range": 6,
 				"art_shot_cost": 1,
+				"basis_hp": {},
 				"campaign": null,
 				"clock": {
 					"bank_sec": 0,

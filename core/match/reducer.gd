@@ -227,7 +227,11 @@ static func _do_link(state: GameState, action: Dictionary, player_id: int, event
 	var speed_bonus: int = int(doctrine.get("speed_bonus", 0))
 	if pawn.unit_type == Constants.UnitType.CAVALRY:
 		speed_bonus += int(doctrine.cav_speed_bonus)
-	pawn.link_card(card, doctrine.hp_bonus, speed_bonus)
+	# C12 (besluit Max, 27 juli): basis-HP per type bovenop de kaart — de
+	# ruiter (2 punten in het C11-model) is met {"cav": 2} altijd minimaal
+	# 2 HP en een kaart-HP telt daar bovenop. {} = byte-identiek 4.1.
+	var basis: int = int(state.rules.basis_hp.get(["inf", "cav", "art"][pawn.unit_type], 0))
+	pawn.link_card(card, int(doctrine.hp_bonus) + basis, speed_bonus)
 	# Vos: de toewijzing is gedekt tot de pion schade toebrengt of ontvangt (§6.6).
 	pawn.card_revealed = not doctrine.hidden_link
 	_ev(events, EV_STATE, {})

@@ -276,3 +276,33 @@ func test_spawn_serialisatie_roundtrip() -> void:
 	var terug: GameState = Serializer.state_from_dict(d)
 	assert_eq(JSON.stringify(Serializer.state_to_dict(terug)), JSON.stringify(d), "roundtrip byte-identiek")
 	assert_eq(Zobrist.state_hash(terug), Zobrist.state_hash(s))
+
+
+func test_c11_punten_pool_spawnkosten() -> void:
+	# C11 (besluit Max, 27 juli): reserve = puntenpot; soldaat 1 / ruiter 2 /
+	# kanon 3. Typed pools uit de (nog typed) campagnelaag -> waarde.
+	var rules := RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten",
+		"pools": {"1": 5, "2": {"inf": 2, "cav": 1, "art": 1}},
+	}})
+	var s := GameState.new()
+	s.rules = rules
+	s.doctrines[1] = Constants.Doctrine.MENS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	s.init_pools()
+	assert_eq(s.pool_total(1), 5, "expliciete puntenpot")
+	assert_eq(s.pool_total(2), 7, "typed pool op waarde: 2x1 + 1x2 + 1x3")
+	assert_eq(s.pool_count(1, Constants.UnitType.ARTILLERY), 1, "5 pt = 1 kanon")
+	assert_eq(s.pool_count(1, Constants.UnitType.CAVALRY), 2, "5 pt = 2 ruiters")
+	s.pool_take(1, Constants.UnitType.ARTILLERY)
+	assert_eq(s.pool_total(1), 2, "kanon kost 3 punten")
+	assert_eq(s.pool_count(1, Constants.UnitType.ARTILLERY), 0, "2 pt = geen kanon meer")
+	s.pool_take(1, Constants.UnitType.CAVALRY)
+	assert_eq(s.pool_total(1), 0, "ruiter kost 2 punten")
+	# Zonder pool_model blijft alles byte-identiek typed (compat goldens).
+	var oud := GameState.new()
+	oud.rules = RulesConfig.from_dict({"campaign": {"pools": {"1": {"inf": 3, "cav": 0, "art": 0}}}})
+	oud.doctrines[1] = Constants.Doctrine.MENS
+	oud.doctrines[2] = Constants.Doctrine.MENS
+	oud.init_pools()
+	assert_eq(oud.pool_count(1, Constants.UnitType.INFANTRY), 3, "oud model onaangetast")

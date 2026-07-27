@@ -1,4 +1,9 @@
 {
- "campaign": {},
+ "basis_hp": {
+  "cav": 2
+ },
+ "campaign": {
+  "pool_model": "punten"
+ },
  "cycle_limit": 20
 }

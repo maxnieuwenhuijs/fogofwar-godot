@@ -3,6 +3,9 @@
  "art_move": 1,
  "art_range": 6,
  "art_shot_cost": 1,
+ "basis_hp": {
+  "cav": 2
+ },
  "campaign": {
   "cp_bijschrijving": "campagnelaag",
   "cp_effect_mode": "define_budget",
@@ -19,10 +22,16 @@
   },
   "kanon_dracht_max": 6,
   "pool_afboeking": true,
+  "pool_model": "punten",
   "pool_zichtbaar": false,
   "poolfactor": 1.5,
   "pools": null,
   "skip_mode": "auto",
+  "spawn_kosten": {
+   "art": 3,
+   "cav": 2,
+   "inf": 1
+  },
   "spawn_max": 3,
   "spawn_totaal_max": 15,
   "spawn_vakken": "achterste_rij",

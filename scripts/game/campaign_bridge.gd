@@ -6,6 +6,11 @@ extends Node
 # (bord-uitslag -> MATCH_RESULT via SoloDriver.verwerk_duel_uitslag).
 
 var driver: SoloDriver = null
+
+## Campagne-moeilijkheid uit het hoofdmenu (0 easy / 1 medium / 2 hard):
+## schaalt de AI van jouw bord-tegenstander in campagne-duels.
+var campagne_moeilijkheid: int = 1
+
 var duel_actief: bool = false
 var _ctx: Dictionary = {}  # {idx, a, b, cp_a, cp_b} — a = de mens = bord-P1
 

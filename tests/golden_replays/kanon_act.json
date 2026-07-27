@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "606ac61d3e7c43dd7739d38911edcb929c8de296def179834b051fad2f0e0ddd",
+			"hash": "fe25875f575504355beda9716fc729f989db86168a7208454fc88c05f5586b05",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785051442.913
+			"ts": 1785180165.055
 		},
 		{
 			"action": {
@@ -113,13 +113,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "7d1d09d44891b5fb1af2408fe75945927a6c782aec140f366b8f6d527922260a",
+			"hash": "4675f0806ba5da6c94b7623de97032ae5e0ed5f75d42527dcc754e7bbd68b1a4",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785051442.914
+			"ts": 1785180165.055
 		}
 	],
-	"final_hash": "7d1d09d44891b5fb1af2408fe75945927a6c782aec140f366b8f6d527922260a",
+	"final_hash": "4675f0806ba5da6c94b7623de97032ae5e0ed5f75d42527dcc754e7bbd68b1a4",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -269,6 +269,7 @@
 			"art_move": 1,
 			"art_range": 6,
 			"art_shot_cost": 1,
+			"basis_hp": {},
 			"campaign": {
 				"comp_override": null,
 				"cp": null,
@@ -287,10 +288,16 @@
 				},
 				"kanon_dracht_max": 6,
 				"pool_afboeking": true,
+				"pool_model": "typen",
 				"pool_zichtbaar": false,
 				"poolfactor": 1.5,
 				"pools": null,
 				"skip_mode": "auto",
+				"spawn_kosten": {
+					"art": 3,
+					"cav": 2,
+					"inf": 1
+				},
 				"spawn_max": 3,
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
@@ -339,7 +346,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-26T09:37:22",
+		"created": "2026-07-27T21:22:45",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -490,6 +497,7 @@
 				"art_move": 1,
 				"art_range": 6,
 				"art_shot_cost": 1,
+				"basis_hp": {},
 				"campaign": {
 					"comp_override": null,
 					"cp": null,
@@ -508,10 +516,16 @@
 					},
 					"kanon_dracht_max": 6,
 					"pool_afboeking": true,
+					"pool_model": "typen",
 					"pool_zichtbaar": false,
 					"poolfactor": 1.5,
 					"pools": null,
 					"skip_mode": "auto",
+					"spawn_kosten": {
+						"art": 3,
+						"cav": 2,
+						"inf": 1
+					},
 					"spawn_max": 3,
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",

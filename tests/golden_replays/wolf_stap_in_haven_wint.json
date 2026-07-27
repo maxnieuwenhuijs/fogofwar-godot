@@ -60,10 +60,10 @@
 					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "9f00692cf2266c3846f470c2b348772f48c4f8c8fee9d2b66d0f6029d7f9187e",
+			"hash": "e2bf9cbdc012ee4e4832ff2abd36935f6ba568c42532ce208ba32e73adebbf57",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785051442.807
+			"ts": 1785180164.947
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "9c2f71e042510e6890821a0e71c472bf8d48ce482e636a5c6018eccff82b1b21",
+			"hash": "7a10fde265dc02e2f526a7ada0db7202bdffa57142bc5113c7e7335570cbb7d4",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785051442.808
+			"ts": 1785180164.947
 		}
 	],
-	"final_hash": "9c2f71e042510e6890821a0e71c472bf8d48ce482e636a5c6018eccff82b1b21",
+	"final_hash": "7a10fde265dc02e2f526a7ada0db7202bdffa57142bc5113c7e7335570cbb7d4",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -267,6 +267,7 @@
 			"art_move": 1,
 			"art_range": 6,
 			"art_shot_cost": 1,
+			"basis_hp": {},
 			"campaign": null,
 			"clock": {
 				"bank_sec": 0,
@@ -311,7 +312,7 @@
 		"winner": 1
 	},
 	"meta": {
-		"created": "2026-07-26T09:37:22",
+		"created": "2026-07-27T21:22:44",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -457,6 +458,7 @@
 				"art_move": 1,
 				"art_range": 6,
 				"art_shot_cost": 1,
+				"basis_hp": {},
 				"campaign": null,
 				"clock": {
 					"bank_sec": 0,

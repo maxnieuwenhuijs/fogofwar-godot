@@ -1585,9 +1585,20 @@ func _campagne_score(s: GameState, kant: int, winner: int) -> float:
 	var comp: Array = s.doctrine_data_of(kant).comp
 	var factor: float = float(s.rules.campaign.get("poolfactor", 1.5))
 	var start_totaal: int = 0
-	for t in 3:
-		start_totaal += int(comp[t]) + int(floor(int(comp[t]) * factor))
-	var rest: int = s.count_alive_pawns_for(kant) + s.pool_total(kant)
+	var rest: int = 0
+	if s.punten_model():
+		# C11: alles in puntenwaarde (soldaat 1 / ruiter 2 / kanon 3) zodat
+		# een gespaard kanon ook echt 3x een soldaat waard is.
+		for t in 3:
+			start_totaal += int(comp[t]) * s.spawn_kosten(t) 				+ int(floor(int(comp[t]) * factor)) * s.spawn_kosten(t)
+		for pawn in s.pawns.values():
+			if not pawn.is_eliminated and pawn.owner_id == kant:
+				rest += s.spawn_kosten(pawn.unit_type)
+		rest += s.pool_total(kant)
+	else:
+		for t in 3:
+			start_totaal += int(comp[t]) + int(floor(int(comp[t]) * factor))
+		rest = s.count_alive_pawns_for(kant) + s.pool_total(kant)
 	var rest_fractie: float = clampf(float(rest) / maxf(1.0, float(start_totaal)), 0.0, 1.0)
 	var cp_start: float = maxf(1.0, float(s.rules.campaign.get("cp_start", 10)))
 	var cp_fractie: float = clampf(float(s.cp.get(kant, 0)) / cp_start, 0.0, 1.0)

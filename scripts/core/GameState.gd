@@ -133,6 +133,23 @@ func init_pools() -> void:
 		else:
 			cp[pid] = int(rules.campaign.get("cp_start", 6))
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if punten_model():
+			# C11 (besluit Max, 27 juli): de reserve is EEN puntenpot; spawnen
+			# koopt een pion (soldaat 1 / ruiter 2 / kanon 3). Een expliciete
+			# typed-pool uit de (nog typed) campagnelaag wordt op waarde omgezet.
+			var pt: int = 0
+			if expliciet is Dictionary and expliciet.has(str(player_id)):
+				var ex = expliciet[str(player_id)]
+				if ex is Dictionary:
+					pt = int(ex.get("inf", 0)) * spawn_kosten(Constants.UnitType.INFANTRY) 						+ int(ex.get("cav", 0)) * spawn_kosten(Constants.UnitType.CAVALRY) 						+ int(ex.get("art", 0)) * spawn_kosten(Constants.UnitType.ARTILLERY)
+				else:
+					pt = int(ex)
+			else:
+				var comp_p: Array = doctrine_data_of(player_id).comp
+				for t in 3:
+					pt += int(floor(comp_p[t] * factor)) * spawn_kosten(t)
+			pools[player_id] = {"pt": pt}
+			continue
 		if expliciet is Dictionary and expliciet.has(str(player_id)):
 			var e: Dictionary = expliciet[str(player_id)]
 			pools[player_id] = {"inf": int(e.get("inf", 0)), "cav": int(e.get("cav", 0)), "art": int(e.get("art", 0))}
@@ -145,15 +162,34 @@ func init_pools() -> void:
 			}
 
 
+## C11 — punten-model actief? (default "typen": alle oude configs/goldens
+## gedragen zich byte-identiek; v4.2-configs zetten expliciet "punten" aan.)
+func punten_model() -> bool:
+	if not rules.campaign_actief():
+		return false  # 4.1: geen campaign-blok, campaign is null
+	return String(rules.campaign.get("pool_model", "typen")) == "punten"
+
+
+func spawn_kosten(unit_type: int) -> int:
+	if not rules.campaign_actief():
+		return 1
+	var kosten: Dictionary = rules.campaign.get("spawn_kosten", {"inf": 1, "cav": 2, "art": 3})
+	return int(kosten.get(["inf", "cav", "art"][unit_type], 1))
+
+
 ## Totale pool-voorraad van een speler (0 zonder campaign).
 func pool_total(player_id: int) -> int:
 	var p: Dictionary = pools.get(player_id, {})
+	if punten_model():
+		return int(p.get("pt", 0))
 	return int(p.get("inf", 0)) + int(p.get("cav", 0)) + int(p.get("art", 0))
 
 
 ## Pool-saldo per unit-type (sleutels: Constants.UnitType).
 func pool_count(player_id: int, unit_type: int) -> int:
 	var p: Dictionary = pools.get(player_id, {})
+	if punten_model():
+		return int(p.get("pt", 0)) / spawn_kosten(unit_type)
 	match unit_type:
 		Constants.UnitType.INFANTRY:
 			return int(p.get("inf", 0))
@@ -165,8 +201,11 @@ func pool_count(player_id: int, unit_type: int) -> int:
 
 
 func pool_take(player_id: int, unit_type: int) -> void:
-	var sleutel: String = ["inf", "cav", "art"][unit_type]
-	pools[player_id][sleutel] = int(pools[player_id][sleutel]) - 1
+	if punten_model():
+		pools[player_id]["pt"] = int(pools[player_id].get("pt", 0)) - spawn_kosten(unit_type)
+	else:
+		var sleutel: String = ["inf", "cav", "art"][unit_type]
+		pools[player_id][sleutel] = int(pools[player_id][sleutel]) - 1
 	spawn_totaal[player_id] = int(spawn_totaal.get(player_id, 0)) + 1
 
 
