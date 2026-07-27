@@ -1,0 +1,241 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Fog of War — UI Specification</title><style>
+* { box-sizing:border-box; }
+body { font:14px/1.55 "Segoe UI", Arial, sans-serif; color:#2a2a2e; max-width:860px; margin:0 auto; padding:32px 24px; }
+h1 { font-size:24px; border-bottom:2px solid #2a2a2e; padding-bottom:6px; }
+h2 { font-size:18px; margin-top:28px; border-bottom:1px solid #c9c9cf; padding-bottom:3px; }
+h3 { font-size:15px; margin-top:18px; }
+p, li { margin:6px 0; }
+ul, ol { padding-left:22px; }
+code, pre { font-family:Consolas, monospace; background:#f4f2ec; }
+pre { padding:12px; border:1px solid #ddd; overflow-x:auto; font-size:12px; line-height:1.4; }
+table { border-collapse:collapse; margin:10px 0; }
+th, td { border:1px solid #bbb; padding:5px 9px; font-size:13px; text-align:left; }
+th { background:#efede6; }
+strong { color:#1a1a1e; }
+blockquote { border-left:4px solid #b0483f; margin:10px 0; padding:4px 14px; background:#faf7f0; }
+.shots { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; margin-top:12px; }
+.shots figure { margin:0; }
+.shots img { width:100%; border:1px solid #999; }
+.shots figcaption { font-size:11px; color:#555; margin-top:3px; }
+@media print { body { padding:8mm; } h2 { page-break-after:avoid; } .shots { grid-template-columns:repeat(2,1fr); } }
+</style></head><body><h1>Fog of War — UI Specification (for designers)</h1>
+<p>Companion documents: <strong>UI-DESIGN-BRIEF</strong> (visual direction, deliverables, phases — ask Max for the
+translated summary of any section) and <strong>ui-wireframes.html</strong> (low-fi wireframes of every screen in
+this spec). This document describes the <em>interface flow</em>: every screen, what it shows, and what the
+player can do there. It reflects a working build — most screens already exist functionally
+(programmer-UI) and screenshots can be provided on request.</p>
+<hr />
+<h2>0. The game in three sentences</h2>
+<p>A 2-player turn-based strategy board game (Godot, mobile-first portrait 1080×1920) with animal
+soldiers in a Napoleonic setting. Players secretly define stat cards each round, assign them to
+pawns, and fight on an 11×11 board; first to get 2 pawns into the enemy harbor (or wipe the enemy
+out) wins. Around the duels sits a <strong>campaign</strong>: two teams of 8 players, a council that nominates
+fighters, donations, testaments of fallen players, and a final civil war between the surviving
+teammates.</p>
+<p><strong>The MULTIPLAYER campaign is the main focus of this product and of the design.</strong> Two teams of 8
+<em>human</em> players play a social campaign (live evening sessions or async over days) — think "Among Us
+energy": a shared timeline, voting, backstabbing testaments, team chat. The solo campaign (vs 15
+bots) uses the <em>same screens</em>; design every campaign screen multiplayer-first, with solo as the
+degenerate case (bots fill the seats, no chat pressure). Concretely that means: every waiting
+moment shows <em>who</em> we are waiting for, every action of another player lands as a feed card, and
+deadlines/timers are always visible (they are server-driven).</p>
+<p><strong>Visual direction (summary):</strong> hand-crafted early-19th-century military — aged parchment, ink,
+wax seals, brass; engraving-style; muted earthy palette; red vs blue team accents; icons over text;
+<strong>no fantasy glow, no glossy TCG look</strong>.</p>
+<h2>1. Screen map &amp; flow</h2>
+<pre><code>Main menu
+ ├─ Multiplayer campaign ──► LOBBY (join code / public queue / friends)
+ │                            └─► Faction pick ──► CAMPAIGN HUB ◄──────┐
+ ├─ Solo campaign ──► Faction pick ──► CAMPAIGN HUB (same screens) ◄───┤
+ │                          ├─ Ledger (roster)                         │
+ │                          ├─ Council (vote panel)                    │ duels resolve /
+ │                          ├─ Donate sheet                            │ reports land
+ │                          ├─ Testament (if you fall)                 │
+ │                          ├─ Team chat + quick-chat (multiplayer)    │
+ │                          ├─ Civil-war bracket                       │
+ │                          └─ &quot;YOUR DUEL&quot; ──► MATCH (board) ──► Match report ─┘
+ ├─ Single duel vs AI / ranked 1v1 ──► Faction ► MATCH (board) ► End screen
+ └─ How to play (5-tab rules screen, reachable everywhere via &quot;?&quot;)
+
+Push notifications (multiplayer) deep-link into: your duel ► Match setup ·
+council open ► Council panel · new report ► the feed card · testament ► Testament panel.
+</code></pre>
+<p>Match flow (inside a duel): <code>Placement → [per cycle: Spawn → 3× (Define cards → Reveal →
+Link) → Action phase] → End</code>.</p>
+<h2>2. Screens</h2>
+<h3>2.1 Main menu</h3>
+<ul>
+<li><strong>Shows:</strong> game title/emblem, buttons: <strong>Multiplayer campaign</strong> (primary) / Solo campaign /
+  Single duel / How to play / Settings.</li>
+<li><strong>Actions:</strong> navigate. — <em>Design: a "field table" feel; this is the storefront of the style.</em></li>
+</ul>
+<h3>2.2 Faction pick (campaign start; also used for single duels)</h3>
+<ul>
+<li><strong>Shows:</strong> 6 faction cards — emblem, name (Pig/Mouse/Lion/Bear/Wolf/Crocodile), army composition
+  (infantry/cavalry/artillery counts), cards-per-round × stat budget, one "pro" and one "con" line.</li>
+<li><strong>Actions:</strong> tap a faction → confirmed permanently for the whole campaign.</li>
+<li><strong>States:</strong> none (choice is final; a confirm affordance is welcome).</li>
+</ul>
+<h3>2.3 Campaign hub (the campaign's home screen)</h3>
+<ul>
+<li><strong>Shows, top to bottom:</strong></li>
+<li>Header: round number + phase name (Council / Donations / Duels / Testament / CIVIL WAR).</li>
+<li>Your balances: soldiers · cavalry · cannons (reinforcements) · CP (command points) · points.</li>
+<li>Two team columns (your team blue, enemy red): per player a portrait chip + name + balances;
+     dead players greyed; currently-fighting players highlighted.</li>
+<li><strong>Timeline feed</strong> (the heart of the screen): cards for everything that happens — battle
+     reports, donations, votes, nominations, testaments, bot chatter ("barks"), phase banners.
+     Tapping a battle report opens the full Match report.</li>
+<li>Phase panel (bottom): context panel that swaps per phase — see 2.4–2.7. While bots play, it
+     shows live progress ("Bots are fighting duel 3 of 8: Nora vs Bruno…").</li>
+<li><strong>Actions:</strong> open Ledger; tap feed cards; act in the phase panel; start YOUR duel.</li>
+<li><strong>7 feed-card types to design:</strong> battle report, nomination, vote result, donation, testament,
+  bark/quick-chat, phase banner.</li>
+</ul>
+<h3>2.4 Council panel (phase panel variant)</h3>
+<ul>
+<li><strong>Shows:</strong> the ballot ("Your team nominates: pick the fighters"), two pickers (own fighter ×
+  enemy fighter), live vote status of teammates.</li>
+<li><strong>Actions:</strong> pick pair → vote. Closes early on unanimity. Round 1 is drawn by lot (no council).</li>
+</ul>
+<h3>2.5 Donate panel (phase panel variant)</h3>
+<ul>
+<li><strong>Shows:</strong> teammate picker, steppers for soldiers/cavalry/cannons/CP, cap hints (max 10 pawns /
+  3 CP per recipient per round).</li>
+<li><strong>Actions:</strong> donate (repeatable) · "Done donating".</li>
+</ul>
+<h3>2.6 Testament panel (phase panel variant — the drama moment)</h3>
+<ul>
+<li><strong>Shows:</strong> "You have fallen." Recipient picker (any living player, including enemies!), what
+  half of your estate amounts to, a prominent timer.</li>
+<li><strong>Actions:</strong> bequeath half to one player · burn everything. (Timeout = everything burns.)</li>
+</ul>
+<h3>2.7 Your-duel panel (phase panel variant)</h3>
+<ul>
+<li><strong>Shows:</strong> "YOUR DUEL: you vs <name>. Your whole estate goes to the board — losses are gone,
+  savings carry over."</li>
+<li><strong>Actions:</strong> "Play the duel" → switches to the Match screen.</li>
+</ul>
+<h3>2.8 Ledger (roster screen)</h3>
+<ul>
+<li><strong>Shows:</strong> sortable table of all 16 players: portrait, faction emblem, soldiers/cavalry/cannons,
+  CP, points, alive/dead. Your row highlighted. Regiment-book styling.</li>
+<li><strong>Actions:</strong> sort by column; back.</li>
+</ul>
+<h3>2.9 Civil-war bracket</h3>
+<ul>
+<li><strong>Shows:</strong> tournament bracket of the surviving team: seeds, pairs, byes, results.</li>
+<li><strong>Actions:</strong> view only (duels start via the phase panel).</li>
+</ul>
+<h3>2.10 Match report</h3>
+<ul>
+<li><strong>Shows:</strong> winner + win-method icon (harbor 🏰 / elimination 💀 / tiebreak / resign), cycles
+  fought, losses per unit type per player, CP changes, reinforcements committed.</li>
+<li><strong>Actions:</strong> close; (later: watch replay).</li>
+</ul>
+<h3>2.11 MATCH — the board (the biggest screen, many sub-states)</h3>
+<ul>
+<li><strong>Layout:</strong> 3D board fills the screen; 2D HUD overlays.</li>
+<li><strong>HUD top bar:</strong> phase name + cycle/round counters, whose turn (color), countdown timer.</li>
+<li><strong>Board sub-states:</strong></li>
+<li><strong>Placement:</strong> drag/tap unit types onto your two home rows; ghost preview; undo; "default
+    setup" button.</li>
+<li><strong>Spawn (campaign only):</strong> reserve counts per type; place up to 3 reinforcements on your back
+    row; blind &amp; simultaneous ("opponent is choosing too…").</li>
+<li><strong>Define cards:</strong> card fan at the bottom (see 2.12), CP-bet stepper, confirm.</li>
+<li><strong>Reveal:</strong> both card sets side by side, initiative bid percentage, "X starts".</li>
+<li><strong>Link:</strong> tap a card → eligible pawns highlight → tap a pawn. Alternating turns.</li>
+<li><strong>Action phase:</strong> tap own pawn → target markers: green = move (with step cost), red =
+    melee/charge, orange = shoot (line of fire), cyan = free wolf-step. Cannon shows an
+    "action pot" badge. Context button for touch actions (skip/undo).</li>
+<li><strong>Premove (chess-style):</strong> during the opponent's turn you can already queue your next action —
+    it shows as a pinned "ghost" order on the board (pawn + target marker + small pin/seal icon)
+    and executes the instant your turn starts, <em>unless</em> it became invalid (target died, path
+    blocked) — then the pin dissolves with subtle feedback ("order lapsed"). One premove at a
+    time; tap again to cancel/replace. Needs a distinct visual state: queued ≠ executed.</li>
+<li><strong>Stat chips</strong> float above active pawns: HP (green) / stamina (blue) / attack (orange);
+    hidden enemy stats show a <strong>"?" seal</strong> — never zeros (information leak).</li>
+<li><strong>End states:</strong> win (harbor / elimination) / loss / draw-by-cycle-limit / resign / forfeit.</li>
+<li><strong>Actions:</strong> everything above + resign (in pause/help menu) + "?" help button.</li>
+</ul>
+<h3>2.12 The cards</h3>
+<p>Fully specified in CARD-DESIGN-BRIEF (separate document): field-order style stat cards, 5 states
+(editable / revealed / selectable / linked / card back), red &amp; blue variants, CP-bet stamp.</p>
+<h3>2.13 How to play</h3>
+<p>5 tabs (The game / Turns / Units / Fighting / Factions) — restyle of an existing text screen;
+illustrated examples preferred over text walls.</p>
+<h3>2.14 Settings</h3>
+<p>Sound, screen-shake toggle, notifications, language (NL/EN planned). Small screen, low priority.</p>
+<h2>2b. Multiplayer-campaign screens (MAIN FOCUS)</h2>
+<p>These make the campaign a <em>social</em> game. Solo reuses everything; these elements simply stay empty
+or bot-driven there.</p>
+<h3>2b.1 Lobby</h3>
+<ul>
+<li><strong>Shows:</strong> three entry paths — big join-code input (5 characters), "Quick play" (public queue,
+  aims for a live 8-player evening), "With friends" (create private lobby + shareable code). While
+  filling: seat list (8 portrait slots per team) with joined players; empty seats fill with bots
+  after a wait, <strong>always visibly labeled 🤖</strong> (trust rule: humans must instantly see who's a bot).</li>
+<li><strong>Actions:</strong> join/create/leave; ready-up; host starts.</li>
+<li><strong>States:</strong> filling / ready / starting.</li>
+</ul>
+<h3>2b.2 Team chat screen + quick-chat</h3>
+<ul>
+<li><strong>Placement:</strong> the bottom zone of the hub is a <strong>two-tab area: [ PHASE ] [ CHAT ]</strong> — the chat
+  is a full screen state at the phase panel's position, not just an overlay. The chat tab shows an
+  <strong>unread badge</strong>; while an action is required of you, the Phase tab pulses/marks so chat never
+  hides your duty.</li>
+<li><strong>Chat screen shows:</strong> team-only thread (portrait + message rows; bot barks share the same
+  visual language), the sealed/ghost state for dead players, and the <strong>quick-chat bar</strong> pinned at
+  the bottom: ~12 fixed phrases as icon+short-text chips ("Send me ⚔", "Donate to X", "Trust me",
+  "Traitor!") — the default communication, translatable, moderation-safe. Free text is a lobby
+  setting (input field only when enabled).</li>
+<li><strong>Actions:</strong> switch tabs; send quick-chat (1 tap); free text if enabled; tap a message's
+  portrait → player detail (ledger row).</li>
+<li><strong>Design note:</strong> the quick-chat bar also appears in compact form on the Phase tab (1 row), so
+  you can react without leaving the ballot/donation panel.</li>
+</ul>
+<h3>2b.3 Waiting &amp; connection states (every blind/simultaneous moment)</h3>
+<ul>
+<li>"Waiting for X, Y…" with portrait chips + a deadline bar (server-driven) — on: card define,
+  spawn, placement, reveal-ack, council votes, donations.</li>
+<li>Reconnect: "connection lost — reconnecting (grace 0:20)" banner; opponent-disconnected state in
+  a duel ("X dropped — forfeit in 0:20").</li>
+<li>Deadline consequence is always pre-announced ("no choice = default loadout").</li>
+</ul>
+<h3>2b.4 Ghost mode (dead players)</h3>
+<ul>
+<li>Dead players keep watching: entire hub in a muted/sepia "ghost" treatment, 💀 badge on own
+  portrait, team secrets visibly sealed ("sealed for the dead" — no team chat, no vote details),
+  public info stays. Drama is the product: ghosts must <em>want</em> to keep watching.</li>
+</ul>
+<h3>2b.5 Push-notification landings</h3>
+<ul>
+<li>3 notification types (your duel ⚔ / council open 🗳 / new report 📜): each needs an icon + a
+  one-line template, and the target screen must look correct when opened <em>cold</em> from the
+  notification (esp. Testament with its timer already running).</li>
+</ul>
+<h2>3. Priorities for the first package</h2>
+<ol>
+<li>Design system: palette, 2 fonts, panel/button styles (9-patch friendly).</li>
+<li>Icon set (~28 monochrome icons, readable at 24×24) + 6 faction emblems.</li>
+<li><strong>Multiplayer campaign hub</strong>: the 7 feed-card types + team columns + quick-chat bar +
+   waiting/deadline states (2b.2–2b.3) — this is the product's living room.</li>
+<li>Card frame + 5 states (CARD-DESIGN-BRIEF).</li>
+<li>Match HUD (top bar, stat chips, target markers, "?" seal).</li>
+<li>Lobby + ghost mode + notification templates.</li>
+</ol>
+<p>Then: remaining campaign panels → menus/help → leaderboards/profile (later phase).</p>
+<h2>4. Practical</h2>
+<ul>
+<li>Target: portrait 1080×1920, must stay readable on 6" phones; thumb-reachable actions.</li>
+<li>Deliverables: PNG with alpha or SVG; 9-patch-friendly frames; no hover-dependent interactions.</li>
+<li>Never leak information through design: hidden = "?" seal, never empty/zero values.</li>
+<li>All states must differ by shape/icon as well as color (color-blindness).</li>
+</ul><h2>Appendix — screenshots of the current build</h2><p>The game is playable today with programmer-UI; these show real layouts and content density. Everything visual is up for redesign.</p><div class="shots"><figure><img src="screenshots/screen-play.png" alt="The board — action phase (current build)"><figcaption>The board — action phase (current build)</figcaption></figure>
+<figure><img src="screenshots/screen-campaign_hub.png" alt="Campaign hub with timeline feed (programmer-UI)"><figcaption>Campaign hub with timeline feed (programmer-UI)</figcaption></figure>
+<figure><img src="screenshots/screen-ledger.png" alt="Ledger / roster"><figcaption>Ledger / roster</figcaption></figure>
+<figure><img src="screenshots/screen-define.png" alt="Define cards — card fan"><figcaption>Define cards — card fan</figcaption></figure>
+<figure><img src="screenshots/screen-reveal.png" alt="Reveal — both card sets + initiative bid"><figcaption>Reveal — both card sets + initiative bid</figcaption></figure>
+<figure><img src="screenshots/screen-link.png" alt="Linking cards to pawns"><figcaption>Linking cards to pawns</figcaption></figure>
+<figure><img src="screenshots/screen-place_done.png" alt="Free placement on home rows"><figcaption>Free placement on home rows</figcaption></figure>
+<figure><img src="screenshots/screen-vosview.png" alt="Hidden info — the "?" state (Crocodile)"><figcaption>Hidden info — the "?" state (Crocodile)</figcaption></figure></div></body></html>

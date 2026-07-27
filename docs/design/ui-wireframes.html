@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fog of War — UI Wireframes (low-fi)</title>
+<style>
+  :root { --ink:#2a2a2e; --line:#9a9aa2; --soft:#e9e9ec; --dyn:#f7f4ea; --red:#b0483f; --blue:#3f5f8f; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 13px/1.45 "Segoe UI", Arial, sans-serif; color: var(--ink); background:#fafafa; padding: 24px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  p.lead { color:#555; max-width: 900px; margin-bottom: 20px; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:24px; font-size:12px; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .chip { width:18px; height:12px; border:1px solid var(--line); display:inline-block; }
+  .chip.dyn { background:var(--dyn); border-style:dashed; }
+  .chip.act { background:#dcdcdf; border-radius:3px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:28px; }
+  .frame { break-inside:avoid; }
+  .frame h2 { font-size:14px; margin-bottom:2px; }
+  .frame .note { font-size:11px; color:#666; margin-bottom:8px; min-height:28px; }
+  .phone { width:270px; height:480px; border:2px solid var(--ink); border-radius:14px; padding:8px; display:flex; flex-direction:column; gap:6px; background:#fff; }
+  .b { border:1px solid var(--line); padding:4px 6px; font-size:10px; color:#444; background:var(--soft); }
+  .dyn { background:var(--dyn); border-style:dashed; }
+  .btn { background:#dcdcdf; border-radius:4px; text-align:center; }
+  .row { display:flex; gap:6px; } .row > * { flex:1; }
+  .grow { flex:1; display:flex; flex-direction:column; gap:6px; }
+  .tiny { font-size:9px; color:#666; }
+  .red { border-left:4px solid var(--red); } .blue { border-left:4px solid var(--blue); }
+  .board { flex:1; border:1px solid var(--line); background:repeating-conic-gradient(#f2f2f2 0% 25%, #fbfbfb 0% 50%) 0 0/28px 28px; position:relative; }
+  .tag { position:absolute; font-size:9px; background:#fff; border:1px solid var(--line); padding:1px 4px; }
+  @media print { body { padding: 8mm; } .grid { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<h1>Fog of War — UI wireframes (low-fi)</h1>
+<p class="lead">Layout intent only — no styling. Read together with <b>UI-SPEC-EN.md</b> (what every element shows/does)
+and the visual-direction brief. Portrait 1080×1920. Solid boxes = static chrome, dashed cream boxes = dynamic content,
+rounded grey = tappable. <b>The multiplayer campaign is the main focus:</b> frames 3–9 are designed for 16 humans
+(solo vs bots reuses them unchanged); frames 13–16 are the multiplayer-specific screens.</p>
+<div class="legend">
+  <span><span class="chip"></span> static</span>
+  <span><span class="chip dyn"></span> dynamic content</span>
+  <span><span class="chip act"></span> tappable</span>
+  <span>▍red/blue bar = enemy / own team accent</span>
+</div>
+
+<div class="grid">
+
+<div class="frame">
+  <h2>1 · Main menu</h2>
+  <div class="note">The storefront of the style ("field table"). Also: settings + help.</div>
+  <div class="phone">
+    <div class="b dyn" style="height:110px">GAME TITLE + EMBLEM</div>
+    <div class="grow"></div>
+    <div class="b btn" style="height:48px"><b>MULTIPLAYER CAMPAIGN</b> ← main</div>
+    <div class="b btn" style="height:40px">SOLO CAMPAIGN</div>
+    <div class="b btn" style="height:40px">SINGLE DUEL vs AI</div>
+    <div class="b btn" style="height:34px">HOW TO PLAY</div>
+    <div class="b btn" style="height:34px">SETTINGS</div>
+    <div class="grow"></div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>2 · Faction pick</h2>
+  <div class="note">Once per campaign, permanent. 6 cards: emblem, composition, cards×budget, pro/con.</div>
+  <div class="phone">
+    <div class="b">CHOOSE YOUR FACTION — fixed for the whole campaign</div>
+    <div class="b btn dyn" style="height:56px">🐭 MOUSE · 18/4/0 · 4 cards × 5<br><span class="tiny">+ swarm, moves through own · − low stats</span></div>
+    <div class="b btn dyn" style="height:56px">🦁 LION · 6/10/2 · 2 cards × 9</div>
+    <div class="b btn dyn" style="height:56px">🐗 PIG · 13/6/3 · 3 cards × 7</div>
+    <div class="b btn dyn" style="height:56px">🐻 BEAR · 16/3/3 · +1 HP</div>
+    <div class="b btn dyn" style="height:56px">🐺 WOLF · 11/8/3 · free step</div>
+    <div class="b btn dyn" style="height:56px">🐊 CROCODILE · hidden links</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>3 · Campaign hub</h2>
+  <div class="note">Home screen. Timeline feed of event cards is the heart; bottom panel swaps per phase (frames 4–7).</div>
+  <div class="phone">
+    <div class="b dyn">Round 3 — THE COUNCIL NOMINATES</div>
+    <div class="b dyn">You: 6·3·1 reinforcements · 7 CP · 5 pts</div>
+    <div class="row" style="height:96px">
+      <div class="b dyn blue">YOUR TEAM<br><span class="tiny">8 portrait chips + balances; dead greyed; fighter marked</span></div>
+      <div class="b dyn red">THE ENEMY<br><span class="tiny">8 portrait chips</span></div>
+    </div>
+    <div class="b btn">Ledger ▸</div>
+    <div class="grow b dyn">TIMELINE FEED<br>
+      <span class="tiny">7 card types: battle report (tap = 9) · nomination · vote result · donation · testament · bark · phase banner — newest at bottom</span>
+    </div>
+    <div class="row" style="height:24px">
+      <div class="b btn tiny"><b>PHASE</b></div><div class="b btn tiny">CHAT (2)</div>
+    </div>
+    <div class="b dyn" style="height:52px">PHASE PANEL (swaps — frames 4–7)<br><span class="tiny">or live progress: "Bots are fighting duel 3 of 8…" · CHAT-tab = frame 14</span></div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>4 · Phase panel — Council</h2>
+  <div class="note">Panel variant inside frame 3. Round 1 is drawn by lot (no council).</div>
+  <div class="phone">
+    <div class="b dyn" style="height:210px">(hub: header / teams / feed)</div>
+    <div class="b">YOUR TEAM NOMINATES — pick the fighters</div>
+    <div class="row"><div class="b btn dyn">own fighter ▾</div><div class="b btn dyn">enemy fighter ▾</div></div>
+    <div class="b dyn" style="height:52px">live teammate votes<br><span class="tiny">portrait + ballot stamp when voted; closes early on unanimity</span></div>
+    <div class="b btn" style="height:40px">VOTE</div>
+    <div class="b dyn tiny">timer bar</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>5 · Phase panel — Donations</h2>
+  <div class="note">Caps are hard rules: max 10 pawns / 3 CP per recipient per round — show why something is blocked.</div>
+  <div class="phone">
+    <div class="b dyn" style="height:230px">(hub)</div>
+    <div class="b">DONATE — or keep everything</div>
+    <div class="b btn dyn">teammate ▾</div>
+    <div class="row">
+      <div class="b btn dyn">soldiers −/+</div><div class="b btn dyn">cavalry −/+</div>
+    </div>
+    <div class="row">
+      <div class="b btn dyn">cannons −/+</div><div class="b btn dyn">CP −/+</div>
+    </div>
+    <div class="row"><div class="b btn">DONATE</div><div class="b btn">DONE DONATING</div></div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>6 · Phase panel — Testament</h2>
+  <div class="note">The drama moment (you just fell). Big timer; timeout burns everything. Recipients may be enemies.</div>
+  <div class="phone">
+    <div class="b dyn" style="height:200px">(hub, muted/sepia — you are dead)</div>
+    <div class="b">YOU HAVE FALLEN — bequeath up to half, max 2 recipients</div>
+    <div class="b dyn" style="height:34px">⏱ BIG TIMER</div>
+    <div class="b btn dyn">recipient ▾ (any living player)</div>
+    <div class="b dyn tiny">half = 4 soldiers · 1 cavalry · 3 CP</div>
+    <div class="b btn" style="height:38px">BEQUEATH HALF</div>
+    <div class="b btn" style="height:32px">BURN EVERYTHING</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>7 · Phase panel — Your duel</h2>
+  <div class="note">Gateway to the board. Stakes must be crystal clear.</div>
+  <div class="phone">
+    <div class="b dyn" style="height:280px">(hub)</div>
+    <div class="b dyn">⚔ YOUR DUEL: you vs Piet<br><span class="tiny">Full team fielded; reinforcements you commit are spent for the campaign.</span></div>
+    <div class="b btn" style="height:48px">PLAY THE DUEL ON THE BOARD</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>8 · Ledger (roster)</h2>
+  <div class="note">Regiment book: sortable columns, your row highlighted, dead players below/greyed.</div>
+  <div class="phone">
+    <div class="b">LEDGER <span class="tiny">(sort: pts / troops / CP / name / status)</span></div>
+    <div class="b dyn tiny">▸ portrait · emblem · 🪖 6·3·1 · 🎖 7 · ⭐ 5 · ❤</div>
+    <div class="b dyn tiny blue">▸ YOU — highlighted row</div>
+    <div class="b dyn tiny">▸ …14 more rows…</div>
+    <div class="grow b dyn"></div>
+    <div class="b btn">BACK</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>9 · Match report</h2>
+  <div class="note">Opens from a feed card; also the post-duel screen. Win-method icons: 🏰 harbor / 💀 elimination / 🤝 tiebreak / 🏳 resign.</div>
+  <div class="phone">
+    <div class="b dyn" style="height:60px">🏰 NORA WINS — harbor, 6 cycles</div>
+    <div class="b dyn" style="height:70px">Nora: −3 soldiers −1 cavalry · CP +8 · committed 2</div>
+    <div class="b dyn" style="height:70px">Bruno: −9 soldiers −2 cannons · CP −10 · committed 5</div>
+    <div class="grow"></div>
+    <div class="b btn">WATCH REPLAY (later)</div>
+    <div class="b btn">CLOSE</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>10 · Board — action phase</h2>
+  <div class="note">3D board + 2D HUD. Target markers need shape + color (color-blindness). "?" seal = hidden enemy stats, never zeros.</div>
+  <div class="phone">
+    <div class="b dyn">⚔ ACTION · cycle 2 · <b style="color:var(--blue)">your turn</b> · ⏱ 0:14</div>
+    <div class="board">
+      <span class="tag" style="top:8px;left:8px">enemy harbor row</span>
+      <span class="tag" style="top:44%;left:12px">green = move (+cost)</span>
+      <span class="tag" style="top:58%;right:10px">red = melee/charge</span>
+      <span class="tag" style="top:30%;right:14px">orange = line of fire</span>
+      <span class="tag" style="bottom:38%;left:20px">stat chips ▪▪▪ / "?" seal</span>
+      <span class="tag" style="top:16%;left:30%">📌 premove: pinned ghost order (queued ≠ executed)</span>
+      <span class="tag" style="bottom:24%;right:18px">cannon: action-pot badge</span>
+      <span class="tag" style="bottom:8px;left:8px">your harbor row</span>
+    </div>
+    <div class="row">
+      <div class="b btn">context (skip/undo)</div><div class="b btn">?</div><div class="b btn">☰ resign</div>
+    </div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>11 · Board — define & reveal</h2>
+  <div class="note">Blind simultaneous phase. Card fan per CARD-DESIGN-BRIEF; CP-bet stepper; reveal shows both sets + initiative bid.</div>
+  <div class="phone">
+    <div class="b dyn">DEFINE YOUR CARDS — round 2 · ⏱ 0:20</div>
+    <div class="board" style="max-height:150px"><span class="tag" style="top:40%;left:25%">board (dimmed)</span></div>
+    <div class="b dyn" style="height:26px">REVEAL (after both): both card sets · bid 67% · "You start"</div>
+    <div class="row" style="height:96px">
+      <div class="b btn dyn">CARD 3/2/2<br>+/− per stat</div>
+      <div class="b btn dyn">CARD 1/1/5</div>
+      <div class="b btn dyn">CARD 2/4/1</div>
+    </div>
+    <div class="row"><div class="b btn dyn">CP bet 0–3 ⊕</div><div class="b btn" style="flex:2">CONFIRM</div></div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>12 · Board — placement & spawn</h2>
+  <div class="note">Placement: free setup on two home rows. Spawn (campaign): up to 3 reinforcements on the back row, blind &amp; simultaneous.</div>
+  <div class="phone">
+    <div class="b dyn">PLACE YOUR ARMY · ghost preview follows finger</div>
+    <div class="board">
+      <span class="tag" style="bottom:26px;left:8px">home rows (highlighted)</span>
+      <span class="tag" style="top:40%;left:16%">SPAWN mode: reserve 🪖4 🐎1 · pick ≤3</span>
+      <span class="tag" style="top:60%;right:12px">"opponent is choosing too…"</span>
+    </div>
+    <div class="row">
+      <div class="b btn">UNDO</div><div class="b btn">DEFAULT SETUP</div><div class="b btn">READY</div>
+    </div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>13 · Lobby (multiplayer)</h2>
+  <div class="note">Three entry paths; seats fill live; empty seats become bots — ALWAYS labeled 🤖 (trust rule).</div>
+  <div class="phone">
+    <div class="b">MULTIPLAYER CAMPAIGN</div>
+    <div class="b btn dyn" style="height:40px">JOIN CODE  [ K 7 X 2 F ]</div>
+    <div class="row"><div class="b btn">QUICK PLAY</div><div class="b btn">WITH FRIENDS</div></div>
+    <div class="row" style="height:150px">
+      <div class="b dyn blue">TEAM 1 — 8 seats<br><span class="tiny">Max ✓ · Anna ✓ · Jip… · 🤖 Bruno · 🤖 …</span></div>
+      <div class="b dyn red">TEAM 2 — 8 seats<br><span class="tiny">joined players + 🤖 backfill</span></div>
+    </div>
+    <div class="b dyn tiny">filling… starts in 1:24 or when full</div>
+    <div class="row"><div class="b btn">READY</div><div class="b btn">LEAVE</div></div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>14 · Chat screen (tab next to the phase panel)</h2>
+  <div class="note">The hub's bottom zone has two tabs: PHASE ⇄ CHAT. Chat = full screen state at the phase panel's position; unread badge on the tab; Phase tab pulses while an action is required of you.</div>
+  <div class="phone">
+    <div class="b dyn" style="height:96px">(hub: header / teams — feed collapses while chatting)</div>
+    <div class="row" style="height:30px">
+      <div class="b btn">PHASE ⚠</div><div class="b btn" style="border-width:2px"><b>CHAT (3)</b></div>
+    </div>
+    <div class="grow b dyn blue">TEAM CHAT (team-only)<br><span class="tiny">portrait + message rows · bot barks in the same visual language · tap portrait = player detail · dead players: 🔒 sealed</span></div>
+    <div class="row" style="height:38px">
+      <div class="b btn tiny">⚔ Send me</div><div class="b btn tiny">🎁 Donate?</div><div class="b btn tiny">🤝 Trust me</div><div class="b btn tiny">🗡 Traitor!</div>
+    </div>
+    <div class="b dyn tiny">free-text input (only if lobby setting allows)</div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>15 · Waiting & connection states</h2>
+  <div class="note">Every blind/simultaneous moment shows WHO we wait for + the server deadline + the consequence. Same pattern in duels (reconnect grace).</div>
+  <div class="phone">
+    <div class="b dyn">DEFINE YOUR CARDS · ⏱ deadline bar 0:41</div>
+    <div class="board" style="max-height:130px"><span class="tag" style="top:40%;left:20%">board (dimmed)</span></div>
+    <div class="b dyn" style="height:44px">✉ WAITING FOR: [Jip] [Nora]<br><span class="tiny">portrait chips; "no choice = default loadout"</span></div>
+    <div class="b dyn" style="height:34px">⚠ connection lost — reconnecting (grace 0:20)</div>
+    <div class="b dyn" style="height:34px">⚠ opponent dropped — forfeit in 0:18</div>
+    <div class="grow"></div>
+  </div>
+</div>
+
+<div class="frame">
+  <h2>16 · Ghost mode (dead players)</h2>
+  <div class="note">Whole hub in muted/sepia; team secrets visibly sealed; public info stays. Ghosts must WANT to keep watching (drama is the product).</div>
+  <div class="phone">
+    <div class="b dyn">💀 YOU HAVE FALLEN — spectating · round 5</div>
+    <div class="b dyn" style="height:80px;opacity:.55">(teams + balances, sepia/desaturated)</div>
+    <div class="grow b dyn" style="opacity:.55">TIMELINE FEED (public cards only)</div>
+    <div class="b dyn" style="height:36px">🔒 TEAM CHAT — sealed for the dead</div>
+    <div class="b dyn tiny">no actions — watch the drama unfold</div>
+  </div>
+</div>
+
+</div>
+
+<h1 style="margin-top:34px">Appendix — screenshots of the current build</h1>
+<p class="lead">The game is playable today with programmer-UI: these show the real layouts and content density behind the
+wireframes. Everything visual is up for redesign — treat these as content reference, not style reference.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+  <figure style="margin:0"><img src="screenshots/screen-play.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">The board — action phase (cf. frame 10)</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-campaign_hub.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Campaign hub + timeline feed (cf. frame 3)</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-ledger.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Ledger / roster (cf. frame 8)</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-define.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Define cards — card fan (cf. frame 11)</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-reveal.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Reveal — both sets + initiative bid (cf. frame 11)</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-link.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Linking cards to pawns</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-place_done.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Free placement on home rows (cf. frame 12)</figcaption></figure>
+  <figure style="margin:0"><img src="screenshots/screen-vosview.png" style="width:100%;border:1px solid #999"><figcaption class="tiny">Hidden info — the "?" state (cf. frame 10)</figcaption></figure>
+</div>
+
+<p class="tiny" style="margin-top:20px">Fog of War © Max Nieuwenhuijs — wireframes v2 (27 Jul 2026). The multiplayer campaign is the main focus; frames 3–9 exist functionally in the build (solo, programmer-UI), frames 13–16 are multiplayer-specific. To share as PDF: open in a browser → Print → Save as PDF.</p>
+</body>
+</html>
