@@ -5,16 +5,17 @@ extends Control
 # Het ledger is bewust volledig openbaar (C-spec, "Among Us-boekhouding"):
 # saldi zijn voor iedereen afleidbaar; de fog zit in de duels, niet hier.
 
+## "titel" is een vertaalsleutel; tr() gebeurt bij het bouwen van de koppen.
 const KOLOMMEN := [
-	{"key": "naam", "titel": "Naam", "breedte": 168},
-	{"key": "team", "titel": "Team", "breedte": 56},
-	{"key": "status", "titel": "Status", "breedte": 96},
-	{"key": "inf", "titel": "Sold.", "breedte": 56},
-	{"key": "cav", "titel": "Cav.", "breedte": 56},
-	{"key": "art", "titel": "Kan.", "breedte": 56},
-	{"key": "pool", "titel": "Totaal", "breedte": 64},
-	{"key": "cp", "titel": "CP", "breedte": 48},
-	{"key": "punten", "titel": "Punten", "breedte": 64},
+	{"key": "naam", "titel": "LEDGER_COL_NAME", "breedte": 168},
+	{"key": "team", "titel": "LEDGER_COL_TEAM", "breedte": 56},
+	{"key": "status", "titel": "LEDGER_COL_STATUS", "breedte": 96},
+	{"key": "inf", "titel": "LEDGER_COL_INF", "breedte": 56},
+	{"key": "cav", "titel": "LEDGER_COL_CAV", "breedte": 56},
+	{"key": "art", "titel": "LEDGER_COL_ART", "breedte": 56},
+	{"key": "pool", "titel": "LEDGER_COL_TOTAL", "breedte": 64},
+	{"key": "cp", "titel": "LEDGER_COL_CP", "breedte": 48},
+	{"key": "punten", "titel": "LEDGER_COL_POINTS", "breedte": 64},
 ]
 
 var _c: CState
@@ -71,18 +72,18 @@ func open(c: CState, mens_id: int) -> void:
 	add_child(wortel)
 	var kop := HBoxContainer.new()
 	var titel := Label.new()
-	titel.text = "GROOTBOEK — de campagne-boekhouding"
+	titel.text = tr("LEDGER_TITLE")
 	titel.add_theme_font_size_override("font_size", 18)
 	titel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kop.add_child(titel)
 	var sluit := Button.new()
 	sluit.name = "GrootboekSluit"
-	sluit.text = "Sluiten"
+	sluit.text = tr("LEDGER_CLOSE_BTN")
 	sluit.pressed.connect(func() -> void: queue_free())
 	kop.add_child(sluit)
 	wortel.add_child(kop)
 	var uitleg := Label.new()
-	uitleg.text = "De boekhouding is openbaar: elke donatie, elk verlies en elk testament staat erin. Tik een kolom om te sorteren."
+	uitleg.text = tr("LEDGER_EXPLAIN")
 	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	uitleg.add_theme_font_size_override("font_size", 12)
 	uitleg.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
@@ -105,7 +106,7 @@ func _herbouw() -> void:
 	for kol in KOLOMMEN:
 		var b := Button.new()
 		var sleutel: String = String(kol.key)
-		b.text = String(kol.titel) + (" v" if sleutel == _kolom else "")
+		b.text = tr(String(kol.titel)) + (" v" if sleutel == _kolom else "")
 		b.custom_minimum_size = Vector2(int(kol.breedte), 0)
 		b.add_theme_font_size_override("font_size", 12)
 		b.pressed.connect(func() -> void:
@@ -118,9 +119,9 @@ func _herbouw() -> void:
 		var hbox := HBoxContainer.new()
 		var dood: bool = String(rij.status) != "actief"
 		var waarden: Array = [
-			String(rij.naam) + ("  (jij)" if int(rij.id) == _mens_id else ""),
+			String(rij.naam) + (tr("LEDGER_YOU_SUFFIX") if int(rij.id) == _mens_id else ""),
 			str(int(rij.team)),
-			"actief" if not dood else "gevallen",
+			tr("LEDGER_STATUS_ACTIVE") if not dood else tr("LEDGER_STATUS_FALLEN"),
 			str(int(rij.inf)), str(int(rij.cav)), str(int(rij.art)),
 			str(int(rij.pool)), str(int(rij.cp)), str(int(rij.punten)),
 		]

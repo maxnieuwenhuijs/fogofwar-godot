@@ -1,0 +1,72 @@
+keys,en,nl
+HELP_TITLE,How to Play,Speluitleg
+HELP_CLOSE,Close,Sluiten
+HELP_TAB_GAME_TITLE,The Game,Het spel
+HELP_TAB_TURNS_TITLE,Turns,Beurten
+HELP_TAB_UNITS_TITLE,Units,Eenheden
+HELP_TAB_COMBAT_TITLE,Combat,Vechten
+HELP_TAB_FACTIONS_TITLE,Factions,Facties
+HELP_GAME_WHAT_TITLE,[b]What is Fog of War?[/b],[b]Wat is Fog of War?[/b]
+HELP_GAME_WHAT_BODY,"Two armies face off on a board of 11×11 tiles. You are red, the AI is blue.","Twee legers staan tegenover elkaar op een bord van 11×11 vakken. Jij bent rood, de AI is blauw."
+HELP_GAME_WIN_TITLE,[b]How to win[/b],[b]Zo win je[/b]
+HELP_GAME_WIN_1,"• Get [b]2 of your pawns[/b] onto the harbor on the far side (the colored edge tiles), or","• Zet [b]2 van je pionnen[/b] op de haven aan de overkant (de gekleurde randvakken), óf"
+HELP_GAME_WIN_2,• defeat [b]all[/b] enemy pawns.,• versla [b]alle[/b] vijandelijke pionnen.
+HELP_GAME_IDEA_TITLE,[b]The key idea[/b],[b]Het belangrijkste idee[/b]
+HELP_GAME_IDEA_BODY,"Your pawns can only act once they have a [b]card[/b]. A pawn without a card is ""asleep"": it can do nothing and dies to a single hit or shot.","Je pionnen kunnen pas iets als ze een [b]kaart[/b] hebben. Een pion zonder kaart ""slaapt"": hij kan niks en gaat dood aan één klap of één schot."
+HELP_GAME_TYPES_BODY,"Every pawn has a fixed type you can tell from its model: the soldier (with a rifle), the beast (the big brother, a head taller than the rest) and the cannon (with wheels). The card sets how strong it is this round; the type sets what it can do.","Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het beest (de grote broer, kop groter dan de rest) en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán."
+HELP_GAME_BARS_BODY,"[b]Above every active pawn[/b] you see pips: green = health (HP), blue = energy (Speed), orange = attack power.","[b]Boven elke actieve pion[/b] zie je blokjes: groen = leven (HP), blauw = energie (Speed), oranje = aanvalskracht."
+HELP_GAME_SETUP_TITLE,[b]Deployment[/b],[b]Opstellen[/b]
+HELP_GAME_SETUP_BODY,"Before battle you deploy your army on your own two rows: first your cannons, then your beasts (click a tile; right-click = undo). The soldiers fill in the rest automatically. In a hurry? Pick the default deployment.","Vóór de slag zet je je leger neer op je twee eigen rijen: eerst je kanonnen, dan je beesten (klik een vak; rechtermuis = ongedaan). De soldaten vullen de rest automatisch aan. Liever snel? Kies de standaard-opstelling."
+HELP_TURNS_INTRO,[b]The game runs in cycles. Each cycle:[/b],[b]Het spel gaat in cycli. Elke cyclus:[/b]
+HELP_TURNS_CARDS_TITLE,[b]1. Build cards[/b] (3 rounds),[b]1. Kaarten maken[/b] (3 rondes)
+HELP_TURNS_CARDS_BODY,"You split points across HP / Speed / Attack. The total is always your budget (Pig: 7).","Je verdeelt punten over HP / Speed / Aanval. De som is altijd je budget (Varken: 7)."
+HELP_TURNS_REVEAL_TITLE,[b]2. Reveal[/b],[b]2. Laten zien[/b]
+HELP_TURNS_REVEAL_BODY,"Both players reveal their cards. Whoever put the most into Attack (the highest ""bid"") gets the [b]initiative[/b]: they link first and later strike first.","Beide spelers tonen hun kaarten. Wie het meest op Aanval heeft ingezet (het hoogste ""bod"") krijgt het [b]initiatief[/b]: die mag eerst koppelen en straks eerst slaan."
+HELP_TURNS_LINK_TITLE,[b]3. Link[/b],[b]3. Koppelen[/b]
+HELP_TURNS_LINK_BODY,"Taking turns, you place a card on one of your own pawns. That pawn wakes up with the card's stats.","Om de beurt leg je een kaart op een eigen pion. Die pion wordt wakker met de stats van de kaart."
+HELP_TURNS_FIGHT_TITLE,[b]4. Fight (action phase)[/b],[b]4. Vechten (actiefase)[/b]
+HELP_TURNS_FIGHT_BODY,"Taking turns, you perform [b]one action[/b] with one pawn. Speed is your pawn's energy:","Om de beurt doe je [b]één actie[/b] met één pion. Speed is de energie van je pion:"
+HELP_TURNS_FIGHT_COST_1,• walking one step costs 1,• een stap lopen kost 1
+HELP_TURNS_FIGHT_COST_2,• striking or shooting costs 1,• slaan of schieten kost 1
+HELP_TURNS_FIGHT_COST_3,• charge (beast) costs steps + 1,• charge (beest) kost stappen + 1
+HELP_TURNS_FIGHT_AGAIN,"A pawn may act again later in the cycle, as long as it has energy left.","Een pion mag later in de cyclus wéér, zolang hij energie heeft."
+HELP_TURNS_NEWCYCLE_TITLE,[b]5. New cycle[/b],[b]5. Nieuwe cyclus[/b]
+HELP_TURNS_NEWCYCLE_BODY,"Nobody can act anymore? Then all cards expire and everything starts over — with the pawns still alive, right where they stand.","Kan niemand meer iets doen? Dan vervallen alle kaarten en begint alles opnieuw — met de pionnen die nog leven, op de plek waar ze staan."
+HELP_TURNS_TIMER_TITLE,[b]Turn timer[/b],[b]Beurt-timer[/b]
+HELP_TURNS_TIMER_BODY,"You get 20 seconds per decision (see the counter at the top). Time's up? Then the game chooses for you: default deployment, cards confirmed, auto-linked, or a sensible move in combat. The timer pauses while you read this guide.","Je hebt 20 seconden per beslissing (zie de teller bovenin). Tijd om? Dan kiest het spel voor je: standaard-opstelling, kaarten bevestigd, automatisch gekoppeld, of een verstandige zet in het gevecht. De timer pauzeert als je deze uitleg leest."
+HELP_UNITS_INF_TITLE,[b]Soldier (infantry)[/b],[b]Soldaat (infanterie)[/b]
+HELP_UNITS_INF_1,• Walks as far as its energy allows.,• Loopt zo ver als zijn energie reikt.
+HELP_UNITS_INF_2,• Strikes an enemy on an adjacent tile.,• Slaat een vijand op het vak ernaast.
+HELP_UNITS_INF_3,• Or shoots at [b]exactly 2 tiles[/b] range (damage = your full Attack).,• Of schiet op [b]precies 2 vakken[/b] afstand (schade = je volle Aanval).
+HELP_UNITS_INF_4,"• Strong on defense: whoever strikes it without killing it takes −1 in return.","• Sterk in de verdediging: wie hem slaat en niet doodt, krijgt zelf −1."
+HELP_UNITS_CAV_TITLE,[b]Beast (cavalry)[/b],[b]Beest (cavalerie)[/b]
+HELP_UNITS_CAV_1,"• [b]Charge[/b]: move and strike in one turn — just click a red enemy, even one further away.","• [b]Charge[/b]: lopen én slaan in één beurt — klik gewoon een rode vijand aan, ook verderop."
+HELP_UNITS_CAV_2,• Jumps over your [b]own[/b] pawns.,• Springt over je [b]eigen[/b] pionnen heen.
+HELP_UNITS_CAV_3,"• If it kills its target, it moves into the freed tile: that's how it gains ground.","• Doodt hij zijn doelwit, dan schuift hij het vrije vak in: zo wint hij terrein."
+HELP_UNITS_CAV_4,"• Can never shoot, and it retaliates hard: −2 for whoever pokes it without finishing it off.","• Kan nooit schieten, en terugslaan doet hij hard: −2 voor wie hem prikt en niet afmaakt."
+HELP_UNITS_ART_TITLE,[b]Cannon (artillery)[/b],[b]Kanon (artillerie)[/b]
+HELP_UNITS_ART_1,• Does [b]1 thing per turn[/b]: 1 step or 1 shot.,• Doet [b]1 ding per beurt[/b]: 1 stap lopen óf 1 schot.
+HELP_UNITS_ART_2,• Shoots up to [b]6 tiles[/b] in a straight line (Lion: 7) at full Attack damage.,• Schiet tot [b]6 vakken[/b] ver in een rechte lijn (Leeuw: 7) met volle Aanval-schade.
+HELP_UNITS_ART_3,• Can [b]never[/b] hit the adjacent tile (dead zone) and cannot strike — get close and it is defenseless.,• Kan [b]nooit[/b] het vak ernaast raken (dode zone) en niet slaan — kom dichtbij en hij is weerloos.
+HELP_UNITS_ART_4,• Speed = how many times it may act per cycle.,• Speed = hoe vaak hij per cyclus iets mag doen.
+HELP_COMBAT_COLORS_TITLE,[b]The colors on the board[/b],[b]De kleuren op het bord[/b]
+HELP_COMBAT_COLORS_1,• [color=#55dd66]Green[/color] = you can walk there (the number = energy cost),• [color=#55dd66]Groen[/color] = daar kun je lopen (het cijfer = energie-kosten)
+HELP_COMBAT_COLORS_2,• [color=#f04545]Red[/color] = you can strike that enemy (or charge with the beast),• [color=#f04545]Rood[/color] = die vijand kun je slaan (of charge met het beest)
+HELP_COMBAT_COLORS_3,• [color=#ffb054]Orange[/color] = you can shoot that enemy (faint orange = your line of fire),• [color=#ffb054]Oranje[/color] = die vijand kun je beschieten (vaag oranje = je vuurlijn)
+HELP_COMBAT_COLORS_4,• [color=#66dddd]Cyan[/color] = free Wolf step after a melee,• [color=#66dddd]Cyaan[/color] = gratis Wolf-stap na een melee
+HELP_COMBAT_MELEE_TITLE,[b]Striking (melee)[/b],[b]Slaan (melee)[/b]
+HELP_COMBAT_MELEE_BODY,"You deal your full Attack as damage. If the target dies, you MUST move into the freed tile — that's how you advance.","Je doet je volle Aanval als schade. Gaat het doelwit dood, dan MOET je het vrije vak in — zo ruk je op."
+HELP_COMBAT_RETAL_TITLE,[b]Retaliation[/b],[b]Terugslag[/b]
+HELP_COMBAT_RETAL_BODY,"If the defender survives your hit, it strikes back:","Overleeft de verdediger jouw klap, dan slaat hij terug:"
+HELP_COMBAT_RETAL_VALUES,• soldier: [b]−1[/b]    • beast: [b]−2[/b]    • cannon: [b]−0[/b] (defenseless),• soldaat: [b]−1[/b]    • beest: [b]−2[/b]    • kanon: [b]−0[/b] (weerloos)
+HELP_COMBAT_RETAL_NOTE,Sleeping pawns never strike back. Shooting never draws retaliation.,Slapende pionnen slaan nooit terug. Schieten krijgt nooit terugslag.
+HELP_COMBAT_SHOOT_TITLE,[b]Shooting[/b],[b]Schieten[/b]
+HELP_COMBAT_SHOOT_1,• Hits anything in a clear straight line — sleeping pawns too (they die instantly).,• Raakt alles in een vrije rechte lijn — ook slapende pionnen (die gaan meteen dood).
+HELP_COMBAT_SHOOT_2,"• But: [b]any[/b] pawn in between blocks the shot, including your own.","• Maar: [b]elke[/b] pion ertussen blokkeert het schot, ook je eigen."
+HELP_COMBAT_SHOOT_3,• Shooting never captures a tile; only walking and striking gain ground.,• Schieten verovert nooit een vak; alleen lopen en slaan winnen terrein.
+HELP_COMBAT_TIP,[b]Tip[/b]: right-click = deselect pawn.,[b]Tip[/b]: rechtermuisklik = pion deselecteren.
+HELP_COMBAT_KEYS,[b]Keys[/b]: K = screen shake on/off · J = all hit effects on/off · M = mute sound.,[b]Toetsen[/b]: K = schermtrilling aan/uit · J = alle klap-effecten aan/uit · M = geluid dempen.
+HELP_FACTIONS_INTRO,[b]Pick a faction (doctrine) before the match. It determines your army and your special power.[/b],[b]Kies vóór de partij een factie (doctrine). Die bepaalt je leger en je speciale kracht.[/b]
+HELP_FACTIONS_COMP,Composition = soldiers / beasts / cannons.,Samenstelling = soldaten / beesten / kanonnen.
+HELP_FACTIONS_ROW,[b]%s[/b] — %d cards × budget %d · army %d/%d/%d,[b]%s[/b] — %d kaarten × budget %d · leger %d/%d/%d
+HELP_FACTIONS_TRIANGLE,"[b]Balance triangle[/b]: cannons > soldiers (range), soldiers > beasts (−1 retaliation and cheap), beasts > cannons (dive into the dead zone and strike).","[b]Balans-driehoek[/b]: kanonnen > soldaten (dracht), soldaten > beesten (terugslag −1 en goedkoop), beesten > kanonnen (dode zone induiken en slaan)."

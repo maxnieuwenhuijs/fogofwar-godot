@@ -89,19 +89,19 @@ func _toon_factie_keuze() -> void:
 	kolom.add_theme_constant_override("separation", 10)
 	achtergrond.add_child(kolom)
 	var titel := Label.new()
-	titel.text = "KIES JE FACTIE"
+	titel.text = tr("HUB_FACTION_TITLE")
 	titel.add_theme_font_size_override("font_size", 24)
 	kolom.add_child(titel)
 	var uitleg := Label.new()
-	uitleg.text = "Je factie staat vast voor de hele campagne."
+	uitleg.text = tr("HUB_FACTION_EXPLAIN")
 	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	uitleg.add_theme_color_override("font_color", Color(0.75, 0.8, 0.9))
 	kolom.add_child(uitleg)
 	for doctrine in Constants.DOCTRINE_DATA:
-		var data: Dictionary = Constants.DOCTRINE_DATA[doctrine]
 		var knop := Button.new()
 		knop.name = "Factie_%d" % int(doctrine)
-		knop.text = "%s\n+ %s\n- %s" % [String(data.name), String(data.pro), String(data.con)]
+		knop.text = tr("HUB_FACTION_BTN") % [Constants.doctrine_display_name(int(doctrine)),
+			Constants.doctrine_pro(int(doctrine)), Constants.doctrine_con(int(doctrine))]
 		knop.clip_text = false
 		knop.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		knop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -148,7 +148,7 @@ func _bouw_layout() -> void:
 	balk.add_theme_constant_override("separation", 8)
 	var grootboek := Button.new()
 	grootboek.name = "GrootboekKnop"
-	grootboek.text = "Grootboek"
+	grootboek.text = tr("HUB_LEDGER_BTN")
 	grootboek.pressed.connect(func() -> void:
 		var scherm := LedgerScreen.new()
 		add_child(scherm)
@@ -231,32 +231,33 @@ func _toon_botwerk_label() -> void:
 	if _info_label == null or not is_instance_valid(_info_label):
 		return
 	var voortgang: String = driver.bezig_met
-	_info_label.text = voortgang if voortgang != "" else "De bots zijn bezig..."
+	_info_label.text = voortgang if voortgang != "" else tr("HUB_BOTS_BUSY")
 
 
 # --- Weergave -------------------------------------------------------------------
 
+## Waarden zijn vertaalsleutels; tr() gebeurt op het moment van tonen.
 const FASE_NAMEN := {
-	CState.Fase.NOMINATIE: "De Raad nomineert",
-	CState.Fase.DONATIE: "Donatie-venster",
-	CState.Fase.DUELS: "De duels",
-	CState.Fase.TESTAMENT: "Testament",
-	CState.Fase.BURGEROORLOG: "BURGEROORLOG",
-	CState.Fase.KLAAR: "Campagne voorbij",
+	CState.Fase.NOMINATIE: "HUB_PHASE_NOMINATION",
+	CState.Fase.DONATIE: "HUB_PHASE_DONATION",
+	CState.Fase.DUELS: "HUB_PHASE_DUELS",
+	CState.Fase.TESTAMENT: "HUB_PHASE_TESTAMENT",
+	CState.Fase.BURGEROORLOG: "HUB_PHASE_CIVIL_WAR",
+	CState.Fase.KLAAR: "HUB_PHASE_OVER",
 }
 
 
 func _ververs() -> void:
 	var c: CState = driver.c
 	var mijn: Dictionary = c.spelers.get(mens_id, {})
-	_header.text = "Ronde %d — %s" % [c.ronde, FASE_NAMEN.get(c.fase, "?")]
+	_header.text = tr("HUB_HEADER") % [c.ronde, tr(FASE_NAMEN.get(c.fase, "?"))]
 	if c.fase == CState.Fase.KLAAR and c.winnaar != -1:
-		_header.text = "KAMPIOEN: %s" % String(c.spelers[c.winnaar].naam)
+		_header.text = tr("HUB_CHAMPION") % String(c.spelers[c.winnaar].naam)
 	var pool: Dictionary = c.pool_van(mens_id)
-	_saldi.text = "Jij (%s, team %d): %d soldaten · %d cavalerie · %d kanonnen · %d CP · %d punten%s" % [
+	_saldi.text = tr("HUB_BALANCE") % [
 		String(mijn.get("naam", "?")), int(mijn.get("team", 0)),
 		int(pool.inf), int(pool.cav), int(pool.art), c.cp_van(mens_id), c.punten_van(mens_id),
-		"" if String(mijn.get("status", "")) == "actief" else "  [UITGEVALLEN — je ziet nu alles]"]
+		"" if String(mijn.get("status", "")) == "actief" else tr("HUB_ELIMINATED_SUFFIX")]
 	_ververs_teams()
 	_ververs_tijdlijn()
 	_bouw_fase_paneel()
@@ -271,7 +272,7 @@ func _ververs_teams() -> void:
 		if not bool(duel.klaar):
 			vecht_nu[int(duel.p1)] = true
 			vecht_nu[int(duel.p2)] = true
-	for gegevens in [[_team_links, mijn_team, "JOUW TEAM"], [_team_rechts, 1 - mijn_team, "DE VIJAND"]]:
+	for gegevens in [[_team_links, mijn_team, tr("HUB_TEAM_YOURS")], [_team_rechts, 1 - mijn_team, tr("HUB_TEAM_ENEMY")]]:
 		var houder: VBoxContainer = gegevens[0]
 		var team: int = int(gegevens[1])
 		for kind in houder.get_children():
@@ -315,9 +316,9 @@ func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
 	var naam := Label.new()
 	var markering := ""
 	if sid == mens_id:
-		markering = " (jij)"
+		markering = tr("HUB_YOU_SUFFIX")
 	if vecht and not dood:
-		markering += "  [VECHT]"
+		markering += tr("HUB_FIGHTING_SUFFIX")
 	naam.text = String(sp.naam) + markering
 	naam.add_theme_font_size_override("font_size", 13)
 	if dood:
@@ -327,10 +328,10 @@ func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
 	tekst.add_child(naam)
 	var saldo := Label.new()
 	if dood:
-		saldo.text = "gevallen"
+		saldo.text = tr("HUB_FALLEN")
 	else:
 		var pool: Dictionary = c.pool_van(sid)
-		saldo.text = "%d·%d·%d · %d CP · %d pt" % [int(pool.inf), int(pool.cav),
+		saldo.text = tr("HUB_MEMBER_BALANCE") % [int(pool.inf), int(pool.cav),
 			int(pool.art), c.cp_van(sid), c.punten_van(sid)]
 	saldo.add_theme_font_size_override("font_size", 11)
 	saldo.add_theme_color_override("font_color",
@@ -349,19 +350,19 @@ func _ververs_tijdlijn() -> void:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.add_theme_font_size_override("font_size", 13)
 		if String(e.type) == "bark":
-			label.text = "R%d · %s: \"%s\"" % [int(e.ronde), String(e.naam), String(e.tekst)]
+			label.text = tr("HUB_FEED_BARK") % [int(e.ronde), String(e.naam), String(e.tekst)]
 			label.add_theme_color_override("font_color", Color(0.75, 0.8, 0.95))
 		elif String(e.type) == "report":
 			var c: CState = driver.c
 			var p1n := String(c.spelers[int(e.p1)].naam)
 			var p2n := String(c.spelers[int(e.p2)].naam)
-			var uitslag := "remise" if int(e.winnaar) == -1 else "%s wint (%s)" % [
+			var uitslag := tr("HUB_DRAW") if int(e.winnaar) == -1 else tr("HUB_WINS_SHORT") % [
 				String(c.spelers[int(e.winnaar)].naam), String(e.methode)]
-			label.text = "R%d · BATTLEREPORT: %s vs %s — %s, %d cycli" % [
+			label.text = tr("HUB_FEED_REPORT") % [
 				int(e.ronde), p1n, p2n, uitslag, int(e.cycli)]
 			label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.6))
 			# F3.3-rest: tik het kaartje voor het volledige rapport.
-			kaart.tooltip_text = "Tik voor het volledige battlereport"
+			kaart.tooltip_text = tr("HUB_REPORT_TOOLTIP")
 			kaart.gui_input.connect(func(ev: InputEvent) -> void:
 				if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
 					_toon_report(e))
@@ -376,23 +377,23 @@ func _ververs_tijdlijn() -> void:
 func _toon_report(e: Dictionary) -> void:
 	var c: CState = driver.c
 	var regels: Array = []
-	var uitslag := "Remise — beide een tiebreak-punt."
+	var uitslag := tr("HUB_REPORT_DRAW")
 	if int(e.winnaar) != -1:
-		uitslag = "%s wint via %s." % [String(c.spelers[int(e.winnaar)].naam), String(e.methode)]
-	regels.append("%s vs %s, ronde %d — %s (%d cycli)" % [
+		uitslag = tr("HUB_REPORT_WINS") % [String(c.spelers[int(e.winnaar)].naam), String(e.methode)]
+	regels.append(tr("HUB_REPORT_HEADER") % [
 		String(c.spelers[int(e.p1)].naam), String(c.spelers[int(e.p2)].naam),
 		int(e.ronde), uitslag, int(e.cycli)])
 	regels.append("")
 	var cp_delta: Dictionary = e.get("cp_delta", {})
 	for sid in [int(e.p1), int(e.p2)]:
 		var v: Dictionary = (e.verliezen as Dictionary).get(str(sid), {})
-		regels.append("%s: -%d soldaten, -%d cavalerie, -%d kanonnen · CP %+d" % [
+		regels.append(tr("HUB_REPORT_LOSSES") % [
 			String(c.spelers[sid].naam), int(v.get("inf", 0)), int(v.get("cav", 0)),
 			int(v.get("art", 0)), int(cp_delta.get(str(sid), 0))])
 	var dlg := AcceptDialog.new()
-	dlg.title = "Battlereport"
+	dlg.title = tr("HUB_REPORT_TITLE")
 	dlg.dialog_text = "\n".join(regels)
-	dlg.ok_button_text = "Sluiten"
+	dlg.ok_button_text = tr("HUB_CLOSE")
 	add_child(dlg)
 	dlg.popup_centered()
 
@@ -423,7 +424,7 @@ func _bouw_fase_paneel() -> void:
 	if not driver.wacht_op_mens():
 		_info_label = Label.new()
 		_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_info_label.text = "De bots zijn bezig..." if _bezig else "Wachten op de volgende fase."
+		_info_label.text = tr("HUB_BOTS_BUSY") if _bezig else tr("HUB_WAIT_NEXT_PHASE")
 		_paneel.add_child(_info_label)
 		return
 	_info_label = null
@@ -440,7 +441,7 @@ func _bouw_fase_paneel() -> void:
 
 func _paneel_nominatie(c: CState) -> void:
 	var titel := Label.new()
-	titel.text = "Jouw team nomineert: kies de vechters."
+	titel.text = tr("HUB_NOMINATE_TITLE")
 	_paneel.add_child(titel)
 	var eigen := OptionButton.new()
 	eigen.name = "EigenKeuze"
@@ -449,7 +450,7 @@ func _paneel_nominatie(c: CState) -> void:
 	var mijn_team: int = int(c.spelers[mens_id].team)
 	for sid in c.actieve_leden(mijn_team):
 		if not c.al_genomineerd.has(sid):
-			eigen.add_item("%s (jij)" % c.spelers[sid].naam if sid == mens_id else String(c.spelers[sid].naam), sid)
+			eigen.add_item(tr("HUB_NAME_YOU") % c.spelers[sid].naam if sid == mens_id else String(c.spelers[sid].naam), sid)
 	for sid in c.actieve_leden(1 - mijn_team):
 		if not c.al_genomineerd.has(sid):
 			vijand.add_item(String(c.spelers[sid].naam), sid)
@@ -458,7 +459,7 @@ func _paneel_nominatie(c: CState) -> void:
 	rij.add_child(eigen)
 	rij.add_child(vijand)
 	_paneel.add_child(rij)
-	_knop("Stem", func() -> void:
+	_knop(tr("HUB_VOTE_BTN"), func() -> void:
 		if eigen.selected >= 0 and vijand.selected >= 0:
 			driver.submit_mens_nominatie(eigen.get_selected_id(), vijand.get_selected_id())
 			_werk_door())
@@ -471,10 +472,10 @@ func _paneel_duel(c: CState) -> void:
 		return
 	var vijand: int = int(d.p2) if int(d.p1) == mens_id else int(d.p1)
 	var titel := Label.new()
-	titel.text = "JOUW DUEL: jij tegen %s. Je hele bezit gaat mee het bord op — wat je verliest ben je kwijt, wat je spaart neem je mee." % String(c.spelers[vijand].naam)
+	titel.text = tr("HUB_DUEL_TITLE") % String(c.spelers[vijand].naam)
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_paneel.add_child(titel)
-	var knop := _knop("Speel het duel op het bord", func() -> void:
+	var knop := _knop(tr("HUB_DUEL_PLAY_BTN"), func() -> void:
 		if CampaignBridge.start_mens_duel():
 			get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
 	knop.name = "SpeelDuelKnop"
@@ -482,7 +483,7 @@ func _paneel_duel(c: CState) -> void:
 
 func _paneel_donatie(c: CState) -> void:
 	var titel := Label.new()
-	titel.text = "Doneer aan een teamgenoot (max 10 pionnen / 3 CP per ontvanger), of houd alles."
+	titel.text = tr("HUB_DONATE_TITLE")
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_paneel.add_child(titel)
 	var mijn_team: int = int(c.spelers[mens_id].team)
@@ -500,35 +501,35 @@ func _paneel_donatie(c: CState) -> void:
 		spin.name = "Spin_" + veld
 		spin.min_value = 0
 		spin.max_value = 10
-		spin.prefix = veld + " "
+		spin.prefix = tr("HUB_UNIT_" + veld.to_upper()) + " "
 		invoer[veld] = spin
 		rij.add_child(spin)
 	if doelen.item_count > 0:
 		_paneel.add_child(doelen)
 		_paneel.add_child(rij)
-		_knop("Doneer", func() -> void:
+		_knop(tr("HUB_DONATE_BTN"), func() -> void:
 			if doelen.selected >= 0:
 				driver.submit_mens_donatie(doelen.get_selected_id(),
 					int(invoer.inf.value), int(invoer.cav.value),
 					int(invoer.art.value), int(invoer.cp.value))
 				_ververs())
-	_knop("Klaar met doneren", func() -> void:
+	_knop(tr("HUB_DONATE_DONE_BTN"), func() -> void:
 		driver.submit_mens_klaar_met_doneren()
 		_werk_door())
 
 
 func _paneel_testament(c: CState) -> void:
 	var titel := Label.new()
-	titel.text = "Je bent uitgevallen. Laat maximaal de helft na aan maximaal 2 ontvangers — de rest verbrandt."
+	titel.text = tr("HUB_WILL_TITLE")
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_paneel.add_child(titel)
 	var doelen := OptionButton.new()
 	doelen.name = "TestamentDoel"
 	for id in c.spelers:
 		if int(id) != mens_id and String(c.spelers[id].status) == "actief":
-			doelen.add_item("%s (team %d)" % [c.spelers[id].naam, int(c.spelers[id].team)], int(id))
+			doelen.add_item(tr("HUB_WILL_TARGET") % [c.spelers[id].naam, int(c.spelers[id].team)], int(id))
 	_paneel.add_child(doelen)
-	_knop("Laat de helft na aan deze speler", func() -> void:
+	_knop(tr("HUB_WILL_HALF_BTN"), func() -> void:
 		if doelen.selected < 0:
 			return
 		var bezit: Dictionary = c.pool_van(mens_id)
@@ -541,6 +542,6 @@ func _paneel_testament(c: CState) -> void:
 		}]
 		driver.submit_mens_testament(verdeling)
 		_werk_door())
-	_knop("Laat niets na (alles verbrandt)", func() -> void:
+	_knop(tr("HUB_WILL_NONE_BTN"), func() -> void:
 		driver.submit_mens_testament([])
 		_werk_door())

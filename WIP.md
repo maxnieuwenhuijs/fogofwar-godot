@@ -1058,6 +1058,20 @@ hill-climbing self-play en toont het live:
 
 ## 9. TODO / volgende stappen
 
+- [x] **i18n / slug-vertalingen (27 juli, opdracht Max)**: alle speler-zichtbare
+      UI-strings lopen nu via `tr("SLUG")` + `res://i18n/strings.csv` (kolommen
+      `keys,en,nl` — 320 sleutels; later talen = extra kolommen). Default-taal
+      **Engels**; wissel via hoofdmenu-knop of `Constants.set_language("nl")`
+      (bewaard in user://settings.cfg). Doctrine-namen/pro/con voor weergave via
+      `Constants.doctrine_display_name()/doctrine_pro()/doctrine_con()` — de
+      DOCTRINE_DATA zelf blijft NL (bestandsnamen/logica). Scene-teksten
+      (card_hand/card_view) vertalen via Godot auto-translate (letterlijke tekst
+      als key in de CSV). Dev-tools (sfeer-paneel, tuner, trainer) bewust NIET
+      vertaald. Bekende restpunten: "1 cannons" (geen meervouds-logica),
+      BARK_DOUBTER_NOM_TEAM_1 heeft 2×%s (pre-existente format-bug), feed-teksten
+      worden gerenderd in de taal van dát moment (taalwissel hernoemt oude
+      kaartjes niet).
+
 - [x] **Solo-hang gefixt (27 juli, laptop)**: de hub bleef "Wachten op de volgende
       fase." tonen terwijl bot-duels minutenlang maalden (medium-AI, cycluslimiet 0,
       3000 stappen — en de tussenstand van een lopend duel wordt niet bewaard, dus

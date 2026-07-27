@@ -125,7 +125,7 @@ func _process(delta: float) -> void:
 			_on_phase_timeout()
 		else:
 			var st: GameState = GameSession.state
-			_top_label.text = "Cyclus %d · Ronde %d · %s · nog %ds" % [
+			_top_label.text = tr("HUD_TOPBAR_TIMER") % [
 				st.cycle, st.round_number, _phase_label(st.phase), int(ceil(_timer_left))]
 			# Aftel-tik in de laatste 5 sec; de laatste 3 sec tikt dezelfde klok
 			# op dubbel tempo en iets hoger — versnelling i.p.v. een apart geluid.
@@ -159,9 +159,9 @@ func _on_resign_pressed() -> void:
 	if ph == Phase.Type.GAME_OVER or ph == Phase.Type.PRE_GAME:
 		return
 	var dlg := ConfirmationDialog.new()
-	dlg.dialog_text = "Weet je zeker dat je wilt opgeven?"
-	dlg.ok_button_text = "Opgeven"
-	dlg.cancel_button_text = "Doorspelen"
+	dlg.dialog_text = tr("MENU_RESIGN_CONFIRM")
+	dlg.ok_button_text = tr("MENU_RESIGN_OK")
+	dlg.cancel_button_text = tr("MENU_RESIGN_CANCEL")
 	dlg.confirmed.connect(func() -> void: GameSession.submit_resign(_human_id))
 	$UI.add_child(dlg)
 	dlg.popup_centered()
@@ -181,7 +181,7 @@ func _on_phase_timeout() -> void:
 		_card_hand._on_confirm_pressed()  # auto-bevestig (altijd geldig)
 	elif ph == Phase.Type.CYCLE_SPAWN and not GameSession.state.spawn_done.get(_human_id, false):
 		_overlay.hide()
-		_update_hud("Tijd om — versterkingen automatisch aangevuld")
+		_update_hud(tr("HUD_TIMEOUT_SPAWN"))
 		GameSession.submit_spawn(_human_id, Validator.aanvul_spawn_actie(GameSession.state, _human_id).spawns)
 	elif Phase.is_linking(ph):
 		_auto_link_human = true
@@ -207,7 +207,7 @@ func _cancel_manual_placement() -> void:
 	for pv in _placement_previews.values():
 		pv.queue_free()
 	_placement_previews = {}
-	_update_hud("Tijd om — standaard-opstelling gebruikt")
+	_update_hud(tr("HUD_TIMEOUT_PLACEMENT"))
 	_confirm_placement()
 
 
@@ -227,7 +227,7 @@ func _auto_action_human() -> void:
 	var action: Dictionary = _human_auto_ai.best_greedy_action(state)
 	if action.is_empty():
 		return
-	_update_hud("Tijd om — het spel koos een zet voor je")
+	_update_hud(tr("HUD_TIMEOUT_ACTION"))
 	match String(action.type):
 		"move":
 			if _kanon_v42(int(action.pawn_id)):
@@ -255,12 +255,14 @@ func _exit_tree() -> void:
 func _show_difficulty_menu() -> void:
 	_card_hand.visible = false
 	_clear_highlights()
-	_top_label.text = "Fog of War"
+	_top_label.text = tr("MENU_TITLE")
 	_prompt_label.text = ""
+	# i18n: de taal-knop toont de ANDERE taal (tikken = wisselen + menu verversen).
+	var taal_optie: String = "Language: English" if Constants.get_language() == "nl" else "Taal: Nederlands"
 	_overlay.show_choice(
-		"Kies je tegenstander",
-		"Tegen welke AI wil je oefenen?",
-		["Easy", "Medium", "Hard", "Ultra — god mode", "Solo-campagne (v4.2)", "Speluitleg", "AI Trainer bekijken", "Model-tuner"],
+		tr("MENU_DIFF_TITLE"),
+		tr("MENU_DIFF_BODY"),
+		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_DIFF_ULTRA"), tr("MENU_DIFF_CAMPAIGN"), tr("MENU_RULES_OPTION"), taal_optie, tr("MENU_DIFF_TRAINER"), tr("MENU_DIFF_TUNER")],
 		_on_menu_choice,
 	)
 
@@ -271,8 +273,12 @@ func _on_menu_choice(index: int) -> void:
 	elif index == 5:
 		_show_rules_overlay(func() -> void: _show_difficulty_menu())
 	elif index == 6:
+		# Taalwissel: opslaan + het menu opnieuw opbouwen in de nieuwe taal.
+		Constants.set_language("en" if Constants.get_language() == "nl" else "nl")
+		_show_difficulty_menu()
+	elif index == 7:
 		get_tree().change_scene_to_file("res://scenes/training/Trainer.tscn")
-	elif index >= 7:
+	elif index >= 8:
 		get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
 	else:
 		ai_difficulty = index
@@ -297,7 +303,7 @@ func _show_rules_overlay(back: Callable) -> void:
 ## Pauzeert de fase-timer zolang het scherm open staat.
 func _build_help_button() -> void:
 	var help := Button.new()
-	help.text = "?"
+	help.text = tr("HUD_BTN_HELP")
 	help.custom_minimum_size = Vector2(64, 64)
 	help.add_theme_font_size_override("font_size", 34)
 	help.anchors_preset = Control.PRESET_TOP_RIGHT
@@ -311,7 +317,7 @@ func _build_help_button() -> void:
 	$UI.add_child(help)
 	# "sfeer"-knopje eronder: opent het sfeer-paneel (zelfde als toets L).
 	var sfeer := Button.new()
-	sfeer.text = "sfeer"
+	sfeer.text = tr("HUD_BTN_AMBIANCE")
 	sfeer.custom_minimum_size = Vector2(64, 40)
 	sfeer.add_theme_font_size_override("font_size", 16)
 	sfeer.anchors_preset = Control.PRESET_TOP_RIGHT
@@ -326,7 +332,7 @@ func _build_help_button() -> void:
 	$UI.add_child(sfeer)
 	# F0.8: opgeven-knop (RESIGN bestaat sinds F0.4c), onder de sfeer-knop.
 	var geef_op := Button.new()
-	geef_op.text = "opgeven"
+	geef_op.text = tr("HUD_BTN_RESIGN")
 	geef_op.custom_minimum_size = Vector2(64, 40)
 	geef_op.add_theme_font_size_override("font_size", 14)
 	geef_op.anchors_preset = Control.PRESET_TOP_RIGHT
@@ -370,17 +376,17 @@ func _update_context_knop() -> void:
 	if _context_knop == null:
 		return
 	if _placement_mode:
-		_context_knop.text = "Ongedaan"
+		_context_knop.text = tr("HUD_BTN_UNDO")
 		_context_knop.visible = true
 		return
 	if _wolf_step_mode:
-		_context_knop.text = "Overslaan"
+		_context_knop.text = tr("HUD_BTN_SKIP")
 		_context_knop.visible = true
 		return
 	var st: GameState = GameSession.state
 	if st != null and st.phase == Phase.Type.ACTION and _selected_pawn_id >= 0 \
 			and st.current_player == _human_id:
-		_context_knop.text = "Deselecteer"
+		_context_knop.text = tr("HUD_BTN_DESELECT")
 		_context_knop.visible = true
 		return
 	_context_knop.visible = false
@@ -416,13 +422,14 @@ func _show_doctrine_menu() -> void:
 	var lines: Array = []
 	for doctrine in Constants.DOCTRINE_DATA.keys():
 		var data: Dictionary = Constants.doctrine_data(doctrine)
-		names.append("%s  (%d× budget %d · %d/%d/%d)" % [
-			data.name, int(data.cards), int(data.budget),
+		names.append(tr("MENU_DOCTRINE_OPTION") % [
+			Constants.doctrine_display_name(doctrine), int(data.cards), int(data.budget),
 			data.comp[0], data.comp[1], data.comp[2]])
-		lines.append("%s:  ✚ %s   ✖ %s" % [data.name, data.pro, data.con])
+		lines.append(tr("MENU_DOCTRINE_LINE") % [Constants.doctrine_display_name(doctrine),
+			Constants.doctrine_pro(doctrine), Constants.doctrine_con(doctrine)])
 	_overlay.show_choice(
-		"Kies je doctrine",
-		"Vast voor de hele partij. Hierna kies je de tegenstander.\nSamenstelling = Infanterie / Cavalerie / Artillerie.\n\n" + "\n".join(lines),
+		tr("MENU_DOCTRINE_TITLE"),
+		tr("MENU_DOCTRINE_BODY") + "\n\n" + "\n".join(lines),
 		names,
 		_on_doctrine_choice,
 		Color.WHITE, true,
@@ -438,13 +445,13 @@ func _on_doctrine_choice(index: int) -> void:
 ## regel (v4.1 §4.1: blinde, gelijktijdige keuze); een vaste factie is
 ## handig om te oefenen tegen een specifieke matchup.
 func _show_opponent_menu() -> void:
-	var names: Array = ["Verrassing (AI kiest blind)"]
+	var names: Array = [tr("MENU_OPP_SURPRISE")]
 	for key in Constants.DOCTRINE_DATA.keys():
 		var data: Dictionary = Constants.doctrine_data(key)
-		names.append("%s  (%d/%d/%d)" % [data.name, data.comp[0], data.comp[1], data.comp[2]])
+		names.append(tr("MENU_OPP_OPTION") % [Constants.doctrine_display_name(key), data.comp[0], data.comp[1], data.comp[2]])
 	_overlay.show_choice(
-		"Tegen wie speel je?",
-		"Kies de factie van de AI, of laat hem blind loten (standaardregel).",
+		tr("MENU_OPP_TITLE"),
+		tr("MENU_OPP_BODY"),
 		names,
 		_on_opponent_choice,
 		Color.WHITE, true,
@@ -465,14 +472,9 @@ func _on_opponent_choice(index: int) -> void:
 ## F2.6 - regelset-keuze: klassiek 4.1 of het v4.2-campagne-duel (economie).
 func _show_ruleset_choice() -> void:
 	_overlay.show_choice(
-		"Welke regels?",
-		"\n".join([
-			"Klassiek: het vertrouwde duel (4.1).",
-			"",
-			"Campagne-duel (v4.2): reserves en spawnen op je achterste rij,",
-			"blinde CP-inzet op je kaarten en het stamina-kanon (rollen/schieten).",
-		]),
-		["Klassiek (4.1)", "Campagne-duel (v4.2)"],
+		tr("MENU_RULESET_TITLE"),
+		tr("MENU_RULESET_BODY"),
+		[tr("MENU_RULESET_CLASSIC"), tr("MENU_RULESET_CAMPAIGN")],
 		_on_ruleset_choice, Color.WHITE, true)
 
 
@@ -506,19 +508,17 @@ func _start_match(difficulty: int) -> void:
 ## Vrije opstelling (v4.1 §2.2). Nu: standaard-opstelling bevestigen;
 ## een sleep-UI voor eigen opstellingen is een latere uitbreiding.
 func _show_placement_overlay() -> void:
-	var human_data: Dictionary = Constants.doctrine_data(_human_doctrine)
-	var ai_data: Dictionary = Constants.doctrine_data(_ai_doctrine)
 	var body := "\n".join([
-		"Doctrines onthuld:",
-		"Jij: %s — ✚ %s" % [human_data.name, human_data.pro],
-		"AI: %s — ✚ %s" % [ai_data.name, ai_data.pro],
+		tr("PHASE_PLACEMENT_REVEAL_HEADER"),
+		tr("PHASE_PLACEMENT_YOU") % [Constants.doctrine_display_name(_human_doctrine), Constants.doctrine_pro(_human_doctrine)],
+		tr("PHASE_PLACEMENT_AI") % [Constants.doctrine_display_name(_ai_doctrine), Constants.doctrine_pro(_ai_doctrine)],
 		"",
-		"Zelf opstellen: eerst je kanonnen, dan je paarden — klik vakken in je twee rijen; de soldaten vullen automatisch aan.",
-		"Standaard: kanonnen vóór op flank en centrum (vrij schootsveld), cavalerie achteraan.",
-		"Doel: 2 pionnen in de haven aan de overkant, of alles uitschakelen.",
+		tr("PHASE_PLACEMENT_MANUAL_HINT"),
+		tr("PHASE_PLACEMENT_DEFAULT_HINT"),
+		tr("PHASE_PLACEMENT_GOAL"),
 	])
-	_update_hud("Opstelling")
-	_overlay.show_choice("Opstelling", body, ["Zelf opstellen", "Standaard opstelling", "Speluitleg"],
+	_update_hud(tr("PHASE_PLACEMENT"))
+	_overlay.show_choice(tr("PHASE_PLACEMENT"), body, [tr("PHASE_PLACEMENT_MANUAL"), tr("PHASE_PLACEMENT_STANDARD"), tr("MENU_RULES_OPTION")],
 		_on_placement_menu_choice, Color.WHITE, true)
 
 
@@ -584,8 +584,8 @@ func _refresh_placement_ui() -> void:
 		return
 	_highlight_tiles(_placement_free_tiles(), Color(0.4, 0.9, 0.9), 0.35)
 	_update_placement_ghost_type()
-	var type_name := "kanonnen" if int(step.type) == Constants.UnitType.ARTILLERY else "paarden"
-	_update_hud("Plaats je %s — klik een vak (nog %d · rechtermuis = ongedaan)" % [type_name, int(step.left)])
+	var type_name := tr("HUD_PLACE_TYPE_CANNONS") if int(step.type) == Constants.UnitType.ARTILLERY else tr("HUD_PLACE_TYPE_HORSES")
+	_update_hud(tr("HUD_PLACE_PROMPT") % [type_name, int(step.left)])
 
 
 ## Ghost-stuk: semi-doorzichtige voorvertoning van het type dat je nu plaatst.
@@ -945,14 +945,10 @@ func _show_cp_overlay() -> void:
 	var maximaal: int = mini(saldo, Validator.expected_define_count(st, _human_id))
 	var opties: Array = []
 	for n in maximaal + 1:
-		opties.append("Geen CP inzetten" if n == 0 else "%d CP (+%d kaartbudget)" % [n, n])
+		opties.append(tr("MENU_CP_NONE") if n == 0 else tr("MENU_CP_OPTION") % [n, n])
 	_overlay.show_choice(
-		"CP inzetten? (saldo %d)" % saldo,
-		"\n".join([
-			"Blind bod: de AI ziet je inzet niet tot de onthulling.",
-			"Elke ingezette CP geeft 1 kaart deze ronde +1 budgetpunt.",
-			"Ingezet = verbrand, ook als je het punt niet gebruikt.",
-		]),
+		tr("MENU_CP_TITLE") % saldo,
+		tr("MENU_CP_BODY"),
 		opties, _on_cp_choice, Color.WHITE, true)
 
 
@@ -971,10 +967,10 @@ func _open_define_hand(bonus: int) -> void:
 	var kaart_aantal: int = Validator.expected_define_count(GameSession.state, _human_id)
 	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus)
 	_card_hand.open_for_define()
-	var uitleg := "Definieer je kaarten (%d× budget %d)" % [kaart_aantal, int(doctrine.budget)]
+	var uitleg := tr("HUD_DEFINE_PROMPT") % [kaart_aantal, int(doctrine.budget)]
 	if bonus > 0:
-		uitleg += " · %d kaart(en) met +1 CP-punt" % bonus
-	_update_hud(uitleg + " — HP = leven · Speed = stappen/acties · Aanval = schade")
+		uitleg += tr("HUD_DEFINE_CP_SUFFIX") % bonus
+	_update_hud(uitleg + tr("HUD_DEFINE_LEGEND"))
 
 
 ## Versterkingen (v4.2): blinde aanvul-keuze; spawns landen op de achterste rij.
@@ -983,16 +979,16 @@ func _show_spawn_overlay() -> void:
 	var pool: Dictionary = st.pools.get(_human_id, {})
 	var suggestie: Array = Validator.aanvul_spawn_actie(st, _human_id).spawns
 	var body := "\n".join([
-		"Reserve: %d soldaten · %d cavalerie · %d kanonnen." % [
+		tr("PHASE_SPAWN_RESERVE") % [
 			int(pool.get("inf", 0)), int(pool.get("cav", 0)), int(pool.get("art", 0))],
-		"Spawns landen als standbeelden op je achterste rij (max %d per cyclus, nog %d dit potje)." % [
+		tr("PHASE_SPAWN_INFO") % [
 			int(st.rules.campaign.get("spawn_max", 3)), st.spawns_over(_human_id)],
-		"De AI kiest blind tegelijk; daarna volgt de onthulling.",
+		tr("PHASE_SPAWN_BLIND"),
 	])
-	var opties: Array = ["Niets spawnen"]
+	var opties: Array = [tr("PHASE_SPAWN_NONE")]
 	if not suggestie.is_empty():
-		opties = ["Verliezen aanvullen (%d)" % suggestie.size(), "Niets spawnen"]
-	_overlay.show_choice("Versterkingen", body, opties, _on_spawn_choice, Color.WHITE, true)
+		opties = [tr("PHASE_SPAWN_REFILL") % suggestie.size(), tr("PHASE_SPAWN_NONE")]
+	_overlay.show_choice(tr("PHASE_SPAWN_TITLE"), body, opties, _on_spawn_choice, Color.WHITE, true)
 
 
 func _on_spawn_choice(index: int) -> void:
@@ -1035,17 +1031,17 @@ func _on_define_confirmed(_cards: Array) -> void:
 # --- Reveal (initiatief-bod, v4.1 §4.3-B) -------------------------------------
 
 func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
-	var body := "Jij (rood): bod %d%% · aanval %d · speed %d\nAI (blauw): bod %d%% · aanval %d · speed %d\n\nHet hoogste aanval-bod krijgt het initiatief:\ndie speler koppelt én handelt straks als eerste." % [
+	var body := tr("PHASE_REVEAL_BODY") % [
 		int(round(float(t1.get("bid", 0.0)) * 100.0)), int(t1.attack), int(t1.stamina),
 		int(round(float(t2.get("bid", 0.0)) * 100.0)), int(t2.attack), int(t2.stamina),
 	]
-	var title := "%s begint met koppelen" % _player_name(initiative_winner)
+	var title := tr("PHASE_REVEAL_TITLE") % _player_name(initiative_winner)
 	var accent := _player_color(initiative_winner)
-	_update_hud("Onthulling")
+	_update_hud(tr("PHASE_REVEAL"))
 	# Trommelroffel bij de onthulling. (initiative-bugel staat nu uit.)
 	Audio.play("reveal")
 	# Audio.play("initiative", 0.6)
-	_overlay.show_choice(title, body, ["Doorgaan"], func(_i: int) -> void: _continue_after_reveal(), accent)
+	_overlay.show_choice(title, body, [tr("MENU_CONTINUE")], func(_i: int) -> void: _continue_after_reveal(), accent)
 
 
 func _continue_after_reveal() -> void:
@@ -1062,7 +1058,7 @@ func _begin_human_linking() -> void:
 	for card in GameSession.state.cards_revealed[_human_id]:
 		flags.append(card.is_linked())
 	_card_hand.open_for_linking(flags)
-	_set_turn_prompt("Jouw beurt — kies een kaart, tik dan een pion", _human_id)
+	_set_turn_prompt(tr("HUD_LINK_PROMPT"), _human_id)
 
 
 func _on_link_card_picked(index: int) -> void:
@@ -1077,12 +1073,12 @@ func _on_link_card_picked(index: int) -> void:
 		return
 	_selected_link_card_id = card.id
 	_highlight_own_unlinked_pawns()
-	_update_hud("Kies een pion om te koppelen")
+	_update_hud(tr("HUD_LINK_PICK_PAWN"))
 
 
 func _on_link_pawn_clicked(pawn_id: int) -> void:
 	if _selected_link_card_id < 0:
-		_update_hud("Kies eerst een kaart onderaan")
+		_update_hud(tr("HUD_LINK_PICK_CARD_FIRST"))
 		return
 	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 	if pawn == null or pawn.owner_id != _human_id or pawn.is_eliminated or pawn.linked_card_id != -1:
@@ -1213,7 +1209,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		if Phase.is_linking(old_phase):
 			# Laat de zojuist gekoppelde pion(nen) even zien vóór de nieuwe ronde.
 			_refresh_all()
-			_update_hud("Ronde afgerond")
+			_update_hud(tr("HUD_ROUND_DONE"))
 			await get_tree().create_timer(0.9).timeout
 		if GameSession.state.round_number <= 1:
 			_clear_footprints()  # nieuwe cyclus: vers slagveld
@@ -1237,7 +1233,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		# de mens kiest via de overlay. Beide binnen -> gelijktijdige reveal.
 		_card_hand.visible = false
 		_refresh_all()
-		_update_hud("Versterkingen")
+		_update_hud(tr("PHASE_SPAWN_TITLE"))
 		if not GameSession.state.spawn_done.get(_ai_id, false):
 			GameSession.submit_spawn(_ai_id, _ai.choose_spawn(GameSession.state))
 		if GameSession.state.phase == Phase.Type.CYCLE_SPAWN \
@@ -1258,7 +1254,7 @@ func _on_turn_changed(player_id: int) -> void:
 			else:
 				_begin_human_linking()
 		else:
-			_set_turn_prompt("Tegenstander koppelt...", player_id)
+			_set_turn_prompt(tr("HUD_OPPONENT_LINKING"), player_id)
 			_auto_link(player_id)
 	elif state.phase == Phase.Type.ACTION:
 		_selected_pawn_id = -1
@@ -1266,13 +1262,13 @@ func _on_turn_changed(player_id: int) -> void:
 		_refresh_all()
 		if player_id == _ai_id:
 			_stop_phase_timer()
-			_set_turn_prompt("Tegenstander is aan zet...", player_id)
+			_set_turn_prompt(tr("HUD_OPPONENT_TURN"), player_id)
 			_ai_action_turn()
 		else:
 			# Beurt-timer voor de mens: tijd om → het spel kiest een zet.
 			_start_phase_timer(PHASE_TIME_LIMIT)
 			# Audio.play("your_turn")  # staat nu uit
-			_set_turn_prompt("Jouw beurt — kies een pion", player_id)
+			_set_turn_prompt(tr("HUD_YOUR_TURN"), player_id)
 
 
 func _ai_action_turn() -> void:
@@ -1336,7 +1332,7 @@ func _on_wolf_step_pending(pawn_id: int) -> void:
 				_wolf_step_tiles.append(neighbor)
 	_clear_highlights()
 	_highlight_tiles(_wolf_step_tiles, Color(0.4, 0.9, 0.9))
-	_update_hud("Gratis Wolf-stap — klik een vak (rechtermuis = overslaan)")
+	_update_hud(tr("HUD_WOLF_STEP"))
 
 
 func _end_wolf_step_mode() -> void:
@@ -2244,21 +2240,21 @@ func _on_game_over(winner_id: int) -> void:
 	_card_hand.visible = false
 	Audio.stop_music()  # sting krijgt de ruimte; ambience loopt door
 	Audio.play("win_fanfare" if winner_id == _human_id else "lose_sting", 0.3)
-	_update_hud("%s wint!" % _player_name(winner_id))
+	_update_hud(tr("END_WINNER") % _player_name(winner_id))
 	if CampaignBridge.duel_actief:
 		# F3.4b: uitslag terugboeken en naar de hub — de campagne gaat door.
 		_overlay.show_choice(
-			"%s wint!" % _player_name(winner_id),
-			"Dit duel telt voor de campagne: verliezen, CP en punten gaan mee terug.",
-			["Terug naar de campagne"],
+			tr("END_WINNER") % _player_name(winner_id),
+			tr("END_CAMPAIGN_BODY"),
+			[tr("END_BACK_TO_CAMPAIGN")],
 			func(_i: int) -> void:
 				CampaignBridge.rond_af(GameSession.state, winner_id)
 				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
 		return
 	_overlay.show_choice(
-		"%s wint!" % _player_name(winner_id),
-		"Het spel is afgelopen.",
-		["Nieuw spel"],
+		tr("END_WINNER") % _player_name(winner_id),
+		tr("END_BODY"),
+		[tr("END_NEW_GAME")],
 		func(_i: int) -> void: _show_difficulty_menu(),
 	)
 
@@ -2270,13 +2266,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		match (event as InputEventKey).keycode:
 			KEY_K:  # screen shake aan/uit (motion sickness)
 				_screen_shake = not _screen_shake
-				_update_hud("Screen shake: %s" % ("aan" if _screen_shake else "uit"))
+				_update_hud(tr("HUD_TOGGLE_SHAKE") % (tr("HUD_ON") if _screen_shake else tr("HUD_OFF")))
 			KEY_J:  # alle combat-feel (stagger/hitstop/vonken/ragdoll) aan/uit
 				_combat_feel = not _combat_feel
-				_update_hud("Combat feel: %s" % ("aan" if _combat_feel else "uit"))
+				_update_hud(tr("HUD_TOGGLE_FEEL") % (tr("HUD_ON") if _combat_feel else tr("HUD_OFF")))
 			KEY_M:  # geluid dempen
 				Audio.set_enabled(not Audio.enabled)
-				_update_hud("Geluid: %s" % ("aan" if Audio.enabled else "uit"))
+				_update_hud(tr("HUD_TOGGLE_SOUND") % (tr("HUD_ON") if Audio.enabled else tr("HUD_OFF")))
 			KEY_L:  # sfeer-paneel: belichting/ambiance live tunen
 				_toggle_ambiance_panel()
 		return
@@ -2378,7 +2374,7 @@ func _update_piece_counts() -> void:
 		red, total_red, blue, total_blue]
 	# F2.6 (v4.2): eigen reserve + CP-saldo (D12: die van de AI blijven geheim).
 	if state.rules.campaign_actief():
-		_count_label.text += "    [color=#bbbbbb]Reserve %d · CP %d[/color]" % [
+		_count_label.text += tr("HUD_COUNT_RESERVE") % [
 			state.pool_total(_human_id), int(state.cp.get(_human_id, 0))]
 
 
@@ -2392,7 +2388,7 @@ func _deselect() -> void:
 	_valid_charges = {}
 	_clear_highlights()
 	_refresh_all()
-	_set_turn_prompt("Jouw beurt — kies een pion", _human_id)
+	_set_turn_prompt(tr("HUD_YOUR_TURN"), _human_id)
 
 
 func _on_tile_clicked(coord: Vector2i) -> void:
@@ -2407,7 +2403,7 @@ func _select_pawn(pawn_id: int) -> void:
 	var state: GameState = GameSession.state
 	if not Rules.can_pawn_act(state, pawn_id):
 		Audio.play("ui_error")
-		_update_hud("Die pion kan niet handelen")
+		_update_hud(tr("HUD_PAWN_CANNOT_ACT"))
 		return
 	_selected_pawn_id = pawn_id
 	_clear_highlights()
@@ -2457,21 +2453,21 @@ func _select_pawn(pawn_id: int) -> void:
 	_highlight_tiles(lane_tiles, Color(1.0, 0.72, 0.2), 0.18)
 	_highlight_tiles(shot_positions, Color(1.0, 0.72, 0.2))
 	_refresh_all()
-	var hint := "groen = beweeg"
+	var hint := tr("HUD_HINT_MOVE")
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
 			if pawn.attack_value >= 2:
-				hint += ", rood = melee, oranje = schot (afstand 2, schade %d)" % Rules.shot_damage(GameSession.state, pawn)
+				hint += tr("HUD_HINT_INF_SHOT") % Rules.shot_damage(GameSession.state, pawn)
 			else:
-				hint += ", rood = melee (Aanval 1: schieten kan niet)"
+				hint += tr("HUD_HINT_INF_NO_SHOT")
 		Constants.UnitType.CAVALRY:
-			hint += ", rood = charge (bewegen + aanval in één)"
+			hint += tr("HUD_HINT_CAV")
 		Constants.UnitType.ARTILLERY:
 			if _valid_shots.is_empty():
-				hint += " (1 stap), oranje = vuurlijn (dracht %d) — geen doelwit in zicht" % Constants.ARTILLERY_RANGE
+				hint += tr("HUD_HINT_ART_NO_TARGET") % Constants.ARTILLERY_RANGE
 			else:
-				hint += " (1 stap), oranje = vuur (dracht %d)" % Constants.ARTILLERY_RANGE
-	_update_hud("%s gekozen — %s (stamina %d)" % [Constants.unit_type_name(pawn.unit_type), hint, pawn.remaining_stamina])
+				hint += tr("HUD_HINT_ART") % Constants.ARTILLERY_RANGE
+	_update_hud(tr("HUD_SELECTED") % [Constants.unit_type_name(pawn.unit_type), hint, pawn.remaining_stamina])
 
 
 ## Voor elke vijand die via een charge bereikbaar is: de beste (kortste) zet
@@ -2651,7 +2647,7 @@ func _clear_highlights() -> void:
 
 func _update_hud(prompt: String = "") -> void:
 	var state: GameState = GameSession.state
-	_top_label.text = "Cyclus %d · Ronde %d · %s" % [
+	_top_label.text = tr("HUD_TOPBAR") % [
 		state.cycle, state.round_number, _phase_label(state.phase)
 	]
 	if prompt != "":
@@ -2661,24 +2657,24 @@ func _update_hud(prompt: String = "") -> void:
 
 func _phase_label(phase: int) -> String:
 	if phase == Phase.Type.PLACEMENT:
-		return "Opstelling"
+		return tr("PHASE_PLACEMENT")
 	if Phase.is_define(phase):
-		return "Definitie"
+		return tr("PHASE_DEFINE")
 	if Phase.is_reveal(phase):
-		return "Onthulling"
+		return tr("PHASE_REVEAL")
 	if Phase.is_linking(phase):
-		return "Koppelen"
+		return tr("PHASE_LINKING")
 	if phase == Phase.Type.ACTION:
-		return "Actie"
+		return tr("PHASE_ACTION")
 	if phase == Phase.Type.GAME_OVER:
-		return "Einde"
+		return tr("PHASE_GAME_OVER")
 	return ""
 
 
 func _player_name(player_id: int) -> String:
 	if player_id != _human_id and CampaignBridge.duel_actief:
-		return "%s (AI)" % CampaignBridge.naam_vijand()  # F3.4b: de campagne-vijand
-	return "Rood (jij)" if player_id == _human_id else "Blauw (AI)"
+		return tr("HUD_PLAYER_CAMPAIGN_AI") % CampaignBridge.naam_vijand()  # F3.4b: de campagne-vijand
+	return tr("HUD_PLAYER_YOU") if player_id == _human_id else tr("HUD_PLAYER_AI")
 
 
 func _player_color(player_id: int) -> Color:

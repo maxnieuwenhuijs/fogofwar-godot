@@ -1,0 +1,345 @@
+keys,en,nl
+HUB_FACTION_TITLE,CHOOSE YOUR FACTION,KIES JE FACTIE
+HUB_FACTION_EXPLAIN,Your faction is locked in for the entire campaign.,Je factie staat vast voor de hele campagne.
+HUB_FACTION_BTN,"%s
++ %s
+- %s","%s
++ %s
+- %s"
+HUB_LEDGER_BTN,Ledger,Grootboek
+HUB_BOTS_BUSY,The bots are at work...,De bots zijn bezig...
+HUB_WAIT_NEXT_PHASE,Awaiting the next phase.,Wachten op de volgende fase.
+HUB_PHASE_NOMINATION,The Council nominates,De Raad nomineert
+HUB_PHASE_DONATION,Donation window,Donatie-venster
+HUB_PHASE_DUELS,The duels,De duels
+HUB_PHASE_TESTAMENT,Last will,Testament
+HUB_PHASE_CIVIL_WAR,CIVIL WAR,BURGEROORLOG
+HUB_PHASE_OVER,Campaign over,Campagne voorbij
+HUB_HEADER,Round %d — %s,Ronde %d — %s
+HUB_CHAMPION,CHAMPION: %s,KAMPIOEN: %s
+HUB_BALANCE,"You (%s, team %d): %d soldiers · %d cavalry · %d cannons · %d CP · %d points%s","Jij (%s, team %d): %d soldaten · %d cavalerie · %d kanonnen · %d CP · %d punten%s"
+HUB_ELIMINATED_SUFFIX,  [ELIMINATED — you now see everything],  [UITGEVALLEN — je ziet nu alles]
+HUB_TEAM_YOURS,YOUR TEAM,JOUW TEAM
+HUB_TEAM_ENEMY,THE ENEMY,DE VIJAND
+HUB_YOU_SUFFIX, (you), (jij)
+HUB_FIGHTING_SUFFIX,  [FIGHTING],  [VECHT]
+HUB_FALLEN,fallen,gevallen
+HUB_MEMBER_BALANCE,%d·%d·%d · %d CP · %d pts,%d·%d·%d · %d CP · %d pt
+HUB_FEED_BARK,"R%d · %s: ""%s""","R%d · %s: ""%s"""
+HUB_DRAW,draw,remise
+HUB_WINS_SHORT,%s wins (%s),%s wint (%s)
+HUB_FEED_REPORT,"R%d · BATTLE REPORT: %s vs %s — %s, %d cycles","R%d · BATTLEREPORT: %s vs %s — %s, %d cycli"
+HUB_REPORT_TOOLTIP,Tap for the full battle report,Tik voor het volledige battlereport
+HUB_REPORT_DRAW,Draw — one tiebreak point each.,Remise — beide een tiebreak-punt.
+HUB_REPORT_WINS,%s wins by %s.,%s wint via %s.
+HUB_REPORT_HEADER,"%s vs %s, round %d — %s (%d cycles)","%s vs %s, ronde %d — %s (%d cycli)"
+HUB_REPORT_LOSSES,"%s: -%d soldiers, -%d cavalry, -%d cannons · CP %+d","%s: -%d soldaten, -%d cavalerie, -%d kanonnen · CP %+d"
+HUB_REPORT_TITLE,Battle report,Battlereport
+HUB_CLOSE,Close,Sluiten
+HUB_NOMINATE_TITLE,Your team nominates: pick the fighters.,Jouw team nomineert: kies de vechters.
+HUB_NAME_YOU,%s (you),%s (jij)
+HUB_VOTE_BTN,Vote,Stem
+HUB_DUEL_TITLE,"YOUR DUEL: you against %s. Everything you own goes onto the board — what you lose is gone, what you spare you keep.","JOUW DUEL: jij tegen %s. Je hele bezit gaat mee het bord op — wat je verliest ben je kwijt, wat je spaart neem je mee."
+HUB_DUEL_PLAY_BTN,Play the duel on the board,Speel het duel op het bord
+HUB_DONATE_TITLE,"Donate to a teammate (max 10 pawns / 3 CP per recipient), or keep it all.","Doneer aan een teamgenoot (max 10 pionnen / 3 CP per ontvanger), of houd alles."
+HUB_UNIT_INF,inf,inf
+HUB_UNIT_CAV,cav,cav
+HUB_UNIT_ART,art,art
+HUB_UNIT_CP,cp,cp
+HUB_DONATE_BTN,Donate,Doneer
+HUB_DONATE_DONE_BTN,Done donating,Klaar met doneren
+HUB_WILL_TITLE,You have fallen. Bequeath at most half to at most 2 recipients — the rest burns.,Je bent uitgevallen. Laat maximaal de helft na aan maximaal 2 ontvangers — de rest verbrandt.
+HUB_WILL_TARGET,%s (team %d),%s (team %d)
+HUB_WILL_HALF_BTN,Leave half to this player,Laat de helft na aan deze speler
+HUB_WILL_NONE_BTN,Leave nothing (everything burns),Laat niets na (alles verbrandt)
+LEDGER_TITLE,LEDGER — the campaign books,GROOTBOEK — de campagne-boekhouding
+LEDGER_CLOSE_BTN,Close,Sluiten
+LEDGER_EXPLAIN,"The books are public: every donation, every loss and every last will is on record. Tap a column to sort.","De boekhouding is openbaar: elke donatie, elk verlies en elk testament staat erin. Tik een kolom om te sorteren."
+LEDGER_COL_NAME,Name,Naam
+LEDGER_COL_TEAM,Team,Team
+LEDGER_COL_STATUS,Status,Status
+LEDGER_COL_INF,Inf.,Sold.
+LEDGER_COL_CAV,Cav.,Cav.
+LEDGER_COL_ART,Guns,Kan.
+LEDGER_COL_TOTAL,Total,Totaal
+LEDGER_COL_CP,CP,CP
+LEDGER_COL_POINTS,Points,Punten
+LEDGER_YOU_SUFFIX,  (you),  (jij)
+LEDGER_STATUS_ACTIVE,active,actief
+LEDGER_STATUS_FALLEN,fallen,gevallen
+BRACKET_TITLE,CIVIL WAR — knockout for the championship,BURGEROORLOG — knock-out om het kampioenschap
+BRACKET_DONE,finished,afgerond
+BRACKET_NOW_PLAYING,NOW ON THE BOARD,NU OP HET BORD
+BRACKET_DUEL_ROW,%s  vs  %s — %s,%s  vs  %s — %s
+BRACKET_QUEUE_ROW,Waiting in line: %s  vs  %s,In de wachtrij: %s  vs  %s
+BRACKET_REMAINING,Still in the fight: %s,Nog in de strijd: %s
+CARD_DEFINE_TITLE,Define your cards,Definieer je kaarten
+CARD_DEFINE_HINT,Distribute %d points (min. 1 per stat). Press Confirm.,Verdeel %d punten (min. 1 per stat). Druk op Bevestigen.
+CARD_LINK_TITLE,Link your cards,Koppel je kaarten
+CARD_LINK_HINT,"Pick a card, then tap a pawn.","Kies een kaart, tik dan een pion."
+CARD_TITLE,Card %d,Kaart %d
+Definieer je kaarten,Define your cards,Definieer je kaarten
+Verdeel 7 punten (min. 1 per stat).,Distribute 7 points (min. 1 per stat).,Verdeel 7 punten (min. 1 per stat).
+Bevestigen,Confirm,Bevestigen
+STAMINA,SPEED,STAMINA
+AANVAL,ATTACK,AANVAL
+Gekoppeld,Linked,Gekoppeld
+DOCTRINE_0_NAME,Pig,Varken
+DOCTRINE_0_PRO,All-rounder with no weaknesses,Allrounder zonder zwaktes
+DOCTRINE_0_CON,Best at nothing,Nergens de beste in
+DOCTRINE_1_NAME,Mouse,Muis
+DOCTRINE_1_PRO,"4 cards, +1 Speed on every mouse, moves through own pawns (swarm)","4 kaarten, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)"
+DOCTRINE_1_CON,"Budget 5: stats capped at 3, no cannons","Budget 5: stats max 3, geen kanonnen"
+DOCTRINE_2_NAME,Lion,Leeuw
+DOCTRINE_2_PRO,Budget 9: monster cards (up to Attack 7) and cannons with range 7,Budget 9: monsterkaarten (tot Aanval 7) en kanonnen met dracht 7
+DOCTRINE_2_CON,Only 2 cards per round and 18 pawns,Maar 2 kaarten per ronde en 18 pionnen
+DOCTRINE_3_NAME,Bear,Beer
+DOCTRINE_3_PRO,Every link grants a free +1 HP: walls of up to 6 HP,Elke koppeling gratis +1 HP: muren tot 6 HP
+DOCTRINE_3_CON,Speed capped at 3: slow across the board,Speed max 3: traag over het bord
+DOCTRINE_4_NAME,Wolf,Wolf
+DOCTRINE_4_PRO,Free step after every melee; cavalry also jumps over enemy infantry,Gratis stap na elke melee; cavalerie springt óók over vijandelijke infanterie
+DOCTRINE_4_CON,No step after shots; light composition,Stap geldt niet na schoten; lichte samenstelling
+DOCTRINE_5_NAME,Crocodile,Krokodil
+DOCTRINE_5_PRO,"Camouflage: link stays secret until first damage, and cavalry gets +1 Speed (ambush)","Schutkleur: koppeling geheim tot eerste schade, en cavalerie +1 Speed (hinderlaag)"
+DOCTRINE_5_CON,The cards themselves are public; standard army,Kaarten zelf zijn openbaar; standaard leger
+UNIT_INFANTRY,Infantry,Infanterie
+UNIT_CAVALRY,Cavalry,Cavalerie
+UNIT_ARTILLERY,Artillery,Artillerie
+HUD_TOPBAR_TIMER,Cycle %d · Round %d · %s · %ds left,Cyclus %d · Ronde %d · %s · nog %ds
+HUD_TOPBAR,Cycle %d · Round %d · %s,Cyclus %d · Ronde %d · %s
+MENU_TITLE,Fog of War,Fog of War
+MENU_RESIGN_CONFIRM,Are you sure you want to surrender?,Weet je zeker dat je wilt opgeven?
+MENU_RESIGN_OK,Surrender,Opgeven
+MENU_RESIGN_CANCEL,Keep fighting,Doorspelen
+HUD_TIMEOUT_SPAWN,Time's up — reinforcements filled in automatically,Tijd om — versterkingen automatisch aangevuld
+HUD_TIMEOUT_PLACEMENT,Time's up — default deployment used,Tijd om — standaard-opstelling gebruikt
+HUD_TIMEOUT_ACTION,Time's up — the game picked a move for you,Tijd om — het spel koos een zet voor je
+MENU_DIFF_TITLE,Choose your opponent,Kies je tegenstander
+MENU_DIFF_BODY,Which AI do you want to practice against?,Tegen welke AI wil je oefenen?
+MENU_DIFF_EASY,Easy,Easy
+MENU_DIFF_MEDIUM,Medium,Medium
+MENU_DIFF_HARD,Hard,Hard
+MENU_DIFF_ULTRA,Ultra — god mode,Ultra — god mode
+MENU_DIFF_CAMPAIGN,Solo campaign (v4.2),Solo-campagne (v4.2)
+MENU_RULES_OPTION,How to play,Speluitleg
+MENU_DIFF_TRAINER,View AI Trainer,AI Trainer bekijken
+MENU_DIFF_TUNER,Model tuner,Model-tuner
+HUD_BTN_HELP,?,?
+HUD_BTN_AMBIANCE,ambiance,sfeer
+HUD_BTN_RESIGN,surrender,opgeven
+HUD_BTN_UNDO,Undo,Ongedaan
+HUD_BTN_SKIP,Skip,Overslaan
+HUD_BTN_DESELECT,Deselect,Deselecteer
+MENU_DOCTRINE_TITLE,Choose your doctrine,Kies je doctrine
+MENU_DOCTRINE_BODY,"Locked in for the whole match. After this you pick your opponent.
+Composition = Infantry / Cavalry / Artillery.","Vast voor de hele partij. Hierna kies je de tegenstander.
+Samenstelling = Infanterie / Cavalerie / Artillerie."
+MENU_DOCTRINE_OPTION,%s  (%d× budget %d · %d/%d/%d),%s  (%d× budget %d · %d/%d/%d)
+MENU_DOCTRINE_LINE,%s:  ✚ %s   ✖ %s,%s:  ✚ %s   ✖ %s
+MENU_OPP_TITLE,Who are you fighting?,Tegen wie speel je?
+MENU_OPP_BODY,"Pick the AI's faction, or let it draw blind (standard rule).","Kies de factie van de AI, of laat hem blind loten (standaardregel)."
+MENU_OPP_SURPRISE,Surprise (AI picks blind),Verrassing (AI kiest blind)
+MENU_OPP_OPTION,%s  (%d/%d/%d),%s  (%d/%d/%d)
+MENU_RULESET_TITLE,Which rules?,Welke regels?
+MENU_RULESET_BODY,"Classic: the familiar duel (4.1).
+
+Campaign duel (v4.2): reserves and spawns on your back row,
+blind CP bids on your cards and the stamina cannon (roll/shoot).","Klassiek: het vertrouwde duel (4.1).
+
+Campagne-duel (v4.2): reserves en spawnen op je achterste rij,
+blinde CP-inzet op je kaarten en het stamina-kanon (rollen/schieten)."
+MENU_RULESET_CLASSIC,Classic (4.1),Klassiek (4.1)
+MENU_RULESET_CAMPAIGN,Campaign duel (v4.2),Campagne-duel (v4.2)
+PHASE_PLACEMENT_REVEAL_HEADER,Doctrines revealed:,Doctrines onthuld:
+PHASE_PLACEMENT_YOU,You: %s — ✚ %s,Jij: %s — ✚ %s
+PHASE_PLACEMENT_AI,AI: %s — ✚ %s,AI: %s — ✚ %s
+PHASE_PLACEMENT_MANUAL_HINT,"Deploy yourself: cannons first, then horses — click squares in your two rows; the soldiers fill in automatically.","Zelf opstellen: eerst je kanonnen, dan je paarden — klik vakken in je twee rijen; de soldaten vullen automatisch aan."
+PHASE_PLACEMENT_DEFAULT_HINT,"Default: cannons up front on flank and center (clear field of fire), cavalry at the rear.","Standaard: kanonnen vóór op flank en centrum (vrij schootsveld), cavalerie achteraan."
+PHASE_PLACEMENT_GOAL,"Goal: 2 pawns in the haven on the far side, or eliminate everything.","Doel: 2 pionnen in de haven aan de overkant, of alles uitschakelen."
+PHASE_PLACEMENT_MANUAL,Deploy yourself,Zelf opstellen
+PHASE_PLACEMENT_STANDARD,Default deployment,Standaard opstelling
+HUD_PLACE_TYPE_CANNONS,cannons,kanonnen
+HUD_PLACE_TYPE_HORSES,horses,paarden
+HUD_PLACE_PROMPT,Place your %s — click a square (%d left · right-click = undo),Plaats je %s — klik een vak (nog %d · rechtermuis = ongedaan)
+MENU_CP_TITLE,Bet CP? (balance %d),CP inzetten? (saldo %d)
+MENU_CP_BODY,"Blind bid: the AI won't see your bet until the reveal.
+Each CP you bet gives 1 card +1 budget point this round.
+Bet = burned, even if you don't use the point.","Blind bod: de AI ziet je inzet niet tot de onthulling.
+Elke ingezette CP geeft 1 kaart deze ronde +1 budgetpunt.
+Ingezet = verbrand, ook als je het punt niet gebruikt."
+MENU_CP_NONE,Bet no CP,Geen CP inzetten
+MENU_CP_OPTION,%d CP (+%d card budget),%d CP (+%d kaartbudget)
+HUD_DEFINE_PROMPT,Define your cards (%d× budget %d),Definieer je kaarten (%d× budget %d)
+HUD_DEFINE_CP_SUFFIX, · %d card(s) with +1 CP point, · %d kaart(en) met +1 CP-punt
+HUD_DEFINE_LEGEND, — HP = life · Speed = steps/actions · Attack = damage, — HP = leven · Speed = stappen/acties · Aanval = schade
+PHASE_SPAWN_TITLE,Reinforcements,Versterkingen
+PHASE_SPAWN_RESERVE,Reserve: %d soldiers · %d cavalry · %d cannons.,Reserve: %d soldaten · %d cavalerie · %d kanonnen.
+PHASE_SPAWN_INFO,"Spawns land as statues on your back row (max %d per cycle, %d left this match).","Spawns landen als standbeelden op je achterste rij (max %d per cyclus, nog %d dit potje)."
+PHASE_SPAWN_BLIND,The AI picks blind at the same time; then comes the reveal.,De AI kiest blind tegelijk; daarna volgt de onthulling.
+PHASE_SPAWN_NONE,Spawn nothing,Niets spawnen
+PHASE_SPAWN_REFILL,Replace losses (%d),Verliezen aanvullen (%d)
+PHASE_REVEAL_BODY,"You (red): bid %d%% · attack %d · speed %d
+AI (blue): bid %d%% · attack %d · speed %d
+
+The highest attack bid takes the initiative:
+that player links and acts first.","Jij (rood): bod %d%% · aanval %d · speed %d
+AI (blauw): bod %d%% · aanval %d · speed %d
+
+Het hoogste aanval-bod krijgt het initiatief:
+die speler koppelt én handelt straks als eerste."
+PHASE_REVEAL_TITLE,%s starts linking,%s begint met koppelen
+MENU_CONTINUE,Continue,Doorgaan
+HUD_LINK_PROMPT,"Your turn — pick a card, then tap a pawn","Jouw beurt — kies een kaart, tik dan een pion"
+HUD_LINK_PICK_PAWN,Pick a pawn to link,Kies een pion om te koppelen
+HUD_LINK_PICK_CARD_FIRST,Pick a card below first,Kies eerst een kaart onderaan
+HUD_ROUND_DONE,Round complete,Ronde afgerond
+HUD_OPPONENT_LINKING,Opponent is linking...,Tegenstander koppelt...
+HUD_OPPONENT_TURN,Opponent is moving...,Tegenstander is aan zet...
+HUD_YOUR_TURN,Your turn — pick a pawn,Jouw beurt — kies een pion
+HUD_WOLF_STEP,Free Wolf step — click a square (right-click = skip),Gratis Wolf-stap — klik een vak (rechtermuis = overslaan)
+HUD_TOGGLE_SHAKE,Screen shake: %s,Screen shake: %s
+HUD_TOGGLE_FEEL,Combat feel: %s,Combat feel: %s
+HUD_TOGGLE_SOUND,Sound: %s,Geluid: %s
+HUD_ON,on,aan
+HUD_OFF,off,uit
+END_WINNER,%s wins!,%s wint!
+END_CAMPAIGN_BODY,"This duel counts for the campaign: losses, CP and points carry back.","Dit duel telt voor de campagne: verliezen, CP en punten gaan mee terug."
+END_BACK_TO_CAMPAIGN,Back to the campaign,Terug naar de campagne
+END_BODY,The game is over.,Het spel is afgelopen.
+END_NEW_GAME,New game,Nieuw spel
+HUD_PAWN_CANNOT_ACT,That pawn cannot act,Die pion kan niet handelen
+HUD_HINT_MOVE,green = move,groen = beweeg
+HUD_HINT_INF_SHOT,", red = melee, orange = shot (range 2, damage %d)",", rood = melee, oranje = schot (afstand 2, schade %d)"
+HUD_HINT_INF_NO_SHOT,", red = melee (Attack 1: shooting not possible)",", rood = melee (Aanval 1: schieten kan niet)"
+HUD_HINT_CAV,", red = charge (move + attack in one)",", rood = charge (bewegen + aanval in één)"
+HUD_HINT_ART_NO_TARGET," (1 step), orange = firing lane (range %d) — no target in sight"," (1 stap), oranje = vuurlijn (dracht %d) — geen doelwit in zicht"
+HUD_HINT_ART," (1 step), orange = fire (range %d)"," (1 stap), oranje = vuur (dracht %d)"
+HUD_SELECTED,%s selected — %s (stamina %d),%s gekozen — %s (stamina %d)
+HUD_COUNT_RESERVE,    [color=#bbbbbb]Reserve %d · CP %d[/color],    [color=#bbbbbb]Reserve %d · CP %d[/color]
+PHASE_PLACEMENT,Deployment,Opstelling
+PHASE_DEFINE,Define,Definitie
+PHASE_REVEAL,Reveal,Onthulling
+PHASE_LINKING,Linking,Koppelen
+PHASE_ACTION,Action,Actie
+PHASE_GAME_OVER,End,Einde
+HUD_PLAYER_CAMPAIGN_AI,%s (AI),%s (AI)
+HUD_PLAYER_YOU,Red (you),Rood (jij)
+HUD_PLAYER_AI,Blue (AI),Blauw (AI)
+HELP_TITLE,How to Play,Speluitleg
+HELP_CLOSE,Close,Sluiten
+HELP_TAB_GAME_TITLE,The Game,Het spel
+HELP_TAB_TURNS_TITLE,Turns,Beurten
+HELP_TAB_UNITS_TITLE,Units,Eenheden
+HELP_TAB_COMBAT_TITLE,Combat,Vechten
+HELP_TAB_FACTIONS_TITLE,Factions,Facties
+HELP_GAME_WHAT_TITLE,[b]What is Fog of War?[/b],[b]Wat is Fog of War?[/b]
+HELP_GAME_WHAT_BODY,"Two armies face off on a board of 11×11 tiles. You are red, the AI is blue.","Twee legers staan tegenover elkaar op een bord van 11×11 vakken. Jij bent rood, de AI is blauw."
+HELP_GAME_WIN_TITLE,[b]How to win[/b],[b]Zo win je[/b]
+HELP_GAME_WIN_1,"• Get [b]2 of your pawns[/b] onto the harbor on the far side (the colored edge tiles), or","• Zet [b]2 van je pionnen[/b] op de haven aan de overkant (de gekleurde randvakken), óf"
+HELP_GAME_WIN_2,• defeat [b]all[/b] enemy pawns.,• versla [b]alle[/b] vijandelijke pionnen.
+HELP_GAME_IDEA_TITLE,[b]The key idea[/b],[b]Het belangrijkste idee[/b]
+HELP_GAME_IDEA_BODY,"Your pawns can only act once they have a [b]card[/b]. A pawn without a card is ""asleep"": it can do nothing and dies to a single hit or shot.","Je pionnen kunnen pas iets als ze een [b]kaart[/b] hebben. Een pion zonder kaart ""slaapt"": hij kan niks en gaat dood aan één klap of één schot."
+HELP_GAME_TYPES_BODY,"Every pawn has a fixed type you can tell from its model: the soldier (with a rifle), the beast (the big brother, a head taller than the rest) and the cannon (with wheels). The card sets how strong it is this round; the type sets what it can do.","Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het beest (de grote broer, kop groter dan de rest) en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán."
+HELP_GAME_BARS_BODY,"[b]Above every active pawn[/b] you see pips: green = health (HP), blue = energy (Speed), orange = attack power.","[b]Boven elke actieve pion[/b] zie je blokjes: groen = leven (HP), blauw = energie (Speed), oranje = aanvalskracht."
+HELP_GAME_SETUP_TITLE,[b]Deployment[/b],[b]Opstellen[/b]
+HELP_GAME_SETUP_BODY,"Before battle you deploy your army on your own two rows: first your cannons, then your beasts (click a tile; right-click = undo). The soldiers fill in the rest automatically. In a hurry? Pick the default deployment.","Vóór de slag zet je je leger neer op je twee eigen rijen: eerst je kanonnen, dan je beesten (klik een vak; rechtermuis = ongedaan). De soldaten vullen de rest automatisch aan. Liever snel? Kies de standaard-opstelling."
+HELP_TURNS_INTRO,[b]The game runs in cycles. Each cycle:[/b],[b]Het spel gaat in cycli. Elke cyclus:[/b]
+HELP_TURNS_CARDS_TITLE,[b]1. Build cards[/b] (3 rounds),[b]1. Kaarten maken[/b] (3 rondes)
+HELP_TURNS_CARDS_BODY,You split points across HP / Speed / Attack. The total is always your budget (Pig: 7).,Je verdeelt punten over HP / Speed / Aanval. De som is altijd je budget (Varken: 7).
+HELP_TURNS_REVEAL_TITLE,[b]2. Reveal[/b],[b]2. Laten zien[/b]
+HELP_TURNS_REVEAL_BODY,"Both players reveal their cards. Whoever put the most into Attack (the highest ""bid"") gets the [b]initiative[/b]: they link first and later strike first.","Beide spelers tonen hun kaarten. Wie het meest op Aanval heeft ingezet (het hoogste ""bod"") krijgt het [b]initiatief[/b]: die mag eerst koppelen en straks eerst slaan."
+HELP_TURNS_LINK_TITLE,[b]3. Link[/b],[b]3. Koppelen[/b]
+HELP_TURNS_LINK_BODY,"Taking turns, you place a card on one of your own pawns. That pawn wakes up with the card's stats.",Om de beurt leg je een kaart op een eigen pion. Die pion wordt wakker met de stats van de kaart.
+HELP_TURNS_FIGHT_TITLE,[b]4. Fight (action phase)[/b],[b]4. Vechten (actiefase)[/b]
+HELP_TURNS_FIGHT_BODY,"Taking turns, you perform [b]one action[/b] with one pawn. Speed is your pawn's energy:",Om de beurt doe je [b]één actie[/b] met één pion. Speed is de energie van je pion:
+HELP_TURNS_FIGHT_COST_1,• walking one step costs 1,• een stap lopen kost 1
+HELP_TURNS_FIGHT_COST_2,• striking or shooting costs 1,• slaan of schieten kost 1
+HELP_TURNS_FIGHT_COST_3,• charge (beast) costs steps + 1,• charge (beest) kost stappen + 1
+HELP_TURNS_FIGHT_AGAIN,"A pawn may act again later in the cycle, as long as it has energy left.","Een pion mag later in de cyclus wéér, zolang hij energie heeft."
+HELP_TURNS_NEWCYCLE_TITLE,[b]5. New cycle[/b],[b]5. Nieuwe cyclus[/b]
+HELP_TURNS_NEWCYCLE_BODY,"Nobody can act anymore? Then all cards expire and everything starts over — with the pawns still alive, right where they stand.","Kan niemand meer iets doen? Dan vervallen alle kaarten en begint alles opnieuw — met de pionnen die nog leven, op de plek waar ze staan."
+HELP_TURNS_TIMER_TITLE,[b]Turn timer[/b],[b]Beurt-timer[/b]
+HELP_TURNS_TIMER_BODY,"You get 20 seconds per decision (see the counter at the top). Time's up? Then the game chooses for you: default deployment, cards confirmed, auto-linked, or a sensible move in combat. The timer pauses while you read this guide.","Je hebt 20 seconden per beslissing (zie de teller bovenin). Tijd om? Dan kiest het spel voor je: standaard-opstelling, kaarten bevestigd, automatisch gekoppeld, of een verstandige zet in het gevecht. De timer pauzeert als je deze uitleg leest."
+HELP_UNITS_INF_TITLE,[b]Soldier (infantry)[/b],[b]Soldaat (infanterie)[/b]
+HELP_UNITS_INF_1,• Walks as far as its energy allows.,• Loopt zo ver als zijn energie reikt.
+HELP_UNITS_INF_2,• Strikes an enemy on an adjacent tile.,• Slaat een vijand op het vak ernaast.
+HELP_UNITS_INF_3,• Or shoots at [b]exactly 2 tiles[/b] range (damage = your full Attack).,• Of schiet op [b]precies 2 vakken[/b] afstand (schade = je volle Aanval).
+HELP_UNITS_INF_4,• Strong on defense: whoever strikes it without killing it takes −1 in return.,"• Sterk in de verdediging: wie hem slaat en niet doodt, krijgt zelf −1."
+HELP_UNITS_CAV_TITLE,[b]Beast (cavalry)[/b],[b]Beest (cavalerie)[/b]
+HELP_UNITS_CAV_1,"• [b]Charge[/b]: move and strike in one turn — just click a red enemy, even one further away.","• [b]Charge[/b]: lopen én slaan in één beurt — klik gewoon een rode vijand aan, ook verderop."
+HELP_UNITS_CAV_2,• Jumps over your [b]own[/b] pawns.,• Springt over je [b]eigen[/b] pionnen heen.
+HELP_UNITS_CAV_3,"• If it kills its target, it moves into the freed tile: that's how it gains ground.","• Doodt hij zijn doelwit, dan schuift hij het vrije vak in: zo wint hij terrein."
+HELP_UNITS_CAV_4,"• Can never shoot, and it retaliates hard: −2 for whoever pokes it without finishing it off.","• Kan nooit schieten, en terugslaan doet hij hard: −2 voor wie hem prikt en niet afmaakt."
+HELP_UNITS_ART_TITLE,[b]Cannon (artillery)[/b],[b]Kanon (artillerie)[/b]
+HELP_UNITS_ART_1,• Does [b]1 thing per turn[/b]: 1 step or 1 shot.,• Doet [b]1 ding per beurt[/b]: 1 stap lopen óf 1 schot.
+HELP_UNITS_ART_2,• Shoots up to [b]6 tiles[/b] in a straight line (Lion: 7) at full Attack damage.,• Schiet tot [b]6 vakken[/b] ver in een rechte lijn (Leeuw: 7) met volle Aanval-schade.
+HELP_UNITS_ART_3,• Can [b]never[/b] hit the adjacent tile (dead zone) and cannot strike — get close and it is defenseless.,• Kan [b]nooit[/b] het vak ernaast raken (dode zone) en niet slaan — kom dichtbij en hij is weerloos.
+HELP_UNITS_ART_4,• Speed = how many times it may act per cycle.,• Speed = hoe vaak hij per cyclus iets mag doen.
+HELP_COMBAT_COLORS_TITLE,[b]The colors on the board[/b],[b]De kleuren op het bord[/b]
+HELP_COMBAT_COLORS_1,• [color=#55dd66]Green[/color] = you can walk there (the number = energy cost),• [color=#55dd66]Groen[/color] = daar kun je lopen (het cijfer = energie-kosten)
+HELP_COMBAT_COLORS_2,• [color=#f04545]Red[/color] = you can strike that enemy (or charge with the beast),• [color=#f04545]Rood[/color] = die vijand kun je slaan (of charge met het beest)
+HELP_COMBAT_COLORS_3,• [color=#ffb054]Orange[/color] = you can shoot that enemy (faint orange = your line of fire),• [color=#ffb054]Oranje[/color] = die vijand kun je beschieten (vaag oranje = je vuurlijn)
+HELP_COMBAT_COLORS_4,• [color=#66dddd]Cyan[/color] = free Wolf step after a melee,• [color=#66dddd]Cyaan[/color] = gratis Wolf-stap na een melee
+HELP_COMBAT_MELEE_TITLE,[b]Striking (melee)[/b],[b]Slaan (melee)[/b]
+HELP_COMBAT_MELEE_BODY,"You deal your full Attack as damage. If the target dies, you MUST move into the freed tile — that's how you advance.","Je doet je volle Aanval als schade. Gaat het doelwit dood, dan MOET je het vrije vak in — zo ruk je op."
+HELP_COMBAT_RETAL_TITLE,[b]Retaliation[/b],[b]Terugslag[/b]
+HELP_COMBAT_RETAL_BODY,"If the defender survives your hit, it strikes back:","Overleeft de verdediger jouw klap, dan slaat hij terug:"
+HELP_COMBAT_RETAL_VALUES,• soldier: [b]−1[/b]    • beast: [b]−2[/b]    • cannon: [b]−0[/b] (defenseless),• soldaat: [b]−1[/b]    • beest: [b]−2[/b]    • kanon: [b]−0[/b] (weerloos)
+HELP_COMBAT_RETAL_NOTE,Sleeping pawns never strike back. Shooting never draws retaliation.,Slapende pionnen slaan nooit terug. Schieten krijgt nooit terugslag.
+HELP_COMBAT_SHOOT_TITLE,[b]Shooting[/b],[b]Schieten[/b]
+HELP_COMBAT_SHOOT_1,• Hits anything in a clear straight line — sleeping pawns too (they die instantly).,• Raakt alles in een vrije rechte lijn — ook slapende pionnen (die gaan meteen dood).
+HELP_COMBAT_SHOOT_2,"• But: [b]any[/b] pawn in between blocks the shot, including your own.","• Maar: [b]elke[/b] pion ertussen blokkeert het schot, ook je eigen."
+HELP_COMBAT_SHOOT_3,• Shooting never captures a tile; only walking and striking gain ground.,• Schieten verovert nooit een vak; alleen lopen en slaan winnen terrein.
+HELP_COMBAT_TIP,[b]Tip[/b]: right-click = deselect pawn.,[b]Tip[/b]: rechtermuisklik = pion deselecteren.
+HELP_COMBAT_KEYS,[b]Keys[/b]: K = screen shake on/off · J = all hit effects on/off · M = mute sound.,[b]Toetsen[/b]: K = schermtrilling aan/uit · J = alle klap-effecten aan/uit · M = geluid dempen.
+HELP_FACTIONS_INTRO,[b]Pick a faction (doctrine) before the match. It determines your army and your special power.[/b],[b]Kies vóór de partij een factie (doctrine). Die bepaalt je leger en je speciale kracht.[/b]
+HELP_FACTIONS_COMP,Composition = soldiers / beasts / cannons.,Samenstelling = soldaten / beesten / kanonnen.
+HELP_FACTIONS_ROW,[b]%s[/b] — %d cards × budget %d · army %d/%d/%d,[b]%s[/b] — %d kaarten × budget %d · leger %d/%d/%d
+HELP_FACTIONS_TRIANGLE,"[b]Balance triangle[/b]: cannons > soldiers (range), soldiers > beasts (−1 retaliation and cheap), beasts > cannons (dive into the dead zone and strike).","[b]Balans-driehoek[/b]: kanonnen > soldaten (dracht), soldaten > beesten (terugslag −1 en goedkoop), beesten > kanonnen (dode zone induiken en slaan)."
+SOLO_NAME_SYSTEM,System,Systeem
+SOLO_FEED_RESUMED,Campaign resumed in round %d.,Campagne hervat in ronde %d.
+SOLO_NAME_LOTING,The Draw,De Loting
+SOLO_FEED_LOTING,Round 1: the draw decides the pairs — everyone to the board!,Ronde 1: het lot bepaalt de paren — iedereen het bord op!
+SOLO_BUSY_BOT_DUEL,The bots are playing duel %d of %d: %s vs %s...,De bots spelen duel %d van %d: %s vs %s...
+BARK_LOYAL_NOM_TEAM_1,"For the team, %s. Make us proud.","Voor het team, %s. Maak ons trots."
+BARK_LOYAL_NOM_TEAM_2,"You are our spear, %s.","Jij bent onze speer, %s."
+BARK_LOYAL_NOM_SELF_1,I'll go myself. Duty is duty.,Ik ga zelf. Plicht is plicht.
+BARK_LOYAL_DONATE_1,"Take my troops, %s. Win this for us.","Neem mijn troepen, %s. Win voor ons."
+BARK_LOYAL_WILL_1,My legacy serves the team. Farewell.,Mijn nalatenschap dient het team. Vaarwel.
+BARK_LOYAL_WILL_ENEMY_1,This... I never thought I'd do this.,Dit... had ik nooit gedacht te doen.
+BARK_RAT_NOM_TEAM_1,Someone has to do it. Not me.,Iemand moet het doen. Niet ik.
+BARK_RAT_NOM_TEAM_2,%s seems... suitable.,%s lijkt me... geschikt.
+BARK_RAT_NOM_SELF_1,"If I must, I must. Regrettably.","Als het moet, dan moet het. Helaas."
+BARK_RAT_DONATE_1,"A trifle. Remember this, %s.","Een kleinigheid. Onthoud dit, %s."
+BARK_RAT_WILL_1,"If I fall, someday you fall too.","Als ik val, val jij ooit ook."
+BARK_RAT_WILL_ENEMY_1,The enemy pays better than my 'friends'.,De vijand betaalt beter dan mijn 'vrienden'.
+BARK_MISER_NOM_TEAM_1,%s fights. I guard the stockpile.,%s vecht. Ik bewaak de voorraad.
+BARK_MISER_NOM_SELF_1,Fine then. But this will cost you.,Vooruit dan. Maar dit kost jullie wat.
+BARK_MISER_DONATE_1,One pawn. That's all you get.,Eén pion. Meer krijg je niet.
+BARK_MISER_WILL_1,My treasures... divide them wisely. Or don't.,Mijn schatten... verdeel ze wijs. Of niet.
+BARK_MISER_WILL_ENEMY_1,Better with them than burned.,Beter bij hen dan verbrand.
+BARK_BERSERKER_NOM_TEAM_1,"Let ME go! ... Fine, %s then.","Laat MIJ gaan! ... Prima, %s dan."
+BARK_BERSERKER_NOM_SELF_1,FINALLY. Send the biggest one they've got!,EINDELIJK. Stuur de grootste die ze hebben!
+BARK_BERSERKER_DONATE_1,Here. Hit harder.,Hier. Sla harder.
+BARK_BERSERKER_WILL_1,I die standing. Take my axe.,Ik sterf staand. Neem mijn bijl.
+BARK_BERSERKER_WILL_ENEMY_1,Respect for a worthy foe.,Respect voor een waardige vijand.
+BARK_STRATEGIST_NOM_TEAM_1,The numbers point to %s. Simple.,De cijfers wijzen %s aan. Simpel.
+BARK_STRATEGIST_NOM_SELF_1,Statistically speaking... I am the best option.,Statistisch gezien... ben ik de beste optie.
+BARK_STRATEGIST_DONATE_1,Precisely measured. Use it well.,Precies afgewogen. Gebruik het goed.
+BARK_STRATEGIST_WILL_1,"According to plan, even now.","Volgens plan, zelfs nu."
+BARK_STRATEGIST_WILL_ENEMY_1,An investment in the final standing.,Een investering in de eindstand.
+BARK_OPPORTUNIST_NOM_TEAM_1,Take the weakest. Always the weakest.,Pak de zwakste. Altijd de zwakste.
+BARK_OPPORTUNIST_NOM_SELF_1,"Against that one? Sure, I'll win that.","Tegen díe? Ja, dat win ik wel."
+BARK_OPPORTUNIST_DONATE_1,"Consider it a loan, %s.","Zie het als een lening, %s."
+BARK_OPPORTUNIST_WILL_1,Whoever repays me in the afterlife...,Wie mij terugbetaalt in het hiernamaals...
+BARK_OPPORTUNIST_WILL_ENEMY_1,Nothing personal. Strictly business.,Niets persoonlijks. Puur zakelijk.
+BARK_DOUBTER_NOM_TEAM_1,"Maybe %s? Or... no, %s.","Misschien %s? Of toch... nee, %s."
+BARK_DOUBTER_NOM_SELF_1,Okay. Okay okay okay. I'll do it.,Oké. Oké oké oké. Ik doe het.
+BARK_DOUBTER_DONATE_1,Is this enough? It's probably not enough.,Is dit genoeg? Het is vast niet genoeg.
+BARK_DOUBTER_WILL_1,Did I divide it right? Too late now.,Heb ik het goed verdeeld? Te laat nu.
+BARK_DOUBTER_WILL_ENEMY_1,Was that really wise?,Was dit wel verstandig?
+BARK_KAMIKAZE_NOM_TEAM_1,Send %s into the inferno!,Stuur %s de vuurzee in!
+BARK_KAMIKAZE_NOM_SELF_1,For eternal glory!,Voor de eeuwige roem!
+BARK_KAMIKAZE_DONATE_1,Everything! Take everything!,Alles! Neem alles!
+BARK_KAMIKAZE_WILL_1,Ashes to ashes. My troops go to the bravest.,As tot as. Mijn troepen aan de dappersten.
+BARK_KAMIKAZE_WILL_ENEMY_1,Even my enemy fought more beautifully than my team.,Zelfs mijn vijand vocht mooier dan mijn team.

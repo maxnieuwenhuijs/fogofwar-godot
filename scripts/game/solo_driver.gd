@@ -98,8 +98,8 @@ static func hervat(pad: String, p_mens_id: int = -1) -> SoloDriver:
 		if String((e.action as Dictionary).get("type", "")) == CActions.MATCH_RESULT:
 			driver._duel_teller += 1
 			driver.duels_gespeeld += 1
-	driver.feed.append({"type": "bark", "speler": -1, "naam": "Systeem",
-		"trigger": "hervat", "tekst": "Campagne hervat in ronde %d." % driver.c.ronde,
+	driver.feed.append({"type": "bark", "speler": -1, "naam": driver.tr("SOLO_NAME_SYSTEM"),
+		"trigger": "hervat", "tekst": driver.tr("SOLO_FEED_RESUMED") % driver.c.ronde,
 		"ronde": driver.c.ronde})
 	return driver
 
@@ -226,9 +226,9 @@ func _stap_nominatie() -> void:
 			for i in mini(a_leden.size(), b_leden.size()):
 				paren.append([int(a_leden[i]), int(b_leden[i])])
 			if _pas_toe(CActions.make_loting(paren), -1):
-				feed.append({"type": "bark", "speler": -1, "naam": "De Loting",
+				feed.append({"type": "bark", "speler": -1, "naam": tr("SOLO_NAME_LOTING"),
 					"trigger": "loting",
-					"tekst": "Ronde 1: het lot bepaalt de paren — iedereen het bord op!",
+					"tekst": tr("SOLO_FEED_LOTING"),
 					"ronde": c.ronde})
 		return
 	var team: int = c.nominatie_team
@@ -416,7 +416,7 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 ## Reducer.apply — orde-van-grootte sneller dan de legacy MatchRunner-route).
 func _speel_duel(idx: int, a: int, b: int) -> void:
 	_duel_teller += 1
-	bezig_met = "De bots spelen duel %d van %d: %s vs %s..." % [
+	bezig_met = tr("SOLO_BUSY_BOT_DUEL") % [
 		idx + 1, c.duels_deze_ronde.size(),
 		String(c.spelers[a].naam), String(c.spelers[b].naam)]
 	var cp_a: int = c.cp_van(a)

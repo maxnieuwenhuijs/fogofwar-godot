@@ -123,15 +123,26 @@ func doctrine_data(doctrine: int) -> Dictionary:
 func doctrine_name(doctrine: int) -> String:
 	return doctrine_data(doctrine).name
 
+## Vertaalde weergavenamen (zie i18n/strings.csv); de rauwe DOCTRINE_DATA
+## blijft de bron voor logica en bestandsnamen.
+func doctrine_display_name(d: int) -> String:
+	return tr("DOCTRINE_%d_NAME" % d)
+
+func doctrine_pro(d: int) -> String:
+	return tr("DOCTRINE_%d_PRO" % d)
+
+func doctrine_con(d: int) -> String:
+	return tr("DOCTRINE_%d_CON" % d)
+
 func pawn_total(doctrine: int) -> int:
 	var comp: Array = doctrine_data(doctrine).comp
 	return comp[0] + comp[1] + comp[2]
 
 func unit_type_name(unit_type: int) -> String:
 	match unit_type:
-		UnitType.INFANTRY: return "Infanterie"
-		UnitType.CAVALRY: return "Cavalerie"
-		UnitType.ARTILLERY: return "Artillerie"
+		UnitType.INFANTRY: return tr("UNIT_INFANTRY")
+		UnitType.CAVALRY: return tr("UNIT_CAVALRY")
+		UnitType.ARTILLERY: return tr("UNIT_ARTILLERY")
 	return "?"
 
 ## Engelse namen voor de model-assets: assets/models/<doctrine_folder>/
@@ -201,3 +212,26 @@ func manhattan_neighbors(pos: Vector2i) -> Array[Vector2i]:
 		Vector2i(pos.x, pos.y + 1),
 		Vector2i(pos.x - 1, pos.y),
 	]
+
+
+# =========================================================================
+# Taal (i18n): slug-vertalingen via res://i18n/strings.csv (kolommen en/nl).
+# Default Engels; de keuze wordt bewaard in user://settings.cfg en kan later
+# met extra kolommen/talen uitgebreid worden.
+# =========================================================================
+
+func _ready() -> void:
+	TranslationServer.set_locale(get_language())
+
+func get_language() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") == OK:
+		return String(cfg.get_value("i18n", "locale", "en"))
+	return "en"
+
+func set_language(locale: String) -> void:
+	TranslationServer.set_locale(locale)
+	var cfg := ConfigFile.new()
+	cfg.load("user://settings.cfg")  # bestaande instellingen behouden
+	cfg.set_value("i18n", "locale", locale)
+	cfg.save("user://settings.cfg")

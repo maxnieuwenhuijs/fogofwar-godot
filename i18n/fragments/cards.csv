@@ -1,0 +1,12 @@
+keys,en,nl
+CARD_DEFINE_TITLE,Define your cards,Definieer je kaarten
+CARD_DEFINE_HINT,"Distribute %d points (min. 1 per stat). Press Confirm.","Verdeel %d punten (min. 1 per stat). Druk op Bevestigen."
+CARD_LINK_TITLE,Link your cards,Koppel je kaarten
+CARD_LINK_HINT,"Pick a card, then tap a pawn.","Kies een kaart, tik dan een pion."
+CARD_TITLE,Card %d,Kaart %d
+Definieer je kaarten,Define your cards,Definieer je kaarten
+Verdeel 7 punten (min. 1 per stat).,Distribute 7 points (min. 1 per stat).,Verdeel 7 punten (min. 1 per stat).
+Bevestigen,Confirm,Bevestigen
+STAMINA,SPEED,STAMINA
+AANVAL,ATTACK,AANVAL
+Gekoppeld,Linked,Gekoppeld

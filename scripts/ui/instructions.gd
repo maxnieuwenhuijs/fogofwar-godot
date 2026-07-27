@@ -50,7 +50,7 @@ func _ready() -> void:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "Speluitleg"
+	title.text = tr("HELP_TITLE")
 	title.add_theme_font_size_override("font_size", 42)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
@@ -90,7 +90,7 @@ func _ready() -> void:
 	scroll.add_child(_body)
 
 	var close := Button.new()
-	close.text = "Sluiten"
+	close.text = tr("HELP_CLOSE")
 	close.custom_minimum_size = Vector2(320, 62)
 	close.add_theme_font_size_override("font_size", 28)
 	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -132,123 +132,123 @@ func _select_tab(index: int) -> void:
 
 func _build_tab_content() -> void:
 	_tabs = [
-		{"title": "Het spel", "text": _tab_game()},
-		{"title": "Beurten", "text": _tab_turns()},
-		{"title": "Eenheden", "text": _tab_units()},
-		{"title": "Vechten", "text": _tab_combat()},
-		{"title": "Facties", "text": _tab_factions()},
+		{"title": tr("HELP_TAB_GAME_TITLE"), "text": _tab_game()},
+		{"title": tr("HELP_TAB_TURNS_TITLE"), "text": _tab_turns()},
+		{"title": tr("HELP_TAB_UNITS_TITLE"), "text": _tab_units()},
+		{"title": tr("HELP_TAB_COMBAT_TITLE"), "text": _tab_combat()},
+		{"title": tr("HELP_TAB_FACTIONS_TITLE"), "text": _tab_factions()},
 	]
 
 
 func _tab_game() -> String:
 	return "\n".join([
-		"[b]Wat is Fog of War?[/b]",
-		"Twee legers staan tegenover elkaar op een bord van 11×11 vakken. Jij bent rood, de AI is blauw.",
+		tr("HELP_GAME_WHAT_TITLE"),
+		tr("HELP_GAME_WHAT_BODY"),
 		"",
-		"[b]Zo win je[/b]",
-		"• Zet [b]2 van je pionnen[/b] op de haven aan de overkant (de gekleurde randvakken), óf",
-		"• versla [b]alle[/b] vijandelijke pionnen.",
+		tr("HELP_GAME_WIN_TITLE"),
+		tr("HELP_GAME_WIN_1"),
+		tr("HELP_GAME_WIN_2"),
 		"",
-		"[b]Het belangrijkste idee[/b]",
-		"Je pionnen kunnen pas iets als ze een [b]kaart[/b] hebben. Een pion zonder kaart \"slaapt\": hij kan niks en gaat dood aan één klap of één schot.",
+		tr("HELP_GAME_IDEA_TITLE"),
+		tr("HELP_GAME_IDEA_BODY"),
 		"",
-		"Elke pion heeft een vast type dat je aan het model herkent: de soldaat (met geweer), het beest (de grote broer, kop groter dan de rest) en het kanon (met wielen). De kaart bepaalt hoe sterk hij deze ronde is; het type bepaalt wat hij kán.",
+		tr("HELP_GAME_TYPES_BODY"),
 		"",
-		"[b]Boven elke actieve pion[/b] zie je blokjes: groen = leven (HP), blauw = energie (Speed), oranje = aanvalskracht.",
+		tr("HELP_GAME_BARS_BODY"),
 		"",
-		"[b]Opstellen[/b]",
-		"Vóór de slag zet je je leger neer op je twee eigen rijen: eerst je kanonnen, dan je beesten (klik een vak; rechtermuis = ongedaan). De soldaten vullen de rest automatisch aan. Liever snel? Kies de standaard-opstelling.",
+		tr("HELP_GAME_SETUP_TITLE"),
+		tr("HELP_GAME_SETUP_BODY"),
 	])
 
 
 func _tab_turns() -> String:
 	return "\n".join([
-		"[b]Het spel gaat in cycli. Elke cyclus:[/b]",
+		tr("HELP_TURNS_INTRO"),
 		"",
-		"[b]1. Kaarten maken[/b] (3 rondes)",
-		"Je verdeelt punten over HP / Speed / Aanval. De som is altijd je budget (Varken: 7).",
+		tr("HELP_TURNS_CARDS_TITLE"),
+		tr("HELP_TURNS_CARDS_BODY"),
 		"",
-		"[b]2. Laten zien[/b]",
-		"Beide spelers tonen hun kaarten. Wie het meest op Aanval heeft ingezet (het hoogste \"bod\") krijgt het [b]initiatief[/b]: die mag eerst koppelen en straks eerst slaan.",
+		tr("HELP_TURNS_REVEAL_TITLE"),
+		tr("HELP_TURNS_REVEAL_BODY"),
 		"",
-		"[b]3. Koppelen[/b]",
-		"Om de beurt leg je een kaart op een eigen pion. Die pion wordt wakker met de stats van de kaart.",
+		tr("HELP_TURNS_LINK_TITLE"),
+		tr("HELP_TURNS_LINK_BODY"),
 		"",
-		"[b]4. Vechten (actiefase)[/b]",
-		"Om de beurt doe je [b]één actie[/b] met één pion. Speed is de energie van je pion:",
-		"• een stap lopen kost 1",
-		"• slaan of schieten kost 1",
-		"• charge (beest) kost stappen + 1",
-		"Een pion mag later in de cyclus wéér, zolang hij energie heeft.",
+		tr("HELP_TURNS_FIGHT_TITLE"),
+		tr("HELP_TURNS_FIGHT_BODY"),
+		tr("HELP_TURNS_FIGHT_COST_1"),
+		tr("HELP_TURNS_FIGHT_COST_2"),
+		tr("HELP_TURNS_FIGHT_COST_3"),
+		tr("HELP_TURNS_FIGHT_AGAIN"),
 		"",
-		"[b]5. Nieuwe cyclus[/b]",
-		"Kan niemand meer iets doen? Dan vervallen alle kaarten en begint alles opnieuw — met de pionnen die nog leven, op de plek waar ze staan.",
+		tr("HELP_TURNS_NEWCYCLE_TITLE"),
+		tr("HELP_TURNS_NEWCYCLE_BODY"),
 		"",
-		"[b]Beurt-timer[/b]",
-		"Je hebt 20 seconden per beslissing (zie de teller bovenin). Tijd om? Dan kiest het spel voor je: standaard-opstelling, kaarten bevestigd, automatisch gekoppeld, of een verstandige zet in het gevecht. De timer pauzeert als je deze uitleg leest.",
+		tr("HELP_TURNS_TIMER_TITLE"),
+		tr("HELP_TURNS_TIMER_BODY"),
 	])
 
 
 func _tab_units() -> String:
 	return "\n".join([
-		"[b]Soldaat (infanterie)[/b]",
-		"• Loopt zo ver als zijn energie reikt.",
-		"• Slaat een vijand op het vak ernaast.",
-		"• Of schiet op [b]precies 2 vakken[/b] afstand (schade = je volle Aanval).",
-		"• Sterk in de verdediging: wie hem slaat en niet doodt, krijgt zelf −1.",
+		tr("HELP_UNITS_INF_TITLE"),
+		tr("HELP_UNITS_INF_1"),
+		tr("HELP_UNITS_INF_2"),
+		tr("HELP_UNITS_INF_3"),
+		tr("HELP_UNITS_INF_4"),
 		"",
-		"[b]Beest (cavalerie)[/b]",
-		"• [b]Charge[/b]: lopen én slaan in één beurt — klik gewoon een rode vijand aan, ook verderop.",
-		"• Springt over je [b]eigen[/b] pionnen heen.",
-		"• Doodt hij zijn doelwit, dan schuift hij het vrije vak in: zo wint hij terrein.",
-		"• Kan nooit schieten, en terugslaan doet hij hard: −2 voor wie hem prikt en niet afmaakt.",
+		tr("HELP_UNITS_CAV_TITLE"),
+		tr("HELP_UNITS_CAV_1"),
+		tr("HELP_UNITS_CAV_2"),
+		tr("HELP_UNITS_CAV_3"),
+		tr("HELP_UNITS_CAV_4"),
 		"",
-		"[b]Kanon (artillerie)[/b]",
-		"• Doet [b]1 ding per beurt[/b]: 1 stap lopen óf 1 schot.",
-		"• Schiet tot [b]6 vakken[/b] ver in een rechte lijn (Leeuw: 7) met volle Aanval-schade.",
-		"• Kan [b]nooit[/b] het vak ernaast raken (dode zone) en niet slaan — kom dichtbij en hij is weerloos.",
-		"• Speed = hoe vaak hij per cyclus iets mag doen.",
+		tr("HELP_UNITS_ART_TITLE"),
+		tr("HELP_UNITS_ART_1"),
+		tr("HELP_UNITS_ART_2"),
+		tr("HELP_UNITS_ART_3"),
+		tr("HELP_UNITS_ART_4"),
 	])
 
 
 func _tab_combat() -> String:
 	return "\n".join([
-		"[b]De kleuren op het bord[/b]",
-		"• [color=#55dd66]Groen[/color] = daar kun je lopen (het cijfer = energie-kosten)",
-		"• [color=#f04545]Rood[/color] = die vijand kun je slaan (of charge met het beest)",
-		"• [color=#ffb054]Oranje[/color] = die vijand kun je beschieten (vaag oranje = je vuurlijn)",
-		"• [color=#66dddd]Cyaan[/color] = gratis Wolf-stap na een melee",
+		tr("HELP_COMBAT_COLORS_TITLE"),
+		tr("HELP_COMBAT_COLORS_1"),
+		tr("HELP_COMBAT_COLORS_2"),
+		tr("HELP_COMBAT_COLORS_3"),
+		tr("HELP_COMBAT_COLORS_4"),
 		"",
-		"[b]Slaan (melee)[/b]",
-		"Je doet je volle Aanval als schade. Gaat het doelwit dood, dan MOET je het vrije vak in — zo ruk je op.",
+		tr("HELP_COMBAT_MELEE_TITLE"),
+		tr("HELP_COMBAT_MELEE_BODY"),
 		"",
-		"[b]Terugslag[/b]",
-		"Overleeft de verdediger jouw klap, dan slaat hij terug:",
-		"• soldaat: [b]−1[/b]    • beest: [b]−2[/b]    • kanon: [b]−0[/b] (weerloos)",
-		"Slapende pionnen slaan nooit terug. Schieten krijgt nooit terugslag.",
+		tr("HELP_COMBAT_RETAL_TITLE"),
+		tr("HELP_COMBAT_RETAL_BODY"),
+		tr("HELP_COMBAT_RETAL_VALUES"),
+		tr("HELP_COMBAT_RETAL_NOTE"),
 		"",
-		"[b]Schieten[/b]",
-		"• Raakt alles in een vrije rechte lijn — ook slapende pionnen (die gaan meteen dood).",
-		"• Maar: [b]elke[/b] pion ertussen blokkeert het schot, ook je eigen.",
-		"• Schieten verovert nooit een vak; alleen lopen en slaan winnen terrein.",
+		tr("HELP_COMBAT_SHOOT_TITLE"),
+		tr("HELP_COMBAT_SHOOT_1"),
+		tr("HELP_COMBAT_SHOOT_2"),
+		tr("HELP_COMBAT_SHOOT_3"),
 		"",
-		"[b]Tip[/b]: rechtermuisklik = pion deselecteren.",
-		"[b]Toetsen[/b]: K = schermtrilling aan/uit · J = alle klap-effecten aan/uit · M = geluid dempen.",
+		tr("HELP_COMBAT_TIP"),
+		tr("HELP_COMBAT_KEYS"),
 	])
 
 
 func _tab_factions() -> String:
 	var lines: Array = [
-		"[b]Kies vóór de partij een factie (doctrine). Die bepaalt je leger en je speciale kracht.[/b]",
-		"Samenstelling = soldaten / beesten / kanonnen.",
+		tr("HELP_FACTIONS_INTRO"),
+		tr("HELP_FACTIONS_COMP"),
 		"",
 	]
 	for doctrine in Constants.DOCTRINE_DATA.keys():
 		var d: Dictionary = Constants.doctrine_data(doctrine)
-		lines.append("[b]%s[/b] — %d kaarten × budget %d · leger %d/%d/%d" % [
-			d.name, int(d.cards), int(d.budget), d.comp[0], d.comp[1], d.comp[2]])
-		lines.append("[color=#7fdd7f]✚ %s[/color]" % d.pro)
-		lines.append("[color=#ee8877]✖ %s[/color]" % d.con)
+		lines.append(tr("HELP_FACTIONS_ROW") % [
+			Constants.doctrine_display_name(doctrine), int(d.cards), int(d.budget), d.comp[0], d.comp[1], d.comp[2]])
+		lines.append("[color=#7fdd7f]✚ %s[/color]" % Constants.doctrine_pro(doctrine))
+		lines.append("[color=#ee8877]✖ %s[/color]" % Constants.doctrine_con(doctrine))
 		lines.append("")
-	lines.append("[b]Balans-driehoek[/b]: kanonnen > soldaten (dracht), soldaten > beesten (terugslag −1 en goedkoop), beesten > kanonnen (dode zone induiken en slaan).")
+	lines.append(tr("HELP_FACTIONS_TRIANGLE"))
 	return "\n".join(lines)

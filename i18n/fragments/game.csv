@@ -1,0 +1,121 @@
+keys,en,nl
+HUD_TOPBAR_TIMER,Cycle %d · Round %d · %s · %ds left,Cyclus %d · Ronde %d · %s · nog %ds
+HUD_TOPBAR,Cycle %d · Round %d · %s,Cyclus %d · Ronde %d · %s
+MENU_TITLE,Fog of War,Fog of War
+MENU_RESIGN_CONFIRM,Are you sure you want to surrender?,Weet je zeker dat je wilt opgeven?
+MENU_RESIGN_OK,Surrender,Opgeven
+MENU_RESIGN_CANCEL,Keep fighting,Doorspelen
+HUD_TIMEOUT_SPAWN,Time's up — reinforcements filled in automatically,Tijd om — versterkingen automatisch aangevuld
+HUD_TIMEOUT_PLACEMENT,Time's up — default deployment used,Tijd om — standaard-opstelling gebruikt
+HUD_TIMEOUT_ACTION,Time's up — the game picked a move for you,Tijd om — het spel koos een zet voor je
+MENU_DIFF_TITLE,Choose your opponent,Kies je tegenstander
+MENU_DIFF_BODY,Which AI do you want to practice against?,Tegen welke AI wil je oefenen?
+MENU_DIFF_EASY,Easy,Easy
+MENU_DIFF_MEDIUM,Medium,Medium
+MENU_DIFF_HARD,Hard,Hard
+MENU_DIFF_ULTRA,Ultra — god mode,Ultra — god mode
+MENU_DIFF_CAMPAIGN,Solo campaign (v4.2),Solo-campagne (v4.2)
+MENU_RULES_OPTION,How to play,Speluitleg
+MENU_DIFF_TRAINER,View AI Trainer,AI Trainer bekijken
+MENU_DIFF_TUNER,Model tuner,Model-tuner
+HUD_BTN_HELP,?,?
+HUD_BTN_AMBIANCE,ambiance,sfeer
+HUD_BTN_RESIGN,surrender,opgeven
+HUD_BTN_UNDO,Undo,Ongedaan
+HUD_BTN_SKIP,Skip,Overslaan
+HUD_BTN_DESELECT,Deselect,Deselecteer
+MENU_DOCTRINE_TITLE,Choose your doctrine,Kies je doctrine
+MENU_DOCTRINE_BODY,"Locked in for the whole match. After this you pick your opponent.
+Composition = Infantry / Cavalry / Artillery.","Vast voor de hele partij. Hierna kies je de tegenstander.
+Samenstelling = Infanterie / Cavalerie / Artillerie."
+MENU_DOCTRINE_OPTION,%s  (%d× budget %d · %d/%d/%d),%s  (%d× budget %d · %d/%d/%d)
+MENU_DOCTRINE_LINE,%s:  ✚ %s   ✖ %s,%s:  ✚ %s   ✖ %s
+MENU_OPP_TITLE,Who are you fighting?,Tegen wie speel je?
+MENU_OPP_BODY,"Pick the AI's faction, or let it draw blind (standard rule).","Kies de factie van de AI, of laat hem blind loten (standaardregel)."
+MENU_OPP_SURPRISE,Surprise (AI picks blind),Verrassing (AI kiest blind)
+MENU_OPP_OPTION,%s  (%d/%d/%d),%s  (%d/%d/%d)
+MENU_RULESET_TITLE,Which rules?,Welke regels?
+MENU_RULESET_BODY,"Classic: the familiar duel (4.1).
+
+Campaign duel (v4.2): reserves and spawns on your back row,
+blind CP bids on your cards and the stamina cannon (roll/shoot).","Klassiek: het vertrouwde duel (4.1).
+
+Campagne-duel (v4.2): reserves en spawnen op je achterste rij,
+blinde CP-inzet op je kaarten en het stamina-kanon (rollen/schieten)."
+MENU_RULESET_CLASSIC,Classic (4.1),Klassiek (4.1)
+MENU_RULESET_CAMPAIGN,Campaign duel (v4.2),Campagne-duel (v4.2)
+PHASE_PLACEMENT_REVEAL_HEADER,Doctrines revealed:,Doctrines onthuld:
+PHASE_PLACEMENT_YOU,You: %s — ✚ %s,Jij: %s — ✚ %s
+PHASE_PLACEMENT_AI,AI: %s — ✚ %s,AI: %s — ✚ %s
+PHASE_PLACEMENT_MANUAL_HINT,"Deploy yourself: cannons first, then horses — click squares in your two rows; the soldiers fill in automatically.","Zelf opstellen: eerst je kanonnen, dan je paarden — klik vakken in je twee rijen; de soldaten vullen automatisch aan."
+PHASE_PLACEMENT_DEFAULT_HINT,"Default: cannons up front on flank and center (clear field of fire), cavalry at the rear.","Standaard: kanonnen vóór op flank en centrum (vrij schootsveld), cavalerie achteraan."
+PHASE_PLACEMENT_GOAL,"Goal: 2 pawns in the haven on the far side, or eliminate everything.","Doel: 2 pionnen in de haven aan de overkant, of alles uitschakelen."
+PHASE_PLACEMENT_MANUAL,Deploy yourself,Zelf opstellen
+PHASE_PLACEMENT_STANDARD,Default deployment,Standaard opstelling
+HUD_PLACE_TYPE_CANNONS,cannons,kanonnen
+HUD_PLACE_TYPE_HORSES,horses,paarden
+HUD_PLACE_PROMPT,Place your %s — click a square (%d left · right-click = undo),Plaats je %s — klik een vak (nog %d · rechtermuis = ongedaan)
+MENU_CP_TITLE,Bet CP? (balance %d),CP inzetten? (saldo %d)
+MENU_CP_BODY,"Blind bid: the AI won't see your bet until the reveal.
+Each CP you bet gives 1 card +1 budget point this round.
+Bet = burned, even if you don't use the point.","Blind bod: de AI ziet je inzet niet tot de onthulling.
+Elke ingezette CP geeft 1 kaart deze ronde +1 budgetpunt.
+Ingezet = verbrand, ook als je het punt niet gebruikt."
+MENU_CP_NONE,Bet no CP,Geen CP inzetten
+MENU_CP_OPTION,%d CP (+%d card budget),%d CP (+%d kaartbudget)
+HUD_DEFINE_PROMPT,Define your cards (%d× budget %d),Definieer je kaarten (%d× budget %d)
+HUD_DEFINE_CP_SUFFIX," · %d card(s) with +1 CP point"," · %d kaart(en) met +1 CP-punt"
+HUD_DEFINE_LEGEND," — HP = life · Speed = steps/actions · Attack = damage"," — HP = leven · Speed = stappen/acties · Aanval = schade"
+PHASE_SPAWN_TITLE,Reinforcements,Versterkingen
+PHASE_SPAWN_RESERVE,Reserve: %d soldiers · %d cavalry · %d cannons.,Reserve: %d soldaten · %d cavalerie · %d kanonnen.
+PHASE_SPAWN_INFO,"Spawns land as statues on your back row (max %d per cycle, %d left this match).","Spawns landen als standbeelden op je achterste rij (max %d per cyclus, nog %d dit potje)."
+PHASE_SPAWN_BLIND,The AI picks blind at the same time; then comes the reveal.,De AI kiest blind tegelijk; daarna volgt de onthulling.
+PHASE_SPAWN_NONE,Spawn nothing,Niets spawnen
+PHASE_SPAWN_REFILL,Replace losses (%d),Verliezen aanvullen (%d)
+PHASE_REVEAL_BODY,"You (red): bid %d%% · attack %d · speed %d
+AI (blue): bid %d%% · attack %d · speed %d
+
+The highest attack bid takes the initiative:
+that player links and acts first.","Jij (rood): bod %d%% · aanval %d · speed %d
+AI (blauw): bod %d%% · aanval %d · speed %d
+
+Het hoogste aanval-bod krijgt het initiatief:
+die speler koppelt én handelt straks als eerste."
+PHASE_REVEAL_TITLE,%s starts linking,%s begint met koppelen
+MENU_CONTINUE,Continue,Doorgaan
+HUD_LINK_PROMPT,"Your turn — pick a card, then tap a pawn","Jouw beurt — kies een kaart, tik dan een pion"
+HUD_LINK_PICK_PAWN,Pick a pawn to link,Kies een pion om te koppelen
+HUD_LINK_PICK_CARD_FIRST,Pick a card below first,Kies eerst een kaart onderaan
+HUD_ROUND_DONE,Round complete,Ronde afgerond
+HUD_OPPONENT_LINKING,Opponent is linking...,Tegenstander koppelt...
+HUD_OPPONENT_TURN,Opponent is moving...,Tegenstander is aan zet...
+HUD_YOUR_TURN,Your turn — pick a pawn,Jouw beurt — kies een pion
+HUD_WOLF_STEP,Free Wolf step — click a square (right-click = skip),Gratis Wolf-stap — klik een vak (rechtermuis = overslaan)
+HUD_TOGGLE_SHAKE,Screen shake: %s,Screen shake: %s
+HUD_TOGGLE_FEEL,Combat feel: %s,Combat feel: %s
+HUD_TOGGLE_SOUND,Sound: %s,Geluid: %s
+HUD_ON,on,aan
+HUD_OFF,off,uit
+END_WINNER,%s wins!,%s wint!
+END_CAMPAIGN_BODY,"This duel counts for the campaign: losses, CP and points carry back.","Dit duel telt voor de campagne: verliezen, CP en punten gaan mee terug."
+END_BACK_TO_CAMPAIGN,Back to the campaign,Terug naar de campagne
+END_BODY,The game is over.,Het spel is afgelopen.
+END_NEW_GAME,New game,Nieuw spel
+HUD_PAWN_CANNOT_ACT,That pawn cannot act,Die pion kan niet handelen
+HUD_HINT_MOVE,green = move,groen = beweeg
+HUD_HINT_INF_SHOT,", red = melee, orange = shot (range 2, damage %d)",", rood = melee, oranje = schot (afstand 2, schade %d)"
+HUD_HINT_INF_NO_SHOT,", red = melee (Attack 1: shooting not possible)",", rood = melee (Aanval 1: schieten kan niet)"
+HUD_HINT_CAV,", red = charge (move + attack in one)",", rood = charge (bewegen + aanval in één)"
+HUD_HINT_ART_NO_TARGET," (1 step), orange = firing lane (range %d) — no target in sight"," (1 stap), oranje = vuurlijn (dracht %d) — geen doelwit in zicht"
+HUD_HINT_ART," (1 step), orange = fire (range %d)"," (1 stap), oranje = vuur (dracht %d)"
+HUD_SELECTED,%s selected — %s (stamina %d),%s gekozen — %s (stamina %d)
+HUD_COUNT_RESERVE,"    [color=#bbbbbb]Reserve %d · CP %d[/color]","    [color=#bbbbbb]Reserve %d · CP %d[/color]"
+PHASE_PLACEMENT,Deployment,Opstelling
+PHASE_DEFINE,Define,Definitie
+PHASE_REVEAL,Reveal,Onthulling
+PHASE_LINKING,Linking,Koppelen
+PHASE_ACTION,Action,Actie
+PHASE_GAME_OVER,End,Einde
+HUD_PLAYER_CAMPAIGN_AI,%s (AI),%s (AI)
+HUD_PLAYER_YOU,Red (you),Rood (jij)
+HUD_PLAYER_AI,Blue (AI),Blauw (AI)

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://rktcas27trk0"
+
+[deps]
+
+files=["res://i18n/fragments/campaign_ui.en.translation", "res://i18n/fragments/campaign_ui.nl.translation"]
+
+source_file="res://i18n/fragments/campaign_ui.csv"
+dest_files=["res://i18n/fragments/campaign_ui.en.translation", "res://i18n/fragments/campaign_ui.nl.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

@@ -53,7 +53,7 @@ func set_linked(linked: bool) -> void:
 
 
 func _refresh() -> void:
-	_title.text = "Kaart %d" % (card_index + 1)
+	_title.text = tr("CARD_TITLE") % (card_index + 1)
 	_hp_value.text = str(data.hp)
 	_sta_value.text = str(data.stamina)
 	_atk_value.text = str(data.attack)

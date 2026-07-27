@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b2d80o2dfl7uy"
+
+[deps]
+
+files=["res://i18n/fragments/solo.en.translation", "res://i18n/fragments/solo.nl.translation"]
+
+source_file="res://i18n/fragments/solo.csv"
+dest_files=["res://i18n/fragments/solo.en.translation", "res://i18n/fragments/solo.nl.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

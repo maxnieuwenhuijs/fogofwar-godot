@@ -155,4 +155,4 @@ func bark(trigger: String) -> String:
 	var lijst: Array = barks.get(trigger, [])
 	if lijst.is_empty():
 		return ""
-	return String(lijst[rng.randi_range(0, lijst.size() - 1)])
+	return tr(String(lijst[rng.randi_range(0, lijst.size() - 1)]))

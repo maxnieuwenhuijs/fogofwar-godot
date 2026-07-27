@@ -55,9 +55,10 @@ func _ready() -> void:
 					shot_fouten += 1
 					print("[SHOT] node ontbreekt: %s" % node_naam)
 			var kop: Label = hub.find_child("Header", true, false)
-			if kop == null or not kop.text.contains("Ronde"):
+			# i18n-proof: check op het vertaalde fragment i.p.v. hardcoded "Ronde".
+			if kop == null or not kop.text.contains(hub.tr("HUB_HEADER").split("%d")[0].strip_edges()):
 				shot_fouten += 1
-				print("[SHOT] header toont geen ronde")
+				print("[SHOT] header toont geen ronde/round")
 			for kolom_naam in ["TeamLinks", "TeamRechts"]:
 				var tk: VBoxContainer = hub.find_child(kolom_naam, true, false)
 				if tk == null or tk.get_child_count() < 9:

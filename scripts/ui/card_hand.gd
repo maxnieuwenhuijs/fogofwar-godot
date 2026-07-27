@@ -135,8 +135,8 @@ func _set_phase(new_phase: int) -> void:
 	phase = new_phase
 	_selected_index = -1
 	if new_phase == Constants.UiPhase.DEFINE:
-		_phase_label.text = "Definieer je kaarten"
-		_hint_label.text = "Verdeel %d punten (min. 1 per stat). Druk op Bevestigen." % _budget
+		_phase_label.text = tr("CARD_DEFINE_TITLE")
+		_hint_label.text = tr("CARD_DEFINE_HINT") % _budget
 		_confirm_button.visible = true
 		_confirm_button.disabled = true
 		for card in _cards:
@@ -193,8 +193,8 @@ func open_for_linking(linked_flags: Array) -> void:
 	visible = true
 	phase = Constants.UiPhase.LINKING
 	_selected_index = -1
-	_phase_label.text = "Koppel je kaarten"
-	_hint_label.text = "Kies een kaart, tik dan een pion."
+	_phase_label.text = tr("CARD_LINK_TITLE")
+	_hint_label.text = tr("CARD_LINK_HINT")
 	_confirm_button.visible = false
 	for i in _cards.size():
 		var card := _cards[i]

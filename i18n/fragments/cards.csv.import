@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://d11ewfek1muqq"
+
+[deps]
+
+files=["res://i18n/fragments/cards.en.translation", "res://i18n/fragments/cards.nl.translation"]
+
+source_file="res://i18n/fragments/cards.csv"
+dest_files=["res://i18n/fragments/cards.en.translation", "res://i18n/fragments/cards.nl.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
