@@ -806,14 +806,39 @@ func _maak_pawn_view(pawn: Pawn) -> void:
 ## maar kregen geen 3D-view of hp-balk — onzichtbaar en onklikbaar, waardoor
 ## koppelen op een spawn onmogelijk was en de partij voor de mens vastliep.
 func _sync_new_pawn_views() -> void:
-	var nieuw_gezien := false
+	var vers: Array = []
 	for pawn in GameSession.state.pawns.values():
 		if pawn.is_eliminated or _pawn_views.has(pawn.id):
 			continue
 		_maak_pawn_view(pawn)
-		nieuw_gezien = true
-	if nieuw_gezien:
-		_build_health_bars()  # herbouwt alle balken, incl. de nieuwe pionnen
+		vers.append(_pawn_views[pawn.id])
+	if vers.is_empty():
+		return
+	_build_health_bars()  # herbouwt alle balken, incl. de nieuwe pionnen
+	# Poef-reveal (besluit Max, 27 juli): verse spawns verschijnen één voor
+	# één op het bord vóórdat de define-hand opent — alleen mid-match
+	# (cyclus 2+); de opstellingsfase bouwt gewoon in stilte.
+	if GameSession.state.cycle >= 2:
+		_poef_reveal(vers)
+
+
+var _spawn_reveal_tot_ms: int = 0
+
+
+## Verse spawns "poef" gefaseerd het bord op; de kaarten wachten (zie
+## _open_define_hand). Schaal-pop met een place-tik per poppetje.
+func _poef_reveal(views: Array) -> void:
+	var stagger := 0.18
+	_spawn_reveal_tot_ms = Time.get_ticks_msec() + int((0.45 + stagger * views.size() + 0.25) * 1000.0)
+	_card_hand.visible = false  # eerst het bord laten zien
+	for i in views.size():
+		var pv: Node3D = views[i]
+		var doel: Vector3 = pv.scale
+		pv.scale = Vector3(0.01, 0.01, 0.01)
+		var tw := pv.create_tween()
+		tw.tween_interval(0.45 + stagger * i)
+		tw.tween_callback(func() -> void: Audio.play("place_pawn", 0.0, -1, 1.0 + 0.03 * i))
+		tw.tween_property(pv, "scale", doel, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 const HP_COLS := 5
@@ -961,6 +986,13 @@ func _on_cp_choice(index: int) -> void:
 
 ## Kaartwaaier openen; de eerste `bonus` kaarten dragen het CP-budgetpunt.
 func _open_define_hand(bonus: int) -> void:
+	# Poef-reveal bezig? Eerst het bord z'n moment geven, dan pas de kaarten
+	# (besluit Max, 27 juli: spawns zien landen vóór de define-fase).
+	var nu: int = Time.get_ticks_msec()
+	if nu < _spawn_reveal_tot_ms:
+		await get_tree().create_timer(float(_spawn_reveal_tot_ms - nu) / 1000.0 + 0.1).timeout
+		if GameSession.state == null or not Phase.is_define(GameSession.state.phase):
+			return
 	var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
 	# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
 	# engine deze ronde zelf over en schuift de fase vanzelf door).

@@ -185,8 +185,26 @@ static func _sample_spawn_sets(state: GameState, player_id: int) -> Array:
 	if state.pool_total(player_id) == 0 or state.spawns_over(player_id) == 0:
 		return out
 	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
-	var vrij: Array = []
+	# Spawn-plaatsing (besluit Max, 27 juli): eerst de HAVEN-vakken op je
+	# achterste rij dichtzetten — de vijand wint daar — met de midden-havens
+	# als prio 1, dan de hoek-havens, dan pas de rest (centrum naar buiten).
+	var haven_x: Dictionary = {}
+	for hpos in Constants.get_haven_for_player(Constants.opponent(player_id)):
+		if int(hpos.y) == achterste:
+			haven_x[int(hpos.x)] = true
+	var midden_havens: Array = []
+	var hoek_havens: Array = []
+	var overig: Array = []
 	for x in [5, 4, 6, 3, 7, 2, 8, 1, 9, 0, 10]:
+		if haven_x.has(x):
+			if x == 0 or x == 10:
+				hoek_havens.append(x)
+			else:
+				midden_havens.append(x)
+		else:
+			overig.append(x)
+	var vrij: Array = []
+	for x in midden_havens + hoek_havens + overig:
 		var pos := Vector2i(x, achterste)
 		if state.is_tile_empty(pos):
 			vrij.append(pos)
