@@ -555,7 +555,7 @@ func _build_ui() -> void:
 	_snd_lijst = VBoxContainer.new()
 	_snd_lijst.add_theme_constant_override("separation", 4)
 	tab_snd.add_child(_snd_lijst)
-	var snd_uitleg := _make_label("Klik om te horen. Ontbrekende categorieen staan grijs: dan valt het spel terug op het algemene geluid.")
+	var snd_uitleg := _make_label("Klik om te horen. dB = volume, vertraging = later (+) of eerder (-) afspelen; wordt bewaard in sounds/sound_tuning.json. Test met \"test dood\" op de Melee-tab.")
 	snd_uitleg.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
 	tab_snd.add_child(snd_uitleg)
 
@@ -1683,6 +1683,7 @@ func _geluid_rijen() -> Array:
 		var rol := _hand_rol()
 		var vc := "val_musket" if rol == "" else "val_" + rol
 		rijen.append({"cat": vc, "wat": "voorwerp valt", "terugval": "val_prop"})
+		rijen.append({"cat": "val_hoed", "wat": "hoedje valt"})
 	rijen.append({"cat": "blood_splash", "wat": "bloedspat"})
 	return rijen
 
@@ -1706,6 +1707,20 @@ func _vul_geluidlijst() -> void:
 		var speel_cat := cat if aantal > 0 else terugval
 		knop.pressed.connect(func() -> void: Audio.play(speel_cat))
 		hb.add_child(knop)
+		# Volume en vertraging per categorie: meteen te horen met de speelknop,
+		# en opgeslagen in sounds/sound_tuning.json.
+		hb.add_child(_make_label(" dB"))
+		var db_spin := _make_spin(hb, -24.0, 12.0, 0.5, Audio.volume_correctie(speel_cat),
+			func(_v: float) -> void: pass)
+		hb.add_child(_make_label(" vertraging"))
+		var vt_spin := _make_spin(hb, -0.5, 2.0, 0.01, Audio.extra_vertraging(speel_cat),
+			func(_v: float) -> void: pass)
+		var bewaar := func(_v: float) -> void:
+			if _updating:
+				return
+			Audio.zet_geluid_tuning(speel_cat, db_spin.value, vt_spin.value)
+		db_spin.value_changed.connect(bewaar)
+		vt_spin.value_changed.connect(bewaar)
 		var info := Label.new()
 		info.add_theme_font_size_override("font_size", 12)
 		if aantal > 0:
@@ -1717,5 +1732,7 @@ func _vul_geluidlijst() -> void:
 		else:
 			info.text = "%s  -  geen bestand" % cat
 			info.add_theme_color_override("font_color", Color(0.6, 0.58, 0.6))
+			db_spin.editable = false
+			vt_spin.editable = false
 		hb.add_child(info)
 		_snd_lijst.add_child(hb)

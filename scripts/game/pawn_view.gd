@@ -762,7 +762,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		# "Dood-poel"). Zo valt de plas precies wanneer dít lijf ligt.
 		# Bons als het LIJF de grond raakt -- zelfde moment als waarop de
 		# bloedplas begint (die timing is per dood-clip al ingesteld).
-		Audio.play("body_fall", float(cfg.get("delay", fx("death_blood_delay", 0.9))))
+		Audio.play_getuned("body_fall", float(cfg.get("delay", fx("death_blood_delay", 0.9))))
 		_spawn_blood(global_position + transform.basis.z * torso_off, 1, 0.03,
 			float(cfg.get("delay", fx("death_blood_delay", 0.9))),
 			float(cfg.get("grow", 0.7)),
@@ -824,7 +824,7 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	arc.tween_property(w, "global_position", land, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	# Kletter-geluid op het moment dat het voorwerp de grond raakt -- los van
 	# de doodskreet, want die duurt korter dan de val (besluit Max, 28 juli).
-	arc.tween_callback(func() -> void: Audio.play(_val_categorie()))
+	arc.tween_callback(func() -> void: Audio.play_getuned(_val_categorie()))
 	arc.tween_property(w, "rotation", _flat_rotation(w), 0.12)
 	# Het musket blijft op het bord liggen (opruiming via battlefield_debris).
 	w.add_to_group("battlefield_debris")
@@ -1340,6 +1340,10 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	var arc := part.create_tween()
 	arc.tween_property(part, "global_position", peak, t_up).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	arc.tween_property(part, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	# Het hoedje tikt hoorbaar op de grond (Max, 28 juli). Andere lichaamsdelen
+	# krijgen geen eigen geluid: dat wordt een kakofonie bij een gib-explosie.
+	if String(part.name).to_lower().contains("hat"):
+		arc.tween_callback(func() -> void: Audio.play_getuned("val_hoed"))
 	# Bij het landen snel plat op de grond draaien en blijven liggen.
 	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
 	# Eén poel per stuk, recht onder de landingsplek. Timing strak en

@@ -19,9 +19,10 @@ const BANK := {
 	"musket_hit":  ["default_musket_hit.wav"],
 	# Factie-sterfgeluiden (SOUND-WISHLIST 7b) en val-geluiden (7bis).
 	# Kanontreffer: eigen, zwaardere kreet die VLAK VOOR de inslag inzet.
-	"inf_kanon_die_mouse": ["mouse_hit_canon_1.wav"],
+	"inf_kanon_die_mouse": ["mouse_hit_canon_1.wav", "mouse_hit_canon_2.wav"],
 	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav", "mouse_shot_die_3.wav"],
 	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
+	"val_hoed":      ["hat_hit_floor_2.wav"],
 	"body_fall":     ["body_hit_floor_1.wav", "body_hit_floor_2.wav", "body_hit_floor_3.wav"],
 	"musket_cock": ["cockhammer.wav"],
 	"melee_kill":  ["mellee_hit.wav", "mellee_hit2.wav", "mellee_hit4.wav"],
@@ -215,6 +216,53 @@ func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: flo
 		play_factie(terugval, doctrine, delay, pitch)
 
 
+## GELUID-AFSTELLING (sounds/sound_tuning.json, besluit Max 28 juli): per
+## categorie een volume-correctie in dB en een extra vertraging in seconden.
+## Zo stem je de bons van een vallend lijf of musket precies af op de animatie
+## zonder de code aan te raken -- de Model-tuner (tab Geluid) schrijft hierin.
+const GELUID_TUNING_PAD := "res://sounds/sound_tuning.json"
+var _snd_tuning: Dictionary = {}
+var _snd_geladen: bool = false
+
+
+func _laad_snd_tuning() -> void:
+	if _snd_geladen:
+		return
+	_snd_geladen = true
+	if not FileAccess.file_exists(GELUID_TUNING_PAD):
+		return
+	var f := FileAccess.open(GELUID_TUNING_PAD, FileAccess.READ)
+	if f == null:
+		return
+	var d = JSON.parse_string(f.get_as_text())
+	if d is Dictionary:
+		_snd_tuning = d
+
+
+func volume_correctie(category: String) -> float:
+	_laad_snd_tuning()
+	return float((_snd_tuning.get(category, {}) as Dictionary).get("db", 0.0))
+
+
+func extra_vertraging(category: String) -> float:
+	_laad_snd_tuning()
+	return float((_snd_tuning.get(category, {}) as Dictionary).get("vertraging", 0.0))
+
+
+func zet_geluid_tuning(category: String, db: float, vertraging: float) -> void:
+	_laad_snd_tuning()
+	_snd_tuning[category] = {"db": db, "vertraging": vertraging}
+	var f := FileAccess.open(GELUID_TUNING_PAD, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(_snd_tuning, "\t"))
+
+
+## Speel met de afgestelde vertraging erbij (voor bonzen die op een animatie
+## moeten vallen). basis = het moment dat de code zelf berekent.
+func play_getuned(category: String, basis: float = 0.0, pitch: float = 0.0) -> void:
+	play(category, maxf(0.0, basis + extra_vertraging(category)), -1, pitch)
+
+
 func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	var variants: Array = _streams.get(category, [])
 	if variants.is_empty() and category.begins_with("val_"):
@@ -225,7 +273,7 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	_next = (_next + 1) % _pool.size()
 	var idx: int = (variant % variants.size()) if variant >= 0 else (randi() % variants.size())
 	player.stream = variants[idx]
-	player.volume_db = master_db + float(CATEGORY_DB.get(category, 0.0))
+	player.volume_db = master_db + float(CATEGORY_DB.get(category, 0.0)) + volume_correctie(category)
 	player.pitch_scale = pitch if pitch > 0.0 else randf_range(0.96, 1.04)
 	player.play()
 

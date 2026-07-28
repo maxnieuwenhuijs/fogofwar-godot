@@ -188,6 +188,7 @@ beginnen.
 | `val_flag` | 2 | vaandelstok | Long wooden flag pole clattering onto dirt, a hard hollow knock and heavy cloth flapping down, dry, no music. |
 | `val_horn` | 2 | hoorn | Small brass bugle dropping onto packed dirt, a bright metallic clank with a faint ringing tone, dry, no music. |
 | `val_sapper` | 2 | bijl | Heavy axe dropping onto dirt, a dull wooden haft thud and a broad iron head clanking, dry, no music. |
+| `val_hoed` | 2-3 ✓ (1) | shako/hoedje dat afvliegt | Stiff felt shako hat landing on packed dirt, a soft muffled flop with a light leather strap slap, dry and close, no music. |
 | `val_canteen` | 2 | vaatje | Small wooden keg dropping and rolling on dirt, hollow wooden thuds with liquid sloshing inside, dry, no music. |
 
 ## 7c. Inslag-geluiden per MATERIAAL (algemeen, factie-onafhankelijk)
@@ -225,6 +226,12 @@ inbouw: infanterie/cavalerie geraakt -> `impact_flesh` (+ `blood_splash`);
 gepantserd (hp-archetype met kuras) -> `impact_armor`; artillerie geraakt ->
 `impact_wood`; dodelijke melee -> `impact_bone` erbij; schot dat mist of
 geblokkeerd wordt -> `impact_dirt` / `ricochet`.
+
+**Timing en volume afstellen** (Model-tuner → tab **Geluid**): achter elke
+categorie staan twee velden -- **dB** (volume-correctie) en **vertraging**
+(later + / eerder -). Ze worden bewaard in `sounds/sound_tuning.json` en
+gelden meteen in het spel; zo schuif je de bons van een vallend lijf of musket
+precies op het frame waar hij hoort, zonder code aan te raken.
 
 **In de tuner luisteren** (Model-tuner → tab **Geluid**): per model zie je
 welke categorieën er zijn, hoeveel varianten en hoe lang de langste is, met
