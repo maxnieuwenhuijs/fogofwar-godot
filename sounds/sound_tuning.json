@@ -7,9 +7,13 @@
 		"db": -8.0,
 		"vertraging": -1.1
 	},
-	"inf_kanon_die_mouse": {
-		"db": 8.0,
+	"inf_die_mouse": {
+		"db": -2.0,
 		"vertraging": 0.0
+	},
+	"inf_kanon_die_mouse": {
+		"db": 12.0,
+		"vertraging": -0.04
 	},
 	"musket_fire": {
 		"db": 1.5,
