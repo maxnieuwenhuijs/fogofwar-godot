@@ -461,13 +461,15 @@ Waarom dit goed werkt:
    goldens en replays blijven byte-identiek.
 4. **Deterministisch.** Welke pion welk attribuut krijgt volgt uit zijn pion-id
    (nooit `randi()`), dus dezelfde replay ziet er elke keer identiek uit.
-5. **Altijd een vaandel en een trommel** (besluit Max, 28 juli): de eerste
-   twee infanteristen van ELK leger krijgen die rol vast, zodat je nooit een
-   regiment zonder kleuren ziet. De rest wordt uitgedund: standaard krijgt
-   daarna ongeveer een op de drie pionnen een van de overige attributen
-   (`ROL_DICHTHEID` in `pawn_view.gd`; 1 = iedereen, 0 = alleen vaandel+trommel).
-   Het volgnummer telt per leger en telt gesneuvelden mee, dus de rol blijft de
-   hele partij bij dezelfde pion horen.
+5. **Altijd TWEE vaandels en TWEE tamboers** (besluit Max, 28 juli): de
+   eerste vier infanteristen van ELK leger krijgen die rollen vast
+   (vaandel, trommel, vaandel, trommel), zodat een regiment er meteen als een
+   regiment uitziet. Kleine legers (< 8 infanteristen) houden het bij een
+   vaandel en een tamboer. De overige attributen -- hoorn, bijl, vat, staf --
+   komen daarna sporadisch: ongeveer een op de vijf (`ROL_DICHTHEID` in
+   `pawn_view.gd`; 1 = iedereen, 0 = alleen de vaste rollen). Het volgnummer
+   telt per leger en telt gesneuvelden mee, dus de rol blijft de hele partij
+   bij dezelfde pion horen.
 6. **De prop vliegt mee bij de dood.** Sneuvelt een figurant, dan tuimelt zijn
    trommel of vaandel uit de handen het bord op en blijft liggen -- exact zoals
    het musket en de hoed dat al deden (`_fling_weapon`).

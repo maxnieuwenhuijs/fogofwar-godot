@@ -1486,9 +1486,12 @@ func set_unit_type(unit_type: int) -> void:
 ## Elk leger heeft ALTIJD een vaandeldrager en een tamboer (besluit Max,
 ## 28 juli): de eerste twee infanteristen krijgen die rol vast. De rest van
 ## de figuranten wordt daarna uitgedund met ROL_DICHTHEID.
-const ROLLEN_VAST := ["flag", "drum"]
+const ROLLEN_VAST := ["flag", "drum", "flag", "drum"]
 const ROLLEN_EXTRA := ["horn", "sapper", "canteen", "drummajor"]
-const ROL_DICHTHEID := 3
+## Kleine legers krijgen maar een vaandel en een tamboer; vanaf dit aantal
+## infanteristen komt het tweede stel erbij (besluit Max, 28 juli).
+const TWEEDE_STEL_VANAF := 8
+const ROL_DICHTHEID := 5   # hoorn/bijl/vat/staf: sporadisch, na de vaste vier
 
 
 var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
@@ -1504,15 +1507,20 @@ var rol_override: String = ""
 ## eigen vaandeldrager en tamboer hebben.
 @export var figurant_index: int = -1
 
+## Aantal infanteristen in dit leger (game.gd vult dit): bepaalt of het tweede
+## vaandel/tamboer-stel erbij komt.
+@export var figurant_totaal: int = 0
+
 
 func _rol_voor_pion() -> String:
 	if figurant_index < 0:
 		return ""
-	if figurant_index < ROLLEN_VAST.size():
-		return ROLLEN_VAST[figurant_index]   # altijd: vaandel, dan trommel
+	var vast: int = ROLLEN_VAST.size() if figurant_totaal >= TWEEDE_STEL_VANAF else 2
+	if figurant_index < vast:
+		return ROLLEN_VAST[figurant_index]   # vaandel, trommel, vaandel, trommel
 	if ROL_DICHTHEID <= 0 or ROLLEN_EXTRA.is_empty():
 		return ""
-	var rest: int = figurant_index - ROLLEN_VAST.size()
+	var rest: int = figurant_index - vast
 	if rest % ROL_DICHTHEID != 0:
 		return ""
 	return ROLLEN_EXTRA[(rest / ROL_DICHTHEID) % ROLLEN_EXTRA.size()]

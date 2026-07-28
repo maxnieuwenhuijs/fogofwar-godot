@@ -843,7 +843,7 @@ func _maak_pawn_view(pawn: Pawn) -> void:
 	# Kijk naar de vijand: rood naar z=0 (-z), blauw naar z=10 (+z).
 	pv.face_dir(Vector2i(0, -1) if pawn.owner_id == Constants.PLAYER_1 else Vector2i(0, 1))
 	pv.set_unit_type(pawn.unit_type)
-	pv.figurant_index = _figurant_index(pawn)
+	_zet_figurant_info(pv, pawn)
 	_pawn_views[pawn.id] = pv
 
 
@@ -854,15 +854,17 @@ func _maak_pawn_view(pawn: Pawn) -> void:
 ## Gesneuvelde pionnen tellen door, zodat het nummer -- en dus de figurant-rol
 ## -- de hele partij hetzelfde blijft: koppel je een vaandeldrager en koppel je
 ## hem later los, dan pakt hij zijn vaandel weer op.
-func _figurant_index(pawn: Pawn) -> int:
+func _zet_figurant_info(pv: PawnView, pawn: Pawn) -> void:
 	if pawn.unit_type != Constants.UnitType.INFANTRY:
-		return -1
+		pv.figurant_index = -1
+		return
 	var ids: Array = []
 	for p in GameSession.state.pawns.values():
 		if p.owner_id == pawn.owner_id and p.unit_type == Constants.UnitType.INFANTRY:
 			ids.append(p.id)
 	ids.sort()
-	return ids.find(pawn.id)
+	pv.figurant_index = ids.find(pawn.id)
+	pv.figurant_totaal = ids.size()
 
 
 func _sync_new_pawn_views() -> void:
