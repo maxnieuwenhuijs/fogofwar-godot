@@ -18,9 +18,9 @@ const BANK := {
 					"musket_echo4.wav", "musket_echo5.wav", "musket_echo6.wav"],
 	"musket_hit":  ["default_musket_hit.wav"],
 	# Factie-sterfgeluiden (SOUND-WISHLIST 7b) en val-geluiden (7bis).
-	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav"],
+	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav", "mouse_shot_die_3.wav"],
 	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
-	"body_fall":     ["body_hit_floor_1.wav", "body_hit_floor_2.wav"],
+	"body_fall":     ["body_hit_floor_1.wav", "body_hit_floor_2.wav", "body_hit_floor_3.wav"],
 	"musket_cock": ["cockhammer.wav"],
 	"melee_kill":  ["mellee_hit.wav", "mellee_hit2.wav", "mellee_hit4.wav"],
 	"melee_survive": ["mellee_hit_no_kill.wav"],
