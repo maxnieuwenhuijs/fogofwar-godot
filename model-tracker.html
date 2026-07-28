@@ -179,7 +179,7 @@
 
 /* ============================================================
    DATA - facties, units, stappen, Mixamo-clips en prompts
-   (bron: MODEL-WISHLIST.md, stand 28 juli 2026 - incl. regimentsrollen par. 3d)
+   (bron: MODEL-WISHLIST.md, stand 28 juli 2026 - incl. figuranten-props par. 3d)
    ============================================================ */
 
 const STAPPEN = [
@@ -192,7 +192,7 @@ const STAPPEN = [
   { id: "blue",   kop: "Blauw",  titel: "Team-texture blauw (_blue.png)" },
   { id: "goreR",  kop: "Gore R", titel: "Gore-texture rood (_red_gore.png), optioneel", optioneel: true },
   { id: "goreB",  kop: "Gore B", titel: "Gore-texture blauw (_blue_gore.png), optioneel", optioneel: true },
-  { id: "musket", kop: "Musket", titel: "Eigen musket-glb, optioneel (valt terug op factie-musket)", optioneel: true, na: ["cavalry", "artillery", "role"] },
+  { id: "musket", kop: "Musket", titel: "Eigen musket-glb, optioneel (valt terug op factie-musket)", optioneel: true, na: ["cavalry", "artillery"] },
   { id: "godot",  kop: "Godot",  titel: "Godot geimporteerd + Model-tuner (schaal/positie/musket/vuurmond)" },
 ];
 
@@ -200,39 +200,8 @@ const TYPES = [
   { id: "infantry",  naam: "Infanterie" },
   { id: "cavalry",   naam: "Cavalerie (big bro)" },
   { id: "artillery", naam: "Artillerie" },
-  { id: "role",      naam: "Regimentsrollen (figuranten)", rollen: true },
 ];
 const ARCHETYPES = ["base", "spd", "hp", "atk", "mix"];
-
-/* Regimentsrollen per factie (MODEL-WISHLIST par. 3d, besluit Max 28 juli).
-   Cosmetische look-laag: een willekeurige pion krijgt dit model als basis.
-   Bestandsnaam = infantry_<rol>.glb, fallback naar infantry_base. Geen musket. */
-const ROLLEN = {
-  mouse:     [{ id: "flag" }, { id: "drum" }, { id: "horn" }, { id: "canteen" }],
-  pig:       [{ id: "flag" }, { id: "drum" }, { id: "canteen" }, { id: "sapper" }],
-  lion:      [{ id: "flag" }, { id: "drummajor" }, { id: "horn" }, { id: "officer" }],
-  bear:      [{ id: "sapper" }, { id: "flag" }, { id: "drum" }, { id: "medic" }],
-  wolf:      [{ id: "horn" }, { id: "flag" }, { id: "scout" }, { id: "drum" }],
-  crocodile: [{ id: "flag" }, { id: "scout" }, { id: "drum" }, { id: "officer" }],
-};
-
-/* Attribuut-props: apart genereren, in Blender parenten aan hand/heup als
-   deel `prop`. Rollen zonder regel hebben hun attribuut al op het model
-   (officier = sabelschede, verkenner = kijkerkoker, veldarts = tas). */
-const ROL_PROPS = {
-  flag:      { naam: "prop_flag",   tekst: "Single prop, tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  drum:      { naam: "prop_drum",   tekst: "Single prop, Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  horn:      { naam: "prop_horn",   tekst: "Single prop, coiled brass Napoleonic cavalry bugle with a woven cord. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  sapper:    { naam: "prop_axe",    tekst: "Single prop, heavy sapper felling axe with a long dark wooden haft and a broad iron head. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  canteen:   { naam: "prop_barrel", tekst: "Single prop, small canteen-woman brandy keg on a leather sling. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  drummajor: { naam: "prop_mace",   tekst: "Single prop, ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-};
-
-const ROL_NAMEN = {
-  flag: "vaandeldrager", drum: "tamboer", horn: "hoornblazer", sapper: "sapeur",
-  officer: "officier", canteen: "marketentster", scout: "verkenner",
-  medic: "veldchirurgijn", drummajor: "tamboer-majeur",
-};
 
 const INF_CLIPS = [
   { id: "idle",   naam: "idle (1-3x)",     zoek: "Rifle Idle" },
@@ -280,13 +249,25 @@ const FACTIES = [
   },
 ];
 
+/* Figuranten-props (MODEL-WISHLIST par. 3d, besluit Max 28 juli).
+   Een pion ZONDER gekoppelde kaart vecht niet: hij draagt geen musket maar
+   een attribuut (trommel, vaandel, hoorn...). Het KARAKTER blijft gewoon het
+   bestaande infantry_base-model van de factie -- alleen de prop in de hand
+   verschilt. Zes losse props, gedeeld over alle facties.
+   Pad: assets/models/props/<id>.glb (of per factie een eigen variant in
+   assets/models/<factie>/<id>.glb). Statische mesh, geen rig/animatie. */
+const PROPS = [
+  { id: "prop_flag",   naam: "Vaandel",        rol: "vaandeldrager", tekst: "Single prop, tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_drum",   naam: "Trommel",        rol: "tamboer", tekst: "Single prop, Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_horn",   naam: "Hoorn",          rol: "hoornblazer", tekst: "Single prop, coiled brass Napoleonic cavalry bugle with a woven cord. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_axe",    naam: "Sapeursbijl",    rol: "sapeur", tekst: "Single prop, heavy sapper felling axe with a long dark wooden haft and a broad iron head. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_barrel", naam: "Brandewijnvat",  rol: "marketentster", tekst: "Single prop, small canteen-woman brandy keg on a leather sling. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_mace",   naam: "Tamboer-staf",   rol: "tamboer-majeur", tekst: "Single prop, ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+];
+
 /* Generatie-prompts per factie/unit (MODEL-WISHLIST par. 3) */
 const PROMPTS = {
 mouse: {
-  infantry_flag: "Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with an empty leather flag-carrier harness and bandolier across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_drum: "Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with shoulder cords and dark grey shako, with an empty drum-sling strap over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_horn: "Single character, extremely thin and lanky anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic bugler uniform with cords and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_canteen: "Single character, short round anthropomorphic mouse canteen-woman with oversized round ears and long whiskers, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic canteen-woman outfit, apron and small dark grey shako, with an empty leather barrel-sling across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_base: "Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako. Clean neutral studio background, single figure only, no text.",
   infantry_hp: "Single character, enormously fat, round-bellied, short and squat anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako. Clean neutral studio background, single figure only, no text.",
@@ -299,10 +280,6 @@ mouse: {
   cavalry_mix: "Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a sturdy war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the war rabbit has long ears, solid legs and a leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text.",
 },
 pig: {
-  infantry_flag: "Single character, plump round-bellied anthropomorphic pig with a broad snout and floppy ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with a heavy leather flag-carrier harness and bandolier across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_drum: "Single character, enormously fat round-bellied anthropomorphic pig with a broad snout and floppy ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with shoulder cords and dark grey shako, with a wide empty drum-sling strap over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_canteen: "Single character, plump anthropomorphic pig canteen-woman with a broad snout and floppy ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic canteen-woman outfit with a stained apron and headscarf, with an empty leather barrel-sling across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_sapper: "Single character, broad heavyset anthropomorphic pig with a broad snout, floppy ears and a full bushy beard, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic sapper uniform with a thick leather work apron, crossed white belts and a tall dark bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_base: "Single character, plump, chubby build anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey bicorne hat, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_spd: "Single character, lighter and leaner but still plump and round-bellied young anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey bicorne hat. Clean neutral studio background, single figure only, no text.",
   infantry_hp: "Single character, enormously fat, pot-bellied, short and squat anthropomorphic pig with a big flat upturned snout, floppy ears and a curly tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey bicorne hat. Clean neutral studio background, single figure only, no text.",
@@ -320,10 +297,6 @@ pig: {
   artillery_mix: "Single prop, Napoleonic field cannon on a weathered dark wooden carriage, with a small anthropomorphic pig gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
 },
 lion: {
-  infantry_flag: "Single character, lean athletic anthropomorphic cheetah with spotted fur, tear-stripe markings and a slender build, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with gold-trimmed epaulettes and a plumed dark grey shako, with an ornate gilded flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_drummajor: "Single character, tall imposing anthropomorphic lion with a full flowing mane, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing an ornate weathered dark grey Napoleonic drum-major uniform with heavy gold braid, gold-fringed epaulettes, a sash and a towering plumed bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_horn: "Single character, lean athletic anthropomorphic cheetah with spotted fur and tear-stripe markings, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic trumpeter uniform with reversed colors, gold cords and a plumed dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_officer: "Single character, proud upright anthropomorphic lion with a full mane, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic officer coat with gold epaulettes, a silk waist sash, tall boots and a plumed bicorne hat worn sideways, with an empty sabre scabbard at the hip, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_base: "Single character, average build anthropomorphic cheetah with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic officer's uniform with dark grey epaulettes and tall black bearskin cap, unarmed. Clean neutral studio background, single figure only, no text.",
   infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic cheetah sprinter with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and tall black bearskin cap. Clean neutral studio background, single figure only, no text.",
   infantry_hp: "Single character, enormously fat, round, short and squat anthropomorphic cheetah with bold black rosette spots and teardrop face stripes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass and a tall black bearskin cap. Clean neutral studio background, single figure only, no text.",
@@ -341,10 +314,6 @@ lion: {
   artillery_mix: "Single prop, ornate Napoleonic field cannon on a weathered dark wooden carriage with pewter detailing, with a small anthropomorphic cheetah gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
 },
 bear: {
-  infantry_sapper: "Single character, massive broad-shouldered anthropomorphic raccoon with a black facial mask, ringed tail and an enormous bushy beard, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic sapper uniform with a heavy studded leather work apron, crossed belts, gauntlets and a huge dark bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_flag: "Single character, stocky heavyset anthropomorphic raccoon with a black facial mask and ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako, with a reinforced leather flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_drum: "Single character, stocky heavyset anthropomorphic raccoon with a black facial mask and ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with heavy shoulder cords and dark grey shako, with a wide reinforced empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_medic: "Single character, stocky anthropomorphic raccoon with a black facial mask, ringed tail and small round spectacles, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic field-surgeon coat with rolled-up sleeves, a blood-stained apron, a satchel strap across the chest and a soft dark grey forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_base: "Single character, average build anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat and dark grey round Russian ushanka-style fur hat with ear flaps, unarmed. Clean neutral studio background, single figure only, no text.",
   infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey round Russian ushanka-style fur hat with ear flaps. Clean neutral studio background, single figure only, no text.",
   infantry_hp: "Single character, enormously fat, round-bellied, short and squat anthropomorphic raccoon with a bold black bandit-mask face, huge round ears and a thick black-ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a heavy dark iron breastplate and round Russian ushanka-style fur hat with ear flaps. Clean neutral studio background, single figure only, no text.",
@@ -362,10 +331,6 @@ bear: {
   artillery_mix: "Single prop, Napoleonic winter field cannon on a weathered dark wooden carriage, with a small anthropomorphic raccoon gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text.",
 },
 wolf: {
-  infantry_horn: "Single character, lean anthropomorphic fox with a narrow muzzle, alert pointed ears and a bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic light-infantry uniform with a green-tipped plume, hunting cords and a dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_flag: "Single character, lean anthropomorphic fox with a narrow muzzle and bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a battered, strictly dark grey Napoleonic uniform patched with scavenged fur and a dark grey shako, with a crude rope-and-leather flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_scout: "Single character, wiry anthropomorphic fox with a narrow muzzle and bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic skirmisher uniform with a short cut-down coat, a rolled blanket over the shoulder, a spyglass case on the belt and a soft dark grey forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_drum: "Single character, lean anthropomorphic fox with a narrow muzzle and bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a battered, strictly dark grey Napoleonic drummer uniform with frayed shoulder cords and a dark grey shako, with a worn empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_base: "Single character, average build anthropomorphic fox with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered military uniform and dark grey forage cap, unarmed. Clean neutral studio background, single figure only, no text.",
   infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed gaunt anthropomorphic fox with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered short military jacket and forage cap. Clean neutral studio background, single figure only, no text.",
   infantry_hp: "Single character, enormously fat, thick-furred, short and squat anthropomorphic fox with huge pointed ears, a sharp narrow snout and a big bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic tattered greatcoat with a scavenged dark steel breastplate and dark grey forage cap. Clean neutral studio background, single figure only, no text.",
@@ -383,10 +348,6 @@ wolf: {
   artillery_mix: "Single prop, scavenged Napoleonic field cannon on a patched weathered dark wooden carriage, with a small anthropomorphic fox gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text.",
 },
 crocodile: {
-  infantry_flag: "Single character, average build anthropomorphic lizard with mottled camouflage scales, slit eyes and a long tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform wrapped in dark camouflage cloth and a dark grey shako, with a cloth-wrapped flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_scout: "Single character, low-slung sinewy anthropomorphic lizard with mottled camouflage scales, slit eyes and a long tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic skirmisher uniform draped with a ragged swamp-reed camouflage cloak, netting over the shoulders and a soft dark grey forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_drum: "Single character, average build anthropomorphic lizard with mottled camouflage scales and slit eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with muted cords and a dark grey shako, with a cloth-wrapped empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
-  infantry_officer: "Single character, tall imposing anthropomorphic crocodile with armored scales, a long snout and heavy jaws, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic officer coat with muted dark braid, a waist sash, a spyglass on the belt and a plain bicorne hat, with an empty sabre scabbard at the hip, unarmed with empty hands. Clean neutral studio background, single figure only, no text.",
   infantry_base: "Single character, average build anthropomorphic lizard with camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and a dark grey tricorne musketeer hat under a loose dark grey hooded cloak, unarmed. Clean neutral studio background, single figure only, no text.",
   infantry_spd: "Single character, extremely tall, thin, lanky and long-limbed anthropomorphic gecko-like lizard with camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic short military jacket and dark grey tricorne musketeer hat. Clean neutral studio background, single figure only, no text.",
   infantry_hp: "Single character, enormously fat, round, short and squat anthropomorphic lizard with thick armored scutes and camouflage-pattern scales, big lidded eyes and a long tapering tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic greatcoat with a dark steel cuirass and a dark grey tricorne musketeer hat. Clean neutral studio background, single figure only, no text.",
@@ -489,7 +450,6 @@ function telFactie(f) {
   let gedaan = 0, totaal = 0;
   for (const t of TYPES) {
     if (f.geenTypes && f.geenTypes.includes(t.id)) continue;
-    if (t.rollen) continue;  // figuranten zijn een optionele look-laag
     for (const a of ARCHETYPES) {
       if (a === "mix") continue;
       for (const s of STAPPEN) {
@@ -510,6 +470,52 @@ function bouw() {
   const nav = document.getElementById("facnav");
   main.innerHTML = "";
   nav.innerHTML = "";
+
+  /* -- Figuranten-props (gedeeld, staat los van de facties) -- */
+  {
+    const psec = document.createElement("section");
+    psec.className = "factie";
+    psec.id = "f-props";
+    psec.style.setProperty("--fc", "#c98b3a");
+    let ph = `
+      <div class="fhead" data-fac="props">
+        <span class="chev">&#9662;</span>
+        <h2>Figuranten-props</h2>
+        <span class="dieren">6 attributen, gedeeld over alle facties | assets/models/props/</span>
+      </div>
+      <div class="fbody">
+      <div class="facnote">Een pion ZONDER gekoppelde kaart vecht niet: die draagt geen musket maar
+      een attribuut. Het karakter blijft het gewone <code>infantry_base</code>-model van de factie --
+      alleen de prop in de hand verschilt, precies zoals het musket nu al werkt. Statische mesh,
+      geen rig en geen animatie nodig. Wil je een factie-eigen variant, zet 'm dan als
+      <code>assets/models/&lt;factie&gt;/&lt;prop&gt;.glb</code>; anders pakt iedereen de gedeelde versie.</div>
+      <div class="tabelwrap"><table><thead><tr><th class="unit">Prop</th><th title="Laag-poly prop gegenereerd">Model</th><th title="In Godot geimporteerd + met de Model-tuner op de hand gezet">Godot</th><th>Prompt</th><th class="unit">Notitie</th></tr></thead><tbody>`;
+    for (const pr of PROPS) {
+      let cellen = "";
+      for (const sid of ["gen", "godot"]) {
+        const key = `props.${pr.id}.${sid}`;
+        cellen += `<td><input type="checkbox" class="opt" data-key="${key}" ${state.checks[key] ? "checked" : ""}></td>`;
+      }
+      const noteKey = `props.${pr.id}`;
+      const prId = `pr-props-${pr.id}`;
+      ph += `
+        <tr class="optioneel" data-rij="props.${pr.id}">
+          <td class="unit">${pr.id}<span class="tag">${pr.rol}</span></td>
+          ${cellen}
+          <td><button class="pknop" data-toggle="${prId}">prompt &#9662;</button></td>
+          <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
+        </tr>
+        <tr class="promptrij" id="${prId}" hidden><td colspan="5"><div class="promptbox">${promptGroepHtml(pr.naam + " (" + pr.rol + ")", pr.tekst, true)}</div></td></tr>`;
+    }
+    ph += `</tbody></table></div>
+      <div class="legenda">De game kiest zelf welke ongekoppelde pion welk attribuut krijgt
+      (deterministisch op pion-id, ongeveer 1 op de 3 -- knop <code>ROL_DICHTHEID</code> in
+      <code>pawn_view.gd</code>). Ontbreekt een prop, dan draagt die pion gewoon zijn musket:
+      je kunt dus met een enkele prop beginnen. Zie MODEL-WISHLIST.md par. 3d.</div>
+      </div>`;
+    psec.innerHTML = ph;
+    main.appendChild(psec);
+  }
 
   for (const f of FACTIES) {
     const a = document.createElement("a");
@@ -563,10 +569,9 @@ function bouw() {
     for (const t of TYPES) {
       if (f.geenTypes && f.geenTypes.includes(t.id)) continue;
       html += `<tr class="typekop"><td colspan="${STAPPEN.length + 3}">${t.naam}<span class="subprog" id="sub-${f.id}-${t.id}"></span></td></tr>`;
-      const archs = t.rollen ? (ROLLEN[f.id] || []).map(r => r.id) : ARCHETYPES;
-      for (const arch of archs) {
-        const unit = (t.rollen ? "infantry_" : t.id + "_") + arch;
-        const optRij = t.rollen ? true : arch === "mix";
+      for (const arch of ARCHETYPES) {
+        const unit = t.id + "_" + arch;
+        const optRij = arch === "mix";
         let alleKlaar = true;
         let cellen = "";
         for (const s of STAPPEN) {
@@ -578,14 +583,13 @@ function bouw() {
         }
         const prompt = PROMPTS[f.id] && PROMPTS[f.id][unit];
         const musket = t.id === "infantry" ? musketPrompt(f.id, arch) : null;
-        const rolProp = t.rollen ? ROL_PROPS[arch] : null;
-        const heeftPrompt = prompt || musket || rolProp;
+        const heeftPrompt = prompt || musket;
         const noteKey = `${f.id}.${unit}`;
         const prId = `pr-${f.id}-${unit}`;
         const knopTekst = (prompt && musket) ? "prompts &#9662;" : "prompt &#9662;";
         html += `
           <tr class="${optRij ? "optioneel" : ""}${alleKlaar && !optRij ? " done" : ""}" data-rij="${f.id}.${unit}">
-            <td class="unit">${unit}${t.rollen ? `<span class="tag">${ROL_NAMEN[arch] || ""}</span>` : (optRij ? `<span class="tag">optioneel</span>` : "")}</td>
+            <td class="unit">${unit}${optRij ? `<span class="tag">optioneel</span>` : ""}</td>
             ${cellen}
             <td>${heeftPrompt ? `<button class="pknop" data-toggle="${prId}">${knopTekst}</button>` : `<span class="na">-</span>`}</td>
             <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
@@ -594,14 +598,13 @@ function bouw() {
           let box = `<div class="promptbox">`;
           if (prompt) box += promptGroepHtml(`Model-prompt ${f.naam} / ${unit}`, prompt, false);
           if (musket) box += promptGroepHtml(`Musket ${f.naam} / ${unit}_musket`, musket, true);
-          if (rolProp) box += promptGroepHtml(`Attribuut ${rolProp.naam} (los genereren, in Blender aan de hand parenten als deel prop)`, rolProp.tekst, true);
           box += `</div>`;
           html += `<tr class="promptrij" id="${prId}" hidden><td colspan="${STAPPEN.length + 3}">${box}</td></tr>`;
         }
       }
     }
     html += `</tbody></table></div>`;
-    html += `<div class="legenda"><b>Blauwe vinkjes</b> = optioneel (telt niet mee in de voortgang). Volgorde per model: genereren, Mixamo-rig, delen splitsen (armL armR body hat legL legR tail), clips + fix-pass, 2 exports (glb + _gibs.glb), team-textures, 1024-import, Godot + tuner. Zie MODEL-WISHLIST.md par. 4. <b>Musket</b> (oranje prompt, alleen infanterie): eigen wapen per archetype (spd = lang/dun, hp = dubbelloops, atk = groot-kaliber + bajonet, base = standaard, mix = karabijn), met factie-materiaal. Zie par. 3c.<br><b>Regimentsrollen</b> (figuranten, par. 3d): een pion ZONDER gekoppelde kaart vecht niet en staat als figurant op het bord (tamboer, vaandeldrager, marketentster); zodra je een kaart koppelt wordt het weer de soldaat met zijn archetype-silhouet. Puur cosmetisch, deterministisch op pion-id, ongeveer 1 op de 3 ongekoppelde pionnen (knop ROL_DICHTHEID). Bestand <code>infantry_&lt;rol&gt;.glb</code>, fallback naar <code>infantry_base</code>; deze modellen krijgen GEEN musket. Attribuut apart genereren en in Blender parenten aan hand of heup als deel <code>prop</code>.</div>`;
+    html += `<div class="legenda"><b>Blauwe vinkjes</b> = optioneel (telt niet mee in de voortgang). Volgorde per model: genereren, Mixamo-rig, delen splitsen (armL armR body hat legL legR tail), clips + fix-pass, 2 exports (glb + _gibs.glb), team-textures, 1024-import, Godot + tuner. Zie MODEL-WISHLIST.md par. 4. <b>Musket</b> (oranje prompt, alleen infanterie): eigen wapen per archetype (spd = lang/dun, hp = dubbelloops, atk = groot-kaliber + bajonet, base = standaard, mix = karabijn), met factie-materiaal. Zie par. 3c.</div>`;
     html += `</div>`;
     sec.innerHTML = html;
     main.appendChild(sec);

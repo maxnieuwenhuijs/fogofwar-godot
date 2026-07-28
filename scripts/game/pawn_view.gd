@@ -1476,21 +1476,36 @@ func set_unit_type(unit_type: int) -> void:
 ## bestand, dan valt dit terug op `_basis.glb` en anders op het geometrische
 ## stuk met een subtiel archetype-silhouet. Aanroepen mag elke refresh
 ## (idempotent via _char_key).
-## Regimentsrollen (MODEL-WISHLIST 3d, besluit Max 28 juli): een pion ZONDER
+## Figuranten (MODEL-WISHLIST 3d, besluit Max 28 juli): een pion ZONDER
 ## gekoppelde kaart vecht niet -- dat is de tamboer, de vaandeldrager, de
-## marketentster. Puur cosmetisch; de staat verandert niet. Deterministisch op
+## marketentster. Het KARAKTERMODEL blijft gewoon infantry_base; alleen de
+## prop in de hand wordt een trommel of vaandel (zelfde mechaniek als het
+## musket). Puur cosmetisch; de staat verandert niet. Deterministisch op
 ## pion-id (nooit randi), dus replays zien er identiek uit. ROL_DICHTHEID 3 =
 ## ongeveer een op de drie ongekoppelde pionnen (1 = iedereen, 0 = uit).
-const ROLLEN := ["flag", "drum", "horn", "sapper", "officer", "canteen", "scout", "medic"]
+const ROLLEN := ["flag", "drum", "horn", "sapper", "canteen", "drummajor"]
 const ROL_DICHTHEID := 3
 
 
+var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
+
+
 func _rol_voor_pion() -> String:
-	if ROL_DICHTHEID <= 0 or pawn_id < 0:
-		return "base"
-	if pawn_id % ROL_DICHTHEID != 0:
-		return "base"
+	if ROL_DICHTHEID <= 0 or pawn_id < 0 or pawn_id % ROL_DICHTHEID != 0:
+		return ""
 	return ROLLEN[(pawn_id / ROL_DICHTHEID) % ROLLEN.size()]
+
+
+## Attribuut-prop bij een rol: eerst een factie-eigen variant, anders de
+## gedeelde set in assets/models/props/. Leeg = niets gevonden (dan pakt
+## _attach_weapon gewoon het musket, zodat een half afgemaakte set niets breekt).
+static func prop_for(rol: String, fac: String) -> Dictionary:
+	var naam := "prop_" + rol
+	for pad in ["%s%s/%s" % [MODELS_DIR, fac, naam], "%sprops/%s" % [MODELS_DIR, naam]]:
+		for ext in [".glb", ".fbx"]:
+			if ResourceLoader.exists(pad + ext):
+				return {"file": pad + ext, "key": pad.replace(MODELS_DIR, "")}
+	return {"file": "", "key": ""}
 
 
 func set_character(doctrine: int, unit_type: int, card) -> void:
@@ -1499,9 +1514,10 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	var arch: String = "base"
 	if card != null:
 		arch = Constants.card_archetype(card.hp, card.stamina, card.attack)
-	elif unit_type == Constants.UnitType.INFANTRY:
-		arch = _rol_voor_pion()  # ongekoppeld = figurant (valt terug op base)
-	var key := "%d:%d:%s" % [doctrine, unit_type, arch]
+	# Figurant-rol (alleen ongekoppelde infanterie): het KARAKTER blijft
+	# gewoon base; alleen de prop in de hand wordt een trommel/vaandel.
+	_rol = _rol_voor_pion() if unit_type == Constants.UnitType.INFANTRY and card == null else ""
+	var key := "%d:%d:%s:%s" % [doctrine, unit_type, arch, _rol]
 	if key == _char_key:
 		return
 	_char_key = key
@@ -1600,6 +1616,12 @@ func _attach_weapon(fac: String) -> void:
 	if _unit_type != 0:
 		return  # v1: alleen infanterie draagt het musket
 	var wp := weapon_for(_model_path, fac)
+	if _rol != "":
+		# Figurant: trommel/vaandel in plaats van het musket. Ontbreekt de
+		# prop, dan valt hij terug op het gewone wapen (niets gaat stuk).
+		var rp := prop_for(_rol, fac)
+		if String(rp["file"]) != "":
+			wp = rp
 	var path: String = wp["file"]
 	_weapon_tune_key = wp["key"]
 	if path == "":

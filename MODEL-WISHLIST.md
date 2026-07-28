@@ -391,54 +391,76 @@ neutral studio background, the weapon only, no hands, no text.`
 | `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
 | `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
 
-## 3d. Regimentsrollen ("figuranten") -- vaandeldrager, tamboer, sapeur
+## 3d. Figuranten -- vaandeldrager, tamboer, sapeur (props op de basissoldaat)
 
 *Besluit Max, 28 juli 2026.* Elk Napoleontisch regiment liep rond met een paar
 onmiskenbare figuren: de **vaandeldrager** met de adelaar, de **tamboer** die de
-pas sloeg, de **hoornblazer**, de bebaarde **sapeur** met bijl en leren schort,
-de **marketentster** met haar vaatje. Een willekeurige pion in je leger krijgt
-zo'n model als basis -- puur sfeer, geen regels.
+pas sloeg, de **hoornblazer**, de bebaarde **sapeur** met zijn bijl, de
+**marketentster** met haar vaatje en de **tamboer-majeur** met zijn versierde
+staf.
 
-**De regel (besluit Max, 28 juli): ONGEKOPPELDE pionnen zijn de figuranten.**
+**De regel: ONGEKOPPELDE pionnen zijn de figuranten.**
 
 Een pion zonder gekoppelde kaart vecht niet -- en dat is nou precies wat een
-tamboer, vaandeldrager of marketentster is. Dus: zolang een pion geen kaart
-heeft, staat hij als figurant op het bord; zodra je er een kaart aan koppelt
-verandert hij in de soldaat met het bijbehorende archetype-silhouet
-(dun/dik/breed). Koppel je hem later los, dan pakt hij zijn trommel weer op.
+tamboer of vaandeldrager is. Zolang een pion geen kaart heeft draagt hij geen
+musket maar een **attribuut**; zodra je een kaart koppelt wordt het weer de
+gewone soldaat met zijn archetype-silhouet (dun/dik/breed). Loskoppelen? Dan
+pakt hij zijn trommel weer op.
+
+**Geen nieuwe karakters nodig (besluit Max):** het karaktermodel blijft gewoon
+de bestaande `infantry_base` van de factie. Alleen de prop in de hand
+verschilt -- exact hetzelfde mechaniek als het musket dat er nu al hangt. Je
+maakt dus **zes losse props** in plaats van 24 karakters.
+
+| Prop | Rol | Voorwerp-omschrijving (prompt-kern) |
+|---|---|---|
+| `prop_flag` | vaandeldrager | tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner |
+| `prop_drum` | tamboer | Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks |
+| `prop_horn` | hoornblazer | coiled brass Napoleonic cavalry bugle with a woven cord |
+| `prop_axe` | sapeur | heavy sapper felling axe with a long dark wooden haft and a broad iron head |
+| `prop_barrel` | marketentster | small canteen-woman brandy keg on a leather sling |
+| `prop_mace` | tamboer-majeur | ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels |
+
+**Prompt-template:** `Single prop, <voorwerp>. Gritty realistic AAA-game concept
+art, highly detailed, low poly. Side profile view, clean neutral studio
+background, the object only, no hands, no text.`
+
+**Bestandspad:** `assets/models/props/<prop>.glb` (gedeeld door alle facties).
+Wil je een factie-eigen variant -- een muizentrommel is nu eenmaal geen
+berentrommel -- zet 'm dan als `assets/models/<factie>/<prop>.glb`; die wint.
+Statische mesh: **geen rig, geen animatie, geen gibs, geen team-texture**.
+Fijnafstelling (schaal/positie/rotatie in de hand) gaat via de Model-tuner,
+net als bij het musket.
 
 Waarom dit goed werkt:
 
 1. **Het is leesbare spelinformatie.** Je ziet in een oogopslag wie nog
-   ongekoppeld (en dus inactief) is -- nu zien die pionnen er hetzelfde uit als
-   een gewone soldaat.
+   ongekoppeld (en dus inactief) is.
 2. **Het stat-silhouet blijft heilig** (sectie 1): een ongekoppelde pion heeft
    geen stats om te tonen, dus er gaat geen informatie verloren.
-3. **Puur cosmetisch.** Geen stat, geen perk, geen zichtbaarheidseffect; de
-   staat verandert niet, dus goldens en replays blijven byte-identiek.
-4. **Deterministisch.** Welke rol een pion krijgt volgt uit zijn pion-id (nooit
-   `randi()`), zodat dezelfde replay er elke keer identiek uitziet en de rol
-   niet verspringt tussen frames.
-5. **Dichtheid instelbaar.** Niet elke ongekoppelde pion wordt een muzikant --
-   een heel leger vol trommels is te veel. Standaard krijgt ongeveer een op de
-   drie ongekoppelde pionnen een rol (knop `ROL_DICHTHEID` in `pawn_view.gd`);
-   de rest blijft de gewone `base`. Zet 'm op 1 als je iedereen wilt.
-6. **Alleen infanterie.** Cavalerie (big bro) en artillerie houden hun eigen
-   model; die hebben sowieso geen kaartloze variant nodig.
-7. **Fallback blijft de reddingslijn.** `infantry_<rol>.glb` ontbreekt -> gewoon
-   `infantry_base.glb`. Het haakje mag dus in de code staan voordat er ook maar
-   een model bestaat (en dat doet het inmiddels ook).
-8. **Geen musket-prop.** Deze figuren dragen hun attribuut in plaats van een
-   geweer; de game hangt er dus geen `_musket.glb` aan (zie 3c).
+3. **Puur cosmetisch.** Geen stat, geen perk; de staat verandert niet, dus
+   goldens en replays blijven byte-identiek.
+4. **Deterministisch.** Welke pion welk attribuut krijgt volgt uit zijn pion-id
+   (nooit `randi()`), dus dezelfde replay ziet er elke keer identiek uit.
+5. **Dichtheid instelbaar.** Standaard krijgt ongeveer een op de drie
+   ongekoppelde pionnen een attribuut (`ROL_DICHTHEID` in `pawn_view.gd`;
+   1 = iedereen, 0 = uit). Een heel leger vol trommels is te veel van het goede.
+6. **Alleen infanterie**, en **ontbrekende props breken niets**: die pion
+   draagt dan gewoon zijn musket. Je kunt dus met een enkele trommel beginnen.
 
-**Pijplijn-aandachtspunt:** genereer het lijf in A-pose ZONDER attribuut (anders
-verpest de Mixamo auto-rig het) en zet vlag/trommel/hoorn er in Blender als los
-deel bij, geparent aan de juiste bot (hand of heup). Deel-namen: de gewone zeven
-(`armL armR body hat legL legR tail`) plus `prop`. Gibs exporteren zoals altijd
-(`<model>_gibs.glb`), zodat een gesneuvelde tamboer zijn trommel laat vallen.
+**Code-haakje: GEBOUWD (28 juli).** `PawnView.set_character()` zet een rol op
+ongekoppelde infanterie (`_rol_voor_pion()`), en `_attach_weapon()` hangt dan
+`prop_for(rol, factie)` aan de hand in plaats van het musket -- met terugval op
+het musket als de prop nog niet bestaat. Er is dus niets meer nodig aan de
+codekant: elke prop die je in `assets/models/props/` zet, staat meteen in het
+spel.
 
-**Bestandsnamen:** `assets/models/<factie>/infantry_<rol>.glb`
-rollen: `flag` `drum` `horn` `sapper` `officer` `canteen` `scout` `medic`
+### Luxe-variant voor later (optioneel): eigen rol-karakters
+
+Wil je ooit verder gaan dan een prop -- een tamboer met een echte
+tamboer-jas, een sapeur met berenmuts en leren schort -- dan staan de
+karakter-prompts hieronder klaar (`infantry_<rol>.glb`, valt terug op
+`infantry_base`). **Niet nodig voor de figuranten-laag hierboven.**
 
 ### Rol-prompts per factie (4 per factie)
 
@@ -496,52 +518,22 @@ rollen: `flag` `drum` `horn` `sapper` `officer` `canteen` `scout` `medic`
 | `infantry_drum` | Single character, average build anthropomorphic lizard with mottled camouflage scales and slit eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with muted cords and a dark grey shako, with a cloth-wrapped empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
 | `infantry_officer` | Single character, tall imposing anthropomorphic crocodile with armored scales, a long snout and heavy jaws, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic officer coat with muted dark braid, a waist sash, a spyglass on the belt and a plain bicorne hat, with an empty sabre scabbard at the hip, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
 
-### Attribuut-props (los genereren, per factie herbruikbaar)
-
-Het attribuut is een aparte prop die je in Blender aan de hand of heup parent
-(deel-naam `prop`). Prompt-template: `Single prop, <voorwerp>. Gritty realistic
-AAA-game concept art, highly detailed, low poly. Side profile view, clean
-neutral studio background, the object only, no hands, no text.`
-
-| Prop | Voorwerp-omschrijving |
-|---|---|
-| `prop_flag` | tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner |
-| `prop_drum` | Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks |
-| `prop_horn` | coiled brass Napoleonic cavalry bugle with a woven cord |
-| `prop_axe` | heavy sapper felling axe with a long dark wooden haft |
-| `prop_barrel` | small canteen-woman brandy keg on a leather sling |
-| `prop_mace` | ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels |
-
-### Tracker -- regimentsrollen (24 modellen + 5 props)
+### Tracker -- figuranten-props (6 stuks)
 
 Status: `-` gewenst | `~` in aanmaak | `x` in het spel
 
-| Factie | flag | drum | horn | sapper | officer | canteen | scout | medic |
-|---|---|---|---|---|---|---|---|---|
-| Muis | - | - | - | | | - | | |
-| Varken | - | - | | - | | - | | |
-| Leeuw | - | - (drummajor) | - | | - | | | |
-| Beer | - | - | | - | | | | - |
-| Wolf | - | - | - | | | | - | |
-| Krokodil | - | - | | | - | | - | |
+| Prop | Rol | Status |
+|---|---|---|
+| `prop_flag` | vaandeldrager | - |
+| `prop_drum` | tamboer | - |
+| `prop_horn` | hoornblazer | - |
+| `prop_axe` | sapeur | - |
+| `prop_barrel` | marketentster | - |
+| `prop_mace` | tamboer-majeur | - |
 
-| Prop | Status |
-|---|---|
-| `prop_flag` | - |
-| `prop_drum` | - |
-| `prop_horn` | - |
-| `prop_axe` | - |
-| `prop_barrel` | - |
-| `prop_mace` | - |
-
-**Code-haakje: GEBOUWD (28 juli).** `PawnView.set_character()` kiest bij
-`card == null` en infanterie een rol via `_rol_voor_pion()` (pion-id modulo de
-rollijst, dichtheid via `ROL_DICHTHEID`) en probeert `infantry_<rol>.glb`; de
-bestaande fallback-keten vangt ontbrekende bestanden op, en omdat de
-model-sleutel op de kaart is gebaseerd wisselt het model vanzelf terug zodra er
-gekoppeld wordt. Er is dus nu al niets meer nodig aan de codekant: elk
-rol-model dat je in `assets/models/<factie>/` zet, verschijnt meteen in het
-spel.
+*(De 24 rol-karakters uit de luxe-variant hierboven zijn optioneel en staan
+niet in deze tracker; zie `model-tracker.html` voor de klikbare versie van de
+props.)*
 
 ## 4. Nieuw model importeren -- stap voor stap
 
