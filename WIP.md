@@ -278,6 +278,8 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   rekenen mee. Logica: in het punten-model kost een ruiter 2 punten en
   hoort hij taaier te zijn dan een 1-punt-soldaat. Daarna trainen + arena.
 
+- **GEFIXT kanon-visuals (28 juli): `cannon_act` ontbrak in de effecten-match van `_on_action_performed` — regels verwerkten de kill, maar geluid/kogel/ragdoll vielen door de match heen. Nu vertaald naar het 4.1-equivalent (shoot->shot, roll->move; result-velden identiek). Nog open uit dit onderzoek: de 'Lambda capture freed'-regen in shoottest (kaartfases, verdacht: i18n-refactor) + headless-guard voor de shoottest-screenshot.**
+  *(oorspronkelijk spoor hieronder)*
 - **OPEN BUG kanon-visuals (28 juli, playtest Max) — ONDERZOEK LOOPT.**
   Symptoom: kanon "schiet niet meer" en geen dood-animatie; andere
   animaties wel; combat-feel staat AAN. Engine bewezen groen (12

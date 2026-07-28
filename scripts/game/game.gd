@@ -1555,6 +1555,17 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				_retaliation_sound(action.defender_id, ret_del)
 				if result.get("attacker_eliminated", false):
 					_death_sound(action.attacker_id, ret_del + 0.05)
+		"cannon_act":
+			# BUG-FIX (28 juli, Max: "kanon schiet zonder geluid/animatie"):
+			# het v4.2-actietype viel dwars door deze match — regels verwerkten
+			# de kill maar kogel/geluid/ragdoll werden nooit aangeroepen.
+			# Vertaal naar het 4.1-equivalent; het result heeft dezelfde velden.
+			if String(action.get("sub", "")) == "shoot":
+				_on_action_performed({"type": "shot", "shooter_id": action.pawn_id,
+					"target_id": action.target_id}, result)
+			elif String(action.get("sub", "")) == "roll":
+				_on_action_performed({"type": "move", "pawn_id": action.pawn_id,
+					"from": action.from, "target": action.target}, result)
 		"shot":
 			var shooter: PawnView = _pawn_views.get(action.shooter_id)
 			if shooter != null:
