@@ -391,6 +391,139 @@ neutral studio background, the weapon only, no hands, no text.`
 | `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
 | `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
 
+## 3d. Regimentsrollen ("figuranten") -- vaandeldrager, tamboer, sapeur
+
+*Besluit Max, 28 juli 2026.* Elk Napoleontisch regiment liep rond met een paar
+onmiskenbare figuren: de **vaandeldrager** met de adelaar, de **tamboer** die de
+pas sloeg, de **hoornblazer**, de bebaarde **sapeur** met bijl en leren schort,
+de **marketentster** met haar vaatje. Een willekeurige pion in je leger krijgt
+zo'n model als basis -- puur sfeer, geen regels.
+
+**Spelregels (dit is een LOOK-laag, geen regel-laag):**
+
+1. **Puur cosmetisch.** Geen stat, geen perk, geen zichtbaarheidseffect. De
+   staat verandert niet, dus goldens en replays blijven byte-identiek.
+2. **Deterministisch toewijzen.** Wie de vlag draagt volgt uit de match-seed +
+   speler-id (nooit `randi()`), anders ziet dezelfde replay er elke keer anders
+   uit. Toewijzing bij matchstart, niet tijdens het spel.
+3. **Alleen infanterie, maximaal 2 per leger.** Het rol-model VERVANGT het
+   archetype-model, dus die pion verliest zijn dun/dik/breed-silhouet. Daarom
+   bij voorkeur op een pion met een `base`- of `mix`-kaart: daar valt het
+   stat-silhouet toch al niet op (sectie 1 blijft heilig).
+4. **Fallback blijft de reddingslijn.** `infantry_<rol>.glb` ontbreekt -> gewoon
+   `infantry_<archetype>.glb` -> `infantry_base.glb`. Niets gaat stuk als een
+   rol nooit gemaakt wordt.
+5. **Geen musket-prop.** Deze figuren dragen hun attribuut in plaats van een
+   geweer; de game hangt er dus geen `_musket.glb` aan (zie 3c).
+
+**Pijplijn-aandachtspunt:** genereer het lijf in A-pose ZONDER attribuut (anders
+verpest de Mixamo auto-rig het) en zet vlag/trommel/hoorn er in Blender als los
+deel bij, geparent aan de juiste bot (hand of heup). Deel-namen: de gewone zeven
+(`armL armR body hat legL legR tail`) plus `prop`. Gibs exporteren zoals altijd
+(`<model>_gibs.glb`), zodat een gesneuvelde tamboer zijn trommel laat vallen.
+
+**Bestandsnamen:** `assets/models/<factie>/infantry_<rol>.glb`
+rollen: `flag` `drum` `horn` `sapper` `officer` `canteen` `scout` `medic`
+
+### Rol-prompts per factie (4 per factie)
+
+**Muis** -- de zwerm: alles is te groot voor ze, en dat is precies de grap.
+
+| Bestand | Prompt |
+|---|---|
+| `infantry_flag` | Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with an empty leather flag-carrier harness and bandolier across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_drum` | Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with shoulder cords and dark grey shako, with an empty drum-sling strap over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_horn` | Single character, extremely thin and lanky anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic bugler uniform with cords and dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_canteen` | Single character, short round anthropomorphic mouse canteen-woman with oversized round ears and long whiskers, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic canteen-woman outfit, apron and small dark grey shako, with an empty leather barrel-sling across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+
+**Varken** -- boers en plomp: eten en drinken zijn nooit ver weg.
+
+| Bestand | Prompt |
+|---|---|
+| `infantry_flag` | Single character, plump round-bellied anthropomorphic pig with a broad snout and floppy ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, with a heavy leather flag-carrier harness and bandolier across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_drum` | Single character, enormously fat round-bellied anthropomorphic pig with a broad snout and floppy ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with shoulder cords and dark grey shako, with a wide empty drum-sling strap over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_canteen` | Single character, plump anthropomorphic pig canteen-woman with a broad snout and floppy ears, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic canteen-woman outfit with a stained apron and headscarf, with an empty leather barrel-sling across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_sapper` | Single character, broad heavyset anthropomorphic pig with a broad snout, floppy ears and a full bushy beard, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic sapper uniform with a thick leather work apron, crossed white belts and a tall dark bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+
+**Leeuw** -- keizerlijke praal: dit is het regiment dat pronkt.
+
+| Bestand | Prompt |
+|---|---|
+| `infantry_flag` | Single character, lean athletic anthropomorphic cheetah with spotted fur, tear-stripe markings and a slender build, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with gold-trimmed epaulettes and a plumed dark grey shako, with an ornate gilded flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_drummajor` | Single character, tall imposing anthropomorphic lion with a full flowing mane, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing an ornate weathered dark grey Napoleonic drum-major uniform with heavy gold braid, gold-fringed epaulettes, a sash and a towering plumed bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_horn` | Single character, lean athletic anthropomorphic cheetah with spotted fur and tear-stripe markings, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic trumpeter uniform with reversed colors, gold cords and a plumed dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_officer` | Single character, proud upright anthropomorphic lion with a full mane, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic officer coat with gold epaulettes, a silk waist sash, tall boots and a plumed bicorne hat worn sideways, with an empty sabre scabbard at the hip, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+
+**Beer** -- zwaar en breed: de sapeur is hier de ster.
+
+| Bestand | Prompt |
+|---|---|
+| `infantry_sapper` | Single character, massive broad-shouldered anthropomorphic raccoon with a black facial mask, ringed tail and an enormous bushy beard, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic sapper uniform with a heavy studded leather work apron, crossed belts, gauntlets and a huge dark bearskin cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_flag` | Single character, stocky heavyset anthropomorphic raccoon with a black facial mask and ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako, with a reinforced leather flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_drum` | Single character, stocky heavyset anthropomorphic raccoon with a black facial mask and ringed tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with heavy shoulder cords and dark grey shako, with a wide reinforced empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_medic` | Single character, stocky anthropomorphic raccoon with a black facial mask, ringed tail and small round spectacles, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic field-surgeon coat with rolled-up sleeves, a blood-stained apron, a satchel strap across the chest and a soft dark grey forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+
+**Wolf** -- jagers en stropers: gehavend, geimproviseerd, sluw.
+
+| Bestand | Prompt |
+|---|---|
+| `infantry_horn` | Single character, lean anthropomorphic fox with a narrow muzzle, alert pointed ears and a bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic light-infantry uniform with a green-tipped plume, hunting cords and a dark grey shako, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_flag` | Single character, lean anthropomorphic fox with a narrow muzzle and bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a battered, strictly dark grey Napoleonic uniform patched with scavenged fur and a dark grey shako, with a crude rope-and-leather flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_scout` | Single character, wiry anthropomorphic fox with a narrow muzzle and bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic skirmisher uniform with a short cut-down coat, a rolled blanket over the shoulder, a spyglass case on the belt and a soft dark grey forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_drum` | Single character, lean anthropomorphic fox with a narrow muzzle and bushy tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a battered, strictly dark grey Napoleonic drummer uniform with frayed shoulder cords and a dark grey shako, with a worn empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+
+**Krokodil** -- moeras en schutkleur: alles is gedempt en omwikkeld.
+
+| Bestand | Prompt |
+|---|---|
+| `infantry_flag` | Single character, average build anthropomorphic lizard with mottled camouflage scales, slit eyes and a long tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic uniform wrapped in dark camouflage cloth and a dark grey shako, with a cloth-wrapped flag-carrier harness across the chest, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_scout` | Single character, low-slung sinewy anthropomorphic lizard with mottled camouflage scales, slit eyes and a long tail, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic skirmisher uniform draped with a ragged swamp-reed camouflage cloak, netting over the shoulders and a soft dark grey forage cap, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_drum` | Single character, average build anthropomorphic lizard with mottled camouflage scales and slit eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic drummer uniform with muted cords and a dark grey shako, with a cloth-wrapped empty drum-sling over the shoulder, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+| `infantry_officer` | Single character, tall imposing anthropomorphic crocodile with armored scales, a long snout and heavy jaws, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered dark grey Napoleonic officer coat with muted dark braid, a waist sash, a spyglass on the belt and a plain bicorne hat, with an empty sabre scabbard at the hip, unarmed with empty hands. Clean neutral studio background, single figure only, no text. |
+
+### Attribuut-props (los genereren, per factie herbruikbaar)
+
+Het attribuut is een aparte prop die je in Blender aan de hand of heup parent
+(deel-naam `prop`). Prompt-template: `Single prop, <voorwerp>. Gritty realistic
+AAA-game concept art, highly detailed, low poly. Side profile view, clean
+neutral studio background, the object only, no hands, no text.`
+
+| Prop | Voorwerp-omschrijving |
+|---|---|
+| `prop_flag` | tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner |
+| `prop_drum` | Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks |
+| `prop_horn` | coiled brass Napoleonic cavalry bugle with a woven cord |
+| `prop_axe` | heavy sapper felling axe with a long dark wooden haft |
+| `prop_barrel` | small canteen-woman brandy keg on a leather sling |
+
+### Tracker -- regimentsrollen (24 modellen + 5 props)
+
+Status: `-` gewenst | `~` in aanmaak | `x` in het spel
+
+| Factie | flag | drum | horn | sapper | officer | canteen | scout | medic |
+|---|---|---|---|---|---|---|---|---|
+| Muis | - | - | - | | | - | | |
+| Varken | - | - | | - | | - | | |
+| Leeuw | - | - (drummajor) | - | | - | | | |
+| Beer | - | - | | - | | | | - |
+| Wolf | - | - | - | | | | - | |
+| Krokodil | - | - | | | - | | - | |
+
+| Prop | Status |
+|---|---|
+| `prop_flag` | - |
+| `prop_drum` | - |
+| `prop_horn` | - |
+| `prop_axe` | - |
+| `prop_barrel` | - |
+
+**Code-haakje (nog te bouwen, klein):** in `pawn_view.gd`, waar nu
+`Constants.card_archetype(...)` het bestandsdeel kiest, eerst kijken of deze
+pion een rol heeft (deterministisch uit match-seed + speler-id, max 2 per leger,
+alleen op `base`/`mix`-pionnen) en dan `infantry_<rol>` proberen. Bestaat dat
+bestand niet, dan verandert er niets -- dit kan dus gebouwd worden voordat er
+ook maar een model bestaat.
+
 ## 4. Nieuw model importeren -- stap voor stap
 
 De volledige pijplijn (bewezen op muis base + spd, 8-9 juli). Per model lever
