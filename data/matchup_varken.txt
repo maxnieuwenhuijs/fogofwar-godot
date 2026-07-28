@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Varken
-Generaties: 97 · adopties: 1 · minuten: 481.6
+Generaties: 102 · adopties: 0 · minuten: 421.4
 Winrate van Varken tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   48.6%  (582 potjes)
-  vs Muis     51.0%  (582 potjes)
-  vs Leeuw    55.0%  (582 potjes)
-  vs Beer     60.0%  (582 potjes)
-  vs Wolf     62.5%  (582 potjes)
-  vs Krokodil  39.0%  (582 potjes)
+  vs Varken   58.2%  (612 potjes)
+  vs Muis     66.6%  (612 potjes)
+  vs Leeuw    55.5%  (612 potjes)
+  vs Beer     65.1%  (612 potjes)
+  vs Wolf     63.7%  (612 potjes)
+  vs Krokodil  40.3%  (612 potjes)
