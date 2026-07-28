@@ -703,6 +703,7 @@ func stagger(world_dir: Vector3) -> void:
 ## force_die_clip: laat een SPECIFIEKE dood-clip spelen (Model-tuner) —
 ## leeg = willekeurige variant.
 func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee", force_die_clip: String = "") -> void:
+	_kreet_af = false
 	_ring.visible = false
 	set_hovered(false)
 	var dir := world_dir
@@ -721,6 +722,9 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
 			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
 		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
+		if not _kreet_af:
+			_kreet_af = true
+			Audio.play_factie("inf_die", _doctrine)
 		if _spawn_gibs(dir, strength):
 			if _piece != null:
 				_piece.visible = false  # de brokstukken zíjn het lijk
@@ -1257,6 +1261,12 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 			break
 	if target == null or not target.visible:
 		return false
+	# Factie-kreet (besluit Max, 28 juli): alleen ALS er echt iets afgaat --
+	# een arm, een been of het hoedje. Zonder afgevallen deel blijft het bij
+	# de algemene doodskreet die game.gd al speelt.
+	if not _kreet_af:
+		_kreet_af = true
+		Audio.play_factie("inf_die", _doctrine)
 	var start: Variant = _fling_single_gib(part_name, dir, violence, time_scale)
 	if start == null:
 		return false
@@ -1512,6 +1522,8 @@ const TWEEDE_STEL_VANAF := 8
 const ROL_DICHTHEID := 5   # hoorn/bijl/vat/staf: sporadisch, na de vaste vier
 
 
+var _doctrine: int = 0  # factie van dit model (voor de factie-geluiden)
+var _kreet_af: bool = false  # per dood maar één kreet
 var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
 
 ## Model-tuner: forceer een figurant-rol ongeacht de kaart ("" = normaal
@@ -1578,6 +1590,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 		return
 	_char_key = key
 	_unit_type = unit_type
+	_doctrine = doctrine
 	var fac: String = Constants.doctrine_folder(doctrine)
 	var tname: String = Constants.unit_type_file(unit_type)
 	var candidates: Array = [

@@ -1509,6 +1509,8 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 	if pawn == null:
 		return
 	if kanon and pawn.unit_type == Constants.UnitType.INFANTRY:
+		# Kanon: de zwaardere kreet zet vóór de inslag in (anticipatie), dus
+		# die blijft hier staan -- een kanontreffer slaat er sowieso delen af.
 		Audio.play_factie("inf_kanon_die", GameSession.state.doctrine_of(pawn.owner_id),
 			delay, 0.0, "inf_die")
 		return
@@ -1516,7 +1518,10 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 	# geluid: een muis piept, een grizzly brult.
 	var doc: int = GameSession.state.doctrine_of(pawn.owner_id)
 	match pawn.unit_type:
-		Constants.UnitType.INFANTRY: Audio.play_factie("inf_die", doc, delay)
+		# Infanterie: hier alleen het ALGEMENE sterfgeluid. De factie-kreet
+		# speelt PawnView zelf, en alleen als er echt een arm of het hoedje
+		# afgaat (besluit Max, 28 juli) -- anders klinkt hij bij elk prikje.
+		Constants.UnitType.INFANTRY: Audio.play("inf_die", delay)
 		Constants.UnitType.CAVALRY: Audio.play_factie("horse_die", doc, delay)
 		Constants.UnitType.ARTILLERY: Audio.play_factie("cannon_die", doc, delay)
 

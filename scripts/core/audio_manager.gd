@@ -208,6 +208,13 @@ func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: flo
 	if not (_streams.get(sleutel, []) as Array).is_empty():
 		play(sleutel, delay, -1, pitch)
 		return
+	# Leen-terugval: heeft deze factie nog geen eigen geluiden, dan die van de
+	# muis -- precies zoals de MODELLEN op de muis-set terugvallen. Zo hoor je
+	# een nieuw opgenomen kreet meteen, ook als je een andere factie speelt.
+	var leen := "%s_mouse" % category
+	if not (_streams.get(leen, []) as Array).is_empty():
+		play(leen, delay, -1, pitch)
+		return
 	if not (_streams.get(category, []) as Array).is_empty():
 		play(category, delay, -1, pitch)
 		return
@@ -260,7 +267,22 @@ func zet_geluid_tuning(category: String, db: float, vertraging: float) -> void:
 ## Speel met de afgestelde vertraging erbij (voor bonzen die op een animatie
 ## moeten vallen). basis = het moment dat de code zelf berekent.
 func play_getuned(category: String, basis: float = 0.0, pitch: float = 0.0) -> void:
+	# Negatieve correctie vervroegt; onder nul kan een geluid niet, dus dan
+	# klinkt hij meteen. Zo kun je een bons die te laat valt naar voren halen.
 	play(category, maxf(0.0, basis + extra_vertraging(category)), -1, pitch)
+
+
+## Wat de tuner nodig heeft om te laten zien wat er echt gebeurt: de basis
+## die de code zelf berekent (bv. de val-tijd van het musket).
+func basis_vertraging(category: String) -> float:
+	match category:
+		"body_fall":
+			return 0.9          # standaard dood-poel-moment; per clip instelbaar
+		"val_hoed":
+			return 0.75         # hoedje tolt langer na
+	if category.begins_with("val_"):
+		return 0.44             # boog van een weggeslingerd voorwerp
+	return 0.0
 
 
 func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:

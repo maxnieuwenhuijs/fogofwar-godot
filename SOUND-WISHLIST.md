@@ -109,8 +109,15 @@ paarden waren); die namen houden we aan, zodat de terugval automatisch klopt.
 | Cavalerie (big bro) | `horse_die` | `horse_die_<factie>` | 5 |
 | Artillerie | `cannon_die` | `cannon_die_<factie>` | 5 |
 
+**Wanneer klinkt de factie-kreet?** (besluit Max, 28 juli) Alleen als er bij
+het sterven ook echt iets afgaat: een arm, een been of het hoedje -- of bij een
+kanontreffer, want die slaat sowieso alles aan flarden. Sterft een pion zonder
+dat er iets afvliegt, dan hoor je het algemene `inf_die`. Zo blijft de kreet
+bijzonder in plaats van dat hij bij elk prikje klinkt.
+
 **Terugval is ingebouwd** (`Audio.play_factie()`, 28 juli): bestaat de
-factie-categorie niet, dan klinkt gewoon het algemene geluid. Je kunt dus met
+factie-categorie niet, dan **leent** hij die van de muis (net zoals de modellen
+op de muis-set terugvallen), en pas daarna het algemene geluid. Je kunt dus met
 een enkele factie beginnen; niets gaat stuk zolang de rest ontbreekt.
 
 **Stemkarakter per factie** (dit is het verschil dat je hoort):

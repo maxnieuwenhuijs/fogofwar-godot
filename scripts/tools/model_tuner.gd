@@ -1712,8 +1712,9 @@ func _vul_geluidlijst() -> void:
 		hb.add_child(_make_label(" dB"))
 		var db_spin := _make_spin(hb, -24.0, 12.0, 0.5, Audio.volume_correctie(speel_cat),
 			func(_v: float) -> void: pass)
-		hb.add_child(_make_label(" vertraging"))
-		var vt_spin := _make_spin(hb, -0.5, 2.0, 0.01, Audio.extra_vertraging(speel_cat),
+		var basis := Audio.basis_vertraging(speel_cat)
+		hb.add_child(_make_label(" vertraging (basis %.2fs) " % basis))
+		var vt_spin := _make_spin(hb, -2.0, 3.0, 0.01, Audio.extra_vertraging(speel_cat),
 			func(_v: float) -> void: pass)
 		var bewaar := func(_v: float) -> void:
 			if _updating:
