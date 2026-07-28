@@ -278,6 +278,26 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   rekenen mee. Logica: in het punten-model kost een ruiter 2 punten en
   hoort hij taaier te zijn dan een 1-punt-soldaat. Daarna trainen + arena.
 
+- **OPEN BUG kanon-visuals (28 juli, playtest Max) — ONDERZOEK LOOPT.**
+  Symptoom: kanon "schiet niet meer" en geen dood-animatie; andere
+  animaties wel; combat-feel staat AAN. Engine bewezen groen (12
+  CannonTests + kanon_act-golden). Sporen: (1) REPRODUCEERBAAR:
+  `-- shoottest` toont een regen "Lambda capture at index 0 was freed"
+  (gdscript_lambda_callable.cpp:110) al tijdens de define/link-fasen —
+  verdacht: de i18n-refactor van card_hand/card_view (pull 5adf140) of
+  een tween-lambda die een gefreede node vasthoudt. (2) `_fire_projectile`
+  gebruikt exact dat patroon: tween_method-lambda + tween_callback op
+  `proj` — als proj vroeg gefreed wordt (scene-wissel/debris-ruiming)
+  vuurt de inslag nooit → schot zonder visuals, kill zonder ragdoll,
+  precies Max' symptoom. (3) shoottest hangt headless sowieso op een
+  screenshot zonder null-guard (los euvel, fixen). VOLGENDE STAPPEN:
+  lambda-bron pinnen (run shoottest met --verbose backtrace), proj-tween
+  robuust maken (is_instance_valid-guard of proj in battlefield_debris
+  met eigen opruiming), null-guard screenshot in shoottest, daarna
+  in-game verifiëren met een campagne-duel. Vraag aan Max uitgezet:
+  sterft de pion wél regel-technisch (HP-blokjes weg) zonder animatie?
+  Dat bevestigt de visuele-keten-hypothese.
+
 - **C11 AF + spawn-inkoop + menu (28 juli).** Het hele economie-pakket
   speelbaar: (1) spawn-fase = inkooplijst voor de mens (+soldaat 1 pt /
   +ruiter 2 / +kanon 3, max 3 per cyclus, haven-prio-vakken automatisch);
