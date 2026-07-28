@@ -50,21 +50,64 @@ func _ready() -> void:
 		driver = CampaignBridge.driver
 		mens_id = driver.mens_id
 	if driver == null:
-		# Hervat de lopende solo-campagne als die er is; anders vers beginnen.
+		# Lopende solo-campagne? Dan is dat een KEUZE, geen stille hervatting
+		# (besluit Max, 28 juli: "ik word meteen een muis, dat wil ik niet").
 		if FileAccess.file_exists(SAVE_PAD):
-			driver = SoloDriver.hervat(SAVE_PAD, mens_id)
-			if driver != null and driver.c.fase == CState.Fase.KLAAR:
-				driver = null  # uitgespeelde campagne: nieuwe starten
-			elif driver != null and not driver.c.rules.ronde1_loting:
-				driver = null  # oude regelset (voor C9): vers beginnen
-			elif driver != null and not driver.c.rules.vol_team_start:
-				driver = null  # oud pool-model (voor 27 juli): vers beginnen
-		if driver == null:
-			# Nieuwe campagne: eerst je factie kiezen — die ben je de hele
-			# campagne (besluit Max, 27 juli). De keuze maakt de driver.
-			_toon_factie_keuze()
-			return
+			var oud_driver := SoloDriver.hervat(SAVE_PAD, mens_id)
+			if oud_driver != null and oud_driver.c.fase != CState.Fase.KLAAR 					and oud_driver.c.rules.ronde1_loting 					and oud_driver.c.rules.vol_team_start 					and not oud_driver.c.rules.budget_bonus.is_empty():
+				# Geldige, actuele save: laat de speler kiezen.
+				_toon_hervat_keuze(oud_driver)
+				return
+		# Geen (bruikbare) save: nieuwe campagne, eerst je factie kiezen.
+		_toon_factie_keuze()
+		return
 	_start()
+
+
+## 28 juli (Max) — doorgaan of opnieuw: nooit meer stilletjes hervatten.
+func _toon_hervat_keuze(oud_driver: SoloDriver) -> void:
+	var achtergrond := ColorRect.new()
+	achtergrond.color = Color(0.08, 0.09, 0.12)
+	achtergrond.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(achtergrond)
+	var kolom := VBoxContainer.new()
+	kolom.name = "HervatKeuze"
+	kolom.set_anchors_preset(Control.PRESET_FULL_RECT)
+	kolom.offset_left = 24
+	kolom.offset_right = -24
+	kolom.offset_top = 60
+	kolom.add_theme_constant_override("separation", 12)
+	achtergrond.add_child(kolom)
+	var titel := Label.new()
+	titel.text = tr("HUB_RESUME_TITLE")
+	titel.add_theme_font_size_override("font_size", 22)
+	kolom.add_child(titel)
+	var info := Label.new()
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var mijn: Dictionary = oud_driver.c.spelers.get(oud_driver.mens_id, {})
+	info.text = tr("HUB_RESUME_INFO") % [oud_driver.c.ronde,
+		Constants.doctrine_display_name(int(mijn.get("doctrine", 0)))]
+	kolom.add_child(info)
+	var door := Button.new()
+	door.name = "HervatDoorgaan"
+	door.text = tr("HUB_RESUME_CONTINUE")
+	door.pressed.connect(func() -> void:
+		achtergrond.queue_free()
+		driver = oud_driver
+		mens_id = driver.mens_id
+		_start())
+	kolom.add_child(door)
+	var nieuw_knop := Button.new()
+	nieuw_knop.name = "HervatNieuw"
+	nieuw_knop.text = tr("HUB_RESUME_NEW")
+	nieuw_knop.pressed.connect(func() -> void:
+		achtergrond.queue_free()
+		if FileAccess.file_exists(SAVE_PAD):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PAD))
+		CampaignBridge.driver = null
+		CampaignBridge.feed_gezien = 0
+		_toon_factie_keuze())
+	kolom.add_child(nieuw_knop)
 
 
 func _start() -> void:
