@@ -1,6 +1,9 @@
-# Fog of War - controlepaneel (F1.6): een-klik-knoppen voor de runs.
+# Fog of War - controlepaneel: een paar simpele knoppen, gewone taal.
 # Starten: dubbelklik "FogOfWar Paneel.bat" (of: powershell -STA -File paneel.ps1)
-# Besluit Max 23-07: niets draait automatisch — alles start vanuit dit paneel.
+# Besluit Max 23-07: niets draait automatisch - alles start vanuit dit paneel.
+# Herbouw 28-07 (Max: "ik ben het spoor bijster"): jargon eruit (4.1/4.2/L1),
+# alleen de knoppen die Max echt gebruikt. Meet-gereedschap voor Claude
+# (fuzz, losse matrix, 4.1-training) draait via de CLI, zie CLAUDE.md.
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -16,7 +19,7 @@ function Aantal-Godots {
 function Bevestig-BijDrukte {
     if ((Aantal-Godots) -gt 0) {
         $antwoord = [System.Windows.Forms.MessageBox]::Show(
-            "Er draaien al Godot-processen. Toch nog een run starten?",
+            "Er draait al iets. Toch nog een run starten?",
             "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
             [System.Windows.Forms.MessageBoxIcon]::Question)
         return ($antwoord -eq [System.Windows.Forms.DialogResult]::Yes)
@@ -25,79 +28,57 @@ function Bevestig-BijDrukte {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Fog of War - paneel"
-$form.Size = New-Object System.Drawing.Size(400, 565)
+$form.Text = "Fog of War"
+$form.Size = New-Object System.Drawing.Size(430, 420)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
 
 $lblStatus = New-Object System.Windows.Forms.Label
 $lblStatus.Location = New-Object System.Drawing.Point(15, 12)
-$lblStatus.Size = New-Object System.Drawing.Size(360, 22)
+$lblStatus.Size = New-Object System.Drawing.Size(390, 22)
 $lblStatus.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
 $form.Controls.Add($lblStatus)
 
-function Maak-Knop([string]$tekst, [int]$y, [scriptblock]$actie) {
+function Maak-Knop([string]$tekst, [string]$uitleg, [int]$y, [scriptblock]$actie) {
     $b = New-Object System.Windows.Forms.Button
     $b.Text = $tekst
     $b.Location = New-Object System.Drawing.Point(15, $y)
-    $b.Size = New-Object System.Drawing.Size(255, 34)
+    $b.Size = New-Object System.Drawing.Size(280, 38)
     $b.Font = New-Object System.Drawing.Font("Segoe UI", 10)
     $b.Add_Click($actie)
     $form.Controls.Add($b)
+    if ($uitleg -ne "") {
+        $l = New-Object System.Windows.Forms.Label
+        $l.Text = $uitleg
+        $l.Location = New-Object System.Drawing.Point(17, ($y + 40))
+        $l.Size = New-Object System.Drawing.Size(390, 16)
+        $l.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+        $l.ForeColor = [System.Drawing.Color]::DimGray
+        $form.Controls.Add($l)
+    }
     return $b
 }
 
 function Maak-Minuten([int]$y, [int]$standaard) {
     $n = New-Object System.Windows.Forms.NumericUpDown
-    $n.Location = New-Object System.Drawing.Point(280, ($y + 4))
+    $n.Location = New-Object System.Drawing.Point(305, ($y + 6))
     $n.Size = New-Object System.Drawing.Size(60, 26)
-    $n.Minimum = 1
+    $n.Minimum = 5
     $n.Maximum = 600
     $n.Value = $standaard
     $form.Controls.Add($n)
     $lbl = New-Object System.Windows.Forms.Label
     $lbl.Text = "min"
-    $lbl.Location = New-Object System.Drawing.Point(343, ($y + 9))
+    $lbl.Location = New-Object System.Drawing.Point(368, ($y + 11))
     $lbl.Size = New-Object System.Drawing.Size(35, 18)
     $form.Controls.Add($lbl)
     return $n
 }
 
-# --- Volle nachtrun: een klik, 8 uur (10k fuzz + L2-arena) -------------------
-$btnNacht8 = Maak-Knop "VOLLE NACHTRUN (8 uur)" 45 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena_nacht.ps1",
-        "-DuurMinuten", 480, "-FuzzGames", 10000)
-}
-$btnNacht8.BackColor = [System.Drawing.Color]::Honeydew
-
-# --- Korte nachtrun, duur instelbaar. De fuzz schaalt mee met de duur --------
-# (~10% van het budget, 500-10000 partijen): korte run = vooral arena-tijd.
-$numNacht = Maak-Minuten 90 120
-$null = Maak-Knop "Korte nachtrun (fuzz + L2-arena)" 90 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    $duur = [int]$numNacht.Value
-    $fuzz = [Math]::Max(500, [Math]::Min(10000, $duur * 25))
-    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena_nacht.ps1",
-        "-DuurMinuten", $duur, "-FuzzGames", $fuzz)
-}
-
-# --- Training (6 parallelle trainers via train_ai.bat), duur instelbaar ------
-$numTrain = Maak-Minuten 135 60
-$null = Maak-Knop "Training 1v1 (4.1-regels)" 135 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    Start-Process "$repo\train_ai.bat" -WorkingDirectory $repo -ArgumentList ([string][int]$numTrain.Value)
-}
-
-# --- Gedeelde starter: 6 parallelle v4.2-trainers, met logbestanden ----------
-# Gebruikt de console-Godot + stdout-redirect zodat de [TRAIN]-voortgang per
-# factie leesbaar terugkomt in results\training_<stamp>\train_<factie>.log
-# (de gewone exe is stil). Valt terug op de stille start als de console-exe
-# er niet is. Gewichten worden sowieso bij elke adoptie opgeslagen.
-function Start-TrainingV42([int]$minuten) {
+# Gedeelde starter: 6 parallelle trainers (campagne-regels) met logbestanden
+# per factie in results\training_<stamp>\.
+function Start-Training([int]$minuten) {
     $stamp = Get-Date -Format "yyyyMMdd_HHmm"
     $logmap = Join-Path $repo ("results\training_" + $stamp)
     New-Item -ItemType Directory -Force $logmap | Out-Null
@@ -120,64 +101,53 @@ function Start-TrainingV42([int]$minuten) {
     }
 }
 
-# --- Training onder de v4.2-regels (1v1-setting; leert spawn/CP-beleid) ------
-$null = Maak-Knop "Training campagne (v4.2)" 180 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    Start-TrainingV42 ([int]$numTrain.Value)
-}
-
-# --- Volle trainingsnacht: een klik = trainen -> arena-meting -> dashboard ---
-$btnTrainNacht = Maak-Knop "VOLLE TRAINING-NACHT v4.2 (8u)" 225 {
+# --- 1. De nacht-knop: bots leren, daarna meten, rapport klaar bij het ontbijt.
+$btnNacht = Maak-Knop "TRAINING-NACHT (8 uur)" "Bots leren 7 uur, daarna meten ze zich en staat het rapport klaar." 45 {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\training_nacht.ps1",
         "-TrainMinuten", 420, "-ArenaMinuten", 60)
 }
-$btnTrainNacht.BackColor = [System.Drawing.Color]::Honeydew
+$btnNacht.BackColor = [System.Drawing.Color]::Honeydew
 
-# --- Snelle arena-test (quick_l1, ~2 min) ------------------------------------
-$null = Maak-Knop "Snelle arena-test (L1, ~2 min)" 270 {
+# --- 2. Korte training overdag, duur zelf te kiezen.
+$numTrain = Maak-Minuten 110 60
+$null = Maak-Knop "Bots laten leren" "Zes bots trainen tegelijk; elke verbetering wordt direct bewaard." 110 {
     if (-not (Bevestig-BijDrukte)) { return }
+    Start-Training ([int]$numTrain.Value)
+}
+
+# --- 3. Losse meting: bots spelen tegen elkaar, cijfers voor het rapport.
+$numMeet = Maak-Minuten 175 120
+$null = Maak-Knop "Bots laten spelen (meting)" "Botgevechten voor winst-cijfers per factie; zie daarna het rapport." 175 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    $duur = [int]$numMeet.Value
+    $fuzz = [Math]::Max(500, [Math]::Min(10000, $duur * 25))
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
-        "-Config", "arena/arena_configs/quick_l1.json", "-Naam", ("test_" + (Get-Date -Format "HHmmss")))
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena_nacht.ps1",
+        "-DuurMinuten", $duur, "-FuzzGames", $fuzz)
 }
 
-# --- Volledige L2-matrix (~40 min) -------------------------------------------
-$null = Maak-Knop "Volledige L2-matrix (~40 min)" 315 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\arena.ps1",
-        "-Config", "arena/arena_configs/matrix_l2.json", "-Naam", ("l2matrix_" + (Get-Date -Format "MMdd_HHmm")))
-}
-
-# --- Fuzz-vangnet (500 partijen) ---------------------------------------------
-$null = Maak-Knop "Fuzz-check (500 partijen)" 360 {
-    if (-not (Bevestig-BijDrukte)) { return }
-    Start-Process $godot -WorkingDirectory $repo -ArgumentList @(
-        "--headless", "--path", ".", "res://arena/arena.tscn", "--", "--fuzz", "500")
-}
-
-# --- Dashboard bouwen + openen ------------------------------------------------
-$null = Maak-Knop "Dashboard verversen + openen" 405 {
+# --- 4. Rapport bekijken.
+$null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-percentages en trends." 240 {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
     else {
-        [System.Windows.Forms.MessageBox]::Show("Nog geen dashboard - draai eerst een arena-run.",
+        [System.Windows.Forms.MessageBox]::Show("Nog geen rapport - laat eerst de bots spelen of trainen.",
             "Fog of War") | Out-Null
     }
 }
 
-# --- Alles stoppen -------------------------------------------------------------
-$btnStop = Maak-Knop "STOP alle runs" 460 {
+# --- 5. Alles stoppen.
+$btnStop = Maak-Knop "STOP alles" "Stopt elke lopende run. Trainingsvoortgang blijft bewaard." 305 {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null
         return
     }
     $antwoord = [System.Windows.Forms.MessageBox]::Show(
-        "$n Godot-proces(sen) stoppen? Trainingsvoortgang tot de laatste adoptie blijft bewaard.",
+        "$n proces(sen) stoppen? Trainingsvoortgang blijft bewaard.",
         "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
         [System.Windows.Forms.MessageBoxIcon]::Warning)
     if ($antwoord -eq [System.Windows.Forms.DialogResult]::Yes) {
@@ -192,7 +162,7 @@ $timer.Interval = 3000
 $timer.Add_Tick({
     $n = Aantal-Godots
     if ($n -gt 0) {
-        $lblStatus.Text = "Status: $n Godot-proces(sen) actief"
+        $lblStatus.Text = "Status: bezig ($n proces(sen))"
         $lblStatus.ForeColor = [System.Drawing.Color]::DarkGreen
     } else {
         $lblStatus.Text = "Status: niets actief"

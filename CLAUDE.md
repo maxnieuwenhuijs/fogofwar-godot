@@ -34,8 +34,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - Godot: `$env:GODOT_PATH`, anders
   `C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe`
   (console-variant `..._console.exe` voor terminal-output).
-- **Paneel** (Max' knoppen): `"FogOfWar Paneel.bat"` → nachtrun (vol/kort),
-  training, L2-matrix, fuzz, dashboard, STOP.
+- **Paneel** (Max' knoppen, herbouw 28-07 in gewone taal): `"FogOfWar
+  Paneel.bat"` → TRAINING-NACHT (pijplijn), Bots laten leren, Bots laten
+  spelen (meting), Bekijk het rapport, STOP alles. Meet-gereedschap voor
+  Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
+  draait alleen nog via de CLI.
 - Nachtrun: `.\arena_nacht.ps1 [-DuurMinuten] [-Kort]` — draait 4.1- én
   v4.2-matrix om-en-om naar aparte run-mappen (B17).
 - Arena: `.\arena.ps1 -Config arena/arena_configs/<x>.json -Procs N -Naam run`
