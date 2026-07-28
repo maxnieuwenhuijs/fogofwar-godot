@@ -156,6 +156,19 @@ func _ready() -> void:
 			else:
 				push_warning("Audio: kon %s niet laden" % filename)
 		_streams[category] = loaded
+	# Bestanden die exact zo heten als hun categorie doen automatisch mee
+	# (zie _vind_losse_bestanden): geen code-wijziging nodig per opname.
+	for cat in _vind_losse_bestanden():
+		var lijst: Array = _streams.get(cat, [])
+		var reeds: Array = BANK.get(cat, [])
+		for bestand in _vind_losse_bestanden()[cat]:
+			if reeds.has(bestand):
+				continue
+			var st := load(SFX_DIR + bestand)
+			if st != null:
+				lijst.append(st)
+		if not lijst.is_empty():
+			_streams[cat] = lijst
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
 		player.bus = "Master"
@@ -249,6 +262,38 @@ func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: flo
 const GELUID_TUNING_PAD := "res://sounds/sound_tuning.json"
 var _snd_tuning: Dictionary = {}
 var _snd_geladen: bool = false
+
+
+## AUTO-VONDST (28 juli): elk bestand in sounds/ dat exact zo heet als een
+## categorie hoort daar vanzelf bij -- `inf_die_mouse_hp.wav` en
+## `inf_die_mouse_hp_2.wav` vormen samen de categorie `inf_die_mouse_hp`.
+## Zo kun je geluiden blijven opnemen zonder dat er code bij hoeft; alleen
+## bestanden met een afwijkende naam staan nog in BANK.
+func _vind_losse_bestanden() -> Dictionary:
+	var gevonden: Dictionary = {}
+	var d := DirAccess.open("res://sounds")
+	if d == null:
+		return gevonden
+	d.list_dir_begin()
+	var naam := d.get_next()
+	while naam != "":
+		if naam.ends_with(".import"):
+			naam = naam.trim_suffix(".import")
+		if naam.ends_with(".wav"):
+			var kaal := naam.get_basename()
+			# Achtervoegsel _2, _3 ... is een variant van dezelfde categorie.
+			var delen := kaal.rsplit("_", true, 1)
+			if delen.size() == 2 and delen[1].is_valid_int():
+				kaal = delen[0]
+			if not gevonden.has(kaal):
+				gevonden[kaal] = []
+			if not (gevonden[kaal] as Array).has(naam):
+				(gevonden[kaal] as Array).append(naam)
+		naam = d.get_next()
+	d.list_dir_end()
+	for k in gevonden:
+		(gevonden[k] as Array).sort()
+	return gevonden
 
 
 func _laad_snd_tuning() -> void:
