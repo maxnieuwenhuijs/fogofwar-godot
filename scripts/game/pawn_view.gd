@@ -1476,12 +1476,31 @@ func set_unit_type(unit_type: int) -> void:
 ## bestand, dan valt dit terug op `_basis.glb` en anders op het geometrische
 ## stuk met een subtiel archetype-silhouet. Aanroepen mag elke refresh
 ## (idempotent via _char_key).
+## Regimentsrollen (MODEL-WISHLIST 3d, besluit Max 28 juli): een pion ZONDER
+## gekoppelde kaart vecht niet -- dat is de tamboer, de vaandeldrager, de
+## marketentster. Puur cosmetisch; de staat verandert niet. Deterministisch op
+## pion-id (nooit randi), dus replays zien er identiek uit. ROL_DICHTHEID 3 =
+## ongeveer een op de drie ongekoppelde pionnen (1 = iedereen, 0 = uit).
+const ROLLEN := ["flag", "drum", "horn", "sapper", "officer", "canteen", "scout", "medic"]
+const ROL_DICHTHEID := 3
+
+
+func _rol_voor_pion() -> String:
+	if ROL_DICHTHEID <= 0 or pawn_id < 0:
+		return "base"
+	if pawn_id % ROL_DICHTHEID != 0:
+		return "base"
+	return ROLLEN[(pawn_id / ROL_DICHTHEID) % ROLLEN.size()]
+
+
 func set_character(doctrine: int, unit_type: int, card) -> void:
 	if _model != null:
 		return
 	var arch: String = "base"
 	if card != null:
 		arch = Constants.card_archetype(card.hp, card.stamina, card.attack)
+	elif unit_type == Constants.UnitType.INFANTRY:
+		arch = _rol_voor_pion()  # ongekoppeld = figurant (valt terug op base)
 	var key := "%d:%d:%s" % [doctrine, unit_type, arch]
 	if key == _char_key:
 		return

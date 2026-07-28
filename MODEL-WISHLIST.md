@@ -399,21 +399,36 @@ pas sloeg, de **hoornblazer**, de bebaarde **sapeur** met bijl en leren schort,
 de **marketentster** met haar vaatje. Een willekeurige pion in je leger krijgt
 zo'n model als basis -- puur sfeer, geen regels.
 
-**Spelregels (dit is een LOOK-laag, geen regel-laag):**
+**De regel (besluit Max, 28 juli): ONGEKOPPELDE pionnen zijn de figuranten.**
 
-1. **Puur cosmetisch.** Geen stat, geen perk, geen zichtbaarheidseffect. De
+Een pion zonder gekoppelde kaart vecht niet -- en dat is nou precies wat een
+tamboer, vaandeldrager of marketentster is. Dus: zolang een pion geen kaart
+heeft, staat hij als figurant op het bord; zodra je er een kaart aan koppelt
+verandert hij in de soldaat met het bijbehorende archetype-silhouet
+(dun/dik/breed). Koppel je hem later los, dan pakt hij zijn trommel weer op.
+
+Waarom dit goed werkt:
+
+1. **Het is leesbare spelinformatie.** Je ziet in een oogopslag wie nog
+   ongekoppeld (en dus inactief) is -- nu zien die pionnen er hetzelfde uit als
+   een gewone soldaat.
+2. **Het stat-silhouet blijft heilig** (sectie 1): een ongekoppelde pion heeft
+   geen stats om te tonen, dus er gaat geen informatie verloren.
+3. **Puur cosmetisch.** Geen stat, geen perk, geen zichtbaarheidseffect; de
    staat verandert niet, dus goldens en replays blijven byte-identiek.
-2. **Deterministisch toewijzen.** Wie de vlag draagt volgt uit de match-seed +
-   speler-id (nooit `randi()`), anders ziet dezelfde replay er elke keer anders
-   uit. Toewijzing bij matchstart, niet tijdens het spel.
-3. **Alleen infanterie, maximaal 2 per leger.** Het rol-model VERVANGT het
-   archetype-model, dus die pion verliest zijn dun/dik/breed-silhouet. Daarom
-   bij voorkeur op een pion met een `base`- of `mix`-kaart: daar valt het
-   stat-silhouet toch al niet op (sectie 1 blijft heilig).
-4. **Fallback blijft de reddingslijn.** `infantry_<rol>.glb` ontbreekt -> gewoon
-   `infantry_<archetype>.glb` -> `infantry_base.glb`. Niets gaat stuk als een
-   rol nooit gemaakt wordt.
-5. **Geen musket-prop.** Deze figuren dragen hun attribuut in plaats van een
+4. **Deterministisch.** Welke rol een pion krijgt volgt uit zijn pion-id (nooit
+   `randi()`), zodat dezelfde replay er elke keer identiek uitziet en de rol
+   niet verspringt tussen frames.
+5. **Dichtheid instelbaar.** Niet elke ongekoppelde pion wordt een muzikant --
+   een heel leger vol trommels is te veel. Standaard krijgt ongeveer een op de
+   drie ongekoppelde pionnen een rol (knop `ROL_DICHTHEID` in `pawn_view.gd`);
+   de rest blijft de gewone `base`. Zet 'm op 1 als je iedereen wilt.
+6. **Alleen infanterie.** Cavalerie (big bro) en artillerie houden hun eigen
+   model; die hebben sowieso geen kaartloze variant nodig.
+7. **Fallback blijft de reddingslijn.** `infantry_<rol>.glb` ontbreekt -> gewoon
+   `infantry_base.glb`. Het haakje mag dus in de code staan voordat er ook maar
+   een model bestaat (en dat doet het inmiddels ook).
+8. **Geen musket-prop.** Deze figuren dragen hun attribuut in plaats van een
    geweer; de game hangt er dus geen `_musket.glb` aan (zie 3c).
 
 **Pijplijn-aandachtspunt:** genereer het lijf in A-pose ZONDER attribuut (anders
@@ -495,6 +510,7 @@ neutral studio background, the object only, no hands, no text.`
 | `prop_horn` | coiled brass Napoleonic cavalry bugle with a woven cord |
 | `prop_axe` | heavy sapper felling axe with a long dark wooden haft |
 | `prop_barrel` | small canteen-woman brandy keg on a leather sling |
+| `prop_mace` | ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels |
 
 ### Tracker -- regimentsrollen (24 modellen + 5 props)
 
@@ -516,13 +532,16 @@ Status: `-` gewenst | `~` in aanmaak | `x` in het spel
 | `prop_horn` | - |
 | `prop_axe` | - |
 | `prop_barrel` | - |
+| `prop_mace` | - |
 
-**Code-haakje (nog te bouwen, klein):** in `pawn_view.gd`, waar nu
-`Constants.card_archetype(...)` het bestandsdeel kiest, eerst kijken of deze
-pion een rol heeft (deterministisch uit match-seed + speler-id, max 2 per leger,
-alleen op `base`/`mix`-pionnen) en dan `infantry_<rol>` proberen. Bestaat dat
-bestand niet, dan verandert er niets -- dit kan dus gebouwd worden voordat er
-ook maar een model bestaat.
+**Code-haakje: GEBOUWD (28 juli).** `PawnView.set_character()` kiest bij
+`card == null` en infanterie een rol via `_rol_voor_pion()` (pion-id modulo de
+rollijst, dichtheid via `ROL_DICHTHEID`) en probeert `infantry_<rol>.glb`; de
+bestaande fallback-keten vangt ontbrekende bestanden op, en omdat de
+model-sleutel op de kaart is gebaseerd wisselt het model vanzelf terug zodra er
+gekoppeld wordt. Er is dus nu al niets meer nodig aan de codekant: elk
+rol-model dat je in `assets/models/<factie>/` zet, verschijnt meteen in het
+spel.
 
 ## 4. Nieuw model importeren -- stap voor stap
 
