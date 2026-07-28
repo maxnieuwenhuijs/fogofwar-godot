@@ -1500,11 +1500,16 @@ func _rol_voor_pion() -> String:
 ## gedeelde set in assets/models/props/. Leeg = niets gevonden (dan pakt
 ## _attach_weapon gewoon het musket, zodat een half afgemaakte set niets breekt).
 static func prop_for(rol: String, fac: String) -> Dictionary:
-	var naam := "prop_" + rol
-	for pad in ["%s%s/%s" % [MODELS_DIR, fac, naam], "%sprops/%s" % [MODELS_DIR, naam]]:
-		for ext in [".glb", ".fbx"]:
-			if ResourceLoader.exists(pad + ext):
-				return {"file": pad + ext, "key": pad.replace(MODELS_DIR, "")}
+	# Alias: het vaandel is in de praktijk gewoon een stok, dus prop_pole telt
+	# ook als prop_flag (zo hoeft niemand bestanden te hernoemen).
+	var namen: Array = ["prop_" + rol]
+	if rol == "flag":
+		namen.append("prop_pole")
+	for naam in namen:
+		for pad in ["%s%s/%s" % [MODELS_DIR, fac, naam], "%sprops/%s" % [MODELS_DIR, naam]]:
+			for ext in [".glb", ".fbx"]:
+				if ResourceLoader.exists(pad + ext):
+					return {"file": pad + ext, "key": pad.replace(MODELS_DIR, "")}
 	return {"file": "", "key": ""}
 
 

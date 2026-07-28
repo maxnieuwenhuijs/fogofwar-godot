@@ -9,12 +9,15 @@ Losse voorwerpen die een pion vasthoudt. Gedeeld door alle facties.
 - **Statische mesh**: geen skelet, geen animatie, geen team-textures, geen gibs.
   Het voorwerp erft de beweging van de hand waar het aan hangt.
 - Poly-budget: laag houden (~500-1.000 tris is ruim zat voor een trommel).
+- Textures: het spel zet ze bij import terug naar **512px met mipmaps** (zie de
+  `.import`-bestanden). Een prop in een hand heeft op bord-afstand niet meer
+  nodig, en het voorkomt hapering bij het eerste gebruik.
 
 ## Namen (exact zo, anders vindt het spel ze niet)
 
 | Bestand | Wie draagt het |
 |---|---|
-| `prop_flag.glb` | vaandeldrager — **alleen de kale stok**, het doek maakt het spel er zelf aan (teamkleur + wapper) |
+| `prop_flag.glb` (of `prop_pole.glb`) | vaandeldrager — **alleen de kale stok**, het doek maakt het spel er zelf aan (teamkleur + wapper) |
 | `prop_drum.glb` | tamboer |
 | `prop_horn.glb` | hoornblazer |
 | `prop_axe.glb` | sapeur |
