@@ -2,24 +2,23 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://deaoxpvnlfiic"
-path.s3tc="res://.godot/imported/prop_pole_ORM_04ff379b-7320-4d87-acb3-c8e23c21b4e2.jpg-a85b6ab3c5ee07abbd7cf9896e51f4b6.s3tc.ctex"
+uid="uid://b4tpbev4417rc"
+path="res://.godot/imported/prop_pole_Color_6ef51aab-57d9-44a6-8723-69e91185708e.jpg-f6ff672d0919ab033f64045f51eb22e9.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "074476aab8e0d1a314cafa35ce0c344f"
+"md5": "1eee50cd90b1fe53b45b1f4a0f2e4c15"
 }
 
 [deps]
 
-source_file="res://assets/models/props/prop_pole_ORM_04ff379b-7320-4d87-acb3-c8e23c21b4e2.jpg"
-dest_files=["res://.godot/imported/prop_pole_ORM_04ff379b-7320-4d87-acb3-c8e23c21b4e2.jpg-a85b6ab3c5ee07abbd7cf9896e51f4b6.s3tc.ctex"]
+source_file="res://assets/models/props/prop_pole_Color_6ef51aab-57d9-44a6-8723-69e91185708e.jpg"
+dest_files=["res://.godot/imported/prop_pole_Color_6ef51aab-57d9-44a6-8723-69e91185708e.jpg-f6ff672d0919ab033f64045f51eb22e9.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -41,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bat416nlynpox"
-path="res://.godot/imported/prop_pole_NormalGL_04ff379b-7320-4d87-acb3-c8e23c21b4e2.jpg-747ff69e25f3e7003ccaaa6c68949c5f.ctex"
+uid="uid://dxetq6sniajct"
+path="res://.godot/imported/prop_pole_NormalGL_6ef51aab-57d9-44a6-8723-69e91185708e.jpg-70612ce389e18ef6ccd64e3495a54a6a.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "8ce355aaaba5f28e4be835fa8c1d4b25"
+"md5": "f5b110e47c789c7a751b69495f8f34e6"
 }
 
 [deps]
 
-source_file="res://assets/models/props/prop_pole_NormalGL_04ff379b-7320-4d87-acb3-c8e23c21b4e2.jpg"
-dest_files=["res://.godot/imported/prop_pole_NormalGL_04ff379b-7320-4d87-acb3-c8e23c21b4e2.jpg-747ff69e25f3e7003ccaaa6c68949c5f.ctex"]
+source_file="res://assets/models/props/prop_pole_NormalGL_6ef51aab-57d9-44a6-8723-69e91185708e.jpg"
+dest_files=["res://.godot/imported/prop_pole_NormalGL_6ef51aab-57d9-44a6-8723-69e91185708e.jpg-70612ce389e18ef6ccd64e3495a54a6a.ctex"]
 
 [params]
 
