@@ -85,6 +85,7 @@ var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
 var _cam: Camera3D = null           # wisselbare camera (spel/close-up/voorkant)
 var _hand_btn: OptionButton = null      # wat de pion vasthoudt (musket of een figuranten-prop)
+var _hand_label: Label = null           # "In de hand (trommel): schaal" — zegt wat je nu bijstelt
 var _view_btn: OptionButton = null
 
 ## Figuranten-props (MODEL-WISHLIST 3d): label -> rol ("" = gewoon musket).
@@ -331,7 +332,15 @@ func _build_ui() -> void:
 	for o in HAND_OPTIES:
 		_hand_btn.add_item(String(o["label"]))
 	_hand_btn.tooltip_text = "Wat de pion vasthoudt. Kies een prop om die in de hand fijn te stellen (alleen infanterie)."
-	_hand_btn.item_selected.connect(func(_i: int) -> void: _reload_pawns())
+	_hand_btn.item_selected.connect(func(_i: int) -> void:
+		# Alleen infanterie draagt iets in de hand: kies je een prop, dan
+		# schakelt het type automatisch mee (anders zie je niets gebeuren).
+		if _hand_rol() != "" and _type_btn.get_selected_id() != Constants.UnitType.INFANTRY:
+			for i in _type_btn.item_count:
+				if _type_btn.get_item_id(i) == Constants.UnitType.INFANTRY:
+					_type_btn.select(i)
+					break
+		_reload_pawns())
 	row1.add_child(_hand_btn)
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
@@ -457,7 +466,8 @@ func _build_ui() -> void:
 	_z_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
 	var roww := HBoxContainer.new()
 	tab_model.add_child(roww)
-	roww.add_child(_make_label("Musket: schaal"))
+	_hand_label = _make_label("In de hand (musket): schaal")
+	roww.add_child(_hand_label)
 	_weapon_spins["scale"] = _make_spin(roww, 0.1, 3.0, 0.05, 1.0, _on_weapon_changed)
 	roww.add_child(_make_label(" pos"))
 	for k in ["px", "py", "pz"]:
@@ -633,6 +643,12 @@ func _sync_sliders_from_tuning() -> void:
 	for i in 3:
 		_weapon_spins[["px", "py", "pz"][i]].value = float(wpos[i])
 		_weapon_spins[["rx", "ry", "rz"][i]].value = float(wrot[i])
+	# Onmiskenbaar maken WAT je nu bijstelt en WAAR het heen wordt geschreven.
+	if _hand_label != null:
+		var wat: String = "musket"
+		if _hand_btn != null and _hand_btn.selected >= 0:
+			wat = String(HAND_OPTIES[_hand_btn.selected]["label"])
+		_hand_label.text = "In de hand (%s → %s): schaal" % [wat, _weapon_target_key()]
 	_updating = false
 	if not _formation_pawns.is_empty() and key == "":
 		_info.text = "Model %s/%s staat niet in de formatie — kies een van de vergeleken facties linksboven om te tunen." % [
