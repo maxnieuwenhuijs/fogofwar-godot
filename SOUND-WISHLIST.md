@@ -282,7 +282,7 @@ vlees klinkt nat, staal klinkt hard, hout klinkt dof.
 | `impact_dirt` | 4 | Mis: kogel slaat in de grond (aarde + steentjes) | ➕ |
 | `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | ➕ |
 | `blood_splash` | 3 | Bloedspat bij een treffer | ✓ (heb je al) |
-| `body_fall` | 2-4 | Het LIJF raakt de grond (timing per dood-clip uit `death_pools`) | ✓ (2) 🎚️ |
+| `body_hit_floor` | 2-4 | Het LIJF raakt de grond (timing per dood-clip uit `death_pools`) | ✓ (2) 🎚️ |
 
 ### Prompts -- materiaal-inslagen
 

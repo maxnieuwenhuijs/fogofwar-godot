@@ -1689,7 +1689,7 @@ func _geluid_rijen() -> Array:
 		rijen.append({"cat": "cannon_fire", "wat": "kanon afvuren"})
 		rijen.append({"cat": "cannon_hit", "wat": "inslag"})
 		rijen.append({"cat": "cannon_die_" + fac, "wat": "vernietigd (factie)", "terugval": "cannon_die"})
-	rijen.append({"cat": "body_fall", "wat": "lijf raakt de grond"})
+	rijen.append({"cat": "body_hit_floor", "wat": "lijf raakt de grond"})
 	if tp == Constants.UnitType.INFANTRY:
 		var rol := _hand_rol()
 		var vc := "val_musket" if rol == "" else "val_" + rol

@@ -772,7 +772,7 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		# "Dood-poel"). Zo valt de plas precies wanneer dít lijf ligt.
 		# Bons als het LIJF de grond raakt -- zelfde moment als waarop de
 		# bloedplas begint (die timing is per dood-clip al ingesteld).
-		Audio.play_getuned("body_fall", float(cfg.get("delay", fx("death_blood_delay", 0.9))))
+		Audio.play_getuned("body_hit_floor", float(cfg.get("delay", fx("death_blood_delay", 0.9))))
 		_spawn_blood(global_position + transform.basis.z * torso_off, 1, 0.03,
 			float(cfg.get("delay", fx("death_blood_delay", 0.9))),
 			float(cfg.get("grow", 0.7)),

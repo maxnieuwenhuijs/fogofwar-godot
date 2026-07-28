@@ -3,7 +3,7 @@
 		"db": 9.5,
 		"vertraging": -2.0
 	},
-	"body_fall": {
+	"body_hit_floor": {
 		"db": -8.0,
 		"vertraging": -1.1
 	},

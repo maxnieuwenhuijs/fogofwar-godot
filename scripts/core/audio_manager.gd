@@ -23,7 +23,6 @@ const BANK := {
 	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav", "mouse_shot_die_3.wav"],
 	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
 	"val_hoed":      ["hat_hit_floor_2.wav"],
-	"body_fall":     ["body_hit_floor_1.wav", "body_hit_floor_2.wav", "body_hit_floor_3.wav"],
 	"musket_cock": ["cockhammer.wav"],
 	"melee_kill":  ["mellee_hit.wav", "mellee_hit2.wav", "mellee_hit4.wav"],
 	"melee_survive": ["mellee_hit_no_kill.wav"],
@@ -344,7 +343,7 @@ func play_getuned(category: String, basis: float = 0.0, pitch: float = 0.0) -> v
 ## die de code zelf berekent (bv. de val-tijd van het musket).
 func basis_vertraging(category: String) -> float:
 	match category:
-		"body_fall":
+		"body_hit_floor":
 			return 0.9          # standaard dood-poel-moment; per clip instelbaar
 		"val_hoed":
 			return 0.75         # hoedje tolt langer na
