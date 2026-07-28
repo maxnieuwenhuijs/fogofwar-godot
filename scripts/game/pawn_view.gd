@@ -703,7 +703,15 @@ func stagger(world_dir: Vector3) -> void:
 ## force_die_clip: laat een SPECIFIEKE dood-clip spelen (Model-tuner) —
 ## leeg = willekeurige variant.
 func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee", force_die_clip: String = "") -> void:
-	_kreet_af = false
+	_kreet_af = kreet_al_gespeeld   # game.gd deed de kanonkreet al vóór de inslag
+	kreet_al_gespeeld = false
+	_dodelijke_kracht = strength
+	# Kreet-kans (besluit Max, 28 juli): niet elke dode gilt. Los van of er
+	# gibs afvliegen -- puur een kans per sterfgeval, instelbaar via
+	# effects_tuning.json ("kreet_kans", 0..1). Een kanontreffer gilt altijd.
+	if not _kreet_af and (strength >= 1.2 or randf() < fx("kreet_kans", 0.45)):
+		_kreet_af = true
+		_speel_doodskreet()
 	_ring.visible = false
 	set_hovered(false)
 	var dir := world_dir
@@ -722,9 +730,6 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
 			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
 		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
-		if not _kreet_af:
-			_kreet_af = true
-			Audio.play_factie("inf_die", _doctrine)
 		if _spawn_gibs(dir, strength):
 			if _piece != null:
 				_piece.visible = false  # de brokstukken zíjn het lijk
@@ -797,6 +802,17 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 ## knockback-richting, tollend neer, even blijven liggen en wegzinken.
 ## Alleen tween_property's op het wapen zelf — de pion mag intussen ge-freed
 ## worden zonder dat de tween op een dode callable klapt.
+## De kreet die bij deze dood hoort: een kanontreffer (kracht >= 1.2) klinkt
+## anders dan een musketkogel of een bajonet.
+func _speel_doodskreet() -> void:
+	if _unit_type != Constants.UnitType.INFANTRY:
+		return
+	if _dodelijke_kracht >= 1.2:
+		Audio.play_factie("inf_kanon_die", _doctrine, 0.0, 0.0, "inf_die")
+	else:
+		Audio.play_factie("inf_die", _doctrine)
+
+
 ## Welk kletter-geluid hoort bij wat er uit de handen vliegt? Trommel klinkt
 ## anders dan een musket. Zonder eigen bestand valt alles terug op "val_prop".
 func _val_categorie() -> String:
@@ -1264,9 +1280,6 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 	# Factie-kreet (besluit Max, 28 juli): alleen ALS er echt iets afgaat --
 	# een arm, een been of het hoedje. Zonder afgevallen deel blijft het bij
 	# de algemene doodskreet die game.gd al speelt.
-	if not _kreet_af:
-		_kreet_af = true
-		Audio.play_factie("inf_die", _doctrine)
 	var start: Variant = _fling_single_gib(part_name, dir, violence, time_scale)
 	if start == null:
 		return false
@@ -1524,6 +1537,11 @@ const ROL_DICHTHEID := 5   # hoorn/bijl/vat/staf: sporadisch, na de vaste vier
 
 var _doctrine: int = 0  # factie van dit model (voor de factie-geluiden)
 var _kreet_af: bool = false  # per dood maar één kreet
+var _dodelijke_kracht: float = 0.7  # kracht van de dodelijke klap (kanon >= 1.2)
+## game.gd zet dit als hij de kanonkreet al VOOR de inslag heeft gespeeld,
+## zodat hij hier niet nog een keer klinkt. In de Model-tuner staat hij op
+## false, dus daar hoor je de kreet die bij de gekozen kracht hoort.
+var kreet_al_gespeeld: bool = false
 var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
 
 ## Model-tuner: forceer een figurant-rol ongeacht de kaart ("" = normaal

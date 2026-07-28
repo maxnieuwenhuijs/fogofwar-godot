@@ -1513,6 +1513,10 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 		# die blijft hier staan -- een kanontreffer slaat er sowieso delen af.
 		Audio.play_factie("inf_kanon_die", GameSession.state.doctrine_of(pawn.owner_id),
 			delay, 0.0, "inf_die")
+		# De pion weet nu dat zijn kreet al klonk en zwijgt bij de inslag.
+		var pv_k: PawnView = _pawn_views.get(pawn_id)
+		if pv_k != null:
+			pv_k.kreet_al_gespeeld = true
 		return
 	# Factie-variant als die bestaat (SOUND-WISHLIST 7b), anders het algemene
 	# geluid: een muis piept, een grizzly brult.

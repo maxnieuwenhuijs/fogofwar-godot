@@ -109,11 +109,12 @@ paarden waren); die namen houden we aan, zodat de terugval automatisch klopt.
 | Cavalerie (big bro) | `horse_die` | `horse_die_<factie>` | 5 |
 | Artillerie | `cannon_die` | `cannon_die_<factie>` | 5 |
 
-**Wanneer klinkt de factie-kreet?** (besluit Max, 28 juli) Alleen als er bij
-het sterven ook echt iets afgaat: een arm, een been of het hoedje -- of bij een
-kanontreffer, want die slaat sowieso alles aan flarden. Sterft een pion zonder
-dat er iets afvliegt, dan hoor je het algemene `inf_die`. Zo blijft de kreet
-bijzonder in plaats van dat hij bij elk prikje klinkt.
+**Wanneer klinkt de factie-kreet?** (besluit Max, 28 juli) Op **kans**, niet
+bij elke dode: standaard 45% (`kreet_kans` in `effects_tuning.json`, 0..1).
+Een **kanontreffer gilt altijd** -- en dan met de eigen, kortere kanonkreet
+(`inf_kanon_die_<factie>`), die al vóór de inslag inzet. De rest van de tijd
+hoor je het algemene `inf_die`. Zo blijft de kreet bijzonder zonder dat je
+hem aan de animatie hoeft te koppelen.
 
 **Terugval is ingebouwd** (`Audio.play_factie()`, 28 juli): bestaat de
 factie-categorie niet, dan **leent** hij die van de muis (net zoals de modellen
