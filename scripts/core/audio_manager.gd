@@ -18,6 +18,8 @@ const BANK := {
 					"musket_echo4.wav", "musket_echo5.wav", "musket_echo6.wav"],
 	"musket_hit":  ["default_musket_hit.wav"],
 	# Factie-sterfgeluiden (SOUND-WISHLIST 7b) en val-geluiden (7bis).
+	# Kanontreffer: eigen, zwaardere kreet die VLAK VOOR de inslag inzet.
+	"inf_kanon_die_mouse": ["mouse_hit_canon_1.wav"],
 	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav", "mouse_shot_die_3.wav"],
 	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
 	"body_fall":     ["body_hit_floor_1.wav", "body_hit_floor_2.wav", "body_hit_floor_3.wav"],
@@ -199,10 +201,18 @@ func langste_duur(category: String) -> float:
 	return langste
 
 
-func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: float = 0.0) -> void:
+func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: float = 0.0,
+		terugval: String = "") -> void:
 	var sleutel := "%s_%s" % [category, Constants.doctrine_folder(doctrine)]
-	var lijst: Array = _streams.get(sleutel, [])
-	play(sleutel if not lijst.is_empty() else category, delay, -1, pitch)
+	if not (_streams.get(sleutel, []) as Array).is_empty():
+		play(sleutel, delay, -1, pitch)
+		return
+	if not (_streams.get(category, []) as Array).is_empty():
+		play(category, delay, -1, pitch)
+		return
+	# Niets van deze soort? Dan de opgegeven terugval (bv. de gewone kreet).
+	if terugval != "":
+		play_factie(terugval, doctrine, delay, pitch)
 
 
 func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:

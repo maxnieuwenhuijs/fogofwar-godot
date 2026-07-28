@@ -160,11 +160,19 @@ een lang, komisch gerekt gepiep. Daarom splitsen we het:
 | Geluid | Wanneer | Lengte |
 |---|---|---|
 | Doodskreet (`inf_die_<factie>` enz.) | direct bij de dodelijke treffer | **0,6-1,2s** |
+| Kanonkreet (`inf_kanon_die_<factie>`) | **vlak VOOR de inslag** (kogel nog onderweg) | **0,8-1,5s** |
 | Val van het voorwerp (`val_*`) | ~0,45s later, als het de grond raakt | **0,3-0,6s** |
 
 Ze spelen **onafhankelijk** van elkaar, dus je hoeft ze niet op elkaar te
 timen: kreet nu, kletter daarna. Dat klinkt ook natuurlijker dan één lang
 geluid -- eerst de schreeuw, dan de stilte, dan het hout op de grond.
+
+**Kanontreffer heeft een eigen kreet** (besluit Max, 28 juli): een kanonskogel
+is geen musketkogel, dus het slachtoffer gilt zwaarder én eerder -- de kreet
+zet in terwijl de kogel nog vliegt en de inslag valt er middenin. Categorie
+`inf_kanon_die_<factie>`; ontbreekt hij, dan klinkt gewoon de normale
+doodskreet van die factie. Prompt-richting: dezelfde stem als `inf_die_<factie>`
+maar harder, langer aangehouden en abrupter afgekapt door de klap.
 
 ### Val-geluiden per voorwerp (7 categorieën)
 

@@ -1670,6 +1670,7 @@ func _geluid_rijen() -> Array:
 		rijen.append({"cat": "musket_fire", "wat": "musket afvuren"})
 		rijen.append({"cat": "musket_hit", "wat": "kogel slaat in"})
 		rijen.append({"cat": "inf_die_" + fac, "wat": "doodskreet (factie)", "terugval": "inf_die"})
+		rijen.append({"cat": "inf_kanon_die_" + fac, "wat": "kreet bij kanontreffer", "terugval": "inf_die_" + fac})
 	elif tp == Constants.UnitType.CAVALRY:
 		rijen.append({"cat": "charge_yell", "wat": "charge"})
 		rijen.append({"cat": "horse_die_" + fac, "wat": "doodskreet (factie)", "terugval": "horse_die"})

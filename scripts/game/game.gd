@@ -1501,9 +1501,16 @@ func _retaliation_sound(defender_id: int, delay: float) -> void:
 		Audio.play("retaliation", delay)  # infanterie: staal-op-staal counter
 
 
-func _death_sound(pawn_id: int, delay: float) -> void:
+## kanon = geraakt door artillerie: dan een eigen, zwaardere kreet die VLAK
+## VOOR de inslag inzet (besluit Max, 28 juli) -- je hoort het slachtoffer al
+## gillen terwijl de kogel nog onderweg is.
+func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 	if pawn == null:
+		return
+	if kanon and pawn.unit_type == Constants.UnitType.INFANTRY:
+		Audio.play_factie("inf_kanon_die", GameSession.state.doctrine_of(pawn.owner_id),
+			delay, 0.0, "inf_die")
 		return
 	# Factie-variant als die bestaat (SOUND-WISHLIST 7b), anders het algemene
 	# geluid: een muis piept, een grizzly brult.
@@ -1610,7 +1617,11 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03,
 				result.attacker_from_pos, result.get("eliminated", false), shot_strength, "shot")
 			if result.get("eliminated", false):
-				_death_sound(action.target_id, travel + 0.05)
+				# Kanon: de kreet begint vóór de inslag (kogel is nog onderweg).
+				if shooter_type == Constants.UnitType.ARTILLERY:
+					_death_sound(action.target_id, maxf(0.0, travel - 0.10), true)
+				else:
+					_death_sound(action.target_id, travel + 0.05)
 		"charge":
 			Audio.play("charge_yell")  # strijdkreet bij het aanrijden
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
