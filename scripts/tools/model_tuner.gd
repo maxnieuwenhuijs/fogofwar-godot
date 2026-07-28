@@ -91,7 +91,12 @@ var _sleep_oorsprong := Vector3.ZERO  # aangrijppunt bij het begin van de sleep
 var _sleep_richting := Vector3.ZERO   # wereldrichting van de gepakte as
 var _sleep_start_t: float = 0.0       # parameter langs de as bij muis-neer
 var _sleep_start_waarde := Vector3.ZERO
+var _sleep_ringen: Array = []         # 3x TorusMesh om te draaien (alleen hand-modus)
+var _sleep_draaien: bool = false      # true = ring gepakt (draaien), false = arm (verplaatsen)
+var _sleep_start_hoek: float = 0.0
+var _sleep_start_euler := Vector3.ZERO
 const SLEEP_TREFFER_PX := 16.0
+const RING_FACTOR := 1.25             # ringstraal t.o.v. de armlengte
 var _tuner_light: DirectionalLight3D = null
 var _tuner_env: WorldEnvironment = null
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
@@ -345,30 +350,6 @@ func _build_ui() -> void:
 	row1.add_child(_arch_btn)
 	for b in [_fac_btn, _type_btn, _arch_btn]:
 		(b as OptionButton).item_selected.connect(_on_model_select_changed)
-	# In de hand: musket of een figuranten-prop (alleen infanterie draagt iets).
-	row1.add_child(_make_label("  Hand:"))
-	_hand_btn = OptionButton.new()
-	for o in HAND_OPTIES:
-		_hand_btn.add_item(String(o["label"]))
-	_hand_btn.tooltip_text = "Wat de pion vasthoudt. Kies een prop om die in de hand fijn te stellen (alleen infanterie)."
-	_hand_btn.item_selected.connect(func(_i: int) -> void:
-		# Alleen infanterie draagt iets in de hand: kies je een prop, dan
-		# schakelt het type automatisch mee (anders zie je niets gebeuren).
-		if _hand_rol() != "" and _type_btn.get_selected_id() != Constants.UnitType.INFANTRY:
-			for i in _type_btn.item_count:
-				if _type_btn.get_item_id(i) == Constants.UnitType.INFANTRY:
-					_type_btn.select(i)
-					break
-		_reload_pawns())
-	row1.add_child(_hand_btn)
-	# Sleep-gizmo: pak een as met de muis i.p.v. cijfers tikken.
-	row1.add_child(_make_label("  Sleep:"))
-	_sleep_btn = OptionButton.new()
-	for lbl in ["uit", "hand", "vuurmond"]:
-		_sleep_btn.add_item(lbl)
-	_sleep_btn.select(1)
-	_sleep_btn.tooltip_text = "Sleep-assen: pak de rode (X), groene (Y) of blauwe (Z) arm met de muis."
-	row1.add_child(_sleep_btn)
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
 	for v in ["spel", "close-up", "voorkant"]:
@@ -491,21 +472,63 @@ func _build_ui() -> void:
 	_x_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
 	row2.add_child(_make_label(" Z"))
 	_z_spin = _make_spin(row2, -0.5, 0.5, 0.01, 0.0, _on_tuning_changed)
+	# --- Tab IN DE HAND: musket en figuranten-props (Max, 28 juli) ----------
+	var tab_hand := VBoxContainer.new()
+	tab_hand.name = "In de hand"
+	tab_hand.add_theme_constant_override("separation", 8)
+	tabs.add_child(tab_hand)
+	var rowk := HBoxContainer.new()
+	tab_hand.add_child(rowk)
+	rowk.add_child(_make_label("Voorwerp"))
+	_hand_btn = OptionButton.new()
+	for o in HAND_OPTIES:
+		_hand_btn.add_item(String(o["label"]))
+	_hand_btn.tooltip_text = "Musket of een figuranten-prop. Alleen infanterie draagt iets in de hand."
+	_hand_btn.item_selected.connect(func(_i: int) -> void:
+		# Alleen infanterie draagt iets: kies je een prop, dan schakelt het
+		# type automatisch mee (anders zie je niets gebeuren).
+		if _hand_rol() != "" and _type_btn.get_selected_id() != Constants.UnitType.INFANTRY:
+			for i in _type_btn.item_count:
+				if _type_btn.get_item_id(i) == Constants.UnitType.INFANTRY:
+					_type_btn.select(i)
+					break
+		_reload_pawns())
+	rowk.add_child(_hand_btn)
+	rowk.add_child(_make_label("   Sleep-assen"))
+	_sleep_btn = OptionButton.new()
+	for lbl in ["uit", "voorwerp", "vuurmond"]:
+		_sleep_btn.add_item(lbl)
+	_sleep_btn.select(1)
+	_sleep_btn.tooltip_text = "Pak een gekleurde arm om te verschuiven of een ring om te draaien (X rood, Y groen, Z blauw)."
+	rowk.add_child(_sleep_btn)
+
 	var roww := HBoxContainer.new()
-	tab_model.add_child(roww)
+	tab_hand.add_child(roww)
 	_hand_label = _make_label("In de hand (musket): schaal")
 	roww.add_child(_hand_label)
 	_weapon_spins["scale"] = _make_spin(roww, 0.1, 3.0, 0.05, 1.0, _on_weapon_changed)
-	roww.add_child(_make_label(" pos"))
-	for k in ["px", "py", "pz"]:
-		_weapon_spins[k] = _make_spin(roww, -0.6, 0.6, 0.01, 0.0, _on_weapon_changed)
-	roww.add_child(_make_label(" rot°"))
-	for k in ["rx", "ry", "rz"]:
-		_weapon_spins[k] = _make_spin(roww, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
+	var roww2 := HBoxContainer.new()
+	tab_hand.add_child(roww2)
+	roww2.add_child(_make_label("positie  X"))
+	_weapon_spins["px"] = _make_spin(roww2, -0.6, 0.6, 0.01, 0.0, _on_weapon_changed)
+	roww2.add_child(_make_label(" Y"))
+	_weapon_spins["py"] = _make_spin(roww2, -0.6, 0.6, 0.01, 0.0, _on_weapon_changed)
+	roww2.add_child(_make_label(" Z"))
+	_weapon_spins["pz"] = _make_spin(roww2, -0.6, 0.6, 0.01, 0.0, _on_weapon_changed)
+	roww2.add_child(_make_label("    draai°  X"))
+	_weapon_spins["rx"] = _make_spin(roww2, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
+	roww2.add_child(_make_label(" Y"))
+	_weapon_spins["ry"] = _make_spin(roww2, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
+	roww2.add_child(_make_label(" Z"))
+	_weapon_spins["rz"] = _make_spin(roww2, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
+	var hint := _make_label("Sleep de armen om te verschuiven, de ringen om te draaien. Loslaten = opslaan.")
+	hint.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	tab_hand.add_child(hint)
+
 	# Vuurmond: waar flits + rook ontstaan, in model-ruimte (rechts/hoogte/
 	# voor). Per model opgeslagen; "test vuur" toont het direct.
 	var rowm := HBoxContainer.new()
-	tab_model.add_child(rowm)
+	tab_hand.add_child(rowm)
 	rowm.add_child(_make_label("Vuurmond: rechts"))
 	_muzzle_spins["x"] = _make_spin(rowm, -1.0, 1.0, 0.01, 0.08, _on_muzzle_changed)
 	rowm.add_child(_make_label(" hoogte"))
@@ -1265,6 +1288,22 @@ func _bouw_sleep_gizmo() -> void:
 		arm.material_override = mat
 		_sleep_gizmo.add_child(arm)
 		_sleep_armen.append(arm)
+		# Draai-ring om dezelfde as (iets doorzichtiger, zodat de arm leidend blijft).
+		var ring := MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.99
+		torus.outer_radius = 1.0
+		torus.rings = 48
+		torus.ring_segments = 6
+		ring.mesh = torus
+		var rmat := StandardMaterial3D.new()
+		rmat.albedo_color = Color(kleuren[i].r, kleuren[i].g, kleuren[i].b, 0.85)
+		rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		rmat.no_depth_test = true
+		rmat.render_priority = 19
+		ring.material_override = rmat
+		_sleep_gizmo.add_child(ring)
+		_sleep_ringen.append(ring)
 
 
 ## Waar de gizmo staat en welke drie wereldrichtingen zijn assen zijn.
@@ -1273,7 +1312,7 @@ func _bouw_sleep_gizmo() -> void:
 func _sleep_doel() -> Dictionary:
 	if _pawn == null or not is_instance_valid(_pawn) or _sleep_btn == null:
 		return {}
-	var modus: String = ["uit", "hand", "vuurmond"][_sleep_btn.selected]
+	var modus: String = ["uit", "hand", "vuurmond"][_sleep_btn.selected]  # label "voorwerp" = hand
 	if modus == "hand":
 		var w = _pawn._weapon
 		if w == null or not is_instance_valid(w):
@@ -1305,8 +1344,13 @@ func _werk_sleep_gizmo_bij() -> void:
 		return
 	_sleep_gizmo.visible = true
 	var lengte := _sleep_armlengte()
+	var draaibaar: bool = String(doel["modus"]) == "hand"   # een punt draai je niet
 	for i in 3:
 		_plaats_arm(_sleep_armen[i], doel["pos"], doel["assen"][i], lengte)
+		var ring: MeshInstance3D = _sleep_ringen[i]
+		ring.visible = draaibaar
+		if draaibaar:
+			_plaats_ring(ring, doel["pos"], doel["assen"][i], lengte * RING_FACTOR)
 
 
 func _plaats_arm(arm: MeshInstance3D, oorsprong: Vector3, richting: Vector3, lengte: float) -> void:
@@ -1316,6 +1360,57 @@ func _plaats_arm(arm: MeshInstance3D, oorsprong: Vector3, richting: Vector3, len
 	var x := d.cross(z).normalized()
 	var b := Basis(x, d, z).scaled(Vector3(1.0, lengte, 1.0))
 	arm.global_transform = Transform3D(b, oorsprong + d * lengte * 0.5)
+
+
+## Een ring ligt in het vlak loodrecht op zijn as (TorusMesh draait om Y).
+func _plaats_ring(ring: MeshInstance3D, oorsprong: Vector3, richting: Vector3, straal: float) -> void:
+	var d: Vector3 = (richting as Vector3).normalized()
+	var hulp := Vector3.UP if absf(d.dot(Vector3.UP)) < 0.95 else Vector3.RIGHT
+	var z := hulp.cross(d).normalized()
+	var x := d.cross(z).normalized()
+	ring.global_transform = Transform3D(Basis(x, d, z).scaled(Vector3(straal, straal, straal)), oorsprong)
+
+
+## Twee loodrechte richtingen in het vlak van een as (voor hoekmeting/ring-punten).
+func _vlak_assen(as_richting: Vector3) -> Array:
+	var d := as_richting.normalized()
+	var hulp := Vector3.UP if absf(d.dot(Vector3.UP)) < 0.95 else Vector3.RIGHT
+	var u := hulp.cross(d).normalized()
+	return [u, d.cross(u).normalized()]
+
+
+## Hoek van de muis rond een as, gemeten in het vlak door de oorsprong.
+func _ring_hoek(muis: Vector2, oorsprong: Vector3, as_richting: Vector3) -> float:
+	if _cam == null:
+		return 0.0
+	var d := as_richting.normalized()
+	var ro := _cam.project_ray_origin(muis)
+	var rd := _cam.project_ray_normal(muis)
+	var noemer := d.dot(rd)
+	if absf(noemer) < 0.0001:
+		return 0.0
+	var punt := ro + rd * (d.dot(oorsprong - ro) / noemer)
+	var vlak := _vlak_assen(d)
+	var v := punt - oorsprong
+	return atan2(v.dot(vlak[1]), v.dot(vlak[0]))
+
+
+## Afstand van de muis tot een ring, in schermpixels (ring als veelhoek).
+func _afstand_tot_ring(muis: Vector2, oorsprong: Vector3, as_richting: Vector3, straal: float) -> float:
+	if _cam == null:
+		return 9999.0
+	var vlak := _vlak_assen(as_richting)
+	var beste := 9999.0
+	var vorig := Vector2.ZERO
+	for i in 25:
+		var hoek := TAU * float(i) / 24.0
+		var wp: Vector3 = oorsprong + (vlak[0] as Vector3) * (cos(hoek) * straal) \
+			+ (vlak[1] as Vector3) * (sin(hoek) * straal)
+		var sp := _cam.unproject_position(wp)
+		if i > 0:
+			beste = minf(beste, _punt_naar_segment(muis, vorig, sp))
+		vorig = sp
+	return beste
 
 
 ## Afstand van een punt tot een lijnstuk in schermcoördinaten (voor het pakken).
@@ -1370,16 +1465,40 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		var mb := event as InputEventMouseButton
 		if mb.pressed:
-			var as_i := _as_onder_muis(mb.position)
+			var doel := _sleep_doel()
+			if doel.is_empty():
+				return
+			# Eerst de ringen (draaien), dan de armen (verplaatsen).
+			var as_i := -1
+			var draaien := false
+			if String(doel["modus"]) == "hand":
+				var straal := _sleep_armlengte() * RING_FACTOR
+				var beste := SLEEP_TREFFER_PX
+				for i in 3:
+					var d := _afstand_tot_ring(mb.position, doel["pos"], doel["assen"][i], straal)
+					if d < beste:
+						beste = d
+						as_i = i
+						draaien = true
+			if as_i < 0:
+				as_i = _as_onder_muis(mb.position)
+				draaien = false
 			if as_i < 0:
 				return
-			var doel := _sleep_doel()
 			_sleep_as = as_i
+			_sleep_draaien = draaien
 			_sleep_modus = String(doel["modus"])
 			_sleep_oorsprong = doel["pos"]
 			_sleep_richting = (doel["assen"][as_i] as Vector3).normalized()
-			_sleep_start_t = _as_parameter(mb.position, _sleep_oorsprong, _sleep_richting)
-			_sleep_start_waarde = _huidige_sleep_waarde()
+			if draaien:
+				_sleep_start_hoek = _ring_hoek(mb.position, _sleep_oorsprong, _sleep_richting)
+				_sleep_start_euler = Vector3(
+					deg_to_rad(_weapon_spins["rx"].value),
+					deg_to_rad(_weapon_spins["ry"].value),
+					deg_to_rad(_weapon_spins["rz"].value))
+			else:
+				_sleep_start_t = _as_parameter(mb.position, _sleep_oorsprong, _sleep_richting)
+				_sleep_start_waarde = _huidige_sleep_waarde()
 			get_viewport().set_input_as_handled()
 		elif _sleep_as >= 0:
 			_sleep_afronden(mb.position)
@@ -1401,6 +1520,9 @@ func _huidige_sleep_waarde() -> Vector3:
 ## via de gewone spinbox-route, zodat opslaan en herladen precies hetzelfde
 ## gaan als bij het tikken van cijfers.
 func _sleep_verplaats(muis: Vector2, definitief: bool) -> void:
+	if _sleep_draaien:
+		_sleep_draai(muis, definitief)
+		return
 	var t := _as_parameter(muis, _sleep_oorsprong, _sleep_richting)
 	var delta := t - _sleep_start_t
 	var nieuw := _sleep_start_waarde
@@ -1428,7 +1550,31 @@ func _sleep_verplaats(muis: Vector2, definitief: bool) -> void:
 				_muzzle_gizmo.global_position = _sleep_oorsprong + _sleep_richting * delta
 
 
+## Draaien om de gepakte ring. De opgeslagen rotatie staat in de ruimte van de
+## hand-aanhechting, dus we vermenigvuldigen VOOR met een draai om die as --
+## precies wat je verwacht als je aan de ring trekt.
+func _sleep_draai(muis: Vector2, definitief: bool) -> void:
+	var hoek := _ring_hoek(muis, _sleep_oorsprong, _sleep_richting)
+	var theta := wrapf(hoek - _sleep_start_hoek, -PI, PI)
+	var lokale_as := Vector3.ZERO
+	lokale_as[_sleep_as] = 1.0
+	var nieuwe_basis := Basis(lokale_as, theta) * Basis.from_euler(_sleep_start_euler)
+	var euler := nieuwe_basis.get_euler()
+	var graden := Vector3(rad_to_deg(euler.x), rad_to_deg(euler.y), rad_to_deg(euler.z))
+	var sleutels := ["rx", "ry", "rz"]
+	if definitief:
+		for i in 3:
+			_weapon_spins[sleutels[i]].value = snappedf(graden[i], 1.0)
+	else:
+		for i in 3:
+			_weapon_spins[sleutels[i]].set_value_no_signal(snappedf(graden[i], 1.0))
+		var w = _pawn._weapon
+		if w != null and is_instance_valid(w):
+			(w as Node3D).rotation = euler
+
+
 func _sleep_afronden(muis: Vector2) -> void:
 	_sleep_verplaats(muis, true)
 	_sleep_as = -1
+	_sleep_draaien = false
 	_sleep_modus = ""
