@@ -259,6 +259,10 @@ func extra_vertraging(category: String) -> float:
 func zet_geluid_tuning(category: String, db: float, vertraging: float) -> void:
 	_laad_snd_tuning()
 	_snd_tuning[category] = {"db": db, "vertraging": vertraging}
+	bewaar_geluid_tuning()
+
+
+func bewaar_geluid_tuning() -> void:
 	var f := FileAccess.open(GELUID_TUNING_PAD, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(_snd_tuning, "\t"))

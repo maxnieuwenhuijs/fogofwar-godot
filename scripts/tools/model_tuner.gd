@@ -335,6 +335,30 @@ func _build_ui() -> void:
 	style.content_margin_bottom = 8.0
 	panel.add_theme_stylebox_override("panel", style)
 	ui.add_child(panel)
+	# Vaste knoppen RECHTSBOVEN (Max, 28 juli): het paneel onderin groeit mee
+	# met de tabs, waardoor de oude onderbalk buiten beeld kon vallen.
+	var top := HBoxContainer.new()
+	top.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	top.anchor_left = 1.0
+	top.offset_left = -330.0
+	top.offset_right = -10.0
+	top.offset_top = 10.0
+	top.offset_bottom = 46.0
+	top.alignment = BoxContainer.ALIGNMENT_END
+	top.add_theme_constant_override("separation", 8)
+	ui.add_child(top)
+	var save_top := Button.new()
+	save_top.text = "  OPSLAAN  "
+	save_top.add_theme_font_size_override("font_size", 16)
+	save_top.pressed.connect(_save)
+	top.add_child(save_top)
+	var back_top := Button.new()
+	back_top.text = "Terug naar het spel"
+	back_top.add_theme_font_size_override("font_size", 16)
+	back_top.pressed.connect(func() -> void:
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
+	top.add_child(back_top)
+
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
@@ -600,22 +624,6 @@ func _build_ui() -> void:
 			dp_test.text = "test dood-poel"
 			dp_test.pressed.connect(_on_death_pool_test)
 			rowd.add_child(dp_test)
-
-	# --- Vaste onderbalk: opslaan ---------------------------------------------
-	var row3 := HBoxContainer.new()
-	box.add_child(row3)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row3.add_child(spacer)
-	var save_btn := Button.new()
-	save_btn.text = "  OPSLAAN  "
-	save_btn.pressed.connect(_save)
-	row3.add_child(save_btn)
-	var back_btn := Button.new()
-	back_btn.text = "Terug naar het spel"
-	back_btn.pressed.connect(func() -> void:
-		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
-	row3.add_child(back_btn)
 
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1222,7 +1230,10 @@ func _save() -> void:
 	var f2 := FileAccess.open(PawnView.EFFECTS_PATH, FileAccess.WRITE)
 	if f2 != null:
 		f2.store_string(JSON.stringify(PawnView.fx_all(), "\t") + "\n")
-	_info.text = "Opgeslagen → model_tuning.json + effects_tuning.json (geldt direct in het spel)"
+	# Geluid-afstelling schrijft zichzelf al bij elke wijziging weg; hier nog
+	# een keer, zodat OPSLAAN echt alles vastlegt.
+	Audio.bewaar_geluid_tuning()
+	_info.text = "Opgeslagen → model_tuning.json + effects_tuning.json + sound_tuning.json"
 
 
 # --- Duel-test: bajonet-choreografie live afstemmen ---------------------------
