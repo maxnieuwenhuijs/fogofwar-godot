@@ -843,12 +843,28 @@ func _maak_pawn_view(pawn: Pawn) -> void:
 	# Kijk naar de vijand: rood naar z=0 (-z), blauw naar z=10 (+z).
 	pv.face_dir(Vector2i(0, -1) if pawn.owner_id == Constants.PLAYER_1 else Vector2i(0, 1))
 	pv.set_unit_type(pawn.unit_type)
+	pv.figurant_index = _figurant_index(pawn)
 	_pawn_views[pawn.id] = pv
 
 
 ## F2.6-bugfix (speeltest Max): gespawnde pionnen bestonden wel in de engine
 ## maar kregen geen 3D-view of hp-balk — onzichtbaar en onklikbaar, waardoor
 ## koppelen op een spawn onmogelijk was en de partij voor de mens vastliep.
+## Volgnummer van een pion binnen het eigen leger (alleen infanterie telt mee).
+## Gesneuvelde pionnen tellen door, zodat het nummer -- en dus de figurant-rol
+## -- de hele partij hetzelfde blijft: koppel je een vaandeldrager en koppel je
+## hem later los, dan pakt hij zijn vaandel weer op.
+func _figurant_index(pawn: Pawn) -> int:
+	if pawn.unit_type != Constants.UnitType.INFANTRY:
+		return -1
+	var ids: Array = []
+	for p in GameSession.state.pawns.values():
+		if p.owner_id == pawn.owner_id and p.unit_type == Constants.UnitType.INFANTRY:
+			ids.append(p.id)
+	ids.sort()
+	return ids.find(pawn.id)
+
+
 func _sync_new_pawn_views() -> void:
 	var vers: Array = []
 	for pawn in GameSession.state.pawns.values():

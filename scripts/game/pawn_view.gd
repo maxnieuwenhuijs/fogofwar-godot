@@ -1483,7 +1483,11 @@ func set_unit_type(unit_type: int) -> void:
 ## musket). Puur cosmetisch; de staat verandert niet. Deterministisch op
 ## pion-id (nooit randi), dus replays zien er identiek uit. ROL_DICHTHEID 3 =
 ## ongeveer een op de drie ongekoppelde pionnen (1 = iedereen, 0 = uit).
-const ROLLEN := ["flag", "drum", "horn", "sapper", "canteen", "drummajor"]
+## Elk leger heeft ALTIJD een vaandeldrager en een tamboer (besluit Max,
+## 28 juli): de eerste twee infanteristen krijgen die rol vast. De rest van
+## de figuranten wordt daarna uitgedund met ROL_DICHTHEID.
+const ROLLEN_VAST := ["flag", "drum"]
+const ROLLEN_EXTRA := ["horn", "sapper", "canteen", "drummajor"]
 const ROL_DICHTHEID := 3
 
 
@@ -1494,10 +1498,24 @@ var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
 var rol_override: String = ""
 
 
+## Volgnummer van deze pion binnen het EIGEN leger (0 = eerste infanterist).
+## game.gd zet dit bij het bouwen van de view; -1 = geen rol (bv. de
+## opstellings-schaduw). Per leger, niet globaal, zodat beide kanten hun
+## eigen vaandeldrager en tamboer hebben.
+@export var figurant_index: int = -1
+
+
 func _rol_voor_pion() -> String:
-	if ROL_DICHTHEID <= 0 or pawn_id < 0 or pawn_id % ROL_DICHTHEID != 0:
+	if figurant_index < 0:
 		return ""
-	return ROLLEN[(pawn_id / ROL_DICHTHEID) % ROLLEN.size()]
+	if figurant_index < ROLLEN_VAST.size():
+		return ROLLEN_VAST[figurant_index]   # altijd: vaandel, dan trommel
+	if ROL_DICHTHEID <= 0 or ROLLEN_EXTRA.is_empty():
+		return ""
+	var rest: int = figurant_index - ROLLEN_VAST.size()
+	if rest % ROL_DICHTHEID != 0:
+		return ""
+	return ROLLEN_EXTRA[(rest / ROL_DICHTHEID) % ROLLEN_EXTRA.size()]
 
 
 ## Attribuut-prop bij een rol: eerst een factie-eigen variant, anders de
