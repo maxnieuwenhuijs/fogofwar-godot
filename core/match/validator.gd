@@ -150,6 +150,10 @@ static func _check_spawn(state: GameState, action: Dictionary, player_id: int) -
 		if dubbel.has(pos):
 			return _nee("Dubbel spawnvak in de inzet")
 		dubbel[pos] = true
+		# Je koopt alleen wat je doctrine kent: het punten-model bepaalt
+		# HOEVEEL, niet WAT (bugfix Max 28 juli: Muis kocht kanonnen).
+		if not state.kent_type(player_id, t):
+			return _nee("Deze factie kent dit type niet")
 		telling[t] = int(telling.get(t, 0)) + 1
 		if telling[t] > state.pool_count(player_id, t):
 			return _nee("Onvoldoende pool-voorraad")
@@ -244,6 +248,8 @@ static func _vul_spawns(state: GameState, player_id: int, vrij: Array, maximum: 
 	for i in maximum:
 		var t: int = -1
 		for kandidaat in volgorde:
+			if not state.kent_type(player_id, kandidaat):
+				continue
 			var kosten: int = state.spawn_kosten(kandidaat) if state.punten_model() else 1
 			if state.punten_model():
 				if punten_over >= kosten:

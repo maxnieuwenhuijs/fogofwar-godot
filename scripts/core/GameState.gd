@@ -186,9 +186,20 @@ func pool_total(player_id: int) -> int:
 
 
 ## Pool-saldo per unit-type (sleutels: Constants.UnitType).
+## Mag deze factie dit type überhaupt in het veld brengen? (BUGFIX Max,
+## 28 juli: met één puntenpot kon een Muis -- comp 18/4/0, dus GEEN
+## artillerie -- ineens een kanon kopen. Je koopt alleen wat je doctrine
+## kent; het punten-model bepaalt hoevéél, niet wát.)
+func kent_type(player_id: int, unit_type: int) -> bool:
+	var comp: Array = doctrine_data_of(player_id).comp
+	return unit_type >= 0 and unit_type < comp.size() and int(comp[unit_type]) > 0
+
+
 func pool_count(player_id: int, unit_type: int) -> int:
 	var p: Dictionary = pools.get(player_id, {})
 	if punten_model():
+		if not kent_type(player_id, unit_type):
+			return 0
 		return int(p.get("pt", 0)) / spawn_kosten(unit_type)
 	match unit_type:
 		Constants.UnitType.INFANTRY:

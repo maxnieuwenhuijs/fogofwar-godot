@@ -306,3 +306,23 @@ func test_c11_punten_pool_spawnkosten() -> void:
 	oud.doctrines[2] = Constants.Doctrine.MENS
 	oud.init_pools()
 	assert_eq(oud.pool_count(1, Constants.UnitType.INFANTRY), 3, "oud model onaangetast")
+
+
+func test_c11_geen_type_buiten_de_doctrine() -> void:
+	# BUGFIX (Max, 28 juli): het punten-model bepaalt HOEVEEL je koopt, niet
+	# WAT. Een Muis (comp 18/4/0) mag dus nooit een kanon spawnen.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {"pool_model": "punten", "pools": {"1": 30, "2": 30}}})
+	s.doctrines[1] = Constants.Doctrine.MUIS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	s.init_pools()
+	assert_false(s.kent_type(1, Constants.UnitType.ARTILLERY), "Muis kent geen artillerie")
+	assert_eq(s.pool_count(1, Constants.UnitType.ARTILLERY), 0, "dus geen kanon te koop")
+	assert_true(s.pool_count(1, Constants.UnitType.INFANTRY) > 0, "soldaten wel")
+	assert_true(s.kent_type(2, Constants.UnitType.ARTILLERY), "Varken kent wel artillerie")
+	s.phase = Phase.Type.CYCLE_SPAWN
+	var achterste: int = Constants.get_start_rows_for_player(1)[0]
+	var kanon := Actions.make_spawn([{"type": Constants.UnitType.ARTILLERY, "pos": Vector2i(5, achterste)}])
+	assert_false(Validator.is_legal(s, kanon, 1).legal, "kanon spawnen als Muis geweigerd")
+	var soldaat := Actions.make_spawn([{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(5, achterste)}])
+	assert_true(Validator.is_legal(s, soldaat, 1).legal, "soldaat spawnen mag wel")

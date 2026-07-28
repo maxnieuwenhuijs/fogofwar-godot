@@ -1095,6 +1095,9 @@ func _show_spawn_overlay() -> void:
 	var acties: Array = []
 	if _spawn_keuze.size() < cap:
 		for t in 3:
+			# Alleen types die je doctrine kent (Muis heeft geen artillerie).
+			if not st.kent_type(_human_id, t):
+				continue
 			if punten_over >= kosten[t]:
 				opties.append(tr("PHASE_SPAWN_BUY_%d" % t) % kosten[t])
 				acties.append(t)
