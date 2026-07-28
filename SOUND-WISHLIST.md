@@ -123,7 +123,7 @@ paarden waren); die namen houden we aan, zodat de terugval automatisch klopt.
 | Artillerie | `cannon_die` | `cannon_die_<factie>` | 5 |
 
 **Wanneer klinkt de factie-kreet?** (besluit Max, 28 juli) Op **kans**, niet
-bij elke dode: standaard 45% (`kreet_kans` in `effects_tuning.json`, 0..1).
+bij elke dode: standaard 15% (`kreet_kans` in `effects_tuning.json`, 0..1).
 Een **kanontreffer gilt altijd** -- en dan met de eigen, kortere kanonkreet
 (`inf_kanon_die_<factie>`), die al vóór de inslag inzet. De rest van de tijd
 hoor je het algemene `inf_die`. Zo blijft de kreet bijzonder zonder dat je

@@ -708,8 +708,9 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 	_dodelijke_kracht = strength
 	# Kreet-kans (besluit Max, 28 juli): niet elke dode gilt. Los van of er
 	# gibs afvliegen -- puur een kans per sterfgeval, instelbaar via
-	# effects_tuning.json ("kreet_kans", 0..1). Een kanontreffer gilt altijd.
-	if not _kreet_af and (strength >= 1.2 or randf() < fx("kreet_kans", 0.45)):
+	# effects_tuning.json ("kreet_kans", 0..1; nu 15%). Een KANONtreffer
+	# gilt altijd -- die kans geldt alleen voor musket- en meleedoden.
+	if not _kreet_af and (strength >= 1.2 or randf() < fx("kreet_kans", 0.15)):
 		_kreet_af = true
 		_speel_doodskreet()
 	_ring.visible = false
