@@ -185,6 +185,7 @@ static func default_weights() -> Dictionary:
 		# spawn_drempel: spawn zodra bord-leger < drempel × startgrootte
 		# (1.0 = altijd aanvullen, lager = zuiniger met de reserve).
 		"spawn_drempel": 1.0,
+	"spawn_duur": 0.5,
 		# cp_bet_rN: gewenste CP-inzet per setup-ronde (geklemd op saldo en
 		# kaartaantal). Default = de bewezen heuristiek: alles op ronde 3.
 		"cp_bet_r1": 0.01,
@@ -354,10 +355,18 @@ func choose_spawn(state: GameState) -> Array:
 	var gewenst: int = clampi(tekort, 0, cap)
 	if gewenst == 0:
 		return []
+	# C11 (leerbaar): kies tussen de goedkoop-eerst en duur-eerst inzet.
+	# spawn_duur > 0.5 = liever kwaliteit (kanon/ruiter) dan lijven.
+	var duur_voorkeur: bool = float(weights.get("spawn_duur", 0.5)) > 0.5
 	var vol: Array = []
+	var duurste: Array = []
 	for s in Validator._sample_spawn_sets(state, player_id):
 		if (s as Array).size() > vol.size():
 			vol = s
+		if not (s as Array).is_empty() and int(((s as Array)[0] as Dictionary).type) != Constants.UnitType.INFANTRY:
+			duurste = s
+	if duur_voorkeur and not duurste.is_empty():
+		return duurste.slice(0, gewenst)
 	return vol.slice(0, gewenst)
 
 

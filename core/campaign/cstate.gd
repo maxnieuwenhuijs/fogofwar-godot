@@ -56,6 +56,11 @@ func setup(namen_doctrines: Array, p_rules: CRules = null) -> void:
 		_boek("start", i, int(floor(comp[0] * rules.start_poolfactor)),
 			int(floor(comp[1] * rules.start_poolfactor)),
 			int(floor(comp[2] * rules.start_poolfactor)), rules.start_cp, 0)
+		# C11: per-factie budget-compensatie (tweakknoppen) — extra soldaten
+		# (1 punt elk) en/of extra start-CP, als eigen ledger-boeking.
+		var bonus: Dictionary = rules.budget_bonus.get(str(int(nd.get("doctrine", 0))), {})
+		if int(bonus.get("pt", 0)) > 0 or int(bonus.get("cp", 0)) > 0:
+			_boek("budget_bonus", i, int(bonus.get("pt", 0)), 0, 0, int(bonus.get("cp", 0)), 0)
 	fase = Fase.NOMINATIE
 	nominatie_team = 0
 	ronde = 1

@@ -259,9 +259,9 @@ func _ververs() -> void:
 	if c.fase == CState.Fase.KLAAR and c.winnaar != -1:
 		_header.text = tr("HUB_CHAMPION") % String(c.spelers[c.winnaar].naam)
 	var pool: Dictionary = c.pool_van(mens_id)
-	_saldi.text = tr("HUB_BALANCE") % [
+	_saldi.text = tr("HUB_BALANCE_PT") % [
 		String(mijn.get("naam", "?")), int(mijn.get("team", 0)),
-		int(pool.inf), int(pool.cav), int(pool.art), c.cp_van(mens_id), c.punten_van(mens_id),
+		_pool_punten(pool), c.cp_van(mens_id), c.punten_van(mens_id),
 		"" if String(mijn.get("status", "")) == "actief" else tr("HUB_ELIMINATED_SUFFIX")]
 	_ververs_teams()
 	_ververs_tijdlijn()
@@ -292,6 +292,12 @@ func _ververs_teams() -> void:
 			if int(c.spelers[sid].team) != team:
 				continue
 			houder.add_child(_team_rij(c, int(sid), team == mijn_team, vecht_nu.has(int(sid))))
+
+
+## C11 — waarde van een typed pool in versterkingspunten (soldaat 1 /
+## ruiter 2 / kanon 3): overal EEN getal in de UI.
+func _pool_punten(pool: Dictionary) -> int:
+	return int(pool.inf) + 2 * int(pool.cav) + 3 * int(pool.art)
 
 
 func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
@@ -336,8 +342,7 @@ func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
 		saldo.text = tr("HUB_FALLEN")
 	else:
 		var pool: Dictionary = c.pool_van(sid)
-		saldo.text = tr("HUB_MEMBER_BALANCE") % [int(pool.inf), int(pool.cav),
-			int(pool.art), c.cp_van(sid), c.punten_van(sid)]
+		saldo.text = tr("HUB_ROW_SALDO") % [_pool_punten(pool), c.cp_van(sid), c.punten_van(sid)]
 	saldo.add_theme_font_size_override("font_size", 11)
 	saldo.add_theme_color_override("font_color",
 		KLEUR_DOOD if dood else Color(0.72, 0.78, 0.86))
@@ -613,37 +618,48 @@ func _start_mens_duel(vijand: int) -> void:
 
 
 func _paneel_donatie(c: CState) -> void:
+	# C11-UX (Max): doneren = een plusje achter de naam. [+1] geeft 1
+	# versterkingspunt (1 soldaat), [+CP] geeft 1 CP; caps bewaakt de reducer.
 	var titel := Label.new()
-	titel.text = tr("HUB_DONATE_TITLE")
+	titel.text = tr("HUB_DONATE_TITLE_PT")
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_paneel.add_child(titel)
 	var mijn_team: int = int(c.spelers[mens_id].team)
-	var doelen := OptionButton.new()
-	doelen.name = "DoneerDoel"
-	# C9: doneren mag aan elke levende teamgenoot.
+	var mijn_pool: Dictionary = c.pool_van(mens_id)
 	for sid in c.actieve_leden(mijn_team):
-		if int(sid) != mens_id:
-			doelen.add_item(String(c.spelers[int(sid)].naam), int(sid))
-	var rij := HBoxContainer.new()
-	rij.add_theme_constant_override("separation", 6)
-	var invoer: Dictionary = {}
-	for veld in ["inf", "cav", "art", "cp"]:
-		var spin := SpinBox.new()
-		spin.name = "Spin_" + veld
-		spin.min_value = 0
-		spin.max_value = 10
-		spin.prefix = tr("HUB_UNIT_" + veld.to_upper()) + " "
-		invoer[veld] = spin
-		rij.add_child(spin)
-	if doelen.item_count > 0:
-		_paneel.add_child(doelen)
-		_paneel.add_child(rij)
-		_knop(tr("HUB_DONATE_BTN"), func() -> void:
-			if doelen.selected >= 0:
-				driver.submit_mens_donatie(doelen.get_selected_id(),
-					int(invoer.inf.value), int(invoer.cav.value),
-					int(invoer.art.value), int(invoer.cp.value))
+		if int(sid) == mens_id:
+			continue
+		var rij := HBoxContainer.new()
+		rij.add_theme_constant_override("separation", 8)
+		var naam := Label.new()
+		naam.text = String(c.spelers[int(sid)].naam)
+		naam.custom_minimum_size = Vector2(140, 0)
+		rij.add_child(naam)
+		var doel: int = int(sid)
+		var plus := Button.new()
+		plus.text = tr("HUB_PLUS_VST")
+		plus.disabled = int(mijn_pool.inf) <= 0
+		plus.pressed.connect(func() -> void:
+			if driver.submit_mens_donatie(doel, 1, 0, 0, 0):
 				_ververs())
+		rij.add_child(plus)
+		var plus_cp := Button.new()
+		plus_cp.text = tr("HUB_PLUS_CP")
+		plus_cp.disabled = driver.c.cp_van(mens_id) <= 0
+		plus_cp.pressed.connect(func() -> void:
+			if driver.submit_mens_donatie(doel, 0, 0, 0, 1):
+				_ververs())
+		rij.add_child(plus_cp)
+		_paneel.add_child(rij)
+	var koers: int = maxi(1, c.rules.ruil_cp_per_punt)
+	var ruil := Button.new()
+	ruil.name = "RuilKnop"
+	ruil.text = tr("HUB_RUIL_BTN") % koers
+	ruil.disabled = c.cp_van(mens_id) < koers
+	ruil.pressed.connect(func() -> void:
+		if driver.submit_mens_ruil(koers):
+			_ververs())
+	_paneel.add_child(ruil)
 	_knop(tr("HUB_DONATE_DONE_BTN"), func() -> void:
 		driver.submit_mens_klaar_met_doneren()
 		_werk_door())

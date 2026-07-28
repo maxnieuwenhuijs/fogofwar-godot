@@ -149,6 +149,11 @@ func _feed_event(action: Dictionary, speler: int) -> void:
 		feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
 			"tekst": tr("SOLO_FEED_DONATE") % [String(c.spelers[speler].naam),
 				", ".join(delen), String(c.spelers[int(action.naar)].naam)]})
+	elif t == CActions.EXCHANGE:
+		var koers: int = maxi(1, c.rules.ruil_cp_per_punt)
+		feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
+			"tekst": tr("SOLO_FEED_RUIL") % [String(c.spelers[speler].naam),
+				int(action.cp), int(action.cp) / koers]})
 	elif t == CActions.TESTAMENT:
 		for deel in (action.verdeling as Array):
 			var delen2: Array = []
@@ -235,6 +240,10 @@ func submit_mens_donatie(naar: int, inf: int, cav: int, art: int, cp: int) -> bo
 
 func submit_mens_klaar_met_doneren() -> bool:
 	return _pas_toe(CActions.make_klaar_met_doneren(), mens_id)
+
+
+func submit_mens_ruil(cp: int) -> bool:
+	return _pas_toe(CActions.make_exchange(cp), mens_id)
 
 
 func submit_mens_testament(verdeling: Array) -> bool:
@@ -387,7 +396,9 @@ func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 		start_b = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
 		pool_a = {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]}
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
-	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit, "campaign": {
+	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit,
+		"basis_hp": {"cav": 2},  # C12: bigbro altijd minstens 2 HP, kaart erbovenop
+		"campaign": {
 		"pool_model": "punten",  # C11: reserve = puntenpot (typed pools op waarde omgezet)
 		"comp_override": {"1": start_a, "2": start_b},
 		"pools": {"1": pool_a, "2": pool_b},

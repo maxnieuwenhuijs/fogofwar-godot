@@ -13,6 +13,7 @@ const KLAAR_MET_DONEREN := "klaar_met_doneren"  # {} — sluit jouw donatie-vens
 const MATCH_RESULT := "match_result"  # {duel, winnaar, methode, verliezen:{"<id>":{inf,cav,art}}, cp_delta:{"<id>": n}}
                                       # + optioneel inzet:{"<id>":{inf,cav,art}} — vol-team-model (27 juli):
                                       # ingezette reinforcements; aanwezig = díé worden afgeboekt i.p.v. de verliezen
+const EXCHANGE := "exchange"        # {cp} — C11: ruil CP naar versterkingen (2 CP = 1 soldaat)
 const TESTAMENT := "testament"      # {verdeling: [{naar, inf, cav, art, cp}]}
 const TICK_DEADLINE := "tick_deadline"  # {} — defaults afdwingen (ook in het log)
 
@@ -21,6 +22,7 @@ const _FIELDS := {
 	LOTING: ["paren"],
 	DONATE: ["naar", "inf", "cav", "art", "cp"],
 	KLAAR_MET_DONEREN: [],
+	EXCHANGE: ["cp"],
 	MATCH_RESULT: ["duel", "winnaar", "methode", "verliezen", "cp_delta"],
 	TESTAMENT: ["verdeling"],
 	TICK_DEADLINE: [],
@@ -45,6 +47,9 @@ static func make_match_result(duel: int, winnaar: int, methode: String, verlieze
 	if not inzet.is_empty():
 		a["inzet"] = inzet
 	return a
+
+static func make_exchange(cp: int) -> Dictionary:
+	return {"type": EXCHANGE, "cp": cp}
 
 static func make_testament(verdeling: Array) -> Dictionary:
 	return {"type": TESTAMENT, "verdeling": verdeling}

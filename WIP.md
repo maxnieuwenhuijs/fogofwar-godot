@@ -278,6 +278,24 @@ Uitvoering volgt `MASTERBOUWPLAN.md`. Afgerond:
   rekenen mee. Logica: in het punten-model kost een ruiter 2 punten en
   hoort hij taaier te zijn dan een 1-punt-soldaat. Daarna trainen + arena.
 
+- **C11 AF + spawn-inkoop + menu (28 juli).** Het hele economie-pakket
+  speelbaar: (1) spawn-fase = inkooplijst voor de mens (+soldaat 1 pt /
+  +ruiter 2 / +kanon 3, max 3 per cyclus, haven-prio-vakken automatisch);
+  bots kregen een duur-eerst spawn-variant + leerbaar gewicht `spawn_duur`
+  (trainer leert kwaliteit vs lijven per factie). (2) CP-ruil 2:1 (actie
+  `exchange`, alleen donatie-venster, hub-knop, feed-event). (3) Factie-
+  budgetten: CRules.budget_bonus (Muis +4 pt, Beer +3, Wolf +2 pt/+4 CP)
+  als eigen ledger-boeking bij setup; compat: pre-C11 leeg. (4) Hub toont
+  overal EEN versterkingsgetal (1/2/3-waarde), saldi-regel "Veldleger:
+  altijd vol", donaties via [+1]/[+CP]-plusjes per teamgenoot. (5) C12
+  basis-2-HP bigbro nu ook in campagne-duels. (6) Hoofdmenu herbouwd:
+  SOLO/MULTIPLAYER/Speluitleg/Instellingen, campagne-moeilijkheid
+  (easy/medium/hard schaalt de bord-AI via CampaignBridge), trainer uit
+  het menu. Vangst onderweg: budget_bonus-serialisatie niet byte-stabiel
+  (cp:0 expliciet gemaakt). CHECKS: 1456 asserts, simcheck 0, solocheck
+  3/3, shot/play schoon. Werkafspraak nieuw: snelle poort (~3 min) bij
+  itereren, volle batterij alleen als commit-poort (Max wachtte te veel).
+
 - **BACKLOG hoofdmenu-herstructurering (besluit Max, 27 juli — VOLGENDE
   BOUWKLUS).** Hoofdmenu wordt: SOLO / MULTIPLAYER (disabled tot F4) /
   Settings / How to play. SOLO -> "1v1" of "Campagne"; daarna pas de

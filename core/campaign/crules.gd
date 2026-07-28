@@ -20,6 +20,20 @@ var vol_team_start: bool = true
 var start_poolfactor: float = 0.5
 var start_cp: int = 10
 
+# C11 (besluit Max, 27 juli): CP inruilen voor versterkingen, 2 CP = 1 punt
+# (geboekt als soldaat, waarde 1). Alleen in het donatie-venster.
+var ruil_cp_per_punt: int = 2
+
+# C11: per-factie budget-compensatie bij de start (tweakknoppen, Max).
+# Sleutel = doctrine-int als string; pt = extra soldaten (1 punt elk),
+# cp = extra start-CP. Basis: nachtdata 26-28 juli (Muis/Beer zwak,
+# Wolf 2 nachten 0 adopties -> CP-steun).
+var budget_bonus: Dictionary = {
+	"1": {"pt": 4, "cp": 0},    # Muis
+	"3": {"pt": 3, "cp": 0},    # Beer
+	"4": {"pt": 2, "cp": 4},    # Wolf
+}
+
 # Donaties (per ontvanger per raadsronde):
 var donatie_cap_pionnen: int = 10
 var donatie_cap_cp: int = 3
@@ -49,6 +63,8 @@ func to_dict() -> Dictionary:
 		"vol_team_start": vol_team_start,
 		"start_poolfactor": start_poolfactor,
 		"start_cp": start_cp,
+		"ruil_cp_per_punt": ruil_cp_per_punt,
+		"budget_bonus": budget_bonus,
 		"donatie_cap_pionnen": donatie_cap_pionnen,
 		"donatie_cap_cp": donatie_cap_cp,
 		"testament_fractie": testament_fractie,
@@ -76,6 +92,13 @@ static func from_dict(d: Dictionary) -> CRules:
 	c.vol_team_start = bool(d.get("vol_team_start", false))
 	c.start_poolfactor = float(d.get("start_poolfactor", c.start_poolfactor))
 	c.start_cp = int(d.get("start_cp", c.start_cp))
+	c.ruil_cp_per_punt = int(d.get("ruil_cp_per_punt", c.ruil_cp_per_punt))
+	# Compat: pre-C11-saves misten budget_bonus -> leeg (geen bonus achteraf).
+	var bb = d.get("budget_bonus", {})
+	c.budget_bonus = {}
+	if bb is Dictionary:
+		for k in bb:
+			c.budget_bonus[String(k)] = {"pt": int((bb[k] as Dictionary).get("pt", 0)), "cp": int((bb[k] as Dictionary).get("cp", 0))}
 	c.donatie_cap_pionnen = int(d.get("donatie_cap_pionnen", c.donatie_cap_pionnen))
 	c.donatie_cap_cp = int(d.get("donatie_cap_cp", c.donatie_cap_cp))
 	c.testament_fractie = float(d.get("testament_fractie", c.testament_fractie))

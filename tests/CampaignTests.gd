@@ -146,6 +146,42 @@ func test_c9_volle_rondes_default() -> void:
 	assert_false(oud.ronde1_loting, "oude saves: geen loting")
 
 
+func test_c11_ruil_cp_naar_versterkingen() -> void:
+	# C11: 2 CP = 1 soldaat (1 punt), alleen in het donatie-venster.
+	var c := _mini()
+	assert_false(CReducer.apply(c, CActions.make_exchange(2), 0).ok,
+		"ruilen buiten het donatie-venster geweigerd")
+	_stem_unaniem(c, 0, 3)
+	assert_eq(c.fase, CState.Fase.DONATIE)
+	var cp_voor: int = c.cp_van(1)
+	var inf_voor: int = int(c.pool_van(1).inf)
+	assert_false(CReducer.apply(c, CActions.make_exchange(3), 1).ok, "alleen veelvouden van 2")
+	assert_false(CReducer.apply(c, CActions.make_exchange(99 * 2), 1).ok, "niet meer dan je saldo")
+	assert_true(CReducer.apply(c, CActions.make_exchange(4), 1).ok, "4 CP -> 2 soldaten")
+	assert_eq(c.cp_van(1), cp_voor - 4)
+	assert_eq(int(c.pool_van(1).inf), inf_voor + 2)
+
+
+func test_c11_budget_bonus_per_factie() -> void:
+	# C11: factie-compensatie als startboeking (Muis +4 pt, Wolf +2 pt/+4 CP).
+	var c := CState.new()
+	c.rules = CRules.new()
+	var lijst: Array = []
+	for i in 6:
+		lijst.append({"naam": "S%d" % i, "doctrine": i})  # doctrine = index
+	c.setup(lijst, c.rules)
+	var muis_comp: Array = Constants.doctrine_data(1).comp
+	var muis_basis: int = int(floor(muis_comp[0] * c.rules.start_poolfactor))
+	assert_eq(int(c.pool_van(1).inf), muis_basis + 4, "Muis: +4 soldaten bonus")
+	assert_eq(c.cp_van(4), c.rules.start_cp + 4, "Wolf: +4 CP bonus")
+	var varken_comp: Array = Constants.doctrine_data(0).comp
+	assert_eq(int(c.pool_van(0).inf), int(floor(varken_comp[0] * c.rules.start_poolfactor)),
+		"Varken: geen bonus")
+	# Compat: oude regels-dict zonder budget_bonus -> geen bonus bij fold.
+	var oud := CRules.from_dict({"team_size": 8})
+	assert_true(oud.budget_bonus.is_empty(), "pre-C11-saves: lege bonus-tabel")
+
+
 func test_donatiecaps_en_regels() -> void:
 	var c := _mini()
 	_stem_unaniem(c, 0, 3)

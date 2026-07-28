@@ -184,10 +184,31 @@ static func _sample_spawn_sets(state: GameState, player_id: int) -> Array:
 	var out: Array = [[]]
 	if state.pool_total(player_id) == 0 or state.spawns_over(player_id) == 0:
 		return out
+	var vrij: Array = vrije_spawn_vakken(state, player_id)
+	if vrij.is_empty():
+		return out
+	var maximum: int = mini(mini(int(state.rules.campaign.get("spawn_max", 3)), vrij.size()), state.spawns_over(player_id))
+	# Twee volle inzetten: goedkoop-eerst (inf > cav > art, veel lijven) en
+	# duur-eerst (art > cav > inf, kwaliteit) — C11: welke wint is leerbaar
+	# (AIController.weights.spawn_duur); de mens kiest zelf per type.
+	var vol_goedkoop: Array = _vul_spawns(state, player_id, vrij, maximum,
+		[Constants.UnitType.INFANTRY, Constants.UnitType.CAVALRY, Constants.UnitType.ARTILLERY])
+	var vol_duur: Array = _vul_spawns(state, player_id, vrij, maximum,
+		[Constants.UnitType.ARTILLERY, Constants.UnitType.CAVALRY, Constants.UnitType.INFANTRY])
+	if not vol_goedkoop.is_empty():
+		out.append([vol_goedkoop[0]])
+		if vol_goedkoop.size() > 1:
+			out.append(vol_goedkoop)
+	if not vol_duur.is_empty() and str(vol_duur) != str(vol_goedkoop):
+		out.append(vol_duur)
+	return out
+
+
+## Vrije achterste-rij-vakken in spawn-prioriteitsvolgorde (besluit Max,
+## 27 juli): eerst de HAVEN-vakken dichtzetten — midden-havens prio 1, dan
+## de hoek-havens, dan de rest van het centrum naar buiten.
+static func vrije_spawn_vakken(state: GameState, player_id: int) -> Array:
 	var achterste: int = Constants.get_start_rows_for_player(player_id)[0]
-	# Spawn-plaatsing (besluit Max, 27 juli): eerst de HAVEN-vakken op je
-	# achterste rij dichtzetten — de vijand wint daar — met de midden-havens
-	# als prio 1, dan de hoek-havens, dan pas de rest (centrum naar buiten).
 	var haven_x: Dictionary = {}
 	for hpos in Constants.get_haven_for_player(Constants.opponent(player_id)):
 		if int(hpos.y) == achterste:
@@ -208,35 +229,39 @@ static func _sample_spawn_sets(state: GameState, player_id: int) -> Array:
 		var pos := Vector2i(x, achterste)
 		if state.is_tile_empty(pos):
 			vrij.append(pos)
-	if vrij.is_empty():
-		return out
+	return vrij
+
+
+## Vul spawns in type-voorkeursvolgorde, betaalbaar uit de (punten)pool.
+static func _vul_spawns(state: GameState, player_id: int, vrij: Array, maximum: int, volgorde: Array) -> Array:
+	var punten_over: int = state.pool_total(player_id)
 	var saldo: Array = [
 		state.pool_count(player_id, Constants.UnitType.INFANTRY),
 		state.pool_count(player_id, Constants.UnitType.CAVALRY),
 		state.pool_count(player_id, Constants.UnitType.ARTILLERY),
 	]
-	var maximum: int = mini(mini(int(state.rules.campaign.get("spawn_max", 3)), vrij.size()), state.spawns_over(player_id))
-	var vol: Array = []
+	var uit: Array = []
 	for i in maximum:
 		var t: int = -1
-		for kandidaat in [Constants.UnitType.INFANTRY, Constants.UnitType.CAVALRY, Constants.UnitType.ARTILLERY]:
-			if saldo[kandidaat] > 0:
+		for kandidaat in volgorde:
+			var kosten: int = state.spawn_kosten(kandidaat) if state.punten_model() else 1
+			if state.punten_model():
+				if punten_over >= kosten:
+					t = kandidaat
+					break
+			elif saldo[kandidaat] > 0:
 				t = kandidaat
 				break
 		if t == -1:
 			break
-		saldo[t] -= 1
-		vol.append({"type": t, "pos": vrij[i]})
-	if not vol.is_empty():
-		out.append([vol[0]])
-		if vol.size() > 1:
-			out.append(vol)
-	return out
+		if state.punten_model():
+			punten_over -= state.spawn_kosten(t)
+		else:
+			saldo[t] -= 1
+		uit.append({"type": t, "pos": vrij[i]})
+	return uit
 
 
-## F1.3 — de SNELLE poort voor de reducer: structuur, fase, beurt, eigendom.
-## De dure legaliteit (paden/doelwitten/charge-kosten) dwingt Rules.apply_*
-## zelf atomair af; is_legal blijft de volledige poort voor tests/tools/UI.
 static func gate_check(state: GameState, action: Dictionary, player_id: int) -> Dictionary:
 	if not Actions.is_wellformed(action):
 		return _nee("Misvormde actie")

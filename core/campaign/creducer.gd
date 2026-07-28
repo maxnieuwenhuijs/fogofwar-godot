@@ -38,6 +38,8 @@ static func apply(c: CState, action: Dictionary, speler: int) -> Dictionary:
 			fout = _do_donate(c, action, speler, events)
 		CActions.KLAAR_MET_DONEREN:
 			fout = _do_klaar_met_doneren(c, speler, events)
+		CActions.EXCHANGE:
+			fout = _do_exchange(c, action, speler, events)
 		CActions.MATCH_RESULT:
 			fout = _do_match_result(c, action, events)
 		CActions.TESTAMENT:
@@ -211,6 +213,24 @@ static func _do_donate(c: CState, action: Dictionary, speler: int, events: Array
 	}
 	_boek_ev(c, events, "donate", speler, -inf, -cav, -art, -cp, 0)
 	_boek_ev(c, events, "donate", naar, inf, cav, art, cp, 0)
+	return ""
+
+
+## C11 — CP inruilen voor versterkingen (2 CP = 1 soldaat, waarde 1 punt).
+## Alleen in het donatie-venster: dat is het beslismoment over je middelen.
+static func _do_exchange(c: CState, action: Dictionary, speler: int, events: Array) -> String:
+	if c.fase != CState.Fase.DONATIE:
+		return "Ruilen kan alleen in het donatie-venster"
+	var lid: Dictionary = c.spelers.get(speler, {})
+	if lid.is_empty() or String(lid.status) != "actief":
+		return "Geen actieve speler"
+	var koers: int = maxi(1, c.rules.ruil_cp_per_punt)
+	var cp: int = int(action.cp)
+	if cp < koers or cp % koers != 0:
+		return "Ruil in veelvouden van %d CP" % koers
+	if cp > c.cp_van(speler):
+		return "Onvoldoende CP"
+	_boek_ev(c, events, "ruil", speler, cp / koers, 0, 0, -cp, 0)
 	return ""
 
 

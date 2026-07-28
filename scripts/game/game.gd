@@ -1050,29 +1050,70 @@ func _open_define_hand(bonus: int) -> void:
 
 
 ## Versterkingen (v4.2): blinde aanvul-keuze; spawns landen op de achterste rij.
+## C11 (besluit Max, 28 juli): zelf kiezen wat je koopt — soldaat (1 pt),
+## ruiter (2 pt) of kanon (3 pt) uit je versterkingspot, max spawn_max per
+## cyclus. De overlay herbouwt na elke keuze; vakken volgen de haven-prio.
+var _spawn_keuze: Array = []
+
+
 func _show_spawn_overlay() -> void:
 	var st: GameState = GameSession.state
-	var pool: Dictionary = st.pools.get(_human_id, {})
-	var suggestie: Array = Validator.aanvul_spawn_actie(st, _human_id).spawns
-	var body := "\n".join([
-		tr("PHASE_SPAWN_RESERVE") % [
-			int(pool.get("inf", 0)), int(pool.get("cav", 0)), int(pool.get("art", 0))],
-		tr("PHASE_SPAWN_INFO") % [
-			int(st.rules.campaign.get("spawn_max", 3)), st.spawns_over(_human_id)],
+	var kosten: Array = [st.spawn_kosten(0), st.spawn_kosten(1), st.spawn_kosten(2)]
+	var besteed := 0
+	var telling: Array = [0, 0, 0]
+	for t in _spawn_keuze:
+		besteed += kosten[t]
+		telling[int(t)] += 1
+	var punten_over: int = st.pool_total(_human_id) - besteed
+	var cap: int = mini(mini(int(st.rules.campaign.get("spawn_max", 3)), st.spawns_over(_human_id)),
+		Validator.vrije_spawn_vakken(st, _human_id).size())
+	var body := "
+".join([
+		tr("PHASE_SPAWN_POINTS") % [punten_over, telling[0], telling[1], telling[2]],
+		tr("PHASE_SPAWN_INFO") % [cap, st.spawns_over(_human_id)],
 		tr("PHASE_SPAWN_BLIND"),
 	])
-	var opties: Array = [tr("PHASE_SPAWN_NONE")]
-	if not suggestie.is_empty():
-		opties = [tr("PHASE_SPAWN_REFILL") % suggestie.size(), tr("PHASE_SPAWN_NONE")]
+	var opties: Array = []
+	var acties: Array = []
+	if _spawn_keuze.size() < cap:
+		for t in 3:
+			if punten_over >= kosten[t]:
+				opties.append(tr("PHASE_SPAWN_BUY_%d" % t) % kosten[t])
+				acties.append(t)
+	opties.append(tr("PHASE_SPAWN_CONFIRM") % _spawn_keuze.size())
+	acties.append("bevestig")
+	if not _spawn_keuze.is_empty():
+		opties.append(tr("PHASE_SPAWN_RESET"))
+		acties.append("reset")
+	_spawn_acties = acties
 	_overlay.show_choice(tr("PHASE_SPAWN_TITLE"), body, opties, _on_spawn_choice, Color.WHITE, true)
+
+
+var _spawn_acties: Array = []
 
 
 func _on_spawn_choice(index: int) -> void:
 	_overlay.hide()
-	var suggestie: Array = Validator.aanvul_spawn_actie(GameSession.state, _human_id).spawns
+	if index < 0 or index >= _spawn_acties.size():
+		return
+	var actie = _spawn_acties[index]
+	if actie is int:
+		_spawn_keuze.append(int(actie))
+		_show_spawn_overlay()
+		return
+	if String(actie) == "reset":
+		_spawn_keuze = []
+		_show_spawn_overlay()
+		return
+	# Bevestigen: vakken toewijzen in haven-prioriteitsvolgorde.
+	var st: GameState = GameSession.state
+	var vrij: Array = Validator.vrije_spawn_vakken(st, _human_id)
 	var inzet: Array = []
-	if index == 0 and not suggestie.is_empty():
-		inzet = suggestie
+	for i in _spawn_keuze.size():
+		if i >= vrij.size():
+			break
+		inzet.append({"type": int(_spawn_keuze[i]), "pos": vrij[i]})
+	_spawn_keuze = []
 	GameSession.submit_spawn(_human_id, inzet)
 
 
