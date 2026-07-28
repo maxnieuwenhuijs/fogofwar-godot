@@ -1489,6 +1489,10 @@ const ROL_DICHTHEID := 3
 
 var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
 
+## Model-tuner: forceer een figurant-rol ongeacht de kaart ("" = normaal
+## gedrag). Zo kun je een trommel of vaandel in de hand fijnafstellen.
+var rol_override: String = ""
+
 
 func _rol_voor_pion() -> String:
 	if ROL_DICHTHEID <= 0 or pawn_id < 0 or pawn_id % ROL_DICHTHEID != 0:
@@ -1521,7 +1525,10 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 		arch = Constants.card_archetype(card.hp, card.stamina, card.attack)
 	# Figurant-rol (alleen ongekoppelde infanterie): het KARAKTER blijft
 	# gewoon base; alleen de prop in de hand wordt een trommel/vaandel.
-	_rol = _rol_voor_pion() if unit_type == Constants.UnitType.INFANTRY and card == null else ""
+	if rol_override != "":
+		_rol = rol_override  # tuner: vaste rol, ook mét kaart
+	else:
+		_rol = _rol_voor_pion() if unit_type == Constants.UnitType.INFANTRY and card == null else ""
 	var key := "%d:%d:%s:%s" % [doctrine, unit_type, arch, _rol]
 	if key == _char_key:
 		return

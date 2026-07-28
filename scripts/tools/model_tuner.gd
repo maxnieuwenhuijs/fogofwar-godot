@@ -84,7 +84,19 @@ var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
 var _cam: Camera3D = null           # wisselbare camera (spel/close-up/voorkant)
+var _hand_btn: OptionButton = null      # wat de pion vasthoudt (musket of een figuranten-prop)
 var _view_btn: OptionButton = null
+
+## Figuranten-props (MODEL-WISHLIST 3d): label -> rol ("" = gewoon musket).
+const HAND_OPTIES := [
+	{"label": "musket", "rol": ""},
+	{"label": "vaandel", "rol": "flag"},
+	{"label": "trommel", "rol": "drum"},
+	{"label": "hoorn", "rol": "horn"},
+	{"label": "bijl", "rol": "sapper"},
+	{"label": "vat", "rol": "canteen"},
+	{"label": "staf", "rol": "drummajor"},
+]
 var _my_fac_btn: OptionButton = null   # formatie: mijn factie
 var _opp_fac_btn: OptionButton = null  # formatie: tegenstander
 var _formation_btn: Button = null      # formatie aan/uit (toggle)
@@ -313,6 +325,14 @@ func _build_ui() -> void:
 	row1.add_child(_arch_btn)
 	for b in [_fac_btn, _type_btn, _arch_btn]:
 		(b as OptionButton).item_selected.connect(_on_model_select_changed)
+	# In de hand: musket of een figuranten-prop (alleen infanterie draagt iets).
+	row1.add_child(_make_label("  Hand:"))
+	_hand_btn = OptionButton.new()
+	for o in HAND_OPTIES:
+		_hand_btn.add_item(String(o["label"]))
+	_hand_btn.tooltip_text = "Wat de pion vasthoudt. Kies een prop om die in de hand fijn te stellen (alleen infanterie)."
+	_hand_btn.item_selected.connect(func(_i: int) -> void: _reload_pawns())
+	row1.add_child(_hand_btn)
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
 	for v in ["spel", "close-up", "voorkant"]:
@@ -651,6 +671,13 @@ func _on_weapon_changed(_v: float) -> void:
 
 # --- Model laden / bijstellen ---------------------------------------------------
 
+## Gekozen rol uit de Hand-dropdown ("" = musket).
+func _hand_rol() -> String:
+	if _hand_btn == null or _hand_btn.selected < 0:
+		return ""
+	return String(HAND_OPTIES[_hand_btn.selected]["rol"])
+
+
 func _current_card() -> Card:
 	var arch: String = ARCHS[_arch_btn.selected]
 	if not ARCH_CARDS.has(arch):
@@ -738,6 +765,7 @@ func _reload_pawns() -> void:
 	add_child(_pawn)
 	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera
 	_pawn.set_unit_type(unit_type)
+	_pawn.rol_override = _hand_rol()
 	_pawn.set_character(doctrine, unit_type, _current_card())
 	_freeze_pose()
 	# Sliders op de opgeslagen waarden zetten (zonder events af te vuren).

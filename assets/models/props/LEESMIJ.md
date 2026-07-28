@@ -34,9 +34,11 @@ die wint automatisch van de gedeelde versie hier.
 2. Klaar: ongekoppelde infanteristen pakken het attribuut vanzelf op
    (ongeveer 1 op de 3 — knop `ROL_DICHTHEID` in `scripts/game/pawn_view.gd`).
 3. Het spel schaalt de prop automatisch naar ~0,55 wereld-unit op de langste
-   as en hangt hem aan de rechterhand. Zit hij scheef of te groot? Fijnafstellen
-   in `assets/models/model_tuning.json` onder de sleutel `props/<naam>`:
-   `{"scale": 1.0, "pos": [x, y, z], "rot": [graden x, y, z]}`.
+   as en hangt hem aan de rechterhand. Zit hij scheef of te groot? **Model-tuner**
+   (hoofdmenu → Instellingen): zet type op *Infanterie*, kies bij **Hand** de
+   prop (vaandel/trommel/hoorn/bijl/vat/staf) en stel hem bij met de
+   musket-schuifjes; opslaan schrijft naar `assets/models/model_tuning.json`
+   onder de sleutel `props/<naam>`.
 
 Ontbreekt een prop, dan draagt die pion gewoon zijn musket — je kunt dus met
 één trommel beginnen. Zie `MODEL-WISHLIST.md` §3d voor de prompts.
