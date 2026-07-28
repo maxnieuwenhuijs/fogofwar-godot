@@ -808,9 +808,9 @@ func _speel_doodskreet() -> void:
 	if _unit_type != Constants.UnitType.INFANTRY:
 		return
 	if _dodelijke_kracht >= 1.2:
-		Audio.play_factie("inf_kanon_die", _doctrine, 0.0, 0.0, "inf_die")
+		Audio.play_factie("inf_kanon_die", _doctrine, 0.0, 0.0, "inf_die", _archetype)
 	else:
-		Audio.play_factie("inf_die", _doctrine)
+		Audio.play_factie("inf_die", _doctrine, 0.0, 0.0, "", _archetype)
 
 
 ## Welk kletter-geluid hoort bij wat er uit de handen vliegt? Trommel klinkt
@@ -1536,6 +1536,7 @@ const ROL_DICHTHEID := 5   # hoorn/bijl/vat/staf: sporadisch, na de vaste vier
 
 
 var _doctrine: int = 0  # factie van dit model (voor de factie-geluiden)
+var _archetype: String = "base"  # base/spd/hp/atk/mix -- geluiden mogen per model
 var _kreet_af: bool = false  # per dood maar één kreet
 var _dodelijke_kracht: float = 0.7  # kracht van de dodelijke klap (kanon >= 1.2)
 ## game.gd zet dit als hij de kanonkreet al VOOR de inslag heeft gespeeld,
@@ -1609,6 +1610,7 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	_char_key = key
 	_unit_type = unit_type
 	_doctrine = doctrine
+	_archetype = arch
 	var fac: String = Constants.doctrine_folder(doctrine)
 	var tname: String = Constants.unit_type_file(unit_type)
 	var candidates: Array = [

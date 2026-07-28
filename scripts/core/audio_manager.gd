@@ -202,37 +202,44 @@ func langste_duur(category: String) -> float:
 	return langste
 
 
-## Welke categorie klinkt er werkelijk? Zelfde keten als play_factie, zodat
-## de Model-tuner precies laat horen wat het spel doet ("" = niets).
-func effectieve_categorie(category: String, doctrine: int, terugval: String = "") -> String:
-	for kandidaat in ["%s_%s" % [category, Constants.doctrine_folder(doctrine)],
-			"%s_mouse" % category, category]:
+## Zoekvolgorde van fijn naar grof (besluit Max, 28 juli):
+##   <cat>_<factie>_<archetype>   bv. inf_die_mouse_hp   -- dit ene model
+##   <cat>_<factie>               bv. inf_die_mouse      -- hele factie
+##   <cat>_mouse[_<archetype>]    leen van de muis (zoals de modellen)
+##   <cat>                        algemeen
+## Zo kun je zo grof of zo fijn opnemen als je wilt: één geluid voor alles,
+## of een eigen kreet voor de dikke hp-muis.
+func categorie_keten(category: String, doctrine: int, archetype: String = "") -> Array:
+	var fac := Constants.doctrine_folder(doctrine)
+	var keten: Array = []
+	if archetype != "":
+		keten.append("%s_%s_%s" % [category, fac, archetype])
+	keten.append("%s_%s" % [category, fac])
+	if fac != "mouse":
+		if archetype != "":
+			keten.append("%s_mouse_%s" % [category, archetype])
+		keten.append("%s_mouse" % category)
+	keten.append(category)
+	return keten
+
+
+## Welke categorie klinkt er werkelijk? ("" = niets) -- de tuner gebruikt dit
+## zodat je daar exact hoort wat het spel speelt.
+func effectieve_categorie(category: String, doctrine: int, terugval: String = "",
+		archetype: String = "") -> String:
+	for kandidaat in categorie_keten(category, doctrine, archetype):
 		if not (_streams.get(kandidaat, []) as Array).is_empty():
 			return kandidaat
 	if terugval != "":
-		return effectieve_categorie(terugval, doctrine)
+		return effectieve_categorie(terugval, doctrine, "", archetype)
 	return ""
 
 
 func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: float = 0.0,
-		terugval: String = "") -> void:
-	var sleutel := "%s_%s" % [category, Constants.doctrine_folder(doctrine)]
-	if not (_streams.get(sleutel, []) as Array).is_empty():
-		play(sleutel, delay, -1, pitch)
-		return
-	# Leen-terugval: heeft deze factie nog geen eigen geluiden, dan die van de
-	# muis -- precies zoals de MODELLEN op de muis-set terugvallen. Zo hoor je
-	# een nieuw opgenomen kreet meteen, ook als je een andere factie speelt.
-	var leen := "%s_mouse" % category
-	if not (_streams.get(leen, []) as Array).is_empty():
-		play(leen, delay, -1, pitch)
-		return
-	if not (_streams.get(category, []) as Array).is_empty():
-		play(category, delay, -1, pitch)
-		return
-	# Niets van deze soort? Dan de opgegeven terugval (bv. de gewone kreet).
-	if terugval != "":
-		play_factie(terugval, doctrine, delay, pitch)
+		terugval: String = "", archetype: String = "") -> void:
+	var cat := effectieve_categorie(category, doctrine, terugval, archetype)
+	if cat != "":
+		play(cat, delay, -1, pitch)
 
 
 ## GELUID-AFSTELLING (sounds/sound_tuning.json, besluit Max 28 juli): per

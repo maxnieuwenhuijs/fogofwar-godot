@@ -98,6 +98,19 @@ Een muis die sneuvelt piept; een grizzly brult. Daarom naast de algemene
 sterfgeluiden een **factie-variant per type**: 5 varianten per factie per type,
 zodat een gevecht nooit gaat ratelen.
 
+**Zo fijn als je wilt** (besluit Max, 28 juli): je mag ook **per model**
+opnemen, dus per archetype. De zoekvolgorde is fijn -> grof:
+
+```
+inf_die_mouse_hp   ->  dit ene model (dikke muis)
+inf_die_mouse      ->  hele factie
+inf_die_mouse[_hp] ->  leen van de muis (als jouw factie nog niets heeft)
+inf_die            ->  algemeen
+```
+
+Eén kreet voor alles volstaat dus, maar wil je de logge `hp` laten kreunen en
+de spichtige `spd` laten piepen, dan zet je er gewoon een bestand bij.
+
 **Naamconventie:** `<basiscategorie>_<factie>` -- factie in het Engels, net als
 de modelmappen: `mouse pig lion bear wolf crocodile`. De basiscategorieen heten
 historisch `inf_die` / `horse_die` / `cannon_die` (uit de tijd dat cavalerie nog

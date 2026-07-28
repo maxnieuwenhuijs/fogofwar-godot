@@ -1511,10 +1511,12 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 	if kanon and pawn.unit_type == Constants.UnitType.INFANTRY:
 		# Kanon: de zwaardere kreet zet vóór de inslag in (anticipatie), dus
 		# die blijft hier staan -- een kanontreffer slaat er sowieso delen af.
-		Audio.play_factie("inf_kanon_die", GameSession.state.doctrine_of(pawn.owner_id),
-			delay, 0.0, "inf_die")
-		# De pion weet nu dat zijn kreet al klonk en zwijgt bij de inslag.
+		# Archetype van dit model erbij: een dikke hp-pion mag anders klinken.
 		var pv_k: PawnView = _pawn_views.get(pawn_id)
+		var arch: String = pv_k._archetype if pv_k != null else ""
+		Audio.play_factie("inf_kanon_die", GameSession.state.doctrine_of(pawn.owner_id),
+			delay, 0.0, "inf_die", arch)
+		# De pion weet nu dat zijn kreet al klonk en zwijgt bij de inslag.
 		if pv_k != null:
 			pv_k.kreet_al_gespeeld = true
 		return
