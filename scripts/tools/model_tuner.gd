@@ -78,6 +78,20 @@ var _z_spin: SpinBox
 var _weapon_spins: Dictionary = {}  # "scale"/"px"/"py"/"pz"/"rx"/"ry"/"rz" -> SpinBox
 var _muzzle_spins: Dictionary = {}  # vuurmond "x"/"y"/"z" -> SpinBox
 var _muzzle_gizmo: Node3D = null    # oranje merkteken op de vuurmond
+
+# --- Sleep-gizmo (besluit Max, 28 juli): drie assen die je met de muis pakt,
+# i.p.v. cijfers tikken. Werkt op wat er in de hand zit (musket of prop) of op
+# de vuurmond; schrijft exact dezelfde tuning-waarden als de spinboxen.
+var _sleep_btn: OptionButton = null
+var _sleep_gizmo: Node3D = null
+var _sleep_armen: Array = []          # 3x MeshInstance3D (X rood, Y groen, Z blauw)
+var _sleep_as: int = -1               # 0/1/2 tijdens slepen, anders -1
+var _sleep_modus: String = ""         # "hand" of "vuurmond" tijdens het slepen
+var _sleep_oorsprong := Vector3.ZERO  # aangrijppunt bij het begin van de sleep
+var _sleep_richting := Vector3.ZERO   # wereldrichting van de gepakte as
+var _sleep_start_t: float = 0.0       # parameter langs de as bij muis-neer
+var _sleep_start_waarde := Vector3.ZERO
+const SLEEP_TREFFER_PX := 16.0
 var _tuner_light: DirectionalLight3D = null
 var _tuner_env: WorldEnvironment = null
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
@@ -173,10 +187,14 @@ func _process(_dt: float) -> void:
 		return
 	if _pawn != null and is_instance_valid(_pawn) and _pawn._tune_key != "":
 		_muzzle_gizmo.visible = true
-		_muzzle_gizmo.global_position = _pawn.muzzle_world()
+		# Tijdens een vuurmond-sleep stuurt de muis het merkteken; anders volgt
+		# het de opgeslagen waarde.
+		if not (_sleep_as >= 0 and _sleep_modus == "vuurmond"):
+			_muzzle_gizmo.global_position = _pawn.muzzle_world()
 		_muzzle_gizmo.global_rotation = _pawn.global_rotation
 	else:
 		_muzzle_gizmo.visible = false
+	_werk_sleep_gizmo_bij()
 
 
 func _build_world() -> void:
@@ -260,6 +278,7 @@ func _build_world() -> void:
 	add_child(_cam)
 	_cam.current = true
 	_apply_camera()
+	_bouw_sleep_gizmo()
 
 
 ## Zet de camera volgens de gekozen view; in formatie-modus zoomt elke view
@@ -342,6 +361,14 @@ func _build_ui() -> void:
 					break
 		_reload_pawns())
 	row1.add_child(_hand_btn)
+	# Sleep-gizmo: pak een as met de muis i.p.v. cijfers tikken.
+	row1.add_child(_make_label("  Sleep:"))
+	_sleep_btn = OptionButton.new()
+	for lbl in ["uit", "hand", "vuurmond"]:
+		_sleep_btn.add_item(lbl)
+	_sleep_btn.select(1)
+	_sleep_btn.tooltip_text = "Sleep-assen: pak de rode (X), groene (Y) of blauwe (Z) arm met de muis."
+	row1.add_child(_sleep_btn)
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
 	for v in ["spel", "close-up", "voorkant"]:
@@ -1211,3 +1238,197 @@ func _clear_duel() -> void:
 	if _duel_root != null and is_instance_valid(_duel_root):
 		_duel_root.queue_free()
 	_duel_root = null
+
+
+# =========================================================================
+# Sleep-gizmo: drie assen pakken met de muis (Max, 28 juli)
+# =========================================================================
+
+## Bouw de drie as-armen. Ze tekenen altijd bovenop het model (no_depth_test)
+## zodat je ze ook ziet als ze in een arm of in het lijf verdwijnen.
+func _bouw_sleep_gizmo() -> void:
+	_sleep_gizmo = Node3D.new()
+	add_child(_sleep_gizmo)
+	var kleuren := [Color(0.95, 0.35, 0.35), Color(0.4, 0.9, 0.45), Color(0.45, 0.65, 1.0)]
+	for i in 3:
+		var arm := MeshInstance3D.new()
+		var cil := CylinderMesh.new()
+		cil.top_radius = 0.012
+		cil.bottom_radius = 0.012
+		cil.height = 1.0
+		arm.mesh = cil
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = kleuren[i]
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.no_depth_test = true
+		mat.render_priority = 20
+		arm.material_override = mat
+		_sleep_gizmo.add_child(arm)
+		_sleep_armen.append(arm)
+
+
+## Waar de gizmo staat en welke drie wereldrichtingen zijn assen zijn.
+## "hand": de prop/musket in de hand, assen = die van de hand-aanhechting.
+## "vuurmond": het punt waar flits en rook ontstaan, assen = die van de pion.
+func _sleep_doel() -> Dictionary:
+	if _pawn == null or not is_instance_valid(_pawn) or _sleep_btn == null:
+		return {}
+	var modus: String = ["uit", "hand", "vuurmond"][_sleep_btn.selected]
+	if modus == "hand":
+		var w = _pawn._weapon
+		if w == null or not is_instance_valid(w):
+			return {}
+		var ouder := (w as Node3D).get_parent() as Node3D
+		if ouder == null:
+			return {}
+		var b := ouder.global_transform.basis.orthonormalized()
+		return {"modus": modus, "pos": (w as Node3D).global_position,
+			"assen": [b.x, b.y, b.z]}
+	if modus == "vuurmond":
+		var b2 := _pawn.global_transform.basis.orthonormalized()
+		var pos: Vector3 = _muzzle_gizmo.global_position if (_sleep_as >= 0 and _sleep_modus == "vuurmond") \
+			else _pawn.muzzle_world()
+		return {"modus": modus, "pos": pos, "assen": [b2.x, b2.y, -b2.z]}
+	return {}
+
+
+func _sleep_armlengte() -> float:
+	return maxf(0.12, (_cam.size if _cam != null else 2.0) * 0.10)
+
+
+func _werk_sleep_gizmo_bij() -> void:
+	if _sleep_gizmo == null:
+		return
+	var doel := _sleep_doel()
+	if doel.is_empty():
+		_sleep_gizmo.visible = false
+		return
+	_sleep_gizmo.visible = true
+	var lengte := _sleep_armlengte()
+	for i in 3:
+		_plaats_arm(_sleep_armen[i], doel["pos"], doel["assen"][i], lengte)
+
+
+func _plaats_arm(arm: MeshInstance3D, oorsprong: Vector3, richting: Vector3, lengte: float) -> void:
+	var d: Vector3 = (richting as Vector3).normalized()
+	var hulp := Vector3.UP if absf(d.dot(Vector3.UP)) < 0.95 else Vector3.RIGHT
+	var z := hulp.cross(d).normalized()
+	var x := d.cross(z).normalized()
+	var b := Basis(x, d, z).scaled(Vector3(1.0, lengte, 1.0))
+	arm.global_transform = Transform3D(b, oorsprong + d * lengte * 0.5)
+
+
+## Afstand van een punt tot een lijnstuk in schermcoördinaten (voor het pakken).
+func _punt_naar_segment(punt: Vector2, a: Vector2, b: Vector2) -> float:
+	var ab := b - a
+	var lengte2 := ab.length_squared()
+	if lengte2 < 0.0001:
+		return punt.distance_to(a)
+	var t := clampf((punt - a).dot(ab) / lengte2, 0.0, 1.0)
+	return punt.distance_to(a + ab * t)
+
+
+## Welke as ligt onder de muis? -1 = geen.
+func _as_onder_muis(muis: Vector2) -> int:
+	var doel := _sleep_doel()
+	if doel.is_empty() or _cam == null:
+		return -1
+	var lengte := _sleep_armlengte()
+	var beste := -1
+	var beste_afstand := SLEEP_TREFFER_PX
+	var p0 := _cam.unproject_position(doel["pos"])
+	for i in 3:
+		var p1 := _cam.unproject_position(doel["pos"] + (doel["assen"][i] as Vector3) * lengte)
+		var d := _punt_naar_segment(muis, p0, p1)
+		if d < beste_afstand:
+			beste_afstand = d
+			beste = i
+	return beste
+
+
+## Positie langs de as waar de muisstraal het dichtst bij komt (lijn-lijn).
+func _as_parameter(muis: Vector2, oorsprong: Vector3, as_richting: Vector3) -> float:
+	if _cam == null:
+		return 0.0
+	var ro := _cam.project_ray_origin(muis)
+	var rd := _cam.project_ray_normal(muis)
+	var w0 := oorsprong - ro
+	var a := as_richting.dot(as_richting)
+	var b := as_richting.dot(rd)
+	var c := rd.dot(rd)
+	var d := as_richting.dot(w0)
+	var e := rd.dot(w0)
+	var noemer := a * c - b * b
+	if absf(noemer) < 0.00001:
+		return 0.0
+	return (b * e - c * d) / noemer
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _sleep_gizmo == null or not _sleep_gizmo.visible:
+		return
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var mb := event as InputEventMouseButton
+		if mb.pressed:
+			var as_i := _as_onder_muis(mb.position)
+			if as_i < 0:
+				return
+			var doel := _sleep_doel()
+			_sleep_as = as_i
+			_sleep_modus = String(doel["modus"])
+			_sleep_oorsprong = doel["pos"]
+			_sleep_richting = (doel["assen"][as_i] as Vector3).normalized()
+			_sleep_start_t = _as_parameter(mb.position, _sleep_oorsprong, _sleep_richting)
+			_sleep_start_waarde = _huidige_sleep_waarde()
+			get_viewport().set_input_as_handled()
+		elif _sleep_as >= 0:
+			_sleep_afronden(mb.position)
+			get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseMotion and _sleep_as >= 0:
+		_sleep_verplaats((event as InputEventMouseMotion).position, false)
+		get_viewport().set_input_as_handled()
+
+
+## De waarde die we slepen, zoals hij nu in de spinboxen staat.
+func _huidige_sleep_waarde() -> Vector3:
+	if _sleep_modus == "hand":
+		return Vector3(_weapon_spins["px"].value, _weapon_spins["py"].value, _weapon_spins["pz"].value)
+	return Vector3(_muzzle_spins["x"].value, _muzzle_spins["y"].value, _muzzle_spins["z"].value)
+
+
+## Live meebewegen tijdens het slepen; bij loslaten schrijven we de waarde
+## via de gewone spinbox-route, zodat opslaan en herladen precies hetzelfde
+## gaan als bij het tikken van cijfers.
+func _sleep_verplaats(muis: Vector2, definitief: bool) -> void:
+	var t := _as_parameter(muis, _sleep_oorsprong, _sleep_richting)
+	var delta := t - _sleep_start_t
+	var nieuw := _sleep_start_waarde
+	nieuw[_sleep_as] = _sleep_start_waarde[_sleep_as] + delta
+	if _sleep_modus == "hand":
+		var sleutels := ["px", "py", "pz"]
+		if definitief:
+			for i in 3:
+				_weapon_spins[sleutels[i]].value = snappedf(nieuw[i], 0.01)
+		else:
+			for i in 3:
+				_weapon_spins[sleutels[i]].set_value_no_signal(snappedf(nieuw[i], 0.01))
+			var w = _pawn._weapon
+			if w != null and is_instance_valid(w):
+				(w as Node3D).global_position = _sleep_oorsprong + _sleep_richting * delta
+	else:
+		var sleutels2 := ["x", "y", "z"]
+		if definitief:
+			for i in 3:
+				_muzzle_spins[sleutels2[i]].value = snappedf(nieuw[i], 0.01)
+		else:
+			for i in 3:
+				_muzzle_spins[sleutels2[i]].set_value_no_signal(snappedf(nieuw[i], 0.01))
+			if _muzzle_gizmo != null:
+				_muzzle_gizmo.global_position = _sleep_oorsprong + _sleep_richting * delta
+
+
+func _sleep_afronden(muis: Vector2) -> void:
+	_sleep_verplaats(muis, true)
+	_sleep_as = -1
+	_sleep_modus = ""
