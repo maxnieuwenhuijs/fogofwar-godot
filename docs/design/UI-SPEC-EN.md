@@ -213,3 +213,32 @@ Then: remaining campaign panels → menus/help → leaderboards/profile (later p
 - Deliverables: PNG with alpha or SVG; 9-patch-friendly frames; no hover-dependent interactions.
 - Never leak information through design: hidden = "?" seal, never empty/zero values.
 - All states must differ by shape/icon as well as color (color-blindness).
+
+
+---
+
+## Addendum (July 28) — changes since the PDFs were generated
+
+**Main menu restructure (built, needs design):** the main menu is now four
+simple buttons: SOLO / MULTIPLAYER (disabled, "coming with online update") /
+How to play / Settings. SOLO leads to "1v1 duel" or "Campaign"; the
+difficulty question (easy/medium/hard) comes AFTER that choice - for the
+campaign it scales your board opponents for the whole run. The AI Trainer
+is no longer in the menu; the Model Tuner and language toggle live under
+Settings.
+
+**Points economy (built, needs design):** reinforcements are ONE number
+everywhere (soldier = 1, cavalry = 2, cannon = 3 points).
+- Balance line: "Field army: always full - Reinforcements: N - CP: N - Fame: N".
+- Donations are [+1] and [+CP] plus-buttons behind each teammate's name.
+- A trade button converts 2 CP into 1 reinforcement point.
+- The spawn phase is a small shop: "+ Soldier (1 pt) / + Cavalry (2 pt) /
+  + Cannon (3 pt)", max 3 per cycle, with a running total and confirm.
+
+**Campaign end screen (built, needs design):** champion banner, summary
+(rounds, duels, your fame + placement), top-3 fame list, buttons for the
+full ledger and "Start a new campaign". Deserves a celebration treatment.
+
+**Event feed:** every donation, bequest and CP trade appears as a green
+event line in the chat log; battle report cards are tappable for a detail
+dialog (losses per type + CP delta per player).
