@@ -1487,10 +1487,13 @@ func _death_sound(pawn_id: int, delay: float) -> void:
 	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 	if pawn == null:
 		return
+	# Factie-variant als die bestaat (SOUND-WISHLIST 7b), anders het algemene
+	# geluid: een muis piept, een grizzly brult.
+	var doc: int = GameSession.state.doctrine_of(pawn.owner_id)
 	match pawn.unit_type:
-		Constants.UnitType.INFANTRY: Audio.play("inf_die", delay)
-		Constants.UnitType.CAVALRY: Audio.play("horse_die", delay)
-		Constants.UnitType.ARTILLERY: Audio.play("cannon_die", delay)
+		Constants.UnitType.INFANTRY: Audio.play_factie("inf_die", doc, delay)
+		Constants.UnitType.CAVALRY: Audio.play_factie("horse_die", doc, delay)
+		Constants.UnitType.ARTILLERY: Audio.play_factie("cannon_die", doc, delay)
 
 
 func _on_action_performed(action: Dictionary, result: Dictionary) -> void:

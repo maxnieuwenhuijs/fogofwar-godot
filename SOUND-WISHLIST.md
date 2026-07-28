@@ -92,6 +92,100 @@ zelf zitten (dan hoeft de engine niks te mixen).
 | `inf_die` | `inf_die*.wav` | 4 | Infanterie sneuvelt | ✓ |
 | `cannon_die` | `cannon_destroyed.wav` | 1 | Kanon vernietigd | ✓ |
 
+## 7b. Sterven per FACTIE (besluit Max, 28 juli)
+
+Een muis die sneuvelt piept; een grizzly brult. Daarom naast de algemene
+sterfgeluiden een **factie-variant per type**: 5 varianten per factie per type,
+zodat een gevecht nooit gaat ratelen.
+
+**Naamconventie:** `<basiscategorie>_<factie>` -- factie in het Engels, net als
+de modelmappen: `mouse pig lion bear wolf crocodile`. De basiscategorieen heten
+historisch `inf_die` / `horse_die` / `cannon_die` (uit de tijd dat cavalerie nog
+paarden waren); die namen houden we aan, zodat de terugval automatisch klopt.
+
+| Type | Algemene categorie (bestaat) | Factie-categorie | # var |
+|---|---|---|---|
+| Infanterie | `inf_die` | `inf_die_<factie>` | 5 |
+| Cavalerie (big bro) | `horse_die` | `horse_die_<factie>` | 5 |
+| Artillerie | `cannon_die` | `cannon_die_<factie>` | 5 |
+
+**Terugval is ingebouwd** (`Audio.play_factie()`, 28 juli): bestaat de
+factie-categorie niet, dan klinkt gewoon het algemene geluid. Je kunt dus met
+een enkele factie beginnen; niets gaat stuk zolang de rest ontbreekt.
+
+**Stemkarakter per factie** (dit is het verschil dat je hoort):
+
+| Factie | Infanterie | Big bro |
+|---|---|---|
+| Muis | hoge, korte piep -- klein en schril | zwaardere knaagdier-krijs (oorlogskonijn) |
+| Varken | schril gilletje met een snuivende uithaal | diep everzwijn-gebrul, snuivend |
+| Leeuw | cheetah: korte hoge tjilp/sis | leeuw: rollende brul die wegzakt |
+| Beer | wasbeer: ratelend gekrijs | grizzly: laag, borstelig gebrul |
+| Wolf | vos: die beruchte doordringende schreeuw | dire wolf: afgebroken huil/jank |
+| Krokodil | hagedis: blazende sis die stikt | krokodil: dreunende bulderende bel |
+
+### Prompts -- sterfgeluiden per factie (18 prompts, elk 5x genereren)
+
+Duration 0.6-1.2s, prompt influence hoog. Steeds hetzelfde raamwerk: **dier +
+val van het lijf + materiaal** (uniform, leer, staal, hout), 18e/19e-eeuws,
+geen synth.
+
+| Bestand | Prompt |
+|---|---|
+| `inf_die_mouse` | Tiny animal death squeak, high-pitched and short, cut off abruptly, followed by a small body collapsing into wool uniform cloth and a light musket clattering on dirt. Dry, close, no reverb tail, no music. |
+| `horse_die_mouse` | Large rodent war-beast death cry, sharp and rattling, dropping in pitch, with heavy thudding of a big body falling onto dirt and leather harness creaking. Dry and close, no music. |
+| `cannon_die_mouse` | Small field cannon destroyed: splintering wood, iron fittings snapping, a tiny high-pitched animal yelp cut short, gravel and dust settling. Dry, no music. |
+| `inf_die_pig` | Pig death squeal, shrill and snorting, breaking into a wet gurgle, then a heavy round body slumping into wool cloth and a musket hitting the ground. Dry and close, no music. |
+| `horse_die_pig` | Wild boar death roar, deep and snorting, ending in a rattling exhale, with a massive body crashing onto dirt and leather straps snapping. Dry, heavy, no music. |
+| `cannon_die_pig` | Heavy field cannon destroyed: thick oak carriage splitting, iron bands popping, a short pig grunt cut off, debris raining down. Dry, no music. |
+| `inf_die_lion` | Cheetah death chirp, high and strangled, ending in a hiss, with a lean body dropping onto dirt and gold-braided uniform cloth rustling. Dry and close, no music. |
+| `horse_die_lion` | Lion death roar, full-throated and rolling, collapsing into a wet growl, with a huge body thudding onto dirt and heavy leather harness creaking. Dry, no music. |
+| `cannon_die_lion` | Ornate field gun destroyed: brass fittings ringing as they snap, walnut carriage splintering, a short feline snarl cut off, dust settling. Dry, no music. |
+| `inf_die_bear` | Raccoon death screech, rattling and chattering, breaking off suddenly, with a stocky body falling into wool cloth and a steel cuirass clanging on dirt. Dry and close, no music. |
+| `horse_die_bear` | Grizzly bear death roar, low and chesty, fading into a wet rumble, with an enormous body crashing to the ground and iron-studded leather groaning. Dry, no music. |
+| `cannon_die_bear` | Heavy mortar destroyed: thick iron cracking, oak block carriage bursting apart, a short bear grunt cut off, heavy debris thudding. Dry, no music. |
+| `inf_die_wolf` | Fox death scream, piercing and eerie, cut off mid-cry, with a light body dropping onto dirt and patched wool and fur rustling. Dry and close, no music. |
+| `horse_die_wolf` | Dire wolf death howl, broken and yelping, dropping into a growl, with a large body hitting the ground and rope-and-leather harness snapping. Dry, no music. |
+| `cannon_die_wolf` | Scavenged field gun destroyed: mismatched scrap iron clattering, cracked wood splitting, a short canine yelp cut off, loose parts rolling away. Dry, no music. |
+| `inf_die_crocodile` | Lizard death hiss, sharp and sputtering, choking off into silence, with a scaled body slapping onto wet dirt and damp camouflage cloth dragging. Dry and close, no music. |
+| `horse_die_crocodile` | Crocodile death bellow, deep booming and guttural, ending in a hissing exhale, with an armored body slamming into wet ground and heavy tail thumping. Dry, no music. |
+| `cannon_die_crocodile` | Swamp-wrapped field gun destroyed: iron cracking under damp cloth, waterlogged wood splitting, a short reptilian hiss cut off, wet debris slapping down. Dry, no music. |
+
+## 7c. Inslag-geluiden per MATERIAAL (algemeen, factie-onafhankelijk)
+
+De klap zelf hoort bij het MATERIAAL dat geraakt wordt, niet bij de factie.
+Deze laag maakt het verschil tussen "er gebeurt iets" en "dat deed pijn":
+vlees klinkt nat, staal klinkt hard, hout klinkt dof.
+
+| Categorie | # var | Wanneer | Status |
+|---|---|---|---|
+| `impact_flesh` | 5 | Treffer op een levend stuk (nat, doffe plof) | ➕ |
+| `impact_armor` | 5 | Treffer op kuras/helm (harde metalen tik) | ➕ |
+| `impact_wood` | 4 | Treffer op musketkolf, affuit, schild (dof hout) | ➕ |
+| `impact_bone` | 3 | Botbreuk bij een dodelijke melee-klap (kort, krakend) | ➕ |
+| `impact_dirt` | 4 | Mis: kogel slaat in de grond (aarde + steentjes) | ➕ |
+| `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | ➕ |
+| `blood_splash` | 3 | Bloedspat bij een treffer | ✓ (heb je al) |
+
+### Prompts -- materiaal-inslagen
+
+Duration 0.3-0.8s, kort en droog.
+
+| Bestand | Prompt |
+|---|---|
+| `impact_flesh` | Wet heavy impact on flesh, a dull meaty thud with a short liquid splatter, close and dry, no reverb, no music. |
+| `impact_armor` | Musket ball striking a steel cuirass, a hard bright metallic clank with a short ringing decay, close and dry, no music. |
+| `impact_wood` | Musket ball smashing into a thick oak musket stock, a dull heavy wooden knock with splintering, close and dry, no music. |
+| `impact_bone` | Sharp bone crack under a heavy blow, a short dry snap muffled by cloth, close, no reverb, no music. |
+| `impact_dirt` | Musket ball slamming into packed dirt, a dull thud with a spray of soil and small pebbles, dry and close, no music. |
+| `ricochet` | Musket ball ricocheting off stone, a bright metallic whine spinning away into the distance, dry, no music. |
+
+**Wanneer welke:** de engine kent het type van het doelwit. Vuistregel voor de
+inbouw: infanterie/cavalerie geraakt -> `impact_flesh` (+ `blood_splash`);
+gepantserd (hp-archetype met kuras) -> `impact_armor`; artillerie geraakt ->
+`impact_wood`; dodelijke melee -> `impact_bone` erbij; schot dat mist of
+geblokkeerd wordt -> `impact_dirt` / `ricochet`.
+
 ## 8. Beurt-timer
 
 | Categorie | Bestanden | # var | Wanneer | Status |
@@ -210,11 +304,19 @@ tijdelijk gedempt · geen ster = nog te maken):
    `inf_die`, `retaliation`, `your_turn`.
 3. **Sfeer-boost:** `reveal`/`cycle_start`, `charge_yell`, `win_fanfare`/`lose_sting`.
 4. **Timer-set** zodra je merkt dat mensen de klok missen.
-5. **Muziek** het laatst (en als OGG, niet WAV).
+5. **Materiaal-inslagen** (7c): grootste klap-per-euro na de losse varianten --
+   zes prompts dekken elk gevecht in het spel.
+6. **Factie-sterfgeluiden** (7b): het lekkerste maar ook het grootste blok
+   (18 prompts x 5). Begin met de infanterie van de facties die je het meest
+   speelt; de terugval dekt de rest.
+7. **Muziek** het laatst (en als OGG, niet WAV).
 
 ## Naamconventie & inbouwen
 
 - Bestand: `sounds/<categorie><nr>.wav` (bv. `place_pawn2.wav`), `snake_case`.
+- Factie-varianten: `sounds/<categorie>_<factie><nr>.wav` (bv.
+  `inf_die_mouse3.wav`). Aanroepen via `Audio.play_factie("inf_die", doctrine)`;
+  ontbreekt de factie-categorie, dan klinkt automatisch het algemene geluid.
 - Nieuwe categorie toevoegen = 2 regels in `audio_manager.gd`
   (`BANK` + `CATEGORY_DB`) en één `Audio.play("...")` op de juiste plek.
 - Korte SFX → **WAV** (nul latency); alleen muziek/ambient → **OGG**.

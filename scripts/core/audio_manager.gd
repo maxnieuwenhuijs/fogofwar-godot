@@ -177,6 +177,16 @@ func play(category: String, delay: float = 0.0, variant: int = -1, pitch: float 
 		_play_now(category, variant, pitch)
 
 
+## Factie-variant met terugval (SOUND-WISHLIST 7b, besluit Max 28 juli):
+## probeert "<categorie>_<factie>" (bv. inf_die_mouse) en valt anders terug op
+## de algemene categorie. Zo kun je per factie geluiden toevoegen zonder dat
+## het spel stuk gaat zolang ze ontbreken.
+func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: float = 0.0) -> void:
+	var sleutel := "%s_%s" % [category, Constants.doctrine_folder(doctrine)]
+	var lijst: Array = _streams.get(sleutel, [])
+	play(sleutel if not lijst.is_empty() else category, delay, -1, pitch)
+
+
 func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	var variants: Array = _streams.get(category, [])
 	if variants.is_empty():
