@@ -17,6 +17,10 @@ const BANK := {
 	"musket_echo": ["musket_echo.wav", "musket_echo2.wav", "musket_echo3.wav",
 					"musket_echo4.wav", "musket_echo5.wav", "musket_echo6.wav"],
 	"musket_hit":  ["default_musket_hit.wav"],
+	# Factie-sterfgeluiden (SOUND-WISHLIST 7b) en val-geluiden (7bis).
+	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav"],
+	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
+	"body_fall":     ["body_hit_floor_1.wav", "body_hit_floor_2.wav"],
 	"musket_cock": ["cockhammer.wav"],
 	"melee_kill":  ["mellee_hit.wav", "mellee_hit2.wav", "mellee_hit4.wav"],
 	"melee_survive": ["mellee_hit_no_kill.wav"],
@@ -181,6 +185,20 @@ func play(category: String, delay: float = 0.0, variant: int = -1, pitch: float 
 ## probeert "<categorie>_<factie>" (bv. inf_die_mouse) en valt anders terug op
 ## de algemene categorie. Zo kun je per factie geluiden toevoegen zonder dat
 ## het spel stuk gaat zolang ze ontbreken.
+## Hoeveel varianten heeft een categorie? (0 = niets geladen -- de tuner
+## toont dat, zodat je meteen ziet of een bestand is aangekomen.)
+func variant_aantal(category: String) -> int:
+	return (_streams.get(category, []) as Array).size()
+
+
+## Langste variant in seconden (voor de tuner: past het bij de animatie?).
+func langste_duur(category: String) -> float:
+	var langste := 0.0
+	for s in _streams.get(category, []):
+		langste = maxf(langste, (s as AudioStream).get_length())
+	return langste
+
+
 func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: float = 0.0) -> void:
 	var sleutel := "%s_%s" % [category, Constants.doctrine_folder(doctrine)]
 	var lijst: Array = _streams.get(sleutel, [])

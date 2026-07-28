@@ -132,7 +132,7 @@ geen synth.
 
 | Bestand | Prompt |
 |---|---|
-| `inf_die_mouse` | Tiny animal death squeak, high-pitched and short, cut off abruptly, followed by a small body collapsing into wool uniform cloth and a light musket clattering on dirt. Dry, close, no reverb tail, no music. |
+| `inf_die_mouse` ✓ (2) | Tiny animal death squeak, high-pitched and short, cut off abruptly, followed by a small body collapsing into wool uniform cloth and a light musket clattering on dirt. Dry, close, no reverb tail, no music. |
 | `horse_die_mouse` | Large rodent war-beast death cry, sharp and rattling, dropping in pitch, with heavy thudding of a big body falling onto dirt and leather harness creaking. Dry and close, no music. |
 | `cannon_die_mouse` | Small field cannon destroyed: splintering wood, iron fittings snapping, a tiny high-pitched animal yelp cut short, gravel and dust settling. Dry, no music. |
 | `inf_die_pig` | Pig death squeal, shrill and snorting, breaking into a wet gurgle, then a heavy round body slumping into wool cloth and a musket hitting the ground. Dry and close, no music. |
@@ -175,7 +175,7 @@ beginnen.
 | Categorie | # var | Voorwerp | Prompt |
 |---|---|---|---|
 | `val_prop` | 3 | terugval voor alles | Wooden and iron object clattering onto packed dirt, a dull knock with a short metallic rattle, dry and close, no music. |
-| `val_musket` | 3 | musket | Musket falling onto dirt, heavy wooden stock thudding with an iron barrel rattle, dry and close, no music. |
+| `val_musket` | 3 ✓ (2) | musket | Musket falling onto dirt, heavy wooden stock thudding with an iron barrel rattle, dry and close, no music. |
 | `val_drum` | 3 | trommel | Military side drum dropping onto the ground, a hollow booming thump with rope and rattling snares, dry, no music. |
 | `val_flag` | 2 | vaandelstok | Long wooden flag pole clattering onto dirt, a hard hollow knock and heavy cloth flapping down, dry, no music. |
 | `val_horn` | 2 | hoorn | Small brass bugle dropping onto packed dirt, a bright metallic clank with a faint ringing tone, dry, no music. |
@@ -197,6 +197,7 @@ vlees klinkt nat, staal klinkt hard, hout klinkt dof.
 | `impact_dirt` | 4 | Mis: kogel slaat in de grond (aarde + steentjes) | ➕ |
 | `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | ➕ |
 | `blood_splash` | 3 | Bloedspat bij een treffer | ✓ (heb je al) |
+| `body_fall` | 2-4 | Het LIJF raakt de grond (timing per dood-clip uit `death_pools`) | ✓ (2) 🎚️ |
 
 ### Prompts -- materiaal-inslagen
 
@@ -216,6 +217,12 @@ inbouw: infanterie/cavalerie geraakt -> `impact_flesh` (+ `blood_splash`);
 gepantserd (hp-archetype met kuras) -> `impact_armor`; artillerie geraakt ->
 `impact_wood`; dodelijke melee -> `impact_bone` erbij; schot dat mist of
 geblokkeerd wordt -> `impact_dirt` / `ricochet`.
+
+**In de tuner luisteren** (Model-tuner → tab **Geluid**): per model zie je
+welke categorieën er zijn, hoeveel varianten en hoe lang de langste is, met
+een speelknop erachter. Ontbreekt er een, dan staat erbij op welk algemeen
+geluid het terugvalt. Zo hoor je meteen of een nieuw bestand is aangekomen en
+of het bij de animatielengte past.
 
 ## 8. Beurt-timer
 

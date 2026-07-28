@@ -98,6 +98,7 @@ var _sleep_start_euler := Vector3.ZERO
 var _hover_as: int = -1               # as onder de muis (voor de highlight)
 var _hover_draai: bool = false
 var _gizmo_hint: Label = null
+var _snd_lijst: VBoxContainer = null   # geluid-tab: rij per categorie
 const SLEEP_TREFFER_PX := 14.0
 const RING_FACTOR := 1.35             # ringstraal t.o.v. de armlengte
 const ARM_START := 0.30               # armen beginnen buiten het midden (daar liggen de ringen)
@@ -546,6 +547,18 @@ func _build_ui() -> void:
 	muzzle_test.pressed.connect(_on_fire_test)
 	rowm.add_child(muzzle_test)
 
+	# --- Tab GELUID: alles horen wat bij dit model hoort (Max, 28 juli) -----
+	var tab_snd := VBoxContainer.new()
+	tab_snd.name = "Geluid"
+	tab_snd.add_theme_constant_override("separation", 6)
+	tabs.add_child(tab_snd)
+	_snd_lijst = VBoxContainer.new()
+	_snd_lijst.add_theme_constant_override("separation", 4)
+	tab_snd.add_child(_snd_lijst)
+	var snd_uitleg := _make_label("Klik om te horen. Ontbrekende categorieen staan grijs: dan valt het spel terug op het algemene geluid.")
+	snd_uitleg.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	tab_snd.add_child(snd_uitleg)
+
 	# Tabs GORE / BLOED / ROOK: effect-knoppen per categorie in een net raster.
 	var cats: Array = [["Melee", "bajonet"], ["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"]]
 	for cat in cats:
@@ -843,6 +856,7 @@ func _reload_pawns() -> void:
 	# Sliders op de opgeslagen waarden zetten (zonder events af te vuren).
 	_sync_sliders_from_tuning()
 	_fill_die_options()
+	_vul_geluidlijst()
 	_refresh_info()
 	_apply_camera()
 
@@ -1641,3 +1655,66 @@ func _sleep_afronden(muis: Vector2) -> void:
 	_sleep_as = -1
 	_sleep_draaien = false
 	_sleep_modus = ""
+
+
+# =========================================================================
+# Geluid-tab: horen wat er bij dit model hoort (Max, 28 juli)
+# =========================================================================
+
+## Categorieen die bij het huidige model horen, in speelvolgorde.
+func _geluid_rijen() -> Array:
+	var fac := _fac_name()
+	var tp: int = _type_btn.get_selected_id()
+	var rijen: Array = []
+	if tp == Constants.UnitType.INFANTRY:
+		rijen.append({"cat": "musket_fire", "wat": "musket afvuren"})
+		rijen.append({"cat": "musket_hit", "wat": "kogel slaat in"})
+		rijen.append({"cat": "inf_die_" + fac, "wat": "doodskreet (factie)", "terugval": "inf_die"})
+	elif tp == Constants.UnitType.CAVALRY:
+		rijen.append({"cat": "charge_yell", "wat": "charge"})
+		rijen.append({"cat": "horse_die_" + fac, "wat": "doodskreet (factie)", "terugval": "horse_die"})
+	else:
+		rijen.append({"cat": "cannon_fire", "wat": "kanon afvuren"})
+		rijen.append({"cat": "cannon_hit", "wat": "inslag"})
+		rijen.append({"cat": "cannon_die_" + fac, "wat": "vernietigd (factie)", "terugval": "cannon_die"})
+	rijen.append({"cat": "body_fall", "wat": "lijf raakt de grond"})
+	if tp == Constants.UnitType.INFANTRY:
+		var rol := _hand_rol()
+		var vc := "val_musket" if rol == "" else "val_" + rol
+		rijen.append({"cat": vc, "wat": "voorwerp valt", "terugval": "val_prop"})
+	rijen.append({"cat": "blood_splash", "wat": "bloedspat"})
+	return rijen
+
+
+func _vul_geluidlijst() -> void:
+	if _snd_lijst == null:
+		return
+	for kind in _snd_lijst.get_children():
+		kind.queue_free()
+	for rij in _geluid_rijen():
+		var cat := String(rij["cat"])
+		var aantal: int = Audio.variant_aantal(cat)
+		var terugval := String(rij.get("terugval", ""))
+		var valt_terug := aantal == 0 and terugval != "" and Audio.variant_aantal(terugval) > 0
+		var hb := HBoxContainer.new()
+		hb.add_theme_constant_override("separation", 8)
+		var knop := Button.new()
+		knop.text = "\u25B6 %s" % String(rij["wat"])
+		knop.custom_minimum_size = Vector2(210, 0)
+		knop.disabled = aantal == 0 and not valt_terug
+		var speel_cat := cat if aantal > 0 else terugval
+		knop.pressed.connect(func() -> void: Audio.play(speel_cat))
+		hb.add_child(knop)
+		var info := Label.new()
+		info.add_theme_font_size_override("font_size", 12)
+		if aantal > 0:
+			info.text = "%s  -  %d variant(en), %.2fs" % [cat, aantal, Audio.langste_duur(cat)]
+			info.add_theme_color_override("font_color", Color(0.75, 0.85, 0.78))
+		elif valt_terug:
+			info.text = "%s ontbreekt  -  speelt %s" % [cat, terugval]
+			info.add_theme_color_override("font_color", Color(0.85, 0.8, 0.55))
+		else:
+			info.text = "%s  -  geen bestand" % cat
+			info.add_theme_color_override("font_color", Color(0.6, 0.58, 0.6))
+		hb.add_child(info)
+		_snd_lijst.add_child(hb)
