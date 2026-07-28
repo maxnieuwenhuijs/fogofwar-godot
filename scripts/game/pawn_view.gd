@@ -1711,20 +1711,80 @@ const VLAG_ZAKT := 0.06      # x poollengte onder de top van de stok
 const VLAG_SHADER := """
 shader_type spatial;
 render_mode cull_disabled;
+
 uniform vec4 kleur : source_color = vec4(0.85, 0.25, 0.28, 1.0);
 uniform float amp = 0.16;
 uniform float snelheid = 3.6;
 uniform float golf = 7.0;
+uniform float vuil = 0.55;    // 0 = schoon fabrieksdoek, 1 = smerig veldvaandel
+uniform float rafel = 1.0;    // hapjes uit de vrije rand (0 = strak afgezoomd)
+
+varying float golfhoogte;
+
+float hash21(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float ruis(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = hash21(i);
+	float b = hash21(i + vec2(1.0, 0.0));
+	float c = hash21(i + vec2(0.0, 1.0));
+	float d = hash21(i + vec2(1.0, 1.0));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p) {
+	float v = 0.0;
+	float a = 0.5;
+	for (int i = 0; i < 4; i++) {
+		v += a * ruis(p);
+		p *= 2.0;
+		a *= 0.5;
+	}
+	return v;
+}
+
 void vertex() {
 	float t = clamp(UV.x, 0.0, 1.0);
 	float stijf = t * t;                    // aan de mast staat het doek stil
-	VERTEX.z += sin(TIME * snelheid + t * golf) * amp * stijf;
+	float g = sin(TIME * snelheid + t * golf);
+	VERTEX.z += g * amp * stijf;
 	VERTEX.y += sin(TIME * snelheid * 0.8 + t * golf * 0.7) * amp * 0.35 * stijf;
+	golfhoogte = g * stijf;
 }
+
 void fragment() {
-	ALBEDO = kleur.rgb;
-	ROUGHNESS = 0.85;
-	SPECULAR = 0.1;
+	vec2 uv = UV;
+	// Weefsel: fijne draad-structuur, net zichtbaar van dichtbij.
+	float weefsel = 0.94 + 0.06 * sin(uv.y * 420.0) * sin(uv.x * 260.0);
+	// Vuil en slijtage: grove vlekken (modder, kruitdamp) plus fijne korrel.
+	float vlekken = fbm(uv * 6.0);
+	float korrel = ruis(uv * 180.0);
+	float sleets = mix(1.0, 0.55 + 0.45 * vlekken, vuil);
+	// Randen verbleken: zon, wrijving en rook slaan het hardst toe aan de
+	// vrije zijde en langs boven- en onderrand.
+	float randslijt = smoothstep(0.55, 1.0, uv.x) * 0.35
+		+ smoothstep(0.75, 1.0, abs(uv.y - 0.5) * 2.0) * 0.25;
+	vec3 doek = kleur.rgb * weefsel * sleets;
+	doek = mix(doek, doek * 1.25 + vec3(0.06), randslijt);
+	doek *= 0.92 + 0.08 * korrel;
+	// Vouwen: bollingen vangen licht, dalen lopen donker weg.
+	doek *= 0.85 + 0.3 * (golfhoogte * 0.5 + 0.5);
+	ALBEDO = doek;
+	ROUGHNESS = 0.95;
+	SPECULAR = 0.05;
+	// Achterkant net zo belicht als de voorkant (het is maar een vlak).
+	if (!FRONT_FACING) {
+		NORMAL = -NORMAL;
+	}
+	// Gerafelde buitenrand: onregelmatige hapjes uit het doek.
+	float rand = fbm(uv * vec2(14.0, 30.0));
+	if (uv.x > 1.0 - rafel * 0.09 * rand) {
+		discard;
+	}
 }
 """
 

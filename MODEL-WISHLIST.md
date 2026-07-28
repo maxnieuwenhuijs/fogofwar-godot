@@ -436,9 +436,13 @@ spel er zelf aan hangt, **in de teamkleur** (rood/blauw) en met een
 wapper-shader. Zo kun je maat, kleur en later een embleem in code aanpassen in
 plaats van ze vast te bakken in een model, en zie je van bovenaf meteen van wie
 de vlag is. Bewust géén echte cloth-physics (SoftBody): dat is duur, het jittert
-en je ziet het toch nauwelijks op bord-afstand. Knoppen staan bovenaan
-`pawn_view.gd`: `VLAG_BREEDTE`, `VLAG_HOOGTE`, `VLAG_ZAKT` en de shader-uniforms
-`amp`/`snelheid`/`golf`.
+en je ziet het toch nauwelijks op bord-afstand. Het doek is bovendien **niet vlak gekleurd**: de shader legt er
+procedureel weefsel, modder- en kruitvlekken, verbleekte randen, licht/donker
+in de vouwen en een gerafelde buitenrand overheen -- dat scheelt een texture en
+het schaalt met elke kleur. Knoppen staan bovenaan `pawn_view.gd`:
+`VLAG_BREEDTE`, `VLAG_HOOGTE`, `VLAG_ZAKT` en de shader-uniforms
+`amp`/`snelheid`/`golf` plus `vuil` (0 = schoon, 1 = smerig veldvaandel) en
+`rafel` (0 = strak afgezoomd).
 
 **Bestandspad:** `assets/models/props/<prop>.glb` (gedeeld door alle facties).
 Wil je een factie-eigen variant -- een muizentrommel is nu eenmaal geen

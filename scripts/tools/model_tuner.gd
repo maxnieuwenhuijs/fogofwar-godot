@@ -920,6 +920,9 @@ func _respawn_model(clear_debris: bool = true) -> void:
 	add_child(_pawn)
 	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera
 	_pawn.set_unit_type(unit_type)
+	# BUGFIX (Max, 28 juli): bij elke slider-wijziging bouwt de tuner het model
+	# opnieuw op; zonder deze regel viel de gekozen prop terug op het musket.
+	_pawn.rol_override = _hand_rol()
 	_pawn.set_character(doctrine, unit_type, _current_card())
 	_freeze_pose()
 	_refresh_info()
