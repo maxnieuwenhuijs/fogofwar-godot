@@ -172,6 +172,61 @@ geen synth.
 | `horse_die_crocodile` | Crocodile death bellow, deep booming and guttural, ending in a hissing exhale, with an armored body slamming into wet ground and heavy tail thumping. Dry, no music. |
 | `cannon_die_crocodile` | Swamp-wrapped field gun destroyed: iron cracking under damp cloth, waterlogged wood splitting, a short reptilian hiss cut off, wet debris slapping down. Dry, no music. |
 
+## 7b-2. Kreten per MODEL (archetype) -- de dikke klinkt niet als de dunne
+
+*Besluit Max, 28 juli.* Naast de factie mag je ook per **archetype** opnemen:
+`inf_die_mouse_hp` klinkt anders dan `inf_die_mouse_spd`. Ontbreekt een
+archetype-bestand, dan pakt het spel gewoon het factie-geluid -- je hoeft dit
+dus alleen te maken waar het opvalt.
+
+**Bestandsnamen:**
+
+| Situatie | Bestand |
+|---|---|
+| Doodgeschoten / bajonet | `inf_die_<factie>_<archetype>` |
+| Geraakt door een KANON | `inf_kanon_die_<factie>_<archetype>` |
+
+Archetypes: `base` `spd` `hp` `atk` `mix` -- dezelfde namen als de modellen.
+
+**Hoe de stem verschilt per bouw** (dit is de hele truc):
+
+| Archetype | Bouw | Stem |
+|---|---|---|
+| `base` | gewoon | de standaardkreet |
+| `spd` | spichtig, lang, dun | hoog, ijl en snel -- meer een gil dan een kreun |
+| `hp` | dik, rond, met kuras | laag en benauwd, gedempt door pantser, met een metalen kreun eronder |
+| `atk` | groot en gespierd | rauw en grommend, meer woede dan pijn |
+| `mix` | allrounder | neutraal; mag hetzelfde blijven als `base` |
+
+**Kanonversies zijn KORTER**: de klap kapt de kreet af. Mik op 0,4-0,8s tegen
+0,6-1,2s voor de gewone kreet -- hij begint immers al vóór de inslag.
+
+### Prompts -- muis, doodgeschoten (`inf_die_mouse_<archetype>`)
+
+| Bestand | Prompt |
+|---|---|
+| `inf_die_mouse_base` | Tiny mouse death squeak, high-pitched and short, cut off abruptly, followed by a small body collapsing into wool uniform cloth. Dry, close, no reverb tail, no music. |
+| `inf_die_mouse_spd` | Very thin skinny mouse death shriek, extremely high-pitched, thin and fast, trailing off into a wheeze, with a light bony body dropping onto dirt. Dry, close, no music. |
+| `inf_die_mouse_hp` | Fat armored mouse death groan, low and winded, muffled behind a steel cuirass, ending in a wet wheeze with metal plates clanking as the heavy body drops. Dry, close, no music. |
+| `inf_die_mouse_atk` | Huge muscular mouse death roar, raw and snarling, more rage than pain, breaking into a growl as a heavy body slams into dirt. Dry, close, no music. |
+| `inf_die_mouse_mix` | Mouse death squeak, high-pitched and short, cut off abruptly, with a body collapsing into wool uniform cloth. Dry, close, no music. |
+
+### Prompts -- muis, geraakt door een kanon (`inf_kanon_die_mouse_<archetype>`)
+
+Kort (0,4-0,8s), harder, en abrupt afgekapt door de inslag.
+
+| Bestand | Prompt |
+|---|---|
+| `inf_kanon_die_mouse_base` | Short violent mouse scream cut off mid-cry by a heavy impact, high-pitched and desperate, no tail, dry and close, no music. |
+| `inf_kanon_die_mouse_spd` | Very short piercing shriek from a skinny mouse, extremely high and thin, snapped off instantly by a crushing blow, dry, no music. |
+| `inf_kanon_die_mouse_hp` | Short deep winded grunt from a fat armored mouse, muffled behind steel plate, cut off hard by a heavy impact with metal buckling, dry, no music. |
+| `inf_kanon_die_mouse_atk` | Short furious roar from a huge muscular mouse, raw and guttural, chopped off abruptly by a crushing blow, dry, no music. |
+| `inf_kanon_die_mouse_mix` | Short violent mouse scream cut off by a heavy impact, high-pitched, no tail, dry and close, no music. |
+
+*Andere facties volgen exact hetzelfde patroon: neem de factie-stem uit de
+tabel in 7b en pas de bouw-modificatie uit de tabel hierboven toe (varken-`hp`
+= laag benauwd geknor achter staal, wolf-`spd` = ijle vossenschreeuw, enz.).*
+
 ## 7bis. Waarom KORT: de doodskreet en de val zijn twee geluiden
 
 *Gemeten met `-- cliplengtes` (28 juli): de dood-animaties duren 1,8 tot 3,8
