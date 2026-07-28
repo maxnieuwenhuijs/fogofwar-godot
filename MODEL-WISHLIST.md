@@ -38,10 +38,15 @@ Vuistregels:
 - Houd de voetafdruk binnen het vak (~1×1): `hp` mag breed, niet groter dan de tegel.
 - Periode: 18e/19e-eeuws (musketten, sabels, kanonnen op houten affuiten) — zelfde
   wereld als het geluidsontwerp (zie SOUND-WISHLIST.md).
-- Mesh: **low poly, max 1.000 tris** (besluit juli 2026). De prompts blijven
-  wél high-quality/realistisch — de Laag Poly-generator (target 1.000) bakt dat
-  detail als texture op de simpele mesh. Het silhouet blijft leidend: de bouw
-  (dun/rond/breed) moet het verschil vertellen, niet het micro-detail.
+- Mesh: **low poly, max 1.000 tris** (besluit juli 2026). Dat is een
+  GENERATOR-instelling ("Laag Poly", target 1.000), géén prompt-woord — in de
+  prompt zelf staat "low poly" niet meer (besluit Max, 28 juli), want dat maakt
+  het concept-plaatje onnodig hoekig. De generator bakt het detail als texture
+  op de simpele mesh. Het silhouet blijft leidend: de bouw (dun/rond/breed)
+  moet het verschil vertellen, niet het micro-detail.
+- **Het hele object moet in beeld** (besluit Max, 28 juli): elke prop-prompt
+  eindigt met `the entire object fully in frame and not cropped` — een
+  afgesneden vlaggenstok of musketloop is onbruikbaar voor de pijplijn.
 
 Zolang een model ontbreekt doet het spel dit al met schaal-silhouetten op de
 geometrische stukken (`ARCHETYPE_SCALE` in pawn_view.gd): dun/hoog = spd,
@@ -328,68 +333,68 @@ schroot-reparaties en touwgewikkelde kolf · Krokodil = mat donker ijzer
 omwikkeld met donkergrijze camouflagedoek.
 
 **Prompt-template:** `Single prop, <silhouet>, <factie-twist>. Gritty realistic
-AAA-game concept art, highly detailed, low poly. Side profile view, clean
+AAA-game concept art, highly detailed. Side profile view, clean
 neutral studio background, the weapon only, no hands, no text.`
 
 ### Muis-musketten
 
 | Bestand | Prompt |
 |---|---|
-| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ### Varken-musketten
 
 | Bestand | Prompt |
 |---|---|
-| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, chunky dark wood with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ### Leeuw-musketten
 
 | Bestand | Prompt |
 |---|---|
-| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, officer-grade dark walnut with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ### Beer-musketten
 
 | Bestand | Prompt |
 |---|---|
-| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ### Wolf-musketten
 
 | Bestand | Prompt |
 |---|---|
-| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, scavenged mismatched parts with scrap-metal repairs and a rope-bound stock. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ### Krokodil-musketten
 
 | Bestand | Prompt |
 |---|---|
-| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
-| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_base_musket` | Single prop, a standard-length Napoleonic flintlock musket with a fixed bayonet, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_spd_musket` | Single prop, an extra-long, very slender lightweight sharpshooter's long rifle with a thin barrel and minimal fittings, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_hp_musket` | Single prop, a short, thick, heavy double-barrelled musket with two side-by-side barrels and reinforced bands, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a wide muzzle and an oversized fixed bayonet-spike, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ## 3d. Figuranten -- vaandeldrager, tamboer, sapeur (props op de basissoldaat)
 
@@ -414,7 +419,7 @@ maakt dus **zes losse props** in plaats van 24 karakters.
 
 | Prop | Rol | Voorwerp-omschrijving (prompt-kern) |
 |---|---|---|
-| `prop_flag` | vaandeldrager | tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner |
+| `prop_flag` | vaandeldrager | **alleen de KALE STOK**: tall bare Napoleonic flag pole of dark weathered wood with a metal eagle finial on top, no banner or cloth attached |
 | `prop_drum` | tamboer | Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks |
 | `prop_horn` | hoornblazer | coiled brass Napoleonic cavalry bugle with a woven cord |
 | `prop_axe` | sapeur | heavy sapper felling axe with a long dark wooden haft and a broad iron head |
@@ -422,8 +427,18 @@ maakt dus **zes losse props** in plaats van 24 karakters.
 | `prop_mace` | tamboer-majeur | ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels |
 
 **Prompt-template:** `Single prop, <voorwerp>. Gritty realistic AAA-game concept
-art, highly detailed, low poly. Side profile view, clean neutral studio
+art, highly detailed. Side profile view, clean neutral studio
 background, the object only, no hands, no text.`
+
+**Het vaandel-doek komt uit Godot, niet uit de glb** (besluit Max, 28 juli):
+`prop_flag` is alleen de kale stok. Het doek is een rechthoekig vlak dat het
+spel er zelf aan hangt, **in de teamkleur** (rood/blauw) en met een
+wapper-shader. Zo kun je maat, kleur en later een embleem in code aanpassen in
+plaats van ze vast te bakken in een model, en zie je van bovenaf meteen van wie
+de vlag is. Bewust géén echte cloth-physics (SoftBody): dat is duur, het jittert
+en je ziet het toch nauwelijks op bord-afstand. Knoppen staan bovenaan
+`pawn_view.gd`: `VLAG_BREEDTE`, `VLAG_HOOGTE`, `VLAG_ZAKT` en de shader-uniforms
+`amp`/`snelheid`/`golf`.
 
 **Bestandspad:** `assets/models/props/<prop>.glb` (gedeeld door alle facties).
 Wil je een factie-eigen variant -- een muizentrommel is nu eenmaal geen

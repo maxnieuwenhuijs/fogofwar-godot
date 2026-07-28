@@ -257,12 +257,12 @@ const FACTIES = [
    Pad: assets/models/props/<id>.glb (of per factie een eigen variant in
    assets/models/<factie>/<id>.glb). Statische mesh, geen rig/animatie. */
 const PROPS = [
-  { id: "prop_flag",   naam: "Vaandel",        rol: "vaandeldrager", tekst: "Single prop, tall Napoleonic regimental colour on a dark wooden pole with a metal finial, weathered torn silk banner. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  { id: "prop_drum",   naam: "Trommel",        rol: "tamboer", tekst: "Single prop, Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  { id: "prop_horn",   naam: "Hoorn",          rol: "hoornblazer", tekst: "Single prop, coiled brass Napoleonic cavalry bugle with a woven cord. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  { id: "prop_axe",    naam: "Sapeursbijl",    rol: "sapeur", tekst: "Single prop, heavy sapper felling axe with a long dark wooden haft and a broad iron head. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  { id: "prop_barrel", naam: "Brandewijnvat",  rol: "marketentster", tekst: "Single prop, small canteen-woman brandy keg on a leather sling. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
-  { id: "prop_mace",   naam: "Tamboer-staf",   rol: "tamboer-majeur", tekst: "Single prop, ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_flag",   naam: "Vaandelstok (doek komt uit Godot)", rol: "vaandeldrager", tekst: "Single prop, tall bare Napoleonic flag pole of dark weathered wood with a metal eagle finial on top, no banner or cloth attached. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_drum",   naam: "Trommel",        rol: "tamboer", tekst: "Single prop, Napoleonic military side drum with a dark wooden shell, rope tensioning, worn drumheads and a pair of sticks. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_horn",   naam: "Hoorn",          rol: "hoornblazer", tekst: "Single prop, coiled brass Napoleonic cavalry bugle with a woven cord. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_axe",    naam: "Sapeursbijl",    rol: "sapeur", tekst: "Single prop, heavy sapper felling axe with a long dark wooden haft and a broad iron head. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_barrel", naam: "Brandewijnvat",  rol: "marketentster", tekst: "Single prop, small canteen-woman brandy keg on a leather sling. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
+  { id: "prop_mace",   naam: "Tamboer-staf",   rol: "tamboer-majeur", tekst: "Single prop, ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
 ];
 
 /* Generatie-prompts per factie/unit (MODEL-WISHLIST par. 3) */
@@ -386,7 +386,7 @@ const MUSKET_FLAVOR = {
 function musketPrompt(facId, arch) {
   const sil = MUSKET_SIL[arch], flav = MUSKET_FLAVOR[facId];
   if (!sil || !flav) return null;
-  return `Single prop, ${sil}, ${flav}. Gritty realistic AAA-game concept art, highly detailed, low poly. Side profile view, clean neutral studio background, the weapon only, no hands, no text.`;
+  return `Single prop, ${sil}, ${flav}. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text.`;
 }
 function promptGroepHtml(label, tekst, isMusket) {
   return `<div class="promptgroup${isMusket ? " musket" : ""}">

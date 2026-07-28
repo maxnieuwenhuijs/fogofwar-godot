@@ -1663,7 +1663,78 @@ func _attach_weapon(fac: String) -> void:
 	var rot: Array = t.get("rot", [0.0, 0.0, 0.0])
 	prop.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2])) / maxf(parent_scale, 0.0001)
 	prop.rotation_degrees = Vector3(float(rot[0]), float(rot[1]), float(rot[2]))
+	if _rol == "flag":
+		_hang_vlagdoek(prop)
 	_weapon = prop
+
+
+# --- Vlaggendoek (besluit Max, 28 juli) ---------------------------------------
+# De prop `prop_flag` is alleen de KALE STOK; het doek maken we hier, zodat we
+# maat, kleur en (later) embleem in code kunnen sturen i.p.v. vastgebakken in
+# een glb. Het wappert met een vertex-shader — geen echte cloth-physics: dat is
+# duur, jittert en voegt niets toe op een bord dat je van bovenaf ziet. Puur
+# visueel; de staat verandert niet, dus replays blijven identiek.
+const VLAG_BREEDTE := 0.62   # x poollengte
+const VLAG_HOOGTE := 0.40    # x poollengte
+const VLAG_ZAKT := 0.06      # x poollengte onder de top van de stok
+
+const VLAG_SHADER := """
+shader_type spatial;
+render_mode cull_disabled;
+uniform vec4 kleur : source_color = vec4(0.85, 0.25, 0.28, 1.0);
+uniform float amp = 0.16;
+uniform float snelheid = 3.6;
+uniform float golf = 7.0;
+void vertex() {
+	float t = clamp(UV.x, 0.0, 1.0);
+	float stijf = t * t;                    // aan de mast staat het doek stil
+	VERTEX.z += sin(TIME * snelheid + t * golf) * amp * stijf;
+	VERTEX.y += sin(TIME * snelheid * 0.8 + t * golf * 0.7) * amp * 0.35 * stijf;
+}
+void fragment() {
+	ALBEDO = kleur.rgb;
+	ROUGHNESS = 0.85;
+	SPECULAR = 0.1;
+}
+"""
+
+
+## Hang een wapperend doek in de teamkleur aan de top van de vlaggenstok.
+func _hang_vlagdoek(pool: Node3D) -> void:
+	var ab := _combined_aabb(pool)
+	var lengte: float = maxf(ab.size.x, maxf(ab.size.y, ab.size.z))
+	if lengte <= 0.0001:
+		return
+	# Langste as = de stok; het doek hangt aan de top en steekt opzij uit.
+	var as_i := 1
+	if ab.size.x >= ab.size.y and ab.size.x >= ab.size.z:
+		as_i = 0
+	elif ab.size.z >= ab.size.y and ab.size.z >= ab.size.x:
+		as_i = 2
+	var midden := ab.position + ab.size * 0.5
+	var top := midden
+	top[as_i] = ab.position[as_i] + ab.size[as_i]
+	var breedte := lengte * VLAG_BREEDTE
+	var hoogte := lengte * VLAG_HOOGTE
+	var doek := MeshInstance3D.new()
+	doek.name = "Vlagdoek"
+	var vlak := PlaneMesh.new()
+	vlak.orientation = PlaneMesh.FACE_Z   # staand vlak in het XY-vlak
+	vlak.size = Vector2(breedte, hoogte)
+	vlak.subdivide_width = 12
+	vlak.subdivide_depth = 6
+	doek.mesh = vlak
+	var sh := Shader.new()
+	sh.code = VLAG_SHADER
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	mat.set_shader_parameter("kleur",
+		Color(0.85, 0.25, 0.28) if team == Constants.Team.RED else Color(0.2, 0.45, 0.9))
+	doek.material_override = mat
+	# Vanaf de mast zijwaarts uitsteken (halve breedte opzij), net onder de top.
+	doek.position = top + Vector3(breedte * 0.5, 0.0, 0.0)
+	doek.position[as_i] -= lengte * VLAG_ZAKT + hoogte * 0.5
+	pool.add_child(doek)
 
 
 ## Normaliseer een geïmporteerd model naar bord-maat: meet de gezamenlijke AABB,
