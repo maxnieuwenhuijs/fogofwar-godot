@@ -1708,14 +1708,18 @@ func _vul_geluidlijst() -> void:
 		var cat := String(rij["cat"])
 		var aantal: int = Audio.variant_aantal(cat)
 		var terugval := String(rij.get("terugval", ""))
-		var valt_terug := aantal == 0 and terugval != "" and Audio.variant_aantal(terugval) > 0
+		# Wat het SPEL zou spelen (incl. lenen van de muis): zo hoor je in de
+		# tuner exact hetzelfde als op het bord.
+		var doc: int = _fac_btn.get_selected_id()
+		var echt := Audio.effectieve_categorie(cat, doc, terugval)
+		var valt_terug := aantal == 0 and echt != "" and echt != cat
 		var hb := HBoxContainer.new()
 		hb.add_theme_constant_override("separation", 8)
 		var knop := Button.new()
 		knop.text = "\u25B6 %s" % String(rij["wat"])
 		knop.custom_minimum_size = Vector2(210, 0)
-		knop.disabled = aantal == 0 and not valt_terug
-		var speel_cat := cat if aantal > 0 else terugval
+		knop.disabled = echt == ""
+		var speel_cat := echt if echt != "" else cat
 		knop.pressed.connect(func() -> void: Audio.play(speel_cat))
 		hb.add_child(knop)
 		# Volume en vertraging per categorie: meteen te horen met de speelknop,
@@ -1739,7 +1743,9 @@ func _vul_geluidlijst() -> void:
 			info.text = "%s  -  %d variant(en), %.2fs" % [cat, aantal, Audio.langste_duur(cat)]
 			info.add_theme_color_override("font_color", Color(0.75, 0.85, 0.78))
 		elif valt_terug:
-			info.text = "%s ontbreekt  -  speelt %s" % [cat, terugval]
+			var reden := "leent van de muis" if echt.ends_with("_mouse") else "valt terug"
+			info.text = "%s ontbreekt  -  %s: %s (%d var, %.2fs)" % [
+				cat, reden, echt, Audio.variant_aantal(echt), Audio.langste_duur(echt)]
 			info.add_theme_color_override("font_color", Color(0.85, 0.8, 0.55))
 		else:
 			info.text = "%s  -  geen bestand" % cat

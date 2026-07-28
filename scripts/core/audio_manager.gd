@@ -202,6 +202,18 @@ func langste_duur(category: String) -> float:
 	return langste
 
 
+## Welke categorie klinkt er werkelijk? Zelfde keten als play_factie, zodat
+## de Model-tuner precies laat horen wat het spel doet ("" = niets).
+func effectieve_categorie(category: String, doctrine: int, terugval: String = "") -> String:
+	for kandidaat in ["%s_%s" % [category, Constants.doctrine_folder(doctrine)],
+			"%s_mouse" % category, category]:
+		if not (_streams.get(kandidaat, []) as Array).is_empty():
+			return kandidaat
+	if terugval != "":
+		return effectieve_categorie(terugval, doctrine)
+	return ""
+
+
 func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: float = 0.0,
 		terugval: String = "") -> void:
 	var sleutel := "%s_%s" % [category, Constants.doctrine_folder(doctrine)]

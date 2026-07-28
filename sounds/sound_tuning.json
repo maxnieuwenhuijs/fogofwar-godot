@@ -1,11 +1,19 @@
 {
+	"blood_splash": {
+		"db": 9.5,
+		"vertraging": -2.0
+	},
 	"body_fall": {
-		"db": 0.0,
-		"vertraging": -0.5
+		"db": -0.5,
+		"vertraging": -0.93
 	},
 	"inf_kanon_die_mouse": {
 		"db": 5.0,
-		"vertraging": 0.02
+		"vertraging": 0.0
+	},
+	"musket_fire": {
+		"db": 1.5,
+		"vertraging": 0.0
 	},
 	"val_hoed": {
 		"db": -3.0,
