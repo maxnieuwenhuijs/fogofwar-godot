@@ -189,6 +189,8 @@ func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: flo
 
 func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	var variants: Array = _streams.get(category, [])
+	if variants.is_empty() and category.begins_with("val_"):
+		variants = _streams.get("val_prop", [])   # generiek kletter-geluid
 	if variants.is_empty():
 		return
 	var player := _pool[_next]

@@ -151,6 +151,37 @@ geen synth.
 | `horse_die_crocodile` | Crocodile death bellow, deep booming and guttural, ending in a hissing exhale, with an armored body slamming into wet ground and heavy tail thumping. Dry, no music. |
 | `cannon_die_crocodile` | Swamp-wrapped field gun destroyed: iron cracking under damp cloth, waterlogged wood splitting, a short reptilian hiss cut off, wet debris slapping down. Dry, no music. |
 
+## 7bis. Waarom KORT: de doodskreet en de val zijn twee geluiden
+
+*Gemeten met `-- cliplengtes` (28 juli): de dood-animaties duren 1,8 tot 3,8
+seconden, gemiddeld 3,2.* Eén geluid dat die hele animatie moet dekken wordt
+een lang, komisch gerekt gepiep. Daarom splitsen we het:
+
+| Geluid | Wanneer | Lengte |
+|---|---|---|
+| Doodskreet (`inf_die_<factie>` enz.) | direct bij de dodelijke treffer | **0,6-1,2s** |
+| Val van het voorwerp (`val_*`) | ~0,45s later, als het de grond raakt | **0,3-0,6s** |
+
+Ze spelen **onafhankelijk** van elkaar, dus je hoeft ze niet op elkaar te
+timen: kreet nu, kletter daarna. Dat klinkt ook natuurlijker dan één lang
+geluid -- eerst de schreeuw, dan de stilte, dan het hout op de grond.
+
+### Val-geluiden per voorwerp (7 categorieën)
+
+Wat uit de handen vliegt bepaalt de klank. Ontbreekt een categorie, dan pakt
+het spel automatisch `val_prop` -- je kunt dus met één generiek geluid
+beginnen.
+
+| Categorie | # var | Voorwerp | Prompt |
+|---|---|---|---|
+| `val_prop` | 3 | terugval voor alles | Wooden and iron object clattering onto packed dirt, a dull knock with a short metallic rattle, dry and close, no music. |
+| `val_musket` | 3 | musket | Musket falling onto dirt, heavy wooden stock thudding with an iron barrel rattle, dry and close, no music. |
+| `val_drum` | 3 | trommel | Military side drum dropping onto the ground, a hollow booming thump with rope and rattling snares, dry, no music. |
+| `val_flag` | 2 | vaandelstok | Long wooden flag pole clattering onto dirt, a hard hollow knock and heavy cloth flapping down, dry, no music. |
+| `val_horn` | 2 | hoorn | Small brass bugle dropping onto packed dirt, a bright metallic clank with a faint ringing tone, dry, no music. |
+| `val_sapper` | 2 | bijl | Heavy axe dropping onto dirt, a dull wooden haft thud and a broad iron head clanking, dry, no music. |
+| `val_canteen` | 2 | vaatje | Small wooden keg dropping and rolling on dirt, hollow wooden thuds with liquid sloshing inside, dry, no music. |
+
 ## 7c. Inslag-geluiden per MATERIAAL (algemeen, factie-onafhankelijk)
 
 De klap zelf hoort bij het MATERIAAL dat geraakt wordt, niet bij de factie.

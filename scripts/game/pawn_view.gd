@@ -790,6 +790,14 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 ## knockback-richting, tollend neer, even blijven liggen en wegzinken.
 ## Alleen tween_property's op het wapen zelf — de pion mag intussen ge-freed
 ## worden zonder dat de tween op een dode callable klapt.
+## Welk kletter-geluid hoort bij wat er uit de handen vliegt? Trommel klinkt
+## anders dan een musket. Zonder eigen bestand valt alles terug op "val_prop".
+func _val_categorie() -> String:
+	if _rol == "":
+		return "val_musket"
+	return "val_" + _rol
+
+
 func _fling_weapon(world_dir: Vector3) -> void:
 	if _weapon == null or not is_instance_valid(_weapon):
 		return
@@ -811,6 +819,9 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	var arc := w.create_tween()
 	arc.tween_property(w, "global_position", peak, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	arc.tween_property(w, "global_position", land, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	# Kletter-geluid op het moment dat het voorwerp de grond raakt -- los van
+	# de doodskreet, want die duurt korter dan de val (besluit Max, 28 juli).
+	arc.tween_callback(func() -> void: Audio.play(_val_categorie()))
 	arc.tween_property(w, "rotation", _flat_rotation(w), 0.12)
 	# Het musket blijft op het bord liggen (opruiming via battlefield_debris).
 	w.add_to_group("battlefield_debris")

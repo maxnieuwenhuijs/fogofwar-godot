@@ -524,6 +524,51 @@ func _ready() -> void:
 			covering, subject.id, str(GameSession.state.pawns[subject.id].position == front)])
 		get_tree().quit()
 		return
+	elif "cliplengtes" in args:
+		# Overzicht van alle animatie-lengtes per model (Max, 28 juli): handig
+		# om sterfgeluiden en effect-timings op te maken.
+		print("[CLIPS] model | clip | seconden")
+		var mdir := "res://assets/models/"
+		var facties: Array = []
+		var dd := DirAccess.open(mdir)
+		if dd != null:
+			dd.list_dir_begin()
+			var naam := dd.get_next()
+			while naam != "":
+				if dd.current_is_dir() and not naam.begins_with(".") and naam != "board" and naam != "props":
+					facties.append(naam)
+				naam = dd.get_next()
+		for fac in facties:
+			var fd := DirAccess.open(mdir + fac)
+			if fd == null:
+				continue
+			var bestanden: Array = []
+			fd.list_dir_begin()
+			var f := fd.get_next()
+			while f != "":
+				if f.ends_with(".glb") and not f.contains("_gibs") and not f.contains("_musket"):
+					bestanden.append(f)
+				f = fd.get_next()
+			bestanden.sort()
+			for b in bestanden:
+				var scene = load(mdir + fac + "/" + b)
+				if scene == null:
+					continue
+				var inst = scene.instantiate()
+				var spelers: Array = inst.find_children("*", "AnimationPlayer", true, false)
+				if spelers.is_empty():
+					inst.queue_free()
+					continue
+				var ap: AnimationPlayer = spelers[0]
+				var namen: Array = ap.get_animation_list()
+				namen.sort()
+				for an in namen:
+					var lengte: float = ap.get_animation(an).length
+					print("[CLIPS] %s/%s | %s | %.2f" % [fac, String(b).get_basename(), an, lengte])
+				inst.queue_free()
+		print("[CLIPS] klaar")
+		get_tree().quit()
+		return
 	elif "shoottest" in args:
 		# Verifieer het klik-pad voor schieten (artillerie + infanterie) in de driver.
 		var hand: CardHand = game.get_node("UI/CardHand")

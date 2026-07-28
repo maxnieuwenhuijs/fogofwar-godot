@@ -854,14 +854,19 @@ func _fill_die_options() -> void:
 	if _pawn != null and _pawn._anim != null:
 		for v in _pawn._variants_of(_pawn.anim_die):
 			var n := String(v)
-			_die_btn.add_item(n.get_slice("/", n.get_slice_count("/") - 1))
+			var kort := n.get_slice("/", n.get_slice_count("/") - 1)
+			# Duur erbij (Max, 28 juli): handig om sterfgeluiden op te maken.
+			var duur := 0.0
+			if _pawn._anim.has_animation(n):
+				duur = _pawn._anim.get_animation(n).length
+			_die_btn.add_item("%s  (%.2fs)" % [kort, duur])
 	_load_death_pool_values()
 
 
 func _load_death_pool_values() -> void:
 	if _die_btn.item_count == 0:
 		return
-	var clip := _die_btn.get_item_text(_die_btn.selected)
+	var clip := _die_btn.get_item_text(_die_btn.selected).get_slice("  (", 0)
 	var cfg: Dictionary = PawnView.fx_dict("death_pools").get(clip, {})
 	_updating = true
 	_dp_spins["delay"].value = float(cfg.get("delay", 0.9))
