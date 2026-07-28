@@ -95,8 +95,14 @@ var _sleep_ringen: Array = []         # 3x TorusMesh om te draaien (alleen hand-
 var _sleep_draaien: bool = false      # true = ring gepakt (draaien), false = arm (verplaatsen)
 var _sleep_start_hoek: float = 0.0
 var _sleep_start_euler := Vector3.ZERO
-const SLEEP_TREFFER_PX := 16.0
-const RING_FACTOR := 1.25             # ringstraal t.o.v. de armlengte
+var _hover_as: int = -1               # as onder de muis (voor de highlight)
+var _hover_draai: bool = false
+var _gizmo_hint: Label = null
+const SLEEP_TREFFER_PX := 14.0
+const RING_FACTOR := 1.35             # ringstraal t.o.v. de armlengte
+const ARM_START := 0.30               # armen beginnen buiten het midden (daar liggen de ringen)
+const GIZMO_KLEUREN := [Color(0.95, 0.35, 0.35), Color(0.4, 0.9, 0.45), Color(0.45, 0.65, 1.0)]
+const AS_NAMEN := ["X", "Y", "Z"]
 var _tuner_light: DirectionalLight3D = null
 var _tuner_env: WorldEnvironment = null
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
@@ -521,9 +527,9 @@ func _build_ui() -> void:
 	_weapon_spins["ry"] = _make_spin(roww2, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
 	roww2.add_child(_make_label(" Z"))
 	_weapon_spins["rz"] = _make_spin(roww2, -180.0, 180.0, 5.0, 0.0, _on_weapon_changed)
-	var hint := _make_label("Sleep de armen om te verschuiven, de ringen om te draaien. Loslaten = opslaan.")
-	hint.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
-	tab_hand.add_child(hint)
+	_gizmo_hint = _make_label("Sleep een arm om te verschuiven, een ring om te draaien. Loslaten = opslaan.")
+	_gizmo_hint.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	tab_hand.add_child(_gizmo_hint)
 
 	# Vuurmond: waar flits + rook ontstaan, in model-ruimte (rechts/hoogte/
 	# voor). Per model opgeslagen; "test vuur" toont het direct.
@@ -1272,7 +1278,7 @@ func _clear_duel() -> void:
 func _bouw_sleep_gizmo() -> void:
 	_sleep_gizmo = Node3D.new()
 	add_child(_sleep_gizmo)
-	var kleuren := [Color(0.95, 0.35, 0.35), Color(0.4, 0.9, 0.45), Color(0.45, 0.65, 1.0)]
+	var kleuren := GIZMO_KLEUREN
 	for i in 3:
 		var arm := MeshInstance3D.new()
 		var cil := CylinderMesh.new()
@@ -1332,7 +1338,9 @@ func _sleep_doel() -> Dictionary:
 
 
 func _sleep_armlengte() -> float:
-	return maxf(0.12, (_cam.size if _cam != null else 2.0) * 0.10)
+	# Compact houden: bij de spel-camera (uitgezoomd) zou 10% van het beeld
+	# een arm van bijna een meter geven -- die overschaduwt het model.
+	return clampf((_cam.size if _cam != null else 2.0) * 0.06, 0.10, 0.30)
 
 
 func _werk_sleep_gizmo_bij() -> void:
@@ -1346,20 +1354,65 @@ func _werk_sleep_gizmo_bij() -> void:
 	var lengte := _sleep_armlengte()
 	var draaibaar: bool = String(doel["modus"]) == "hand"   # een punt draai je niet
 	for i in 3:
-		_plaats_arm(_sleep_armen[i], doel["pos"], doel["assen"][i], lengte)
+		# Highlight: de as die je vasthebt (of waar je overheen zweeft) licht op
+		# en wordt dikker; de rest dimt weg.
+		var arm_actief: bool = (_sleep_as == i and not _sleep_draaien) \
+			or (_sleep_as < 0 and _hover_as == i and not _hover_draai)
+		var ring_actief: bool = (_sleep_as == i and _sleep_draaien) \
+			or (_sleep_as < 0 and _hover_as == i and _hover_draai)
+		var iets_actief: bool = _sleep_as >= 0 or _hover_as >= 0
+		_kleur_deel(_sleep_armen[i], i, arm_actief, iets_actief)
+		_plaats_arm(_sleep_armen[i], doel["pos"], doel["assen"][i], lengte, 2.2 if arm_actief else 1.0)
 		var ring: MeshInstance3D = _sleep_ringen[i]
 		ring.visible = draaibaar
 		if draaibaar:
+			_kleur_deel(ring, i, ring_actief, iets_actief)
 			_plaats_ring(ring, doel["pos"], doel["assen"][i], lengte * RING_FACTOR)
+	_werk_gizmo_hint_bij()
 
 
-func _plaats_arm(arm: MeshInstance3D, oorsprong: Vector3, richting: Vector3, lengte: float) -> void:
+## Oplichten (actief), normaal, of wegdimmen als er iets anders actief is.
+func _kleur_deel(mi: MeshInstance3D, as_i: int, actief: bool, iets_actief: bool) -> void:
+	var mat := mi.material_override as StandardMaterial3D
+	if mat == null:
+		return
+	var basis: Color = GIZMO_KLEUREN[as_i]
+	if actief:
+		mat.albedo_color = Color(1.0, 0.95, 0.35)      # geel = dit heb je vast
+	elif iets_actief:
+		mat.albedo_color = Color(basis.r, basis.g, basis.b, 0.35)
+	else:
+		mat.albedo_color = basis
+
+
+## Regeltje onder de schuifjes: welke as en wat hij doet.
+func _werk_gizmo_hint_bij() -> void:
+	if _gizmo_hint == null:
+		return
+	var as_i := _sleep_as if _sleep_as >= 0 else _hover_as
+	var draai := _sleep_draaien if _sleep_as >= 0 else _hover_draai
+	if as_i < 0:
+		_gizmo_hint.text = "Sleep een arm om te verschuiven, een ring om te draaien. Loslaten = opslaan."
+		_gizmo_hint.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+		return
+	_gizmo_hint.text = "%s %s-as%s" % [
+		"DRAAIEN om de" if draai else "VERSCHUIVEN langs de", AS_NAMEN[as_i],
+		"  (sleep met de muis)" if _sleep_as < 0 else "  -- bezig..."]
+	_gizmo_hint.add_theme_color_override("font_color", Color(1.0, 0.95, 0.35))
+
+
+func _plaats_arm(arm: MeshInstance3D, oorsprong: Vector3, richting: Vector3,
+		lengte: float, dik: float = 1.0) -> void:
 	var d: Vector3 = (richting as Vector3).normalized()
 	var hulp := Vector3.UP if absf(d.dot(Vector3.UP)) < 0.95 else Vector3.RIGHT
 	var z := hulp.cross(d).normalized()
 	var x := d.cross(z).normalized()
-	var b := Basis(x, d, z).scaled(Vector3(1.0, lengte, 1.0))
-	arm.global_transform = Transform3D(b, oorsprong + d * lengte * 0.5)
+	# De arm loopt van ARM_START tot het uiteinde: het midden is ring-gebied,
+	# zodat verschuiven en draaien elkaar niet in de weg zitten.
+	var start := lengte * ARM_START
+	var lijf := lengte - start
+	var b := Basis(x, d, z).scaled(Vector3(dik, lijf, dik))
+	arm.global_transform = Transform3D(b, oorsprong + d * (start + lijf * 0.5))
 
 
 ## Een ring ligt in het vlak loodrecht op zijn as (TorusMesh draait om Y).
@@ -1423,22 +1476,32 @@ func _punt_naar_segment(punt: Vector2, a: Vector2, b: Vector2) -> float:
 	return punt.distance_to(a + ab * t)
 
 
-## Welke as ligt onder de muis? -1 = geen.
-func _as_onder_muis(muis: Vector2) -> int:
+## Wat ligt er onder de muis? {"as": 0-2, "draai": bool} of {} als er niets
+## binnen bereik is. Armen en ringen strijden op afstand-in-pixels, dus je
+## pakt altijd wat er visueel het dichtst bij ligt.
+func _gizmo_treffer(muis: Vector2) -> Dictionary:
 	var doel := _sleep_doel()
 	if doel.is_empty() or _cam == null:
-		return -1
+		return {}
 	var lengte := _sleep_armlengte()
-	var beste := -1
-	var beste_afstand := SLEEP_TREFFER_PX
-	var p0 := _cam.unproject_position(doel["pos"])
+	var beste := SLEEP_TREFFER_PX
+	var uit: Dictionary = {}
 	for i in 3:
-		var p1 := _cam.unproject_position(doel["pos"] + (doel["assen"][i] as Vector3) * lengte)
+		var a: Vector3 = doel["assen"][i]
+		var p0 := _cam.unproject_position(doel["pos"] + a * (lengte * ARM_START))
+		var p1 := _cam.unproject_position(doel["pos"] + a * lengte)
 		var d := _punt_naar_segment(muis, p0, p1)
-		if d < beste_afstand:
-			beste_afstand = d
-			beste = i
-	return beste
+		if d < beste:
+			beste = d
+			uit = {"as": i, "draai": false}
+	if String(doel["modus"]) == "hand":
+		var straal := lengte * RING_FACTOR
+		for i in 3:
+			var dr := _afstand_tot_ring(muis, doel["pos"], doel["assen"][i], straal)
+			if dr < beste:
+				beste = dr
+				uit = {"as": i, "draai": true}
+	return uit
 
 
 ## Positie langs de as waar de muisstraal het dichtst bij komt (lijn-lijn).
@@ -1468,23 +1531,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			var doel := _sleep_doel()
 			if doel.is_empty():
 				return
-			# Eerst de ringen (draaien), dan de armen (verplaatsen).
-			var as_i := -1
-			var draaien := false
-			if String(doel["modus"]) == "hand":
-				var straal := _sleep_armlengte() * RING_FACTOR
-				var beste := SLEEP_TREFFER_PX
-				for i in 3:
-					var d := _afstand_tot_ring(mb.position, doel["pos"], doel["assen"][i], straal)
-					if d < beste:
-						beste = d
-						as_i = i
-						draaien = true
-			if as_i < 0:
-				as_i = _as_onder_muis(mb.position)
-				draaien = false
-			if as_i < 0:
+			var treffer := _gizmo_treffer(mb.position)
+			if treffer.is_empty():
 				return
+			var as_i: int = int(treffer["as"])
+			var draaien: bool = bool(treffer["draai"])
 			_sleep_as = as_i
 			_sleep_draaien = draaien
 			_sleep_modus = String(doel["modus"])
@@ -1504,9 +1555,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			_sleep_afronden(mb.position)
 			get_viewport().set_input_as_handled()
 		return
-	if event is InputEventMouseMotion and _sleep_as >= 0:
-		_sleep_verplaats((event as InputEventMouseMotion).position, false)
-		get_viewport().set_input_as_handled()
+	if event is InputEventMouseMotion:
+		var mm := event as InputEventMouseMotion
+		if _sleep_as >= 0:
+			_sleep_verplaats(mm.position, false)
+			get_viewport().set_input_as_handled()
+		else:
+			# Zweven: laat zien wat je zou pakken.
+			var tr := _gizmo_treffer(mm.position)
+			_hover_as = int(tr["as"]) if not tr.is_empty() else -1
+			_hover_draai = bool(tr["draai"]) if not tr.is_empty() else false
 
 
 ## De waarde die we slepen, zoals hij nu in de spinboxen staat.
