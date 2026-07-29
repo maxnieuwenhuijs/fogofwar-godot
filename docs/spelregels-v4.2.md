@@ -184,7 +184,7 @@
 | **Varken** (enum MENS) | 3 | 7 | [13,6,3] = 22 | geen — allrounder |
 | **Muis** | 4 | 5 | **[18,4,0] = 22** | +1 Speed op elke koppeling; beweegt door eigen pionnen (zwerm) |
 | **Leeuw** | 2 | 9 | [6,10,2] = 18 | artilleriedracht +1 (7) |
-| **Beer** | 3 | 7 | [16,3,3] = 22 | +1 HP op elke koppeling; kaart-Speed max 3 |
+| **Beer** | 3 | 7 | [16,3,3] = 22 | +1 HP op elke koppeling; kaart-Speed max 4 |
 | **Wolf** | 3 | 7 | [11,8,3] = 22 | gratis stap na elke melee; cav springt over vijandelijke infanterie |
 | **Krokodil** (enum VOS) | 3 | 7 | [13,6,3] = 22 | verborgen koppeling; +1 Speed op cavalerie |
 

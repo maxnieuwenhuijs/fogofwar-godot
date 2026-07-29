@@ -1,5 +1,23 @@
 # Spelregels — CHANGELOG
 
+## C13 — 29 juli 2026 (balans na de trainingsplateau-meting)
+
+De trainingsnacht liep vast op een plateau: 314 generaties, 1 adoptie, en de
+convergentiecheck meldde 50% tegen de kampioen van 5 generaties terug. De bots
+spelen hun factie dus zo goed als dit model toelaat -- wat overbleef was geen
+leerprobleem maar een ONTWERPprobleem. Gemeten winrates: Krokodil 76%, Varken
+58%, Leeuw 48%, Wolf 45%, Muis 40%, Beer 30% (Muis-vs-Krokodil zelfs 5%).
+
+- **Krokodil, schutkleur afgezwakt** (`schutkleur_onthul_nabij`, default aan):
+  de gedekte koppeling valt niet alleen weg bij schade, maar OOK zodra er een
+  actieve vijandelijke pion naast de pion staat. Van een vak afstand kijk je
+  iemand recht aan; schutkleur werkt op afstand, niet in een handgemeen. Puur
+  een KIJK-regel: de staat verandert niet, dus replays/goldens blijven gelijk.
+- **Beer, speedplafond 3 -> 4**: 81% van alle partijen wordt via de haven
+  beslist en maar 14% via eliminatie. Beer betaalde zijn +1 HP dus met precies
+  het middel waarmee je wint. Hij blijft de traagste factie (anderen kennen
+  geen plafond), maar is niet langer structureel uitgeteld in de race.
+
 ## Campagne C9 — 26 juli 2026 (playtest Max: volle rondes, geen cycluslimiet)
 
 - **Ronde 1 = loting:** alle 16 spelers worden random 1v1 gepaird (nieuwe

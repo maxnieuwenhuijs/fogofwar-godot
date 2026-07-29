@@ -531,6 +531,7 @@ func _try_load_model() -> void:
 	_mesh.visible = false
 	_marker.visible = false
 	_anim = _find_anim_player(_model)
+	_normaliseer_clipnamen()
 	if _anim != null:
 		_anim.animation_finished.connect(_on_anim_finished)
 	play_idle()
@@ -652,6 +653,66 @@ const ANIM_ALIASES: Dictionary = {
 	"hit": ["hurt", "flinch"],
 	"ready": ["ready_up", "readyup"],
 }
+
+
+## Clipnamen van verse exports opschonen (Max, 29 juli). Mixamo levert
+## "Death 1", "Rifile Walking", "Bayont Attack"; het spel zoekt death1,
+## walk1, bayonet1. We hernoemen ALLEEN vuile namen (spatie of hoofdletter),
+## zodat bestaande modellen exact blijven zoals ze zijn.
+const CLIP_WOORDEN: Array = [
+	{"woorden": ["idle"], "doel": "idle"},
+	{"woorden": ["walk"], "doel": "walk"},
+	{"woorden": ["death", "die"], "doel": "death"},
+	{"woorden": ["aim", "ready"], "doel": "ready_up"},
+	{"woorden": ["hit", "reaction", "flinch"], "doel": "hit"},
+	{"woorden": ["fire", "shoot"], "doel": "fire"},
+	{"woorden": ["bayon", "butt", "stab", "melee", "attack"], "doel": "bayonet"},
+]
+
+
+static func _schone_clipnaam(n: String) -> bool:
+	return not n.contains(" ") and n == n.to_lower()
+
+
+static func _clip_doelnaam(n: String) -> String:
+	var laag := n.to_lower()
+	for regel in CLIP_WOORDEN:
+		for w in regel["woorden"]:
+			if laag.contains(String(w)):
+				return String(regel["doel"])
+	return ""
+
+
+func _normaliseer_clipnamen() -> void:
+	if _anim == null:
+		return
+	for lib_naam in _anim.get_animation_library_list():
+		var lib: AnimationLibrary = _anim.get_animation_library(lib_naam)
+		if lib == null:
+			continue
+		# Wat al netjes heet telt mee, zodat we niet over bestaande nummers heen gaan.
+		var teller: Dictionary = {}
+		for a in lib.get_animation_list():
+			var n := String(a)
+			if not _schone_clipnaam(n):
+				continue
+			var basis := n.rstrip("0123456789")
+			var rest := n.substr(basis.length())
+			var nr: int = int(rest) if rest.is_valid_int() else 1
+			teller[basis] = maxi(int(teller.get(basis, 0)), nr)
+		for a in lib.get_animation_list():
+			var n := String(a)
+			if _schone_clipnaam(n):
+				continue
+			var doel := _clip_doelnaam(n)
+			if doel == "":
+				continue
+			var idx: int = int(teller.get(doel, 0)) + 1
+			teller[doel] = idx
+			var nieuw_naam := "%s%d" % [doel, idx]
+			if not lib.has_animation(nieuw_naam):
+				lib.rename_animation(a, nieuw_naam)
+	_variant_cache.clear()
 
 
 func _variants_of(base: String) -> Array:
@@ -1164,7 +1225,7 @@ func muzzle_world() -> Vector3:
 func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	if _model_path == "" or _piece == null:
 		return false
-	var gibs_path := _model_path.get_basename() + "_gibs.glb"
+	var gibs_path := _gibs_pad()
 	if not ResourceLoader.exists(gibs_path):
 		return false
 	var scene_parent := get_parent()
@@ -1189,6 +1250,27 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 			_fling_part(part as Node3D, dir, violence)
 	parts_root.add_to_group("battlefield_debris")
 	return true
+
+
+## Deelnaam zonder punten, streepjes, spaties of cijfers: "Arm.L" -> "arml".
+static func _kale_deelnaam(n: String) -> String:
+	var uit := ""
+	for teken in n.to_lower():
+		if teken >= "a" and teken <= "z":
+			uit += teken
+	return uit
+
+
+## Gibs-bestand naast het model: "_gibs.glb" of ".gibs.glb" (zoals de
+## exportpijplijn het schrijft). Leeg als er geen is.
+func _gibs_pad() -> String:
+	if _model_path == "":
+		return ""
+	for kandidaat in [_model_path.get_basename() + "_gibs.glb",
+			_model_path.get_basename() + ".gibs.glb"]:
+		if ResourceLoader.exists(kandidaat):
+			return kandidaat
+	return _model_path.get_basename() + "_gibs.glb"
 
 
 func _is_hat(node: Node) -> bool:
@@ -1273,7 +1355,9 @@ func _shed_first_limb(live: Array, dir: Vector3) -> void:
 func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> bool:
 	var target: MeshInstance3D = null
 	for mi in live:
-		if String(mi.name).to_lower().contains(part_name):
+		# Verse exports heten "Arm.L" / "Upleg.R"; kaal maken zodat "arml" en
+		# "legr" gewoon matchen (Max, 29 juli).
+		if _kale_deelnaam(String(mi.name)).contains(part_name):
 			target = mi
 			break
 	if target == null or not target.visible:
@@ -1298,7 +1382,7 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> Variant:
 	if _model_path == "" or _piece == null:
 		return null
-	var gibs_path := _model_path.get_basename() + "_gibs.glb"
+	var gibs_path := _gibs_pad()
 	if not ResourceLoader.exists(gibs_path):
 		return null
 	var scene_parent := get_parent()
@@ -1614,9 +1698,14 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	_archetype = arch
 	var fac: String = Constants.doctrine_folder(doctrine)
 	var tname: String = Constants.unit_type_file(unit_type)
+	# Zoekvolgorde (Max, 29 juli -- de nieuwe export is de leidraad): eerst de
+	# korte naam, dan de naam zoals de exportpijplijn hem levert
+	# (<type>_<archetype>_<factie>.glb), dan terugval op base.
 	var candidates: Array = [
 		"%s%s/%s_%s.glb" % [MODELS_DIR, fac, tname, arch],
+		"%s%s/%s_%s_%s.glb" % [MODELS_DIR, fac, tname, arch, fac],
 		"%s%s/%s_base.glb" % [MODELS_DIR, fac, tname],
+		"%s%s/%s_base_%s.glb" % [MODELS_DIR, fac, tname, fac],
 	]
 	for path in candidates:
 		if ResourceLoader.exists(path):
@@ -1653,6 +1742,9 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	# De geometrische stukken hebben er geen — dan blijft _anim gewoon null.
 	_anim = _find_anim_player(_piece)
 	_variant_cache = {}
+	# Verse exports leveren Mixamo-namen ("Death 1"); opschonen zodat het spel
+	# ze vindt. Al nette namen blijven onaangeroerd.
+	_normaliseer_clipnamen()
 	if _anim != null:
 		_anim.animation_finished.connect(_on_anim_finished)
 	if auto_fit:
@@ -1702,9 +1794,36 @@ static func weapon_for(model_path: String, fac: String) -> Dictionary:
 ## automatisch op musketlengte (~0.55 wereld-unit) geschaald; fijnafstelling
 ## via model_tuning.json sleutel "<factie>/musket":
 ##   {"scale": 1.0, "pos": [x,y,z], "rot": [graden x,y,z]}
+## Lichaamsdelen die we kennen; al het andere geskinde meshje in het model is
+## meegebakken uitrusting (het musket zit als los meshje aan RightHand).
+const LIJF_DELEN: Array = ["arm", "forarm", "leg", "upleg", "body", "head", "hat", "tail", "foot"]
+
+
+## Het meegebakken musket verbergen (Max, 29 juli): we hangen zelf een prop in
+## de hand die we in de tuner kunnen afstellen en die bij de dood wegvliegt.
+## Twee muskets tegelijk zou dubbel staan. Blender hoeft er niet aan te pas.
+func _verberg_ingebakken_wapen() -> void:
+	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
+		var kaal := _kale_deelnaam(String(mi.name))
+		var is_lijf := false
+		for deel in LIJF_DELEN:
+			if kaal.contains(String(deel)):
+				is_lijf = true
+				break
+		if is_lijf:
+			continue
+		# Alleen verbergen als het duidelijk uitrusting is: een wapenwoord, of
+		# een naamloos generator-meshje (tripo_node_...). Onbekende lijfdelen
+		# van oudere modellen blijven zo gewoon staan.
+		var wapen := kaal.contains("musket") or kaal.contains("rifle") 				or kaal.contains("gun") or kaal.contains("weapon") 				or kaal.contains("triponode")
+		if wapen:
+			(mi as MeshInstance3D).visible = false
+
+
 func _attach_weapon(fac: String) -> void:
 	if _unit_type != 0:
 		return  # v1: alleen infanterie draagt het musket
+	_verberg_ingebakken_wapen()
 	var wp := weapon_for(_model_path, fac)
 	if _rol != "":
 		# Figurant: trommel/vaandel in plaats van het musket. Ontbreekt de

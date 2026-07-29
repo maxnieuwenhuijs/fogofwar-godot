@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Beer
-Generaties: 9 · adopties: 0 · minuten: 60.9
+Generaties: 40 · adopties: 0 · minuten: 242.6
 Winrate van Beer tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   23.5%  (54 potjes)
-  vs Muis     46.0%  (54 potjes)
-  vs Leeuw    17.0%  (54 potjes)
-  vs Beer     22.0%  (54 potjes)
-  vs Wolf     38.1%  (54 potjes)
-  vs Krokodil  48.3%  (54 potjes)
+  vs Varken   24.4%  (240 potjes)
+  vs Muis     44.8%  (240 potjes)
+  vs Leeuw    22.4%  (240 potjes)
+  vs Beer     24.7%  (240 potjes)
+  vs Wolf     27.5%  (240 potjes)
+  vs Krokodil  34.6%  (240 potjes)

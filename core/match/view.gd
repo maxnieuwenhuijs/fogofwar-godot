@@ -41,7 +41,7 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 			continue
 		if pawn.owner_id == enemy and blind_placement:
 			continue  # blind opstellen: de ander bestaat nog niet voor jou
-		pawns_d[str(id)] = _pawn_view(pawn, player_id) if redacted else pawn.to_dict()
+		pawns_d[str(id)] = _pawn_view(pawn, player_id, state) if redacted else pawn.to_dict()
 	var eigen_defined: Dictionary = {}
 	for c in state.cards_defined.get(player_id, []):
 		eigen_defined[c.id] = true
@@ -59,7 +59,7 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		var vijand_onthuld: bool = visible_enemy_cards.has(card.id)
 		if not (linked_alive or eigen_huidig or vijand_onthuld):
 			continue
-		var covered: bool = redacted and _card_link_covered(state, card)
+		var covered: bool = redacted and _card_link_covered(state, card, player_id)
 		if card.owner_id == player_id or not redacted:
 			cards_d[str(id)] = card.to_dict()
 		elif vijand_onthuld or linked_alive:
@@ -148,18 +148,42 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	}
 
 
+## C13 (besluit Max, 29 juli): schutkleur valt ook weg als er een ACTIEVE
+## vijandelijke pion NAAST hem staat -- van zo dichtbij zie je wie je voor je
+## hebt. Puur een kijk-regel: de staat verandert niet, dus replays en goldens
+## blijven identiek. Zet `schutkleur_onthul_nabij` op false voor het oude
+## gedrag (alleen onthullen zodra er schade valt).
+static func _van_dichtbij_gezien(state: GameState, pawn: Pawn, kijker_id: int) -> bool:
+	if not state.rules.schutkleur_onthul_nabij:
+		return false
+	for buur in Constants.manhattan_neighbors(pawn.position):
+		if not Constants.is_on_board(buur):
+			continue
+		var ander: Pawn = state.get_pawn_at(buur)
+		if ander != null and not ander.is_eliminated and ander.is_active \
+				and ander.owner_id == kijker_id:
+			return true
+	return false
+
+
 ## Is de koppeling van deze kaart gedekt (Krokodil-perk, pion nog niet onthuld)?
-static func _card_link_covered(state: GameState, card: Card) -> bool:
+static func _card_link_covered(state: GameState, card: Card, kijker_id: int = -1) -> bool:
 	if card.linked_pawn_id == -1:
 		return false
 	var pawn: Pawn = state.pawns.get(card.linked_pawn_id, null)
-	return pawn != null and pawn.is_active and not pawn.card_revealed
+	if pawn == null or not pawn.is_active or pawn.card_revealed:
+		return false
+	if kijker_id >= 0 and _van_dichtbij_gezien(state, pawn, kijker_id):
+		return false
+	return true
 
 
-static func _pawn_view(pawn: Pawn, viewer_id: int) -> Dictionary:
+static func _pawn_view(pawn: Pawn, viewer_id: int, state: GameState = null) -> Dictionary:
 	var d: Dictionary = pawn.to_dict()
 	if pawn.owner_id == viewer_id or not pawn.is_active or pawn.card_revealed:
 		return d  # eigen pionnen en onthulde/inactieve pionnen: alles zichtbaar
+	if state != null and _van_dichtbij_gezien(state, pawn, viewer_id):
+		return d  # er staat een eigen actieve pion naast: je ziet hem gewoon
 	# Gedekte vijandelijke pion: stats worden het "?"-sentinel, de koppeling
 	# verdwijnt. Actief-zijn en type blijven zichtbaar (dat wist je al).
 	for veld in ["current_hp", "max_hp", "remaining_stamina", "max_stamina", "attack_value"]:

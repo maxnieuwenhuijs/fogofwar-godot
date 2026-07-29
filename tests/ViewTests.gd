@@ -20,6 +20,20 @@ func _fresh(d1: int, d2: int) -> GameState:
 
 
 ## Structurele lek-checks op de view van `viewer`. Retourneert lijst schendingen.
+## Spiegelt View._van_dichtbij_gezien: een gedekte pion met een actieve
+## vijand ernaast is bewust zichtbaar (C13).
+func _naast_eigen_pion(state: GameState, pawn: Pawn, viewer: int) -> bool:
+	if not state.rules.schutkleur_onthul_nabij:
+		return false
+	for buur in Constants.manhattan_neighbors(pawn.position):
+		if not Constants.is_on_board(buur):
+			continue
+		var ander: Pawn = state.get_pawn_at(buur)
+		if ander != null and not ander.is_eliminated and ander.is_active 				and ander.owner_id == viewer:
+			return true
+	return false
+
+
 func _lekken(state: GameState, viewer: int) -> Array:
 	var fouten: Array = []
 	var enemy: int = Constants.opponent(viewer)
@@ -45,6 +59,10 @@ func _lekken(state: GameState, viewer: int) -> Array:
 	#    kaart die naar de pion terugwijst.
 	for pawn in state.pawns.values():
 		if pawn.owner_id != enemy or not pawn.is_active or pawn.card_revealed:
+			continue
+		# C13 (29 juli): staat er een ACTIEVE eigen pion naast, dan MAG je hem
+		# zien -- dat is de afgezwakte schutkleur, geen lek.
+		if _naast_eigen_pion(state, pawn, viewer):
 			continue
 		var key := str(pawn.id)
 		if not view.pawns.has(key):
@@ -171,3 +189,37 @@ func test_dekking_vervalt_bij_cyclus_reset() -> void:
 	var pv: Dictionary = View.for_player(s, 1).pawns[str(pawn.id)]
 	assert_eq(int(pv.current_hp), 0, "na de reset gewoon de (lege) stats")
 	assert_true(bool(pv.card_revealed))
+
+
+func test_c13_schutkleur_valt_weg_van_dichtbij() -> void:
+	# C13 (besluit Max, 29 juli): de Krokodil is gedekt op afstand, maar zodra
+	# er een ACTIEVE vijand naast staat zie je gewoon wat hij is.
+	var s := GameState.new()
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.VOS       # Krokodil
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	var gedekt: Pawn = s._spawn_pawn(Constants.PLAYER_1, Vector2i(5, 5))
+	var kaart := Card.new(s.next_card_id(), Constants.PLAYER_1, 1, 3, 2, 2)
+	s.all_cards[kaart.id] = kaart
+	gedekt.link_card(kaart)
+	gedekt.card_revealed = false
+	var ver: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(9, 9))
+	var kaart2 := Card.new(s.next_card_id(), Constants.PLAYER_2, 1, 2, 2, 2)
+	s.all_cards[kaart2.id] = kaart2
+	ver.link_card(kaart2)
+	# Ver weg: stats gedekt.
+	var v1: Dictionary = View.for_player(s, Constants.PLAYER_2)
+	assert_eq(v1.pawns[str(gedekt.id)].current_hp, View.HIDDEN, "op afstand: gedekt")
+	# Buurman ernaast: gewoon zichtbaar.
+	var dichtbij: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(5, 4))
+	var kaart3 := Card.new(s.next_card_id(), Constants.PLAYER_2, 1, 2, 2, 2)
+	s.all_cards[kaart3.id] = kaart3
+	dichtbij.link_card(kaart3)
+	var v2: Dictionary = View.for_player(s, Constants.PLAYER_2)
+	assert_eq(int(v2.pawns[str(gedekt.id)].current_hp), gedekt.current_hp, "van dichtbij: zichtbaar")
+	# De tegenstander zelf ziet zijn eigen pion natuurlijk altijd.
+	var v3: Dictionary = View.for_player(s, Constants.PLAYER_1)
+	assert_eq(int(v3.pawns[str(gedekt.id)].current_hp), gedekt.current_hp, "eigen pion altijd zichtbaar")
+	# Uitgeschakelde knop = oud gedrag.
+	s.rules.schutkleur_onthul_nabij = false
+	var v4: Dictionary = View.for_player(s, Constants.PLAYER_2)
+	assert_eq(v4.pawns[str(gedekt.id)].current_hp, View.HIDDEN, "knop uit: blijft gedekt")

@@ -171,9 +171,26 @@ class FuzzChecker:
 		for pawn in state.pawns.values():
 			if pawn.owner_id != enemy or not pawn.is_active or pawn.card_revealed or pawn.is_eliminated:
 				continue
+			# C13: staat er een eigen actieve pion naast, dan MAG je hem zien.
+			# Dat is de regel, geen lek (spiegelt View._van_dichtbij_gezien).
+			if _naast_eigen_pion(state, pawn, viewer):
+				continue
 			var pv: Dictionary = view.pawns.get(str(pawn.id), {})
 			if not pv.is_empty() and not (pv.current_hp is String):
 				schendingen.append("actie %d: gedekte pion %d lekt stats" % [_acties, pawn.id])
+
+	## Spiegelt de C13-regel: eigen actieve pion op een aangrenzend vak?
+	func _naast_eigen_pion(state: GameState, pawn: Pawn, viewer: int) -> bool:
+		if not state.rules.schutkleur_onthul_nabij:
+			return false
+		for buur in Constants.manhattan_neighbors(pawn.position):
+			if not Constants.is_on_board(buur):
+				continue
+			var ander: Pawn = state.get_pawn_at(buur)
+			if ander != null and not ander.is_eliminated and ander.is_active 					and ander.owner_id == viewer:
+				return true
+		return false
+
 
 	## 3+4) Eind-checks: legale keuzes + fold == eindstaat.
 	func final_checks(runner: AgentRunner) -> void:

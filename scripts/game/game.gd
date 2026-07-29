@@ -45,7 +45,7 @@ var _placement_ghost: Node3D = null       # semi-doorzichtig stuk onder de muis
 var _placement_ghost_type: int = -1
 var _human_doctrine: int = Constants.Doctrine.MENS
 var _ai_doctrine: int = Constants.Doctrine.MENS
-var _campaign_mode: bool = false  # F2.6: v4.2-campagne-duel (economie)
+var _campaign_mode: bool = true  # elk potje is een v4.2-duel (CP + versterkingen)
 var _hovered_pawn_id: int = -1
 var _hp_layer: Control = null
 var _hp_bars: Dictionary = {}        # pawn_id -> {holder, blocks}
@@ -510,20 +510,10 @@ func _on_opponent_choice(index: int) -> void:
 		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[randi() % Constants.DOCTRINE_DATA.size()]
 	else:
 		_ai_doctrine = Constants.DOCTRINE_DATA.keys()[index - 1]
-	_show_ruleset_choice()
-
-
-## F2.6 - regelset-keuze: klassiek 4.1 of het v4.2-campagne-duel (economie).
-func _show_ruleset_choice() -> void:
-	_overlay.show_choice(
-		tr("MENU_RULESET_TITLE"),
-		tr("MENU_RULESET_BODY"),
-		[tr("MENU_RULESET_CLASSIC"), tr("MENU_RULESET_CAMPAIGN")],
-		_on_ruleset_choice, Color.WHITE, true)
-
-
-func _on_ruleset_choice(index: int) -> void:
-	_campaign_mode = index == 1
+	# Er is nog maar EEN spel (besluit Max, 29 juli): elk duel speelt met de
+	# v4.2-economie -- CP en versterkingen. 4.1 blijft alleen als
+	# regressie-ijkpunt in de tests bestaan, niet meer als speelbare optie.
+	_campaign_mode = true
 	_start_match(ai_difficulty)
 
 
@@ -543,7 +533,11 @@ func _start_match(difficulty: int) -> void:
 	var regels: RulesConfig = null
 	if CampaignBridge.duel_actief:
 		regels = CampaignBridge.duel_rules()  # F3.4b: bezit/CP uit de campagne
-	elif _campaign_mode:
+	else:
+		# Elk potje speelt v4.2: CP, versterkingen en de spawn-fase. De
+		# 1v1-instelling staat in v42_default.json (cp_start, poolfactor,
+		# spawn_totaal_max), zodat een los duel en een campagne-duel dezelfde
+		# economie kennen.
 		regels = RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
 	GameSession.start_new_game(_human_doctrine, _ai_doctrine, regels)
 	_show_placement_overlay()

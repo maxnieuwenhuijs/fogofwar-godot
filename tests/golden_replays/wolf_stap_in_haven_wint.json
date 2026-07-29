@@ -60,10 +60,10 @@
 					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "e2bf9cbdc012ee4e4832ff2abd36935f6ba568c42532ce208ba32e73adebbf57",
+			"hash": "fc92f6d36e25edded9bee1b75f4e870e2fd48d6a80a887990fe9184e5eb9c097",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785180164.947
+			"ts": 1785331183.992
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "7a10fde265dc02e2f526a7ada0db7202bdffa57142bc5113c7e7335570cbb7d4",
+			"hash": "b2202e455f9eb4bb44fb59ffbd9851f523dbec15ec2665aa9bcfee99775f088f",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785180164.947
+			"ts": 1785331183.993
 		}
 	],
-	"final_hash": "7a10fde265dc02e2f526a7ada0db7202bdffa57142bc5113c7e7335570cbb7d4",
+	"final_hash": "b2202e455f9eb4bb44fb59ffbd9851f523dbec15ec2665aa9bcfee99775f088f",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -292,6 +292,7 @@
 			},
 			"rounds_per_cycle": 3,
 			"rules_version": "4.1.10-hr",
+			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0,
 			"tiebreak": "material_haven_proximity"
@@ -312,7 +313,7 @@
 		"winner": 1
 	},
 	"meta": {
-		"created": "2026-07-27T21:22:44",
+		"created": "2026-07-29T15:19:43",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -483,6 +484,7 @@
 				},
 				"rounds_per_cycle": 3,
 				"rules_version": "4.1.10-hr",
+				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0,
 				"tiebreak": "material_haven_proximity"

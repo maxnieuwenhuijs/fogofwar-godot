@@ -77,11 +77,11 @@ const DOCTRINE_DATA: Dictionary = {
 	},
 	Doctrine.BEER: {
 		"name": "Beer", "cards": 3, "budget": 7, "comp": [16, 3, 3],
-		"move_through_own": false, "hp_bonus": 1, "speed_max": 3,
+		"move_through_own": false, "hp_bonus": 1, "speed_max": 4,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
 		"pro": "Elke koppeling gratis +1 HP: muren tot 6 HP",
-		"con": "Speed max 3: traag over het bord",
+		"con": "Speed max 4: traag over het bord",
 	},
 	Doctrine.WOLF: {
 		"name": "Wolf", "cards": 3, "budget": 7, "comp": [11, 8, 3],

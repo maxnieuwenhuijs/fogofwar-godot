@@ -16,12 +16,22 @@ aan hand/heup als deel `prop`; deze modellen krijgen GEEN musket.
 - [ ] Mixamo: upload **A-pose zonder botten** → auto-rig → **1× FBX "With Skin"**
 
 ## B. Blender — voorbereiden
-- [ ] Lijf in **losse objecten** geknipt en exact benoemd: `armL armR body hat legL legR tail`
-      (Edit Mode → selecteer per deel → `P` → Selection)
+- [ ] Lijf in **losse objecten** geknipt. Namen mogen zijn zoals Blender ze
+      geeft: `Arm.L`, `ARm.R`, `Upleg.L`, `body`, `hat`, `Leg.R` ... Het spel
+      maakt namen zelf kaal (punten, spaties en hoofdletters tellen niet mee),
+      dus `Arm.L` telt gewoon als `armL`. Zorg alleen dat het WOORD klopt:
+      arm, leg, body, hat, tail.
+- [ ] **Clipnamen hoeven niet netjes.** Mixamo-namen als "Death 1",
+      "Rifile Walking" of "Bayont Attack" worden bij het laden vertaald naar
+      death1 / walk1 / bayonet1. Herkende woorden: idle, walk, death|die,
+      hit|reaction, fire|shoot, bayon|butt|stab|melee|attack, aim|ready.
 
 ## C. Twee exports uit hetzelfde .blend
-- [ ] **Export 1** `<model>.glb` — 7 delen **+ Armature** · **Skinning AAN · Animation AAN**
-- [ ] **Export 2** `<model>_gibs.glb` — **alleen** de 7 delen · **Skinning UIT · Animation UIT**
+- [ ] **Export 1** het model **+ Armature** · **Skinning AAN · Animation AAN**
+- [ ] **Export 2** de gibs — dezelfde delen, **Animation UIT**
+- [ ] Bestandsnamen mogen kort (`infantry_atk.glb` / `infantry_atk_gibs.glb`)
+      of lang (`infantry_atk_mouse.glb` / `infantry_atk_mouse.gibs.glb`) zijn;
+      het spel accepteert beide en zoekt in die volgorde.
 
 ## D. Clips + rechtdraaien
 - [ ] Zitten alle 15 clips in je .blend? → sleep `<model>.glb` op **`fix_model.bat`** (kwartslag-fix)

@@ -27,6 +27,13 @@ var haven_score_cumulative: bool = false  # true: "touches" tellen — ooit-aang
 
 # --- Kaartdefinitie ---
 var per_stat_cap: int = 0             # >0: harde bovengrens per losse kaart-stat
+## C13 (besluit Max, 29 juli): de schutkleur van de Krokodil valt ook weg als
+## er een ACTIEVE vijand naast staat -- je ziet wat je van dichtbij bekijkt.
+## Zonder dit was de fog-factie te sterk (76% winrate tegen 30% voor Beer):
+## tegenstanders moesten een heel potje tegen onbekende waarden spelen.
+## false = het oude gedrag (alleen onthullen bij schade).
+var schutkleur_onthul_nabij: bool = true
+
 var basis_hp: Dictionary = {}         # C12: basis-HP per type BOVENOP de kaart (bv {"cav": 2}); {} = 4.1-gedrag
 
 # --- Schotparameters ---
@@ -160,6 +167,7 @@ func to_dict() -> Dictionary:
 		"haven_score_cumulative": haven_score_cumulative,
 		"per_stat_cap": per_stat_cap,
 		"basis_hp": basis_hp,
+		"schutkleur_onthul_nabij": schutkleur_onthul_nabij,
 		"inf_shot_range": inf_shot_range,
 		"inf_shot_cost": inf_shot_cost,
 		"inf_shot_full_attack": inf_shot_full_attack,
@@ -188,6 +196,7 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 	c.statue_threshold = int(d.get("statue_threshold", c.statue_threshold))
 	c.haven_score_cumulative = bool(d.get("haven_score_cumulative", c.haven_score_cumulative))
 	c.per_stat_cap = int(d.get("per_stat_cap", c.per_stat_cap))
+	c.schutkleur_onthul_nabij = bool(d.get("schutkleur_onthul_nabij", c.schutkleur_onthul_nabij))
 	var bhp = d.get("basis_hp", {})
 	if bhp is Dictionary:
 		for k in bhp:

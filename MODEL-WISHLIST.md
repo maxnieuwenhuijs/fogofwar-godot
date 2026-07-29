@@ -659,8 +659,14 @@ assets/models/<factie>/<type>_<archetype>.glb
 - type: `infantry` `cavalry` `artillery`
 - archetype: `base` `spd` `hp` `atk` `mix`
 
-**Fallback-keten**: `<type>_<archetype>.glb` → `<type>_base.glb` → geometrisch
-stuk met archetype-silhouet. Alles werkt dus ook met maar één model per type.
+**Fallback-keten**: `<type>_<archetype>.glb` → `<type>_<archetype>_<factie>.glb`
+(de lange exportnaam) → `<type>_base.glb` → geometrisch stuk met
+archetype-silhouet. Gibs mogen `_gibs.glb` of `.gibs.glb` heten.
+
+**Namen zijn soepel geworden** (besluit Max, 29 juli): het spel maakt clip- en
+deelnamen zelf schoon. "Death 1" wordt death1, "Arm.L" telt als armL. Je hoeft
+in Blender dus niets meer te hernoemen -- exporteer zoals de pijplijn het
+levert. Alles werkt dus ook met maar één model per type.
 `mix` mag je overslaan (valt terug op `basis`).
 
 **Prioriteit**: eerst de 16 `_base`-modellen (elke factie meteen een eigen
