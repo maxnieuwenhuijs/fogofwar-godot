@@ -1556,7 +1556,14 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 		# afgaat (besluit Max, 28 juli) -- anders klinkt hij bij elk prikje.
 		Constants.UnitType.INFANTRY: Audio.play("inf_die", delay)
 		Constants.UnitType.CAVALRY: Audio.play_factie("horse_die", doc, delay)
-		Constants.UnitType.ARTILLERY: Audio.play_factie("cannon_die", doc, delay)
+		Constants.UnitType.ARTILLERY:
+			Audio.play_factie("cannon_die", doc, delay)
+			# Een affuit die het opgeeft verliest een wiel (Max, 30 juli): de
+			# crash eerst, daarna rolt het wiel weg. Niet altijd, anders wordt
+			# het een deuntje; de vertraging stel je af in de tuner.
+			if randf() < 0.6:
+				Audio.play_getuned("cannon_wheel_loose",
+					delay + Audio.basis_vertraging("cannon_wheel_loose"))
 
 
 func _on_action_performed(action: Dictionary, result: Dictionary) -> void:

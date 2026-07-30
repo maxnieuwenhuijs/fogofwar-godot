@@ -57,6 +57,16 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - Fuzz: `<godot> --headless --path . res://arena/arena.tscn -- --fuzz [games] [seed]`
   (`--fuzz-selftest` = test-de-tester).
 
+## Mappen (30 juli)
+
+`assets/models/<factie>/{infanterie,wapens,bron-texturen}/` en
+`sounds/{vuren,impact,dood,val,beweging,selectie,kaarten,spel,ui,facties/<factie>}/`.
+Het spel zoekt assets op **bestandsnaam** via `scripts/core/bestandsindex.gd`,
+niet op pad: submappen bijmaken of dingen verschuiven mag. Teamkleur-png's
+moeten wel naast hun glb blijven (die gaan op modelnaam). Afstel-sleutels in
+`model_tuning.json` zijn map-onafhankelijk (`<factie>/<bestandsnaam>`). Zie
+`assets/models/LEESMIJ.md` en `sounds/LEESMIJ.md`.
+
 ## Architectuur in één alinea
 
 `core/match/` = de pure engine: `reducer.gd` (apply → {ok, events, error}),

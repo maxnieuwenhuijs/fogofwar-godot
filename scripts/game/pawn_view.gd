@@ -42,6 +42,7 @@ const PIECE_SCENES: Dictionary = {
 ##   bv. mouse/infantry_spd.glb · mouse/infantry_base.glb = neutraal/ongekoppeld
 ## Fallback-keten: exact archetype → base van dat type → geometrisch stuk
 ## (PIECE_SCENES) met een archetype-silhouet als placeholder.
+const Bestandsindex := preload("res://scripts/core/bestandsindex.gd")
 const MODELS_DIR := "res://assets/models/"
 ## Placeholder-silhouet zolang het .glb ontbreekt, in de visuele taal van
 ## MODEL-WISHLIST.md: dun/gestrekt = snel, laag/rond = taai, breed/gespierd =
@@ -1693,10 +1694,14 @@ static func prop_for(rol: String, fac: String) -> Dictionary:
 	if rol == "flag":
 		namen.append("prop_pole")
 	for naam in namen:
-		for pad in ["%s%s/%s" % [MODELS_DIR, fac, naam], "%sprops/%s" % [MODELS_DIR, naam]]:
+		# Eerst een factie-eigen prop, dan de gedeelde set. De sleutel blijft
+		# "<factie>/<naam>" of "props/<naam>" -- dus onafhankelijk van de map
+		# waarin het bestand ligt, anders raakt bestaande tuning los.
+		for paar in [[MODELS_DIR + fac, fac], [MODELS_DIR + "props", "props"]]:
 			for ext in [".glb", ".fbx"]:
-				if ResourceLoader.exists(pad + ext):
-					return {"file": pad + ext, "key": pad.replace(MODELS_DIR, "")}
+				var pad := Bestandsindex.vind(String(paar[0]), String(naam) + ext)
+				if pad != "" and ResourceLoader.exists(pad):
+					return {"file": pad, "key": "%s/%s" % [String(paar[1]), naam]}
 	return {"file": "", "key": ""}
 
 
@@ -1724,12 +1729,15 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	# Zoekvolgorde (Max, 29 juli -- de nieuwe export is de leidraad): eerst de
 	# korte naam, dan de naam zoals de exportpijplijn hem levert
 	# (<type>_<archetype>_<factie>.glb), dan terugval op base.
-	var candidates: Array = [
-		"%s%s/%s_%s.glb" % [MODELS_DIR, fac, tname, arch],
-		"%s%s/%s_%s_%s.glb" % [MODELS_DIR, fac, tname, arch, fac],
-		"%s%s/%s_base.glb" % [MODELS_DIR, fac, tname],
-		"%s%s/%s_base_%s.glb" % [MODELS_DIR, fac, tname, fac],
-	]
+	# Alleen BESTANDSNAMEN: Bestandsindex zoekt ze op onder de factie-map, in
+	# welke submap ze ook liggen (infanterie/, wapens/, ...). Zo kan de indeling
+	# veranderen zonder dat het spel eraan hoeft (Max, 30 juli).
+	var candidates: Array = []
+	for naam in ["%s_%s.glb" % [tname, arch], "%s_%s_%s.glb" % [tname, arch, fac],
+			"%s_base.glb" % tname, "%s_base_%s.glb" % [tname, fac]]:
+		var gevonden := Bestandsindex.vind(MODELS_DIR + fac, String(naam))
+		if gevonden != "":
+			candidates.append(gevonden)
 	for path in candidates:
 		if ResourceLoader.exists(path):
 			_tune_key = "%s/%s" % [fac, String(path).get_file().get_basename()]
@@ -1801,13 +1809,14 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 ## anders de factie-musket (<factie>/musket.glb). Zo krijgt elk model dat met
 ## z'n eigen wapen wordt geleverd dat automatisch, met eigen fijnafstelling.
 static func weapon_for(model_path: String, fac: String) -> Dictionary:
-	var per := model_path.get_basename() + "_musket"
+	var basis := model_path.get_file().get_basename()
 	for ext in [".glb", ".fbx"]:
-		if ResourceLoader.exists(per + ext):
-			return {"file": per + ext, "key": "%s/%s_musket" % [fac, model_path.get_file().get_basename()]}
+		var per := Bestandsindex.vind(MODELS_DIR + fac, basis + "_musket" + ext)
+		if per != "" and ResourceLoader.exists(per):
+			return {"file": per, "key": "%s/%s_musket" % [fac, basis]}
 	for ext in [".glb", ".fbx"]:
-		var fp := "%s%s/musket%s" % [MODELS_DIR, fac, ext]
-		if ResourceLoader.exists(fp):
+		var fp := Bestandsindex.vind(MODELS_DIR + fac, "musket" + ext)
+		if fp != "" and ResourceLoader.exists(fp):
 			return {"file": fp, "key": "%s/musket" % fac}
 	return {"file": "", "key": "%s/musket" % fac}
 

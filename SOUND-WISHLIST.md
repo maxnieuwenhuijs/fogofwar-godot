@@ -137,7 +137,8 @@ tabel onderaan, dan heb je alle varianten in een generatie.
 |---|---|---|---|---|
 | `horse_die` | `horse_die*.wav` | 2 | Cavalerie sneuvelt | 6 short horse death whinnies in a row, each about 0.5 seconds, strained and falling in pitch, silence between each, one horse only, dry close mono, no reverb, no music |
 | `inf_die` | `inf_die*.wav` | 4 | Infanterie sneuvelt | 6 short soldier death cries in a row, each about 0.4 seconds, clipped and breathy, silence between each, one man only, dry close mono, no reverb, no music |
-| `cannon_die` | `cannon_destroyed.wav` | 1 | Kanon vernietigd | 6 short bursts of splintering wood and cracking cast iron in a row, each about 0.5 seconds, silence between each, dry close mono, no reverb, no music |
+| `cannon_die` | `cannon_destroyed.wav` + `_2` | 2 | Kanon vernietigd | 6 short bursts of splintering wood and cracking cast iron in a row, each about 0.5 seconds, silence between each, dry close mono, no reverb, no music |
+| `cannon_wheel_loose` | `cannon_wheel_loose.wav` + `_2` | 2 | Wiel schiet los na de crash (60% kans, 0.35s erna) | ✓ (2) INGEBOUWD |
 
 ## 7b. Sterven per FACTIE (besluit Max, 28 juli)
 

@@ -4,6 +4,7 @@ extends Node
 ## play() kiest willekeurig een variant → natuurlijke afwisseling. Een pool van
 ## AudioStreamPlayers laat geluiden overlappen (schot + inslag + terugslag).
 
+const Bestandsindex := preload("res://scripts/core/bestandsindex.gd")
 const SFX_DIR := "res://sounds/"
 const POOL_SIZE := 10
 
@@ -47,7 +48,7 @@ const BANK := {
 	"horse_select": ["horse_select.wav", "horse_select2.wav", "horse_select3.wav"],
 	"horse_die":   ["horse_die.wav", "horse_die2.wav"],
 	"inf_die":     ["inf_die.wav", "inf_die2.wav", "inf_die3.wav", "inf_die4.wav"],
-	"cannon_die":  ["cannon_destroyed.wav"],
+	"cannon_die":  ["cannon_destroyed.wav", "cannon_destroyed_2.wav"],
 	"retaliation_horse": ["retaliation_with_horse.wav"],
 	"blood_splash": ["small_blood_splash.wav", "small_blood_splash2.wav", "small_blood_splash3.wav"],
 	"charge_yell": ["charge_yell.wav"],
@@ -110,6 +111,9 @@ const CATEGORY_DB := {
 	"impact_wood": -6.0,
 	"impact_bone": -5.0,
 	"ricochet": -8.0,
+	# Het wiel dat losschiet komt NA de crash; iets zachter zodat het napraat
+	# in plaats van de klap over te nemen.
+	"cannon_wheel_loose": -6.0,
 	"val_prop": -6.0,
 	"val_flag": -8.0,
 	"val_drum": -5.0,
@@ -176,7 +180,7 @@ func _ready() -> void:
 	for category in BANK:
 		var loaded: Array = []
 		for filename in BANK[category]:
-			var stream := load(SFX_DIR + filename)
+			var stream := load(_pad_van(String(filename)))
 			if stream != null:
 				loaded.append(stream)
 			else:
@@ -193,7 +197,7 @@ func _ready() -> void:
 			# die elk overzicht vervuilt (audit 30 juli).
 			if _in_bank(String(bestand)):
 				continue
-			var st := load(SFX_DIR + bestand)
+			var st := load(_pad_van(String(bestand)))
 			if st != null:
 				lijst.append(st)
 		if not lijst.is_empty():
@@ -382,28 +386,25 @@ func _in_bank(bestandsnaam: String) -> bool:
 	return false
 
 
+## Waar ligt dit geluidsbestand? De mappen onder sounds/ mogen vrij ingedeeld
+## worden (ui/, gevecht/, val/, facties/mouse/ ...); de code zoekt op naam.
+func _pad_van(bestandsnaam: String) -> String:
+	var pad := Bestandsindex.vind(SFX_DIR.trim_suffix("/"), bestandsnaam)
+	return pad if pad != "" else SFX_DIR + bestandsnaam
+
+
 func _vind_losse_bestanden() -> Dictionary:
 	var gevonden: Dictionary = {}
-	var d := DirAccess.open("res://sounds")
-	if d == null:
-		return gevonden
-	d.list_dir_begin()
-	var naam := d.get_next()
-	while naam != "":
-		if naam.ends_with(".import"):
-			naam = naam.trim_suffix(".import")
-		if naam.ends_with(".wav"):
-			var kaal := naam.get_basename()
-			# Achtervoegsel _2, _3 ... is een variant van dezelfde categorie.
-			var delen := kaal.rsplit("_", true, 1)
-			if delen.size() == 2 and delen[1].is_valid_int():
-				kaal = delen[0]
-			if not gevonden.has(kaal):
-				gevonden[kaal] = []
-			if not (gevonden[kaal] as Array).has(naam):
-				(gevonden[kaal] as Array).append(naam)
-		naam = d.get_next()
-	d.list_dir_end()
+	for naam in Bestandsindex.alles(SFX_DIR.trim_suffix("/"), ".wav"):
+		var kaal := String(naam).get_basename()
+		# Achtervoegsel _2, _3 ... is een variant van dezelfde categorie.
+		var delen := kaal.rsplit("_", true, 1)
+		if delen.size() == 2 and delen[1].is_valid_int():
+			kaal = delen[0]
+		if not gevonden.has(kaal):
+			gevonden[kaal] = []
+		if not (gevonden[kaal] as Array).has(naam):
+			(gevonden[kaal] as Array).append(naam)
 	for k in gevonden:
 		(gevonden[k] as Array).sort()
 	return gevonden
@@ -461,6 +462,8 @@ func basis_vertraging(category: String) -> float:
 			return 0.9          # standaard dood-poel-moment; per clip instelbaar
 		"val_hoed":
 			return 0.75         # hoedje tolt langer na
+		"cannon_wheel_loose":
+			return 0.35         # eerst de crash, dan rolt het wiel weg
 	if category.begins_with("val_"):
 		# 0.0 en niet 0.44: het geluid hangt aan het LANDINGS-moment van de
 		# tween, dus de boog zit al in de tijd. De tuner toonde hier een basis

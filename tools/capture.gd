@@ -1,5 +1,7 @@
 extends Node
 
+const Bestandsindex := preload("res://scripts/core/bestandsindex.gd")
+
 ## Tijdelijke helper om screenshots / input-tests van game.tscn te maken via de CLI.
 ## Modi (na `--`): (geen)=waaier, `open`=open-stand, `click`=klik-test op de + knop.
 
@@ -573,15 +575,12 @@ func _ready() -> void:
 			if fd == null:
 				continue
 			var bestanden: Array = []
-			fd.list_dir_begin()
-			var f := fd.get_next()
-			while f != "":
-				if f.ends_with(".glb") and not f.contains("_gibs") and not f.contains("_musket"):
+			for f in Bestandsindex.alles(mdir + fac, ".glb"):
+				if not String(f).contains("_gibs") and not String(f).contains("_musket"):
 					bestanden.append(f)
-				f = fd.get_next()
 			bestanden.sort()
 			for b in bestanden:
-				var scene = load(mdir + fac + "/" + b)
+				var scene = load(Bestandsindex.vind(mdir + fac, String(b)))
 				if scene == null:
 					continue
 				var inst = scene.instantiate()
