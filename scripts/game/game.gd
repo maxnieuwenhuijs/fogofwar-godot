@@ -1504,30 +1504,31 @@ func _retaliation_sound(defender_id: int, delay: float) -> void:
 ## Materiaal-laag onder de treffer (SOUND-WISHLIST 7b-2, besluit Max 30 juli).
 ## Het schot en de klap houden hun eigen geluid; hier komt eronder te liggen
 ## WAT er geraakt is, zodat een kanon anders klinkt dan een lijf:
-##   artillerie geraakt     -> impact_wood (affuit en wielen)
-##   hp-archetype geraakt   -> impact_armor (die draagt het kuras)
-##   al het andere leven    -> impact_flesh
-##   dodelijke melee erbij  -> impact_bone (kans, anders wordt het een deuntje)
-##   geen schade            -> ricochet (kogel ketst weg)
+##   artillerie geraakt      -> impact_wood (affuit en wielen)
+##   hp-archetype geraakt    -> impact_armor (die draagt het kuras)
+##   al het andere leven     -> impact_flesh
+##   dodelijke melee erbij   -> impact_bone (kans, anders wordt het een deuntje)
+##   schot dat NIET doodt    -> ricochet erbij (kogel zingt weg langs het lijf)
+## De keuze zelf staat in PawnView.impact_categorie -- één plek, zodat de
+## tuner exact hoort wat het spel speelt.
 ## Tijden en volumes stel je per categorie af in de tuner (Geluid-tab).
 func _impact_laag(target_id: int, damage: int, gedood: bool, delay: float,
 		melee: bool = false) -> void:
 	var pawn: Pawn = GameSession.state.pawns.get(target_id)
-	if pawn == null:
+	if pawn == null or damage <= 0:
 		return
-	if damage <= 0:
-		Audio.play_getuned("ricochet", delay)
+	var pv: PawnView = _pawn_views.get(target_id)
+	var arch: String = pv.archetype() if pv != null else ""
+	Audio.play_getuned(PawnView.impact_categorie(pawn.unit_type, arch), delay)
+	if gedood:
+		if melee and randf() < 0.5:
+			Audio.play_getuned("impact_bone", delay + 0.05)
 		return
-	var cat := "impact_flesh"
-	if pawn.unit_type == Constants.UnitType.ARTILLERY:
-		cat = "impact_wood"
-	else:
-		var pv: PawnView = _pawn_views.get(target_id)
-		if pv != null and pv.archetype() == "hp":
-			cat = "impact_armor"
-	Audio.play_getuned(cat, delay)
-	if gedood and melee and randf() < 0.5:
-		Audio.play_getuned("impact_bone", delay + 0.05)
+	# Overleefd schot: de kogel ketst af in plaats van door te dringen. Dit is
+	# het enige moment waarop je een afketser hoort -- schade is in de regels
+	# altijd minstens 1, dus een "mis" bestaat niet (audit 30 juli).
+	if not melee and randf() < 0.4:
+		Audio.play_getuned("ricochet", delay + 0.03)
 
 
 func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:

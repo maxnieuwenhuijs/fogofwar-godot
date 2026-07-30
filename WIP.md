@@ -1,5 +1,32 @@
 # Fog of War — Work In Progress & Context
 
+## 30 juli 2026 (later) -- de veertien nieuwe geluiden doen mee
+
+- **Ingelezen**: de veertien wav's stonden op de schijf maar Godot had ze nog
+  niet geimporteerd (geen .import), dus het spel kon ze niet eens laden.
+- **Materiaal-laag onder elke treffer**: je hoort nu WAT er geraakt wordt.
+  Artillerie -> `impact_wood`, hp-archetype (kuras) -> `impact_armor`, de rest
+  `impact_flesh`; dodelijke melee legt er 50% van de tijd `impact_bone` op.
+  De keuze-regel staat op EEN plek (`PawnView.impact_categorie`), zodat de
+  tuner exact laat horen wat het spel kiest. Vijf speelplekken: melee,
+  melee-terugslag, schot, charge, charge-terugslag.
+- **Afketser hangt aan een overleefd schot** (40% kans), niet aan een mis: een
+  mis bestaat niet in de regels (schade is altijd minstens 1 en de validator
+  weigert een schot zonder schade). `impact_dirt` blijft dus voorlopig zonder
+  plek. Dit kwam uit een audit: de eerste versie hing hem aan `damage <= 0`,
+  wat dus dode code was.
+- **Val-geluiden van de figuranten** deden meteen mee: `_val_categorie()` koos
+  al op rol, dus val_flag/val_drum/val_horn/val_sapper vielen op hun plek en
+  wat ontbreekt valt terug op `val_prop`.
+- **Nieuw kijkgereedschap `-- geluidcheck`**: elke categorie met aantal
+  varianten, mix-dB, tuner-dB en vertraging, plus een melding van categorieen
+  zonder geluid of die niemand afspeelt. Dat laatste bracht 73 spookcategorieen
+  aan het licht (elk bank-bestand kreeg ook zijn eigen categorie); die zijn bij
+  de bron weggesneden. Van 145 naar 72 echte categorieen, alles gedekt.
+- Ook eerlijk gemaakt: de tuner toonde voor val-geluiden een basisvertraging
+  van 0.44s die de code nooit gebruikte (het geluid hangt aan het landings-
+  moment van de tween).
+
 ## 30 juli 2026 -- vuur-clip, 1v1-reserve, prompts op ElevenLabs-recept
 
 - **Vuur-animatie deed niets** (Max, HP-muis): de clip heet "Firing Rifile

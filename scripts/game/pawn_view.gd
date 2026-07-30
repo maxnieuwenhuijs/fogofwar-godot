@@ -888,6 +888,18 @@ func archetype() -> String:
 	return _archetype
 
 
+## Welke materiaal-laag hoort bij een treffer op dit soort pion?
+## EEN plek voor deze regel: game.gd speelt hem en de tuner laat hem horen.
+## Zonder dit stond de regel dubbel en tunede je een geluid dat het spel
+## nooit koos (opmerking uit de audit, 30 juli).
+static func impact_categorie(unit_type: int, arch: String) -> String:
+	if unit_type == Constants.UnitType.ARTILLERY:
+		return "impact_wood"     # affuit en wielen
+	if arch == "hp":
+		return "impact_armor"    # de dikke pion draagt het kuras
+	return "impact_flesh"
+
+
 func _val_categorie() -> String:
 	if _rol == "":
 		return "val_musket"

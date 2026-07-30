@@ -50,6 +50,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   v4.2-regels traint hij op campagne-fitness: haven 3 > eliminatie 2 >
   tiebreak 1 > verlies 0 + spaarbonus restleger/CP — één generatie duurt
   met cycle_limit 20 zo'n 10-15 min per factie).
+- Kijken zonder te spelen: `-- cliplengtes` (elke animatie met lengte EN de
+  naam die het spel ervan maakt) en `-- geluidcheck` (elke geluidscategorie met
+  aantal varianten, mix-dB, tuner-dB en vertraging; meldt categorieen zonder
+  geluid of die niemand afspeelt). Beide via `res://tools/capture.tscn`.
 - Fuzz: `<godot> --headless --path . res://arena/arena.tscn -- --fuzz [games] [seed]`
   (`--fuzz-selftest` = test-de-tester).
 

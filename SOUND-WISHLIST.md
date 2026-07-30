@@ -330,12 +330,12 @@ vlees klinkt nat, staal klinkt hard, hout klinkt dof.
 
 | Categorie | # var | Wanneer | Status |
 |---|---|---|---|
-| `impact_flesh` | 5 | Treffer op een levend stuk (nat, doffe plof) | 6 short wet impacts on flesh in a row, each about 0.3 seconds, dull meaty thud with a brief splatter, silence between each, dry close mono recording, no reverb, no music |
-| `impact_armor` | 5 | Treffer op kuras/helm (harde metalen tik) | 6 short musket ball impacts on a steel cuirass in a row, each about 0.3 seconds, hard bright clank with a short ring, silence between each, dry close mono recording, no reverb, no music |
-| `impact_wood` | 4 | Treffer op musketkolf, affuit, schild (dof hout) | 6 short musket ball impacts on a thick oak stock in a row, each about 0.3 seconds, dull heavy knock with splintering, silence between each, dry close mono recording, no reverb, no music |
-| `impact_bone` | 3 | Botbreuk bij een dodelijke melee-klap (kort, krakend) | 6 short bone cracks under cloth in a row, each about 0.25 seconds, dry snap, silence between each, dry close mono recording, no reverb, no music |
+| `impact_flesh` | 5 | Treffer op een levend stuk (nat, doffe plof) | ✓ (2) INGEBOUWD |
+| `impact_armor` | 5 | Treffer op kuras/helm (harde metalen tik) | ✓ (1) INGEBOUWD |
+| `impact_wood` | 4 | Treffer op musketkolf, affuit, schild (dof hout) | ✓ (1) INGEBOUWD |
+| `impact_bone` | 3 | Botbreuk bij een dodelijke melee-klap (kort, krakend) | ✓ (1) INGEBOUWD |
 | `impact_dirt` | 4 | Mis: kogel slaat in de grond (aarde + steentjes) | 6 short musket ball impacts in packed dirt in a row, each about 0.3 seconds, dull thud with a spray of soil and pebbles, silence between each, dry close mono recording, no reverb, no music |
-| `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | 6 short musket ball ricochets off stone in a row, each about 0.4 seconds, bright metallic whine spinning away, silence between each, dry close mono recording, no reverb, no music |
+| `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | ✓ (1) INGEBOUWD |
 | `blood_splash` | 3 | Bloedspat bij een treffer | ✓ (heb je al) |
 | `body_hit_floor` | 2-4 | Het LIJF raakt de grond (timing per dood-clip uit `death_pools`) | ✓ (2) 🎚️ |
 
@@ -352,11 +352,23 @@ Recept uit §0: een materiaal per prompt, zes korte takes in een clip.
 | `impact_dirt` | Musket ball slamming into packed dirt, a dull thud with a spray of soil and small pebbles, dry and close, no music. |
 | `ricochet` | Musket ball ricocheting off stone, a bright metallic whine spinning away into the distance, dry, no music. |
 
-**Wanneer welke:** de engine kent het type van het doelwit. Vuistregel voor de
-inbouw: infanterie/cavalerie geraakt -> `impact_flesh` (+ `blood_splash`);
-gepantserd (hp-archetype met kuras) -> `impact_armor`; artillerie geraakt ->
-`impact_wood`; dodelijke melee -> `impact_bone` erbij; schot dat mist of
-geblokkeerd wordt -> `impact_dirt` / `ricochet`.
+**Wanneer welke -- zo zit het er nu in** (30 juli, `_impact_laag` in game.gd,
+keuze-regel in `PawnView.impact_categorie`): de laag speelt bovenop het schot
+of de klap, op hetzelfde inslagmoment.
+
+| Situatie | Wat je hoort |
+|---|---|
+| artillerie geraakt | `impact_wood` (affuit en wielen) |
+| hp-archetype geraakt | `impact_armor` (die draagt het kuras) |
+| al het andere leven | `impact_flesh` |
+| dodelijke melee-klap | `impact_bone` erbij, 50% kans |
+| schot dat het doel OVERLEEFT | `ricochet` erbij, 40% kans |
+
+Vijf plekken spelen hem: melee, melee-terugslag, schot, charge en
+charge-terugslag. `impact_dirt` staat nog op de lijst maar heeft nog geen
+plek: **een mis bestaat niet in de regels** -- schade is altijd minstens 1 en
+de validator laat een schot zonder schade niet toe. Daarom is de afketser aan
+het overleefde schot gehangen in plaats van aan een mis.
 
 **Timing en volume afstellen** (Model-tuner → tab **Geluid**): achter elke
 categorie staan twee velden -- **dB** (volume-correctie) en **vertraging**

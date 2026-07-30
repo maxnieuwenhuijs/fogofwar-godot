@@ -524,6 +524,36 @@ func _ready() -> void:
 			covering, subject.id, str(GameSession.state.pawns[subject.id].position == front)])
 		get_tree().quit()
 		return
+	elif "geluidcheck" in args:
+		# Doet elk wav-bestand ook echt mee? (Max, 30 juli: "importeer de nieuwe
+		# sounds"). Per categorie: hoeveel varianten geladen zijn, de mix-stand
+		# en de tuning uit sounds/sound_tuning.json. Regels met AAN=0 zijn
+		# bestanden die het spel NIET kan spelen -- die moet je zien.
+		print("[SND] categorie | varianten | mix-dB | tuner-dB | vertraging")
+		var cats: Array = Audio.alle_categorieen()
+		var stil: Array = []
+		var los: Array = []
+		for cat in cats:
+			var n: int = Audio.variant_aantal(cat)
+			if n == 0:
+				stil.append(cat)
+			print("[SND] %-24s | %d | %+.1f | %+.1f | %+.2f" % [cat, n,
+				float(Audio.CATEGORY_DB.get(cat, 0.0)),
+				Audio.volume_correctie(cat), Audio.extra_vertraging(cat)])
+		# Stille opnames: een categorie die geladen is maar die geen enkel
+		# script ooit afspeelt. Dat is de vraag die telt -- "staat het bestand
+		# in een categorie" is altijd waar en zegt dus niets.
+		for cat in cats:
+			if not Audio.categorie_wordt_gespeeld(String(cat)):
+				los.append(String(cat))
+		los.sort()
+		print("[SND] categorieen: %d, zonder geluid: %s" % [cats.size(),
+			"geen" if stil.is_empty() else String(", ").join(stil)])
+		print("[SND] categorieen die niemand afspeelt: %s" % [
+			"geen" if los.is_empty() else String(", ").join(los)])
+		print("[SND] klaar")
+		get_tree().quit()
+		return
 	elif "cliplengtes" in args:
 		# Overzicht van alle animatie-lengtes per model (Max, 28 juli): handig
 		# om sterfgeluiden en effect-timings op te maken.

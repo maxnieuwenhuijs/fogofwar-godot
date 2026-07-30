@@ -186,9 +186,12 @@ func _ready() -> void:
 	# (zie _vind_losse_bestanden): geen code-wijziging nodig per opname.
 	for cat in _vind_losse_bestanden():
 		var lijst: Array = _streams.get(cat, [])
-		var reeds: Array = BANK.get(cat, [])
 		for bestand in _vind_losse_bestanden()[cat]:
-			if reeds.has(bestand):
+			# Zit het bestand al in een bank-categorie (cannon_heavy.wav hoort
+			# bij cannon_fire), dan hoort het daar en NIET onder zijn eigen
+			# naam: anders krijg je een spookcategorie die niemand speelt en
+			# die elk overzicht vervuilt (audit 30 juli).
+			if _in_bank(String(bestand)):
 				continue
 			var st := load(SFX_DIR + bestand)
 			if st != null:
@@ -295,6 +298,90 @@ var _snd_geladen: bool = false
 ## `inf_die_mouse_hp_2.wav` vormen samen de categorie `inf_die_mouse_hp`.
 ## Zo kun je geluiden blijven opnemen zonder dat er code bij hoeft; alleen
 ## bestanden met een afwijkende naam staan nog in BANK.
+## Alle categorieen die het spel kent (BANK + losse bestanden), gesorteerd.
+## Gebruikt door `-- geluidcheck`, zodat je kunt zien wat er meedoet.
+func alle_categorieen() -> Array:
+	var uit: Array = []
+	for k in _streams.keys():
+		uit.append(String(k))
+	for k in BANK.keys():
+		if not uit.has(String(k)):
+			uit.append(String(k))
+	var los: Dictionary = _vind_losse_bestanden()
+	for k in los.keys():
+		if uit.has(String(k)):
+			continue
+		# Spookcategorie: al zijn bestanden horen bij een bank-categorie.
+		var eigen := false
+		for bestand in (los[k] as Array):
+			if not _in_bank(String(bestand)):
+				eigen = true
+				break
+		if eigen:
+			uit.append(String(k))
+	uit.sort()
+	return uit
+
+
+## Speelt het spel deze categorie ook echt? Elk wav valt automatisch onder
+## een categorie, dus "hij is geladen" zegt niets (audit 30 juli). Daarom
+## zoeken we de naam op in de scripts zelf: staat hij nergens, dan ligt de
+## opname stil op de schijf. Factie- en archetype-varianten (inf_die_mouse_hp)
+## tellen mee zodra hun stam ergens genoemd wordt.
+func categorie_wordt_gespeeld(categorie: String) -> bool:
+	var bron := _script_tekst()
+	var kandidaat := categorie
+	while kandidaat != "":
+		if bron.contains("\"%s\"" % kandidaat):
+			return true
+		var delen := kandidaat.rsplit("_", true, 1)
+		if delen.size() != 2:
+			return false
+		kandidaat = delen[0]
+	return false
+
+
+var _script_cache: String = ""
+
+func _script_tekst() -> String:
+	if _script_cache != "":
+		return _script_cache
+	var uit := ""
+	for map in ["res://scripts", "res://core", "res://tools", "res://agents"]:
+		uit += _lees_gd_recursief(map)
+	_script_cache = uit
+	return uit
+
+
+func _lees_gd_recursief(map: String) -> String:
+	var uit := ""
+	var d := DirAccess.open(map)
+	if d == null:
+		return uit
+	d.list_dir_begin()
+	var naam := d.get_next()
+	while naam != "":
+		var pad := map + "/" + naam
+		if d.current_is_dir():
+			if not naam.begins_with("."):
+				uit += _lees_gd_recursief(pad)
+		elif naam.ends_with(".gd"):
+			var f := FileAccess.open(pad, FileAccess.READ)
+			if f != null:
+				uit += f.get_as_text()
+		naam = d.get_next()
+	d.list_dir_end()
+	return uit
+
+
+## Staat dit bestand ergens in BANK? Dan is zijn categorie daar geregeld.
+func _in_bank(bestandsnaam: String) -> bool:
+	for lijst in BANK.values():
+		if (lijst as Array).has(bestandsnaam):
+			return true
+	return false
+
+
 func _vind_losse_bestanden() -> Dictionary:
 	var gevonden: Dictionary = {}
 	var d := DirAccess.open("res://sounds")
@@ -375,7 +462,10 @@ func basis_vertraging(category: String) -> float:
 		"val_hoed":
 			return 0.75         # hoedje tolt langer na
 	if category.begins_with("val_"):
-		return 0.44             # boog van een weggeslingerd voorwerp
+		# 0.0 en niet 0.44: het geluid hangt aan het LANDINGS-moment van de
+		# tween, dus de boog zit al in de tijd. De tuner toonde hier een basis
+		# die de code niet gebruikt (audit 30 juli).
+		return 0.0
 	return 0.0
 
 
