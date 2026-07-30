@@ -85,7 +85,7 @@
 	"link_puff": 1.0,
 	"melee_advance_delay": 0.5,
 	"melee_hit_delay": 1.0,
-	"melee_move_wait": 0.3,
+	"melee_move_wait": 1.0,
 	"melee_retaliation_delay": 0.1,
 	"melee_speed": 1.4,
 	"melee_yaw": 0.0,

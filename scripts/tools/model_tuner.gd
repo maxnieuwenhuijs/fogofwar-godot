@@ -1662,7 +1662,19 @@ func _sleep_draai(muis: Vector2, definitief: bool) -> void:
 
 
 func _sleep_afronden(muis: Vector2) -> void:
+	var was_modus := _sleep_modus
 	_sleep_verplaats(muis, true)
+	# BUG-FIX (Max, 30 juli: "als ik opsla slaat hij niet op hoe de musket nu
+	# zit"). Tijdens het slepen zetten we de spinboxen STIL bij (geen signaal,
+	# anders bouwt hij bij elke muisbeweging het model opnieuw op). Bij
+	# loslaten zetten we dezelfde waarde nog eens "met signaal" -- maar Godot
+	# stuurt value_changed niet als het getal al klopt, dus de schrijfactie
+	# bleef uit en OPSLAAN bewaarde de OUDE stand. Daarom schrijven we hier
+	# expliciet weg.
+	if was_modus == "hand":
+		_on_weapon_changed(0.0)
+	elif was_modus == "vuurmond":
+		_on_muzzle_changed(0.0)
 	_sleep_as = -1
 	_sleep_draaien = false
 	_sleep_modus = ""

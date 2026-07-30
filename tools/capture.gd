@@ -1046,6 +1046,147 @@ func _ready() -> void:
 			vtex.get_image().save_png("res://_shot_vosview.png")
 		get_tree().quit(0 if vosview_ok else 1)
 		return
+	elif "meleecheck" in args:
+		# `-- meleecheck` — de bajonet-choreografie METEN in het echte spel
+		# (Max, 30 juli: "laat het popje op de tegel staan, laat de tegenstander
+		# doodgaan, dan pas oversteken"). We zetten twee pionnen naast elkaar,
+		# laten de aanvaller toestoten en bemonsteren daarna elke 50 ms waar zijn
+		# model STAAT. Goed = hij blijft op zijn eigen vak tot de dood-clip klaar
+		# is, en steekt daarna over.
+		# Muizen: die hebben alle karaktermodellen met clips, dus hier valt echt
+		# iets te meten (de mens-factie speelt met geometrische stukken).
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.MUIS
+		var mc_hand: CardHand = game.get_node("UI/CardHand")
+		var mc_steps := 0
+		while GameSession.state.phase != Phase.Type.ACTION \
+				and GameSession.state.phase != Phase.Type.GAME_OVER and mc_steps < 700:
+			mc_steps += 1
+			var mst: GameState = GameSession.state
+			if mst.phase == Phase.Type.PRE_GAME:
+				game._start_match(1)
+			elif mst.phase == Phase.Type.PLACEMENT:
+				game._confirm_placement()
+			elif Phase.is_reveal(mst.phase):
+				game._continue_after_reveal()
+			elif Phase.is_define(mst.phase) and mst.cards_defined[1].size() == 0:
+				var mbud: int = int(GameSession.state.doctrine_data_of(1).budget)
+				for c2 in mc_hand.get_card_views():
+					c2.data.hp = 1
+					c2.data.stamina = mini(mbud - 2, 3)
+					c2.data.attack = mbud - 1 - mini(mbud - 2, 3)
+					c2._refresh()
+				mc_hand._on_confirm_pressed()
+			elif Phase.is_linking(mst.phase) and mst.current_player == 1:
+				for i in mst.cards_revealed[1].size():
+					if not mst.cards_revealed[1][i].is_linked():
+						game._on_link_card_picked(i)
+						break
+				var mtarget = null
+				for pawn in mst.pawns.values():
+					if pawn.owner_id == 1 and not pawn.is_eliminated \
+							and pawn.linked_card_id == -1 and game._pawn_has_room(pawn):
+						mtarget = pawn
+						break
+				if mtarget != null:
+					game._on_link_pawn_clicked(mtarget.id)
+			await get_tree().create_timer(0.04).timeout
+		var st3: GameState = GameSession.state
+		# Speler 1 stoot: zijn modellen zijn zichtbaar (van de vijand houdt de
+		# fog het archetype verborgen, dat zou de meting vertroebelen).
+		st3.current_player = 1
+		# Deze check meet alleen de KIJK-kant (animatie + opruk), dus als het
+		# koppelen nog niet rond is zetten we de fase gewoon op actie.
+		if st3.phase != Phase.Type.ACTION:
+			st3.phase = Phase.Type.ACTION
+		# Een actieve eigen pion en een vijand ernaast zetten; de vijand op 1 HP,
+		# zodat de stoot dodelijk is en de verplichte opruk aan gaat.
+		var aanvaller: Pawn = null
+		var slachtoffer: Pawn = null
+		for pawn in st3.pawns.values():
+			if pawn.is_eliminated or not pawn.is_active:
+				continue
+			if pawn.owner_id == st3.current_player and aanvaller == null \
+					and pawn.unit_type == Constants.UnitType.INFANTRY:
+				aanvaller = pawn
+			elif pawn.owner_id != st3.current_player and slachtoffer == null \
+					and pawn.unit_type == Constants.UnitType.INFANTRY:
+				slachtoffer = pawn
+		if aanvaller == null or slachtoffer == null:
+			print("[MELEE] geen bruikbaar paar gevonden")
+			get_tree().quit(1)
+			return
+		var van := Vector2i(5, 5)
+		var naar := Vector2i(5, 4)
+		for bezet in st3.pawns.values():
+			if bezet != aanvaller and bezet != slachtoffer and not bezet.is_eliminated \
+					and (bezet.position == van or bezet.position == naar):
+				st3.set_pawn_position(bezet, Vector2i(0, 0) if bezet.position != Vector2i(0, 0) else Vector2i(10, 9))
+		st3.set_pawn_position(aanvaller, van)
+		st3.set_pawn_position(slachtoffer, naar)
+		slachtoffer.current_hp = 1
+		game._refresh_all()
+		await get_tree().create_timer(0.3).timeout
+		# Zelfde rekensom als game.gd: de dood-clip speelt op death_speed, en de
+		# opruk wacht op stoot-frame + dood-clip + opruk-vertraging.
+		var dood_dur := 0.0
+		var def_view = game._pawn_views.get(slachtoffer.id)
+		var atk_voor = game._pawn_views.get(aanvaller.id)
+		if def_view != null:
+			var dsp2: float = def_view.melee_fx("death_speed", "death_speed", 1.0)
+			dood_dur = def_view.clip_duration("die") / maxf(dsp2, 0.01)
+		var hit_del2: float = 0.55
+		var wacht_f: float = 1.0
+		var opruk_v: float = 0.35
+		if atk_voor != null:
+			hit_del2 = atk_voor.melee_fx("hit_delay", "melee_hit_delay", 0.55)
+			wacht_f = atk_voor.melee_fx("move_wait", "melee_move_wait", 1.0)
+			opruk_v = atk_voor.melee_fx("advance_delay", "melee_advance_delay", 0.35)
+		var verwacht: float = hit_del2 + dood_dur * wacht_f + opruk_v
+		var melee_gestart := ""
+		var atk_view = game._pawn_views.get(aanvaller.id)
+		var y_van: Vector3 = game.tile_position(van.x, van.y)
+		var mc_gelukt: bool = GameSession.submit_attack(st3.current_player, aanvaller.id, slachtoffer.id)
+		if not mc_gelukt:
+			var mc_act := Actions.make_melee(aanvaller.id, slachtoffer.id)
+			var mc_res: Dictionary = Validator.is_legal(st3, mc_act, st3.current_player)
+			print("[MELEE] stoot geweigerd: %s (fase=%s speler=%d stamina=%d actief=%s kaart=%d posities=%s/%s)" % [
+				JSON.stringify(mc_res), Phase.to_string_phase(st3.phase), st3.current_player,
+				aanvaller.remaining_stamina, str(aanvaller.is_active), aanvaller.linked_card_id,
+				str(aanvaller.position), str(slachtoffer.position)])
+			get_tree().quit(1)
+			return
+		if atk_view != null:
+			melee_gestart = String(atk_view.huidige_clip())
+		var t := 0.0
+		var vertrek := -1.0
+		while t < verwacht + 3.0:
+			await get_tree().create_timer(0.05).timeout
+			t += 0.05
+			if atk_view == null or not is_instance_valid(atk_view):
+				break
+			var afstand: float = Vector2(atk_view.position.x - y_van.x,
+				atk_view.position.z - y_van.z).length()
+			if afstand > 0.15 and vertrek < 0.0:
+				vertrek = t
+				break
+		print("[MELEE] stoot-clip=%s dood-clip=%.2fs verwacht vertrek %.2fs, echt %.2fs" % [
+			melee_gestart if melee_gestart != "" else "GEEN", dood_dur, verwacht, vertrek])
+		var mc_ok: bool = melee_gestart.begins_with("melee") or melee_gestart.begins_with("bayonet")
+		if vertrek < 0.0:
+			print("[MELEE] FAIL: hij is helemaal niet overgestoken")
+			mc_ok = false
+		elif vertrek < verwacht * 0.85:
+			print("[MELEE] FAIL: te vroeg overgestoken (%.2fs tegen %.2fs verwacht)" % [vertrek, verwacht])
+			mc_ok = false
+		elif vertrek > verwacht * 1.6 + 0.5:
+			print("[MELEE] FAIL: veel te laat overgestoken (%.2fs tegen %.2fs verwacht)" % [vertrek, verwacht])
+			mc_ok = false
+		if not mc_ok and melee_gestart != "" and not (melee_gestart.begins_with("melee") or melee_gestart.begins_with("bayonet")):
+			print("[MELEE] FAIL: er speelde geen bajonet-clip maar '%s'" % melee_gestart)
+		print("[MELEE] " + ("PASS" if mc_ok else "FAIL"))
+		get_tree().quit(0 if mc_ok else 1)
+		return
 	elif "play" in args:
 		# `-- play [factie]` — bv. `play muis` om karaktermodellen te bekijken.
 		var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,

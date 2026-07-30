@@ -557,7 +557,7 @@ func play_walk() -> void:
 
 
 func play_attack() -> void:
-	_play_variant(anim_attack)
+	_play_variant(anim_attack, false, 1.0, true)
 
 
 ## Melee-klap: eigen clip als het model die heeft, anders de (schiet)attack.
@@ -576,13 +576,13 @@ func play_melee() -> void:
 	if _anim != null and not _variants_of(anim_melee).is_empty():
 		# melee-tempo: bajonet/zwaard-clips zijn lang; sneller afspelen houdt
 		# het gevecht strak (raakmoment stem je af met melee-raakmoment).
-		_play_variant(anim_melee, false, melee_fx("speed", "melee_speed", 1.4))
+		_play_variant(anim_melee, false, melee_fx("speed", "melee_speed", 1.4), true)
 	else:
-		_play_variant(anim_attack)
+		_play_variant(anim_attack, false, 1.0, true)
 
 
 func play_die() -> void:
-	_play_variant(anim_die)
+	_play_variant(anim_die, false, 1.0, true)
 
 
 ## Hit-reactie: korte incasseer-clip als de pion een klap/schot OVERLEEFT
@@ -590,26 +590,40 @@ func play_die() -> void:
 ## Koppel-moment: het karakter maakt zich klaar (ready_up-clip) terwijl de
 ## pion omhoog hopt. Heeft het model de clip niet, dan gebeurt er niets.
 func play_ready() -> void:
-	_play_variant("ready")
+	_play_variant("ready", false, 1.0, true)
 
 
 func play_hit() -> void:
 	if _anim != null and not _variants_of(anim_hit).is_empty():
-		_play_variant(anim_hit, false, melee_fx("hit_speed", "hit_speed", 1.0))
+		_play_variant(anim_hit, false, melee_fx("hit_speed", "hit_speed", 1.0), true)
 
 
 ## Speel een willekeurige variant van een basisclip: "walk" kiest uit
 ## walk/walk2/walk3, "die" uit die/die2, enz. desync = start op een
 ## willekeurig punt in de clip, zodat 22 muizen nooit synchroon ademen
 ## of in de maat marcheren.
-func _play_variant(base: String, desync: bool = false, speed: float = 1.0) -> void:
+func _play_variant(base: String, desync: bool = false, speed: float = 1.0,
+		herstart: bool = false) -> void:
 	if _anim == null:
 		return
 	var variants := _variants_of(base)
 	if variants.is_empty():
 		return
 	var full: String = variants[randi() % variants.size()]
+	# Vaandeldrager staat RECHTOP en kijkt niet rond (besluit Max, 30 juli):
+	# altijd dezelfde eerste idle-variant, zodat de vlag stil in de lucht
+	# staat. De trommel en de rest wisselen wel gewoon van idle.
+	if _rol == "flag" and base == anim_idle:
+		full = String(variants[0])
 	if _anim.current_animation == full:
+		# BUG-FIX (Max, 30 juli: "de bajonet-melee werkt niet goed"): twee
+		# stoten achter elkaar die dezelfde variant trekken lieten NIETS zien,
+		# want de clip speelde al. Eenmalige clips (stoot, schot, dood, hit)
+		# beginnen daarom opnieuw; idle/walk laten we juist doorlopen, anders
+		# stottert het lopen bij elke aanroep.
+		if herstart:
+			_anim.seek(0.0, true)
+			_last_clip_len = _anim.get_animation(full).length / maxf(speed, 0.01)
 		return
 	_anim.play(full, 0.2, speed)  # korte crossfade tussen houdingen
 	_last_clip_len = _anim.get_animation(full).length / maxf(speed, 0.01)
@@ -619,6 +633,15 @@ func _play_variant(base: String, desync: bool = false, speed: float = 1.0) -> vo
 
 ## Duur van de laatst gestarte clip (voor timing: bv. oprukken pas na de
 ## bajonetstoot). Al gecorrigeerd voor de afspeelsnelheid.
+## Naam van de clip die NU speelt ("" als er niets speelt). Voor checks als
+## `-- meleecheck`: klopt het dat er echt een bajonet-clip loopt?
+func huidige_clip() -> String:
+	if _anim == null:
+		return ""
+	var n := String(_anim.current_animation)
+	return n.get_slice("/", n.get_slice_count("/") - 1)
+
+
 func last_clip_duration() -> float:
 	return _last_clip_len
 
@@ -1636,7 +1659,13 @@ func set_unit_type(unit_type: int) -> void:
 ## Elk leger heeft ALTIJD een vaandeldrager en een tamboer (besluit Max,
 ## 28 juli): de eerste twee infanteristen krijgen die rol vast. De rest van
 ## de figuranten wordt daarna uitgedund met ROL_DICHTHEID.
-const ROLLEN_VAST := ["flag", "drum", "flag", "drum"]
+## Vaste plekken in de rij (besluit Max, 30 juli): "de vlaggen moeten altijd
+## minimaal 4 poppetjes uit elkaar zitten, net als de drums verspreid". Dus
+## vlag op 0 en 4, trommel op 2 en 6 -- twee vlaggen liggen 4 pionnen uit
+## elkaar, twee trommels ook, en tussen vlag en trommel staan gewone soldaten.
+const ROLLEN_VASTE_PLEK: Dictionary = {0: "flag", 2: "drum", 4: "flag", 6: "drum"}
+const ROL_AFSTAND := 4      # minimale afstand tussen twee gelijke rollen
+const LAATSTE_VASTE_PLEK := 6
 const ROLLEN_EXTRA := ["horn", "sapper", "canteen", "drummajor"]
 ## Kleine legers krijgen maar een vaandel en een tamboer; vanaf dit aantal
 ## infanteristen komt het tweede stel erbij (besluit Max, 28 juli).
@@ -1673,12 +1702,14 @@ var rol_override: String = ""
 func _rol_voor_pion() -> String:
 	if figurant_index < 0:
 		return ""
-	var vast: int = ROLLEN_VAST.size() if figurant_totaal >= TWEEDE_STEL_VANAF else 2
-	if figurant_index < vast:
-		return ROLLEN_VAST[figurant_index]   # vaandel, trommel, vaandel, trommel
+	# Klein leger: alleen het eerste stel (vlag op 0, trommel op 2).
+	var laatste: int = LAATSTE_VASTE_PLEK if figurant_totaal >= TWEEDE_STEL_VANAF \
+			else ROL_AFSTAND - 2
+	if figurant_index <= laatste:
+		return String(ROLLEN_VASTE_PLEK.get(figurant_index, ""))
 	if ROL_DICHTHEID <= 0 or ROLLEN_EXTRA.is_empty():
 		return ""
-	var rest: int = figurant_index - vast
+	var rest: int = figurant_index - laatste - 1
 	if rest % ROL_DICHTHEID != 0:
 		return ""
 	return ROLLEN_EXTRA[(rest / ROL_DICHTHEID) % ROLLEN_EXTRA.size()]
@@ -1915,8 +1946,12 @@ func _attach_weapon(fac: String) -> void:
 # een glb. Het wappert met een vertex-shader — geen echte cloth-physics: dat is
 # duur, jittert en voegt niets toe op een bord dat je van bovenaf ziet. Puur
 # visueel; de staat verandert niet, dus replays blijven identiek.
-const VLAG_BREEDTE := 0.62   # x poollengte
-const VLAG_HOOGTE := 0.40    # x poollengte
+## Doekmaat als fractie van de poollengte. Kleiner gezet op verzoek van Max
+## (30 juli: "de vlag wat kleiner op de prop"); afstelbaar via
+## effects_tuning.json ("vlag_breedte"/"vlag_hoogte") zodat je er geen code
+## meer voor hoeft aan te raken.
+const VLAG_BREEDTE := 0.42   # x poollengte
+const VLAG_HOOGTE := 0.26    # x poollengte
 const VLAG_ZAKT := 0.06      # x poollengte onder de top van de stok
 
 const VLAG_SHADER := """
@@ -2015,8 +2050,8 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 	var midden := ab.position + ab.size * 0.5
 	var top := midden
 	top[as_i] = ab.position[as_i] + ab.size[as_i]
-	var breedte := lengte * VLAG_BREEDTE
-	var hoogte := lengte * VLAG_HOOGTE
+	var breedte := lengte * fx("vlag_breedte", VLAG_BREEDTE)
+	var hoogte := lengte * fx("vlag_hoogte", VLAG_HOOGTE)
 	var doek := MeshInstance3D.new()
 	doek.name = "Vlagdoek"
 	var vlak := PlaneMesh.new()

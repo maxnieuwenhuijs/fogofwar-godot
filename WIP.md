@@ -1,5 +1,38 @@
 # Fog of War — Work In Progress & Context
 
+## 30 juli 2026 (avond) -- bajonet-choreografie, tuner-opslag, vlaggen
+
+**Bajonet-melee (Max: "dit werkt nog niet goed in het spel zelf")**. Twee
+oorzaken, beide gemeten met de nieuwe check `-- meleecheck`:
+
+1. `Rules.apply_melee` zet de winnaar METEEN op het vrijgekomen vak, en
+   `_refresh_all()` zet elke pion op zijn staat-positie. De eerste refresh na de
+   stoot teleporteerde hem er dus al naartoe, terwijl de nette opruk-timer nog
+   liep. Stervende pionnen hadden die bescherming wel (`_dying_views`), de
+   oprukker niet. Nieuw: `_advance_holds` houdt hem visueel op zijn eigen vak
+   tot `_begin_advance` hem laat oversteken.
+2. `_play_variant` sloeg een clip over als die al speelde. Twee stoten achter
+   elkaar die dezelfde variant trokken lieten dus NIETS zien. Eenmalige clips
+   (stoot, schot, dood, hit, ready) herstarten nu; idle/walk blijven doorlopen.
+
+`melee_move_wait` van 0,3 naar **1,0**: hij wacht nu de hele dood-animatie af
+voor hij oversteekt (Max' expliciete wens). Dat is bij de langste dood-clip
+5,3 seconden; wil je het sneller, dan is dat de knop in de tuner.
+
+**Tuner sloeg de musket-stand niet op**. Tijdens het slepen zetten we de
+spinboxen stil bij (anders herbouwt hij het model per muisbeweging); bij
+loslaten zetten we dezelfde waarde nog eens "met signaal", maar Godot stuurt
+`value_changed` niet als het getal al klopt. De schrijfactie bleef dus uit en
+OPSLAAN bewaarde de oude stand. `_sleep_afronden` schrijft nu expliciet weg.
+Gemeten met een tijdelijke probe: sleutel `mouse/infantry_hp_musket` komt nu
+echt op schijf.
+
+**Vlaggen** (Max): doek kleiner (0,42 x 0,26 van de poollengte, afstelbaar via
+`vlag_breedte`/`vlag_hoogte` in effects_tuning.json), vaandeldrager speelt
+altijd dezelfde rust-clip zodat hij rechtop staat en niet rondkijkt, en de
+vaste rollen staan verder uit elkaar: vlag op 0 en 4, trommel op 2 en 6 -- dus
+minimaal 4 pionnen tussen twee gelijke rollen.
+
 ## 30 juli 2026 (later) -- de versterkingen deden al drie dagen niks
 
 **Aanleiding**: Max wilde de campagne-regels houden maar het BUDGET van een

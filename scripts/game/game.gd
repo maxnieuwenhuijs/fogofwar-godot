@@ -72,6 +72,11 @@ var _shake_amt: float = 0.0
 var _cam_base: Vector3 = Vector3.ZERO
 var _in_hitstop: bool = false
 var _dying_views: Dictionary = {}     # pawn_id -> true zolang de ragdoll speelt
+# BUG-FIX (Max, 30 juli): de regels zetten een melee-winnaar METEEN op het
+# vrijgekomen vak, dus de eerste _refresh_all teleporteerde hem er al naartoe
+# terwijl zijn stoot nog liep. Zolang hij hier staat, houdt de view hem op zijn
+# eigen tegel; _begin_advance haalt hem eruit en laat hem netjes overlopen.
+var _advance_holds: Dictionary = {}   # pawn_id -> Vector2i (tegel waar hij nog staat)
 var _auto_link_human: bool = false   # koppelen automatisch afmaken na timeout
 
 const PHASE_TIME_LIMIT := 20.0
@@ -525,6 +530,7 @@ func _start_match(difficulty: int) -> void:
 	_in_hitstop = false
 	_shake_amt = 0.0
 	_dying_views.clear()
+	_advance_holds.clear()
 	_clear_debris(true)  # slagveld van de vorige partij ruimen
 	_clear_footprints()
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
@@ -992,7 +998,10 @@ func _refresh_all() -> void:
 			continue
 		pv.visible = true
 		if not _tweening_pawns.has(pid):
-			pv.position = tile_position(pawn.position.x, pawn.position.y) + Vector3(0.0, PAWN_Y, 0.0)
+			# Melee-winnaar die nog moet oprukken: laat hem op zijn eigen vak
+			# staan, ook al zegt de staat al dat hij verderop staat.
+			var toon: Vector2i = _advance_holds.get(pid, pawn.position)
+			pv.position = tile_position(toon.x, toon.y) + Vector3(0.0, PAWN_Y, 0.0)
 		# Karaktermodel op basis van de gekoppelde kaart. Verborgen koppelingen (Krokodil-perk)
 		# blijven neutraal voor de tegenstander (het archetype zou de kaart verraden);
 		# je eigen pionnen tonen hun karakter altijd.
@@ -1611,8 +1620,14 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 					move_del = maxf(move_del, hit_del + death_dur * attacker.melee_fx("move_wait", "melee_move_wait", 1.0))
 				if attacker != null:
 					move_del += attacker.melee_fx("advance_delay", "melee_advance_delay", 0.35)
+				# Visueel vastzetten op zijn eigen vak tot de opruk begint.
+				_advance_holds[int(action.attacker_id)] = result.attacker_from_pos
+				if attacker != null:
+					attacker.position = tile_position(
+						result.attacker_from_pos.x, result.attacker_from_pos.y) \
+						+ Vector3(0.0, PAWN_Y, 0.0)
 				get_tree().create_timer(move_del).timeout.connect(
-					_animate_move.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
+					_begin_advance.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",
 				maxf(hit_del - 0.12, 0.0))
 			_impact_laag(action.defender_id, int(result.get("damage", 0)),
@@ -2418,6 +2433,14 @@ func _spawn_damage_float(coord: Vector2i, text: String, color: Color = Color(1.0
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(label.queue_free)
+
+
+## Opruk na een gewonnen melee: eerst de vasthoud-vlag weg, dan pas lopen.
+## Zo kan geen enkele refresh hem tussentijds naar het doelvak snappen, en zie
+## je hem echt vanaf zijn eigen tegel oversteken (Max, 30 juli).
+func _begin_advance(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> void:
+	_advance_holds.erase(pawn_id)
+	_animate_move(pawn_id, from_coord, to_coord)
 
 
 func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> void:

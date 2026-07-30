@@ -565,6 +565,13 @@ Status: `-` gewenst | `~` in aanmaak | `x` in het spel
 niet in deze tracker; zie `model-tracker.html` voor de klikbare versie van de
 props.)*
 
+
+**Verdeling over de rij** (besluit Max, 30 juli): vlaggen staan minimaal 4
+pionnen uit elkaar, trommels ook. Vaste plekken in het eigen leger: vlag op 0
+en 4, trommel op 2 en 6. Kleine legers (< 8 infanteristen) krijgen alleen het
+eerste stel. De vaandeldrager speelt altijd dezelfde rustanimatie, rechtop, en
+kijkt niet heen en weer -- anders zwiept de vlag door het beeld.
+
 ## 4. Nieuw model importeren -- stap voor stap
 
 De volledige pijplijn (bewezen op muis base + spd, 8-9 juli). Per model lever
