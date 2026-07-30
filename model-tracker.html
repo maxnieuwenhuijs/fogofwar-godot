@@ -265,6 +265,15 @@ const PROPS = [
   { id: "prop_mace",   naam: "Tamboer-staf",   rol: "tamboer-majeur", tekst: "Single prop, ornate Napoleonic drum-major mace with a long dark staff, heavy gilded head and hanging cords with tassels. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the object only, no hands, no text." },
 ];
 
+/* Teamkleur-texturen (MODEL-WISHLIST par. 3e, besluit Max 30 juli):
+   witte banden voor beide teams, zilver+blauwe pluim voor blauw,
+   goud+rode pluim voor rood. Zelfde UV-atlas als het model. */
+const TEXTURES = [
+  { id: "<model>_blue.png", naam: "Blauw leger", rol: "zilver + blauwe pluim", tekst: "Texture repaint of the same character, identical UV layout, only colours change. Weathered dark grey Napoleonic uniform, crisp white crossbelts and white waist belt, silver metal buttons in two rows, silver bullion epaulettes on both shoulders, a blue upright feather plume on the shako, dark brown leather shoes and cartridge pouch. Gritty realistic AAA-game texture, subtle dirt and wear, no text, no logo." },
+  { id: "<model>_red.png",  naam: "Rood leger",  rol: "goud + rode pluim",    tekst: "Texture repaint of the same character, identical UV layout, only colours change. Weathered dark grey Napoleonic uniform, crisp white crossbelts and white waist belt, gold metal buttons in two rows, gold bullion epaulettes on both shoulders, a red upright feather plume on the shako, dark brown leather shoes and cartridge pouch. Gritty realistic AAA-game texture, subtle dirt and wear, no text, no logo." },
+  { id: "<model>_<team>_gore.png", naam: "Gore-variant", rol: "voor de gibs", tekst: "Same texture, identical UV layout, battle damage version: dark blood soaked into the grey wool, red splatter across the white belts, torn fabric edges, dulled and scratched metal. Gritty realistic AAA-game texture, no text, no logo." },
+];
+
 /* Generatie-prompts per factie/unit (MODEL-WISHLIST par. 3) */
 const PROMPTS = {
 mouse: {
@@ -515,6 +524,44 @@ function bouw() {
       </div>`;
     psec.innerHTML = ph;
     main.appendChild(psec);
+  }
+
+  {
+    const tsec = document.createElement("section");
+    tsec.className = "factie";
+    let th = `<div class="fkop"><h2>Teamkleur-texturen</h2>
+      <div class="fsub">witte banden, zilver voor blauw en goud voor rood</div></div>
+      <div class="fbody">
+      <div class="facnote">Het model blijft <b>strikt donkergrijs</b>; de teamkleur zit in de png
+      die naast de glb ligt (<code>&lt;model&gt;_blue.png</code> / <code>&lt;model&gt;_red.png</code>,
+      optioneel <code>_gore</code> voor de brokstukken). Zelfde UV-atlas als het model, dus het
+      makkelijkst is: een team afmaken en daarna alleen het metaal en de pluim omkleuren.</div>
+      <div class="tabelwrap"><table><thead><tr><th class="unit">Bestand</th><th title="Texture geschilderd">Texture</th><th title="Naast de glb gezet en in Godot geimporteerd">Godot</th><th>Prompt</th><th class="unit">Notitie</th></tr></thead><tbody>`;
+    for (const tx of TEXTURES) {
+      let cellen = "";
+      for (const sid of ["gen", "godot"]) {
+        const key = `tex.${tx.naam}.${sid}`;
+        cellen += `<td><input type="checkbox" class="opt" data-key="${key}" ${state.checks[key] ? "checked" : ""}></td>`;
+      }
+      const noteKey = `tex.${tx.naam}`;
+      const txId = `pr-tex-${tx.naam.replace(/[^a-z]/gi, "")}`;
+      th += `
+        <tr class="optioneel" data-rij="tex.${tx.naam}">
+          <td class="unit">${esc(tx.id)}<span class="tag">${tx.rol}</span></td>
+          ${cellen}
+          <td><button class="pknop" data-toggle="${txId}">prompt &#9662;</button></td>
+          <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
+        </tr>
+        <tr class="promptrij" id="${txId}" hidden><td colspan="5"><div class="promptbox">${promptGroepHtml(tx.naam + " (" + tx.rol + ")", tx.tekst, true)}</div></td></tr>`;
+    }
+    th += `</tbody></table></div>
+      <div class="legenda">Andere facties: alleen pluim en metaal volgen het team. Factie-eigen
+      dingen (Krokodil-camouflagedoek, Wolf-lappen, Beer-kuras) houden hun eigen kleur -- vervang
+      in de prompt de uniform-beschrijving en laat de regel over banden, knopen, epauletten en
+      pluim staan. Zie MODEL-WISHLIST.md par. 3e.</div>
+      </div>`;
+    tsec.innerHTML = th;
+    main.appendChild(tsec);
   }
 
   for (const f of FACTIES) {

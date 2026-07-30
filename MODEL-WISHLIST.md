@@ -572,6 +572,65 @@ en 4, trommel op 2 en 6. Kleine legers (< 8 infanteristen) krijgen alleen het
 eerste stel. De vaandeldrager speelt altijd dezelfde rustanimatie, rechtop, en
 kijkt niet heen en weer -- anders zwiept de vlag door het beeld.
 
+## 3e. Teamkleur-texturen -- witte banden, zilver of goud (Max, 30 juli)
+
+Het model zelf blijft **strikt donkergrijs**; de teamkleur zit in de texture die
+ernaast ligt. Bestandsnamen (het spel pakt ze op modelnaam):
+
+| Bestand | Waarvoor |
+|---|---|
+| `<model>_blue.png` | blauw leger |
+| `<model>_red.png` | rood leger |
+| `<model>_blue_gore.png` / `<model>_red_gore.png` | bloederige recolor voor de gibs (optioneel) |
+
+**Dezelfde UV-atlas als het model.** Makkelijkste route: een team klaarmaken en
+daarna alleen de metaaldelen en de pluim omkleuren.
+
+### Wat per team verschilt
+
+| Onderdeel | Blauw | Rood |
+|---|---|---|
+| Kruisbanden / bandelier | wit | wit |
+| Knopen | zilver | goud |
+| Schouderstukken (epauletten) | zilver | goud |
+| Pluim op de shako | blauw | rood |
+| Uniform | donkergrijs (gelijk) | donkergrijs (gelijk) |
+| Leer (schoenen, patroontas, riem) | donkerbruin (gelijk) | donkerbruin (gelijk) |
+
+### Prompt -- blauw team (`<model>_blue.png`)
+
+```
+Texture repaint of the same character, identical UV layout, only colours change.
+Weathered dark grey Napoleonic uniform, crisp white crossbelts and white waist belt,
+silver metal buttons in two rows, silver bullion epaulettes on both shoulders,
+a blue upright feather plume on the shako, dark brown leather shoes and cartridge pouch.
+Gritty realistic AAA-game texture, subtle dirt and wear, no text, no logo.
+```
+
+### Prompt -- rood team (`<model>_red.png`)
+
+```
+Texture repaint of the same character, identical UV layout, only colours change.
+Weathered dark grey Napoleonic uniform, crisp white crossbelts and white waist belt,
+gold metal buttons in two rows, gold bullion epaulettes on both shoulders,
+a red upright feather plume on the shako, dark brown leather shoes and cartridge pouch.
+Gritty realistic AAA-game texture, subtle dirt and wear, no text, no logo.
+```
+
+### Prompt -- gore-variant (`<model>_<team>_gore.png`)
+
+```
+Same texture, identical UV layout, battle damage version: dark blood soaked into the
+grey wool, red splatter across the white belts, torn fabric edges, dulled and scratched
+metal. Gritty realistic AAA-game texture, no text, no logo.
+```
+
+**Voor de andere facties**: alleen de pluim en het metaal volgen het team; de
+factie-eigen dingen (Krokodil-camouflagedoek, Wolf-lappen en vacht,
+Beer-kuras) houden hun eigen kleur. Vervang in de prompt "dark grey Napoleonic
+uniform" door de factie-beschrijving uit 3, en laat de regel over witte banden,
+knopen, epauletten en pluim staan zoals hij is.
+
 ## 4. Nieuw model importeren -- stap voor stap
 
 De volledige pijplijn (bewezen op muis base + spd, 8-9 juli). Per model lever
