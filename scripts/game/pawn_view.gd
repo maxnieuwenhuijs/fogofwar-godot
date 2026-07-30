@@ -659,14 +659,19 @@ const ANIM_ALIASES: Dictionary = {
 ## "Death 1", "Rifile Walking", "Bayont Attack"; het spel zoekt death1,
 ## walk1, bayonet1. We hernoemen ALLEEN vuile namen (spatie of hoofdletter),
 ## zodat bestaande modellen exact blijven zoals ze zijn.
+## De doelnamen zijn de namen die het spel ZELF afspeelt (anim_attack "attack",
+## anim_die "die", anim_melee "melee", play_ready "ready"). Eerste treffer wint,
+## dus de volgorde is de regel: "Bayonet attack" is melee, "Attack Firing Rifle"
+## is schieten.
 const CLIP_WOORDEN: Array = [
 	{"woorden": ["idle"], "doel": "idle"},
 	{"woorden": ["walk"], "doel": "walk"},
-	{"woorden": ["death", "die"], "doel": "death"},
-	{"woorden": ["aim", "ready"], "doel": "ready_up"},
+	{"woorden": ["death", "die"], "doel": "die"},
+	{"woorden": ["aim", "ready"], "doel": "ready"},
 	{"woorden": ["hit", "reaction", "flinch"], "doel": "hit"},
-	{"woorden": ["fire", "shoot"], "doel": "fire"},
-	{"woorden": ["bayon", "butt", "stab", "melee", "attack"], "doel": "bayonet"},
+	# "fir" i.p.v. "fire": de HP-muis heet "Firing Rifile ankle shot".
+	{"woorden": ["fir", "shoot", "shot"], "doel": "attack"},
+	{"woorden": ["bayon", "butt", "stab", "melee", "attack"], "doel": "melee"},
 ]
 
 

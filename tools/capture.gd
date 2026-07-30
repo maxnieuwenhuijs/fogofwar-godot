@@ -562,9 +562,23 @@ func _ready() -> void:
 				var ap: AnimationPlayer = spelers[0]
 				var namen: Array = ap.get_animation_list()
 				namen.sort()
+				# Naast de ruwe naam ook de naam die het SPEL gebruikt: verse
+				# exports heten "Death 1" en worden bij het laden die1. Zo zie
+				# je in een oogopslag of elke actie een clip heeft.
+				var tellers: Dictionary = {}
 				for an in namen:
 					var lengte: float = ap.get_animation(an).length
-					print("[CLIPS] %s/%s | %s | %.2f" % [fac, String(b).get_basename(), an, lengte])
+					var spel := String(an)
+					if not PawnView._schone_clipnaam(spel):
+						var doel := PawnView._clip_doelnaam(spel)
+						if doel == "":
+							spel = "(geen actie)"
+						else:
+							var nr: int = int(tellers.get(doel, 0)) + 1
+							tellers[doel] = nr
+							spel = "%s%d" % [doel, nr]
+					print("[CLIPS] %s/%s | %s -> %s | %.2f" % [
+						fac, String(b).get_basename(), an, spel, lengte])
 				inst.queue_free()
 		print("[CLIPS] klaar")
 		get_tree().quit()
