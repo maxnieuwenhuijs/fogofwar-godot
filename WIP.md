@@ -15,9 +15,20 @@ oorzaken, beide gemeten met de nieuwe check `-- meleecheck`:
    elkaar die dezelfde variant trokken lieten dus NIETS zien. Eenmalige clips
    (stoot, schot, dood, hit, ready) herstarten nu; idle/walk blijven doorlopen.
 
-`melee_move_wait` van 0,3 naar **1,0**: hij wacht nu de hele dood-animatie af
-voor hij oversteekt (Max' expliciete wens). Dat is bij de langste dood-clip
-5,3 seconden; wil je het sneller, dan is dat de knop in de tuner.
+**Opruk-wachttijd is VAST** (Max, later dezelfde dag: "maak dat wachten op melee
+altijd zelfde, dan gaat die dood-animatie maar langer door, moet snel naar die
+plek"). Eerst stond `melee_move_wait` op 1,0 en wachtte hij de hele dood-clip
+af: die varieert per variant van 1,8 tot 3,8 seconden, dus elke kill duurde
+anders lang (tot 5,3s). Nu is het stoot-frame + opruk-vertraging, klaar. Drie
+metingen met `-- meleecheck`: 1,45 / 1,45 / 1,40 seconden. De dood-animatie
+loopt door terwijl hij oversteekt; het slachtoffer ligt dan al of is ragdoll.
+`melee_move_wait` is uit de tuner EN uit effects_tuning.json gehaald, want die
+knop zou nu niets meer doen: de vaste tijd stel je bij met "opruk-vertraging".
+
+**Muis-sterfgeluiden**: Max zette `inf_die_mouse[_2,_3].wav` neer maar Godot gaf
+`No loader found` -- nieuwe wav's moeten eerst geïmporteerd worden. Na
+`--import` staat de categorie op 6 varianten. Terugvalketen ongewijzigd:
+`inf_die_mouse_<archetype>` -> `inf_die_mouse` -> `inf_die`.
 
 **Tuner sloeg de musket-stand niet op**. Tijdens het slepen zetten we de
 spinboxen stil bij (anders herbouwt hij het model per muisbeweging); bij
