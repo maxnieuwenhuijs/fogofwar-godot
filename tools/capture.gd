@@ -1136,13 +1136,13 @@ func _ready() -> void:
 			var dsp2: float = def_view.melee_fx("death_speed", "death_speed", 1.0)
 			dood_dur = def_view.clip_duration("die") / maxf(dsp2, 0.01)
 		var hit_del2: float = 0.55
-		var wacht_f: float = 1.0
 		var opruk_v: float = 0.35
 		if atk_voor != null:
 			hit_del2 = atk_voor.melee_fx("hit_delay", "melee_hit_delay", 0.55)
-			wacht_f = atk_voor.melee_fx("move_wait", "melee_move_wait", 1.0)
 			opruk_v = atk_voor.melee_fx("advance_delay", "melee_advance_delay", 0.35)
-		var verwacht: float = hit_del2 + dood_dur * wacht_f + opruk_v
+		# VASTE wachttijd (Max, 30 juli): stoot-frame + opruk-vertraging. De
+		# dood-clip mag doorlopen; we printen zijn lengte alleen ter info.
+		var verwacht: float = hit_del2 + opruk_v
 		var melee_gestart := ""
 		var atk_view = game._pawn_views.get(aanvaller.id)
 		var y_van: Vector3 = game.tile_position(van.x, van.y)
@@ -1179,7 +1179,7 @@ func _ready() -> void:
 		elif vertrek < verwacht * 0.85:
 			print("[MELEE] FAIL: te vroeg overgestoken (%.2fs tegen %.2fs verwacht)" % [vertrek, verwacht])
 			mc_ok = false
-		elif vertrek > verwacht * 1.6 + 0.5:
+		elif vertrek > verwacht + 0.6:
 			print("[MELEE] FAIL: veel te laat overgestoken (%.2fs tegen %.2fs verwacht)" % [vertrek, verwacht])
 			mc_ok = false
 		if not mc_ok and melee_gestart != "" and not (melee_gestart.begins_with("melee") or melee_gestart.begins_with("bayonet")):

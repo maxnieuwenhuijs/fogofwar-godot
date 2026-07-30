@@ -854,10 +854,114 @@ func _maak_pawn_view(pawn: Pawn) -> void:
 ## Gesneuvelde pionnen tellen door, zodat het nummer -- en dus de figurant-rol
 ## -- de hele partij hetzelfde blijft: koppel je een vaandeldrager en koppel je
 ## hem later los, dan pakt hij zijn vaandel weer op.
+const FIGURANT_MIN_AFSTAND := 4   # vakken tussen twee gelijke rollen (Max, 30 juli)
+
+var _figurant_rollen: Dictionary = {}   # pawn_id -> "flag"/"drum"
+
+
+## Vaandels en trommels ruimtelijk verdelen (Max, 30 juli: "staan niet genoeg
+## uit elkaar"). Een volgnummer in de rij zegt niets over de afstand op het
+## bord, dus we kiezen hier: houd bestaande dragers vast zolang ze mogen dragen,
+## en vul vacatures met de kandidaat die het VERST van de andere dragers staat,
+## met een harde ondergrens van FIGURANT_MIN_AFSTAND vakken tussen twee gelijke
+## rollen. Deterministisch (kandidaten op pion-id), dus replays blijven gelijk.
+func _werk_figurant_rollen_bij() -> void:
+	var state: GameState = GameSession.state
+	if state == null:
+		return
+	for pid in _figurant_rollen.keys():
+		var p: Pawn = state.pawns.get(pid)
+		if p == null or p.is_eliminated or p.linked_card_id != -1:
+			_figurant_rollen.erase(pid)   # gesneuveld of gekoppeld: rol vervalt
+	for owner in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		var kandidaten: Array = []
+		var totaal: int = 0
+		for p in state.pawns.values():
+			if p.owner_id != owner or p.unit_type != Constants.UnitType.INFANTRY \
+					or p.is_eliminated:
+				continue
+			totaal += 1
+			if p.linked_card_id == -1 and not _figurant_rollen.has(p.id):
+				kandidaten.append(p)
+		kandidaten.sort_custom(func(a: Pawn, b: Pawn) -> bool: return a.id < b.id)
+		var per_rol: int = 2 if totaal >= PawnView.TWEEDE_STEL_VANAF else 1
+		# Dragers kunnen tijdens het oprukken naar elkaar toe lopen. Staan twee
+		# gelijke rollen te dicht op elkaar EN is er een kandidaat die het wel
+		# haalt, dan geeft de jongste zijn rol af (de oudste houdt hem vast,
+		# zodat het niet heen en weer flappert).
+		for rol in ["flag", "drum"]:
+			var dragers: Array = []
+			for pid in _figurant_rollen:
+				if String(_figurant_rollen[pid]) != rol:
+					continue
+				var dp: Pawn = state.pawns.get(pid)
+				if dp != null and dp.owner_id == owner:
+					dragers.append(dp)
+			dragers.sort_custom(func(a: Pawn, b: Pawn) -> bool: return a.id < b.id)
+			for i in dragers.size():
+				for j in range(i + 1, dragers.size()):
+					if _vak_afstand(dragers[i].position, dragers[j].position) 							>= FIGURANT_MIN_AFSTAND:
+						continue
+					var beter := false
+					for k in kandidaten:
+						if _vak_afstand(k.position, dragers[i].position) 								>= FIGURANT_MIN_AFSTAND:
+							beter = true
+							break
+					if beter:
+						_figurant_rollen.erase(dragers[j].id)
+						kandidaten.append(dragers[j])
+		for rol in ["flag", "drum"]:
+			var bezet: Array = []
+			for pid in _figurant_rollen:
+				if String(_figurant_rollen[pid]) != rol:
+					continue
+				var pp: Pawn = state.pawns.get(pid)
+				if pp != null and pp.owner_id == owner:
+					bezet.append(pp)
+			while bezet.size() < per_rol:
+				var keus: Pawn = _verste_kandidaat(kandidaten, bezet, state, owner)
+				if keus == null:
+					break
+				_figurant_rollen[keus.id] = rol
+				bezet.append(keus)
+				kandidaten.erase(keus)
+
+
+## Kandidaat die zo ver mogelijk van de huidige dragers staat. Gelijke rol weegt
+## honderd keer zwaarder dan "ver van alle figuranten": twee vaandels ver uit
+## elkaar is belangrijker dan een vaandel ver van een trommel.
+func _verste_kandidaat(kandidaten: Array, zelfde_rol: Array, state: GameState,
+		owner: int) -> Pawn:
+	var beste: Pawn = null
+	var beste_score: float = -1.0e9
+	for k in kandidaten:
+		var d_zelfde: int = 99
+		for z in zelfde_rol:
+			d_zelfde = mini(d_zelfde, _vak_afstand(k.position, z.position))
+		var d_alle: int = 99
+		for pid in _figurant_rollen:
+			var pp: Pawn = state.pawns.get(pid)
+			if pp != null and pp.owner_id == owner:
+				d_alle = mini(d_alle, _vak_afstand(k.position, pp.position))
+		var score: float = float(d_zelfde) * 100.0 + float(d_alle)
+		if not zelfde_rol.is_empty() and d_zelfde < FIGURANT_MIN_AFSTAND:
+			score -= 1.0e6   # mag alleen als er echt niets verder weg staat
+		if score > beste_score:
+			beste_score = score
+			beste = k
+	return beste
+
+
+func _vak_afstand(a: Vector2i, b: Vector2i) -> int:
+	return absi(a.x - b.x) + absi(a.y - b.y)
+
+
 func _zet_figurant_info(pv: PawnView, pawn: Pawn) -> void:
 	if pawn.unit_type != Constants.UnitType.INFANTRY:
 		pv.figurant_index = -1
+		pv.rol_vast = ""
 		return
+	pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
 	var ids: Array = []
 	for p in GameSession.state.pawns.values():
 		if p.owner_id == pawn.owner_id and p.unit_type == Constants.UnitType.INFANTRY:
@@ -986,6 +1090,7 @@ func _update_health_bars() -> void:
 
 func _refresh_all() -> void:
 	var state: GameState = GameSession.state
+	_werk_figurant_rollen_bij()   # vaandels/trommels ruimtelijk verdelen
 	_sync_new_pawn_views()  # F2.6: verse spawns direct zichtbaar en klikbaar
 	_update_piece_counts()
 	for pid in _pawn_views:
@@ -1008,6 +1113,10 @@ func _refresh_all() -> void:
 		var card: Card = null
 		if pawn.linked_card_id >= 0 and (pawn.card_revealed or pawn.owner_id == _human_id):
 			card = state.all_cards.get(pawn.linked_card_id)
+		# Rol kan verhuizen (drager sneuvelt of koppelt): set_character weegt
+		# hem opnieuw, want _rol zit in de karakter-sleutel.
+		if pawn.unit_type == Constants.UnitType.INFANTRY:
+			pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		pv.set_team_ring_active(pawn.is_active)
@@ -1605,19 +1714,14 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			var hit_del: float = (attacker.melee_fx("hit_delay", "melee_hit_delay", 0.55)
 					if attacker != null else PawnView.fx("melee_hit_delay", 0.55))
 			if result.get("forced_move", false):
-				# Opruk-choreografie: de aanvaller blijft op zijn eigen vak staan
-				# tot ZOWEL zijn eigen stoot-clip klaar is ALS de dood-animatie
-				# van de verdediger ver genoeg (opruk-wacht = fractie van de
-				# dood-clip; 1.0 = volledig afwachten). Pas daarna + de
-				# opruk-vertraging stapt hij het vrijgekomen vak in - dus nooit
-				# door een nog-stervende tegenstander heen.
-				var move_del: float = hit_del + 0.12
-				if attacker != null:
-					move_del = maxf(move_del, attacker.last_clip_duration())
-				if result.get("eliminated", false) and melee_def != null and attacker != null:
-					var dsp: float = melee_def.melee_fx("death_speed", "death_speed", 1.0)
-					var death_dur: float = melee_def.clip_duration("die") / maxf(dsp, 0.01)
-					move_del = maxf(move_del, hit_del + death_dur * attacker.melee_fx("move_wait", "melee_move_wait", 1.0))
+				# Opruk-choreografie (Max, 30 juli: "maak dat wachten altijd
+				# hetzelfde, dan gaat die dood-animatie maar langer door, moet
+				# snel naar die plek"). VASTE wachttijd: het stoot-frame plus de
+				# opruk-vertraging. Hij wacht dus NIET meer op de lengte van de
+				# dood-clip -- die duurt per variant 1,8 tot 3,8 seconden en
+				# maakte elke kill anders lang. Het slachtoffer ligt inmiddels op
+				# de grond of is al ragdoll, dus hij loopt niet door iemand heen.
+				var move_del: float = hit_del
 				if attacker != null:
 					move_del += attacker.melee_fx("advance_delay", "melee_advance_delay", 0.35)
 				# Visueel vastzetten op zijn eigen vak tot de opruk begint.

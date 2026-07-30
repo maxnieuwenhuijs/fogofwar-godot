@@ -27,6 +27,15 @@ OPSLAAN bewaarde de oude stand. `_sleep_afronden` schrijft nu expliciet weg.
 Gemeten met een tijdelijke probe: sleutel `mouse/infantry_hp_musket` komt nu
 echt op schijf.
 
+**Vlag-idle op meetwaarde, niet op index** (Max: "je hebt nu de verkeerde idle
+vlag gekozen"). De exports zetten de rustanimaties per model in een ANDERE
+volgorde. Gemeten kop/nek-uitslag per idle: atk 70/34/14 graden, spd 1/70/14,
+hp 42/14/1, base en mix 42/70/14. Index 0 pakken is dus per definitie soms de
+wildste. PawnView meet nu de uitslag van de kop-tracks en kiest de stilste
+variant, per model gecached. Handmatig overrulen kan met `vlag_idle` in
+effects_tuning.json (-1 = automatisch). Uitkomst: spd en hp krijgen hun
+1-graad-variant, de rest 14 graden.
+
 **Vlaggen** (Max): doek kleiner (0,42 x 0,26 van de poollengte, afstelbaar via
 `vlag_breedte`/`vlag_hoogte` in effects_tuning.json), vaandeldrager speelt
 altijd dezelfde rust-clip zodat hij rechtop staat en niet rondkijkt, en de

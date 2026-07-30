@@ -610,11 +610,15 @@ func _play_variant(base: String, desync: bool = false, speed: float = 1.0,
 	if variants.is_empty():
 		return
 	var full: String = variants[randi() % variants.size()]
-	# Vaandeldrager staat RECHTOP en kijkt niet rond (besluit Max, 30 juli):
-	# altijd dezelfde eerste idle-variant, zodat de vlag stil in de lucht
-	# staat. De trommel en de rest wisselen wel gewoon van idle.
+	# Vaandeldrager staat RECHTOP en kijkt niet rond (besluit Max, 30 juli).
+	# NIET op index kiezen: de exports zetten de idles per model in een andere
+	# volgorde (gemeten 30 juli: bij atk zwiept "Idle 1" 123 graden met de kop,
+	# bij spd is juist "Idle 1" de rustige). We meten dus welke variant de kop
+	# het minst beweegt en pakken die.
 	if _rol == "flag" and base == anim_idle:
-		full = String(variants[0])
+		var stil := _stilste_idle_variant(variants)
+		if stil != "":
+			full = stil
 	if _anim.current_animation == full:
 		# BUG-FIX (Max, 30 juli: "de bajonet-melee werkt niet goed"): twee
 		# stoten achter elkaar die dezelfde variant trekken lieten NIETS zien,
@@ -742,6 +746,56 @@ func _normaliseer_clipnamen() -> void:
 			if not lib.has_animation(nieuw_naam):
 				lib.rename_animation(a, nieuw_naam)
 	_variant_cache.clear()
+
+
+## Stilste idle-variant van dit model (voor de vaandeldrager). Gemeten op de
+## kop/nek-rotatietracks: de variant met de kleinste uitslag staat het meest
+## rechtop. Per model gecached, dus de meting gebeurt een keer.
+## Handmatig overrulen kan met "vlag_idle" in effects_tuning.json (index in de
+## variantenlijst; -1 = automatisch meten).
+static var _stilste_idle_cache: Dictionary = {}
+
+
+func _stilste_idle_variant(variants: Array) -> String:
+	if variants.is_empty() or _anim == null:
+		return ""
+	var handmatig := int(fx("vlag_idle", -1.0))
+	if handmatig >= 0 and handmatig < variants.size():
+		return String(variants[handmatig])
+	var sleutel := "%s|%d" % [_model_path, variants.size()]
+	if _stilste_idle_cache.has(sleutel):
+		return String(_stilste_idle_cache[sleutel])
+	var beste := String(variants[0])
+	var beste_uitslag := INF
+	for v in variants:
+		var a: Animation = _anim.get_animation(String(v))
+		if a == null:
+			continue
+		var uitslag := _kop_uitslag(a)
+		if uitslag < beste_uitslag:
+			beste_uitslag = uitslag
+			beste = String(v)
+	_stilste_idle_cache[sleutel] = beste
+	return beste
+
+
+## Hoeveel graden draait de kop/nek in deze clip, van de rustpose af gemeten?
+static func _kop_uitslag(a: Animation) -> float:
+	var ergste := 0.0
+	for t in a.get_track_count():
+		if a.track_get_type(t) != Animation.TYPE_ROTATION_3D:
+			continue
+		var pad := String(a.track_get_path(t)).to_lower()
+		if not (pad.contains("head") or pad.contains("neck")):
+			continue
+		var n := a.track_get_key_count(t)
+		if n < 2:
+			continue
+		var eerste: Quaternion = a.track_get_key_value(t, 0)
+		for k in range(1, n):
+			var q: Quaternion = a.track_get_key_value(t, k)
+			ergste = maxf(ergste, absf(rad_to_deg(eerste.angle_to(q))))
+	return ergste
 
 
 func _variants_of(base: String) -> Array:
@@ -1659,13 +1713,11 @@ func set_unit_type(unit_type: int) -> void:
 ## Elk leger heeft ALTIJD een vaandeldrager en een tamboer (besluit Max,
 ## 28 juli): de eerste twee infanteristen krijgen die rol vast. De rest van
 ## de figuranten wordt daarna uitgedund met ROL_DICHTHEID.
-## Vaste plekken in de rij (besluit Max, 30 juli): "de vlaggen moeten altijd
-## minimaal 4 poppetjes uit elkaar zitten, net als de drums verspreid". Dus
-## vlag op 0 en 4, trommel op 2 en 6 -- twee vlaggen liggen 4 pionnen uit
-## elkaar, twee trommels ook, en tussen vlag en trommel staan gewone soldaten.
-const ROLLEN_VASTE_PLEK: Dictionary = {0: "flag", 2: "drum", 4: "flag", 6: "drum"}
-const ROL_AFSTAND := 4      # minimale afstand tussen twee gelijke rollen
-const LAATSTE_VASTE_PLEK := 6
+## Vlaggen en trommels worden RUIMTELIJK verdeeld (Max, 30 juli, met een foto
+## van twee vaandels naast elkaar: "staan niet genoeg uit elkaar"). Een
+## volgnummer in de rij zegt niets over waar een pion op het bord staat, dus
+## game.gd rekent de afstanden uit en zet de rol hier in `rol_vast`. Minimaal 4
+## vakken tussen twee gelijke rollen; zie `_verdeel_figurant_rollen` in game.gd.
 const ROLLEN_EXTRA := ["horn", "sapper", "canteen", "drummajor"]
 ## Kleine legers krijgen maar een vaandel en een tamboer; vanaf dit aantal
 ## infanteristen komt het tweede stel erbij (besluit Max, 28 juli).
@@ -1687,6 +1739,10 @@ var _rol: String = ""   # actieve figurant-rol ("" = gewone soldaat met musket)
 ## gedrag). Zo kun je een trommel of vaandel in de hand fijnafstellen.
 var rol_override: String = ""
 
+## Rol die game.gd ruimtelijk heeft toegewezen ("flag"/"drum"/""). Staat los van
+## rol_override (tuner) en van de dichtheidsregel voor de extra props.
+@export var rol_vast: String = ""
+
 
 ## Volgnummer van deze pion binnen het EIGEN leger (0 = eerste infanterist).
 ## game.gd zet dit bij het bouwen van de view; -1 = geen rol (bv. de
@@ -1702,17 +1758,17 @@ var rol_override: String = ""
 func _rol_voor_pion() -> String:
 	if figurant_index < 0:
 		return ""
-	# Klein leger: alleen het eerste stel (vlag op 0, trommel op 2).
-	var laatste: int = LAATSTE_VASTE_PLEK if figurant_totaal >= TWEEDE_STEL_VANAF \
-			else ROL_AFSTAND - 2
-	if figurant_index <= laatste:
-		return String(ROLLEN_VASTE_PLEK.get(figurant_index, ""))
+	# Vaandel en trommel komen van game.gd: die kent de posities en zet ze
+	# minimaal 4 vakken uit elkaar.
+	if rol_vast != "":
+		return rol_vast
+	# De sporadische extra's (hoorn, bijl, vat, staf) mogen wel op volgnummer:
+	# die hoeven niet verspreid te staan, ze zijn juist toevallige aankleding.
 	if ROL_DICHTHEID <= 0 or ROLLEN_EXTRA.is_empty():
 		return ""
-	var rest: int = figurant_index - laatste - 1
-	if rest % ROL_DICHTHEID != 0:
+	if figurant_index % ROL_DICHTHEID != 0:
 		return ""
-	return ROLLEN_EXTRA[(rest / ROL_DICHTHEID) % ROLLEN_EXTRA.size()]
+	return ROLLEN_EXTRA[(figurant_index / ROL_DICHTHEID) % ROLLEN_EXTRA.size()]
 
 
 ## Attribuut-prop bij een rol: eerst een factie-eigen variant, anders de

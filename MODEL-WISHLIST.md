@@ -566,11 +566,19 @@ niet in deze tracker; zie `model-tracker.html` voor de klikbare versie van de
 props.)*
 
 
-**Verdeling over de rij** (besluit Max, 30 juli): vlaggen staan minimaal 4
-pionnen uit elkaar, trommels ook. Vaste plekken in het eigen leger: vlag op 0
-en 4, trommel op 2 en 6. Kleine legers (< 8 infanteristen) krijgen alleen het
-eerste stel. De vaandeldrager speelt altijd dezelfde rustanimatie, rechtop, en
-kijkt niet heen en weer -- anders zwiept de vlag door het beeld.
+**Verdeling over het bord** (besluit Max, 30 juli): vlaggen staan minimaal 4
+VAKKEN uit elkaar, trommels ook. Dat gaat op echte afstand, niet op volgnummer:
+het spel houdt bestaande dragers vast zolang ze mogen dragen, vult vacatures met
+de kandidaat die het verst van de andere dragers staat, en geeft een rol door
+als twee dragers tijdens het oprukken toch te dicht bij elkaar komen. Kleine
+legers (< 8 infanteristen) krijgen alleen het eerste stel. De sporadische extra
+props (hoorn, bijl, vat, staf) mogen wel op volgnummer: dat is toevallige
+aankleding. De vaandeldrager staat rechtop en kijkt niet heen en weer -- anders
+zwiept de vlag door het beeld. Het spel kiest daarvoor NIET de eerste idle,
+maar meet per model welke rustanimatie de kop het minst beweegt (de exports
+zetten ze niet in dezelfde volgorde: bij atk zwaait "Idle 1" 70 graden, bij spd
+maar 1). Wil je het zelf vastzetten: `vlag_idle` in effects_tuning.json,
+index in de variantenlijst, -1 = automatisch.
 
 ## 3e. Teamkleur-texturen -- witte banden, zilver of goud (Max, 30 juli)
 

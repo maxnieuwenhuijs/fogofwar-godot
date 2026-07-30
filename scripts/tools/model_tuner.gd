@@ -19,7 +19,6 @@ const FX_DEFS: Array = [
 	{"cat": "bajonet", "key": "melee_hit_delay", "label": "raakmoment", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"cat": "bajonet", "key": "melee_yaw", "label": "aanvaller-draai", "min": -180.0, "max": 180.0, "step": 1.0, "def": 0.0},
 	{"cat": "bajonet", "key": "melee_advance_delay", "label": "opruk-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.5},
-	{"cat": "bajonet", "key": "melee_move_wait", "label": "opruk-wacht (dood)", "min": 0.0, "max": 1.5, "step": 0.01, "def": 0.3},
 	{"cat": "bajonet", "key": "hit_speed", "label": "hit-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bajonet", "key": "death_speed", "label": "sterf-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bajonet", "key": "melee_retaliation_delay", "label": "terugslag-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.1},
@@ -1280,7 +1279,9 @@ func _on_duel_test(kill: bool) -> void:
 		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration())
 		var dsp2: float = def_pv.melee_fx("death_speed", "death_speed", 1.0)
 		var death_dur2: float = def_pv.clip_duration("die") / maxf(dsp2, 0.01)
-		move_del = maxf(move_del, hd + death_dur2 * _pawn.melee_fx("move_wait", "melee_move_wait", 1.0))
+		# Zelfde vaste timing als in het spel (Max, 30 juli): stoot-frame plus
+		# opruk-vertraging, niet de lengte van de dood-clip.
+		move_del = hd + _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35)
 		move_del += _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35)
 		get_tree().create_timer(move_del).timeout.connect(func() -> void:
 			if gen != _preview_gen or _pawn == null or not is_instance_valid(_pawn):
