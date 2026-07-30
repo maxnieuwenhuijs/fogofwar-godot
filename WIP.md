@@ -32,11 +32,19 @@ en geen enkele partij die de cycluslimiet haalt. Gezet in `v42_default.json`
 `punten_start` 10, `spawn_totaal_max` 10. De campagne zelf levert per duel een
 expliciete pool uit het grootboek en is dus onaangeroerd.
 
-**Let op bij subagents**: een van de diagnose-agents heeft `agents/agent.gd`
-tijdens de rit teruggezet met git, waardoor de fix er even uit was en een deel
-van de eerste meetdata besmet raakte (spawns zakten van 4,2 naar 1,1). Data
+**Let op bij parallel werken**: halverwege raakte `agents/agent.gd` zijn fix
+kwijt, waardoor een deel van de eerste meetdata besmet raakte (aanvullingen
+zakten van 4,2 naar 1,1). Er liep tegelijk een TWEEDE sessie in deze repo (de
+commits van 12:08: `sounds/` in submappen per soort, 639 bestanden, plus de
+bestandsindex), dus een git-actie daarvan is de waarschijnlijke oorzaak. Data
 weggegooid en schoon opnieuw gemeten; fix opnieuw aangebracht en met een
-debug-run bevestigd.
+debug-run bevestigd (`her.pools = {"pt": 7}`). Les: bij twee sessies in een
+repo eerst `git status` lezen voor je meet, en na een lange meting checken of
+je fix er nog in staat.
+
+**Na de geluidsverhuizing gecontroleerd**: `-- geluidcheck` meldt 73
+categorieen, geen enkele zonder geluid en geen enkele die niemand afspeelt. De
+submappen breken de audio dus niet.
 
 **Voor de eerstvolgende trainingsnacht**: de weights van 28 juli hebben over een
 dode economie geleerd -- de spawn-gewichten (incl. `spawn_duur`) zijn nooit
