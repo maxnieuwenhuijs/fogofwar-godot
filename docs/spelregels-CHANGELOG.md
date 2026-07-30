@@ -1,5 +1,20 @@
 # Spelregels — CHANGELOG
 
+## C14 — 30 juli 2026 (vaste 1v1-startreserve)
+
+- **`punten_start`** (nieuwe knop in het campaign-blok, default 0 = uit): een
+  vaste puntenreserve voor beide spelers. Staat hij op 0, dan rekent
+  `poolfactor x doctrine-comp` het bedrag uit zoals voorheen -- dat blijft het
+  gedrag in de campagne, waar de laag zelf de pool aanlevert.
+- **Het losse 1v1-potje** (`v42_default.json`) start nu op **15 punten reserve
+  en 10 CP**, ongeacht de factie. Daarvoor hing de reserve aan de doctrine-comp
+  en verschilde hij per factie (21 punten voor de een, 17 voor de ander) zonder
+  dat iemand dat kon zien: onuitlegbaar in een duel dat verder symmetrisch is.
+  De campagne is de plek waar ongelijke budgetten thuishoren (budget_bonus).
+- **Goldens hergenereerd**: `cp_inzet`, `kanon_act` en `spawn_geblokkeerd`
+  draaien op de 1v1-config en kennen dus een andere startpool.
+
+
 ## C13 — 29 juli 2026 (balans na de trainingsplateau-meting)
 
 De trainingsnacht liep vast op een plateau: 314 generaties, 1 adoptie, en de

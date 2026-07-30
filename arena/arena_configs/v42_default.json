@@ -26,6 +26,7 @@
   "pool_zichtbaar": false,
   "poolfactor": 1.5,
   "pools": null,
+  "punten_start": 15,
   "skip_mode": "auto",
   "spawn_kosten": {
    "art": 3,

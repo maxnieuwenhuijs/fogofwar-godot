@@ -1,5 +1,27 @@
 # Fog of War — Work In Progress & Context
 
+## 30 juli 2026 -- vuur-clip, 1v1-reserve, prompts op ElevenLabs-recept
+
+- **Vuur-animatie deed niets** (Max, HP-muis): de clip heet "Firing Rifile
+  ankle shot" en mijn vertaaltabel zocht op het hele woord "fire" -- dat zit
+  niet in "Firing". Nu `fir`/`shoot`/`shot`. Droogtest over alle vier de muizen:
+  idle, walk, attack, melee, die, hit en ready worden nu alle vier gevonden,
+  ook met "Rfile", "Bayont" en dubbele spaties. De animator hoeft niets te
+  hernoemen; alleen het kernwoord moet in de clipnaam staan.
+- **Ingebakken musket verborgen**: de nieuwe muizen dragen zelf een musket
+  (los meshje aan RightHand). Het spel zet dat op invisible zodra hij onze
+  eigen afstelbare prop in de hand hangt -- geen Blender-werk nodig. Filter is
+  smal (wapenwoorden + naamloze generator-meshjes).
+- **C14, vaste 1v1-reserve**: nieuwe knop `punten_start`; het losse duel start
+  op 15 punten en 10 CP voor beide spelers. Drie goldens hergenereerd
+  (cp_inzet, kanon_act, spawn_geblokkeerd), twaalf cosmetische diffs
+  teruggedraaid.
+- **Geluidsprompts herschreven** (SOUND-WISHLIST §0): een laag per prompt, zes
+  korte takes in een clip, duur per take in de prompt. De oude filmscene-stijl
+  ("war-beast death cry ... harness creaking") gaf sfeerclipjes in plaats van
+  spelgeluid. 24 prompts om, plus het recept en de "zo niet / zo wel" uitleg.
+- Checks: 1466/0, simcheck 0 afwijkingen, fuzz 25 schoon, play/shot 0 fouten.
+
 > Levend document. Bijgewerkt terwijl we bouwen. Laatste grote update: mens-vs-AI
 > volledig speelbaar, met slimme kaarten, health/stamina/attack-blokjes, animaties
 > en projectie-picking.

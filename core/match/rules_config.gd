@@ -77,6 +77,10 @@ const CAMPAIGN_DEFAULTS := {
 	"spawn_kosten": {"inf": 1, "cav": 2, "art": 3},  # C11: prijs per type in het punten-model
 	"cp_start_mode": "vast",             # D13
 	"cp_bijschrijving": "campagnelaag",  # D13: verdiensten naar de campagnepot
+	# Vaste puntenreserve voor beide spelers (besluit Max, 30 juli): een 1v1
+	# start met 15 punten, ongeacht de doctrine-comp. 0 = uit, dan rekent
+	# poolfactor x comp het bedrag uit zoals voorheen (campagne doet dat).
+	"punten_start": 0,
 	"poolfactor": 1.5,                   # D5: x doctrine-comp per type (3.0 -> 1.5, besluit Max 25 juli)
 	"pool_afboeking": true,              # D5: duel-verliezen raken de campagne-pool
 	"pools": null,                       # expliciete startpool {"1": {inf,cav,art}, "2": ...} wint van poolfactor

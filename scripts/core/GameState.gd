@@ -138,6 +138,10 @@ func init_pools() -> void:
 			# koopt een pion (soldaat 1 / ruiter 2 / kanon 3). Een expliciete
 			# typed-pool uit de (nog typed) campagnelaag wordt op waarde omgezet.
 			var pt: int = 0
+			var vast: int = int(rules.campaign.get("punten_start", 0))
+			if vast > 0 and not (expliciet is Dictionary and expliciet.has(str(player_id))):
+				pools[player_id] = {"pt": vast}
+				continue
 			if expliciet is Dictionary and expliciet.has(str(player_id)):
 				var ex = expliciet[str(player_id)]
 				if ex is Dictionary:

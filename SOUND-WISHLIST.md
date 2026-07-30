@@ -14,6 +14,53 @@ zelf zitten (dan hoeft de engine niks te mixen).
 
 ---
 
+## 0. Het prompt-recept (ElevenLabs) -- LEES DIT EERST
+
+*Besluit Max, 30 juli.* De oude prompts waren filmscene-beschrijvingen. Zoiets
+levert een sfeerclipje op, geen bruikbaar spelgeluid. Het recept is nu:
+
+**EEN geluidsbron. EEN korte reactie. ZES takes achter elkaar in een clip.**
+
+```
+6 short <bijvoeglijk> <bron> <reactie>s in a row,
+each about 0.4 seconds, silence between each,
+one <bron> only, dry close mono recording, no reverb, no music
+```
+
+Waarom zo:
+
+| Regel | Reden |
+|---|---|
+| **Een laag per prompt** | Kreet, lijf-op-de-grond en musket-kletter zijn drie categorieen die het spel apart afspeelt en apart timet. Vraag je ze in een prompt, dan kun je ze nooit meer los schuiven. |
+| **Zes takes in een clip** | Je knipt ze zelf uit en noemt ze `inf_die_mouse1..6`. Een categorie met varianten ratelt niet. Veel goedkoper dan zes keer genereren. |
+| **Duur per take erin** | Zonder getal maakt ElevenLabs er een lange uithaal van. |
+| **"one X only"** | Anders komt er een kudde of een menigte. |
+| **Geen scene** | Laat "battlefield", "war-beast", "harness creaking", "dust settling" weg: dat is regie, geen geluid. |
+| **Zet Duration op ~5-8s** | Genoeg voor zes takes; Prompt influence hoog (80-100%). |
+
+**Zo niet** (dit was de oude stijl, drie lagen + regie in een prompt):
+
+> ~~Large rodent war-beast death cry, sharp and rattling, dropping in pitch,
+> with heavy thudding of a big body falling onto dirt and leather harness
+> creaking. Dry and close, no music.~~
+
+**Zo wel** (alleen de stem, zes takes, duur erin):
+
+> 6 short deep rodent squeals in a row, each about 0.4 seconds, raspy and
+> dropping in pitch, silence between each, one animal only, dry close mono
+> recording, no reverb, no music
+
+Het lijf dat neerkomt vraag je los aan (`body_hit_floor`), en het harnas dat
+kraakt hoort bij `val_prop`. Dat is geen extra werk: het zijn categorieen die
+je toch al nodig hebt, en het spel kan ze dan per frame timen (tuner, tab
+**Geluid**).
+
+**Voor de niet-vocale categorieen geldt hetzelfde**: zet
+`<# var> short ... in a row, silence between each` voor de prompt uit de grote
+tabel onderaan, dan heb je alle varianten in een generatie.
+
+---
+
 ## 1. Interface / knoppen (kort & subtiel)
 
 | Categorie | Bestanden | # var | Wanneer | Status |
@@ -72,25 +119,25 @@ zelf zitten (dan hoeft de engine niks te mixen).
 |---|---|---|---|---|
 | `musket_fire` | `musket*.wav` | 3 | Infanterieschot afvuren | ✓ 🎚️ |
 | `musket_echo` | `musket_echo*.wav` | 6 | Naklank van het schot | ✓ |
-| `musket_hit` | `default_musket_hit.wav` | 2-3 | Kogel slaat in | ✓ 🎚️ (nu 1) |
+| `musket_hit` | `default_musket_hit.wav` | 2-3 | Kogel slaat in | 6 short musket ball impacts on a body in a row, each about 0.3 seconds, wet thud with dust, silence between each, dry close mono, no reverb, no music |
 | `cannon_fire` | `cannon_heavy*.wav` | 3 | Kanon afvuren | ✓ |
 | `cannon_air` | `cannon_bal_flies*.wav` | 4 | Kogel door de lucht | ✓ |
 | `cannon_hit` | `cannon_ball_hit.wav` | 2-3 | Kanonskogel inslag | ✓ 🎚️ (nu 1) |
-| `melee_kill` | `mellee_hit*.wav` | 3 | Melee doodt het doelwit | ✓ |
-| `melee_survive` | `mellee_hit_no_kill.wav` | 2-3 | Doelwit overleeft de klap | ✓ 🎚️ (nu 1) |
-| `retaliation` | `retaliation.wav` | 1 | Terugslag door infanterie (staal-op-staal) | ✓ |
+| `melee_kill` | `mellee_hit*.wav` | 3 | Melee doodt het doelwit | 6 short bayonet stabs into a body in a row, each about 0.3 seconds, wet punch with a steel scrape, silence between each, dry close mono, no reverb, no music |
+| `melee_survive` | `mellee_hit_no_kill.wav` | 2-3 | Doelwit overleeft de klap | 6 short steel-on-steel parry clangs in a row, each about 0.3 seconds, bright and blocked, silence between each, dry close mono, no reverb, no music |
+| `retaliation` | `retaliation.wav` | 1 | Terugslag door infanterie (staal-op-staal) | 3 short steel counterstrike clangs with a single male grunt in a row, each about 0.4 seconds, silence between each, dry close mono, no reverb, no music |
 | `retaliation_horse` | `retaliation_with_horse.wav` | 1 | Terugslag door een paard (hoeven) | ✓ |
-| `blood_splash` | `small_blood_splash*.wav` | 3 | Levend stuk overleeft een treffer | ✓ |
-| `charge_yell` | `charge_yell.wav` | 1 | Cavalerie begint een charge (strijdkreet) | ✓ |
-| `pawn_block` | `pawn_block.wav` | 2 | Schot geblokkeerd (bank klaar; nog geen event) | 🎚️ (klaar) |
+| `blood_splash` | `small_blood_splash*.wav` | 3 | Levend stuk overleeft een treffer | 6 short wet blood splatters in a row, each about 0.25 seconds, silence between each, dry close mono, no reverb, no music |
+| `charge_yell` | `charge_yell.wav` | 1 | Cavalerie begint een charge (strijdkreet) | 3 short male battle shouts in a row, each about 0.6 seconds, hoarse and forward, silence between each, a few men only, dry close mono, no reverb, no music |
+| `pawn_block` | `pawn_block.wav` | 2 | Schot geblokkeerd (bank klaar; nog geen event) | 3 short musket ball thuds into thick wood in a row, each about 0.3 seconds, blocked and dull, silence between each, dry close mono, no reverb, no music |
 
 ## 7. Sterven per type
 
 | Categorie | Bestanden | # var | Wanneer | Status |
 |---|---|---|---|---|
-| `horse_die` | `horse_die*.wav` | 2 | Cavalerie sneuvelt | ✓ |
-| `inf_die` | `inf_die*.wav` | 4 | Infanterie sneuvelt | ✓ |
-| `cannon_die` | `cannon_destroyed.wav` | 1 | Kanon vernietigd | ✓ |
+| `horse_die` | `horse_die*.wav` | 2 | Cavalerie sneuvelt | 6 short horse death whinnies in a row, each about 0.5 seconds, strained and falling in pitch, silence between each, one horse only, dry close mono, no reverb, no music |
+| `inf_die` | `inf_die*.wav` | 4 | Infanterie sneuvelt | 6 short soldier death cries in a row, each about 0.4 seconds, clipped and breathy, silence between each, one man only, dry close mono, no reverb, no music |
+| `cannon_die` | `cannon_destroyed.wav` | 1 | Kanon vernietigd | 6 short bursts of splintering wood and cracking cast iron in a row, each about 0.5 seconds, silence between each, dry close mono, no reverb, no music |
 
 ## 7b. Sterven per FACTIE (besluit Max, 28 juli)
 
@@ -145,32 +192,38 @@ een enkele factie beginnen; niets gaat stuk zolang de rest ontbreekt.
 | Wolf | vos: die beruchte doordringende schreeuw | dire wolf: afgebroken huil/jank |
 | Krokodil | hagedis: blazende sis die stikt | krokodil: dreunende bulderende bel |
 
-### Prompts -- sterfgeluiden per factie (18 prompts, elk 5x genereren)
+### Prompts -- factie-stem (alleen de KREET, een laag)
 
-Duration 0.6-1.2s, prompt influence hoog. Steeds hetzelfde raamwerk: **dier +
-val van het lijf + materiaal** (uniform, leer, staal, hout), 18e/19e-eeuws,
-geen synth.
+Recept uit §0. Duration ~6s, Prompt influence hoog; knip er zes takes uit en
+noem ze `<bestand>1..6`. Het lijf-op-de-grond en de vallende musket komen uit
+`body_hit_floor` en `val_musket` -- die zitten hier bewust NIET in.
 
 | Bestand | Prompt |
 |---|---|
-| `inf_die_mouse` ✓ (2) | Tiny animal death squeak, high-pitched and short, cut off abruptly, followed by a small body collapsing into wool uniform cloth and a light musket clattering on dirt. Dry, close, no reverb tail, no music. |
-| `horse_die_mouse` | Large rodent war-beast death cry, sharp and rattling, dropping in pitch, with heavy thudding of a big body falling onto dirt and leather harness creaking. Dry and close, no music. |
-| `cannon_die_mouse` | Small field cannon destroyed: splintering wood, iron fittings snapping, a tiny high-pitched animal yelp cut short, gravel and dust settling. Dry, no music. |
-| `inf_die_pig` | Pig death squeal, shrill and snorting, breaking into a wet gurgle, then a heavy round body slumping into wool cloth and a musket hitting the ground. Dry and close, no music. |
-| `horse_die_pig` | Wild boar death roar, deep and snorting, ending in a rattling exhale, with a massive body crashing onto dirt and leather straps snapping. Dry, heavy, no music. |
-| `cannon_die_pig` | Heavy field cannon destroyed: thick oak carriage splitting, iron bands popping, a short pig grunt cut off, debris raining down. Dry, no music. |
-| `inf_die_lion` | Cheetah death chirp, high and strangled, ending in a hiss, with a lean body dropping onto dirt and gold-braided uniform cloth rustling. Dry and close, no music. |
-| `horse_die_lion` | Lion death roar, full-throated and rolling, collapsing into a wet growl, with a huge body thudding onto dirt and heavy leather harness creaking. Dry, no music. |
-| `cannon_die_lion` | Ornate field gun destroyed: brass fittings ringing as they snap, walnut carriage splintering, a short feline snarl cut off, dust settling. Dry, no music. |
-| `inf_die_bear` | Raccoon death screech, rattling and chattering, breaking off suddenly, with a stocky body falling into wool cloth and a steel cuirass clanging on dirt. Dry and close, no music. |
-| `horse_die_bear` | Grizzly bear death roar, low and chesty, fading into a wet rumble, with an enormous body crashing to the ground and iron-studded leather groaning. Dry, no music. |
-| `cannon_die_bear` | Heavy mortar destroyed: thick iron cracking, oak block carriage bursting apart, a short bear grunt cut off, heavy debris thudding. Dry, no music. |
-| `inf_die_wolf` | Fox death scream, piercing and eerie, cut off mid-cry, with a light body dropping onto dirt and patched wool and fur rustling. Dry and close, no music. |
-| `horse_die_wolf` | Dire wolf death howl, broken and yelping, dropping into a growl, with a large body hitting the ground and rope-and-leather harness snapping. Dry, no music. |
-| `cannon_die_wolf` | Scavenged field gun destroyed: mismatched scrap iron clattering, cracked wood splitting, a short canine yelp cut off, loose parts rolling away. Dry, no music. |
-| `inf_die_crocodile` | Lizard death hiss, sharp and sputtering, choking off into silence, with a scaled body slapping onto wet dirt and damp camouflage cloth dragging. Dry and close, no music. |
-| `horse_die_crocodile` | Crocodile death bellow, deep booming and guttural, ending in a hissing exhale, with an armored body slamming into wet ground and heavy tail thumping. Dry, no music. |
-| `cannon_die_crocodile` | Swamp-wrapped field gun destroyed: iron cracking under damp cloth, waterlogged wood splitting, a short reptilian hiss cut off, wet debris slapping down. Dry, no music. |
+| `inf_die_mouse` ✓ (2) | 6 short high-pitched mouse squeaks in a row, each about 0.3 seconds, thin and cut off abruptly, silence between each, one small rodent only, dry close mono recording, no reverb, no music |
+| `horse_die_mouse` | 6 short deep rodent squeals in a row, each about 0.4 seconds, raspy and dropping in pitch, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `cannon_die_mouse` | 6 short bursts of splintering thin wood and snapping small iron fittings in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `inf_die_pig` | 6 short shrill pig squeals in a row, each about 0.4 seconds, snorting and breaking into a wet gurgle, silence between each, one pig only, dry close mono recording, no reverb, no music |
+| `horse_die_pig` | 6 short deep boar grunts in a row, each about 0.5 seconds, snorting and rattling, silence between each, one boar only, dry close mono recording, no reverb, no music |
+| `cannon_die_pig` | 6 short bursts of thick oak splitting and iron bands popping in a row, each about 0.5 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `inf_die_lion` | 6 short high cheetah chirps in a row, each about 0.3 seconds, strangled and ending in a hiss, silence between each, one cat only, dry close mono recording, no reverb, no music |
+| `horse_die_lion` | 6 short rolling lion growls in a row, each about 0.5 seconds, full-throated and wet, silence between each, one lion only, dry close mono recording, no reverb, no music |
+| `cannon_die_lion` | 6 short bursts of brass fittings snapping and hardwood splintering in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `inf_die_bear` | 6 short raccoon screeches in a row, each about 0.3 seconds, rattling and chattering, cut off abruptly, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `horse_die_bear` | 6 short low chesty bear grunts in a row, each about 0.5 seconds, wet and rumbling, silence between each, one bear only, dry close mono recording, no reverb, no music |
+| `cannon_die_bear` | 6 short bursts of thick iron cracking and heavy oak bursting in a row, each about 0.5 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `inf_die_wolf` | 6 short piercing fox screams in a row, each about 0.3 seconds, eerie and cut off mid-cry, silence between each, one fox only, dry close mono recording, no reverb, no music |
+| `horse_die_wolf` | 6 short broken wolf yelps in a row, each about 0.4 seconds, dropping into a growl, silence between each, one wolf only, dry close mono recording, no reverb, no music |
+| `cannon_die_wolf` | 6 short bursts of scrap iron clattering and cracked wood splitting in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `inf_die_crocodile` | 6 short sharp lizard hisses in a row, each about 0.3 seconds, sputtering and choking off, silence between each, one reptile only, dry close mono recording, no reverb, no music |
+| `horse_die_crocodile` | 6 short deep crocodile bellows in a row, each about 0.5 seconds, booming and ending in a hissing exhale, silence between each, one reptile only, dry close mono recording, no reverb, no music |
+| `cannon_die_crocodile` | 6 short bursts of damp iron cracking and waterlogged wood splitting in a row, each about 0.5 seconds, silence between each, dry close mono recording, no reverb, no music |
+
+**Stem-woordenboek** (als je zelf wil varieren): muis = *high-pitched squeak* ·
+varken = *shrill snorting squeal* · leeuw = *cheetah chirp* (inf) / *lion growl*
+(rijdier) · beer = *raccoon screech* (inf) / *chesty bear grunt* (rijdier) ·
+wolf = *fox scream* (inf) / *wolf yelp* (rijdier) · krokodil = *lizard hiss*
+(inf) / *crocodile bellow* (rijdier).
 
 ## 7b-2. Kreten per MODEL (archetype) -- de dikke klinkt niet als de dunne
 
@@ -201,31 +254,33 @@ Archetypes: `base` `spd` `hp` `atk` `mix` -- dezelfde namen als de modellen.
 **Kanonversies zijn KORTER**: de klap kapt de kreet af. Mik op 0,4-0,8s tegen
 0,6-1,2s voor de gewone kreet -- hij begint immers al vóór de inslag.
 
-### Prompts -- muis, doodgeschoten (`inf_die_mouse_<archetype>`)
+### Prompts -- muis per archetype (`inf_die_mouse_<archetype>`)
+
+Zelfde recept; alleen het bijvoeglijk naamwoord verschilt. Zes takes per clip.
 
 | Bestand | Prompt |
 |---|---|
-| `inf_die_mouse_base` | Tiny mouse death squeak, high-pitched and short, cut off abruptly, followed by a small body collapsing into wool uniform cloth. Dry, close, no reverb tail, no music. |
-| `inf_die_mouse_spd` | Very thin skinny mouse death shriek, extremely high-pitched, thin and fast, trailing off into a wheeze, with a light bony body dropping onto dirt. Dry, close, no music. |
-| `inf_die_mouse_hp` | Fat armored mouse death groan, low and winded, muffled behind a steel cuirass, ending in a wet wheeze with metal plates clanking as the heavy body drops. Dry, close, no music. |
-| `inf_die_mouse_atk` | Huge muscular mouse death roar, raw and snarling, more rage than pain, breaking into a growl as a heavy body slams into dirt. Dry, close, no music. |
-| `inf_die_mouse_mix` | Mouse death squeak, high-pitched and short, cut off abruptly, with a body collapsing into wool uniform cloth. Dry, close, no music. |
+| `inf_die_mouse_base` | 6 short high-pitched mouse squeaks in a row, each about 0.3 seconds, thin and cut off abruptly, silence between each, one rodent only, dry close mono recording, no reverb, no music |
+| `inf_die_mouse_spd` | 6 very short thin mouse shrieks in a row, each about 0.2 seconds, extremely high-pitched and fast, silence between each, one rodent only, dry close mono recording, no reverb, no music |
+| `inf_die_mouse_hp` | 6 short muffled winded grunts from a rodent behind steel plate in a row, each about 0.4 seconds, low and wheezing, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `inf_die_mouse_atk` | 6 short raw snarling rodent growls in a row, each about 0.4 seconds, angry rather than pained, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `inf_die_mouse_mix` | 6 short mouse squeaks in a row, each about 0.3 seconds, high-pitched and clipped, silence between each, one rodent only, dry close mono recording, no reverb, no music |
 
-### Prompts -- muis, geraakt door een kanon (`inf_kanon_die_mouse_<archetype>`)
+### Prompts -- muis geraakt door een KANON (`inf_kanon_die_mouse_<archetype>`)
 
-Kort (0,4-0,8s), harder, en abrupt afgekapt door de inslag.
+Korter en harder; de inslag kapt hem af. Vraag de takes op 0,2-0,3s.
 
 | Bestand | Prompt |
 |---|---|
-| `inf_kanon_die_mouse_base` | Short violent mouse scream cut off mid-cry by a heavy impact, high-pitched and desperate, no tail, dry and close, no music. |
-| `inf_kanon_die_mouse_spd` | Very short piercing shriek from a skinny mouse, extremely high and thin, snapped off instantly by a crushing blow, dry, no music. |
-| `inf_kanon_die_mouse_hp` | Short deep winded grunt from a fat armored mouse, muffled behind steel plate, cut off hard by a heavy impact with metal buckling, dry, no music. |
-| `inf_kanon_die_mouse_atk` | Short furious roar from a huge muscular mouse, raw and guttural, chopped off abruptly by a crushing blow, dry, no music. |
-| `inf_kanon_die_mouse_mix` | Short violent mouse scream cut off by a heavy impact, high-pitched, no tail, dry and close, no music. |
+| `inf_kanon_die_mouse_base` | 6 very short violent mouse screams in a row, each about 0.25 seconds, high-pitched and desperate, chopped off instantly, silence between each, one rodent only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_mouse_spd` | 6 very short piercing thin shrieks in a row, each about 0.2 seconds, extremely high, snapped off instantly, silence between each, one rodent only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_mouse_hp` | 6 very short deep winded grunts muffled behind steel in a row, each about 0.3 seconds, cut off hard, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_mouse_atk` | 6 very short furious guttural roars in a row, each about 0.3 seconds, chopped off abruptly, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_mouse_mix` | 6 very short violent mouse screams in a row, each about 0.25 seconds, high-pitched, cut off instantly, silence between each, one rodent only, dry close mono recording, no reverb, no music |
 
-*Andere facties volgen exact hetzelfde patroon: neem de factie-stem uit de
-tabel in 7b en pas de bouw-modificatie uit de tabel hierboven toe (varken-`hp`
-= laag benauwd geknor achter staal, wolf-`spd` = ijle vossenschreeuw, enz.).*
+*Andere facties: neem de stem uit het woordenboek in 7b en zet de bouw-
+modificatie ervoor (varken-`hp` = muffled winded snort behind steel,
+wolf-`spd` = very short thin fox shriek, enz.).*
 
 ## 7bis. Waarom KORT: de doodskreet en de val zijn twee geluiden
 
@@ -258,14 +313,14 @@ beginnen.
 
 | Categorie | # var | Voorwerp | Prompt |
 |---|---|---|---|
-| `val_prop` | 3 | terugval voor alles | Wooden and iron object clattering onto packed dirt, a dull knock with a short metallic rattle, dry and close, no music. |
-| `val_musket` | 3 ✓ (2) | musket | Musket falling onto dirt, heavy wooden stock thudding with an iron barrel rattle, dry and close, no music. |
-| `val_drum` | 3 | trommel | Military side drum dropping onto the ground, a hollow booming thump with rope and rattling snares, dry, no music. |
-| `val_flag` | 2 | vaandelstok | Long wooden flag pole clattering onto dirt, a hard hollow knock and heavy cloth flapping down, dry, no music. |
-| `val_horn` | 2 | hoorn | Small brass bugle dropping onto packed dirt, a bright metallic clank with a faint ringing tone, dry, no music. |
-| `val_sapper` | 2 | bijl | Heavy axe dropping onto dirt, a dull wooden haft thud and a broad iron head clanking, dry, no music. |
-| `val_hoed` | 2-3 ✓ (1) | shako/hoedje dat afvliegt | Stiff felt shako hat landing on packed dirt, a soft muffled flop with a light leather strap slap, dry and close, no music. |
-| `val_canteen` | 2 | vaatje | Small wooden keg dropping and rolling on dirt, hollow wooden thuds with liquid sloshing inside, dry, no music. |
+| `val_prop` | 3 | terugval voor alles | 6 short wooden and iron object clatters on packed dirt in a row, each about 0.4 seconds, dull knock with a brief metal rattle, silence between each, dry close mono recording, no reverb, no music |
+| `val_musket` | 3 ✓ (2) | musket | 6 short musket drops on dirt in a row, each about 0.4 seconds, heavy wooden stock thud with an iron barrel rattle, silence between each, one musket only, dry close mono recording, no reverb, no music |
+| `val_drum` | 3 | trommel | 6 short side drum drops on dirt in a row, each about 0.5 seconds, hollow thump with rope and snare rattle, silence between each, one drum only, dry close mono recording, no reverb, no music |
+| `val_flag` | 2 | vaandelstok | 6 short wooden pole clatters on dirt in a row, each about 0.4 seconds, hard hollow knock with a single cloth flap, silence between each, dry close mono recording, no reverb, no music |
+| `val_horn` | 2 | hoorn | 6 short brass bugle drops on dirt in a row, each about 0.4 seconds, bright metallic clank with a faint ring, silence between each, dry close mono recording, no reverb, no music |
+| `val_sapper` | 2 | bijl | 6 short axe drops on dirt in a row, each about 0.4 seconds, dull wooden haft thud with a broad iron clank, silence between each, dry close mono recording, no reverb, no music |
+| `val_hoed` | 2-3 ✓ (1) | shako/hoedje dat afvliegt | 6 short felt hat landings on packed dirt in a row, each about 0.3 seconds, soft muffled flop with a light leather strap slap, silence between each, dry close mono recording, no reverb, no music |
+| `val_canteen` | 2 | vaatje | 6 short small wooden keg drops on dirt in a row, each about 0.5 seconds, hollow thud with liquid sloshing inside, silence between each, dry close mono recording, no reverb, no music |
 
 ## 7c. Inslag-geluiden per MATERIAAL (algemeen, factie-onafhankelijk)
 
@@ -275,18 +330,18 @@ vlees klinkt nat, staal klinkt hard, hout klinkt dof.
 
 | Categorie | # var | Wanneer | Status |
 |---|---|---|---|
-| `impact_flesh` | 5 | Treffer op een levend stuk (nat, doffe plof) | ➕ |
-| `impact_armor` | 5 | Treffer op kuras/helm (harde metalen tik) | ➕ |
-| `impact_wood` | 4 | Treffer op musketkolf, affuit, schild (dof hout) | ➕ |
-| `impact_bone` | 3 | Botbreuk bij een dodelijke melee-klap (kort, krakend) | ➕ |
-| `impact_dirt` | 4 | Mis: kogel slaat in de grond (aarde + steentjes) | ➕ |
-| `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | ➕ |
+| `impact_flesh` | 5 | Treffer op een levend stuk (nat, doffe plof) | 6 short wet impacts on flesh in a row, each about 0.3 seconds, dull meaty thud with a brief splatter, silence between each, dry close mono recording, no reverb, no music |
+| `impact_armor` | 5 | Treffer op kuras/helm (harde metalen tik) | 6 short musket ball impacts on a steel cuirass in a row, each about 0.3 seconds, hard bright clank with a short ring, silence between each, dry close mono recording, no reverb, no music |
+| `impact_wood` | 4 | Treffer op musketkolf, affuit, schild (dof hout) | 6 short musket ball impacts on a thick oak stock in a row, each about 0.3 seconds, dull heavy knock with splintering, silence between each, dry close mono recording, no reverb, no music |
+| `impact_bone` | 3 | Botbreuk bij een dodelijke melee-klap (kort, krakend) | 6 short bone cracks under cloth in a row, each about 0.25 seconds, dry snap, silence between each, dry close mono recording, no reverb, no music |
+| `impact_dirt` | 4 | Mis: kogel slaat in de grond (aarde + steentjes) | 6 short musket ball impacts in packed dirt in a row, each about 0.3 seconds, dull thud with a spray of soil and pebbles, silence between each, dry close mono recording, no reverb, no music |
+| `ricochet` | 4 | Kogel ketst af op steen/ijzer (zingende afketser) | 6 short musket ball ricochets off stone in a row, each about 0.4 seconds, bright metallic whine spinning away, silence between each, dry close mono recording, no reverb, no music |
 | `blood_splash` | 3 | Bloedspat bij een treffer | ✓ (heb je al) |
 | `body_hit_floor` | 2-4 | Het LIJF raakt de grond (timing per dood-clip uit `death_pools`) | ✓ (2) 🎚️ |
 
 ### Prompts -- materiaal-inslagen
 
-Duration 0.3-0.8s, kort en droog.
+Recept uit §0: een materiaal per prompt, zes korte takes in een clip.
 
 | Bestand | Prompt |
 |---|---|
@@ -350,7 +405,9 @@ track afloopt start automatisch een willekeurige volgende variant.
 
 Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:
 - **Engels** werkt het best; benoem het **materiaal** en het **karakter** (kort, dof, ...).
-- **Duration kort** houden (UI: 0.2-0.5s, klappen/schoten: 0.4-1s, fanfare: 1.5-3s).
+- **Duration**: zet hem op ~5-8s en vraag om **zes korte takes achter elkaar**
+  (recept §0); je knipt ze uit en nummert ze. Voor eenmalige dingen (fanfare,
+  loop) gewoon een take en de echte lengte.
 - **Prompt influence hoog** (~80-100%) voor strak, voorspelbaar resultaat.
 - Voor varianten: **genereer 3-5×** met dezelfde prompt en pak de beste — dat is
   precies waarvoor de categorieën meerdere bestanden hebben.

@@ -23,6 +23,21 @@ const BANK := {
 	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav", "mouse_shot_die_3.wav"],
 	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
 	"val_hoed":      ["hat_hit_floor_2.wav"],
+	# Materiaal-laag onder de treffer (SOUND-WISHLIST 7b-2): je hoort WAT er
+	# geraakt wordt. Extra opnames (impact_flesh_3.wav, ...) doen automatisch
+	# mee -- ze hoeven hier niet bij.
+	"impact_flesh": ["impact_flesh.wav", "impact_flesh_2.wav"],
+	"impact_armor": ["impact_armor.wav"],
+	"impact_wood":  ["impact_wood.wav"],
+	"impact_bone":  ["impact_bone.wav"],
+	"ricochet":     ["ricochet.wav"],
+	# Val-geluiden van de figurant-voorwerpen (7bis). _val_categorie() in
+	# PawnView kiest op rol; wat ontbreekt valt terug op val_prop.
+	"val_prop":   ["val_prop.wav"],
+	"val_flag":   ["val_flag.wav", "val_flag_2.wav"],
+	"val_drum":   ["val_drum.wav"],
+	"val_horn":   ["val_horn.wav", "val_horn_2.wav"],
+	"val_sapper": ["val_sapper.wav", "val_sapper_2.wav"],
 	"musket_cock": ["cockhammer.wav"],
 	"melee_kill":  ["mellee_hit.wav", "mellee_hit2.wav", "mellee_hit4.wav"],
 	"melee_survive": ["mellee_hit_no_kill.wav"],
@@ -88,6 +103,18 @@ const CATEGORY_DB := {
 	"cannon_die": -2.0,
 	"retaliation_horse": -3.0,
 	"blood_splash": -6.0,
+	# De materiaal-laag ligt onder het schot/de klap: hij mag kleuren, niet
+	# overstemmen. Bot is het kortst en mag daarom iets harder.
+	"impact_flesh": -6.0,
+	"impact_armor": -7.0,
+	"impact_wood": -6.0,
+	"impact_bone": -5.0,
+	"ricochet": -8.0,
+	"val_prop": -6.0,
+	"val_flag": -8.0,
+	"val_drum": -5.0,
+	"val_horn": -6.0,
+	"val_sapper": -6.0,
 	"charge_yell": -3.0,
 	"pawn_block": -4.0,
 	"haven_score": -2.0,

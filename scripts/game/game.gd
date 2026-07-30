@@ -1501,6 +1501,35 @@ func _retaliation_sound(defender_id: int, delay: float) -> void:
 ## kanon = geraakt door artillerie: dan een eigen, zwaardere kreet die VLAK
 ## VOOR de inslag inzet (besluit Max, 28 juli) -- je hoort het slachtoffer al
 ## gillen terwijl de kogel nog onderweg is.
+## Materiaal-laag onder de treffer (SOUND-WISHLIST 7b-2, besluit Max 30 juli).
+## Het schot en de klap houden hun eigen geluid; hier komt eronder te liggen
+## WAT er geraakt is, zodat een kanon anders klinkt dan een lijf:
+##   artillerie geraakt     -> impact_wood (affuit en wielen)
+##   hp-archetype geraakt   -> impact_armor (die draagt het kuras)
+##   al het andere leven    -> impact_flesh
+##   dodelijke melee erbij  -> impact_bone (kans, anders wordt het een deuntje)
+##   geen schade            -> ricochet (kogel ketst weg)
+## Tijden en volumes stel je per categorie af in de tuner (Geluid-tab).
+func _impact_laag(target_id: int, damage: int, gedood: bool, delay: float,
+		melee: bool = false) -> void:
+	var pawn: Pawn = GameSession.state.pawns.get(target_id)
+	if pawn == null:
+		return
+	if damage <= 0:
+		Audio.play_getuned("ricochet", delay)
+		return
+	var cat := "impact_flesh"
+	if pawn.unit_type == Constants.UnitType.ARTILLERY:
+		cat = "impact_wood"
+	else:
+		var pv: PawnView = _pawn_views.get(target_id)
+		if pv != null and pv.archetype() == "hp":
+			cat = "impact_armor"
+	Audio.play_getuned(cat, delay)
+	if gedood and melee and randf() < 0.5:
+		Audio.play_getuned("impact_bone", delay + 0.05)
+
+
 func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 	if pawn == null:
@@ -1578,6 +1607,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 					_animate_move.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
 			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",
 				maxf(hit_del - 0.12, 0.0))
+			_impact_laag(action.defender_id, int(result.get("damage", 0)),
+				result.get("eliminated", false), maxf(hit_del - 0.12, 0.0), true)
 			_hit_feedback(action.defender_id, result.defender_pos, result.damage, hit_del,
 				result.attacker_from_pos, result.get("eliminated", false), 0.7)
 			if result.get("eliminated", false):
@@ -1589,6 +1620,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				_hit_feedback(action.attacker_id, result.attacker_from_pos, result.get("retaliation_damage", 1), ret_del,
 					result.defender_pos, result.get("attacker_eliminated", false), 0.5)
 				_retaliation_sound(action.defender_id, ret_del)
+				_impact_laag(action.attacker_id, int(result.get("retaliation_damage", 1)),
+					result.get("attacker_eliminated", false), ret_del, true)
 				if result.get("attacker_eliminated", false):
 					_death_sound(action.attacker_id, ret_del + 0.05)
 		"cannon_act":
@@ -1621,6 +1654,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				Audio.play("musket_fire")
 				Audio.play("musket_echo", 0.18)
 				Audio.play("musket_hit", travel)
+			_impact_laag(action.target_id, int(result.get("damage", 0)),
+				result.get("eliminated", false), travel)
 			var shot_strength := 1.4 if shooter_type == Constants.UnitType.ARTILLERY else 0.75
 			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03,
 				result.attacker_from_pos, result.get("eliminated", false), shot_strength, "shot")
@@ -1642,6 +1677,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			if action.get("defender_id", -1) != -1:
 				# Na de aanrij-animatie: klap op het doelwit, evt. terugslag op het paard.
 				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", 0.4)
+				_impact_laag(action.defender_id, int(result.get("damage", 0)),
+					result.get("eliminated", false), 0.4, true)
 				_hit_feedback(action.defender_id, result.defender_pos, result.damage, 0.4,
 					result.charge_from, result.get("eliminated", false), 0.85)
 				if result.get("eliminated", false):
@@ -1650,6 +1687,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), 0.75,
 						result.defender_pos, result.get("attacker_eliminated", false), 0.5)
 					_retaliation_sound(action.defender_id, 0.75)
+					_impact_laag(action.pawn_id, int(result.get("retaliation_damage", 1)),
+						result.get("attacker_eliminated", false), 0.75, true)
 					if result.get("attacker_eliminated", false):
 						_death_sound(action.pawn_id, 0.8)
 		"wolf_step":

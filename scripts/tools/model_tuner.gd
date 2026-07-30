@@ -1696,6 +1696,14 @@ func _geluid_rijen() -> Array:
 		rijen.append({"cat": vc, "wat": "voorwerp valt", "terugval": "val_prop"})
 		rijen.append({"cat": "val_hoed", "wat": "hoedje valt"})
 	rijen.append({"cat": "blood_splash", "wat": "bloedspat"})
+	# Materiaal-laag: exact de categorie die het spel voor DIT model kiest,
+	# plus de twee losse gevallen (botbreuk bij een dodelijke klap, afketser
+	# als er geen schade valt).
+	var mat := "impact_wood" if tp == Constants.UnitType.ARTILLERY else (
+		"impact_armor" if ARCHS[_arch_btn.selected] == "hp" else "impact_flesh")
+	rijen.append({"cat": mat, "wat": "treffer op dit model"})
+	rijen.append({"cat": "impact_bone", "wat": "botbreuk (dodelijke klap)"})
+	rijen.append({"cat": "ricochet", "wat": "afketser (geen schade)"})
 	return rijen
 
 

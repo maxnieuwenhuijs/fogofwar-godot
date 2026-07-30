@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "288f2a71e249be0512a0e747958b420195116958b1625287e929185eecac9fc0",
+			"hash": "ac71f3f262f0f6e9e4feeedcd75c8030ee9c3a416bc812f2d80b6e817113d745",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785331184.085
+			"ts": 1785397491.77
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "c6251bf3811eadeb4a6b5312e6a25cbfd0fa13a185489a236352c0ed7f08d9b2",
+			"hash": "5cded81c356ef924f6be601b8216b3ba839cbcd901c1f5c97af29e030292e150",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785331184.085
+			"ts": 1785397491.77
 		},
 		{
 			"action": {
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "d4212e7c4c2d38449dae4fe3a88aa453609889d5089a70cf04a0ec36a502cf06",
+			"hash": "9ca9067f19ef23361f536750a7ae6cc6fd1c17d9ba9ad9a0b705524fa419d715",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1785331184.086
+			"ts": 1785397491.77
 		}
 	],
-	"final_hash": "d4212e7c4c2d38449dae4fe3a88aa453609889d5089a70cf04a0ec36a502cf06",
+	"final_hash": "9ca9067f19ef23361f536750a7ae6cc6fd1c17d9ba9ad9a0b705524fa419d715",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -266,6 +266,7 @@
 				"pool_zichtbaar": false,
 				"poolfactor": 1.5,
 				"pools": null,
+				"punten_start": 0,
 				"skip_mode": "auto",
 				"spawn_kosten": {
 					"art": 3,
@@ -321,7 +322,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-29T15:19:44",
+		"created": "2026-07-30T09:44:51",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -449,6 +450,7 @@
 					"pool_zichtbaar": false,
 					"poolfactor": 1.5,
 					"pools": null,
+					"punten_start": 0,
 					"skip_mode": "auto",
 					"spawn_kosten": {
 						"art": 3,

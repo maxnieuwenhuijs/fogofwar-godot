@@ -882,6 +882,12 @@ func _speel_doodskreet() -> void:
 
 ## Welk kletter-geluid hoort bij wat er uit de handen vliegt? Trommel klinkt
 ## anders dan een musket. Zonder eigen bestand valt alles terug op "val_prop".
+## Welk archetype draagt deze pion (hp/atk/spd/mix)? Nodig voor de
+## materiaal-laag: de hp-pion draagt het kuras en klinkt metalig.
+func archetype() -> String:
+	return _archetype
+
+
 func _val_categorie() -> String:
 	if _rol == "":
 		return "val_musket"
