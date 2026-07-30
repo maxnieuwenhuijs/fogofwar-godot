@@ -1,6 +1,6 @@
 {
  "matchups": "all",
- "games_per_matchup": 4,
+ "games_per_matchup": 2,
  "agents": {
   "p1": "l2",
   "p2": "l2"

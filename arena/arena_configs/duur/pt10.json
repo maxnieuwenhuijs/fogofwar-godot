@@ -8,5 +8,5 @@
  "base_seed": 515000,
  "max_steps": 4000,
  "track_repetitions": false,
- "rules": "res://arena/arena_configs/duur/rules_pt4.json"
+ "rules": "res://arena/arena_configs/duur/rules_pt10.json"
 }

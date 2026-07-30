@@ -3,7 +3,9 @@
   "cav": 2
  },
  "campaign": {
-  "pool_model": "punten"
+  "pool_model": "punten",
+  "punten_start": 10,
+  "spawn_totaal_max": 10
  },
  "cycle_limit": 20
 }

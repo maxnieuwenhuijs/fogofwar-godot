@@ -1,5 +1,51 @@
 # Fog of War — Work In Progress & Context
 
+## 30 juli 2026 (later) -- de versterkingen deden al drie dagen niks
+
+**Aanleiding**: Max wilde de campagne-regels houden maar het BUDGET van een
+enkel potje ("niet dat een 1v1 zo lang duurt als reinforcements voor een
+campagne van minstens 4 potjes"). Bij het meten van de speelduur bleek er
+iets veel ergers: **0 spawns in 33 partijen**. Historisch nagerekend over alle
+runs: nacht 24 juli 36,1 spawns per partij, nachten 28 juli 0,00 in 3240
+partijen.
+
+**Oorzaak** (fan-out van vier diagnose-lenzen, alle vier op dezelfde regel
+uitgekomen; de geschiedenis-lens noemde de commit): sinds C11 heet de reserve
+`{"pt": N}`, maar `agents/agent.gd` bouwde de pool van een bot terug als
+`{inf, cav, art}`. De bot zag dus 0 en bood zelf een lege spawn-inzet aan --
+de legaliteitspoort was onschuldig (SPAWN was gewoon legaal). Commit 35704f0,
+27 juli.
+
+**Tweede vondst, stiller**: `Serializer.state_from_dict` deed hetzelfde, dus
+elke replay/fold/campagne-hervatting verloor de puntenreserve. Geen golden ving
+dat, want `zobrist` hasht de pools niet. Beide gefixt met "neem de sleutels
+over die er staan"; twee regressietests in SpawnTests zetten het vast.
+
+**Toen pas de regel** (C14): startreserve gemeten tegen speelduur, L2-L2, alle
+matchups, 288 potjes per variant. Oude 1v1-formule (1,5 x comp = 39-52 pt) =
+14,5 cycli mediaan, 24,5 aanvullingen, 11% in de cycluslimiet. 4 pt = 10,0 /
+4,2 / 3%. 6 pt = 9,0 / 5,1 / 3%. 15 pt (hele campagnepot) = 11,0 / 12,7 / 8%.
+**10 pt = 10,0 / 9,2 / 0%** en dat is Max' keuze ("gewoon om een 1v1 wat te
+prolongeren"): dezelfde speelduur als 4 punten, ruim dubbel zoveel aanvullen,
+en geen enkele partij die de cycluslimiet haalt. Gezet in `v42_default.json`
+(los duel + bron van de nacht-matrix) en `rules_v42_campaign.json` (trainer):
+`punten_start` 10, `spawn_totaal_max` 10. De campagne zelf levert per duel een
+expliciete pool uit het grootboek en is dus onaangeroerd.
+
+**Let op bij subagents**: een van de diagnose-agents heeft `agents/agent.gd`
+tijdens de rit teruggezet met git, waardoor de fix er even uit was en een deel
+van de eerste meetdata besmet raakte (spawns zakten van 4,2 naar 1,1). Data
+weggegooid en schoon opnieuw gemeten; fix opnieuw aangebracht en met een
+debug-run bevestigd.
+
+**Voor de eerstvolgende trainingsnacht**: de weights van 28 juli hebben over een
+dode economie geleerd -- de spawn-gewichten (incl. `spawn_duur`) zijn nooit
+getest. Een nieuwe nacht is dus geen herhaling maar de eerste echte meting van
+het aanvullen.
+
+**Opgeruimd**: de diagnose-agents lieten probe_*.gd/tscn, mn_ab.json,
+zz_check_*.json en scripts/core/bestandsindex.gd achter; verwijderd.
+
 ## 30 juli 2026 (later) -- de veertien nieuwe geluiden doen mee
 
 - **Ingelezen**: de veertien wav's stonden op de schijf maar Godot had ze nog

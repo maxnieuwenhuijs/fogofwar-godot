@@ -113,8 +113,16 @@ static func reconstruct_state(view: Dictionary) -> GameState:
 	# validator-checks voor EIGEN acties lezen alleen de eigen kant.
 	for key in view.get("pools", {}):
 		if view.pools[key] is Dictionary:
+			# ALLE sleutels overnemen, niet alleen inf/cav/art (fix 30 juli):
+			# in de punten-economie (C11) heet de reserve "pt". Wie alleen de
+			# typen kopieerde zag een lege voorraad en heeft daardoor sinds
+			# 27 juli geen enkele keer meer gespawnd -- twee trainingsnachten
+			# lang. Overnemen wat er staat houdt beide modellen goed.
 			var p: Dictionary = view.pools[key]
-			s.pools[int(String(key))] = {"inf": int(p.get("inf", 0)), "cav": int(p.get("cav", 0)), "art": int(p.get("art", 0))}
+			var kopie: Dictionary = {}
+			for k in p:
+				kopie[String(k)] = int(p[k])
+			s.pools[int(String(key))] = kopie
 	for key in view.get("cp", {}):
 		if not (view.cp[key] is String):
 			s.cp[int(String(key))] = int(view.cp[key])

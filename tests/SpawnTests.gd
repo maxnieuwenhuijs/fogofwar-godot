@@ -326,3 +326,37 @@ func test_c11_geen_type_buiten_de_doctrine() -> void:
 	assert_false(Validator.is_legal(s, kanon, 1).legal, "kanon spawnen als Muis geweigerd")
 	var soldaat := Actions.make_spawn([{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(5, achterste)}])
 	assert_true(Validator.is_legal(s, soldaat, 1).legal, "soldaat spawnen mag wel")
+
+
+func test_punten_pool_overleeft_serialisatie() -> void:
+	# REGRESSIE (30 juli): Serializer.from_dict las alleen inf/cav/art terug.
+	# In de punten-economie heet de reserve "pt", dus elke replay/fold verloor
+	# hem stil -- zobrist hasht de pools niet, dus geen golden merkte het.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "punten_start": 9,
+	}})
+	s.doctrines[1] = Constants.Doctrine.MENS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	s.init_pools()
+	assert_eq(s.pool_total(1), 9, "vaste startreserve")
+	var terug: GameState = Serializer.state_from_dict(Serializer.state_to_dict(s))
+	assert_eq(terug.pool_total(1), 9, "puntenreserve overleeft de roundtrip")
+	assert_eq(terug.pool_count(1, Constants.UnitType.ARTILLERY), 3, "9 pt = 3 kanonnen")
+
+
+func test_agent_ziet_eigen_puntenreserve() -> void:
+	# REGRESSIE (30 juli): agents/agent.gd bouwde de pools typed op, zag dus 0
+	# punten en spawnde nooit. Dat kostte twee trainingsnachten: 3240 partijen
+	# met 0 spawns, terwijl de nacht van 24 juli er nog 36 per partij had.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "punten_start": 7,
+	}})
+	s.doctrines[1] = Constants.Doctrine.MUIS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	s.setup_initial_pawns()
+	var view: Dictionary = View.for_player(s, 1)
+	var her: GameState = Agent.reconstruct_state(view)
+	assert_eq(her.pool_total(1), 7, "agent ziet zijn eigen puntenreserve")
+	assert_eq(her.pool_count(1, Constants.UnitType.INFANTRY), 7, "7 pt = 7 soldaten")

@@ -1,19 +1,52 @@
 # Spelregels — CHANGELOG
 
-## C14 — 30 juli 2026 (vaste 1v1-startreserve)
+## C14 — 30 juli 2026 (een los potje krijgt een potje-budget)
 
-- **`punten_start`** (nieuwe knop in het campaign-blok, default 0 = uit): een
-  vaste puntenreserve voor beide spelers. Staat hij op 0, dan rekent
-  `poolfactor x doctrine-comp` het bedrag uit zoals voorheen -- dat blijft het
-  gedrag in de campagne, waar de laag zelf de pool aanlevert.
-- **Het losse 1v1-potje** (`v42_default.json`) start nu op **15 punten reserve
-  en 10 CP**, ongeacht de factie. Daarvoor hing de reserve aan de doctrine-comp
-  en verschilde hij per factie (21 punten voor de een, 17 voor de ander) zonder
-  dat iemand dat kon zien: onuitlegbaar in een duel dat verder symmetrisch is.
-  De campagne is de plek waar ongelijke budgetten thuishoren (budget_bonus).
-- **Goldens hergenereerd**: `cp_inzet`, `kanon_act` en `spawn_geblokkeerd`
-  draaien op de 1v1-config en kennen dus een andere startpool.
+**Eerst de bug, want die maakte de regel pas meetbaar.** Sinds C11 (27 juli,
+commit 35704f0) is de reserve EEN puntenpot: `pools[speler] = {"pt": N}`. Twee
+plekken bouwden de pool nog per type op (`inf`/`cav`/`art`) en lazen dus 0:
 
+- `agents/agent.gd` (view-reconstructie): elke bot zag een LEGE reserve en
+  diende zelf een lege spawn-inzet in. De nacht van 24 juli had nog 36,1
+  aanvullingen per partij, de nachten van 28 juli 0,00 in 3240 partijen. Twee
+  trainingsnachten hebben dus over een dode economie geleerd.
+- `core/match/serializer.gd` (`state_from_dict`): elke replay, fold en
+  campagne-hervatting verloor de puntenreserve. Onzichtbaar, want `zobrist`
+  hasht de pools niet, dus geen golden kon het vangen.
+
+Beide doen nu "neem de sleutels over die er staan"; twee regressietests in
+`tests/SpawnTests.gd` zetten het vast (agent ziet zijn eigen puntenreserve,
+en de reserve overleeft een serialisatie-roundtrip).
+
+**En toen de regel.** Met werkende aanvullingen gemeten, L2 tegen L2, alle
+matchups, v4.2-duel:
+
+| reserve | potjes | cycli (mediaan) | aanvullingen | haven | eliminatie | tiebreak |
+|---|---|---|---|---|---|---|
+| oude 1v1-formule (1,5 x comp = 39-52 pt) | 288 | 14.5 | 24.5 | 72% | 17% | 11% |
+| 4 punten | 288 | 10.0 | 4.2 | 64% | 33% | 3% |
+| 6 punten | 288 | 9.0 | 5.1 | 58% | 39% | 3% |
+| **10 punten (gekozen)** | 288 | 10.0 | 9.2 | 50% | 50% | 0% |
+| 15 punten (hele campagnepot) | 288 | 11.0 | 12.7 | 53% | 39% | 8% |
+
+- **`punten_start` = 10** en **`spawn_totaal_max` = 10** in `v42_default.json`
+  (het losse duel, en de bron van de nacht-matrix) en in
+  `rules_v42_campaign.json` (de trainer). Keuze van Max: een los potje mag wat
+  langer doorlopen. De meting steunt dat: 10 punten geeft dezelfde speelduur als
+  4 punten maar ruim dubbel zoveel aanvullingen, en geen enkele partij eindigde
+  in de cycluslimiet.
+- **Waarom niet de oude formule** (1,5 x comp = 39 tot 52 punten): dat is geen
+  potje-budget maar een oorlogskas. 24,5 aanvullingen per partij, de langste
+  partijen van allemaal en 11% die de cycluslimiet haalt.
+- **Waarom niet de hele campagnepot** (15 punten): 0,5 x comp geeft in de
+  campagne 15 tot 18 punten voor een campagne van MINSTENS vier duels. Dat in
+  een enkel potje stoppen is vier potjes budget in een potje.
+- **De campagne blijft de campagne**: die levert per duel een expliciete pool
+  uit het grootboek, en een expliciete pool wint van `punten_start`. Een los
+  1v1 speelt dus met campagne-REGELS (CP, versterkingen, spawn-fase) op het
+  budget van een enkel duel.
+- **Goldens**: hergenereerd. Geen enkele hash veranderde (de startpool zit niet
+  in de zobrist-hash), alleen de opgeslagen startpool in de replay-data.
 
 ## C13 — 29 juli 2026 (balans na de trainingsplateau-meting)
 

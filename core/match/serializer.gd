@@ -134,8 +134,16 @@ static func state_from_dict(d: Dictionary) -> GameState:
 		for pid in d.get("haven_touches", {}).get(key, []):
 			s.haven_touches[player_id][int(pid)] = true
 		if d.get("pools", {}).has(key):
+			# Zelfde fix als in agents/agent.gd: neem de sleutels over die er
+			# staan. Typed = inf/cav/art, punten = pt. Deed hij dat niet, dan
+			# verloor elke replay/fold de puntenreserve en werd een latere
+			# spawn ineens illegaal -- onzichtbaar, want zobrist hasht de
+			# pools niet.
 			var p: Dictionary = d.pools[key]
-			s.pools[player_id] = {"inf": int(p.get("inf", 0)), "cav": int(p.get("cav", 0)), "art": int(p.get("art", 0))}
+			var kopie: Dictionary = {}
+			for k in p:
+				kopie[String(k)] = int(p[k])
+			s.pools[player_id] = kopie
 		var commits: Array = []
 		for e in d.get("spawn_commits", {}).get(key, []):
 			var pos = e.pos
