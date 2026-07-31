@@ -76,6 +76,24 @@ function Maak-Minuten([int]$y, [int]$standaard) {
     return $n
 }
 
+# Klein getal-veldje naast een knop (bv. het aantal potjes per matchup voor de
+# regelzoeker). Zelfde vorm als Maak-Minuten, maar met een eigen label.
+function Maak-Getal([int]$y, [int]$standaard, [int]$min, [int]$max, [string]$label, [int]$x) {
+    $n = New-Object System.Windows.Forms.NumericUpDown
+    $n.Location = New-Object System.Drawing.Point($x, ($y + 6))
+    $n.Size = New-Object System.Drawing.Size(48, 26)
+    $n.Minimum = $min
+    $n.Maximum = $max
+    $n.Value = $standaard
+    $form.Controls.Add($n)
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Text = $label
+    $lbl.Location = New-Object System.Drawing.Point(($x + 50), ($y + 11))
+    $lbl.Size = New-Object System.Drawing.Size(55, 18)
+    $form.Controls.Add($lbl)
+    return $n
+}
+
 # Gedeelde starter: 6 parallelle trainers (campagne-regels) met logbestanden
 # per factie in results\training_<stamp>\.
 function Start-Training([int]$minuten) {
@@ -131,14 +149,21 @@ $null = Maak-Knop "Bots laten spelen (meting)" "Botgevechten voor winst-cijfers 
 # --- 4. Rapport bekijken.
 # --- 3b. Regels uitproberen: zoekt zelf naar een betere ontwerp-balans.
 $numBalans = Maak-Minuten 240 60
+# Potjes per matchup: meer = minder ruis, maar tragere generaties. Onder de 2
+# is het verschil tussen 25% en 40% winrate niet meer van toeval te scheiden.
+$numPotjes = Maak-Getal 240 2 1 8 "potjes" 200
 $null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP- en versterkings-instellingen; komt met een voorstel." 240 {
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numBalans.Value
+    $potjes = [int]$numPotjes.Value
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-        "python `"$repo\tools\balans\regelzoeker.py`" --minuten $duur --potjes 2 --kandidaten 6; Read-Host 'Klaar - druk op Enter'")
+        "python `"$repo\tools\balans\regelzoeker.py`" --minuten $duur --potjes $potjes --kandidaten 6; Read-Host 'Klaar - druk op Enter'")
     [System.Windows.Forms.MessageBox]::Show(
-        "De regelzoeker draait $duur minuten." + [Environment]::NewLine + [Environment]::NewLine +
+        "De regelzoeker draait $duur minuten met $potjes potje(s) per matchup." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Meer potjes = betrouwbaardere cijfers maar tragere generaties." +
+        [Environment]::NewLine + [Environment]::NewLine +
         "Hij verandert NIETS aan het spel: hij zet zijn beste vondst als voorstel.json in " +
         "results\balans_<tijd>\, met een log van alles wat hij geprobeerd heeft. " +
         "Daarna kijken we samen wat je ervan overneemt.", "Fog of War") | Out-Null
