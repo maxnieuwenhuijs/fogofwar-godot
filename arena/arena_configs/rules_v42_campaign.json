@@ -1,19 +1,28 @@
 {
+ "_uitleg_cycluslimiet": "MEETGRENS, geen spelregel: in de echte campagne staat de cycluslimiet UIT (C9). Bots rekken partijen zonder limiet tot ~1570 stappen (gemeten 31 juli, 3x zo lang), waardoor een trainingsnacht een derde van de generaties haalt en 18% van de partijen op de meet-afkap eindigt. 25 cycli bindt in botspel vrijwel nooit (mediaan 9-10) en houdt de meting eerlijk.",
  "basis_hp": {
   "cav": 2
  },
  "campaign": {
-  "pool_model": "punten",
-  "punten_start": 10,
-  "punten_start_factie": {
-   "0": 9,
-   "1": 12,
-   "2": 7,
-   "3": 12,
-   "4": 11,
-   "5": 7
+  "budget_bonus": {
+   "1": {
+    "cp": 0,
+    "pt": 4
+   },
+   "3": {
+    "cp": 0,
+    "pt": 3
+   },
+   "4": {
+    "cp": 4,
+    "pt": 2
+   }
   },
-  "spawn_totaal_max": 10
+  "cp_start": 10,
+  "pool_model": "punten",
+  "potje_factor": 1.0,
+  "spawn_totaal_max": 15,
+  "start_poolfactor": 0.5
  },
- "cycle_limit": 20
+ "cycle_limit": 25
 }

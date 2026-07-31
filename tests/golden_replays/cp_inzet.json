@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "670d826ecd4c52a407e5654364f5c520431605ef0bfea2dc43cc9d3a3a3dd2c7",
+			"hash": "39231fda2f12bf8b04d0229efac3005cfed81fdfb55e68a6f1d0c44fcd3fb854",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785420253.585
+			"ts": 1785501402.956
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "56b9b0d2063c2240cbe7f3f15f355082c8d1798e91092ce056b8ed5e21be88e0",
+			"hash": "754c05ff35e32589f0c5ed627e273281c054f68ba3ccab4bd620b373419dbd72",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785420253.586
+			"ts": 1785501402.956
 		},
 		{
 			"action": {
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "6b3df5d8fa7a06a6e2a9114babc072fa0381f9af4fd26284f0ff224bc6dded09",
+			"hash": "601f0852673173218af0948ea9d487be8ca838cc02ace247971ca1c12b8ecaaa",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1785420253.586
+			"ts": 1785501402.958
 		}
 	],
-	"final_hash": "6b3df5d8fa7a06a6e2a9114babc072fa0381f9af4fd26284f0ff224bc6dded09",
+	"final_hash": "601f0852673173218af0948ea9d487be8ca838cc02ace247971ca1c12b8ecaaa",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -247,6 +247,7 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"budget_bonus": {},
 				"buit_tamboer_cp": 2,
 				"buit_vaandel_pt": 2,
 				"comp_override": null,
@@ -270,6 +271,7 @@
 				"pool_zichtbaar": false,
 				"poolfactor": 1.5,
 				"pools": null,
+				"potje_factor": 1.0,
 				"punten_start": 0,
 				"punten_start_factie": {},
 				"skip_mode": "auto",
@@ -282,6 +284,7 @@
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
 				"spawn_vanaf_cyclus": 2,
+				"start_poolfactor": 0.5,
 				"tamboers_max": 2,
 				"vaandels_max": 2
 			},
@@ -329,7 +332,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T16:04:13",
+		"created": "2026-07-31T14:36:42",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -438,6 +441,7 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"budget_bonus": {},
 					"buit_tamboer_cp": 2,
 					"buit_vaandel_pt": 2,
 					"comp_override": null,
@@ -461,6 +465,7 @@
 					"pool_zichtbaar": false,
 					"poolfactor": 1.5,
 					"pools": null,
+					"potje_factor": 1.0,
 					"punten_start": 0,
 					"punten_start_factie": {},
 					"skip_mode": "auto",
@@ -473,6 +478,7 @@
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",
 					"spawn_vanaf_cyclus": 2,
+					"start_poolfactor": 0.5,
 					"tamboers_max": 2,
 					"vaandels_max": 2
 				},

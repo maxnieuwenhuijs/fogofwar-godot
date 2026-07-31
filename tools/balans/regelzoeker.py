@@ -38,18 +38,23 @@ from collections import Counter, defaultdict
 PROJECT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GODOT = os.environ.get("GODOT_PATH") or (
     r"C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe")
-BASIS = os.path.join(PROJECT, "arena", "arena_configs", "v42_default.json")
+# C17 (besluit Max, 31 juli): EEN REGELSET. De campagne is het spel, dus de
+# zoeker draait op de campagne-config. Een los 1v1 is daar een afgeleide van
+# (dezelfde formule maal potje_factor), dus wat hier beter wordt, wordt daar
+# vanzelf beter.
+BASIS = os.path.join(PROJECT, "arena", "arena_configs", "rules_v42_campaign.json")
 
 # --------------------------------------------------------------- zoekruimte
 # Elke knop: (pad in het campaign-blok, ondergrens, bovengrens, geheel getal?)
 # De factie-reserves staan apart omdat het er zes zijn.
 KNOPPEN = [
+    ("start_poolfactor", 0.2, 1.2, False),   # reserve = factor x je legersamenstelling
     ("cp_start", 2, 20, True),
     ("buit_vaandel_pt", 0, 6, True),
     ("buit_tamboer_cp", 0, 8, True),
     ("ruil_cp_per_punt", 1, 4, True),
     ("spawn_max", 1, 6, True),
-    ("spawn_totaal_max", 3, 20, True),
+    ("spawn_totaal_max", 3, 25, True),
     ("spawn_vanaf_cyclus", 1, 4, True),
 ]
 FACTIES = {"0": "Varken", "1": "Muis", "2": "Leeuw", "3": "Beer", "4": "Wolf", "5": "Krokodil"}
@@ -59,11 +64,15 @@ FACTIES = {"0": "Varken", "1": "Muis", "2": "Leeuw", "3": "Beer", "4": "Wolf", "
 # waarna hij die knop nooit meer kon vinden (gemeten 31 juli: buit 3,11 in de
 # nulmeting, 0,00 bij alle kandidaten van generatie 1).
 CODE_DEFAULTS = {
-    "cp_start": 10, "buit_vaandel_pt": 2, "buit_tamboer_cp": 2,
-    "ruil_cp_per_punt": 2, "spawn_max": 3, "spawn_totaal_max": 15,
-    "spawn_vanaf_cyclus": 2,
+    "start_poolfactor": 0.5, "cp_start": 10, "buit_vaandel_pt": 2,
+    "buit_tamboer_cp": 2, "ruil_cp_per_punt": 2, "spawn_max": 3,
+    "spawn_totaal_max": 15, "spawn_vanaf_cyclus": 2,
 }
-RESERVE_MIN, RESERVE_MAX = 3, 20
+# Budget-bonus per factie: de compensatie die zwakke facties bij de start
+# krijgen. Dit is DE knop voor factie-evenwicht binnen een regelset -- niet een
+# aparte 1v1-tabel (die is er niet meer, C17).
+BONUS_PT_MAX = 10
+BONUS_CP_MAX = 10
 
 # --------------------------------------------------------------- doelstelling
 # Gewichten van de score. Hoger = zwaarder mee. Alles wordt op 0..1 genormeerd
@@ -144,12 +153,18 @@ def muteer(regels, rng, sigma):
         waarde = huidig * math.exp(rng.gauss(0.0, sigma))
         waarde = max(onder, min(boven, waarde))
         c[naam] = int(round(waarde)) if geheel else round(waarde, 3)
-    tabel = dict(c.get("punten_start_factie", {}))
+    # Factie-evenwicht loopt via de budget-bonus (zelfde knop als de campagne).
+    bonus = {k: dict(v) for k, v in (c.get("budget_bonus", {}) or {}).items()}
     for sleutel in FACTIES:
-        huidig = float(tabel.get(sleutel, c.get("punten_start", 10)))
-        waarde = huidig * math.exp(rng.gauss(0.0, sigma))
-        tabel[sleutel] = int(round(max(RESERVE_MIN, min(RESERVE_MAX, waarde))))
-    c["punten_start_factie"] = tabel
+        b = bonus.get(sleutel, {"pt": 0, "cp": 0})
+        pt = float(b.get("pt", 0))
+        cp = float(b.get("cp", 0))
+        # Vanaf nul kan log-normale ruis nooit weg, dus daar tellen we op.
+        pt = pt * math.exp(rng.gauss(0.0, sigma)) if pt > 0 else max(0.0, rng.gauss(0.0, 1.5))
+        cp = cp * math.exp(rng.gauss(0.0, sigma)) if cp > 0 else max(0.0, rng.gauss(0.0, 1.5))
+        bonus[sleutel] = {"pt": int(round(min(BONUS_PT_MAX, pt))),
+                          "cp": int(round(min(BONUS_CP_MAX, cp)))}
+    c["budget_bonus"] = bonus
     return nieuw
 
 

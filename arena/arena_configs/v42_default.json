@@ -7,6 +7,20 @@
   "cav": 2
  },
  "campaign": {
+  "budget_bonus": {
+   "1": {
+    "cp": 0,
+    "pt": 4
+   },
+   "3": {
+    "cp": 0,
+    "pt": 3
+   },
+   "4": {
+    "cp": 4,
+    "pt": 2
+   }
+  },
   "cp_bijschrijving": "campagnelaag",
   "cp_effect_mode": "define_budget",
   "cp_eliminatie": 4,
@@ -26,15 +40,7 @@
   "pool_zichtbaar": false,
   "poolfactor": 1.5,
   "pools": null,
-  "punten_start": 10,
-  "punten_start_factie": {
-   "0": 9,
-   "1": 12,
-   "2": 7,
-   "3": 12,
-   "4": 11,
-   "5": 7
-  },
+  "potje_factor": 0.35,
   "skip_mode": "auto",
   "spawn_kosten": {
    "art": 3,
@@ -42,9 +48,10 @@
    "inf": 1
   },
   "spawn_max": 3,
-  "spawn_totaal_max": 10,
+  "spawn_totaal_max": 8,
   "spawn_vakken": "achterste_rij",
-  "spawn_vanaf_cyclus": 2
+  "spawn_vanaf_cyclus": 2,
+  "start_poolfactor": 0.5
  },
  "clock": {
   "bank_sec": 0,

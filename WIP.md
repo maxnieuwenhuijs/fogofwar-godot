@@ -1,5 +1,38 @@
 # Fog of War — Work In Progress & Context
 
+## 31 juli 2026 (later) -- C17: EEN regelset, de campagne is het spel
+
+Max: "het moet allemaal 1 lijn zijn en zeker de trainer. De campagne-regels zijn
+belangrijk, de 1v1 is gewoon een afgeleide: in plaats van meerdere duels speel
+je er een, en dus heb je iets gedowngrade CP en reinforcements, meer niet."
+
+**Wat er mis was**: er stonden twee economieen naast elkaar. De campagne rekende
+0,5 x comp + budget-bonus (15-18 pt), het 1v1 gebruikte de vaste C16-tabel
+(7-12 pt), en de TRAINER draaide op `rules_v42_campaign.json` waar ik die
+1v1-tabel in had gezet. Hij leerde dus over een economie die in de campagne niet
+bestaat. Bovendien gaf `train_ai.bat` het regelbestand helemaal niet mee: die
+trainde op 4.1.
+
+**Nu**: `start_poolfactor` x comp + `budget_bonus` is de enige formule, overal.
+Het losse potje schaalt met `potje_factor` (0,35). Campagne 15-18 pt en 10-14
+CP; los potje 5-6 pt en 4-5 CP. Trainer, nacht-matrix, ijk-sims en regelzoeker
+draaien alle vier op de campagne-config. De regelzoeker draait niet meer aan een
+1v1-tabel maar aan `start_poolfactor`, `budget_bonus` per factie, `cp_start`,
+ruil, buit en de spawn-caps.
+
+**Meetgrens, geen spelregel**: in de campagne staat de cycluslimiet uit (C9).
+Gemeten wat dat met bots doet: 1569 stappen per partij (3x zo lang) en 18%
+eindigt op de meet-afkap; er kwamen 11 partijen door waar er anders 36 door
+komen. De arena/trainer-config heeft daarom een limiet van 25 cycli als
+MEETGRENS -- bindt vrijwel nooit (mediaan 10), en met die grens: 686 stappen,
+11% tiebreak, 36 partijen.
+
+**Nieuw hulpje**: `python tools/balans/toon_economie.py` rekent voor wat elke
+factie krijgt onder een regels-json, campagne en potje naast elkaar.
+
+Checks: 1536/0, simcheck 0 (baseline nu op de campagne-regels, 5 sims herijkt),
+fuzz 25 schoon, play 0 fouten, meleecheck PASS.
+
 ## 31 juli 2026 -- regelzoeker, nachtmeting en de dode buit
 
 **De nacht van 31 juli gelezen** (3240 partijen, v4.2-matrix): de C14-fix werkt,

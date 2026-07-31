@@ -512,3 +512,43 @@ func test_c15_opstelling_telt_dragers_mee() -> void:
 	assert_eq(inf, int(comp[0]), "dragers tellen mee als infanterie, niet extra")
 	assert_eq(dragers, 4, "twee vaandels en twee tamboers")
 	assert_true(s.is_valid_placement(1, opstelling), "en de engine keurt hem goed")
+
+
+func test_c17_een_economie_campagne_en_potje() -> void:
+	# C17 (besluit Max, 31 juli): "het moet allemaal 1 lijn zijn". De
+	# startreserve komt uit DEZELFDE formule als de campagnelaag; een los potje
+	# is die formule maal potje_factor. Geen tweede economie meer.
+	var camp := RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "start_poolfactor": 0.5, "potje_factor": 1.0,
+		"cp_start": 10, "budget_bonus": {"1": {"pt": 4, "cp": 0}},
+	}})
+	var s := GameState.new()
+	s.rules = camp
+	s.doctrines[1] = Constants.Doctrine.MUIS      # comp 18/4/0
+	s.doctrines[2] = Constants.Doctrine.MENS      # comp 13/6/3
+	s.init_pools()
+	# Muis: floor(18*0.5)=9 inf x1 + floor(4*0.5)=2 cav x2 = 13, +4 bonus = 17
+	assert_eq(s.pool_total(1), 17, "muis krijgt de campagne-reserve inclusief bonus")
+	# Varken: 6x1 + 3x2 + 1x3 = 15, geen bonus
+	assert_eq(s.pool_total(2), 15, "varken krijgt de kale campagne-reserve")
+	assert_eq(int(s.cp.get(1, 0)), 10, "CP uit dezelfde bron")
+	# Los potje: exact dezelfde formule, kleinere pot.
+	var potje := RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "start_poolfactor": 0.5, "potje_factor": 0.35,
+		"cp_start": 10, "budget_bonus": {"1": {"pt": 4, "cp": 0}},
+	}})
+	var s2 := GameState.new()
+	s2.rules = potje
+	s2.doctrines[1] = Constants.Doctrine.MUIS
+	s2.doctrines[2] = Constants.Doctrine.MENS
+	s2.init_pools()
+	assert_eq(s2.pool_total(1), 6, "muis in een los potje: 17 x 0,35 afgerond")
+	assert_eq(s2.pool_total(2), 5, "varken in een los potje: 15 x 0,35 afgerond")
+	assert_eq(int(s2.cp.get(1, 0)), 4, "en de CP schaalt mee")
+	# Zonder campagne-blok bestaat de economie niet (4.1 blijft ongemoeid).
+	var kaal := GameState.new()
+	kaal.rules = RulesConfig.new()
+	kaal.doctrines[1] = Constants.Doctrine.MUIS
+	kaal.doctrines[2] = Constants.Doctrine.MENS
+	kaal.init_pools()
+	assert_eq(kaal.pool_total(1), 0, "4.1 kent geen reserve")

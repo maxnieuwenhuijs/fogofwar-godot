@@ -131,20 +131,26 @@ func init_pools() -> void:
 		if cp_expliciet is Dictionary and cp_expliciet.has(str(pid)):
 			cp[pid] = int(cp_expliciet[str(pid)])
 		else:
-			cp[pid] = int(rules.campaign.get("cp_start", 6))
+			# C17: zelfde bron als de campagne (start-CP + budget-bonus), en met
+			# dezelfde potje_factor geschaald.
+			var basis_cp: int = int(rules.campaign.get("cp_start", 6))
+			basis_cp += int(_budget_bonus_van(pid).get("cp", 0))
+			cp[pid] = int(round(basis_cp * float(rules.campaign.get("potje_factor", 1.0))))
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		if punten_model():
 			# C11 (besluit Max, 27 juli): de reserve is EEN puntenpot; spawnen
 			# koopt een pion (soldaat 1 / ruiter 2 / kanon 3). Een expliciete
 			# typed-pool uit de (nog typed) campagnelaag wordt op waarde omgezet.
 			var pt: int = 0
-			# C16: eerst de factie-tabel, anders de vaste waarde voor iedereen.
+			# C17: de CAMPAGNE-formule is de standaard (een regelset). Volgorde:
+			# expliciete tabel > vaste waarde > campagne-formule.
 			var vast: int = int(rules.campaign.get("punten_start", 0))
 			var per_factie = rules.campaign.get("punten_start_factie", {})
-			if per_factie is Dictionary:
-				var sleutel := str(int(doctrines.get(player_id, 0)))
-				if per_factie.has(sleutel):
-					vast = int(per_factie[sleutel])
+			var sleutel := str(int(doctrines.get(player_id, 0)))
+			if per_factie is Dictionary and per_factie.has(sleutel):
+				vast = int(per_factie[sleutel])
+			elif vast <= 0:
+				vast = campagne_startreserve(player_id)
 			if vast > 0 and not (expliciet is Dictionary and expliciet.has(str(player_id))):
 				pools[player_id] = {"pt": vast}
 				continue
@@ -191,6 +197,31 @@ func spawn_kosten(unit_type: int) -> int:
 ## C15: punten bijschrijven op de reserve (buit van een vaandel). In de
 ## punten-economie gaat dat op "pt"; in het oude typed-model boeken we het als
 ## soldaten, zodat er niets stuk gaat als iemand met typed pools speelt.
+## C17 (besluit Max, 31 juli): EEN economie. Dit is exact de formule van de
+## campagnelaag (CRules.start_poolfactor + budget_bonus), zodat een los duel
+## dezelfde regels gebruikt als een campagne-duel -- alleen kleiner geschaald
+## met `potje_factor`. Zo is de 1v1 een AFGELEIDE en geen tweede spel.
+func campagne_startreserve(player_id: int) -> int:
+	if not rules.campaign_actief():
+		return 0
+	var factor: float = float(rules.campaign.get("start_poolfactor", 0.5))
+	var comp: Array = doctrine_data_of(player_id).comp
+	var punten: int = 0
+	for t in 3:
+		punten += int(floor(comp[t] * factor)) * spawn_kosten(t)
+	punten += int(_budget_bonus_van(player_id).get("pt", 0))
+	return int(round(punten * float(rules.campaign.get("potje_factor", 1.0))))
+
+
+## Budget-bonus van deze factie uit het campaign-blok ({"pt": x, "cp": y}).
+func _budget_bonus_van(player_id: int) -> Dictionary:
+	var tabel = rules.campaign.get("budget_bonus", {})
+	if not (tabel is Dictionary):
+		return {}
+	var d = tabel.get(str(int(doctrines.get(player_id, 0))), {})
+	return d if d is Dictionary else {}
+
+
 func pool_bijschrijven(player_id: int, punten: int) -> void:
 	if punten <= 0 or not pools.has(player_id):
 		return

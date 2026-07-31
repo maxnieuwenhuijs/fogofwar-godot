@@ -37,7 +37,11 @@ echo.
 
 echo Start 6 parallelle trainers (%MIN% minuten elk)...
 for %%F in (mens muis leeuw beer wolf vos) do (
-    start "Train %%F" /min "%GODOT%" --headless --path "%~dp0." res://tools/capture.tscn -- train %MIN% 6 6 %%F
+    rem C17 (31 juli): EEN regelset. Trainen gebeurt altijd op de CAMPAGNE-regels,
+    rem want dat is het spel; een los 1v1 is daar een afgeleide van (dezelfde
+    rem economie maal potje_factor). Zonder dit argument traint hij op 4.1 en
+    rem leert hij een economie die niet bestaat.
+    start "Train %%F" /min "%GODOT%" --headless --path "%~dp0." res://tools/capture.tscn -- train %MIN% 6 6 %%F 0 arena/arena_configs/rules_v42_campaign.json
 )
 echo.
 echo 6 trainingsvensters gestart (geminimaliseerd), 1 per factie.

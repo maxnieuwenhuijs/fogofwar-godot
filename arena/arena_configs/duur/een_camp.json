@@ -1,0 +1,12 @@
+{
+ "matchups": "all",
+ "games_per_matchup": 1,
+ "agents": {
+  "p1": "l2",
+  "p2": "l2"
+ },
+ "base_seed": 606000,
+ "max_steps": 6000,
+ "track_repetitions": false,
+ "rules": "res://arena/arena_configs/rules_v42_campaign.json"
+}

@@ -313,6 +313,23 @@ naar de engine-klokken migreert:
   `campaign.kanon_actie_kost`, enz. MASTERBOUWPLAN F2.4/F2.6 volgt deze
   spelling.
 
+## C17 — Een regelset: de campagne is het spel (4.2.1)
+
+De campagne is niet "een modus naast het 1v1": het IS het spel. Een los potje is
+er een afgeleide van, en de enige verschillen zijn schaal:
+
+| | campagne | los potje |
+|---|---|---|
+| startreserve | `start_poolfactor` (0,5) x comp + `budget_bonus` | zelfde formule x `potje_factor` (0,35) |
+| start-CP | `cp_start` + budget-bonus | zelfde x `potje_factor` |
+| spawn-cap | 15 per duel | 8 |
+| cycluslimiet | uit | 20 (een los potje moet aflopen) |
+| duels | meerdere, met raad, donaties en testament | een |
+
+Alles wat je aan de balans verandert, verander je dus **in de campagne-regels**;
+het losse potje volgt vanzelf. Wie een aparte 1v1-economie bouwt, bouwt een
+tweede spel dat niemand traint.
+
 ## C15 — Figuranten en buit (4.2.1)
 
 Een pion **zonder gekoppelde kaart** is een standbeeld: hij handelt niet, maar

@@ -90,11 +90,20 @@ const CAMPAIGN_DEFAULTS := {
 	# Hoeveel je er bij het opstellen mag aanwijzen (per speler).
 	"vaandels_max": 2,
 	"tamboers_max": 2,
-	# C16 (besluit Max, 30 juli): per FACTIE een eigen startreserve in een los
-	# potje -- "de muis heeft dan bijv 12 tov de leeuw 7". Sleutel = doctrine-int
-	# als string; leeg = uit, dan geldt punten_start voor iedereen. Dit is de
-	# 1v1-vertaling van de campagne-budgetbonus, en de getallen zijn een
-	# startpunt dat we nog uittrainen.
+	# C17 (besluit Max, 31 juli): EEN REGELSET, en dat is de campagne. "De 1v1 is
+	# gewoon een afgeleide van de campagne: in plaats van meerdere duels speel je
+	# er een, en dus heb je iets gedowngrade CP en reinforcements, meer niet."
+	#
+	# De startreserve komt daarom uit dezelfde formule als de campagnelaag
+	# (CRules): start_poolfactor x je legersamenstelling, plus de budget-bonus
+	# van je factie. `potje_factor` schaalt dat naar een LOS potje: 1.0 = een
+	# volwaardige campagne-start, 0.35 = het duel-aandeel van een campagne.
+	# Zo staat er nergens meer een tweede economie naast.
+	"start_poolfactor": 0.5,
+	"budget_bonus": {},        # {"<doctrine>": {"pt": x, "cp": y}}
+	"potje_factor": 1.0,
+	# Expliciete afwijking (blijft bestaan voor experimenten, maar staat NIET
+	# meer in de trainer- of arena-configs): een vaste reserve per factie.
 	"punten_start_factie": {},
 	"punten_start": 0,
 	"poolfactor": 1.5,                   # D5: x doctrine-comp per type (3.0 -> 1.5, besluit Max 25 juli)

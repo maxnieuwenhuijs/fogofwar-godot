@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "f83086cd962bd3f22ae44d36f0c35491b6c9e4fad6148da63682f6b1a6e10649",
+			"hash": "3a0468b93b5e8c90f34505395a64cbb46a0572fcca261b58371c10a5d9b48ffe",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785420253.589
+			"ts": 1785501402.972
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ad2b04c7ff295f4dcb148e22a309a35ab45cecc47ca4bbef1af14e992d6c58f2",
+			"hash": "58482d2c515ea9f62f5ff27d8e122af6c60ccc02af05e9cd16babc010018ec9d",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785420253.589
+			"ts": 1785501402.973
 		}
 	],
-	"final_hash": "ad2b04c7ff295f4dcb148e22a309a35ab45cecc47ca4bbef1af14e992d6c58f2",
+	"final_hash": "58482d2c515ea9f62f5ff27d8e122af6c60ccc02af05e9cd16babc010018ec9d",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -278,6 +278,7 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"budget_bonus": {},
 				"buit_tamboer_cp": 2,
 				"buit_vaandel_pt": 2,
 				"comp_override": null,
@@ -301,6 +302,7 @@
 				"pool_zichtbaar": false,
 				"poolfactor": 1.5,
 				"pools": null,
+				"potje_factor": 1.0,
 				"punten_start": 0,
 				"punten_start_factie": {},
 				"skip_mode": "auto",
@@ -313,6 +315,7 @@
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
 				"spawn_vanaf_cyclus": 2,
+				"start_poolfactor": 0.5,
 				"tamboers_max": 2,
 				"vaandels_max": 2
 			},
@@ -360,7 +363,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T16:04:13",
+		"created": "2026-07-31T14:36:42",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -517,6 +520,7 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"budget_bonus": {},
 					"buit_tamboer_cp": 2,
 					"buit_vaandel_pt": 2,
 					"comp_override": null,
@@ -540,6 +544,7 @@
 					"pool_zichtbaar": false,
 					"poolfactor": 1.5,
 					"pools": null,
+					"potje_factor": 1.0,
 					"punten_start": 0,
 					"punten_start_factie": {},
 					"skip_mode": "auto",
@@ -552,6 +557,7 @@
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",
 					"spawn_vanaf_cyclus": 2,
+					"start_poolfactor": 0.5,
 					"tamboers_max": 2,
 					"vaandels_max": 2
 				},

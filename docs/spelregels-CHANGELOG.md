@@ -1,5 +1,52 @@
 # Spelregels — CHANGELOG
 
+## C17 — 31 juli 2026 (EEN regelset: de campagne is het spel)
+
+*Besluit Max: "het moet allemaal 1 lijn zijn en zeker de trainer. De campagne-
+regels zijn belangrijk, de 1v1 is gewoon een afgeleide van de campagne: in
+plaats van meerdere duels speel je er een, en dus heb je iets gedowngrade CP en
+reinforcements, meer niet."*
+
+Er stonden twee economieen naast elkaar en dat is nu weg:
+
+| | campagne (voor C17) | 1v1 / trainer (voor C17) |
+|---|---|---|
+| startreserve | 0,5 x comp + budget-bonus (15-18 pt) | vaste tabel C16 (7-12 pt) |
+| spawn-cap | 15 | 10 |
+| cycluslimiet | uit | 20 |
+
+De trainer draaide op `rules_v42_campaign.json`, maar daar stond de 1v1-tabel
+in: hij leerde dus over een economie die in de campagne niet bestaat.
+
+**Nu geldt overal dezelfde formule.** `start_poolfactor` (0,5) x je
+legersamenstelling, plus `budget_bonus` van je factie -- exact wat CRules in de
+campagne doet. Het losse potje schaalt dat met **`potje_factor`**: 1,0 in de
+campagne, 0,35 in een los duel. Dat is precies "een duel in plaats van een hele
+campagne", en verder niets.
+
+| | campagne | los potje (factor 0,35) |
+|---|---|---|
+| Varken / Krokodil | 15 pt, 10 CP | 5 pt, 4 CP |
+| Muis | 17 pt, 10 CP | 6 pt, 4 CP |
+| Leeuw | 16 pt, 10 CP | 6 pt, 4 CP |
+| Beer | 16 pt, 10 CP | 6 pt, 4 CP |
+| Wolf | 18 pt, 14 CP | 6 pt, 5 CP |
+
+- `punten_start_factie` (C16) bestaat nog als expliciete afwijking voor
+  experimenten, maar staat NIET meer in de trainer- of arena-configs.
+- **Trainer, nacht-matrix, ijk-sims en de regelzoeker draaien nu alle vier op
+  `rules_v42_campaign.json`.** `train_ai.bat` gaf dat regelbestand niet mee en
+  trainde dus op 4.1: rechtgezet.
+- De **regelzoeker** draait niet meer aan een 1v1-tabel maar aan de
+  campagne-knoppen: `start_poolfactor`, `budget_bonus` per factie, `cp_start`,
+  ruil, buit en de spawn-caps.
+- **Meetgrens, geen spelregel**: in de echte campagne staat de cycluslimiet uit
+  (C9). Bots rekken partijen dan tot ~1570 stappen (gemeten: 3x zo lang, 18%
+  eindigt op de meet-afkap). De arena- en trainerconfig krijgt daarom een ruime
+  limiet van 25 cycli; die bindt in botspel vrijwel nooit (mediaan 10) en houdt
+  een trainingsnacht bruikbaar. Met die grens: 686 stappen, 11% tiebreak.
+
+
 ## Ijk-sims verhuisd naar 4.2 (30 juli)
 
 De vijf vaste sims in `tests/golden_sims.json` draaiden nog op de KALE

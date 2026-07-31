@@ -7,6 +7,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
 ## Kernregels (samenvatting; bron: MASTERBOUWPLAN §0 + besluiten)
 
+- **EEN REGELSET (C17)**: de **campagne** is het spel. Een los 1v1 is dezelfde
+  economie maal `potje_factor` (0,35): dezelfde formule, kleinere pot. De
+  startreserve is overal `start_poolfactor` x comp + `budget_bonus` per factie,
+  net als CRules in de campagne. Trainer, nacht-matrix, ijk-sims en de
+  regelzoeker draaien allemaal op `arena/arena_configs/rules_v42_campaign.json`.
+  Bouw NOOIT een tweede economie voor het 1v1.
 - **C15-buit (4.2.1)**: vaandeldrager neerleggen = 2 versterkingspunten,
   tamboer = 2 CP, alleen als het slachtoffer ONgekoppeld is. De rol staat op de
   pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in de
