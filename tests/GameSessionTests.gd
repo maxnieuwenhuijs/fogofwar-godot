@@ -279,8 +279,18 @@ func test_vos_links_hidden() -> void:
 		else:
 			assert_true(pawn.card_revealed)
 
-func test_vos_cavalry_gets_speed_bonus_via_session() -> void:
-	GameSession.start_new_game_default(Constants.Doctrine.VOS, Constants.Doctrine.MENS)
+## C18 (besluit Max, 31 juli): de +1 cavalerie-snelheid is van Krokodil naar
+## WOLF verhuisd. Krokodil hield 83% winrate met het leger van Varken plus twee
+## gratis voordelen; Wolf stond op 8% en past bij tempo. Deze test bewaakt beide
+## kanten van die verhuizing.
+func test_wolf_cavalry_gets_speed_bonus_via_session() -> void:
+	assert_eq(int(Constants.DOCTRINE_DATA[Constants.Doctrine.VOS].cav_speed_bonus), 0,
+		"Krokodil heeft de cavalerie-bonus niet meer")
+	assert_eq(int(Constants.DOCTRINE_DATA[Constants.Doctrine.WOLF].cav_speed_bonus), 1,
+		"Wolf heeft hem overgenomen")
+	assert_eq(int(Constants.DOCTRINE_DATA[Constants.Doctrine.VOS].budget), 6,
+		"en Krokodil zakte naar kaartbudget 6")
+	GameSession.start_new_game_default(Constants.Doctrine.WOLF, Constants.Doctrine.MENS)
 	GameSession.submit_define_cards(Constants.PLAYER_1, _cards_for(3, 2, 2, 3, 2, 2, 3, 2, 2))
 	GameSession.submit_define_cards(Constants.PLAYER_2, _cards_for(1, 1, 5, 1, 1, 5, 1, 1, 5))
 	GameSession.acknowledge_reveal()
@@ -301,7 +311,7 @@ func test_vos_cavalry_gets_speed_bonus_via_session() -> void:
 			card_id = c.id
 			break
 	assert_true(GameSession.submit_link(Constants.PLAYER_1, card_id, cav.id))
-	# Kaart-Speed 2 + Vos-cavalerieperk 1 = 3.
+	# Kaart-Speed 2 + Wolf-cavalerieperk 1 = 3.
 	assert_eq(cav.max_stamina, 3)
 
 # =========================================================================

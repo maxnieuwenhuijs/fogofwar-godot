@@ -1,5 +1,46 @@
 # Spelregels — CHANGELOG
 
+## C18 — 31 juli 2026 (Krokodil ingeperkt, Wolf krijgt tempo)
+
+*Besluit Max: "zal ik eerst een harde verandering doen: krokodil 6 budget per
+kaart, en geef de wolf dan die +1 cav speed van de krokodil?"*
+
+De regelzoeker kan alleen aan de ECONOMIE draaien, en twee metingen wezen
+allebei naar de facties zelf: Krokodil had exact het leger van Varken (13/6/3,
+3 kaarten, budget 7) plus schutkleur plus +1 cavalerie-snelheid, en stond
+25 tot 42 punten hoger. Wolf betaalde zijn tempo-pakket met niets en zakte naar
+8,3%.
+
+- **Krokodil**: kaartbudget **7 -> 6** en de +1 cavalerie-snelheid eraf. Hij
+  houdt zijn schutkleur (dat is zijn identiteit); zijn nadeel is nu ook echt een
+  nadeel: zwakkere kaarten dan de rest.
+- **Wolf**: krijgt die **+1 cavalerie-snelheid**. Past bij zijn karakter (gratis
+  stap na melee, cavalerie die over vijandelijke infanterie springt).
+
+Gemeten op de campagne-regels, 324 partijen, L2 tegen L2, zelfde seeds als de
+nulmeting van de regelzoeker:
+
+| factie | voor | na |
+|---|---|---|
+| Krokodil | 83,3% | **41,7%** |
+| Leeuw | 66,7% | 58,3% |
+| Varken | 58,3% | 66,7% |
+| Muis | 50,0% | 50,0% |
+| Beer | 33,3% | 50,0% |
+| Wolf | 8,3% | **33,3%** |
+
+Gemiddelde afwijking van 50%: **19,4% -> 8,3%**. Ter vergelijking: de
+regelzoeker kwam in 139 minuten en vijf generaties op 11,1%, en moest daarvoor
+Wolf bijna 20 punten reserve geven -- een pleister op een factie die kapot was.
+Partijen werden er ook gezonder van: 8% tiebreak, 52% haven tegen 38%
+eliminatie, mediaan 10 cycli.
+
+**Wat nog scheef staat**: Varken (66,7%) is de allrounder zonder perks en staat
+nu bovenaan, wat betekent dat de perks van de anderen minder waard zijn dan hun
+nadelen kosten. Wolf blijft met 33,3% de zwakste. Dat is werk voor een volgende
+ronde, en nu wel binnen bereik van de regelzoeker.
+
+
 ## C17 — 31 juli 2026 (EEN regelset: de campagne is het spel)
 
 *Besluit Max: "het moet allemaal 1 lijn zijn en zeker de trainer. De campagne-

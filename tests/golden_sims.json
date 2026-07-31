@@ -8,9 +8,9 @@
    "d1": "muis",
    "d2": "wolf",
    "seed": 777,
-   "winner": 1,
-   "cyclus": 10,
-   "acties": 290
+   "winner": 2,
+   "cyclus": 4,
+   "acties": 103
   },
   {
    "p1": "easy",
@@ -18,9 +18,9 @@
    "d1": "mens",
    "d2": "vos",
    "seed": 101,
-   "winner": 2,
-   "cyclus": 14,
-   "acties": 346
+   "winner": 1,
+   "cyclus": 23,
+   "acties": 592
   },
   {
    "p1": "easy",
@@ -49,8 +49,8 @@
    "d2": "leeuw",
    "seed": 404,
    "winner": 1,
-   "cyclus": 10,
-   "acties": 240
+   "cyclus": 6,
+   "acties": 140
   }
  ],
  "rules": "res://arena/arena_configs/rules_v42_campaign.json"

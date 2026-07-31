@@ -130,6 +130,14 @@ def score_run(games):
     return totaal, detail
 
 
+def lees_alle(paden):
+    """Partijen van alle processen van een kandidaat samen."""
+    uit = []
+    for p in paden:
+        uit.extend(lees_games(p))
+    return uit
+
+
 def lees_games(pad):
     uit = []
     if not os.path.exists(pad):
@@ -168,8 +176,16 @@ def muteer(regels, rng, sigma):
     return nieuw
 
 
-def draai_kandidaat(map_pad, naam, regels, potjes, seed):
-    """Schrijf de configs en start één arena-proces. Geeft (proc, games-pad)."""
+def draai_kandidaat(map_pad, naam, regels, potjes, seed, procs=3):
+    """Schrijf de configs en start `procs` arena-processen voor DEZELFDE regels.
+
+    Elk proces speelt de volledige matrix met een eigen seed-offset, dus samen
+    leveren ze `procs` x zoveel partijen in dezelfde wandkloktijd. Gemeten op
+    31 juli: zes kandidaten in hun eentje = 28 minuten per generatie op een
+    machine met 32 threads. Met drie processen per kandidaat draaien er 18
+    tegelijk en zakt dat naar ongeveer een derde.
+    Geeft (lijst-van-procs, lijst-van-games-paden).
+    """
     regels_pad = os.path.join(map_pad, "%s_regels.json" % naam)
     with open(regels_pad, "w", encoding="utf-8") as f:
         json.dump(regels, f, indent=1, ensure_ascii=False, sort_keys=True)
@@ -182,14 +198,18 @@ def draai_kandidaat(map_pad, naam, regels, potjes, seed):
     cfg_pad = os.path.join(map_pad, "%s_arena.json" % naam)
     with open(cfg_pad, "w", encoding="utf-8") as f:
         json.dump(arena_cfg, f, indent=1, ensure_ascii=False)
-    uit_map = os.path.join(map_pad, naam)
-    proc = subprocess.Popen(
-        [GODOT, "--headless", "--path", PROJECT, "res://arena/arena.tscn", "--",
-         "--config", os.path.relpath(cfg_pad, PROJECT).replace("\\", "/"),
-         "--out", os.path.relpath(uit_map, PROJECT).replace("\\", "/"),
-         "--seed-offset", "0"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=PROJECT)
-    return proc, os.path.join(uit_map, "games.jsonl")
+    procs_uit = []
+    paden = []
+    for i in range(max(1, procs)):
+        uit_map = os.path.join(map_pad, "%s_p%d" % (naam, i))
+        procs_uit.append(subprocess.Popen(
+            [GODOT, "--headless", "--path", PROJECT, "res://arena/arena.tscn", "--",
+             "--config", os.path.relpath(cfg_pad, PROJECT).replace("\\", "/"),
+             "--out", os.path.relpath(uit_map, PROJECT).replace("\\", "/"),
+             "--seed-offset", str(i * 100000)],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=PROJECT))
+        paden.append(os.path.join(uit_map, "games.jsonl"))
+    return procs_uit, paden
 
 
 def main():
@@ -198,6 +218,8 @@ def main():
     p.add_argument("--kandidaten", type=int, default=6, help="kandidaten per generatie")
     p.add_argument("--potjes", type=int, default=2, help="potjes per matchup per kandidaat")
     p.add_argument("--sigma", type=float, default=0.25, help="mutatie-ruis (log-normaal)")
+    p.add_argument("--procs", type=int, default=3,
+                   help="processen per kandidaat (meer partijen in dezelfde tijd)")
     p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 
@@ -209,14 +231,16 @@ def main():
 
     kampioen = json.load(open(BASIS, encoding="utf-8"))
     print("[BALANS] basis: %s" % os.path.relpath(BASIS, PROJECT))
-    print("[BALANS] %d kandidaten per generatie, %d potjes per matchup, sigma %.2f"
-          % (args.kandidaten, args.potjes, args.sigma))
+    print("[BALANS] %d kandidaten per generatie, %d potjes per matchup x %d processen, sigma %.2f"
+          % (args.kandidaten, args.potjes, args.procs, args.sigma))
     print("[BALANS] uitvoer: %s" % os.path.relpath(map_pad, PROJECT))
 
     # Nulmeting: hoe scoort de huidige balans?
-    proc, games_pad = draai_kandidaat(map_pad, "gen0_basis", kampioen, args.potjes, 515000)
-    proc.wait()
-    beste_score, beste_detail = score_run(lees_games(games_pad))
+    procs0, paden0 = draai_kandidaat(map_pad, "gen0_basis", kampioen, args.potjes,
+                                     515000, args.procs)
+    for pr in procs0:
+        pr.wait()
+    beste_score, beste_detail = score_run(lees_alle(paden0))
     print("[BALANS] huidige balans: score %.4f  (afwijking %.1f%%, tiebreak %.1f%%, cycli %d, "
           "aanvullen %.2f, buit %.2f)" % (beste_score, beste_detail["gem_afwijking_van_50"],
           beste_detail["tiebreak_pct"], beste_detail["cycli"], beste_detail["spawns"],
@@ -239,14 +263,15 @@ def main():
         for i in range(args.kandidaten):
             kandidaat = muteer(kampioen, rng, sigma)
             naam = "gen%d_k%d" % (generatie, i)
-            proc, gp = draai_kandidaat(map_pad, naam, kandidaat, args.potjes,
-                                       515000 + generatie * 1000)
-            procs.append((naam, kandidaat, proc, gp))
-        for naam, kandidaat, proc, gp in procs:
-            proc.wait()
+            plist, gpaden = draai_kandidaat(map_pad, naam, kandidaat, args.potjes,
+                                            515000 + generatie * 1000, args.procs)
+            procs.append((naam, kandidaat, plist, gpaden))
+        for naam, kandidaat, plist, gpaden in procs:
+            for pr in plist:
+                pr.wait()
         beste_van_ronde = None
-        for naam, kandidaat, proc, gp in procs:
-            s, detail = score_run(lees_games(gp))
+        for naam, kandidaat, plist, gpaden in procs:
+            s, detail = score_run(lees_alle(gpaden))
             with open(log_pad, "a", encoding="utf-8") as f:
                 f.write(json.dumps({"generatie": generatie, "naam": naam, "detail": detail,
                                     "regels": kandidaat["campaign"]}, ensure_ascii=False) + "\n")
@@ -273,7 +298,10 @@ def main():
     print("[BALANS] winrates van het voorstel: %s" % beste_detail.get("winrates"))
     print("[BALANS] voorstel: %s" % os.path.relpath(os.path.join(map_pad, "voorstel.json"), PROJECT))
     print("[BALANS] LET OP: dit verandert niets aan het spel. Vergelijk het voorstel met")
-    print("         arena/arena_configs/v42_default.json en beslis zelf wat je overneemt.")
+    print("         %s en beslis zelf wat je overneemt." % os.path.relpath(BASIS, PROJECT))
+    print("[BALANS] Let vooral op de UITERSTEN, niet op de score: een factie die aan de")
+    print("         boven- of ondergrens van de zoekruimte blijft plakken, vertelt je dat")
+    print("         je aan de verkeerde knop draait.")
 
 
 if __name__ == "__main__":

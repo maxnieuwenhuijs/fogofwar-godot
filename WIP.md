@@ -1,5 +1,28 @@
 # Fog of War — Work In Progress & Context
 
+## 31 juli 2026 (avond) -- C18: Krokodil ingeperkt, Wolf krijgt tempo
+
+Max koos een harde ingreep boven acht uur economie-zoeken, en dat was de betere
+volgorde. De regelzoeker kan alleen aan de pot draaien; twee metingen wezen naar
+de FACTIES zelf.
+
+- Krokodil: kaartbudget 7 -> 6, +1 cavalerie-snelheid eraf (houdt schutkleur).
+- Wolf: krijgt die +1 cavalerie-snelheid.
+
+Gemeten op de campagne-regels, 324 partijen, zelfde seeds als de nulmeting van
+de zoeker: gemiddelde afwijking van 50% **19,4% -> 8,3%**. Krokodil 83,3 ->
+41,7; Wolf 8,3 -> 33,3; Beer 33,3 -> 50,0. De zoeker kwam in 139 minuten niet
+verder dan 11,1% en moest daarvoor Wolf bijna 20 punten reserve geven.
+
+Nog scheef: Varken 66,7 (allrounder zonder perks staat bovenaan, dus de perks
+van de anderen wegen niet op tegen hun nadelen) en Wolf 33,3.
+
+Test `test_vos_cavalry_gets_speed_bonus_via_session` is meeverhuisd naar Wolf en
+bewaakt nu beide kanten: Krokodil zonder bonus en budget 6, Wolf met bonus.
+Goldens hergenereerd, 3 ijk-sims opnieuw vastgelegd.
+
+Checks: 1532/0, simcheck 0 afwijkingen, fuzz 25 schoon, play 0 fouten.
+
 ## 31 juli 2026 (later) -- C17: EEN regelset, de campagne is het spel
 
 Max: "het moet allemaal 1 lijn zijn en zeker de trainer. De campagne-regels zijn

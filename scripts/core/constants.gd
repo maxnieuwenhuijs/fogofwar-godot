@@ -87,17 +87,17 @@ const DOCTRINE_DATA: Dictionary = {
 		"name": "Wolf", "cards": 3, "budget": 7, "comp": [11, 8, 3],
 		"move_through_own": false, "hp_bonus": 0, "speed_max": 0,
 		"wolf_step": true, "hidden_link": false,
-		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": true,
-		"pro": "Gratis stap na elke melee; cavalerie springt óók over vijandelijke infanterie",
+		"art_range_bonus": 0, "cav_speed_bonus": 1, "cav_jump_infantry": true,
+		"pro": "Gratis stap na elke melee; cavalerie +1 Speed en springt óók over vijandelijke infanterie",
 		"con": "Stap geldt niet na schoten; lichte samenstelling",
 	},
 	Doctrine.VOS: {
-		"name": "Krokodil", "cards": 3, "budget": 7, "comp": [13, 6, 3],
+		"name": "Krokodil", "cards": 3, "budget": 6, "comp": [13, 6, 3],
 		"move_through_own": false, "hp_bonus": 0, "speed_max": 0,
 		"wolf_step": false, "hidden_link": true,
-		"art_range_bonus": 0, "cav_speed_bonus": 1, "cav_jump_infantry": false,
-		"pro": "Schutkleur: koppeling geheim tot eerste schade, en cavalerie +1 Speed (hinderlaag)",
-		"con": "Kaarten zelf zijn openbaar; standaard leger",
+		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
+		"pro": "Schutkleur: koppeling blijft geheim tot de eerste schade (hinderlaag)",
+		"con": "Budget 6: zwakkere kaarten dan de rest; kaarten zelf zijn openbaar",
 	},
 }
 

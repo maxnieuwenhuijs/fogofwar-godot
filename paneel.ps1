@@ -158,7 +158,7 @@ $null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP-
     $potjes = [int]$numPotjes.Value
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-        "python `"$repo\tools\balans\regelzoeker.py`" --minuten $duur --potjes $potjes --kandidaten 6; Read-Host 'Klaar - druk op Enter'")
+        "python `"$repo\tools\balans\regelzoeker.py`" --minuten $duur --potjes $potjes --kandidaten 6 --procs 3; Read-Host 'Klaar - druk op Enter'")
     [System.Windows.Forms.MessageBox]::Show(
         "De regelzoeker draait $duur minuten met $potjes potje(s) per matchup." +
         [Environment]::NewLine + [Environment]::NewLine +
