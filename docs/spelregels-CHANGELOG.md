@@ -1,5 +1,74 @@
 # Spelregels — CHANGELOG
 
+## Ijk-sims verhuisd naar 4.2 (30 juli)
+
+De vijf vaste sims in `tests/golden_sims.json` draaiden nog op de KALE
+4.1-defaults, terwijl 4.1 sinds vandaag geen speelbare optie meer is. Ze
+bewaakten dus een regelset die niemand speelt. `simcheck` laadt nu
+`arena/arena_configs/v42_default.json` (pad staat in golden_sims.json) en de
+vijf uitkomsten zijn opnieuw vastgelegd onder die regels.
+
+**Eerlijk erbij**: onder de oude 4.1-baseline weken alle vijf sims af na de
+C15/C16-ronde, en ik heb die afwijking NIET kunnen herleiden tot een enkel
+bestand (Pawn, Rules, GameState, rules_config en AIController elk los
+teruggezet: de afwijking bleef; alle code samen terugzetten: weg). Het gaat om
+kortere partijen en een omgeklapte winnaar, niet om een crash. Omdat 4.2 de
+gespeelde regelset is, bewaakt de canary nu dat, en blijft dit als open vraag
+staan in WIP.md.
+
+## C16 — 30 juli 2026 (startreserve per factie in een los potje)
+
+*Besluit Max: "de 1v1 moet dus wel die voordelen in economie vertaald hebben per
+factie, dus de muis heeft dan bijv 12 tov de leeuw 7 -- dat moeten we nog goed
+uittrainen en bedenken."*
+
+- Nieuwe knop **`punten_start_factie`** (sleutel = doctrine-int als string). Leeg
+  = uit, dan geldt `punten_start` voor iedereen. Dit is de 1v1-vertaling van de
+  campagne-budgetbonus (`budget_bonus` in CRules), die alleen in de campagne gold.
+- **Startpunt** in `v42_default.json` en `rules_v42_campaign.json` (dus ook voor
+  de trainer): Muis 12, Beer 12, Wolf 11, Varken 9, Leeuw 7, Krokodil 7. De twee
+  ankers komen van Max; de rest volgt de gemeten winrates van 29 juli
+  (Krokodil 76%, Varken 58%, Leeuw 48%, Wolf 45%, Muis 40%, Beer 30%): zwak =
+  meer reserve.
+- **Dit is expliciet een startpunt, geen conclusie.** De volgende trainingsnacht
+  is de eerste met werkende versterkingen (zie C14) EN met buit (C15), dus de
+  winrates van 29 juli zijn nu verouderd. Meten voordat we hier weer aan draaien.
+
+
+## C15 — 30 juli 2026 (buit op figuranten, rules_version 4.2.1)
+
+*Besluit Max: "de vaandel 2 reinforcements en de tamboer 2 CP dus in. Alleen
+moet je ook zelf dus kunnen bepalen waar deze komen te staan bij army neerzet
+fase."*
+
+Tot nu toe waren de vaandeldrager en de tamboer pure aankleding: een pion zonder
+kaart kreeg een prop in de hand, en strategisch negeerde je hem. Nu hangt er
+geld aan.
+
+- **Rol staat op de PION, in de staat** (`Pawn.rol`: "" / "flag" / "drum"). Dat
+  moest wel: er hangt buit aan, dus replays en goldens moeten hem kennen. De rol
+  verhuist NOOIT (expliciete wens): koppel je een drager, dan bergt hij zijn
+  vaandel op; ontkoppel je hem, dan pakt hij hetzelfde vaandel weer op.
+- **Buit bij een kill**: een DRAGENDE vaandeldrager levert de aanvaller
+  **2 versterkingspunten** op, een tamboer **2 CP**
+  (`buit_vaandel_pt` / `buit_tamboer_cp`, 0 = uit). "Dragend" = zonder kaart:
+  een gekoppelde pion is een gewone soldaat en heeft niets in de hand, dus er
+  valt niets te veroveren. Dat is ook wat je op het bord ZIET.
+- **Je zet ze zelf neer**: in de opstelfase zijn "vaandeldragers" en "tamboers"
+  losse plaats-stappen, net als kanonnen en ruiters. Je kiest dus hun vak.
+  `vaandels_max` en `tamboers_max` (default 2 en 2) begrenzen hoeveel je mag
+  aanwijzen; de validator weigert meer, rollen op niet-infanterie en rollen
+  zonder campagne-blok.
+- **Bots doen mee**: twee leerbare gewichten, `buit_jacht` (een vijandelijke
+  drager binnen bereik is winst) en `buit_hoede` (mijn drager binnen bereik van
+  de vijand is verlies), gewaardeerd uit de regelknoppen zelf. De arena meet
+  `buit_pt`, `buit_cp` en `dragers_verloren` per potje, dus de trainingsnacht
+  kan laten zien of ze er echt op jagen.
+- **Zonder campagne-blok (4.1) verandert er niets**: rollen zijn dan niet eens
+  legaal in een opstelling. Binnen 4.2 is dit wel een echte regelwijziging, dus
+  `rules_version` gaat naar **4.2.1** en de goldens zijn hergenereerd.
+
+
 ## C14 — 30 juli 2026 (een los potje krijgt een potje-budget)
 
 **Eerst de bug, want die maakte de regel pas meetbaar.** Sinds C11 (27 juli,

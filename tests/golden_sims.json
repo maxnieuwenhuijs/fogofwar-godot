@@ -1,5 +1,5 @@
 {
- "_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder cycle_limit (F0.4c) oneindig patstellen.",
+ "_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder cycle_limit (F0.4c) oneindig patstellen. 30 juli: de baseline draait nu op v42_default.json, de regels die we echt spelen (4.1 is geen speelbare optie meer).",
  "gemeten_op": "commit 0f027d6 + regelwijziging 4.1.10-hr (define begrensd door vrije pionnen), juli 2026",
  "sims": [
   {
@@ -9,8 +9,8 @@
    "d2": "wolf",
    "seed": 777,
    "winner": 2,
-   "cyclus": 11,
-   "acties": 311
+   "cyclus": 12,
+   "acties": 357
   },
   {
    "p1": "easy",
@@ -19,8 +19,8 @@
    "d2": "vos",
    "seed": 101,
    "winner": 2,
-   "cyclus": 13,
-   "acties": 323
+   "cyclus": 9,
+   "acties": 219
   },
   {
    "p1": "easy",
@@ -28,9 +28,9 @@
    "d1": "leeuw",
    "d2": "beer",
    "seed": 202,
-   "winner": 1,
-   "cyclus": 16,
-   "acties": 363
+   "winner": 2,
+   "cyclus": 11,
+   "acties": 276
   },
   {
    "p1": "medium",
@@ -39,8 +39,8 @@
    "d2": "muis",
    "seed": 303,
    "winner": 1,
-   "cyclus": 5,
-   "acties": 147
+   "cyclus": 13,
+   "acties": 414
   },
   {
    "p1": "easy",
@@ -48,9 +48,10 @@
    "d1": "wolf",
    "d2": "leeuw",
    "seed": 404,
-   "winner": 2,
+   "winner": 1,
    "cyclus": 14,
-   "acties": 264
+   "acties": 349
   }
- ]
+ ],
+ "rules": "res://arena/arena_configs/v42_default.json"
 }

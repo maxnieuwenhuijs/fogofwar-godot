@@ -52,13 +52,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "f6180212cd760164ded8c880276005f3eb7798b9b6d1f64df78e27f862117f60",
+			"hash": "702c91b0cefb69b22f966f46773ca84893bae428ba4fd114dcc04c9402c933b0",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785406057.382
+			"ts": 1785420253.578
 		}
 	],
-	"final_hash": "f6180212cd760164ded8c880276005f3eb7798b9b6d1f64df78e27f862117f60",
+	"final_hash": "702c91b0cefb69b22f966f46773ca84893bae428ba4fd114dcc04c9402c933b0",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -120,6 +120,7 @@
 					7
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"1": {
@@ -138,6 +139,7 @@
 					3
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			}
 		},
@@ -204,7 +206,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T12:07:37",
+		"created": "2026-07-30T16:04:13",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -267,6 +269,7 @@
 						8
 					],
 					"remaining_stamina": 1,
+					"rol": "",
 					"unit_type": 0
 				},
 				"1": {
@@ -285,6 +288,7 @@
 						3
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				}
 			},

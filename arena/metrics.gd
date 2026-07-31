@@ -30,6 +30,9 @@ func _init() -> void:
 			"actions": 0, "damage": 0, "kills": 0, "overkill": 0,
 			"shots": 0, "melees": 0, "charges": 0, "moves": 0, "wolf_steps": 0,
 			"spawns": 0, "cp_bet": 0,  # F2.5: v4.2-meetpunten (CHECK-eis)
+			# C15: veroverde buit op figuranten (vaandel = punten, tamboer = CP)
+			# en hoeveel eigen dragers je onderweg hebt verloren.
+			"buit_pt": 0, "buit_cp": 0, "dragers_verloren": 0,
 		}
 
 
@@ -113,6 +116,15 @@ func _verwerk_gevecht(state: GameState, player: int, actie: Dictionary, events: 
 		var result: Dictionary = ev.payload.result
 		var damage: int = int(result.get("damage", 0))
 		stats.damage += damage
+		# C15-buit: de reducer boekt het al in de staat; hier meten we het
+		# zodat de arena en het dashboard kunnen laten zien of bots erop jagen.
+		var b_pt: int = int(result.get("buit_pt", 0))
+		var b_cp: int = int(result.get("buit_cp", 0))
+		if b_pt > 0 or b_cp > 0:
+			stats.buit_pt += b_pt
+			stats.buit_cp += b_cp
+			var slachtoffer_kant: int = Constants.opponent(player)
+			_per_speler[slachtoffer_kant].dragers_verloren += 1
 		if bool(result.get("eliminated", false)):
 			stats.kills += 1
 			if _pending_hp_before > 0:

@@ -116,12 +116,21 @@ Regels (vastgelegd, masterplan):
   donaties/ruil** meer.
 - De **kampioen** is de winnaar van de burgeroorlog-finale.
 
+## 5b. Buit uit een duel (C15, 30 juli)
+
+Wat je in een duel op figuranten verovert, komt in je campagne-bezit terecht:
+een vaandeldrager levert 2 versterkingspunten op, een tamboer 2 CP. Het duel
+boekt dat in de duel-staat; de campagnelaag neemt het saldo daarna over via het
+gewone eindboeking-pad. Voor de raad is dat een extra reden om te weten wie zijn
+vaandel verloor -- en dat staat in het battlereport.
+
 ## 6. Informatie en fog (D12-lijn)
 
 - Het **grootboek** (ledger) is publiek: punten, donaties en testamenten zijn
   voor iedereen zichtbaar ("Among Us-gevoel").
 - **Vijandelijke voorraad en CP zijn verborgen** — in duels (D12) én op de
-  campagnekaart. De informatiebron is het **battlereport**: wat er in een
+  campagnekaart. *(30 juli: dit was in de hub en het grootboek nog niet zo; de
+  saldi van andere teams staan er nu als "?" en alleen roem is publiek.)* De informatiebron is het **battlereport**: wat er in een
   duel gespawnd, verloren en verdiend is, is na afloop publiek leesbaar
   (besluit Max: "dat moet je lezen uit de battlereports of van je teammaten
   horen"). Team-chat/stem-details zijn team-only; wie dood is ziet alles.

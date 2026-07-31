@@ -18,7 +18,40 @@ func _ready() -> void:
 	var exit_code: int = 0 if _failed == 0 else 1
 	get_tree().quit(exit_code)
 
+## Alleen deze suites draaien: `-- suites=SoloTests,CampaignTests`. Zonder
+## argument draait alles, precies zoals voorheen. Hiermee kan de batterij over
+## meerdere processen verdeeld worden (tests.ps1), wat op deze machine het
+## verschil is tussen ~12 minuten en ~2 (Max, 30 juli: "kun je die batterijen
+## niet wat sneller laten gaan").
+func _gevraagde_suites() -> Array:
+	for a in OS.get_cmdline_user_args():
+		var s := String(a)
+		if s.begins_with("suites="):
+			var uit: Array = []
+			for deel in s.substr(7).split(",", false):
+				var naam := String(deel).strip_edges()
+				if naam != "":
+					uit.append(naam)
+			return uit
+	return []
+
+
+## `-- deel=2/3` draait alleen elke derde test (nummer 2 van 3). Zo kan ook EEN
+## trage suite over meerdere processen: SoloTests speelt complete campagnes uit
+## en bepaalde in zijn eentje de wachttijd.
+func _deel_filter() -> Array:
+	for a in OS.get_cmdline_user_args():
+		var s := String(a)
+		if s.begins_with("deel="):
+			var stukken := s.substr(5).split("/")
+			if stukken.size() == 2 and String(stukken[0]).is_valid_int() 					and String(stukken[1]).is_valid_int():
+				return [int(stukken[0]), maxi(1, int(stukken[1]))]
+	return []
+
+
 func _run_all() -> void:
+	var alleen: Array = _gevraagde_suites()
+	var deel: Array = _deel_filter()
 	var test_classes: Array = [
 		preload("res://tests/CardTests.gd").new(),
 		preload("res://tests/RulesTests.gd").new(),
@@ -42,8 +75,15 @@ func _run_all() -> void:
 		preload("res://tests/SoloTests.gd").new(),
 	]
 	for t in test_classes:
+		if not alleen.is_empty():
+			var naam := String(t.get_script().resource_path.get_file().get_basename())
+			if not alleen.has(naam):
+				continue
 		t._runner = self
-		t.run_all()
+		if deel.is_empty():
+			t.run_all()
+		else:
+			t.run_deel(int(deel[0]), int(deel[1]))
 
 func assert_eq(actual, expected, message: String = "") -> void:
 	if actual == expected:

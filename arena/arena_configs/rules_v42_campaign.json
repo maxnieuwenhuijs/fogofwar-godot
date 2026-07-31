@@ -5,6 +5,14 @@
  "campaign": {
   "pool_model": "punten",
   "punten_start": 10,
+  "punten_start_factie": {
+   "0": 9,
+   "1": 12,
+   "2": 7,
+   "3": 12,
+   "4": 11,
+   "5": 7
+  },
   "spawn_totaal_max": 10
  },
  "cycle_limit": 20

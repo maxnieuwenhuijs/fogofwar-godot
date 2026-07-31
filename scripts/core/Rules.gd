@@ -260,12 +260,14 @@ static func _resolve_melee(state: GameState, attacker: Pawn, defender: Pawn, res
 	if defender.is_active:
 		defender.current_hp -= damage
 		if defender.current_hp <= 0:
+			_boek_buit(state, defender, attacker.owner_id, result)
 			state.remove_pawn(defender)
 			result.eliminated = true
 	else:
 		# Standbeeld: sneuvelt alleen als de schade de drempel haalt
 		# (statue_threshold 0 = elke schade > 0, het 4.1.9-hr-gedrag).
 		if damage >= maxi(1, state.rules.statue_threshold):
+			_boek_buit(state, defender, attacker.owner_id, result)
 			state.remove_pawn(defender)
 			result.eliminated = true
 	if result.eliminated:
@@ -433,18 +435,51 @@ static func apply_shot(state: GameState, shooter_id: int, target_id: int) -> Dic
 	if target.is_active:
 		target.current_hp -= damage
 		if target.current_hp <= 0:
+			_boek_buit(state, target, shooter.owner_id, result)
 			state.remove_pawn(target)
 			result.eliminated = true
 	else:
 		# Standbeeld: alleen geëlimineerd als de schade de drempel haalt
 		# (statue_threshold 0 = elke schade > 0; het schot is anders verspild).
 		if damage >= maxi(1, state.rules.statue_threshold):
+			_boek_buit(state, target, shooter.owner_id, result)
 			state.remove_pawn(target)
 			result.eliminated = true
 	shooter.spend_stamina(shot_cost(state, shooter))
 	_after_action_stamina(state, shooter)
 	result.success = true
 	return result
+
+## C15 (besluit Max, 30 juli): BUIT op figuranten. Wie een DRAGENDE
+## vaandeldrager neerlegt krijgt versterkingspunten in zijn reserve, wie een
+## tamboer neerlegt krijgt CP. "Dragend" = ongekoppeld: een pion met een kaart
+## is een gewone soldaat en heeft zijn vaandel opgeborgen -- je ziet dan ook
+## geen vaandel op het bord, dus er valt niets te veroveren.
+## Zonder campagne-blok (4.1) of met de knoppen op 0 gebeurt er niets.
+static func _boek_buit(state: GameState, slachtoffer: Pawn, winnaar: int,
+		result: Dictionary) -> void:
+	if slachtoffer == null or String(slachtoffer.rol) == "":
+		return
+	if slachtoffer.linked_card_id != -1:
+		return  # had een kaart: droeg niets
+	if not state.rules.campaign_actief():
+		return
+	if winnaar != Constants.PLAYER_1 and winnaar != Constants.PLAYER_2:
+		return
+	var rol := String(slachtoffer.rol)
+	if rol == "flag":
+		var pt: int = int(state.rules.campaign.get("buit_vaandel_pt", 0))
+		if pt > 0:
+			state.pool_bijschrijven(winnaar, pt)
+			result["buit_pt"] = int(result.get("buit_pt", 0)) + pt
+			result["buit_rol"] = "flag"
+	elif rol == "drum":
+		var cp: int = int(state.rules.campaign.get("buit_tamboer_cp", 0))
+		if cp > 0:
+			state.cp[winnaar] = int(state.cp.get(winnaar, 0)) + cp
+			result["buit_cp"] = int(result.get("buit_cp", 0)) + cp
+			result["buit_rol"] = "drum"
+
 
 static func _empty_attack_result() -> Dictionary:
 	return {
@@ -457,6 +492,9 @@ static func _empty_attack_result() -> Dictionary:
 		"attacker_eliminated": false,
 		"attacker_alive": true,
 		"is_shot": false,
+		"buit_pt": 0,          # C15: veroverde versterkingspunten (vaandel)
+		"buit_cp": 0,          # C15: veroverde CP (tamboer)
+		"buit_rol": "",
 		"moved": false,
 		"move_target": Vector2i.ZERO,
 		"charge_from": Vector2i.ZERO,

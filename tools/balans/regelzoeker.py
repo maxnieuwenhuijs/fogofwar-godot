@@ -1,0 +1,265 @@
+"""Regelzoeker: zoekt automatisch naar een betere ONTWERP-balans.
+
+Verschil met de AI-trainer (tools/capture.gd -- train): die zoekt betere BOTS
+binnen vaste regels. Deze zoekt betere REGELS met vaste bots. Sinds de nacht van
+31 juli (6 facties, 40-142 generaties, 1 adoptie in 7 uur) zit de trainer op een
+plateau, en dat betekent dat wat er nog te winnen valt in het ONTWERP zit.
+
+Wat hij draait: elke kandidaat is een regels-json (economie-knoppen). De arena
+speelt er een volledige factie-matrix mee, en de uitkomst wordt gescoord op vier
+dingen die Max belangrijk vindt:
+
+  1. facties in evenwicht   -- winrates zo dicht mogelijk bij 50%
+  2. beslissende partijen   -- zo min mogelijk tiebreak/cycluslimiet
+  3. speelduur in de band   -- mediaan cycli tussen ondergrens en bovengrens
+  4. levende economie       -- er wordt echt aangevuld en buit gepakt
+
+Gebruik (vanuit de projectmap):
+    python tools/balans/regelzoeker.py --minuten 60 --potjes 2 --kandidaten 6
+
+Zonder --minuten draait hij een korte proefronde (2 generaties). Elke generatie
+schrijft naar results/balans_<tijd>/: de configs, de ruwe uitslagen, een
+log.jsonl met alle scores, en bovenaan het voorstel. Hij verandert NOOIT zelf
+een spelconfig: de winnaar komt als voorstel-json op tafel, jij beslist.
+"""
+
+import argparse
+import json
+import math
+import os
+import random
+import shutil
+import statistics as st
+import subprocess
+import sys
+import time
+from collections import Counter, defaultdict
+
+PROJECT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+GODOT = os.environ.get("GODOT_PATH") or (
+    r"C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe")
+BASIS = os.path.join(PROJECT, "arena", "arena_configs", "v42_default.json")
+
+# --------------------------------------------------------------- zoekruimte
+# Elke knop: (pad in het campaign-blok, ondergrens, bovengrens, geheel getal?)
+# De factie-reserves staan apart omdat het er zes zijn.
+KNOPPEN = [
+    ("cp_start", 2, 20, True),
+    ("buit_vaandel_pt", 0, 6, True),
+    ("buit_tamboer_cp", 0, 8, True),
+    ("ruil_cp_per_punt", 1, 4, True),
+    ("spawn_max", 1, 6, True),
+    ("spawn_totaal_max", 3, 20, True),
+    ("spawn_vanaf_cyclus", 1, 4, True),
+]
+FACTIES = {"0": "Varken", "1": "Muis", "2": "Leeuw", "3": "Beer", "4": "Wolf", "5": "Krokodil"}
+# Staat een knop NIET in de basis-json, dan geldt de default uit
+# core/match/rules_config.gd (CAMPAIGN_DEFAULTS). Zonder deze tabel begon de
+# zoeker op de ondergrens -- en dat zette bijvoorbeeld de buit meteen op 0,
+# waarna hij die knop nooit meer kon vinden (gemeten 31 juli: buit 3,11 in de
+# nulmeting, 0,00 bij alle kandidaten van generatie 1).
+CODE_DEFAULTS = {
+    "cp_start": 10, "buit_vaandel_pt": 2, "buit_tamboer_cp": 2,
+    "ruil_cp_per_punt": 2, "spawn_max": 3, "spawn_totaal_max": 15,
+    "spawn_vanaf_cyclus": 2,
+}
+RESERVE_MIN, RESERVE_MAX = 3, 20
+
+# --------------------------------------------------------------- doelstelling
+# Gewichten van de score. Hoger = zwaarder mee. Alles wordt op 0..1 genormeerd
+# zodat de gewichten leesbaar blijven; de totaalscore is 0..1 (hoger is beter).
+DOEL = {
+    "evenwicht": 0.45,   # winrates rond 50%
+    "beslissend": 0.25,  # weinig tiebreaks
+    "duur": 0.15,        # mediaan cycli in de band
+    "economie": 0.15,    # aanvullen en buit gebeuren echt
+}
+DUUR_ONDER, DUUR_BOVEN = 8, 13   # gewenste mediaan cycli
+
+
+def score_run(games):
+    """Scoor een arena-run. Geeft (totaal, detail-dict)."""
+    if not games:
+        return 0.0, {"reden": "geen partijen"}
+    win = defaultdict(lambda: [0, 0])
+    for r in games:
+        for kant, d in ((1, r["d1"]), (2, r["d2"])):
+            win[d][1] += 1
+            if int(r["winner"]) == kant:
+                win[d][0] += 1
+    winrates = {d: 100.0 * w / max(t, 1) for d, (w, t) in win.items()}
+    # 1) evenwicht: gemiddelde afstand tot 50%, 0 punten bij 25 procentpunt eraf
+    afwijking = st.mean(abs(v - 50.0) for v in winrates.values()) if winrates else 50.0
+    evenwicht = max(0.0, 1.0 - afwijking / 25.0)
+    # 2) beslissend: aandeel partijen dat NIET op tiebreak/remise eindigt
+    m = Counter(r["methode"] for r in games)
+    beslissend = (m["haven"] + m["eliminatie"]) / len(games)
+    # 3) duur: mediaan cycli binnen de band = 1, daarbuiten lineair weg
+    cycli = st.median([int(r["cycli"]) for r in games])
+    if DUUR_ONDER <= cycli <= DUUR_BOVEN:
+        duur = 1.0
+    else:
+        mis = DUUR_ONDER - cycli if cycli < DUUR_ONDER else cycli - DUUR_BOVEN
+        duur = max(0.0, 1.0 - mis / 8.0)
+    # 4) economie: aanvullen EN buit moeten echt voorkomen (anders is de knop dood)
+    def per_partij(veld):
+        return st.mean(sum(int(r["spelers"][p].get(veld, 0)) for p in r["spelers"]) for r in games)
+    spawns = per_partij("spawns")
+    buit = per_partij("buit_pt") + per_partij("buit_cp")
+    economie = min(1.0, spawns / 4.0) * 0.6 + min(1.0, buit / 2.0) * 0.4
+    totaal = (DOEL["evenwicht"] * evenwicht + DOEL["beslissend"] * beslissend
+              + DOEL["duur"] * duur + DOEL["economie"] * economie)
+    detail = {
+        "score": round(totaal, 4),
+        "evenwicht": round(evenwicht, 3), "gem_afwijking_van_50": round(afwijking, 1),
+        "beslissend": round(beslissend, 3), "tiebreak_pct": round(100.0 * m["tiebreak"] / len(games), 1),
+        "cycli": cycli, "duur": round(duur, 3),
+        "spawns": round(spawns, 2), "buit": round(buit, 2), "economie": round(economie, 3),
+        "winrates": {d: round(v, 1) for d, v in sorted(winrates.items(), key=lambda kv: -kv[1])},
+        "partijen": len(games),
+    }
+    return totaal, detail
+
+
+def lees_games(pad):
+    uit = []
+    if not os.path.exists(pad):
+        return uit
+    for regel in open(pad, encoding="utf-8-sig"):
+        try:
+            d = json.loads(regel)
+        except Exception:
+            continue
+        if not d.get("run_meta"):
+            uit.append(d)
+    return uit
+
+
+def muteer(regels, rng, sigma):
+    """Eén kandidaat: schaal elke knop met log-normale ruis, klem op de grenzen."""
+    nieuw = json.loads(json.dumps(regels))
+    c = nieuw["campaign"]
+    for naam, onder, boven, geheel in KNOPPEN:
+        huidig = float(c.get(naam, CODE_DEFAULTS.get(naam, onder)))
+        waarde = huidig * math.exp(rng.gauss(0.0, sigma))
+        waarde = max(onder, min(boven, waarde))
+        c[naam] = int(round(waarde)) if geheel else round(waarde, 3)
+    tabel = dict(c.get("punten_start_factie", {}))
+    for sleutel in FACTIES:
+        huidig = float(tabel.get(sleutel, c.get("punten_start", 10)))
+        waarde = huidig * math.exp(rng.gauss(0.0, sigma))
+        tabel[sleutel] = int(round(max(RESERVE_MIN, min(RESERVE_MAX, waarde))))
+    c["punten_start_factie"] = tabel
+    return nieuw
+
+
+def draai_kandidaat(map_pad, naam, regels, potjes, seed):
+    """Schrijf de configs en start één arena-proces. Geeft (proc, games-pad)."""
+    regels_pad = os.path.join(map_pad, "%s_regels.json" % naam)
+    with open(regels_pad, "w", encoding="utf-8") as f:
+        json.dump(regels, f, indent=1, ensure_ascii=False, sort_keys=True)
+    arena_cfg = {
+        "matchups": "all", "games_per_matchup": potjes,
+        "agents": {"p1": "l2", "p2": "l2"},
+        "base_seed": seed, "max_steps": 4000, "track_repetitions": False,
+        "rules": "res://" + os.path.relpath(regels_pad, PROJECT).replace("\\", "/"),
+    }
+    cfg_pad = os.path.join(map_pad, "%s_arena.json" % naam)
+    with open(cfg_pad, "w", encoding="utf-8") as f:
+        json.dump(arena_cfg, f, indent=1, ensure_ascii=False)
+    uit_map = os.path.join(map_pad, naam)
+    proc = subprocess.Popen(
+        [GODOT, "--headless", "--path", PROJECT, "res://arena/arena.tscn", "--",
+         "--config", os.path.relpath(cfg_pad, PROJECT).replace("\\", "/"),
+         "--out", os.path.relpath(uit_map, PROJECT).replace("\\", "/"),
+         "--seed-offset", "0"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=PROJECT)
+    return proc, os.path.join(uit_map, "games.jsonl")
+
+
+def main():
+    p = argparse.ArgumentParser(description="Zoekt een betere ontwerp-balans (regels, niet bots).")
+    p.add_argument("--minuten", type=float, default=0.0, help="tijdbudget; 0 = korte proefronde")
+    p.add_argument("--kandidaten", type=int, default=6, help="kandidaten per generatie")
+    p.add_argument("--potjes", type=int, default=2, help="potjes per matchup per kandidaat")
+    p.add_argument("--sigma", type=float, default=0.25, help="mutatie-ruis (log-normaal)")
+    p.add_argument("--seed", type=int, default=0)
+    args = p.parse_args()
+
+    rng = random.Random(args.seed or int(time.time()))
+    stempel = time.strftime("%Y%m%d_%H%M%S")
+    map_pad = os.path.join(PROJECT, "results", "balans_" + stempel)
+    os.makedirs(map_pad, exist_ok=True)
+    log_pad = os.path.join(map_pad, "log.jsonl")
+
+    kampioen = json.load(open(BASIS, encoding="utf-8"))
+    print("[BALANS] basis: %s" % os.path.relpath(BASIS, PROJECT))
+    print("[BALANS] %d kandidaten per generatie, %d potjes per matchup, sigma %.2f"
+          % (args.kandidaten, args.potjes, args.sigma))
+    print("[BALANS] uitvoer: %s" % os.path.relpath(map_pad, PROJECT))
+
+    # Nulmeting: hoe scoort de huidige balans?
+    proc, games_pad = draai_kandidaat(map_pad, "gen0_basis", kampioen, args.potjes, 515000)
+    proc.wait()
+    beste_score, beste_detail = score_run(lees_games(games_pad))
+    print("[BALANS] huidige balans: score %.4f  (afwijking %.1f%%, tiebreak %.1f%%, cycli %d, "
+          "aanvullen %.2f, buit %.2f)" % (beste_score, beste_detail["gem_afwijking_van_50"],
+          beste_detail["tiebreak_pct"], beste_detail["cycli"], beste_detail["spawns"],
+          beste_detail["buit"]))
+    with open(log_pad, "a", encoding="utf-8") as f:
+        f.write(json.dumps({"generatie": 0, "naam": "basis", "detail": beste_detail,
+                            "regels": kampioen["campaign"]}, ensure_ascii=False) + "\n")
+
+    start = time.time()
+    generatie = 0
+    sigma = args.sigma
+    while True:
+        generatie += 1
+        if args.minuten > 0:
+            if (time.time() - start) / 60.0 >= args.minuten:
+                break
+        elif generatie > 2:
+            break
+        procs = []
+        for i in range(args.kandidaten):
+            kandidaat = muteer(kampioen, rng, sigma)
+            naam = "gen%d_k%d" % (generatie, i)
+            proc, gp = draai_kandidaat(map_pad, naam, kandidaat, args.potjes,
+                                       515000 + generatie * 1000)
+            procs.append((naam, kandidaat, proc, gp))
+        for naam, kandidaat, proc, gp in procs:
+            proc.wait()
+        beste_van_ronde = None
+        for naam, kandidaat, proc, gp in procs:
+            s, detail = score_run(lees_games(gp))
+            with open(log_pad, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"generatie": generatie, "naam": naam, "detail": detail,
+                                    "regels": kandidaat["campaign"]}, ensure_ascii=False) + "\n")
+            if beste_van_ronde is None or s > beste_van_ronde[0]:
+                beste_van_ronde = (s, kandidaat, detail, naam)
+        s, kandidaat, detail, naam = beste_van_ronde
+        beter = s > beste_score
+        print("[BALANS] gen %d: beste %.4f (%s) %s  afwijking %.1f%% tiebreak %.1f%% cycli %d "
+              "aanvullen %.2f buit %.2f" % (generatie, s, naam,
+              "-> ADOPTIE" if beter else "(kampioen blijft)", detail["gem_afwijking_van_50"],
+              detail["tiebreak_pct"], detail["cycli"], detail["spawns"], detail["buit"]))
+        if beter:
+            kampioen, beste_score, beste_detail = kandidaat, s, detail
+            sigma = max(0.08, sigma * 0.9)   # dichterbij: fijner zoeken
+        else:
+            sigma = min(0.5, sigma * 1.05)   # niets gevonden: breder zoeken
+        # Voorstel altijd bijwerken, zodat je tussentijds kunt kijken.
+        voorstel = os.path.join(map_pad, "voorstel.json")
+        with open(voorstel, "w", encoding="utf-8") as f:
+            json.dump(kampioen, f, indent=1, ensure_ascii=False, sort_keys=True)
+
+    print("\n[BALANS] klaar na %d generaties (%.1f min). Beste score %.4f" % (
+        generatie - 1, (time.time() - start) / 60.0, beste_score))
+    print("[BALANS] winrates van het voorstel: %s" % beste_detail.get("winrates"))
+    print("[BALANS] voorstel: %s" % os.path.relpath(os.path.join(map_pad, "voorstel.json"), PROJECT))
+    print("[BALANS] LET OP: dit verandert niets aan het spel. Vergelijk het voorstel met")
+    print("         arena/arena_configs/v42_default.json en beslis zelf wat je overneemt.")
+
+
+if __name__ == "__main__":
+    main()

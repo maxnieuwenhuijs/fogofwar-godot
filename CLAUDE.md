@@ -7,6 +7,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
 ## Kernregels (samenvatting; bron: MASTERBOUWPLAN §0 + besluiten)
 
+- **C15-buit (4.2.1)**: vaandeldrager neerleggen = 2 versterkingspunten,
+  tamboer = 2 CP, alleen als het slachtoffer ONgekoppeld is. De rol staat op de
+  pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in de
+  opstelfase. Knoppen: `buit_vaandel_pt`, `buit_tamboer_cp`, `vaandels_max`,
+  `tamboers_max`. Bots hebben `buit_jacht`/`buit_hoede`; de arena meet
+  `buit_pt`/`buit_cp`/`dragers_verloren`.
 - **Regelversies zijn heilig.** 4.1.10-hr = het huidige spel; 4.2.0 = de
   campagne-economie, config-gated door het `campaign`-blok (zonder blok speelt
   álles byte-identiek 4.1.x). Spec: `docs/spelregels-v4.2.md` (Deel A = 4.1,
@@ -39,6 +45,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   spelen (meting), Bekijk het rapport, STOP alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
+- **Regelzoeker** (31 juli): `python tools/balans/regelzoeker.py --minuten 60
+  --potjes 2 --kandidaten 6`, of de paneelknop "Regels uitproberen (balans)".
+  Zoekt betere REGELS met vaste bots (de trainer zoekt betere bots met vaste
+  regels). Scoort op factie-evenwicht 45%, beslissende partijen 25%, speelduur
+  15%, levende economie 15%. Raakt het spel niet aan: schrijft `voorstel.json`
+  + een log per kandidaat in `results/balans_<tijd>/`.
 - Nachtrun: `.\arena_nacht.ps1 [-DuurMinuten] [-Kort]` — draait 4.1- én
   v4.2-matrix om-en-om naar aparte run-mappen (B17).
 - Arena: `.\arena.ps1 -Config arena/arena_configs/<x>.json -Procs N -Naam run`

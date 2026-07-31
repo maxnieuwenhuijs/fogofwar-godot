@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "49b390beddb56ba3fd0b5a8be992cbc187899f456258e143df12d72063da2638",
+			"hash": "f83086cd962bd3f22ae44d36f0c35491b6c9e4fad6148da63682f6b1a6e10649",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785406057.429
+			"ts": 1785420253.589
 		},
 		{
 			"action": {
@@ -74,6 +74,9 @@
 								5,
 								5
 							],
+							"buit_cp": 0,
+							"buit_pt": 0,
+							"buit_rol": "",
 							"charge_from": [
 								0,
 								0
@@ -113,13 +116,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "6916ea1128ebe9ea63814b1f3f203585a4393f2c11c68fc0c5996a119267c514",
+			"hash": "ad2b04c7ff295f4dcb148e22a309a35ab45cecc47ca4bbef1af14e992d6c58f2",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785406057.429
+			"ts": 1785420253.589
 		}
 	],
-	"final_hash": "6916ea1128ebe9ea63814b1f3f203585a4393f2c11c68fc0c5996a119267c514",
+	"final_hash": "ad2b04c7ff295f4dcb148e22a309a35ab45cecc47ca4bbef1af14e992d6c58f2",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -184,6 +187,7 @@
 					5
 				],
 				"remaining_stamina": 1,
+				"rol": "",
 				"unit_type": 2
 			},
 			"1": {
@@ -202,6 +206,7 @@
 					3
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"2": {
@@ -220,6 +225,7 @@
 					10
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"3": {
@@ -238,6 +244,7 @@
 					10
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			}
 		},
@@ -271,6 +278,8 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"buit_tamboer_cp": 2,
+				"buit_vaandel_pt": 2,
 				"comp_override": null,
 				"cp": null,
 				"cp_bijschrijving": "campagnelaag",
@@ -293,6 +302,7 @@
 				"poolfactor": 1.5,
 				"pools": null,
 				"punten_start": 0,
+				"punten_start_factie": {},
 				"skip_mode": "auto",
 				"spawn_kosten": {
 					"art": 3,
@@ -302,7 +312,9 @@
 				"spawn_max": 3,
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
-				"spawn_vanaf_cyclus": 2
+				"spawn_vanaf_cyclus": 2,
+				"tamboers_max": 2,
+				"vaandels_max": 2
 			},
 			"clock": {
 				"bank_sec": 0,
@@ -326,7 +338,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.2.0",
+			"rules_version": "4.2.1",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0,
@@ -348,7 +360,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T12:07:37",
+		"created": "2026-07-30T16:04:13",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -414,6 +426,7 @@
 						6
 					],
 					"remaining_stamina": 3,
+					"rol": "",
 					"unit_type": 2
 				},
 				"1": {
@@ -432,6 +445,7 @@
 						3
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				},
 				"2": {
@@ -450,6 +464,7 @@
 						10
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				},
 				"3": {
@@ -468,6 +483,7 @@
 						10
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				}
 			},
@@ -501,6 +517,8 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"buit_tamboer_cp": 2,
+					"buit_vaandel_pt": 2,
 					"comp_override": null,
 					"cp": null,
 					"cp_bijschrijving": "campagnelaag",
@@ -523,6 +541,7 @@
 					"poolfactor": 1.5,
 					"pools": null,
 					"punten_start": 0,
+					"punten_start_factie": {},
 					"skip_mode": "auto",
 					"spawn_kosten": {
 						"art": 3,
@@ -532,7 +551,9 @@
 					"spawn_max": 3,
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",
-					"spawn_vanaf_cyclus": 2
+					"spawn_vanaf_cyclus": 2,
+					"tamboers_max": 2,
+					"vaandels_max": 2
 				},
 				"clock": {
 					"bank_sec": 0,
@@ -556,7 +577,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.2.0",
+				"rules_version": "4.2.1",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0,
@@ -577,6 +598,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.2.0"
+		"rules_version": "4.2.1"
 	}
 }

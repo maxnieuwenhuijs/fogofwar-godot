@@ -158,6 +158,7 @@ func _tab_game() -> String:
 		"",
 		tr("HELP_GAME_SETUP_TITLE"),
 		tr("HELP_GAME_SETUP_BODY"),
+		tr("HELP_GAME_SETUP_ROLES"),
 	])
 
 
@@ -231,6 +232,12 @@ func _tab_combat() -> String:
 		tr("HELP_COMBAT_SHOOT_1"),
 		tr("HELP_COMBAT_SHOOT_2"),
 		tr("HELP_COMBAT_SHOOT_3"),
+		"",
+		"",
+		tr("HELP_COMBAT_LOOT_TITLE"),
+		tr("HELP_COMBAT_LOOT_1"),
+		tr("HELP_COMBAT_LOOT_2"),
+		tr("HELP_COMBAT_LOOT_3"),
 		"",
 		tr("HELP_COMBAT_TIP"),
 		tr("HELP_COMBAT_KEYS"),

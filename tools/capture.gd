@@ -681,10 +681,21 @@ func _ready() -> void:
 		# F0.4a: draai alle vastgelegde golden sims (tests/golden_sims.json) en
 		# vergelijk winnaar/cycli/acties. Exit 0 = alles identiek, 1 = afwijking.
 		var gj = JSON.parse_string(FileAccess.get_file_as_string("res://tests/golden_sims.json"))
+		# De ijk-sims draaien op de regels die we ECHT spelen (Max, 30 juli:
+		# "4.2 zijn de regels nu toch"). Stond hier eerst null = kale 4.1-
+		# defaults; die regelset speelt niemand meer, dus bewaakte de baseline
+		# het verkeerde. Pad staat in golden_sims.json ("rules"), leeg = 4.1.
+		var sim_rules_pad := String(gj.get("rules", ""))
+		var sim_rules: RulesConfig = null
+		if sim_rules_pad != "" and FileAccess.file_exists(sim_rules_pad):
+			var rj = JSON.parse_string(FileAccess.get_file_as_string(sim_rules_pad))
+			if rj is Dictionary:
+				sim_rules = RulesConfig.from_dict(rj)
 		var mismatches := 0
 		for entry in gj.sims:
 			var uitkomst: Dictionary = _run_sim(String(entry.p1), String(entry.p2),
-				_sim_doctrine(String(entry.d1)), _sim_doctrine(String(entry.d2)), int(entry.seed), null)
+				_sim_doctrine(String(entry.d1)), _sim_doctrine(String(entry.d2)), int(entry.seed),
+				RulesConfig.from_dict(rj_kopie(sim_rules_pad)) if sim_rules != null else null)
 			var ok: bool = uitkomst.winner == int(entry.winner) 				and uitkomst.cyclus == int(entry.cyclus) and uitkomst.acties == int(entry.acties)
 			print("[SIMCHECK] %s-%s %s-%s seed=%d -> winner=%d cyclus=%d acties=%d %s" % [
 				entry.p1, entry.p2, entry.d1, entry.d2, int(entry.seed),
@@ -1899,6 +1910,15 @@ func _sim_doctrine(naam: String) -> int:
 
 ## Volledige AI-vs-AI-partij op de GameSession-autoload; synchroon.
 ## Retourneert {winner, cyclus, acties, guard}.
+## Verse RulesConfig per sim: de config wordt tijdens een partij aangeraakt
+## (pools/cp), dus elke sim krijgt zijn eigen kopie uit hetzelfde bestand.
+func rj_kopie(pad: String) -> Dictionary:
+	if pad == "" or not FileAccess.file_exists(pad):
+		return {}
+	var d = JSON.parse_string(FileAccess.get_file_as_string(pad))
+	return d if d is Dictionary else {}
+
+
 func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules: RulesConfig, record_path: String = "") -> Dictionary:
 	var paths := {
 		"easy": "res://scripts/ai/AIEasy.gd",

@@ -21,6 +21,9 @@
 								4,
 								1
 							],
+							"buit_cp": 0,
+							"buit_pt": 0,
+							"buit_rol": "",
 							"charge_from": [
 								0,
 								0
@@ -60,10 +63,10 @@
 					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "fc92f6d36e25edded9bee1b75f4e870e2fd48d6a80a887990fe9184e5eb9c097",
+			"hash": "50b5dc7343a7125c6f22b77fb46641dbcba0b02e8efa2c641e835572a2ff47aa",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785406057.319
+			"ts": 1785420253.569
 		},
 		{
 			"action": {
@@ -116,13 +119,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "b2202e455f9eb4bb44fb59ffbd9851f523dbec15ec2665aa9bcfee99775f088f",
+			"hash": "ddf1dadeb4f250f92920d22aafa16d01b0e9081131ec6474fb750541940bf924",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785406057.32
+			"ts": 1785420253.569
 		}
 	],
-	"final_hash": "b2202e455f9eb4bb44fb59ffbd9851f523dbec15ec2665aa9bcfee99775f088f",
+	"final_hash": "ddf1dadeb4f250f92920d22aafa16d01b0e9081131ec6474fb750541940bf924",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -193,6 +196,7 @@
 					0
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"1": {
@@ -211,6 +215,7 @@
 					0
 				],
 				"remaining_stamina": 1,
+				"rol": "",
 				"unit_type": 0
 			},
 			"2": {
@@ -229,6 +234,7 @@
 					1
 				],
 				"remaining_stamina": 2,
+				"rol": "",
 				"unit_type": 0
 			},
 			"3": {
@@ -247,6 +253,7 @@
 					10
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			}
 		},
@@ -313,7 +320,7 @@
 		"winner": 1
 	},
 	"meta": {
-		"created": "2026-07-30T12:07:37",
+		"created": "2026-07-30T16:04:13",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -385,6 +392,7 @@
 						0
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				},
 				"1": {
@@ -403,6 +411,7 @@
 						1
 					],
 					"remaining_stamina": 2,
+					"rol": "",
 					"unit_type": 0
 				},
 				"2": {
@@ -421,6 +430,7 @@
 						1
 					],
 					"remaining_stamina": 2,
+					"rol": "",
 					"unit_type": 0
 				},
 				"3": {
@@ -439,6 +449,7 @@
 						10
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				}
 			},

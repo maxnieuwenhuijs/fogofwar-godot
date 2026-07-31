@@ -192,7 +192,12 @@ static var _vfx_cache: Dictionary = {}  # map-pad -> Array van {tex, cols, rows}
 ## Generieke VFX-loader: scant een map eenmalig, zet zwart-op-achtergrond om
 ## naar alpha (boost = dekking-versterking) en herkent sprite sheets aan een
 ## _<kolommen>x<rijen>-suffix in de naam. Entry = {tex, cols, rows}.
-static func _vfx_entry(dir_path: String, boost: float) -> Dictionary:
+## `wens` = deel van een bestandsnaam (bv. "white_smoke"). Leeg = willekeurig
+## uit de map, zoals altijd. Zo kan de spawn-pof een andere wolk krijgen dan de
+## kruitrook van een musket (Max, 30 juli: "gebruik white_smoke als de spawn
+## smoke texture"). Staat de gevraagde texture er niet, dan valt hij netjes
+## terug op willekeurig.
+static func _vfx_entry(dir_path: String, boost: float, wens: String = "") -> Dictionary:
 	if not _vfx_cache.has(dir_path):
 		var list: Array = []
 		var seen: Dictionary = {}
@@ -217,16 +222,22 @@ static func _vfx_entry(dir_path: String, boost: float) -> Dictionary:
 							if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
 								cols = maxi(int(grid[0]), 1)
 								rows = maxi(int(grid[1]), 1)
-						list.append({"tex": _black_to_alpha(tex, boost), "cols": cols, "rows": rows})
+						list.append({"tex": _black_to_alpha(tex, boost), "cols": cols,
+							"rows": rows, "naam": base})
 		_vfx_cache[dir_path] = list
 	var list2: Array = _vfx_cache[dir_path]
 	if list2.is_empty():
 		return {}
+	if wens != "":
+		var w := wens.to_lower()
+		for e in list2:
+			if String(e.get("naam", "")).contains(w):
+				return e
 	return list2[randi() % list2.size()]
 
 
-static func _smoke_entry() -> Dictionary:
-	return _vfx_entry(SMOKE_TEX_DIR, 2.3)
+static func _smoke_entry(wens: String = "") -> Dictionary:
+	return _vfx_entry(SMOKE_TEX_DIR, 2.3, wens)
 
 
 ## Vuurflits aan de loop met een texture uit assets/textures/fire/ (billboard,
@@ -307,12 +318,13 @@ static func _black_to_alpha(tex: Texture2D, boost: float = 2.3) -> Texture2D:
 ## een klein wolkje ECHT uitzetten (rook-groei), opstijgen en vervagen.
 ## pos is in de lokale ruimte van parent. Knoppen: rook-aantal/-maat/-groei/
 ## -duur. Zonder textures: grijze bol-wolkjes (zelfde gedrag).
-static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0) -> void:
+static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float,
+		dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0, tex_wens: String = "") -> void:
 	if parent == null:
 		return
 	var amount := int(clampf(float(count) * fx("smoke_amount", 1.0), 0.0, 24.0))
 	for i in amount:
-		var e := _smoke_entry()
+		var e := _smoke_entry(tex_wens)
 		var sheet_cols := 1
 		var sheet_rows := 1
 		var puff := MeshInstance3D.new()
@@ -852,7 +864,9 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 	_dodelijke_kracht = strength
 	# Kreet-kans (besluit Max, 28 juli): niet elke dode gilt. Los van of er
 	# gibs afvliegen -- puur een kans per sterfgeval, instelbaar via
-	# effects_tuning.json ("kreet_kans", 0..1; nu 15%). Een KANONtreffer
+	# effects_tuning.json ("kreet_kans"). In het SPEL speelt game.gd de
+	# factie-kreet al bij elke dood (en zet kreet_al_gespeeld), dus deze poort
+	# is er voor losse gevallen: de Model-tuner en tests. Een KANONtreffer
 	# gilt altijd -- die kans geldt alleen voor musket- en meleedoden.
 	if not _kreet_af and (strength >= 1.2 or randf() < fx("kreet_kans", 0.15)):
 		_kreet_af = true
@@ -1339,6 +1353,9 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	scene_parent.add_child(parts_root)
 	# Zelfde maat/rotatie/plek als het getunede lijf.
 	parts_root.global_transform = (_piece as Node3D).global_transform
+	var maat_f2 := _gib_maat_correctie(parts_root)
+	if not is_equal_approx(maat_f2, 1.0):
+		parts_root.scale *= maat_f2   # gibs stonden op een andere schaal
 	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
 	var parts: Array = parts_root.find_children("*", "MeshInstance3D", true, false)
 	if parts.is_empty():
@@ -1492,6 +1509,9 @@ func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_sc
 	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
 	scene_parent.add_child(parts_root)
 	parts_root.global_transform = (_piece as Node3D).global_transform
+	var maat_f := _gib_maat_correctie(parts_root)
+	if not is_equal_approx(maat_f, 1.0):
+		parts_root.scale *= maat_f   # gibs stonden op een andere schaal
 	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
 	var chosen: Node3D = null
 	for part in parts_root.find_children("*", "MeshInstance3D", true, false):
@@ -1977,9 +1997,19 @@ func _attach_weapon(fac: String) -> void:
 	att.add_child(prop)
 	# Auto-schaal: langste as van de prop → ~0.55 wereld-unit (musketlengte),
 	# gecorrigeerd voor alle ouder-schalen (skelet/auto-fit).
+	# BUG-FIX (Max, 30 juli: reuzengeweer bij het plaatsen van versterkingen).
+	# De prop wordt genormaliseerd op de SCHAAL VAN DE OUDER, en die komt uit de
+	# bot-aanhechting. Bij een vers gespawnde pion waren de bot-transforms nog
+	# niet doorgerekend: dan leest hij 1.0 in plaats van ~0.008 en wordt de
+	# normalisatie honderden malen te groot. Skelet forceren voor we meten.
+	skel.force_update_all_bone_transforms()
+	att.force_update_transform()
+	prop.force_update_transform()
 	var ab := _combined_aabb(prop)
 	var longest: float = maxf(ab.size.x, maxf(ab.size.y, ab.size.z))
 	var parent_scale: float = prop.global_transform.basis.get_scale().x
+	if parent_scale <= 0.0001 or not is_finite(parent_scale):
+		parent_scale = 1.0
 	if longest > 0.0001 and parent_scale > 0.0001:
 		var factor := 0.55 / (longest * parent_scale)
 		prop.scale = Vector3(factor, factor, factor)
@@ -1991,6 +2021,20 @@ func _attach_weapon(fac: String) -> void:
 	var rot: Array = t.get("rot", [0.0, 0.0, 0.0])
 	prop.position = Vector3(float(pos[0]), float(pos[1]), float(pos[2])) / maxf(parent_scale, 0.0001)
 	prop.rotation_degrees = Vector3(float(rot[0]), float(rot[1]), float(rot[2]))
+	# VANGRAIL (Max, 30 juli: "hoe kan die musket dan ook zo groot worden?").
+	# De normalisatie hierboven zet elk voorwerp op ~0.55 wereld-units, maar de
+	# tuning mag daar bovenop schalen. Een uitschieter (of een verkeerd bewaarde
+	# waarde) zou een reuzenwapen op het bord zetten. Boven prop_max keren we
+	# terug naar de norm: liever een voorwerp dat iets te klein staat dan een
+	# stok van drie tegels. prop_max = veelvoud van de normale voorwerp-lengte.
+	var grens: float = 0.55 * fx("prop_max", 3.0)
+	var nu_lang: float = maxf(_combined_aabb(prop).size.x,
+			maxf(_combined_aabb(prop).size.y, _combined_aabb(prop).size.z)) 			* prop.global_transform.basis.get_scale().x
+	if nu_lang > grens and nu_lang > 0.0001:
+		var terug: float = grens / nu_lang
+		prop.scale *= terug
+		push_warning("Prop %s was %.2f lang (max %.2f) -- teruggeschaald" % [
+			_weapon_tune_key, nu_lang, grens])
 	if _rol == "flag":
 		_hang_vlagdoek(prop)
 	_weapon = prop
@@ -2277,6 +2321,62 @@ func _measure_bones(root: Node3D) -> Dictionary:
 ## Skinned modellen (AI-generators): mesh-AABB's staan in bind-ruimte en zeggen
 ## niks over de gerenderde maat (skelet schaalt ze op) → meet dan via de
 ## bot-posities van het skelet, die staan wél in echte ruimte.
+## Hoogte (wereld-units) van alles wat er onder deze node getekend wordt.
+## Voor de gibs-maatcorrectie hieronder: 0.0 als er niets te meten is.
+static func _mesh_hoogte(root: Node3D) -> float:
+	var box := AABB()
+	var eerste := true
+	for kind in root.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = kind
+		if mi.mesh == null:
+			continue
+		var ab: AABB = mi.global_transform * mi.get_aabb()
+		if eerste:
+			box = ab
+			eerste = false
+		else:
+			box = box.merge(ab)
+	return 0.0 if eerste else box.size.y
+
+
+## BUG-FIX (Max, 30 juli: "een gigantisch geweer komt opeens tevoorschijn").
+## Niet elk gibs-bestand staat op dezelfde schaal als zijn model: gemeten staat
+## `infantry_base` 0,006 hoog en zijn gibs 1,275 -- factor 200. De gibs kregen
+## de transform van het model, dus die factor sloeg er vol in en er vloog een
+## reuzenarm (of musket) door het beeld. Precies bij base, en dat is het model
+## dat vaandeldragers en tamboers dragen -- vandaar de indruk dat het met de
+## figuranten te maken had. We meten de verhouding en corrigeren, per
+## model-pad gecached.
+static var _gib_maat_cache: Dictionary = {}
+
+
+func _gib_maat_correctie(parts_root: Node3D) -> float:
+	if _model_path == "":
+		return 1.0
+	if _gib_maat_cache.has(_model_path):
+		return float(_gib_maat_cache[_model_path])
+	# CORRECTIE (30 juli, tweede poging): NIET twee verse bestanden vergelijken.
+	# Een geskinde mesh meet in bind-space (de muis-base leest dan 0,006 terwijl
+	# hij op het bord 0,9 hoog staat), dus die vergelijking rekende 200x de
+	# verkeerde kant op. We gebruiken wat de auto-fit al heeft GEMETEN aan het
+	# skelet (`last_fit.h`, in modelruimte) x de toegepaste schaal: dat is de
+	# hoogte die de speler ziet, pose-onafhankelijk. De gibs hebben op dit
+	# moment al de transform van het model, dus hun gemeten hoogte is direct
+	# vergelijkbaar.
+	var f := 1.0
+	var gibs_h := _mesh_hoogte(parts_root)
+	var piece_scale: float = (_piece as Node3D).global_transform.basis.get_scale().y
+	var pion_h: float = float(last_fit.get("h", 0.0)) * piece_scale
+	if pion_h > 0.0001 and gibs_h > 0.0001:
+		var verhouding := pion_h / gibs_h
+		# Alleen bij een echte mismatch ingrijpen (meer dan 25% scheel), en
+		# nooit wilder dan factor 100 -- anders verstoppen we een fout.
+		if verhouding < 0.8 or verhouding > 1.25:
+			f = clampf(verhouding, 0.01, 100.0)
+	_gib_maat_cache[_model_path] = f
+	return f
+
+
 func _combined_aabb(root: Node3D) -> AABB:
 	var inv: Transform3D = root.global_transform.affine_inverse()
 	var skels: Array = root.find_children("*", "Skeleton3D", true, false)

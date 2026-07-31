@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Wolf
-Generaties: 61 · adopties: 0 · minuten: 240.7
+Generaties: 87 · adopties: 0 · minuten: 423.0
 Winrate van Wolf tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   41.0%  (366 potjes)
-  vs Muis     45.7%  (366 potjes)
-  vs Leeuw    60.0%  (366 potjes)
-  vs Beer     37.7%  (366 potjes)
-  vs Wolf     54.5%  (366 potjes)
-  vs Krokodil  29.3%  (366 potjes)
+  vs Varken   28.6%  (522 potjes)
+  vs Muis     46.1%  (522 potjes)
+  vs Leeuw    36.2%  (522 potjes)
+  vs Beer     29.1%  (522 potjes)
+  vs Wolf     49.3%  (522 potjes)
+  vs Krokodil  36.8%  (522 potjes)

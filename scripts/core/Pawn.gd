@@ -15,6 +15,14 @@ var attack_value: int = 0
 var card_revealed: bool = true  # Vos: false tot de kaart onthuld wordt (schade geven/krijgen)
 var is_eliminated: bool = false
 
+## Figurant-rol, gekozen tijdens het opstellen (C15, besluit Max 30 juli):
+## "" = gewone soldaat, "flag" = vaandeldrager, "drum" = tamboer. Zit in de
+## STAAT (niet in de view) omdat er buit aan hangt: wie een dragende figurant
+## neerlegt, krijgt versterkingspunten of CP. Een gekoppelde pion draagt niets
+## -- de rol blijft wel op de pion staan, dus na ontkoppelen pakt hij zijn
+## vaandel weer op.
+var rol: String = ""
+
 func _init(p_id: int = 0, p_owner: int = 0, p_pos: Vector2i = Vector2i.ZERO, p_type: int = 0) -> void:
 	id = p_id
 	owner_id = p_owner
@@ -59,6 +67,7 @@ func clone() -> Pawn:
 	p.attack_value = attack_value
 	p.card_revealed = card_revealed
 	p.is_eliminated = is_eliminated
+	p.rol = rol
 	return p
 
 func to_dict() -> Dictionary:
@@ -76,6 +85,7 @@ func to_dict() -> Dictionary:
 		"attack_value": attack_value,
 		"card_revealed": card_revealed,
 		"is_eliminated": is_eliminated,
+		"rol": rol,
 	}
 
 static func from_dict(d: Dictionary) -> Pawn:
@@ -95,4 +105,5 @@ static func from_dict(d: Dictionary) -> Pawn:
 	p.attack_value = int(d.get("attack_value", 0))
 	p.card_revealed = bool(d.get("card_revealed", true))
 	p.is_eliminated = bool(d.get("is_eliminated", false))
+	p.rol = String(d.get("rol", ""))
 	return p

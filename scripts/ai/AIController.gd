@@ -186,6 +186,12 @@ static func default_weights() -> Dictionary:
 		# (1.0 = altijd aanvullen, lager = zuiniger met de reserve).
 		"spawn_drempel": 1.0,
 	"spawn_duur": 0.5,
+		# C15-buit (leerbaar, opdracht Max 30 juli): een DRAGENDE figurant is
+		# geld. buit_jacht = hoe graag ik een vijandelijke drager binnen bereik
+		# neerleg; buit_hoede = hoe erg ik het vind als mijn eigen drager binnen
+		# bereik van de vijand staat. 0 = de bot negeert de buit.
+		"buit_jacht": 12.0,
+		"buit_hoede": 10.0,
 		# cp_bet_rN: gewenste CP-inzet per setup-ronde (geklemd op saldo en
 		# kaartaantal). Default = de bewezen heuristiek: alles op ronde 3.
 		"cp_bet_r1": 0.01,
@@ -292,6 +298,10 @@ func choose_placement(state: GameState) -> Array:
 		for i in int(spec.count):
 			taken[scored[i].pos] = true
 			placements.append({"type": spec.type, "pos": scored[i].pos})
+	# C15: de bot wijst ook zijn vaandeldragers en tamboers aan. Zonder dit
+	# stond er in botspel NOOIT een drager op het bord, en dan is de buit een
+	# dode regel (gemeten 31 juli: 0 buit in 34 arena-partijen).
+	state._rollen_over_opstelling(placements)
 	return placements
 
 
@@ -400,6 +410,20 @@ func choose_action(_state: GameState) -> Dictionary:
 # Gedeelde evaluatie (positief = goed voor `me`)
 # =========================================================================
 
+## Wat is deze drager waard als buit? Uit de regels, zodat de bot meebeweegt
+## als Max de knoppen verandert (vaandel = versterkingspunten, tamboer = CP).
+## Eén versterkingspunt weegt zwaarder dan één CP: met 2 punten koop je een
+## soldaat, met 2 CP koop je één punt (ruil 2:1).
+static func _buit_waarde(state: GameState, drager: Pawn) -> float:
+	if not state.rules.campaign_actief():
+		return 0.0
+	if String(drager.rol) == "flag":
+		return float(state.rules.campaign.get("buit_vaandel_pt", 0))
+	if String(drager.rol) == "drum":
+		return float(state.rules.campaign.get("buit_tamboer_cp", 0)) * 0.5
+	return 0.0
+
+
 func evaluate(state: GameState, me: int) -> int:
 	var opp: int = Constants.opponent(me)
 	var my_target: Array = Constants.get_haven_for_player(me)
@@ -436,6 +460,11 @@ func evaluate(state: GameState, me: int) -> int:
 	var opp_art: int = 0
 	var my_ranged: int = 0
 	var opp_ranged: int = 0
+	# C15-buit
+	var my_dragers: int = 0
+	var opp_dragers: int = 0
+	var my_buit_risk: float = 0.0
+	var opp_buit_kans: float = 0.0
 	for pawn in state.pawns.values():
 		if pawn.is_eliminated:
 			continue
@@ -466,6 +495,20 @@ func evaluate(state: GameState, me: int) -> int:
 				my_risk += 1
 			else:
 				opp_risk += 1
+		# C15: dragende figuranten (vaandel/tamboer zonder kaart) zijn buit.
+		# Een vijandelijke drager binnen bereik is winst; mijn eigen drager
+		# binnen bereik van de vijand is verlies. Standbeelden zijn ook zonder
+		# kaart killable, dus we vragen het los na.
+		if String(pawn.rol) != "" and pawn.linked_card_id == -1:
+			var pakbaar: bool = _is_killable(state, pawn)
+			if mine:
+				my_dragers += 1
+				if pakbaar:
+					my_buit_risk += _buit_waarde(state, pawn)
+			else:
+				opp_dragers += 1
+				if pakbaar:
+					opp_buit_kans += _buit_waarde(state, pawn)
 		# Vuurdreiging: hoeveel doelwitten hebben mijn schutters NU in de vuurlijn?
 		if pawn.is_active and pawn.unit_type != Constants.UnitType.CAVALRY:
 			var shots: int = Rules.get_valid_shot_targets(state, pawn.id).size()
@@ -488,6 +531,9 @@ func evaluate(state: GameState, me: int) -> int:
 	score += (my_art - opp_art) * weights.get("art_value", 24.0)
 	score += (my_hp - opp_hp) * weights.hp
 	score += (opp_risk - my_risk) * weights.protect
+	# C15: buit pakken en buit beschermen. Zero-sum opgebouwd, dus negamax-safe.
+	score += opp_buit_kans * float(weights.get("buit_jacht", 12.0))
+	score -= my_buit_risk * float(weights.get("buit_hoede", 10.0))
 	score += (my_ranged - opp_ranged) * weights.get("ranged", 40.0)
 	score += (my_reach - opp_reach) * weights.reach
 	# WANHOOP-MODUS (besluit Max, 27 juli): met minder dan 7 eigen pionnen is

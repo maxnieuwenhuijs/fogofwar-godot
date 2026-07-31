@@ -41,7 +41,7 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.2.0", "campaign-activering = 4.2.0")
+	assert_eq(met.rules_version, "4.2.1", "campaign-activering = 4.2.1")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.1.10-hr", "zonder blok blijft 4.1.x")
@@ -360,3 +360,155 @@ func test_agent_ziet_eigen_puntenreserve() -> void:
 	var her: GameState = Agent.reconstruct_state(view)
 	assert_eq(her.pool_total(1), 7, "agent ziet zijn eigen puntenreserve")
 	assert_eq(her.pool_count(1, Constants.UnitType.INFANTRY), 7, "7 pt = 7 soldaten")
+
+
+func test_c15_buit_vaandel_en_tamboer() -> void:
+	# C15 (besluit Max, 30 juli): een DRAGENDE vaandeldrager levert 2
+	# versterkingspunten op, een tamboer 2 CP. Een gekoppelde drager levert
+	# niets: die heeft zijn vaandel opgeborgen.
+	# punten_start 0 = knop UIT (dan rekent poolfactor x comp), dus we zetten een
+	# expliciet lege pool om de buit zuiver te kunnen meten.
+	var rules := RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "pools": {"1": 0, "2": 0}, "cp_start": 0,
+	}})
+	var s := GameState.new()
+	s.rules = rules
+	s.doctrines[1] = Constants.Doctrine.MENS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	s.init_pools()
+	assert_eq(s.pool_total(1), 0, "lege reserve als startpunt")
+	assert_eq(int(s.cp.get(1, 0)), 0, "leeg CP-saldo als startpunt")
+	# Vaandeldrager van speler 2, ongekoppeld (standbeeld).
+	var drager := s._spawn_pawn(2, Vector2i(5, 5), Constants.UnitType.INFANTRY)
+	drager.rol = "flag"
+	var aanvaller := s._spawn_pawn(1, Vector2i(5, 4), Constants.UnitType.INFANTRY)
+	aanvaller.link_card(Card.new(0, 1, 0, 1, 3, 2))
+	var res: Dictionary = Rules.apply_melee(s, aanvaller.id, drager.id)
+	assert_true(bool(res.success), "melee lukt")
+	assert_true(bool(res.eliminated), "standbeeld sneuvelt")
+	assert_eq(int(res.get("buit_pt", 0)), 2, "vaandel = 2 punten in het resultaat")
+	assert_eq(s.pool_total(1), 2, "punten bijgeschreven op de reserve")
+	# Tamboer: 2 CP.
+	var tamboer := s._spawn_pawn(2, Vector2i(6, 5), Constants.UnitType.INFANTRY)
+	tamboer.rol = "drum"
+	var a2 := s._spawn_pawn(1, Vector2i(6, 4), Constants.UnitType.INFANTRY)
+	a2.link_card(Card.new(1, 1, 0, 1, 3, 2))
+	var res2: Dictionary = Rules.apply_melee(s, a2.id, tamboer.id)
+	assert_eq(int(res2.get("buit_cp", 0)), 2, "tamboer = 2 CP in het resultaat")
+	assert_eq(int(s.cp.get(1, 0)), 2, "CP bijgeschreven")
+	# GEKOPPELDE drager levert niets op.
+	var drager3 := s._spawn_pawn(2, Vector2i(7, 5), Constants.UnitType.INFANTRY)
+	drager3.rol = "flag"
+	drager3.link_card(Card.new(2, 2, 0, 1, 3, 1))
+	var a3 := s._spawn_pawn(1, Vector2i(7, 4), Constants.UnitType.INFANTRY)
+	a3.link_card(Card.new(3, 1, 0, 1, 3, 5))
+	var res3: Dictionary = Rules.apply_melee(s, a3.id, drager3.id)
+	assert_true(bool(res3.eliminated), "gekoppelde drager sneuvelt ook")
+	assert_eq(int(res3.get("buit_pt", 0)), 0, "maar levert geen buit op")
+	assert_eq(s.pool_total(1), 2, "reserve onveranderd")
+
+
+func test_c15_rol_overleeft_koppelen_en_serialisatie() -> void:
+	# Max: "als je een mannetje koppelt onthoudt de game dat dit origineel de
+	# vaandeldrager was, en als hij weer ontkoppelt heeft hij weer de vaandel."
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.doctrines[1] = Constants.Doctrine.MENS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	var pion := s._spawn_pawn(1, Vector2i(3, 9), Constants.UnitType.INFANTRY)
+	pion.rol = "flag"
+	pion.link_card(Card.new(0, 1, 0, 2, 2, 1))
+	assert_eq(pion.rol, "flag", "rol blijft bij het koppelen")
+	pion.unlink()
+	assert_eq(pion.rol, "flag", "en na ontkoppelen draagt hij hetzelfde vaandel")
+	var terug: GameState = Serializer.state_from_dict(Serializer.state_to_dict(s))
+	assert_eq(String((terug.pawns[pion.id] as Pawn).rol), "flag", "rol overleeft de roundtrip")
+
+
+func test_c15_opstelling_grenzen() -> void:
+	# Niet meer rollen dan toegestaan, niet op ruiters/kanonnen, en zonder
+	# campagne-blok bestaan ze niet.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {"vaandels_max": 1, "tamboers_max": 1}})
+	s.doctrines[1] = Constants.Doctrine.MUIS
+	s.doctrines[2] = Constants.Doctrine.MUIS
+	var basis: Array = s.default_placement(1)
+	var vlaggen := 0
+	var trommels := 0
+	for e in basis:
+		match String(e.get("rol", "")):
+			"flag": vlaggen += 1
+			"drum": trommels += 1
+	assert_eq(vlaggen, 1, "standaard-opstelling houdt zich aan vaandels_max")
+	assert_eq(trommels, 1, "en aan tamboers_max")
+	assert_true(s.is_valid_placement(1, basis), "eigen standaard is legaal")
+	# Te veel vaandels: geweigerd.
+	var teveel: Array = []
+	for e in basis:
+		var kopie: Dictionary = (e as Dictionary).duplicate()
+		if int(kopie.get("type", 0)) == Constants.UnitType.INFANTRY:
+			kopie["rol"] = "flag"
+		teveel.append(kopie)
+	assert_false(s.is_valid_placement(1, teveel), "meer vaandels dan toegestaan wordt geweigerd")
+	# Zonder campagne: geen rollen.
+	var s2 := GameState.new()
+	s2.rules = RulesConfig.new()
+	s2.doctrines[1] = Constants.Doctrine.MUIS
+	s2.doctrines[2] = Constants.Doctrine.MUIS
+	var vlak: Array = s2.default_placement(1)
+	for e in vlak:
+		assert_eq(String(e.get("rol", "")), "", "4.1 kent geen figurant-rollen")
+	var met_rol: Array = []
+	for e in vlak:
+		var k2: Dictionary = (e as Dictionary).duplicate()
+		if int(k2.get("type", 0)) == Constants.UnitType.INFANTRY and met_rol.is_empty():
+			k2["rol"] = "flag"
+		met_rol.append(k2)
+	assert_false(s2.is_valid_placement(1, met_rol), "rol zonder campagne-blok wordt geweigerd")
+
+
+func test_c16_reserve_per_factie() -> void:
+	# C16 (besluit Max, 30 juli): "de muis heeft dan bijv 12 tov de leeuw 7".
+	var rules := RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "punten_start": 10,
+		"punten_start_factie": {"1": 12, "2": 7},
+	}})
+	var s := GameState.new()
+	s.rules = rules
+	s.doctrines[1] = Constants.Doctrine.MUIS
+	s.doctrines[2] = Constants.Doctrine.LEEUW
+	s.init_pools()
+	assert_eq(s.pool_total(1), 12, "muis krijgt 12 punten")
+	assert_eq(s.pool_total(2), 7, "leeuw krijgt 7 punten")
+	# Factie zonder eigen regel valt terug op punten_start.
+	var s2 := GameState.new()
+	s2.rules = rules
+	s2.doctrines[1] = Constants.Doctrine.BEER
+	s2.doctrines[2] = Constants.Doctrine.WOLF
+	s2.init_pools()
+	assert_eq(s2.pool_total(1), 10, "beer valt terug op de vaste waarde")
+
+
+func test_c15_opstelling_telt_dragers_mee() -> void:
+	# REGRESSIE (Max, 30 juli): de handmatige opstelling vulde na de dragers nog
+	# eens de VOLLE infanterie aan. De opstelling kwam dan 4 pionnen te hoog uit,
+	# de engine keurde hem af en de partij bleef in de opstelfase hangen -- dus
+	# geen koppel-fase en geen gloeiende ring bij het hoveren.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {"vaandels_max": 2, "tamboers_max": 2}})
+	s.doctrines[1] = Constants.Doctrine.MUIS
+	s.doctrines[2] = Constants.Doctrine.MUIS
+	var comp: Array = s.doctrine_data_of(1).comp
+	var opstelling: Array = s.default_placement(1)
+	assert_eq(opstelling.size(), int(comp[0]) + int(comp[1]) + int(comp[2]),
+		"de opstelling heeft exact de doctrine-samenstelling")
+	var inf := 0
+	var dragers := 0
+	for e in opstelling:
+		if int(e.get("type", 0)) == Constants.UnitType.INFANTRY:
+			inf += 1
+			if String(e.get("rol", "")) != "":
+				dragers += 1
+	assert_eq(inf, int(comp[0]), "dragers tellen mee als infanterie, niet extra")
+	assert_eq(dragers, 4, "twee vaandels en twee tamboers")
+	assert_true(s.is_valid_placement(1, opstelling), "en de engine keurt hem goed")

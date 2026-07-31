@@ -66,7 +66,8 @@ var campaign = null
 
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
-## rules_version naar 4.2.0; zonder blok speelt de engine exact 4.1.x.
+## rules_version naar 4.2.1 (C15: buit op figuranten); zonder blok speelt de
+## engine exact 4.1.x.
 const CAMPAIGN_DEFAULTS := {
 	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
 	"cp_haven": 8, "cp_eliminatie": 4, "cp_raadstem": 1,
@@ -80,6 +81,21 @@ const CAMPAIGN_DEFAULTS := {
 	# Vaste puntenreserve voor beide spelers (besluit Max, 30 juli): een 1v1
 	# start met 15 punten, ongeacht de doctrine-comp. 0 = uit, dan rekent
 	# poolfactor x comp het bedrag uit zoals voorheen (campagne doet dat).
+	# C15 (besluit Max, 30 juli): BUIT op figuranten. Wie een dragende
+	# vaandeldrager neerlegt krijgt versterkingspunten, wie een tamboer neerlegt
+	# CP. Alleen als het slachtoffer op dat moment ONgekoppeld is -- dan draagt
+	# hij het vaandel ook echt. 0 = uit.
+	"buit_vaandel_pt": 2,
+	"buit_tamboer_cp": 2,
+	# Hoeveel je er bij het opstellen mag aanwijzen (per speler).
+	"vaandels_max": 2,
+	"tamboers_max": 2,
+	# C16 (besluit Max, 30 juli): per FACTIE een eigen startreserve in een los
+	# potje -- "de muis heeft dan bijv 12 tov de leeuw 7". Sleutel = doctrine-int
+	# als string; leeg = uit, dan geldt punten_start voor iedereen. Dit is de
+	# 1v1-vertaling van de campagne-budgetbonus, en de getallen zijn een
+	# startpunt dat we nog uittrainen.
+	"punten_start_factie": {},
 	"punten_start": 0,
 	"poolfactor": 1.5,                   # D5: x doctrine-comp per type (3.0 -> 1.5, besluit Max 25 juli)
 	"pool_afboeking": true,              # D5: duel-verliezen raken de campagne-pool
@@ -259,7 +275,7 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 			c.stamina_model = "pool"
 		# Activering van het campaign-blok IS de regelversie-overgang (B7).
 		if c.rules_version.begins_with("4.1"):
-			c.rules_version = "4.2.0"
+			c.rules_version = "4.2.1"
 	else:
 		c.campaign = null
 	return c

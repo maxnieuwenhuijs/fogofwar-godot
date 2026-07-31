@@ -77,10 +77,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "3e9ed51c36c6bb12b7fc3ce6ccbd23fd58d1a2d2360b194f41cfa7bdae95da05",
+			"hash": "22a34d78771ee66aa32234cb4379b0a6e3c05387c45d95a2f2afeafa22e39bcc",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785406057.397
+			"ts": 1785420253.581
 		},
 		{
 			"action": {
@@ -116,10 +116,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "dccb49b38699928528c16d7dec773c07a8bd0c038f820bdb4693a55c5cdedf0a",
+			"hash": "e533a453ee95b02394097db7d58d1cafa797c0e51b7329e651766bb46a10568c",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785406057.397
+			"ts": 1785420253.582
 		},
 		{
 			"action": {
@@ -196,13 +196,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "7976638f93ae8c803ce72ad0f8e324f387220bb3254e0a731e661b2469cc22a2",
+			"hash": "a2be2bcff070a538babf373159bf0512ca63993438006cbbe879d39646114d2d",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1785406057.398
+			"ts": 1785420253.582
 		}
 	],
-	"final_hash": "7976638f93ae8c803ce72ad0f8e324f387220bb3254e0a731e661b2469cc22a2",
+	"final_hash": "a2be2bcff070a538babf373159bf0512ca63993438006cbbe879d39646114d2d",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -267,6 +267,7 @@
 					7
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"1": {
@@ -285,6 +286,7 @@
 					10
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"2": {
@@ -303,6 +305,7 @@
 					1
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"3": {
@@ -321,6 +324,7 @@
 					10
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			}
 		},
@@ -354,6 +358,8 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"buit_tamboer_cp": 2,
+				"buit_vaandel_pt": 2,
 				"comp_override": null,
 				"cp": null,
 				"cp_bijschrijving": "campagnelaag",
@@ -376,6 +382,7 @@
 				"poolfactor": 1.5,
 				"pools": null,
 				"punten_start": 0,
+				"punten_start_factie": {},
 				"skip_mode": "auto",
 				"spawn_kosten": {
 					"art": 3,
@@ -385,7 +392,9 @@
 				"spawn_max": 3,
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
-				"spawn_vanaf_cyclus": 2
+				"spawn_vanaf_cyclus": 2,
+				"tamboers_max": 2,
+				"vaandels_max": 2
 			},
 			"clock": {
 				"bank_sec": 0,
@@ -409,7 +418,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.2.0",
+			"rules_version": "4.2.1",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0,
@@ -446,7 +455,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T12:07:37",
+		"created": "2026-07-30T16:04:13",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -512,6 +521,7 @@
 						8
 					],
 					"remaining_stamina": 1,
+					"rol": "",
 					"unit_type": 0
 				},
 				"1": {
@@ -530,6 +540,7 @@
 						10
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				},
 				"2": {
@@ -548,6 +559,7 @@
 						1
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				}
 			},
@@ -581,6 +593,8 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"buit_tamboer_cp": 2,
+					"buit_vaandel_pt": 2,
 					"comp_override": null,
 					"cp": null,
 					"cp_bijschrijving": "campagnelaag",
@@ -603,6 +617,7 @@
 					"poolfactor": 1.5,
 					"pools": null,
 					"punten_start": 0,
+					"punten_start_factie": {},
 					"skip_mode": "auto",
 					"spawn_kosten": {
 						"art": 3,
@@ -612,7 +627,9 @@
 					"spawn_max": 3,
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",
-					"spawn_vanaf_cyclus": 2
+					"spawn_vanaf_cyclus": 2,
+					"tamboers_max": 2,
+					"vaandels_max": 2
 				},
 				"clock": {
 					"bank_sec": 0,
@@ -636,7 +653,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.2.0",
+				"rules_version": "4.2.1",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0,
@@ -657,6 +674,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.2.0"
+		"rules_version": "4.2.1"
 	}
 }

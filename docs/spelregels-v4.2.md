@@ -312,3 +312,26 @@ naar de engine-klokken migreert:
 - Config-knoppen in snake_case (D14): `campaign.kanon_dracht_max`,
   `campaign.kanon_actie_kost`, enz. MASTERBOUWPLAN F2.4/F2.6 volgt deze
   spelling.
+
+## C15 — Figuranten en buit (4.2.1)
+
+Een pion **zonder gekoppelde kaart** is een standbeeld: hij handelt niet, maar
+hij staat er wel. Twee van die pionnen per leger dragen het **vaandel** en twee
+de **trommel** (`vaandels_max` / `tamboers_max`, default 2 en 2). Je wijst ze
+zelf aan tijdens het opstellen: het zijn losse plaats-stappen, net als kanonnen.
+
+| Wat | Regel |
+|---|---|
+| Waar de rol woont | Op de pion, in de staat (`Pawn.rol`). Hij verhuist nooit naar een andere pion. |
+| Koppelen | De drager bergt zijn vaandel op en is een gewone soldaat. Geen buit. |
+| Ontkoppelen | Hij pakt zijn eigen vaandel weer op. |
+| Vaandeldrager neerleggen | De aanvaller krijgt **2 versterkingspunten** (`buit_vaandel_pt`). |
+| Tamboer neerleggen | De aanvaller krijgt **2 CP** (`buit_tamboer_cp`). |
+| Voorwaarde | Het slachtoffer moet op dat moment ONgekoppeld zijn: alleen wie draagt, kan zijn vaandel verliezen. |
+| Zonder campagne-blok | Rollen bestaan niet; een opstelling met rollen wordt geweigerd (4.1 blijft byte-identiek). |
+| Gespawnde versterkingen | Krijgen geen rol: alleen wie bij het opstellen is aangewezen, draagt. |
+
+De prijs is bewust laag genoeg om geen doel op zich te zijn (2 punten = één
+soldaat, 2 CP = één punt na de 2:1-ruil), maar hoog genoeg om je te laten
+nadenken over waar je je standbeelden parkeert.
+

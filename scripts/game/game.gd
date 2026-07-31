@@ -587,6 +587,16 @@ func _begin_manual_placement() -> void:
 		{"type": Constants.UnitType.CAVALRY, "count": int(comp[1])},
 	]
 	order.sort_custom(func(a, b): return int(a.count) < int(b.count))
+	# C15 (besluit Max, 30 juli): je zet je vaandeldragers en tamboers ZELF neer.
+	# Ze staan vooraan in de plaats-reeks als losse stappen, dus je kiest hun vak
+	# net als bij een kanon. Wat je niet plaatst, wordt gewone infanterie.
+	var camp: Dictionary = GameSession.state.rules.campaign
+	if GameSession.state.rules.campaign_actief():
+		for rol_stap in [["flag", int(camp.get("vaandels_max", 2))],
+				["drum", int(camp.get("tamboers_max", 2))]]:
+			if int(rol_stap[1]) > 0:
+				order.append({"type": Constants.UnitType.INFANTRY,
+					"count": int(rol_stap[1]), "rol": String(rol_stap[0])})
 	_placement_steps = []
 	for entry in order:
 		if int(entry.count) > 0:
@@ -602,12 +612,14 @@ func _begin_manual_placement() -> void:
 
 func _placement_current() -> Dictionary:
 	for step in _placement_steps:
+		var rol := String(step.get("rol", ""))
 		var placed := 0
 		for p in _placement_placed:
-			if int(p.type) == int(step.type):
+			if int(p.type) == int(step.type) and String(p.get("rol", "")) == rol:
 				placed += 1
 		if placed < int(step.count):
-			return {"type": int(step.type), "left": int(step.count) - placed}
+			return {"type": int(step.type), "rol": rol,
+				"left": int(step.count) - placed}
 	return {}
 
 
@@ -629,6 +641,9 @@ func _refresh_placement_ui() -> void:
 	_highlight_tiles(_placement_free_tiles(), Color(0.4, 0.9, 0.9), 0.35)
 	_update_placement_ghost_type()
 	var type_name := tr("HUD_PLACE_TYPE_CANNONS") if int(step.type) == Constants.UnitType.ARTILLERY else tr("HUD_PLACE_TYPE_HORSES")
+	match String(step.get("rol", "")):
+		"flag": type_name = tr("HUD_PLACE_TYPE_FLAG")
+		"drum": type_name = tr("HUD_PLACE_TYPE_DRUM")
 	_update_hud(tr("HUD_PLACE_PROMPT") % [type_name, int(step.left)])
 
 
@@ -676,7 +691,8 @@ func _on_placement_tile_clicked(coord: Vector2i) -> void:
 	var step: Dictionary = _placement_current()
 	if step.is_empty():
 		return
-	_placement_placed.append({"type": int(step.type), "pos": coord})
+	_placement_placed.append({"type": int(step.type), "pos": coord,
+		"rol": String(step.get("rol", ""))})
 	Audio.play("place_pawn")
 	_spawn_placement_preview(int(step.type), coord)
 	if _placement_ghost != null:
@@ -714,7 +730,17 @@ func _spawn_placement_preview(unit_type: int, coord: Vector2i) -> void:
 func _finish_manual_placement() -> void:
 	# Infanterie vult de open vakken aan: voorste rij eerst, centrum naar buiten.
 	var comp: Array = GameSession.state.doctrine_data_of(_human_id).comp
-	var inf_left: int = int(comp[0])
+	# BUG-FIX (Max, 30 juli: "de hover highlight dat een ring gloeit is niet
+	# meer"). Sinds C15 plaats je zelf vaandeldragers en tamboers, en dat zijn
+	# ook INFANTERIE. Zonder deze aftrek vulde de code er nog comp[0] bij, kwam
+	# de opstelling 4 pionnen te hoog uit, keurde de engine hem af en bleef de
+	# partij in de opstelfase hangen -- dus nooit een koppel-fase en dus ook
+	# geen gloeiende ring.
+	var al_inf: int = 0
+	for al in _placement_placed:
+		if int(al.get("type", 0)) == Constants.UnitType.INFANTRY:
+			al_inf += 1
+	var inf_left: int = maxi(0, int(comp[0]) - al_inf)
 	var rows: Array = Constants.get_start_rows_for_player(_human_id)  # [achter, voor]
 	var center_out: Array = [5, 4, 6, 3, 7, 2, 8, 1, 9, 0, 10]
 	for row in [rows[1], rows[0]]:
@@ -874,6 +900,21 @@ func _werk_figurant_rollen_bij() -> void:
 		if p == null or p.is_eliminated or p.linked_card_id != -1:
 			_figurant_rollen.erase(pid)   # gesneuveld of gekoppeld: rol vervalt
 	for owner in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		# C15 (besluit Max, 30 juli): heeft dit leger rollen UIT DE STAAT, dan
+		# is dat de waarheid en verdelen we hier niets meer. De rol hoort bij de
+		# pion: koppel je hem, dan bergt hij zijn vaandel op; ontkoppel je hem,
+		# dan pakt hij hetzelfde vaandel weer op. Hij geeft het nooit door.
+		var uit_staat := false
+		for p in state.pawns.values():
+			if p.owner_id == owner and not p.is_eliminated and String(p.rol) != "":
+				uit_staat = true
+				break
+		if uit_staat:
+			for pid in _figurant_rollen.keys():
+				var pp2: Pawn = state.pawns.get(pid)
+				if pp2 != null and pp2.owner_id == owner:
+					_figurant_rollen.erase(pid)
+			continue
 		var kandidaten: Array = []
 		var totaal: int = 0
 		for p in state.pawns.values():
@@ -961,7 +1002,8 @@ func _zet_figurant_info(pv: PawnView, pawn: Pawn) -> void:
 		pv.figurant_index = -1
 		pv.rol_vast = ""
 		return
-	pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
+	pv.rol_vast = String(pawn.rol) if String(pawn.rol) != "" \
+			else String(_figurant_rollen.get(pawn.id, ""))
 	var ids: Array = []
 	for p in GameSession.state.pawns.values():
 		if p.owner_id == pawn.owner_id and p.unit_type == Constants.UnitType.INFANTRY:
@@ -1116,7 +1158,8 @@ func _refresh_all() -> void:
 		# Rol kan verhuizen (drager sneuvelt of koppelt): set_character weegt
 		# hem opnieuw, want _rol zit in de karakter-sleutel.
 		if pawn.unit_type == Constants.UnitType.INFANTRY:
-			pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
+			pv.rol_vast = String(pawn.rol) if String(pawn.rol) != "" \
+					else String(_figurant_rollen.get(pawn.id, ""))
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		pv.set_team_ring_active(pawn.is_active)
@@ -1367,6 +1410,10 @@ func _auto_link(player_id: int) -> void:
 ## Korte koppel-animatie: pion springt even omhoog + glim-flits.
 func _animate_link(pawn_id: int) -> void:
 	Audio.play("link_snap")  # kaart klikt vast op de pion
+	# Koppelen is het moment dat een standbeeld een SOLDAAT wordt; Max wil daar
+	# het spawn-geluid onder (30 juli). Via play_getuned, dus dB en timing stel
+	# je bij in de Model-tuner (tab Geluid) zonder code.
+	Audio.play_getuned("spawn_sound")
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
@@ -1376,7 +1423,10 @@ func _animate_link(pawn_id: int) -> void:
 	# tevoorschijn komt. Grootte tunebaar via "koppel-pof".
 	var puff: int = int(round(4.0 * PawnView.fx("link_puff", 1.0)))
 	if puff > 0:
-		_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2, Vector3.UP * 0.25, 1.3)
+		# Witte wolk voor de koppel-/spawn-pof (Max, 30 juli): kruitrook hoort
+		# bij schieten, een verse soldaat komt uit een schone witte pof.
+		_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2,
+			Vector3.UP * 0.25, 1.3, "white_smoke")
 	# Onder de pof: naar het archetype-model wisselen + daar de ready-flourish.
 	var link_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
 	var link_card: Card = null
@@ -1418,7 +1468,8 @@ func _uncouple_cascade() -> void:
 				return
 			var puff: int = int(round(4.0 * PawnView.fx("link_puff", 1.0)))
 			if puff > 0:
-				_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2, Vector3.UP * 0.25, 1.3)
+				_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2,
+					Vector3.UP * 0.25, 1.3, "white_smoke")
 			pv.set_character(doctrine, utype, null))  # terug naar base
 
 
@@ -1505,6 +1556,18 @@ func _on_turn_changed(player_id: int) -> void:
 				_begin_human_linking()
 		else:
 			_set_turn_prompt(tr("HUD_OPPONENT_LINKING"), player_id)
+			# ADEMRUIMTE (Max, 30 juli: "als ik mijn character koppel dan freezed
+			# ie en is de ai meteen ook gekoppeld"). De tegenstander koppelde in
+			# dezelfde tel als jij, inclusief zijn model-wissel: dat leest als
+			# een hapering. Nu wacht hij eerst even zichtbaar "na te denken".
+			# Knop: ai_link_denktijd in effects_tuning.json (0 = meteen).
+			var denktijd: float = PawnView.fx("ai_link_denktijd", 0.55)
+			if denktijd > 0.0:
+				await get_tree().create_timer(denktijd).timeout
+			# Fase kan intussen zijn doorgeschoven (timeout, forfeit).
+			var nu: GameState = GameSession.state
+			if not Phase.is_linking(nu.phase) or nu.current_player != player_id:
+				return
 			_auto_link(player_id)
 	elif state.phase == Phase.Type.ACTION:
 		_selected_pawn_id = -1
@@ -1669,10 +1732,20 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 	# geluid: een muis piept, een grizzly brult.
 	var doc: int = GameSession.state.doctrine_of(pawn.owner_id)
 	match pawn.unit_type:
-		# Infanterie: hier alleen het ALGEMENE sterfgeluid. De factie-kreet
-		# speelt PawnView zelf, en alleen als er echt een arm of het hoedje
-		# afgaat (besluit Max, 28 juli) -- anders klinkt hij bij elk prikje.
-		Constants.UnitType.INFANTRY: Audio.play("inf_die", delay)
+		# Infanterie: het sterfgeluid van de FACTIE (Max, 30 juli: "ik hoor nog
+		# gewoon de normale die sound"). Hier stond `Audio.play("inf_die")`, dus
+		# een muis stierf met het algemene soldatengeluid en zijn eigen zes
+		# muizen-kreten klonken alleen in de 15%-gevallen van PawnView. Nu loopt
+		# het door de keten inf_die_<factie>_<archetype> -> inf_die_<factie> ->
+		# inf_die: een muis piept dus altijd als een muis, en een factie zonder
+		# eigen bestanden valt netjes terug op het algemene geluid.
+		Constants.UnitType.INFANTRY:
+			var pv_d: PawnView = _pawn_views.get(pawn_id)
+			var arch_d: String = pv_d._archetype if pv_d != null else ""
+			Audio.play_factie("inf_die", doc, delay, 0.0, "", arch_d)
+			# PawnView hoeft niet nog eens: anders hoor je hem dubbel.
+			if pv_d != null:
+				pv_d.kreet_al_gespeeld = true
 		Constants.UnitType.CAVALRY: Audio.play_factie("horse_die", doc, delay)
 		Constants.UnitType.ARTILLERY:
 			Audio.play_factie("cannon_die", doc, delay)
@@ -2393,8 +2466,9 @@ func _muzzle_flash(pos: Vector3, big: bool) -> void:
 ## Zwartkruit-rook via de gedeelde spawner in PawnView: textures uit
 ## assets/textures/smoke/ (billboards die echt uitzetten), zonder textures
 ## grijze bol-wolkjes. Knoppen in de Model-tuner: rook-aantal/-maat/-groei/-duur.
-func _spawn_smoke(pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0) -> void:
-	PawnView.spawn_powder_smoke(_board, pos, count, size, dir, life_mult)
+func _spawn_smoke(pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO,
+		life_mult: float = 1.0, tex_wens: String = "") -> void:
+	PawnView.spawn_powder_smoke(_board, pos, count, size, dir, life_mult, tex_wens)
 
 
 ## Treffer-feedback (de "Hit"-fase). Op het inslagmoment (na `delay`): witte flits,

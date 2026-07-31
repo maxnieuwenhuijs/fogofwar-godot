@@ -383,9 +383,13 @@ func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
 	var saldo := Label.new()
 	if dood:
 		saldo.text = tr("HUB_FALLEN")
-	else:
+	elif CView.mag_saldo_zien(c, mens_id, sid):
 		var pool: Dictionary = c.pool_van(sid)
 		saldo.text = tr("HUB_ROW_SALDO") % [_pool_punten(pool), c.cp_van(sid), c.punten_van(sid)]
+	else:
+		# D12/spec 6: voorraad en CP van de tegenstander zijn verborgen. Zijn
+		# roem is wel publiek -- dat is de enige maat waar je hem aan afmeet.
+		saldo.text = tr("HUB_ROW_SALDO_GEHEIM") % c.punten_van(sid)
 	saldo.add_theme_font_size_override("font_size", 11)
 	saldo.add_theme_color_override("font_color",
 		KLEUR_DOOD if dood else Color(0.72, 0.78, 0.86))

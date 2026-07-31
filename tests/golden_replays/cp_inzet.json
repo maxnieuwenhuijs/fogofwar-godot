@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "ac71f3f262f0f6e9e4feeedcd75c8030ee9c3a416bc812f2d80b6e817113d745",
+			"hash": "670d826ecd4c52a407e5654364f5c520431605ef0bfea2dc43cc9d3a3a3dd2c7",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785406057.412
+			"ts": 1785420253.585
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5cded81c356ef924f6be601b8216b3ba839cbcd901c1f5c97af29e030292e150",
+			"hash": "56b9b0d2063c2240cbe7f3f15f355082c8d1798e91092ce056b8ed5e21be88e0",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785406057.413
+			"ts": 1785420253.586
 		},
 		{
 			"action": {
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "9ca9067f19ef23361f536750a7ae6cc6fd1c17d9ba9ad9a0b705524fa419d715",
+			"hash": "6b3df5d8fa7a06a6e2a9114babc072fa0381f9af4fd26284f0ff224bc6dded09",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1785406057.413
+			"ts": 1785420253.586
 		}
 	],
-	"final_hash": "9ca9067f19ef23361f536750a7ae6cc6fd1c17d9ba9ad9a0b705524fa419d715",
+	"final_hash": "6b3df5d8fa7a06a6e2a9114babc072fa0381f9af4fd26284f0ff224bc6dded09",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -194,6 +194,7 @@
 					9
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			},
 			"1": {
@@ -212,6 +213,7 @@
 					1
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			}
 		},
@@ -245,6 +247,8 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"buit_tamboer_cp": 2,
+				"buit_vaandel_pt": 2,
 				"comp_override": null,
 				"cp": null,
 				"cp_bijschrijving": "campagnelaag",
@@ -267,6 +271,7 @@
 				"poolfactor": 1.5,
 				"pools": null,
 				"punten_start": 0,
+				"punten_start_factie": {},
 				"skip_mode": "auto",
 				"spawn_kosten": {
 					"art": 3,
@@ -276,7 +281,9 @@
 				"spawn_max": 3,
 				"spawn_totaal_max": 15,
 				"spawn_vakken": "achterste_rij",
-				"spawn_vanaf_cyclus": 2
+				"spawn_vanaf_cyclus": 2,
+				"tamboers_max": 2,
+				"vaandels_max": 2
 			},
 			"clock": {
 				"bank_sec": 0,
@@ -300,7 +307,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.2.0",
+			"rules_version": "4.2.1",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0,
@@ -322,7 +329,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T12:07:37",
+		"created": "2026-07-30T16:04:13",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -378,6 +385,7 @@
 						9
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				},
 				"1": {
@@ -396,6 +404,7 @@
 						1
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				}
 			},
@@ -429,6 +438,8 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"buit_tamboer_cp": 2,
+					"buit_vaandel_pt": 2,
 					"comp_override": null,
 					"cp": null,
 					"cp_bijschrijving": "campagnelaag",
@@ -451,6 +462,7 @@
 					"poolfactor": 1.5,
 					"pools": null,
 					"punten_start": 0,
+					"punten_start_factie": {},
 					"skip_mode": "auto",
 					"spawn_kosten": {
 						"art": 3,
@@ -460,7 +472,9 @@
 					"spawn_max": 3,
 					"spawn_totaal_max": 15,
 					"spawn_vakken": "achterste_rij",
-					"spawn_vanaf_cyclus": 2
+					"spawn_vanaf_cyclus": 2,
+					"tamboers_max": 2,
+					"vaandels_max": 2
 				},
 				"clock": {
 					"bank_sec": 0,
@@ -484,7 +498,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.2.0",
+				"rules_version": "4.2.1",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0,
@@ -505,6 +519,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.2.0"
+		"rules_version": "4.2.1"
 	}
 }

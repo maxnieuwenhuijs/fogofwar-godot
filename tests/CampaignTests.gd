@@ -362,3 +362,38 @@ func test_ledger_invariant_som_constant() -> void:
 		if String(e.reason) == "donate" or String(e.reason) == "testament":
 			som += int(e.inf) + int(e.cav) + int(e.art) + int(e.cp)
 	assert_eq(som, 0, "overdrachten zijn altijd netto nul (niets ontstaat of verdwijnt)")
+
+
+func test_vijandelijk_saldo_verborgen() -> void:
+	# Spec 6 / D12 (aangescherpt 30 juli, Max: "bij ieder potje kan je wel zien
+	# wat de reserve is en de CP van je tegenstander"). Roem blijft publiek.
+	var c := _mini()
+	var kijker: int = -1
+	var teamgenoot: int = -1
+	var vijand: int = -1
+	for id in c.spelers:
+		var t: int = int(c.spelers[id].team)
+		if kijker < 0:
+			kijker = int(id)
+		elif teamgenoot < 0 and t == int(c.spelers[kijker].team):
+			teamgenoot = int(id)
+		elif vijand < 0 and t != int(c.spelers[kijker].team):
+			vijand = int(id)
+	assert_true(kijker >= 0 and teamgenoot >= 0 and vijand >= 0, "drie spelers gevonden")
+	var v: Dictionary = CView.for_player(c, kijker)
+	assert_false(v.spelers[str(kijker)].cp is String, "eigen CP zichtbaar")
+	assert_false(v.spelers[str(teamgenoot)].cp is String, "teamgenoot zichtbaar")
+	assert_true(v.spelers[str(vijand)].cp is String, "vijandelijke CP verborgen")
+	assert_true(v.spelers[str(vijand)].pool is String, "vijandelijke voorraad verborgen")
+	assert_false(v.spelers[str(vijand)].punten is String, "roem blijft publiek")
+	# Grootboek-scherm mag het ook niet doorgeven.
+	var rijen: Array = LedgerScreen.rijen(c, "naam", kijker)
+	for r in rijen:
+		if int(r.id) == vijand:
+			assert_false(bool(r.saldo_zichtbaar), "grootboek verbergt het vijandelijke saldo")
+		if int(r.id) == kijker:
+			assert_true(bool(r.saldo_zichtbaar), "eigen saldo blijft leesbaar")
+	# Wie uitgevallen is ziet alles (spec 6).
+	c.spelers[kijker]["status"] = "uitgevallen"
+	var v2: Dictionary = CView.for_player(c, kijker)
+	assert_false(v2.spelers[str(vijand)].cp is String, "doden zien alles")

@@ -25,16 +25,31 @@ var _tabel: VBoxContainer
 var _headers: HBoxContainer
 
 
+## "?" voor wat je niet mag zien (verborgen saldo is als -1 opgeslagen).
+static func _getal(rij: Dictionary, sleutel: String) -> String:
+	if not bool(rij.get("saldo_zichtbaar", true)):
+		return "?"
+	return str(int(rij[sleutel]))
+
+
 ## Gesorteerde rij-data uit de staat; puur en los testbaar.
-static func rijen(c: CState, kolom: String) -> Array:
+## `kijker` = wie het grootboek opslaat. Voorraad en CP van de VIJAND zijn
+## verborgen (spec 6/D12, aangescherpt 30 juli na Max: "bij ieder potje kan je
+## wel zien wat de reserve is en de CP van je tegenstander"). Roem blijft
+## publiek; wie zelf uitgevallen is ziet alles.
+static func rijen(c: CState, kolom: String, kijker: int = -1) -> Array:
 	var uit: Array = []
 	for id in c.spelers:
 		var sp: Dictionary = c.spelers[id]
 		var pool: Dictionary = c.pool_van(int(id))
+		var zien: bool = kijker < 0 or CView.mag_saldo_zien(c, kijker, int(id))
 		uit.append({"id": int(id), "naam": String(sp.naam), "team": int(sp.team),
-			"status": String(sp.status), "inf": int(pool.inf), "cav": int(pool.cav),
-			"art": int(pool.art), "pool": c.pool_totaal_van(int(id)),
-			"cp": c.cp_van(int(id)), "punten": c.punten_van(int(id))})
+			"status": String(sp.status),
+			"inf": int(pool.inf) if zien else -1, "cav": int(pool.cav) if zien else -1,
+			"art": int(pool.art) if zien else -1,
+			"pool": c.pool_totaal_van(int(id)) if zien else -1,
+			"cp": c.cp_van(int(id)) if zien else -1,
+			"punten": c.punten_van(int(id)), "saldo_zichtbaar": zien})
 	uit.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if kolom == "naam":
 			return String(a.naam) < String(b.naam)
@@ -115,15 +130,15 @@ func _herbouw() -> void:
 		_headers.add_child(b)
 	for kind in _tabel.get_children():
 		kind.queue_free()
-	for rij in rijen(_c, _kolom):
+	for rij in rijen(_c, _kolom, _mens_id):
 		var hbox := HBoxContainer.new()
 		var dood: bool = String(rij.status) != "actief"
 		var waarden: Array = [
 			String(rij.naam) + (tr("LEDGER_YOU_SUFFIX") if int(rij.id) == _mens_id else ""),
 			str(int(rij.team)),
 			tr("LEDGER_STATUS_ACTIVE") if not dood else tr("LEDGER_STATUS_FALLEN"),
-			str(int(rij.inf)), str(int(rij.cav)), str(int(rij.art)),
-			str(int(rij.pool)), str(int(rij.cp)), str(int(rij.punten)),
+			_getal(rij, "inf"), _getal(rij, "cav"), _getal(rij, "art"),
+			_getal(rij, "pool"), _getal(rij, "cp"), str(int(rij.punten)),
 		]
 		for i in waarden.size():
 			var l := Label.new()

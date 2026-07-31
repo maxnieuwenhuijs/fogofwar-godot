@@ -1,5 +1,90 @@
 # Fog of War — Work In Progress & Context
 
+## 31 juli 2026 -- regelzoeker, nachtmeting en de dode buit
+
+**De nacht van 31 juli gelezen** (3240 partijen, v4.2-matrix): de C14-fix werkt,
+7,01 aanvullingen per partij in 99% van de partijen (was 0,00). Maar de winrates
+zijn omgegooid: Krokodil 80,8, Leeuw 68,4 (+20!), Varken 60,8, Beer 34,4, Muis
+33,3, Wolf 21,9 (-23!). De aanvul-economie bevoordeelt dure comps enorm. De
+C16-tabel is dus achterhaald: die gaf Wolf 11 op basis van de oude 45%.
+
+**De trainer zit op een plateau**: 6 facties, 40-142 generaties, 7 uur, in totaal
+**1 adoptie**. Wat er nog te winnen valt zit in het ONTWERP, niet in de bots.
+
+**Buit deed in botspel niets** (0 in 34 arena-partijen, ook met de nieuwste
+code): bots bouwen hun opstelling met `AIController.choose_placement` en die
+wees geen dragers aan -- `default_placement` deed dat wel, maar die gebruiken ze
+niet. Nu delen ze dezelfde verdeling. Meteen gemeten: buit 0,00 -> 1,53 per
+partij, 58% van de partijen. Zonder deze fix had de trainingsnacht geleerd over
+een regel die in botwereld niet bestond.
+
+**Nieuw gereedschap: de regelzoeker** (`tools/balans/regelzoeker.py`, paneelknop
+"Regels uitproberen (balans)"). Zoekt betere REGELS met vaste bots, precies
+andersom dan de trainer. Score: factie-evenwicht 45%, beslissende partijen 25%,
+speelduur 15%, levende economie 15%. Verandert het spel NIET: schrijft
+`voorstel.json` + log per kandidaat. Eerste run: 0,636 -> 0,743 in twee
+generaties, scheefheid 19,4% -> 13,9%.
+
+*Valkuil die zich meteen liet zien*: knoppen die niet in de basis-json staan
+(buit_vaandel_pt, buit_tamboer_cp) begonnen op hun ondergrens, dus de zoeker
+zette de buit op 0 en noemde dat balans. Startwaarden komen nu uit een tabel met
+de echte code-defaults. Les: een zoeker vindt altijd iets, en zonder oplettende
+startwaarden vindt hij dat je regel beter niet kan bestaan.
+
+**Testbatterij sneller**: `tests.ps1` verdeelt hem over negen processen
+(SoloTests in drieen via de nieuwe `deel=i/n`-filter). Van ~13 minuten naar 5
+tot 7, zelfde 1529 tests.
+
+**Sim-baseline nogmaals herijkt**: bots zetten nu dragers neer, dus hun
+opstelling verandert -- 3 van de 5 sims wijken bewust af en zijn opnieuw
+vastgelegd.
+
+## 30 juli 2026 (avond 2) -- C15-buit, C16-economie en een reeks bugs
+
+**C15 buit op figuranten** (spec + CHANGELOG). Rol staat op de PION in de staat,
+verhuist nooit, en levert bij een kill 2 versterkingspunten (vaandel) of 2 CP
+(tamboer) op -- alleen als het slachtoffer ongekoppeld is, want alleen dan
+draagt hij ook echt. Je wijst de dragers zelf aan in de opstelfase (losse
+plaats-stappen). Bots kregen `buit_jacht` en `buit_hoede` als leerbare
+gewichten; de arena meet `buit_pt`, `buit_cp` en `dragers_verloren`.
+
+**C16 reserve per factie**: Muis 12, Beer 12, Wolf 11, Varken 9, Leeuw 7,
+Krokodil 7 (ankers van Max, rest op de winrates van 29 juli). Staat ook in de
+trainer-config. Uitdrukkelijk een startpunt: die winrates komen uit nachten
+zonder werkende versterkingen en zonder buit.
+
+**Bugs deze ronde**, allemaal eerst gemeten:
+- Fog-lek: hub en grootboek toonden reserve en CP van de tegenstander. Nu "?",
+  alleen roem is publiek (spec 6). Test erbij.
+- Muis stierf met het ALGEMENE doodsgeluid: game.gd speelde `inf_die` hard,
+  terwijl de factie-kreet aan een tweede pad met 15% kans hing. Nu loopt het
+  door de factie-keten.
+- Reuzengeweer, twee oorzaken: (1) de gib-maat werd vergeleken met de
+  bind-pose van een geskinde mesh (base leest 0,006 terwijl hij 0,88 hoog
+  staat) -- nu vergeleken met wat de auto-fit aan het skelet mat; (2) bij een
+  VERS gespawnde pion waren de bot-transforms nog niet doorgerekend, dus las de
+  prop-normalisatie ouderschaal 1.0 in plaats van ~0,008 en werd het voorwerp
+  honderden malen te groot. Skelet wordt nu geforceerd bijgewerkt. Plus een
+  vangrail op 3x de normale voorwerplengte.
+- Opstelbug: de dragers werden dubbel geteld (ze zijn ook infanterie), de
+  opstelling kwam 4 pionnen te hoog uit, de engine keurde hem af en de partij
+  bleef in de opstelfase hangen -- dat was Max' verdwenen hover-ring.
+- Freeze bij koppelen: de AI koppelde in dezelfde tel. Nu 0,55s denktijd
+  (`ai_link_denktijd`).
+- Spawn-geluid ingebouwd bij het koppelen (-9 dB), witte pof bij koppelen en
+  ontkoppelen.
+
+**Open vraag**: onder de OUDE 4.1-sim-baseline weken na deze ronde alle vijf
+sims af, en dat is niet te herleiden tot een enkel bestand (Pawn, Rules,
+GameState, rules_config, AIController elk los teruggezet: afwijking bleef; alles
+samen terug: weg). Omdat 4.1 geen speelbare optie meer is, draait de baseline nu
+op v42_default.json en is hij opnieuw vastgelegd. Wie ooit weer 4.1 wil spelen,
+moet dit eerst uitzoeken.
+
+**Werkafspraak-les**: nooit bisecten terwijl er een achtergrondpoort door
+dezelfde werkmap draait -- twee metingen waren daardoor onbruikbaar (script-
+fouten uit mijn eigen stash lazen als spelbugs).
+
 ## 30 juli 2026 (avond) -- bajonet-choreografie, tuner-opslag, vlaggen
 
 **Bajonet-melee (Max: "dit werkt nog niet goed in het spel zelf")**. Twee

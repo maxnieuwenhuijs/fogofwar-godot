@@ -1,5 +1,6 @@
 {
 	"_uitleg": "Effect-tuning voor doden/gibs/bloed. Stel af via de Model-tuner (hoofdmenu) en druk daar op OPSLAAN. Handmatig bewerken kan ook: herstart daarna het spel of de tuner. Regel weghalen = code-default.",
+	"ai_link_denktijd": 0.55,
 	"bg_bright": 0.0,
 	"blood_burst": 0.9,
 	"blood_extra_delay": 0.2,

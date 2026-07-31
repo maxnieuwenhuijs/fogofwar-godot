@@ -29,6 +29,9 @@
 								5,
 								5
 							],
+							"buit_cp": 0,
+							"buit_pt": 0,
+							"buit_rol": "",
 							"charge_from": [
 								5,
 								7
@@ -81,13 +84,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "be2f378b67bb7c0ce264bf3d17d4dd195d9cf70e00dc0ee163db1df933702c22",
+			"hash": "00b17b1294ad634e2f47ea564b568ed5ce8e0230a9d25099c7a5f1ede23100a5",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785406057.335
+			"ts": 1785420253.572
 		}
 	],
-	"final_hash": "be2f378b67bb7c0ce264bf3d17d4dd195d9cf70e00dc0ee163db1df933702c22",
+	"final_hash": "00b17b1294ad634e2f47ea564b568ed5ce8e0230a9d25099c7a5f1ede23100a5",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -158,6 +161,7 @@
 					4
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 1
 			},
 			"1": {
@@ -176,6 +180,7 @@
 					4
 				],
 				"remaining_stamina": 2,
+				"rol": "",
 				"unit_type": 0
 			},
 			"2": {
@@ -194,6 +199,7 @@
 					10
 				],
 				"remaining_stamina": 0,
+				"rol": "",
 				"unit_type": 0
 			}
 		},
@@ -260,7 +266,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-30T12:07:37",
+		"created": "2026-07-30T16:04:13",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -332,6 +338,7 @@
 						7
 					],
 					"remaining_stamina": 3,
+					"rol": "",
 					"unit_type": 1
 				},
 				"1": {
@@ -350,6 +357,7 @@
 						4
 					],
 					"remaining_stamina": 2,
+					"rol": "",
 					"unit_type": 0
 				},
 				"2": {
@@ -368,6 +376,7 @@
 						10
 					],
 					"remaining_stamina": 0,
+					"rol": "",
 					"unit_type": 0
 				}
 			},

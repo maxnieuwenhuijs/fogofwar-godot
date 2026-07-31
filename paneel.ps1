@@ -1,4 +1,4 @@
-# Fog of War - controlepaneel: een paar simpele knoppen, gewone taal.
+﻿# Fog of War - controlepaneel: een paar simpele knoppen, gewone taal.
 # Starten: dubbelklik "FogOfWar Paneel.bat" (of: powershell -STA -File paneel.ps1)
 # Besluit Max 23-07: niets draait automatisch - alles start vanuit dit paneel.
 # Herbouw 28-07 (Max: "ik ben het spoor bijster"): jargon eruit (4.1/4.2/L1),
@@ -29,7 +29,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(430, 420)
+$form.Size = New-Object System.Drawing.Size(430, 490)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -129,7 +129,22 @@ $null = Maak-Knop "Bots laten spelen (meting)" "Botgevechten voor winst-cijfers 
 }
 
 # --- 4. Rapport bekijken.
-$null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-percentages en trends." 240 {
+# --- 3b. Regels uitproberen: zoekt zelf naar een betere ontwerp-balans.
+$numBalans = Maak-Minuten 240 60
+$null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP- en versterkings-instellingen; komt met een voorstel." 240 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    $duur = [int]$numBalans.Value
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+        "python `"$repo\tools\balans\regelzoeker.py`" --minuten $duur --potjes 2 --kandidaten 6; Read-Host 'Klaar - druk op Enter'")
+    [System.Windows.Forms.MessageBox]::Show(
+        "De regelzoeker draait $duur minuten." + [Environment]::NewLine + [Environment]::NewLine +
+        "Hij verandert NIETS aan het spel: hij zet zijn beste vondst als voorstel.json in " +
+        "results\balans_<tijd>\, met een log van alles wat hij geprobeerd heeft. " +
+        "Daarna kijken we samen wat je ervan overneemt.", "Fog of War") | Out-Null
+}
+
+$null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-percentages en trends." 305 {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
@@ -140,7 +155,7 @@ $null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-per
 }
 
 # --- 5. Alles stoppen.
-$btnStop = Maak-Knop "STOP alles" "Stopt elke lopende run. Trainingsvoortgang blijft bewaard." 305 {
+$btnStop = Maak-Knop "STOP alles" "Stopt elke lopende run. Trainingsvoortgang blijft bewaard." 370 {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null

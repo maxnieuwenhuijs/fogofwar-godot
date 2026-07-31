@@ -27,6 +27,14 @@
   "poolfactor": 1.5,
   "pools": null,
   "punten_start": 10,
+  "punten_start_factie": {
+   "0": 9,
+   "1": 12,
+   "2": 7,
+   "3": 12,
+   "4": 11,
+   "5": 7
+  },
   "skip_mode": "auto",
   "spawn_kosten": {
    "art": 3,

@@ -138,7 +138,13 @@ func init_pools() -> void:
 			# koopt een pion (soldaat 1 / ruiter 2 / kanon 3). Een expliciete
 			# typed-pool uit de (nog typed) campagnelaag wordt op waarde omgezet.
 			var pt: int = 0
+			# C16: eerst de factie-tabel, anders de vaste waarde voor iedereen.
 			var vast: int = int(rules.campaign.get("punten_start", 0))
+			var per_factie = rules.campaign.get("punten_start_factie", {})
+			if per_factie is Dictionary:
+				var sleutel := str(int(doctrines.get(player_id, 0)))
+				if per_factie.has(sleutel):
+					vast = int(per_factie[sleutel])
 			if vast > 0 and not (expliciet is Dictionary and expliciet.has(str(player_id))):
 				pools[player_id] = {"pt": vast}
 				continue
@@ -182,6 +188,18 @@ func spawn_kosten(unit_type: int) -> int:
 
 
 ## Totale pool-voorraad van een speler (0 zonder campaign).
+## C15: punten bijschrijven op de reserve (buit van een vaandel). In de
+## punten-economie gaat dat op "pt"; in het oude typed-model boeken we het als
+## soldaten, zodat er niets stuk gaat als iemand met typed pools speelt.
+func pool_bijschrijven(player_id: int, punten: int) -> void:
+	if punten <= 0 or not pools.has(player_id):
+		return
+	if punten_model():
+		pools[player_id]["pt"] = int(pools[player_id].get("pt", 0)) + punten
+	else:
+		pools[player_id]["inf"] = int(pools[player_id].get("inf", 0)) + punten
+
+
 func pool_total(player_id: int) -> int:
 	var p: Dictionary = pools.get(player_id, {})
 	if punten_model():
@@ -234,7 +252,10 @@ func spawns_over(player_id: int) -> int:
 ## Plaats de pionnen van één speler volgens een placement-lijst [{type, pos}, ...].
 func apply_placement(player_id: int, placements: Array) -> void:
 	for entry in placements:
-		_spawn_pawn(player_id, entry.pos, int(entry.type))
+		# C15: de opstelling mag per pion een figurant-rol meegeven
+		# ("flag"/"drum"). Ontbreekt hij, dan is het een gewone soldaat.
+		var pion := _spawn_pawn(player_id, entry.pos, int(entry.type))
+		pion.rol = String(entry.get("rol", ""))
 	placements_done[player_id] = true
 
 ## Verwijder de pionnen van één speler weer (her-opstellen tijdens de PLACEMENT-fase).
@@ -251,6 +272,41 @@ func clear_placement(player_id: int) -> void:
 ## Redelijke standaard-opstelling volgens doctrine-samenstelling (v4.1 §2.2/§3.3):
 ## artillerie vóór op flanken/centrum (schootsveld), infanterie vult de voorste rij
 ## aan en dan het centrum achter, cavalerie op de achterste rij (randen).
+## C15: vaandels en tamboers over de opstelling verdelen. Op de achterste rij is
+## de index ook echt de afstand, dus vlag op 0 en 4, tamboer op 2 en 6 geeft
+## minimaal 4 vakken tussen twee gelijke rollen (besluit Max, 30 juli). Bots en
+## de "vul automatisch"-knop gebruiken dit; de mens kan het in de opstelfase
+## zelf aanwijzen.
+func _rollen_over_opstelling(placements: Array) -> void:
+	if not campaign_actief_rollen():
+		return
+	var vlaggen: int = int(rules.campaign.get("vaandels_max", 2))
+	var tamboers: int = int(rules.campaign.get("tamboers_max", 2))
+	if vlaggen <= 0 and tamboers <= 0:
+		return
+	# Alleen infanterie kan dragen; op leesbare afstand van elkaar.
+	var kandidaten: Array = []
+	for i in placements.size():
+		if int(placements[i].get("type", 0)) == Constants.UnitType.INFANTRY:
+			kandidaten.append(i)
+	if kandidaten.is_empty():
+		return
+	var stap: int = maxi(2, int(floor(float(kandidaten.size()) / float(maxi(1, vlaggen + tamboers)))))
+	var beurt: Array = []
+	for n in vlaggen:
+		beurt.append("flag")
+	for n in tamboers:
+		beurt.append("drum")
+	# Afwisselen zodat vlag en tamboer niet naast elkaar staan.
+	beurt.sort_custom(func(a: String, b: String) -> bool: return a < b)
+	var i2: int = 0
+	var plek: int = 0
+	while i2 < beurt.size() and plek < kandidaten.size():
+		placements[kandidaten[plek]]["rol"] = String(beurt[i2])
+		i2 += 1
+		plek += stap
+
+
 func default_placement(player_id: int) -> Array:
 	var comp: Array = doctrine_data_of(player_id).comp
 	var rows: Array = Constants.get_start_rows_for_player(player_id)
@@ -310,6 +366,7 @@ func default_placement(player_id: int) -> Array:
 		front_used[x] = true
 		cav_left -= 1
 
+	_rollen_over_opstelling(placements)   # C15: vaandels/tamboers erbij
 	return placements
 
 ## Valideer een placement-lijst voor een speler (samenstelling, thuisrijen, uniek).
@@ -318,6 +375,7 @@ func is_valid_placement(player_id: int, placements: Array) -> bool:
 	var counts: Array = [0, 0, 0]
 	var rows: Array = Constants.get_start_rows_for_player(player_id)
 	var seen: Dictionary = {}
+	var rollen: Dictionary = {}
 	for entry in placements:
 		if not (entry is Dictionary) or not entry.has("type") or not entry.has("pos"):
 			return false
@@ -333,7 +391,30 @@ func is_valid_placement(player_id: int, placements: Array) -> bool:
 			return false
 		seen[pos] = true
 		counts[t] += 1
+		# C15: figurant-rollen. Alleen op infanterie, alleen de twee bekende
+		# rollen, en niet meer dan de regels toestaan.
+		var rol := String(entry.get("rol", ""))
+		if rol != "":
+			if rol != "flag" and rol != "drum":
+				return false
+			if t != Constants.UnitType.INFANTRY:
+				return false
+			rollen[rol] = int(rollen.get(rol, 0)) + 1
+	if not campaign_actief_rollen():
+		if not rollen.is_empty():
+			return false   # zonder campagne bestaan figurant-rollen niet
+	else:
+		if int(rollen.get("flag", 0)) > int(rules.campaign.get("vaandels_max", 2)):
+			return false
+		if int(rollen.get("drum", 0)) > int(rules.campaign.get("tamboers_max", 2)):
+			return false
 	return counts[0] == comp[0] and counts[1] == comp[1] and counts[2] == comp[2]
+
+
+## Kleine hulp: mogen er figurant-rollen in de opstelling staan? (C15 hangt aan
+## het campagne-blok, zodat 4.1 byte-identiek blijft.)
+func campaign_actief_rollen() -> bool:
+	return rules != null and rules.campaign_actief()
 
 func _spawn_pawn(owner_id: int, pos: Vector2i, unit_type: int = Constants.UnitType.INFANTRY) -> Pawn:
 	var pawn := Pawn.new(_next_pawn_id, owner_id, pos, unit_type)
