@@ -29,7 +29,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(430, 490)
+$form.Size = New-Object System.Drawing.Size(430, 555)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -169,7 +169,26 @@ $null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP-
         "Daarna kijken we samen wat je ervan overneemt.", "Fog of War") | Out-Null
 }
 
-$null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-percentages en trends." 305 {
+# --- 3c. Facties uitproberen: zoekt aan de factie-eigenschappen zelf.
+$numFacties = Maak-Minuten 305 120
+$null = Maak-Knop "Facties uitproberen (balans)" "Probeert kaartbudget, perks en legers per factie; komt met een voorstel." 305 {
+    if (-not (Bevestig-BijDrukte)) { return }
+    $duur = [int]$numFacties.Value
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+        "python `"$repo	oolsalansactiezoeker.py`" --minuten $duur --potjes 2 --kandidaten 6 --procs 3; Read-Host 'Klaar - druk op Enter'")
+    [System.Windows.Forms.MessageBox]::Show(
+        "De factiezoeker draait $duur minuten." + [Environment]::NewLine + [Environment]::NewLine +
+        "Hij schuift aan kaartbudget, kaarten per ronde, legersamenstelling en de perks, " +
+        "met een rem erop: hoe verder van je oorspronkelijke ontwerp, hoe meer een kandidaat " +
+        "moet opleveren. Anders maakt hij van zes facties zes klonen." + [Environment]::NewLine +
+        [Environment]::NewLine +
+        "Het voorstel komt in resultsacties_<tijd>oorstel.json en verandert NIETS aan " +
+        "het spel: je kunt dat bestand direct aan de trainer meegeven om het te proberen.",
+        "Fog of War") | Out-Null
+}
+
+$null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-percentages en trends." 370 {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
@@ -180,7 +199,7 @@ $null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-per
 }
 
 # --- 5. Alles stoppen.
-$btnStop = Maak-Knop "STOP alles" "Stopt elke lopende run. Trainingsvoortgang blijft bewaard." 370 {
+$btnStop = Maak-Knop "STOP alles" "Stopt elke lopende run. Trainingsvoortgang blijft bewaard." 435 {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null

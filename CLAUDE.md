@@ -51,6 +51,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   spelen (meting), Bekijk het rapport, STOP alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
+- **Factiezoeker** (1 augustus): `python tools/balans/factiezoeker.py --minuten
+  120 --potjes 2 [--facties 2,3]`, of de paneelknop "Facties uitproberen
+  (balans)". Zoekt aan kaartbudget, kaarten per ronde, legersamenstelling en de
+  perks, met een **identiteits-rem**: elke afwijking van het huidige ontwerp
+  kost punten, anders eindig je met zes klonen. Zijn voorstel is een regels-json
+  met een `doctrines`-blok: dat kun je direct aan de trainer of de arena
+  meegeven zonder `constants.gd` aan te raken.
 - **Regelzoeker** (31 juli): `python tools/balans/regelzoeker.py --minuten 60
   --potjes 2 --kandidaten 6`, of de paneelknop "Regels uitproberen (balans)".
   Zoekt betere REGELS met vaste bots (de trainer zoekt betere bots met vaste
