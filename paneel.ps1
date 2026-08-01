@@ -157,8 +157,8 @@ $null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP-
     $duur = [int]$numBalans.Value
     $potjes = [int]$numPotjes.Value
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-        "python `"$repo\tools\balans\regelzoeker.py`" --minuten $duur --potjes $potjes --kandidaten 6 --procs 3; Read-Host 'Klaar - druk op Enter'")
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\balans.ps1",
+        "-Soort", "regels", "-Minuten", $duur, "-Potjes", $potjes)
     [System.Windows.Forms.MessageBox]::Show(
         "De regelzoeker draait $duur minuten met $potjes potje(s) per matchup." +
         [Environment]::NewLine + [Environment]::NewLine +
@@ -175,8 +175,8 @@ $null = Maak-Knop "Facties uitproberen (balans)" "Probeert kaartbudget, perks en
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numFacties.Value
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-        "python `"$repo	oolsalansactiezoeker.py`" --minuten $duur --potjes 2 --kandidaten 6 --procs 3; Read-Host 'Klaar - druk op Enter'")
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\balans.ps1",
+        "-Soort", "facties", "-Minuten", $duur, "-Potjes", 2)
     [System.Windows.Forms.MessageBox]::Show(
         "De factiezoeker draait $duur minuten." + [Environment]::NewLine + [Environment]::NewLine +
         "Hij schuift aan kaartbudget, kaarten per ronde, legersamenstelling en de perks, " +
