@@ -170,15 +170,31 @@ $null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP-
 }
 
 # --- 3c. Facties uitproberen: zoekt aan de factie-eigenschappen zelf.
-$numFacties = Maak-Minuten 305 120
+$numFacties = Maak-Minuten 305 360
+# Welke facties mag hij aanraken? Leeg = alle zes. Gericht zoeken (bv. "2,3" =
+# Leeuw en Beer) vindt veel sneller iets, want dan is elke kandidaat een
+# wijziging aan een factie in plaats van een mengsel van zes.
+$txtFacties = New-Object System.Windows.Forms.TextBox
+$txtFacties.Location = New-Object System.Drawing.Point(200, 311)
+$txtFacties.Size = New-Object System.Drawing.Size(48, 24)
+$txtFacties.Text = "2,3"
+$form.Controls.Add($txtFacties)
+$lblFacties = New-Object System.Windows.Forms.Label
+$lblFacties.Text = "facties"
+$lblFacties.Location = New-Object System.Drawing.Point(250, 316)
+$lblFacties.Size = New-Object System.Drawing.Size(50, 18)
+$form.Controls.Add($lblFacties)
 $null = Maak-Knop "Facties uitproberen (balans)" "Probeert kaartbudget, perks en legers per factie; komt met een voorstel." 305 {
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numFacties.Value
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\balans.ps1",
-        "-Soort", "facties", "-Minuten", $duur, "-Potjes", 2)
+        "-Soort", "facties", "-Minuten", $duur, "-Potjes", 2,
+        "-Facties", $txtFacties.Text)
     [System.Windows.Forms.MessageBox]::Show(
-        "De factiezoeker draait $duur minuten." + [Environment]::NewLine + [Environment]::NewLine +
+        "De factiezoeker draait $duur minuten" + $(if ($txtFacties.Text) { " aan factie(s) " + $txtFacties.Text } else { " aan alle facties" }) + "." +
+        [Environment]::NewLine + "0 Varken - 1 Muis - 2 Leeuw - 3 Beer - 4 Wolf - 5 Krokodil" +
+        [Environment]::NewLine + [Environment]::NewLine +
         "Hij schuift aan kaartbudget, kaarten per ronde, legersamenstelling en de perks, " +
         "met een rem erop: hoe verder van je oorspronkelijke ontwerp, hoe meer een kandidaat " +
         "moet opleveren. Anders maakt hij van zes facties zes klonen." + [Environment]::NewLine +
