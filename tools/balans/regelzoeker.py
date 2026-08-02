@@ -90,8 +90,12 @@ def score_run(games):
     """Scoor een arena-run. Geeft (totaal, detail-dict)."""
     if not games:
         return 0.0, {"reden": "geen partijen"}
+    # Spiegelpartijen tellen niet mee (zie factiezoeker): die geven dezelfde
+    # factie een winst en een verlies en trekken elke winrate naar 50%.
     win = defaultdict(lambda: [0, 0])
     for r in games:
+        if r["d1"] == r["d2"]:
+            continue
         for kant, d in ((1, r["d1"]), (2, r["d2"])):
             win[d][1] += 1
             if int(r["winner"]) == kant:
@@ -118,8 +122,18 @@ def score_run(games):
     economie = min(1.0, spawns / 4.0) * 0.6 + min(1.0, buit / 2.0) * 0.4
     totaal = (DOEL["evenwicht"] * evenwicht + DOEL["beslissend"] * beslissend
               + DOEL["duur"] * duur + DOEL["economie"] * economie)
+    # VETO op kant-dominantie (les van 1 augustus, gevonden door de
+    # factiezoeker): wint speler 1 structureel, dan is het spel stuk en zeggen
+    # de winrates niets meer -- elke factie speelt immers de helft als speler 1.
+    p1 = sum(1 for r in games if int(r["winner"]) == 1)
+    p2 = sum(1 for r in games if int(r["winner"]) == 2)
+    kant_share = 100.0 * p1 / max(p1 + p2, 1)
+    veto = abs(kant_share - 50.0) > 15.0
+    if veto:
+        totaal *= 0.25
     detail = {
-        "score": round(totaal, 4),
+        "score": round(totaal, 4), "speler1_wint_pct": round(kant_share, 1),
+        "veto_kant": veto,
         "evenwicht": round(evenwicht, 3), "gem_afwijking_van_50": round(afwijking, 1),
         "beslissend": round(beslissend, 3), "tiebreak_pct": round(100.0 * m["tiebreak"] / len(games), 1),
         "cycli": cycli, "duur": round(duur, 3),

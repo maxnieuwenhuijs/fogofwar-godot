@@ -1,5 +1,34 @@
 # Fog of War — Work In Progress & Context
 
+## 1 augustus 2026 -- de factiezoeker vond een gat in mijn eigen scorefunctie
+
+Eerste echte run: 86 generaties, 6 uur, eindscore 0,9117 met alle zes facties op
+precies 50,0%. Te mooi, en dat klopte ook niet.
+
+**Wat er gebeurde**: in de winnende kandidaat won **speler 1 alle 216 partijen**.
+Elke factie speelt de helft van zijn potjes als speler 1, dus stond iedereen op
+exact 50% en scoorde dat als perfecte balans. 124 van de 517 kandidaten hadden
+datzelfde patroon. De zoeker had niet de balans opgelost maar het spel
+kapotgemaakt: partijen van 15 cycli die door de beurtvolgorde werden beslist.
+
+**Twee fouten in mijn score, allebei gerepareerd:**
+1. Spiegelpartijen (factie tegen zichzelf, 36 van de 216) telden mee. Die geven
+   dezelfde factie een winst en een verlies en trekken alles naar 50%. Nu eruit.
+2. Geen enkele meting op de KANT. Nu meten beide zoekers hoe vaak speler 1 wint;
+   wijkt dat meer dan 15 procentpunt van 50/50 af, dan volgt een VETO (score x
+   0,25). Een aftrek van 0,20 was niet genoeg: de kapotte kandidaat won daarmee
+   nog steeds. Na het veto: 0,9117 -> 0,1804, en de huidige facties (0,6844)
+   winnen ruim.
+
+**Wat de meting wel opleverde, en dat is nuttig**: de eerste-speler-voorsprong
+in het echte spel. Nacht van 1 augustus (3240 partijen): speler 1 wint 51% --
+gezond. De kleinere runs van 216-324 partijen gaven 61%, dus dat was ruis.
+
+**Les voor de volgende zoeker**: een zoekfunctie optimaliseert precies wat je
+meet. Meet je "iedereen 50%", dan krijg je ook een spel waarin de beurtvolgorde
+beslist. Elke nieuwe doelstelling heeft een veto nodig op de manier waarop hij
+te makkelijk gehaald kan worden.
+
 ## 31 juli 2026 (avond) -- C18: Krokodil ingeperkt, Wolf krijgt tempo
 
 Max koos een harde ingreep boven acht uur economie-zoeken, en dat was de betere

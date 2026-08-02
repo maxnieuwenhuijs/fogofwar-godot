@@ -78,9 +78,10 @@ COMP_MIN, COMP_MAX = 0, 20
 COMP_TOTAAL_MIN, COMP_TOTAAL_MAX = 16, 24   # legergrootte blijft in de buurt
 
 DOEL = {
-    "evenwicht": 0.55,     # winrates rond 50%
-    "beslissend": 0.15,    # weinig tiebreaks
-    "duur": 0.10,          # mediaan cycli in de band
+    "evenwicht": 0.40,     # winrates rond 50% (zonder spiegelpartijen)
+    "kant": 0.20,          # speler 1 mag niet structureel winnen
+    "beslissend": 0.12,    # weinig tiebreaks
+    "duur": 0.08,          # mediaan cycli in de band
     "identiteit": 0.20,    # blijf in de buurt van het oorspronkelijke ontwerp
 }
 DUUR_ONDER, DUUR_BOVEN = 8, 13
@@ -104,8 +105,13 @@ def identiteits_score(doctrines):
 def score_run(games, doctrines):
     if not games:
         return 0.0, {"reden": "geen partijen"}
+    # SPIEGELPARTIJEN (zelfde factie tegen zichzelf) tellen NIET mee: die geven
+    # per definitie een winst en een verlies aan dezelfde factie en trekken elke
+    # winrate naar 50%.
     win = defaultdict(lambda: [0, 0])
     for r in games:
+        if r["d1"] == r["d2"]:
+            continue
         for kant, d in ((1, r["d1"]), (2, r["d2"])):
             win[d][1] += 1
             if int(r["winner"]) == kant:
@@ -113,6 +119,15 @@ def score_run(games, doctrines):
     winrates = {d: 100.0 * w / max(t, 1) for d, (w, t) in win.items()}
     afwijking = st.mean(abs(v - 50.0) for v in winrates.values()) if winrates else 50.0
     evenwicht = max(0.0, 1.0 - afwijking / 25.0)
+    # KANT-EERLIJKHEID (les van 1 augustus): de zoeker vond een kandidaat waar
+    # speler 1 ALLE 216 partijen won. Elke factie speelt de helft als speler 1,
+    # dus stond iedereen op precies 50% en scoorde dat als perfecte balans. Een
+    # spel dat door de beurtvolgorde wordt beslist is juist stuk, dus meten we
+    # het apart: 50/50 = 1,0, en 100% voor een kant = 0.
+    p1 = sum(1 for r in games if int(r["winner"]) == 1)
+    p2 = sum(1 for r in games if int(r["winner"]) == 2)
+    kant_share = 100.0 * p1 / max(p1 + p2, 1)
+    kant = max(0.0, 1.0 - abs(kant_share - 50.0) / 25.0)
     m = Counter(r["methode"] for r in games)
     beslissend = (m["haven"] + m["eliminatie"]) / len(games)
     cycli = st.median([int(r["cycli"]) for r in games])
@@ -122,10 +137,21 @@ def score_run(games, doctrines):
         mis = DUUR_ONDER - cycli if cycli < DUUR_ONDER else cycli - DUUR_BOVEN
         duur = max(0.0, 1.0 - mis / 8.0)
     identiteit = identiteits_score(doctrines)
-    totaal = (DOEL["evenwicht"] * evenwicht + DOEL["beslissend"] * beslissend
-              + DOEL["duur"] * duur + DOEL["identiteit"] * identiteit)
+    totaal = (DOEL["evenwicht"] * evenwicht + DOEL["kant"] * kant
+              + DOEL["beslissend"] * beslissend + DOEL["duur"] * duur
+              + DOEL["identiteit"] * identiteit)
+    # VETO, geen aftrek. Een aftrek van 0,20 was niet genoeg: de kandidaat waar
+    # speler 1 alles won scoorde daarmee nog steeds hoger dan het echte spel,
+    # want hij haalde de volle evenwicht-punten. Wie een spel maakt dat door de
+    # beurtvolgorde wordt beslist, heeft geen balans gevonden maar het spel
+    # kapotgemaakt -- en dan zeggen de winrates niets meer.
+    veto = abs(kant_share - 50.0) > 15.0
+    if veto:
+        totaal *= 0.25
     return totaal, {
         "score": round(totaal, 4), "gem_afwijking_van_50": round(afwijking, 1),
+        "speler1_wint_pct": round(kant_share, 1), "kant": round(kant, 3),
+        "veto_kant": veto,
         "tiebreak_pct": round(100.0 * m["tiebreak"] / len(games), 1), "cycli": cycli,
         "identiteit": round(identiteit, 3),
         "winrates": {d: round(v, 1) for d, v in sorted(winrates.items(), key=lambda kv: -kv[1])},
@@ -277,8 +303,9 @@ def main():
     for pr in procs0:
         pr.wait()
     beste_score, beste_detail = score_run(lees_alle(paden0), kampioen.get("doctrines", {}))
-    print("[FACTIES] huidige facties: score %.4f (afwijking %.1f%%) %s" % (
-        beste_score, beste_detail["gem_afwijking_van_50"], beste_detail["winrates"]))
+    print("[FACTIES] huidige facties: score %.4f (afwijking %.1f%%, speler1 wint %.0f%%) %s" % (
+        beste_score, beste_detail["gem_afwijking_van_50"], beste_detail["speler1_wint_pct"],
+        beste_detail["winrates"]))
     with open(log_pad, "a", encoding="utf-8") as f:
         f.write(json.dumps({"generatie": 0, "naam": "basis", "detail": beste_detail,
                             "doctrines": kampioen.get("doctrines", {})}, ensure_ascii=False) + "\n")
@@ -314,9 +341,9 @@ def main():
                 beste_ronde = (s, kandidaat, detail, naam)
         s, kandidaat, detail, naam = beste_ronde
         beter = s > beste_score
-        print("[FACTIES] gen %d: beste %.4f (%s) %s  afwijking %.1f%%  identiteit %.2f" % (
+        print("[FACTIES] gen %d: beste %.4f (%s) %s  afwijking %.1f%%  speler1 %.0f%%  identiteit %.2f" % (
             generatie, s, naam, "-> ADOPTIE" if beter else "(kampioen blijft)",
-            detail["gem_afwijking_van_50"], detail["identiteit"]))
+            detail["gem_afwijking_van_50"], detail["speler1_wint_pct"], detail["identiteit"]))
         if beter:
             kampioen, beste_score, beste_detail = kandidaat, s, detail
             sigma = max(0.08, sigma * 0.9)
