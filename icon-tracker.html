@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,30 +47,30 @@
     padding: 5px 12px; border-radius: 4px; cursor: pointer; font: inherit; font-size: 12px;
   }
   button:hover { border-color: var(--accent); color: var(--accent); }
-  .groepnav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .groepnav a {
+  .groupnav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .groupnav a {
     text-decoration: none; color: var(--text); font-size: 12px;
     background: var(--panel2); border: 1px solid var(--line);
     padding: 3px 10px; border-radius: 12px;
   }
-  .groepnav a b { color: var(--accent); font-weight: 600; }
+  .groupnav a b { color: var(--accent); font-weight: 600; }
   main { max-width: 1180px; margin: 0 auto; padding: 20px; }
   .intro {
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
     padding: 12px 16px; margin-bottom: 18px; font-size: 13px; color: var(--dim);
   }
   .intro b { color: var(--text); }
-  section.groep {
+  section.group {
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
     margin-bottom: 18px; overflow: hidden;
   }
-  section.groep > h2 {
+  section.group > h2 {
     margin: 0; padding: 10px 16px; font-size: 15px;
     background: var(--panel2); border-bottom: 1px solid var(--line);
     display: flex; align-items: center; gap: 12px;
   }
-  section.groep > h2 .telling { color: var(--dim); font-size: 12px; font-weight: 400; }
-  section.groep > h2 .groepbar { flex: 1 1 120px; max-width: 200px; margin-left: auto; }
+  section.group > h2 .count { color: var(--dim); font-size: 12px; font-weight: 400; }
+  section.group > h2 .groupbar { flex: 1 1 120px; max-width: 200px; margin-left: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
   th { color: var(--dim); font-weight: 600; font-size: 12px; white-space: nowrap; }
@@ -78,13 +78,13 @@
   tr.done td { opacity: .55; }
   td.nr { color: var(--dim); width: 34px; }
   td.iid { font-family: Consolas, monospace; font-size: 12px; color: var(--accent); white-space: nowrap; }
-  td.naam { font-weight: 600; white-space: nowrap; }
+  td.name { font-weight: 600; white-space: nowrap; }
   td.sug { color: var(--dim); }
-  td.waar { color: var(--dim); font-size: 12px; }
-  td.check { width: 130px; white-space: nowrap; }
+  td.where { color: var(--dim); font-size: 12px; }
+  td.check { width: 150px; white-space: nowrap; }
   td.check label { margin-right: 10px; font-size: 11px; color: var(--dim); cursor: pointer; }
   input[type=checkbox] { accent-color: var(--accent); cursor: pointer; }
-  .hergebruik {
+  .reused {
     display: inline-block; background: var(--panel2); border: 1px solid var(--opt);
     color: var(--opt); font-size: 11px; border-radius: 10px; padding: 0 8px; margin-left: 6px;
   }
@@ -92,13 +92,13 @@
     width: 100%; background: var(--panel2); color: var(--text);
     border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; font: inherit; font-size: 12px;
   }
-  .apart {
+  .separate {
     border-left: 3px solid var(--opt);
   }
   footer { text-align: center; color: var(--dim); font-size: 12px; margin-top: 30px; }
   @media (max-width: 760px) {
     td.sug, th.sug { display: none; }
-    td.waar, th.waar { display: none; }
+    td.where, th.where { display: none; }
   }
 </style>
 </head>
@@ -107,186 +107,186 @@
   <h1>Fog of War - <span>Icon Tracker</span></h1>
   <div class="topbar">
     <div class="totalwrap">
-      <div class="bar"><i id="totaalbar"></i></div>
-      <div class="barlabel" id="totaallabel"></div>
+      <div class="bar"><i id="totalbar"></i></div>
+      <div class="barlabel" id="totallabel"></div>
     </div>
     <div class="btns">
-      <button id="exportbtn">exporteer stand</button>
-      <button id="resetbtn">reset alles</button>
+      <button id="exportbtn">export progress</button>
+      <button id="resetbtn">reset all</button>
     </div>
   </div>
-  <div class="groepnav" id="groepnav"></div>
+  <div class="groupnav" id="groupnav"></div>
 </header>
 <main>
   <div class="intro">
-    De <b>definitieve iconenlijst</b> (30 juli): <b>37 unieke tekeningen</b>, monochroom
-    leesbaar op 24&times;24, kleurvariant toegestaan. Bron van waarheid:
-    <b>docs/design/UI-SPEC-EN.md &sect; "Icon list (definitive)"</b> — dit bord is de
-    werkstand per icoon. Hergebruiken zijn benoemd: wat een <span class="hergebruik">hergebruik</span>-label
-    draagt wordt <i>niet</i> apart getekend. Stappen per icoon: <b>schets</b> (vorm akkoord) &rarr;
-    <b>def</b> (definitieve tekening 24&times;24) &rarr; <b>in game</b> (staat in de UI).
+    The <b>definitive icon list</b> (July 30): <b>37 unique drawings</b>, monochrome,
+    readable at 24&times;24, colour variant allowed. Source of truth:
+    <b>docs/design/UI-SPEC-EN.md &sect; "Icon list (definitive)"</b> — this board tracks the
+    working state per icon. Reuses are named: anything wearing a <span class="reused">reused</span>
+    label is <i>not</i> drawn separately. Steps per icon: <b>sketch</b> (shape approved) &rarr;
+    <b>final</b> (definitive drawing at 24&times;24) &rarr; <b>in game</b> (live in the UI).
   </div>
-  <div id="inhoud"></div>
-  <footer>Stand wordt lokaal bewaard (localStorage) - exporteer voor je een andere machine gebruikt.</footer>
+  <div id="content"></div>
+  <footer>Progress is stored locally (localStorage) - export before switching machines.</footer>
 </main>
 <script>
 "use strict";
 
-/* Bron: docs/design/UI-SPEC-EN.md, "Icon list (definitive, July 30)". 37 uniek. */
-const GROEPEN = [
- { id: "stats", naam: "A. Kaart-stats", noot: "gedeeld deliverable met CARD-DESIGN-BRIEF", iconen: [
-   { id: "stat-hp",        naam: "HP",                sug: "hart of klein schild",              waar: "kaarten, stat-chips, tuner" },
-   { id: "stat-speed",     naam: "Speed",             sug: "laars of gevleugelde spoor",        waar: "kaarten, stat-chips" },
-   { id: "stat-attack",    naam: "Attack",            sug: "sabel of gebalde vuist",            waar: "kaarten, stat-chips" },
+/* Source: docs/design/UI-SPEC-EN.md, "Icon list (definitive, July 30)". 37 unique. */
+const GROUPS = [
+ { id: "stats", name: "A. Card stats", note: "shared deliverable with CARD-DESIGN-BRIEF", icons: [
+   { id: "stat-hp",        name: "HP",                sug: "heart or small shield",             where: "cards, stat chips, tuner" },
+   { id: "stat-speed",     name: "Speed",             sug: "boot or winged spur",               where: "cards, stat chips" },
+   { id: "stat-attack",    name: "Attack",            sug: "sabre or clenched fist",            where: "cards, stat chips" },
  ]},
- { id: "status", naam: "B. Middelen & status", iconen: [
-   { id: "pool",           naam: "Versterkingspool",  sug: "soldatenrij / tentenkamp",          waar: "grootboek, DonateSheet, spawn-UI, HUD" },
-   { id: "cp",             naam: "Commandopunten",    sug: "medaille / epaulet",                waar: "grootboek, bied-UI, DonateSheet" },
-   { id: "score",          naam: "Campagnepunten",    sug: "lauwerster",                        waar: "grootboek, MatchReport, leaderboard" },
-   { id: "alive",          naam: "Levend",            sug: "staande vlag",                      waar: "grootboek, portretten" },
-   { id: "dead",           naam: "Dood / uitgeschakeld", sug: "gebroken vlag of doodskop",      waar: "grootboek, portretten, spookmodus", hergebruik: "ook winst-door-eliminatie" },
-   { id: "initiative",     naam: "Initiatief",        sug: "klaroen / signaalhoorn",            waar: "initiatief-banner, HUD" },
-   { id: "hidden",         naam: "Verborgen (“?”)", sug: "waszegel met vraagteken",   waar: "gedekte pionnen, niet-onthulde info, wachtstates" },
+ { id: "status", name: "B. Resources & status", icons: [
+   { id: "pool",           name: "Reinforcement pool", sug: "soldier row / tent camp",          where: "ledger, DonateSheet, spawn UI, HUD" },
+   { id: "cp",             name: "Command points",    sug: "medal / epaulette",                 where: "ledger, bid UI, DonateSheet" },
+   { id: "score",          name: "Campaign points",   sug: "laurel star",                       where: "ledger, MatchReport, leaderboard" },
+   { id: "alive",          name: "Alive",             sug: "standing flag",                     where: "ledger, portraits" },
+   { id: "dead",           name: "Dead / eliminated", sug: "broken flag or skull",              where: "ledger, portraits, ghost mode", reused: "also win-by-elimination" },
+   { id: "initiative",     name: "Initiative",        sug: "bugle / signal trumpet",            where: "initiative banner, HUD" },
+   { id: "hidden",         name: "Hidden (“?”)",  sug: "wax seal with question mark",   where: "covered pawns, unrevealed info, wait states" },
  ]},
- { id: "acties", naam: "C. Gevechtsacties", iconen: [
-   { id: "act-melee",      naam: "Melee",             sug: "gekruiste bajonetten",              waar: "bordknoppen, rapporten", hergebruik: "ook actie-fase en duel-notificatie" },
-   { id: "act-shot",       naam: "Schot",             sug: "musket",                            waar: "bordknoppen, rapporten" },
-   { id: "act-move",       naam: "Bewegen",           sug: "voetstappen",                       waar: "bordknoppen, rapporten" },
-   { id: "act-charge",     naam: "Charge",            sug: "galopperend silhouet",              waar: "bordknoppen, rapporten" },
-   { id: "act-wolfstep",   naam: "Wolf-stap",         sug: "pootafdruk",                        waar: "bordknoppen, rapporten, uitleg" },
-   { id: "act-roll",       naam: "Kanon: rollen",     sug: "spaakwiel",                         waar: "kanon-actiepot" },
-   { id: "act-fire",       naam: "Kanon: vuren",      sug: "mondingsvlam",                      waar: "kanon-actiepot" },
-   { id: "act-retreat",    naam: "Kanon: inrukken",   sug: "omgekeerde pijl",                   waar: "kanon-actiepot" },
+ { id: "actions", name: "C. Battle actions", icons: [
+   { id: "act-melee",      name: "Melee",             sug: "crossed bayonets",                  where: "board buttons, reports", reused: "also action phase and duel notification" },
+   { id: "act-shot",       name: "Shot",              sug: "musket",                            where: "board buttons, reports" },
+   { id: "act-move",       name: "Move",              sug: "footprints",                        where: "board buttons, reports" },
+   { id: "act-charge",     name: "Charge",            sug: "galloping silhouette",              where: "board buttons, reports" },
+   { id: "act-wolfstep",   name: "Wolf step",         sug: "paw print",                         where: "board buttons, reports, help" },
+   { id: "act-roll",       name: "Cannon: roll",      sug: "spoked wheel",                      where: "cannon action pot" },
+   { id: "act-fire",       name: "Cannon: fire",      sug: "muzzle flame",                      where: "cannon action pot" },
+   { id: "act-retreat",    name: "Cannon: retreat",   sug: "reversed arrow",                    where: "cannon action pot" },
  ]},
- { id: "units", naam: "D. Units & spawn", iconen: [
-   { id: "unit-infantry",  naam: "Infanterie",        sug: "infanterist-silhouet",              waar: "overal waar unit-types staan" },
-   { id: "unit-cavalry",   naam: "Cavalerie (big bro)", sug: "big-bro-silhouet",                waar: "overal waar unit-types staan" },
-   { id: "unit-artillery", naam: "Artillerie",        sug: "kanon-silhouet",                    waar: "overal waar unit-types staan" },
-   { id: "spawn",          naam: "Spawn",             sug: "tent met pijl het veld op",         waar: "spawn-UI, rapporten", hergebruik: "ook spawn-fase" },
+ { id: "units", name: "D. Units & spawn", icons: [
+   { id: "unit-infantry",  name: "Infantry",          sug: "infantryman silhouette",            where: "everywhere unit types appear" },
+   { id: "unit-cavalry",   name: "Cavalry (big bro)", sug: "big-bro silhouette",                where: "everywhere unit types appear" },
+   { id: "unit-artillery", name: "Artillery",         sug: "cannon silhouette",                 where: "everywhere unit types appear" },
+   { id: "spawn",          name: "Spawn",             sug: "tent with arrow onto the field",    where: "spawn UI, reports", reused: "also spawn phase" },
  ]},
- { id: "fasen", naam: "E. Fasen (topbalk)", noot: "actie-fase hergebruikt act-melee, spawn-fase hergebruikt spawn", iconen: [
-   { id: "phase-setup",    naam: "Opstellen",         sug: "hand die een pion plaatst",         waar: "topbalk" },
-   { id: "phase-define",   naam: "Definiëren",   sug: "veer op kaart",                     waar: "topbalk" },
-   { id: "phase-reveal",   naam: "Onthullen",         sug: "kaart die opengaat",                waar: "topbalk" },
-   { id: "phase-link",     naam: "Koppelen",          sug: "kettingschakel / verbonden zegel",  waar: "topbalk" },
+ { id: "phases", name: "E. Phases (top bar)", note: "action phase reuses act-melee, spawn phase reuses spawn", icons: [
+   { id: "phase-setup",    name: "Setup",             sug: "hand placing a pawn",               where: "top bar" },
+   { id: "phase-define",   name: "Define",            sug: "quill on card",                     where: "top bar" },
+   { id: "phase-reveal",   name: "Reveal",            sug: "card turning face-up",              where: "top bar" },
+   { id: "phase-link",     name: "Link",              sug: "chain link / joined seal",          where: "top bar" },
  ]},
- { id: "uitslag", naam: "F. Uitslagen", noot: "eliminatie hergebruikt `dead`", iconen: [
-   { id: "win-harbor",     naam: "Winst: haven",      sug: "vesting",                           waar: "MatchReport, historie" },
-   { id: "draw",           naam: "Tiebreak / remise", sug: "handdruk",                          waar: "MatchReport, historie" },
-   { id: "forfeit",        naam: "Forfeit / opgave",  sug: "witte vlag",                        waar: "MatchReport, historie" },
+ { id: "outcomes", name: "F. Match outcomes", note: "elimination reuses `dead`", icons: [
+   { id: "win-harbor",     name: "Win by harbor",     sug: "fortress",                          where: "MatchReport, history" },
+   { id: "draw",           name: "Tiebreak / draw",   sug: "handshake",                         where: "MatchReport, history" },
+   { id: "forfeit",        name: "Forfeit / resign",  sug: "white flag",                        where: "MatchReport, history" },
  ]},
- { id: "campagne", naam: "G. Campagne & sociaal", iconen: [
-   { id: "vote",           naam: "Stem / raad",       sug: "stembus",                           waar: "raad, feed-kaartjes", hergebruik: "ook raad-notificatie" },
-   { id: "nomination",     naam: "Nominatie",         sug: "wijzende vinger",                   waar: "raad, feed-kaartjes" },
-   { id: "donation",       naam: "Donatie",           sug: "pakket / gift",                     waar: "DonateSheet, feed-kaartjes" },
-   { id: "testament",      naam: "Testament",         sug: "verzegelde brief",                  waar: "testament-scherm, feed-kaartjes" },
-   { id: "report",         naam: "Rapport",           sug: "perkamentrol",                      waar: "feed-kaartjes", hergebruik: "ook rapport-notificatie" },
-   { id: "chat",           naam: "Chat / bark",       sug: "spraakballon",                      waar: "quick-chat, feed-kaartjes" },
+ { id: "campaign", name: "G. Campaign & social", icons: [
+   { id: "vote",           name: "Vote / council",    sug: "ballot box",                        where: "council, feed cards", reused: "also council notification" },
+   { id: "nomination",     name: "Nomination",        sug: "pointing finger",                   where: "council, feed cards" },
+   { id: "donation",       name: "Donation",          sug: "wrapped parcel / gift",             where: "DonateSheet, feed cards" },
+   { id: "testament",      name: "Testament",         sug: "sealed letter",                     where: "testament screen, feed cards" },
+   { id: "report",         name: "Report",            sug: "parchment scroll",                  where: "feed cards", reused: "also report notification" },
+   { id: "chat",           name: "Chat / bark",       sug: "speech bubble",                     where: "quick-chat, feed cards" },
  ]},
- { id: "tijd", naam: "H. Tijd & orders", iconen: [
-   { id: "clock",          naam: "Klok / deadline",   sug: "zakhorloge",                        waar: "TimerBar, raad, testament" },
-   { id: "pin",            naam: "Vastgepinde order", sug: "kaartspeld / klein zegel",          waar: "wachtende async-orders op het bord" },
- ]},
-];
-
-/* Aparte deliverables: geen deel van de 37, wel op dit bord te volgen. */
-const APART = [
- { id: "emblemen", naam: "Factie-emblemen (6, regimentszegels)", iconen: [
-   { id: "emblem-mouse",     naam: "Muis",     sug: "regimentszegel", waar: "portretten, kaarten, hub" },
-   { id: "emblem-pig",       naam: "Varken",   sug: "regimentszegel", waar: "portretten, kaarten, hub" },
-   { id: "emblem-lion",      naam: "Leeuw",    sug: "regimentszegel", waar: "portretten, kaarten, hub" },
-   { id: "emblem-bear",      naam: "Beer",     sug: "regimentszegel", waar: "portretten, kaarten, hub" },
-   { id: "emblem-wolf",      naam: "Wolf",     sug: "regimentszegel", waar: "portretten, kaarten, hub" },
-   { id: "emblem-crocodile", naam: "Krokodil", sug: "regimentszegel", waar: "portretten, kaarten, hub" },
+ { id: "time", name: "H. Time & orders", icons: [
+   { id: "clock",          name: "Clock / deadline",  sug: "pocket watch",                      where: "TimerBar, council, testament" },
+   { id: "pin",            name: "Pinned order",      sug: "map pin / small seal",              where: "queued async orders on the board" },
  ]},
 ];
 
-const STAPPEN = [
-  { id: "schets", kop: "schets" },
-  { id: "def",    kop: "def" },
-  { id: "game",   kop: "in game" },
+/* Separate deliverables: not part of the 37, tracked on this board anyway. */
+const SEPARATE = [
+ { id: "emblems", name: "Faction emblems (6, regimental seals)", icons: [
+   { id: "emblem-mouse",     name: "Mouse",     sug: "regimental seal", where: "portraits, cards, hub" },
+   { id: "emblem-pig",       name: "Pig",       sug: "regimental seal", where: "portraits, cards, hub" },
+   { id: "emblem-lion",      name: "Lion",      sug: "regimental seal", where: "portraits, cards, hub" },
+   { id: "emblem-bear",      name: "Bear",      sug: "regimental seal", where: "portraits, cards, hub" },
+   { id: "emblem-wolf",      name: "Wolf",      sug: "regimental seal", where: "portraits, cards, hub" },
+   { id: "emblem-crocodile", name: "Crocodile", sug: "regimental seal", where: "portraits, cards, hub" },
+ ]},
 ];
-const OPSLAG_KEY = "fow_icon_tracker_v1";
+
+const STEPS = [
+  { id: "schets", label: "sketch" },
+  { id: "def",    label: "final" },
+  { id: "game",   label: "in game" },
+];
+const STORE_KEY = "fow_icon_tracker_v1";
 
 let state = { checks: {}, notes: {} };
 try {
-  const raw = localStorage.getItem(OPSLAG_KEY);
+  const raw = localStorage.getItem(STORE_KEY);
   if (raw) state = Object.assign(state, JSON.parse(raw));
-} catch (e) { /* file:// zonder localStorage of corrupt: verse start */ }
+} catch (e) { /* file:// without localStorage or corrupt: fresh start */ }
 
-function bewaar() {
-  try { localStorage.setItem(OPSLAG_KEY, JSON.stringify(state)); } catch (e) {}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
 }
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-function rijHtml(nr, ic) {
+function rowHtml(nr, ic) {
   const noteKey = ic.id;
   let checks = "";
-  for (const s of STAPPEN) {
+  for (const s of STEPS) {
     const key = ic.id + "." + s.id;
-    checks += `<label><input type="checkbox" data-key="${key}" ${state.checks[key] ? "checked" : ""}> ${s.kop}</label>`;
+    checks += `<label><input type="checkbox" data-key="${key}" ${state.checks[key] ? "checked" : ""}> ${s.label}</label>`;
   }
-  const klaar = STAPPEN.every(s => state.checks[ic.id + "." + s.id]);
-  return `<tr class="${klaar ? "done" : ""}" data-icoon="${ic.id}">
+  const done = STEPS.every(s => state.checks[ic.id + "." + s.id]);
+  return `<tr class="${done ? "done" : ""}" data-icon="${ic.id}">
     <td class="nr">${nr}</td>
     <td class="iid">${ic.id}</td>
-    <td class="naam">${esc(ic.naam)}${ic.hergebruik ? `<span class="hergebruik" title="${esc(ic.hergebruik)}">hergebruik</span>` : ""}</td>
+    <td class="name">${esc(ic.name)}${ic.reused ? `<span class="reused" title="${esc(ic.reused)}">reused</span>` : ""}</td>
     <td class="sug">${esc(ic.sug)}</td>
-    <td class="waar">${esc(ic.waar)}</td>
+    <td class="where">${esc(ic.where)}</td>
     <td class="check">${checks}</td>
     <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
   </tr>`;
 }
 
-function groepHtml(g, startNr, apart) {
-  let rijen = "", nr = startNr;
-  for (const ic of g.iconen) rijen += rijHtml(apart ? "-" : nr++, ic);
-  return `<section class="groep ${apart ? "apart" : ""}" id="g-${g.id}">
-    <h2>${esc(g.naam)} <span class="telling">${g.iconen.length} stuks${g.noot ? " &middot; " + esc(g.noot) : ""}</span>
-      <span class="groepbar bar small"><i data-groepbar="${g.id}"></i></span></h2>
+function groupHtml(g, startNr, separate) {
+  let rows = "", nr = startNr;
+  for (const ic of g.icons) rows += rowHtml(separate ? "-" : nr++, ic);
+  return `<section class="group ${separate ? "separate" : ""}" id="g-${g.id}">
+    <h2>${esc(g.name)} <span class="count">${g.icons.length} icons${g.note ? " &middot; " + esc(g.note) : ""}</span>
+      <span class="groupbar bar small"><i data-groupbar="${g.id}"></i></span></h2>
     <table>
-      <thead><tr><th>#</th><th>id</th><th>icoon</th><th class="sug">suggestie</th><th class="waar">gebruikt in</th><th>stappen</th><th>notities</th></tr></thead>
-      <tbody>${rijen}</tbody>
+      <thead><tr><th>#</th><th>id</th><th>icon</th><th class="sug">suggestion</th><th class="where">used in</th><th>steps</th><th>notes</th></tr></thead>
+      <tbody>${rows}</tbody>
     </table>
   </section>`;
 }
 
 function render() {
   let html = "", nr = 1, nav = "";
-  for (const g of GROEPEN) {
-    html += groepHtml(g, nr, false);
-    nav += `<a href="#g-${g.id}"><b>${g.iconen.length}</b> ${esc(g.naam.replace(/^[A-H]\. /, ""))}</a>`;
-    nr += g.iconen.length;
+  for (const g of GROUPS) {
+    html += groupHtml(g, nr, false);
+    nav += `<a href="#g-${g.id}"><b>${g.icons.length}</b> ${esc(g.name.replace(/^[A-H]\. /, ""))}</a>`;
+    nr += g.icons.length;
   }
-  for (const g of APART) {
-    html += groepHtml(g, 0, true);
-    nav += `<a href="#g-${g.id}"><b>${g.iconen.length}</b> ${esc(g.naam.split(" (")[0])}</a>`;
+  for (const g of SEPARATE) {
+    html += groupHtml(g, 0, true);
+    nav += `<a href="#g-${g.id}"><b>${g.icons.length}</b> ${esc(g.name.split(" (")[0])}</a>`;
   }
-  document.getElementById("inhoud").innerHTML = html;
-  document.getElementById("groepnav").innerHTML = nav;
-  bijwerken();
+  document.getElementById("content").innerHTML = html;
+  document.getElementById("groupnav").innerHTML = nav;
+  refresh();
 }
 
-function bijwerken() {
-  const alles = GROEPEN.concat(APART);
-  let totDef = 0, totIco = 0;
-  for (const g of alles) {
-    let klaar = 0;
-    for (const ic of g.iconen) {
-      if (state.checks[ic.id + ".def"]) klaar++;
+function refresh() {
+  const all = GROUPS.concat(SEPARATE);
+  let totFinal = 0, totIcons = 0;
+  for (const g of all) {
+    let done = 0;
+    for (const ic of g.icons) {
+      if (state.checks[ic.id + ".def"]) done++;
     }
-    if (GROEPEN.includes(g)) { totDef += klaar; totIco += g.iconen.length; }
-    const balk = document.querySelector(`[data-groepbar="${g.id}"]`);
-    if (balk) balk.style.width = (g.iconen.length ? (100 * klaar / g.iconen.length) : 0) + "%";
+    if (GROUPS.includes(g)) { totFinal += done; totIcons += g.icons.length; }
+    const bar = document.querySelector(`[data-groupbar="${g.id}"]`);
+    if (bar) bar.style.width = (g.icons.length ? (100 * done / g.icons.length) : 0) + "%";
   }
-  document.getElementById("totaalbar").style.width = (100 * totDef / totIco) + "%";
-  document.getElementById("totaallabel").textContent =
-    `${totDef} van ${totIco} unieke iconen definitief getekend (emblemen tellen apart)`;
-  document.querySelectorAll("tr[data-icoon]").forEach(rij => {
-    const id = rij.dataset.icoon;
-    rij.classList.toggle("done", STAPPEN.every(s => state.checks[id + "." + s.id]));
+  document.getElementById("totalbar").style.width = (100 * totFinal / totIcons) + "%";
+  document.getElementById("totallabel").textContent =
+    `${totFinal} of ${totIcons} unique icons drawn final (emblems tracked separately)`;
+  document.querySelectorAll("tr[data-icon]").forEach(row => {
+    const id = row.dataset.icon;
+    row.classList.toggle("done", STEPS.every(s => state.checks[id + "." + s.id]));
   });
 }
 
@@ -295,7 +295,7 @@ document.addEventListener("change", e => {
   if (t.matches("input[type=checkbox][data-key]")) {
     state.checks[t.dataset.key] = t.checked;
     if (!t.checked) delete state.checks[t.dataset.key];
-    bewaar(); bijwerken();
+    save(); refresh();
   }
 });
 document.addEventListener("input", e => {
@@ -303,19 +303,19 @@ document.addEventListener("input", e => {
   if (t.matches("input[data-note]")) {
     if (t.value) state.notes[t.dataset.note] = t.value;
     else delete state.notes[t.dataset.note];
-    bewaar();
+    save();
   }
 });
 document.getElementById("resetbtn").addEventListener("click", () => {
-  if (!confirm("Alle vinkjes en notities wissen?")) return;
+  if (!confirm("Clear all checkmarks and notes?")) return;
   state = { checks: {}, notes: {} };
-  bewaar(); render();
+  save(); render();
 });
 document.getElementById("exportbtn").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "icon-tracker-stand.json";
+  a.download = "icon-tracker-progress.json";
   a.click();
   URL.revokeObjectURL(a.href);
 });
