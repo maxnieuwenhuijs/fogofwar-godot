@@ -162,7 +162,8 @@ maar overdrijft de proporties, zodat het model op 2 cm schermhoogte herkenbaar b
 andere clip-set, want cavalerie schiet nooit: **Idle** (bv. Bouncing Fight
 Idle), **Walking (In Place!)**, **Standing Melee Attack** (Swiping/Punch) als
 `attack`/`melee`, en een **Death**. Geen musket-prop (het spel hangt die alleen
-aan infanterie). Cavalerie-audio (nu paarden-galop) vervangen we later per
+aan infanterie); de big bro krijgt een MELEE-wapen als losse prop, zie 3c-2.
+Cavalerie-audio (nu paarden-galop) vervangen we later per
 familie (brul/grom/gepiep).
 
 ### Muis -- infanterie + dikke rat als big bro + licht kanon
@@ -385,6 +386,90 @@ neutral studio background, the weapon only, no hands, no text.`
 | `infantry_hp_musket` | Single prop, a thick, heavy double-barrelled musket with a medium-length barrel, two side-by-side barrels, reinforced bands and a fixed bayonet, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 | `infantry_atk_musket` | Single prop, a massive heavy big-bore musket with a medium-length barrel, a wide muzzle and an oversized fixed bayonet-spike, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 | `infantry_mix_musket` | Single prop, a compact plain short-barrelled carbine with a fixed bayonet, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+
+## 3c-2. Melee-wapens per big bro (cavalerie)
+
+De big bro vecht met zijn handen tot hij een wapen heeft; elk krijgt een
+**eigen melee-wapen-glb** (`cavalry_<archetype>_melee.glb`, naast het model).
+Zelfde leeswijze als de musketten, maar dan uniek per vak: de **wapenfamilie**
+verraadt de factie, de **variant** het archetype. Nog niet ingebouwd in het
+spel (props hangen nu alleen aan infanterie): bestandsnaam-conventie staat
+vast zodat de inbouw later zonder hernoemen kan.
+
+**Wapenfamilie per factie (het karakter):**
+
+| Factie | Familie |
+|---|---|
+| Muis (rat) | slagers-hakmessen (riool en slachthuis) |
+| Varken (everzwijn) | houthakkers-bijlen |
+| Leeuw | officiers-klingen |
+| Beer (grizzly) | hamers en knotsen (Russische winter) |
+| Wolf (dire wolf) | schroot-wapens |
+| Krokodil | kap-klingen (moeras) |
+
+**Variant per archetype** (zelfde logica als de musketten): `base` =
+standaard · `spd` = lang, dun, licht (bereik) · `hp` = kort, dik,
+verstevigd · `atk` = overmaats tweehandig · `mix` = compact en kaal.
+
+### Muis (rat) -- melee
+
+| Bestand | Prompt |
+|---|---|
+| `cavalry_base_melee` | Single prop, a heavy butcher's cleaver with a squared rusty blade and a cracked wooden grip, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_spd_melee` | Single prop, a long thin boarding pike with a narrow needle spike and a light wooden shaft, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_hp_melee` | Single prop, a short broad meat chopper with a thick reinforced spine and a stubby riveted grip, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_atk_melee` | Single prop, an enormous two-handed slaughterhouse cleaver with a chipped edge and a long crude iron handle, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_mix_melee` | Single prop, a plain short hatchet with a simple curved edge and a bare wooden handle, plain dark iron and worn pale wood. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+
+### Varken (everzwijn) -- melee
+
+| Bestand | Prompt |
+|---|---|
+| `cavalry_base_melee` | Single prop, a broad-bladed war axe with a heavy curved edge, chunky dark wood haft with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_spd_melee` | Single prop, a long-hafted light felling axe with a narrow blade, chunky dark wood haft with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_hp_melee` | Single prop, a short double-headed axe with two thick reinforced heads, chunky dark wood haft with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_atk_melee` | Single prop, a colossal two-handed broadaxe with an oversized bearded blade, chunky dark wood haft with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_mix_melee` | Single prop, a compact plain hand axe with a simple flat head, chunky dark wood haft with heavy brass fittings. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+
+### Leeuw -- melee
+
+| Bestand | Prompt |
+|---|---|
+| `cavalry_base_melee` | Single prop, a curved officer's cavalry sabre with an elegant swept guard, officer-grade dark walnut grip with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_spd_melee` | Single prop, a long slender thrusting rapier with a fine needle blade and a delicate swept hilt, officer-grade dark walnut grip with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_hp_melee` | Single prop, a heavy basket-hilted broadsword with a wide reinforced blade, officer-grade dark walnut grip with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_atk_melee` | Single prop, a massive two-handed greatsword with a long gleaming blade and a crowned pommel, officer-grade dark walnut grip with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_mix_melee` | Single prop, a plain short sabre with a simple stirrup guard, officer-grade dark walnut grip with ornate gilded pewter engraving. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+
+### Beer (grizzly) -- melee
+
+| Bestand | Prompt |
+|---|---|
+| `cavalry_base_melee` | Single prop, a heavy iron war maul with a blocky cross-hatched head, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_spd_melee` | Single prop, a long-hafted light war pick with a narrow curved spike, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_hp_melee` | Single prop, a short thick sledgehammer with a squat reinforced head, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_atk_melee` | Single prop, a gigantic two-handed war hammer with a massive flat head and a long iron shaft, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_mix_melee` | Single prop, a plain iron mace with a simple ridged head, frost-worn dark iron with a fur-wrapped grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+
+### Wolf (dire wolf) -- melee
+
+| Bestand | Prompt |
+|---|---|
+| `cavalry_base_melee` | Single prop, a crude spiked club studded with bent scrap iron nails, scavenged mismatched parts with a rope-bound grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_spd_melee` | Single prop, a long scrap-iron glaive with a jagged blade lashed to a rough pole, scavenged mismatched parts with a rope-bound grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_hp_melee` | Single prop, a short heavy scrap-metal mace with welded overlapping plates, scavenged mismatched parts with a rope-bound grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_atk_melee` | Single prop, a monstrous two-handed scrap-iron sledge made of a salvaged anvil block on a beam, scavenged mismatched parts with a rope-bound grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_mix_melee` | Single prop, a plain nail-studded wooden cudgel, scavenged mismatched parts with a rope-bound grip. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+
+### Krokodil -- melee
+
+| Bestand | Prompt |
+|---|---|
+| `cavalry_base_melee` | Single prop, a broad heavy falchion with a deep chopping belly, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_spd_melee` | Single prop, a long slender hooked bill-blade on a short shaft, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_hp_melee` | Single prop, a short thick chopping machete with a heavily reinforced spine, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_atk_melee` | Single prop, a massive two-handed executioner's blade with a wide squared tip, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
+| `cavalry_mix_melee` | Single prop, a plain short machete with a simple straight edge, matte dark iron wrapped in dark grey camouflage cloth. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text. |
 
 ## 3d. Figuranten -- vaandeldrager, tamboer, sapeur (props op de basissoldaat)
 

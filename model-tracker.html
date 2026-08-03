@@ -193,6 +193,7 @@ const STAPPEN = [
   { id: "goreR",  kop: "Gore R", titel: "Gore-texture rood (_red_gore.png), optioneel", optioneel: true },
   { id: "goreB",  kop: "Gore B", titel: "Gore-texture blauw (_blue_gore.png), optioneel", optioneel: true },
   { id: "musket", kop: "Musket", titel: "Eigen musket-glb, optioneel (valt terug op factie-musket)", optioneel: true, na: ["cavalry", "artillery"] },
+  { id: "melee",  kop: "Melee",  titel: "Eigen melee-wapen-glb (cavalry_<arch>_melee.glb)", optioneel: true, na: ["infantry", "artillery"] },
   { id: "godot",  kop: "Godot",  titel: "Godot geimporteerd + Model-tuner (schaal/positie/musket/vuurmond)" },
 ];
 
@@ -392,6 +393,56 @@ const MUSKET_FLAVOR = {
   wolf:      "scavenged mismatched parts with scrap-metal repairs and a rope-bound stock",
   crocodile: "matte dark iron wrapped in dark grey camouflage cloth",
 };
+/* Melee-wapens per big bro: uniek per factie EN archetype (MODEL-WISHLIST 3c-2). */
+const MELEE_WAPENS = {
+  mouse: {
+    base: "a heavy butcher's cleaver with a squared rusty blade and a cracked wooden grip, plain dark iron and worn pale wood",
+    spd: "a long thin boarding pike with a narrow needle spike and a light wooden shaft, plain dark iron and worn pale wood",
+    hp: "a short broad meat chopper with a thick reinforced spine and a stubby riveted grip, plain dark iron and worn pale wood",
+    atk: "an enormous two-handed slaughterhouse cleaver with a chipped edge and a long crude iron handle, plain dark iron and worn pale wood",
+    mix: "a plain short hatchet with a simple curved edge and a bare wooden handle, plain dark iron and worn pale wood",
+  },
+  pig: {
+    base: "a broad-bladed war axe with a heavy curved edge, chunky dark wood haft with heavy brass fittings",
+    spd: "a long-hafted light felling axe with a narrow blade, chunky dark wood haft with heavy brass fittings",
+    hp: "a short double-headed axe with two thick reinforced heads, chunky dark wood haft with heavy brass fittings",
+    atk: "a colossal two-handed broadaxe with an oversized bearded blade, chunky dark wood haft with heavy brass fittings",
+    mix: "a compact plain hand axe with a simple flat head, chunky dark wood haft with heavy brass fittings",
+  },
+  lion: {
+    base: "a curved officer's cavalry sabre with an elegant swept guard, officer-grade dark walnut grip with ornate gilded pewter engraving",
+    spd: "a long slender thrusting rapier with a fine needle blade and a delicate swept hilt, officer-grade dark walnut grip with ornate gilded pewter engraving",
+    hp: "a heavy basket-hilted broadsword with a wide reinforced blade, officer-grade dark walnut grip with ornate gilded pewter engraving",
+    atk: "a massive two-handed greatsword with a long gleaming blade and a crowned pommel, officer-grade dark walnut grip with ornate gilded pewter engraving",
+    mix: "a plain short sabre with a simple stirrup guard, officer-grade dark walnut grip with ornate gilded pewter engraving",
+  },
+  bear: {
+    base: "a heavy iron war maul with a blocky cross-hatched head, frost-worn dark iron with a fur-wrapped grip",
+    spd: "a long-hafted light war pick with a narrow curved spike, frost-worn dark iron with a fur-wrapped grip",
+    hp: "a short thick sledgehammer with a squat reinforced head, frost-worn dark iron with a fur-wrapped grip",
+    atk: "a gigantic two-handed war hammer with a massive flat head and a long iron shaft, frost-worn dark iron with a fur-wrapped grip",
+    mix: "a plain iron mace with a simple ridged head, frost-worn dark iron with a fur-wrapped grip",
+  },
+  wolf: {
+    base: "a crude spiked club studded with bent scrap iron nails, scavenged mismatched parts with a rope-bound grip",
+    spd: "a long scrap-iron glaive with a jagged blade lashed to a rough pole, scavenged mismatched parts with a rope-bound grip",
+    hp: "a short heavy scrap-metal mace with welded overlapping plates, scavenged mismatched parts with a rope-bound grip",
+    atk: "a monstrous two-handed scrap-iron sledge made of a salvaged anvil block on a beam, scavenged mismatched parts with a rope-bound grip",
+    mix: "a plain nail-studded wooden cudgel, scavenged mismatched parts with a rope-bound grip",
+  },
+  crocodile: {
+    base: "a broad heavy falchion with a deep chopping belly, matte dark iron wrapped in dark grey camouflage cloth",
+    spd: "a long slender hooked bill-blade on a short shaft, matte dark iron wrapped in dark grey camouflage cloth",
+    hp: "a short thick chopping machete with a heavily reinforced spine, matte dark iron wrapped in dark grey camouflage cloth",
+    atk: "a massive two-handed executioner's blade with a wide squared tip, matte dark iron wrapped in dark grey camouflage cloth",
+    mix: "a plain short machete with a simple straight edge, matte dark iron wrapped in dark grey camouflage cloth",
+  },
+};
+function meleePrompt(facId, arch) {
+  const wapen = MELEE_WAPENS[facId] && MELEE_WAPENS[facId][arch];
+  if (!wapen) return null;
+  return `Single prop, ${wapen}. Gritty realistic AAA-game concept art, highly detailed. Side profile view, the entire object fully in frame and not cropped, clean neutral studio background, the weapon only, no hands, no text.`;
+}
 function musketPrompt(facId, arch) {
   const sil = MUSKET_SIL[arch], flav = MUSKET_FLAVOR[facId];
   if (!sil || !flav) return null;
@@ -630,10 +681,11 @@ function bouw() {
         }
         const prompt = PROMPTS[f.id] && PROMPTS[f.id][unit];
         const musket = t.id === "infantry" ? musketPrompt(f.id, arch) : null;
-        const heeftPrompt = prompt || musket;
+        const melee = t.id === "cavalry" ? meleePrompt(f.id, arch) : null;
+        const heeftPrompt = prompt || musket || melee;
         const noteKey = `${f.id}.${unit}`;
         const prId = `pr-${f.id}-${unit}`;
-        const knopTekst = (prompt && musket) ? "prompts &#9662;" : "prompt &#9662;";
+        const knopTekst = (prompt && (musket || melee)) ? "prompts &#9662;" : "prompt &#9662;";
         html += `
           <tr class="${optRij ? "optioneel" : ""}${alleKlaar && !optRij ? " done" : ""}" data-rij="${f.id}.${unit}">
             <td class="unit">${unit}${optRij ? `<span class="tag">optioneel</span>` : ""}</td>
@@ -645,6 +697,7 @@ function bouw() {
           let box = `<div class="promptbox">`;
           if (prompt) box += promptGroepHtml(`Model-prompt ${f.naam} / ${unit}`, prompt, false);
           if (musket) box += promptGroepHtml(`Musket ${f.naam} / ${unit}_musket`, musket, true);
+          if (melee) box += promptGroepHtml(`Melee ${f.naam} / ${unit}_melee`, melee, true);
           box += `</div>`;
           html += `<tr class="promptrij" id="${prId}" hidden><td colspan="${STAPPEN.length + 3}">${box}</td></tr>`;
         }
