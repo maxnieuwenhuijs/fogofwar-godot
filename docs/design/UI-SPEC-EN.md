@@ -198,7 +198,7 @@ or bot-driven there.
 ## 3. Priorities for the first package
 
 1. Design system: palette, 2 fonts, panel/button styles (9-patch friendly).
-2. Icon set (~28 monochrome icons, readable at 24×24) + 6 faction emblems.
+2. Icon set: **37 unique monochrome icons, readable at 24×24** (definitive list in §Icon list below) + 6 faction emblems.
 3. **Multiplayer campaign hub**: the 7 feed-card types + team columns + quick-chat bar +
    waiting/deadline states (2b.2–2b.3) — this is the product's living room.
 4. Card frame + 5 states (CARD-DESIGN-BRIEF).
@@ -242,3 +242,93 @@ full ledger and "Start a new campaign". Deserves a celebration treatment.
 **Event feed:** every donation, bequest and CP trade appears as a green
 event line in the chat log; battle report cards are tappable for a detail
 dialog (losses per type + CP delta per player).
+
+---
+
+## Icon list (definitive, July 30) -- the official set
+
+This replaces the earlier "~28" estimate: that number was a guess, this list is
+the contract. **37 unique drawings**; reuses are named so nothing is drawn twice.
+The 6 faction emblems and the ~12 quick-chat chips are separate deliverables
+(chips mostly reuse these icons + short text).
+
+### A. Card stats (shared with CARD-DESIGN-BRIEF)
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 1 | `stat-hp` | HP | heart or small shield | cards, stat chips, tuner |
+| 2 | `stat-speed` | Speed | boot or winged spur | cards, stat chips |
+| 3 | `stat-attack` | Attack | sabre or clenched fist | cards, stat chips |
+
+### B. Resources & status
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 4 | `pool` | Reinforcement pool | soldier row / tent camp | ledger, DonateSheet, spawn UI, HUD |
+| 5 | `cp` | Command points | medal / epaulette | ledger, bid UI, DonateSheet |
+| 6 | `score` | Campaign points | laurel star | ledger, MatchReport, leaderboard |
+| 7 | `alive` | Alive | standing flag | ledger, portraits |
+| 8 | `dead` | Dead / eliminated | broken flag or skull | ledger, portraits, ghost mode; ALSO reused as win-by-elimination |
+| 9 | `initiative` | Initiative | bugle / signal trumpet | initiative banner, HUD |
+| 10 | `hidden` | Hidden ("?") | wax seal with question mark | covered pawns, unrevealed info, wait states |
+
+### C. Battle actions
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 11 | `act-melee` | Melee | crossed bayonets | board buttons, reports; ALSO reused as action-phase and duel-notification |
+| 12 | `act-shot` | Shot | musket | board buttons, reports |
+| 13 | `act-move` | Move | footprints | board buttons, reports |
+| 14 | `act-charge` | Charge | galloping silhouette | board buttons, reports |
+| 15 | `act-wolfstep` | Wolf step | paw print | board buttons, reports, help |
+| 16 | `act-roll` | Cannon: roll | spoked wheel | cannon action pot |
+| 17 | `act-fire` | Cannon: fire | muzzle flame | cannon action pot |
+| 18 | `act-retreat` | Cannon: retreat | reversed arrow | cannon action pot |
+
+### D. Units & spawn
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 19 | `unit-infantry` | Infantry | infantryman silhouette | everywhere unit types appear |
+| 20 | `unit-cavalry` | Cavalry (big bro) | big-bro silhouette | everywhere unit types appear |
+| 21 | `unit-artillery` | Artillery | cannon silhouette | everywhere unit types appear |
+| 22 | `spawn` | Spawn | tent with arrow onto the field | spawn UI, reports; ALSO reused as spawn-phase |
+
+### E. Phases (top bar)
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 23 | `phase-setup` | Setup | hand placing a pawn | top bar |
+| 24 | `phase-define` | Define | quill on card | top bar |
+| 25 | `phase-reveal` | Reveal | card turning face-up | top bar |
+| 26 | `phase-link` | Link | chain link / joined seal | top bar; action phase reuses act-melee, spawn phase reuses spawn |
+
+### F. Match outcomes
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 27 | `win-harbor` | Win by harbor | fortress | MatchReport, history |
+| 28 | `draw` | Tiebreak / draw | handshake | MatchReport, history |
+| 29 | `forfeit` | Forfeit / resign | white flag | MatchReport, history; elimination reuses `dead` |
+
+### G. Campaign & social
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 30 | `vote` | Vote / council | ballot box | council, feed cards; ALSO reused as council-notification |
+| 31 | `nomination` | Nomination | pointing finger | council, feed cards |
+| 32 | `donation` | Donation | wrapped parcel / gift | DonateSheet, feed cards |
+| 33 | `testament` | Testament | sealed letter | testament screen, feed cards |
+| 34 | `report` | Report | parchment scroll | feed cards; ALSO reused as report-notification |
+| 35 | `chat` | Chat / bark | speech bubble | quick-chat, feed cards |
+
+### H. Time & orders
+
+| # | id | Icon | Suggestion | Used in |
+|---|---|---|---|---|
+| 36 | `clock` | Clock / deadline | pocket watch | TimerBar, council, testament |
+| 37 | `pin` | Pinned order | map pin / small seal | queued async orders on the board |
+
+Rules that stay in force: monochrome first (colour variant allowed), every
+state differs by shape as well as colour, hidden information is always the
+`hidden` seal and never an empty value.

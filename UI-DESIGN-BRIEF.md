@@ -25,6 +25,13 @@ implementatie: `scripts/ui/`, `scripts/ui/campaign/`, `scripts/game/game.gd`.
 
 ### 2.1 Iconenset (monochroom leesbaar op 24×24, kleurvariant toegestaan)
 
+> **Definitieve lijst (30 juli): 37 unieke iconen, genummerd vastgelegd in
+> `docs/design/UI-SPEC-EN.md` § "Icon list (definitive)".** Die lijst is het
+> contract met de designer; de tabel hieronder is de duiding per concept.
+> Bovenop de eerdere tabel telt hij ook mee: de 3 stat-iconen (gedeeld met de
+> kaart-brief), 4 fase-iconen, initiatief, het "?"-zegel, de pin voor
+> vastgepinde orders, rapport- en chat-iconen.
+
 | Concept | Suggestie | Gebruikt in |
 |---|---|---|
 | Pool (pionnenvoorraad) | 🪖 soldatenrij / tentenkamp | Grootboek, DonateSheet, spawn-UI, HUD |
