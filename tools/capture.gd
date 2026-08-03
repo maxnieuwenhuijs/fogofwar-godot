@@ -526,6 +526,71 @@ func _ready() -> void:
 			covering, subject.id, str(GameSession.state.pawns[subject.id].position == front)])
 		get_tree().quit()
 		return
+	elif "facties" in args:
+		# Waar spelen we nu eigenlijk mee? (C17, 3 augustus.) Drukt per factie
+		# de kale tabel uit constants.gd af naast de ACTIEVE waarden, dus met
+		# het doctrines-blok uit CRules.REGELS_BESTAND eroverheen, plus de
+		# startvoorraad die een campagne daarmee boekt. Zo zie je in een
+		# oogopslag wat een voorstel van de factiezoeker verandert, zonder een
+		# campagne te hoeven starten.
+		var blok: Dictionary = CRules.facties_uit_bestand()
+		print("[FACTIES] bestand: %s" % CRules.REGELS_BESTAND)
+		if blok.is_empty():
+			print("[FACTIES] geen doctrines-blok: iedereen speelt de kale tabel uit constants.gd")
+		else:
+			print("[FACTIES] blok actief voor %d facties: %s" % [blok.size(), str(blok.keys())])
+		var cr := CRules.new()
+		cr.doctrines = blok
+		print("[FACTIES] naam       kaarten budget comp            perks (hp/art/cav)  start-reserve")
+		for doc in Constants.DOCTRINE_DATA.keys():
+			var kaal: Dictionary = Constants.doctrine_data(doc)
+			var nu: Dictionary = cr.doctrine_data(doc)
+			var comp: Array = nu.comp
+			var res: int = int(floor(int(comp[0]) * cr.start_poolfactor)) \
+				+ int((cr.budget_bonus.get(str(doc), {}) as Dictionary).get("pt", 0))
+			var ster := "  " if JSON.stringify(kaal) == JSON.stringify(nu) else " *"
+			print("[FACTIES]%s %-10s %5d %6d  %-14s %d / %d / %d          %d inf" % [
+				ster, String(nu.name), int(nu.cards), int(nu.budget), str(comp),
+				int(nu.get("hp_bonus", 0)), int(nu.get("art_range_bonus", 0)),
+				int(nu.get("cav_speed_bonus", 0)), res])
+		print("[FACTIES] (* = wijkt af van constants.gd; start-reserve = comp x %.2f + budget_bonus)"
+			% cr.start_poolfactor)
+		# Proef op de som: een echte campagne opstarten en kijken of haar
+		# grootboek en haar duelregels dezelfde facties gebruiken. Dit is de
+		# controle die tot 3 augustus ontbrak -- toen las de campagne de kale
+		# tabel en speelde ze dus andere dieren dan de arena mat.
+		var proef := SoloDriver.new(31415, -1, 6)
+		var eerste: int = int(proef.c.spelers.keys()[0])
+		# Kies een speler wiens factie ECHT is overschreven, bij voorkeur eentje
+		# met een andere comp: dat is het enige dat je in het grootboek TERUG
+		# ziet. Bij een lege lijst valt hij terug op de eerste speler.
+		for eis in ["comp", ""]:
+			var gevonden := false
+			for sid in proef.c.spelers:
+				var sleutel := str(int(proef.c.spelers[sid].doctrine))
+				var ov = blok.get(sleutel, null)
+				if ov is Dictionary and (eis == "" or (ov as Dictionary).has(eis)):
+					eerste = int(sid)
+					gevonden = true
+					break
+			if gevonden:
+				break
+		var doc0: int = int(proef.c.spelers[eerste].doctrine)
+		# Tegenstander: de eerste speler uit het andere team die bestaat.
+		var tegen: int = eerste
+		for sid in proef.c.spelers:
+			if int(proef.c.spelers[sid].team) != int(proef.c.spelers[eerste].team):
+				tegen = int(sid)
+				break
+		var duel: RulesConfig = proef.duel_rules_voor(eerste, tegen)
+		print("[FACTIES] proefcampagne: %s start met %d inf in het grootboek (verwacht %d)" % [
+			String(cr.doctrine_data(doc0).name), int(proef.c.pool_van(eerste).inf),
+			int(floor(int((cr.doctrine_data(doc0).comp as Array)[0]) * cr.start_poolfactor))
+				+ int((cr.budget_bonus.get(str(doc0), {}) as Dictionary).get("pt", 0))])
+		print("[FACTIES] duelregels dragen %d factie-overrides mee, opstelling %s" % [
+			(duel.doctrines as Dictionary).size(), str(duel.campaign.comp_override["1"])])
+		get_tree().quit()
+		return
 	elif "geluidcheck" in args:
 		# Doet elk wav-bestand ook echt mee? (Max, 30 juli: "importeer de nieuwe
 		# sounds"). Per categorie: hoeveel varianten geladen zijn, de mix-stand

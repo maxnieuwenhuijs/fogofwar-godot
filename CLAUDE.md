@@ -12,7 +12,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   startreserve is overal `start_poolfactor` x comp + `budget_bonus` per factie,
   net als CRules in de campagne. Trainer, nacht-matrix, ijk-sims en de
   regelzoeker draaien allemaal op `arena/arena_configs/rules_v42_campaign.json`.
-  Bouw NOOIT een tweede economie voor het 1v1.
+  Bouw NOOIT een tweede economie voor het 1v1. **Facties (3 augustus):** het
+  `doctrines`-blok in dat bestand is de enige plek waar factie-eigenschappen
+  worden bijgesteld zonder `constants.gd` aan te raken. De campagne leest het
+  bij de start (`CRules.facties_uit_bestand()`) en **bevriest** het in de save;
+  het losse potje leest het uit dezelfde bron. Wie hier iets wijzigt, verandert
+  meting én spel tegelijk: dat is een bewuste regelwijziging (goldens +
+  `golden_sims.json` regenereren). Lees factie-data NOOIT rechtstreeks uit
+  `Constants.doctrine_data()` in speel-code; ga via `rules.doctrine_data()`,
+  `c.rules.doctrine_data()` of `Agent.doctrine_data_uit_view()`.
 - **C15-buit (4.2.1)**: vaandeldrager neerleggen = 2 versterkingspunten,
   tamboer = 2 CP, alleen als het slachtoffer ONgekoppeld is. De rol staat op de
   pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in de
@@ -78,6 +86,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
+- Facties bekijken: `-- facties` (welke factie-instellingen gelden er NU: de
+  kale tabel uit `constants.gd` naast de actieve waarden met het
+  `doctrines`-blok eroverheen, plus de startvoorraad die een campagne daarmee
+  boekt, en een proefcampagne die bewijst dat grootboek en duelregels hetzelfde
+  leger gebruiken). Draai dit vóór en ná het aannemen van een voorstel.
 - Kijken zonder te spelen: `-- cliplengtes` (elke animatie met lengte EN de
   naam die het spel ervan maakt) en `-- geluidcheck` (elke geluidscategorie met
   aantal varianten, mix-dB, tuner-dB en vertraging; meldt categorieen zonder

@@ -52,7 +52,10 @@ func setup(namen_doctrines: Array, p_rules: CRules = null) -> void:
 			"status": "actief",
 			"testament_af": false,
 		}
-		var comp: Array = Constants.doctrine_data(int(nd.get("doctrine", 0))).comp
+		# C17: via de campagneregels, niet rechtstreeks uit Constants. Zonder
+		# doctrines-blok is dit hetzelfde getal; mét blok telt de startvoorraad
+		# hetzelfde leger als de duels opstellen.
+		var comp: Array = rules.doctrine_data(int(nd.get("doctrine", 0))).comp
 		_boek("start", i, int(floor(comp[0] * rules.start_poolfactor)),
 			int(floor(comp[1] * rules.start_poolfactor)),
 			int(floor(comp[2] * rules.start_poolfactor)), rules.start_cp, 0)

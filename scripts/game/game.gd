@@ -545,6 +545,12 @@ func _start_match(difficulty: int) -> void:
 		# spawn_totaal_max), zodat een los duel en een campagne-duel dezelfde
 		# economie kennen.
 		regels = RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
+		# C17: de facties komen uit hetzelfde bestand als de campagne, de
+		# trainer en de arena. Anders speelt een los potje andere dieren dan de
+		# campagne zodra er een voorstel van de factiezoeker is aangenomen.
+		var facties := CRules.facties_uit_bestand()
+		if not facties.is_empty():
+			regels.doctrines = facties
 	GameSession.start_new_game(_human_doctrine, _ai_doctrine, regels)
 	_show_placement_overlay()
 

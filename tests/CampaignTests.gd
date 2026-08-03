@@ -38,7 +38,7 @@ func _sluit_donaties(c: CState) -> void:
 
 func test_start_bezit_via_ledger() -> void:
 	var c := _mini()
-	var comp: Array = Constants.doctrine_data(Constants.Doctrine.MENS).comp
+	var comp: Array = c.rules.doctrine_data(Constants.Doctrine.MENS).comp
 	var pool: Dictionary = c.pool_van(0)
 	assert_eq(int(pool.inf), int(floor(comp[0] * c.rules.start_poolfactor)),
 		"start = reinforcements = comp x poolfactor (vol-team-model)")
@@ -397,3 +397,81 @@ func test_vijandelijk_saldo_verborgen() -> void:
 	c.spelers[kijker]["status"] = "uitgevallen"
 	var v2: Dictionary = CView.for_player(c, kijker)
 	assert_false(v2.spelers[str(vijand)].cp is String, "doden zien alles")
+
+
+# --- C17: het doctrines-blok stuurt ook de campagne (3 augustus) ---------------
+
+## De startvoorraad moet hetzelfde leger tellen als de duels opstellen. Deed hij
+## niet: CState.setup las Constants rechtstreeks, dus een aangenomen voorstel van
+## de factiezoeker veranderde wel de meting en niet het spel.
+func test_c17_doctrines_stuurt_startvoorraad() -> void:
+	var regels := CRules.new()
+	regels.doctrines = {"0": {"comp": [20, 0, 0]}}
+	var c := CState.new()
+	var lijst: Array = []
+	for i in 6:
+		lijst.append({"naam": "S%d" % i, "doctrine": Constants.Doctrine.MENS})
+	c.setup(lijst, regels)
+	var pool: Dictionary = c.pool_van(0)
+	assert_eq(int(pool.inf), int(floor(20 * regels.start_poolfactor)),
+		"startvoorraad volgt de overschreven comp, niet de tabel")
+	assert_eq(int(pool.cav), 0, "override vervangt de comp volledig")
+	assert_eq(c.ledger.size(), 6, "nog steeds 1 start-boeking per speler")
+
+
+## Zonder blok mag er geen komma verschuiven: dat is de garantie waarop alle
+## bestaande tests, goldens en ijk-sims leunen.
+func test_c17_zonder_blok_verandert_er_niets() -> void:
+	var c := CState.new()
+	var lijst: Array = []
+	for i in 6:
+		lijst.append({"naam": "S%d" % i, "doctrine": i % 6})
+	c.setup(lijst, CRules.new())
+	for i in 6:
+		var comp: Array = Constants.doctrine_data(i % 6).comp
+		# C11-compensatie komt er als aparte boeking bovenop (Muis +4, Beer +3,
+		# Wolf +2) en staat los van het doctrines-blok.
+		var bonus: int = int((c.rules.budget_bonus.get(str(i % 6), {}) as Dictionary).get("pt", 0))
+		assert_eq(int(c.pool_van(i).inf), int(floor(comp[0] * 0.5)) + bonus,
+			"speler %d start op de kale tabel" % i)
+
+
+## Het blok moet de rondreis naar de save en terug overleven, met INTS.
+func test_c17_crules_doctrines_rondreis() -> void:
+	var regels := CRules.new()
+	regels.doctrines = {"2": {"budget": 9, "comp": [6, 11, 2]}}
+	var terug := CRules.from_dict(JSON.parse_string(JSON.stringify(regels.to_dict())))
+	assert_eq(int(terug.doctrine_data(2).budget), 9, "override overleeft de save")
+	var comp: Array = terug.doctrine_data(2).comp
+	for i in 3:
+		assert_true(comp[i] is int, "comp moet ints houden, geen JSON-floats")
+	assert_eq(int(comp[1]), 11)
+	assert_eq(String(terug.doctrine_data(2).name), "Leeuw", "rest blijft de tabel")
+
+
+## Hervatten moet de BEVROREN facties uit de save gebruiken, niet die van het
+## bestand: neemt Max later een ander voorstel aan, dan houdt een lopende
+## campagne haar eigen dieren en pakken alleen nieuwe campagnes het nieuwe blok.
+func test_c17_save_bevriest_de_facties() -> void:
+	var regels := CRules.new()
+	regels.doctrines = {"0": {"budget": 3, "comp": [20, 0, 0]}}
+	var c := CState.new()
+	var lijst: Array = []
+	for i in 6:
+		lijst.append({"naam": "S%d" % i, "doctrine": Constants.Doctrine.MENS})
+	c.setup(lijst, regels)
+	var terug := CState.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(int(terug.rules.doctrine_data(0).budget), 3,
+		"de campagne draagt haar facties mee in de save")
+	assert_eq(int((terug.rules.doctrine_data(0).comp as Array)[0]), 20)
+	assert_eq(int(terug.pool_van(0).inf), int(c.pool_van(0).inf),
+		"en de voorraad foldt identiek terug")
+
+
+## Saves van voor 3 augustus missen de sleutel: die moeten leeg terugkomen en
+## dus onder hun eigen, oude facties blijven folden.
+func test_c17_oude_save_zonder_doctrines() -> void:
+	var oud := CRules.from_dict({"team_size": 8, "start_poolfactor": 0.5})
+	assert_true(oud.doctrines.is_empty(), "ontbrekende sleutel = leeg blok")
+	assert_eq(int(oud.doctrine_data(2).budget),
+		int(Constants.doctrine_data(2).budget), "en dus gewoon de kale tabel")

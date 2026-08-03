@@ -1,5 +1,40 @@
 # Fog of War — Work In Progress & Context
 
+## 3 augustus 2026 (later) -- C17 was een afspraak, geen mechanisme
+
+Keuze van Max: de campagne gelijktrekken met de duels, voordat er een
+factie-voorstel wordt aangenomen. Bij het uitzoeken bleek het gat groter dan de
+startvoorraad alleen: **de campagne las geen enkele regels-json**. Ze rekende
+haar startvoorraad uit de kale factietabel, stelde haar duels met dezelfde tabel
+op, en bouwde de duelregels ter plekke op zonder doctrines-sleutel. Een voorstel
+van de factiezoeker kwam dus in de arena, in de trainer en in de ijk-sims, en
+nooit in een gespeelde campagne.
+
+Alle drie moesten samen mee. Alleen het blok doorgeven aan de duelregels was
+niet genoeg: `comp_override` uit de campagne wint van de merge, dus je zou
+nieuwe kaarten en perks krijgen op een leger van de oude grootte. Half repareren
+was hier erger dan niet repareren.
+
+Nu: `CRules` draagt de facties, leest ze bij de start uit
+`rules_v42_campaign.json` (hetzelfde bestand waar de trainer en de arena op
+draaien) en **bevriest ze in de save**. Hervat je een campagne, dan houdt die
+haar eigen dieren, ook als je later een ander voorstel aanneemt. Het losse potje
+haalt ze uit dezelfde bron. Zolang dat bestand geen blok heeft verandert er
+niets, en dat is precies wat de poort moest bewijzen.
+
+**Nieuw kijkgereedschap**: `-- facties` laat zien welke factie-instellingen er
+NU gelden, met een sterretje bij alles wat afwijkt van `constants.gd`, en start
+een proefcampagne die bewijst dat het grootboek en de duelregels hetzelfde leger
+gebruiken. Getest met een tijdelijk blok (Beer comp [22,6,3], Leeuw budget 6):
+Beer startte met 14 inf in plaats van 11 en de duelopstelling werd [22, 6, 3].
+Bestand daarna teruggezet, poort opnieuw groen.
+
+**Nog niet gelijk**: de factiekeuze in de hub en het Facties-tabblad tonen nog
+de kale tabel, dus met een blok actief kies je op verouderde cijfers. En
+`budget_bonus` (Muis +4, Beer +3, Wolf +2/+4 CP) staat er als aparte
+startboeking bovenop: arena en campagne passen die allebei toe, dus de meting
+klopt, maar het blijven twee knoppen voor hetzelfde probleem.
+
 ## 3 augustus 2026 -- de factiezoeker speelde helemaal niet
 
 De run van 90 minuten leverde niets op: 72 van de 73 kandidaten kregen een VETO,

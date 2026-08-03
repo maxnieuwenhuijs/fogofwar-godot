@@ -219,7 +219,7 @@ func test_vol_team_start_en_inzet_boeking() -> void:
 	# samenstelling; de pool is puur reinforcements en slinkt alleen door
 	# INZET (spawns), niet door bord-verliezen.
 	var driver := SoloDriver.new(7001, -1, 6)
-	var comp: Array = Constants.doctrine_data(int(driver.c.spelers[0].doctrine)).comp
+	var comp: Array = driver.c.rules.doctrine_data(int(driver.c.spelers[0].doctrine)).comp
 	# Maak speler 0 straatarm: zelfs dan start het bord vol.
 	var arm: Dictionary = driver.c.pool_van(0)
 	driver.c._boek("test", 0, -int(arm.inf), -int(arm.cav), -int(arm.art), 0, 0)
@@ -322,3 +322,30 @@ func test_arm_start_comp_gecapt() -> void:
 	assert_eq(int(s.cp[1]), 2, "per-speler CP uit de campagnelaag")
 	assert_eq(int(s.cp[2]), 7)
 	assert_eq(s.pool_total(2), 2, "expliciete reserve")
+
+
+# --- C17: de facties van de campagne gaan ook het bord op (3 augustus) --------
+
+## Drie plekken moesten samen mee: de startboeking, de comp van de opstelling en
+## het doctrines-blok in de duelregels. Alleen de laatste zou een leger van de
+## oude grootte met nieuwe kaarten opleveren, want comp_override wint in
+## GameState.doctrine_data_of van de merge.
+func test_c17_doctrines_in_duelregels() -> void:
+	var driver := SoloDriver.new(7101, -1, 6)
+	driver.c.rules.doctrines = {str(int(driver.c.spelers[0].doctrine)): {"comp": [20, 0, 0], "budget": 9}}
+	var rules: RulesConfig = driver.duel_rules_voor(0, 3)
+	assert_false((rules.doctrines as Dictionary).is_empty(),
+		"de duelregels dragen het blok mee")
+	assert_eq(int(rules.doctrine_data(int(driver.c.spelers[0].doctrine)).budget), 9,
+		"kaartbudget volgt de campagne")
+	assert_eq((rules.campaign.comp_override["1"] as Array), [20, 0, 0],
+		"en de opstelling volgt hetzelfde leger, niet de kale tabel")
+
+
+## Het bestand zelf: vandaag staat er geen blok in, dus de laadweg is een no-op.
+## Deze test is de wachter die dat zichtbaar maakt zodra er wel een blok komt.
+func test_c17_regelbestand_leesbaar() -> void:
+	var uit: Dictionary = CRules.facties_uit_bestand()
+	assert_true(uit is Dictionary, "laadweg geeft altijd een dict terug")
+	var weg: Dictionary = CRules.facties_uit_bestand("res://bestaat_niet.json")
+	assert_true(weg.is_empty(), "ontbrekend bestand = leeg blok, geen crash")

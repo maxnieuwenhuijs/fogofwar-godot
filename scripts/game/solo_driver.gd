@@ -63,7 +63,13 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosa
 			"naam": String(lobby[i].naam) if i != mens_id else "Max",
 			"doctrine": doctrine,
 		})
-	c.setup(lijst, CRules.new())
+	# C17: de facties waaronder deze campagne speelt komen uit hetzelfde
+	# bestand als waar de trainer en de arena op meten, en worden daarna in de
+	# save bevroren (hervatten leest het bestand niet meer). Zonder blok in dat
+	# bestand is dit een lege dict en verandert er niets.
+	var campagne_regels := CRules.new()
+	campagne_regels.doctrines = CRules.facties_uit_bestand()
+	c.setup(lijst, campagne_regels)
 	c.nominatie_team = c.kleinste_team()
 	clog.setup(c, {"seed": seed_val})
 	for i in n_spelers:
@@ -375,8 +381,11 @@ func _stap_testament() -> void:
 func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 	var bezit_a: Dictionary = c.pool_van(a)
 	var bezit_b: Dictionary = c.pool_van(b)
-	var comp_a: Array = Constants.doctrine_data(int(c.spelers[a].doctrine)).comp
-	var comp_b: Array = Constants.doctrine_data(int(c.spelers[b].doctrine)).comp
+	# C17: via de campagneregels, net als de startboeking in CState.setup.
+	# Rechtstreeks uit Constants lezen gaf een leger dat niet strookte met de
+	# voorraad zodra er een doctrines-blok in het spel was.
+	var comp_a: Array = c.rules.doctrine_data(int(c.spelers[a].doctrine)).comp
+	var comp_b: Array = c.rules.doctrine_data(int(c.spelers[b].doctrine)).comp
 	var start_a: Array
 	var start_b: Array
 	var pool_a: Dictionary
@@ -398,6 +407,10 @@ func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
 	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit,
 		"basis_hp": {"cav": 2},  # C12: bigbro altijd minstens 2 HP, kaart erbovenop
+		# C17: de facties van DEZE campagne mee het bord op. Zonder dit blok
+		# vielen kaarten, budget en perks in elk campagne-duel terug op de
+		# kale tabel, terwijl de trainer en de arena wel de override maten.
+		"doctrines": c.rules.doctrines,
 		"campaign": {
 		"pool_model": "punten",  # C11: reserve = puntenpot (typed pools op waarde omgezet)
 		"comp_override": {"1": start_a, "2": start_b},

@@ -54,6 +54,58 @@ var punten_teambonus: int = 2             # aan het einde, ook voor doden
 # (cp uit het campagnesaldo, 15-spawn-cap via spawn_totaal_max).
 var duel_spawn_totaal_max: int = 15
 
+# C17 (3 augustus): de factie-instellingen waaronder DEZE campagne speelt.
+# Zelfde vorm als het doctrines-blok in de match-regels: sleutel = doctrine als
+# string, waarde = de velden die over Constants.DOCTRINE_DATA heen gaan.
+#
+# Waarom hier en niet alleen in de match-regels: de campagne rekent haar
+# startvoorraad zelf uit (CState.setup) en bouwt haar duelregels zelf op
+# (SoloDriver.duel_rules_voor). Zonder dit veld leest zij de kale tabel en
+# spelen de duels dus andere facties dan de trainer en de arena meten. Een
+# voorstel van de factiezoeker landde daardoor wel in de meting en nooit in
+# het spel.
+#
+# Het blok wordt bij campagnestart uit REGELS_BESTAND gelezen en daarna
+# BEVROREN in de save: hervatten pakt de opgeslagen kopie, nooit het bestand.
+# Neem je later een ander voorstel aan, dan houdt een lopende campagne haar
+# eigen facties en pakken alleen nieuwe campagnes het nieuwe blok.
+# Leeg blok = precies het gedrag van voor 3 augustus, byte-identiek.
+var doctrines: Dictionary = {}
+
+## Het regels-bestand waaruit campagne, trainer, arena en ijk-sims allemaal
+## hun facties halen (C17: EEN regelset). Alleen de doctrines-sleutel wordt
+## overgenomen; de rest van dat bestand bevat meet-instellingen zoals de
+## cycluslimiet, en die horen niet in een echte campagne (C9).
+const REGELS_BESTAND := "res://arena/arena_configs/rules_v42_campaign.json"
+
+
+## Het doctrines-blok uit een regels-json, genormaliseerd. Gaat bewust via
+## RulesConfig.from_dict, zodat we de sleutel-behandeling en _diep_int erven
+## (JSON leest 6 terug als 6.0, en comp moet ints houden -- zie de fix van
+## 3 augustus, waar dat de bots lam legde).
+static func facties_uit_bestand(pad: String = REGELS_BESTAND) -> Dictionary:
+	if not FileAccess.file_exists(pad):
+		return {}
+	var txt := FileAccess.get_file_as_string(pad)
+	var parsed = JSON.parse_string(txt)
+	if not (parsed is Dictionary):
+		push_warning("CRules: ongeldige JSON in %s, facties genegeerd" % pad)
+		return {}
+	var docs = (parsed as Dictionary).get("doctrines", null)
+	if not (docs is Dictionary) or (docs as Dictionary).is_empty():
+		return {}
+	return RulesConfig.from_dict({"doctrines": docs}).doctrines
+
+
+## Factie-data zoals ze in DEZE campagne gelden: de tabel uit Constants met
+## het eigen doctrines-blok eroverheen. Leeg blok = het snelle pad.
+## Bewust niet gecachet: dit wordt bij de start en per duel gelezen, niet in
+## een hete lus, en een cache zou stil verouderen als iemand het blok zet.
+func doctrine_data(doctrine: int) -> Dictionary:
+	if doctrines.is_empty():
+		return Constants.doctrine_data(doctrine)
+	return RulesConfig.from_dict({"doctrines": doctrines}).doctrine_data(doctrine)
+
 
 func to_dict() -> Dictionary:
 	return {
@@ -75,6 +127,7 @@ func to_dict() -> Dictionary:
 		"punten_verlies": punten_verlies,
 		"punten_teambonus": punten_teambonus,
 		"duel_spawn_totaal_max": duel_spawn_totaal_max,
+		"doctrines": doctrines.duplicate(true),
 	}
 
 
@@ -109,6 +162,11 @@ static func from_dict(d: Dictionary) -> CRules:
 	c.punten_verlies = int(d.get("punten_verlies", c.punten_verlies))
 	c.punten_teambonus = int(d.get("punten_teambonus", c.punten_teambonus))
 	c.duel_spawn_totaal_max = int(d.get("duel_spawn_totaal_max", c.duel_spawn_totaal_max))
+	# C17: saves van voor 3 augustus missen de sleutel -> leeg = de kale tabel,
+	# precies zoals ze toen speelden. Door RulesConfig.from_dict heen voor de
+	# sleutel-normalisatie en de float-naar-int-omzetting.
+	var docs = d.get("doctrines", {})
+	c.doctrines = RulesConfig.from_dict({"doctrines": docs}).doctrines if docs is Dictionary else {}
 	return c
 
 

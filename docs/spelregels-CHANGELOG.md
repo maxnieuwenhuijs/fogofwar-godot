@@ -1,5 +1,47 @@
 # Spelregels — CHANGELOG
 
+## C17 afgemaakt — 3 augustus 2026 (de campagne volgt nu ook de facties)
+
+**Geen gedragswijziging zolang er geen `doctrines`-blok is.** Wel: tot vandaag
+kon een aangenomen factie-voorstel het echte spel helemaal niet bereiken.
+
+C17 zei "EEN regelset", maar dat was een afspraak, geen mechanisme. De campagne
+rekende haar startvoorraad uit met `Constants.doctrine_data()` (`cstate.gd:55`),
+stelde haar duels op met dezelfde kale tabel (`solo_driver.gd:378`) en bouwde de
+duelregels ter plekke op zónder `doctrines`-sleutel (`solo_driver.gd:399`). Een
+voorstel van de factiezoeker landde dus wel in de arena, de trainer en de
+ijk-sims, en nooit in een gespeelde campagne.
+
+Alle drie moesten samen mee. Alleen het blok doorgeven aan de duelregels was
+niet genoeg: `comp_override` uit de campagne wint in
+`GameState.doctrine_data_of()` van de merge, dus je zou nieuwe kaarten, budget
+en perks krijgen op een leger van de oude grootte.
+
+- **`CRules` krijgt een `doctrines`-veld** met dezelfde vorm als het blok in de
+  match-regels, plus `doctrine_data()` die naar `RulesConfig` delegeert (zo
+  erven we de sleutel-behandeling en `_diep_int` uit de fix van vanochtend).
+- **Bij campagnestart** wordt het blok uit `rules_v42_campaign.json` gelezen:
+  hetzelfde bestand waar de trainer, de arena en de ijk-sims op draaien. Alleen
+  de `doctrines`-sleutel; de rest van dat bestand bevat meet-instellingen zoals
+  de cycluslimiet, en die horen niet in een echte campagne (C9).
+- **Daarna bevroren in de save.** Hervatten gebruikt de opgeslagen kopie, nooit
+  het bestand. Neem je later een ander voorstel aan, dan houdt een lopende
+  campagne haar eigen dieren en pakken alleen nieuwe campagnes het nieuwe blok.
+- **Het losse potje** (`game.gd:547`, `v42_default.json`) haalt zijn facties uit
+  dezelfde bron, anders speelt een los duel andere dieren dan de campagne.
+- Saves van voor vandaag missen de sleutel en krijgen een leeg blok: dat is
+  precies hun oude gedrag.
+
+Let op bij het aannemen van een voorstel: `budget_bonus` (Muis +4 pt, Beer +3,
+Wolf +2 pt/+4 CP) blijft er als aparte startboeking bovenop staan. Arena en
+campagne passen die allebei toe, dus de meting klopt, maar het zijn wel twee
+knoppen die hetzelfde probleem oplossen.
+
+Nog niet gelijkgetrokken: de factiekeuze in de hub en het Facties-tabblad in het
+uitlegscherm drukken nog de kale tabel af. Met een blok actief kiest de speler
+dus op verouderde cijfers. Ook draagt `CView` geen doctrine mee, dus
+campagne-bots kunnen niet op gewijzigde factie-eigenschappen redeneren.
+
 ## Meetfout hersteld — 3 augustus 2026 (doctrines-blok legde de bots lam)
 
 **Geen regelwijziging. Wel: alle metingen mét een `doctrines`-blok waren tot
