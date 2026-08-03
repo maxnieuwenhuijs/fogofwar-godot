@@ -186,7 +186,7 @@ een enkele factie beginnen; niets gaat stuk zolang de rest ontbreekt.
 
 | Factie | Infanterie | Big bro |
 |---|---|---|
-| Muis | hoge, korte piep -- klein en schril | zwaardere knaagdier-krijs (oorlogskonijn) |
+| Muis | hoge, korte piep -- klein en schril | zwaardere knaagdier-krijs (dikke bruine rat) |
 | Varken | schril gilletje met een snuivende uithaal | diep everzwijn-gebrul, snuivend |
 | Leeuw | cheetah: korte hoge tjilp/sis | leeuw: rollende brul die wegzakt |
 | Beer | wasbeer: ratelend gekrijs | grizzly: laag, borstelig gebrul |

@@ -122,7 +122,7 @@ HP-blokjes en het kaartpaneel geven de exacte cijfers.
 
 | Factie | Infanterie (klein broertje) | Big bro cavalerie (groot, ook 2 benen) |
 |---|---|---|
-| Muis | muis | **muis-ruiter op een oorlogskonijn** (afwijkend: bereden i.p.v. tweebenige big bro, besluit Max 25 juli); comp 18/4/0, dus 4 cavalerie-eenheden |
+| Muis | muis | **dikke bruine rat** (big bro; besluit Max 30 juli: het ruiter-op-konijn-idee van 25 juli is teruggedraaid); comp 18/4/0, dus 4 cavalerie-eenheden |
 | Varken (ex-Mens) | varken | **everzwijn** met slagtanden |
 | Leeuw | **cheetah** (slank, gevlekt, snel) | **leeuw** met volle manen |
 | Beer | **wasbeer** (gemaskerd gezicht) | massieve grizzly |
@@ -165,23 +165,11 @@ Idle), **Walking (In Place!)**, **Standing Melee Attack** (Swiping/Punch) als
 aan infanterie). Cavalerie-audio (nu paarden-galop) vervangen we later per
 familie (brul/grom/gepiep).
 
-### Muis -- infanterie + muis-ruiter op oorlogskonijn + licht kanon
+### Muis -- infanterie + dikke rat als big bro + licht kanon
 
-*Cavalerie afwijkend (besluit Max 25 juli): geen tweebenige big bro maar een
-kleine muis-ruiter (zelfde uniform + shako als de infanterie) op de rug van een
-oorlogskonijn. Het KONIJN draagt het archetype-silhouet (dun/rond/breed); de
-muis-ruiter blijft gelijk.*
-
-*Animatie -- custom door de animator (niet de Mixamo-pijplijn, want bereden
-eenheid). Konijn is het bewegende karakter, muis-ruiter beweegt mee. Zelfde
-clip-namen als de andere cavalerie zodat de game ze zonder code-wijziging
-oppikt: `idle`, `walk` (hup/galop, IN PLACE), `melee`/`attack` (uitval van het
-konijn of houw van de ruiter), `die`. Delen blijven LOS + aan EEN skelet, zodat
-limb-shed werkt -- deel-namen aanhouden (`hat` = shako van de ruiter,
-`body`/`armL`/`armR` van de muis, plus konijn-delen). Gibs = dezelfde losse
-delen zonder skelet/animatie in `<model>_gibs.glb` (rider + konijn spatten dan
-samen uiteen). Model-fit: cavalerie schaalt op ~1,1 tegel-hoogte, voetafdruk
-binnen de tegel -- houd het konijn compact.*
+*Cavalerie teruggedraaid naar de familie-regel (besluit Max 30 juli): de big
+bro is de dikke bruine rat, tweebenig, dus gewoon de Mixamo-pijplijn zoals bij
+elke andere factie. Het ruiter-op-konijn-plan van 25 juli vervalt.*
 
 | Bestand | Prompt |
 |---|---|
@@ -190,11 +178,11 @@ binnen de tegel -- houd het konijn compact.*
 | `infantry_hp` | Single character, enormously fat, round-bellied, short and squat anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform with a dark steel cuirass and dark grey shako, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
 | `infantry_atk` | Single character, gigantic, hulking, broad-shouldered and heavily-muscled anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
 | `infantry_mix` | Single character, average build anthropomorphic mouse with oversized round ears, long twitching whiskers and a pointed snout, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military uniform and dark grey shako, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
-| `cavalry_base` | Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a powerful war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the war rabbit has long ears laid back, strong muscular hind legs and a leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text. |
-| `cavalry_spd` | Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a whip-thin, greyhound-lean, long-limbed racing war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the lean war rabbit has long ears laid back, extremely long slender legs and a light leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text. |
-| `cavalry_hp` | Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a colossally fat, round and squat heavy war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the massive war rabbit has thick fur, stout legs and dark steel armor plates over its leather war-harness, low stance. Clean neutral studio background, the rider and mount only, no text. |
-| `cavalry_atk` | Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a monstrously muscular, hulking, battle-scarred war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the muscular war rabbit has huge powerful hind legs, bared buck teeth and a heavy leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text. |
-| `cavalry_mix` | Single mounted unit, a small anthropomorphic mouse cavalryman riding on the back of a sturdy war rabbit, exaggerated stylized caricature proportions. Gritty realistic AAA-game concept art, highly detailed. The mouse rider wears a weathered, strictly dark grey Napoleonic military uniform and dark grey shako; the war rabbit has long ears, solid legs and a leather war-harness with saddle. Clean neutral studio background, the rider and mount only, no text. |
+| `cavalry_base` | Single character, towering powerful anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
+| `cavalry_spd` | Single character, towering yet whip-thin, greyhound-lean and long-limbed anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
+| `cavalry_hp` | Single character, towering, colossally fat, round and squat anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with dark steel armor plates over the harness, low stance, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
+| `cavalry_atk` | Single character, towering, monstrously muscular, hulking and battle-scarred anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps with bared teeth, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
+| `cavalry_mix` | Single character, towering sturdy anthropomorphic fat brown rat with a long scaly tail, a blunt whiskered snout and beady eyes, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey Napoleonic military harness with heavy leather straps, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text. |
 
 | `artillery_base` | Single prop, small light Napoleonic field cannon on a weathered dark wooden gun carriage with two spoked wheels, with a small anthropomorphic mouse gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron barrel. Clean neutral studio background, the cannon and one gunner only, no text. |
 | `artillery_spd` | Single prop, very light small Napoleonic horse-artillery cannon with a slender barrel on a weathered dark wooden carriage with large thin spoked wheels, with a small anthropomorphic mouse gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Dark iron. Clean neutral studio background, the cannon and one gunner only, no text. |
