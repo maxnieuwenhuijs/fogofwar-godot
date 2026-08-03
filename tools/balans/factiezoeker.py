@@ -264,10 +264,19 @@ def draai_kandidaat(map_pad, naam, regels, potjes, seed, procs=3):
     regels_pad = os.path.join(map_pad, "%s_regels.json" % naam)
     with open(regels_pad, "w", encoding="utf-8") as f:
         json.dump(regels, f, indent=1, ensure_ascii=False, sort_keys=True)
+    # tie_break_loting AAN, net als de nachtmatrix. Zonder deze knop is L2
+    # volledig deterministisch: dan speelt de arena bij gelijke stand steeds
+    # dezelfde zet en zijn 216 "partijen" gewoon 36 unieke potjes die zes keer
+    # worden overgetikt. Precies dat gebeurde tot 3 augustus -- drie totaal
+    # verschillende base_seeds gaven byte-identieke uitslagen, en de zoeker
+    # dacht 216 metingen te hebben terwijl er 36 waren. Het verklaart ook
+    # waarom de zoeker op 61% eerste-speler-voorsprong uitkwam en de nachtrun
+    # op 51%: dat was geen ander spel, dat was geen spreiding.
     arena_cfg = {
         "matchups": "all", "games_per_matchup": potjes,
         "agents": {"p1": "l2", "p2": "l2"},
-        "base_seed": seed, "max_steps": 6000, "track_repetitions": False,
+        "base_seed": seed, "max_steps": 2500, "track_repetitions": False,
+        "tie_break_loting": True,
         "rules": "res://" + os.path.relpath(regels_pad, PROJECT).replace("\\", "/"),
     }
     cfg_pad = os.path.join(map_pad, "%s_arena.json" % naam)

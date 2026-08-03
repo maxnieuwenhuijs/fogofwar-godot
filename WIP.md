@@ -35,10 +35,55 @@ nulmeting van dezelfde run (bodem 62%, harde bovengrens 85%), en alle
 generaties spelen dezelfde seeds, zodat een kandidaat niet meer wordt afgezet
 tegen een kampioen die op andere partijen is gemeten.
 
-**Nog open**: waarom de zoeker-seeds (216 partijen, base_seed 515000) op 61%
-uitkomen en de nachtmatrix (3240 partijen, base_seed 91000) op 51%. Zelfde
-regels, zelfde bots, zelfde matrix -- alleen andere seeds. Dat is geen
-regelverschil dat ik kan aanwijzen.
+**Tweede vondst, en die is net zo vervelend: de zoeker mat 36 partijen, geen
+216.** Drie totaal verschillende base_seeds gaven byte-identieke uitslagen. L2
+is namelijk volledig deterministisch zolang `tie_break_loting` uit staat, en die
+knop zat alleen in de nachtmatrix. Bij gelijke stand koos de bot dan altijd
+dezelfde zet, dus waren `2 potjes x 3 processen` gewoon 36 unieke partijen die
+zes keer werden overgetikt -- 216 regels zonder een greintje variatie.
+
+Daarmee is de oude vraag beantwoord: de 61% eerste-speler-voorsprong van de
+zoeker tegen 51% in de nacht was geen ruis en geen ander spel, maar het verschil
+tussen 36 partijen zonder spreiding en 3240 mét. Beide zoekers zetten nu
+`tie_break_loting: true` en `max_steps: 2500`, gelijk aan `v42_matrix_l2.json`.
+
+**Wat dit betekent voor de eerdere runs**: de regelzoeker-run van 31 juli en de
+factiezoeker-runs van 1 en 3 augustus zijn allemaal ongeldig. De eerste twee
+door te weinig spreiding, de derde ook nog door de lamgelegde bots.
+
+**De nieuwe nulmeting** (648 partijen, drie seed-sets, mét loting) laat zien dat
+de opstelling nu wél iets meet: de drie sets geven 47%, 54% en 46% eerste-speler-
+voorsprong in plaats van drie keer exact hetzelfde getal, samen 49%. Dat sluit
+aan bij de 51% van de nachtrun.
+
+| factie | wint (540 partijen, zonder spiegels) |
+|---|---|
+| Leeuw | 72,8% |
+| Krokodil | 63,9% |
+| Varken | 60,6% |
+| Muis | 38,9% |
+| Wolf | 36,1% |
+| Beer | 27,2% |
+
+Gemiddelde afwijking van 50%: **15,8 procentpunt**. Twee dingen springen eruit:
+C18 heeft Krokodil niet echt afgeremd (nog steeds tweede, 63,9%), en **Beer is
+nu de zwakste** met 27,2%. Dat is het echte werk voor de factiezoeker.
+
+**Nagekeken, en dit is GEEN fout**: de trainer speelt ook zonder loting en met
+seed 0 (`capture.gd:1787`), maar daar is dat opzet. Zijn kandidaten verschillen
+in gewichten, en juist die gewichten bepalen dan het verschil in plaats van de
+dobbelsteen: gepaarde vergelijking. De variatie komt bij hem uit tegenstander,
+factie en kant, die wél rouleren. Bij de zoeker was er helemaal geen variatie,
+want daar spelen beide kanten hetzelfde profiel.
+
+Dat geldt ook voor de **voor/na-tabel bij C18**: die is gemeten met "zelfde
+seeds als de nulmeting van de regelzoeker", dus zonder loting. 324 partijen was
+in werkelijkheid 36. Vandaar ook die verdachte ronde getallen (83,3% / 8,3% /
+33,3% -- allemaal twaalfden). Het BESLUIT C18 zelf staat overeind: Krokodil had
+letterlijk het leger van Varken plus twee voordelen, en de nachtmatrix van
+1 augustus (3240 partijen, mét loting) laat los daarvan zien dat Leeuw op 74%
+staat en Beer en Wolf te zwak zijn. Maar hoeveel C18 precies heeft geholpen weet
+ik niet: dat moet een nachtrun opnieuw meten.
 
 ## 1 augustus 2026 -- de factiezoeker vond een gat in mijn eigen scorefunctie
 

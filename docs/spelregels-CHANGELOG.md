@@ -35,18 +35,29 @@ nulmeting had er een. Daarom zag de run er van buiten normaal uit.
 - Canary's: `AgentTests.test_bots_blijven_spelen_met_doctrines_blok`
   (fallback_count = 0) en twee rondreis-tests in `RulesConfigTests`.
 
-Twee dingen in de zoekers zelf gingen mee:
+### En de zoeker mat 36 partijen, geen 216
 
-- **Kant-veto is nu relatief.** Het stond vast op 50 ± 15, maar de nulmeting van
-  de zoeker zit op 61% (216 partijen, base_seed 515000) terwijl de nachtrun over
-  3240 partijen op 51% uitkomt. Een vaste drempel schiet dan alles af. Nu:
-  ijken op de nulmeting van dezelfde run, met 62% als bodem en 85% als harde
-  bovengrens. *Open vraag: dat verschil van 61% tegen 51% is een eigenschap van
-  de seed-set, geen bekend regelverschil.*
+Tweede vondst, uit dezelfde controle. Drie totaal verschillende `base_seed`-
+waarden (515000, 91000, 300000) gaven **byte-identieke uitslagen**: 61% speler 1,
+114 haven, 78 eliminatie, 24 tiebreak. Oorzaak: L2 is volledig deterministisch
+tenzij `tie_break_loting` aanstaat, en die knop stond alleen in de nachtmatrix.
+Zonder loting kiest de bot bij gelijke stand altijd dezelfde zet, dus zijn
+`games_per_matchup: 2` maal drie processen niet 216 partijen maar **36 unieke
+potjes, zes keer overgetikt**.
+
+Dat verklaart meteen de 61% tegen 51% die eerder op ruis werd afgeboekt: dat is
+geen ander spel en geen andere seed-set, dat is het verschil tussen 36 partijen
+zonder spreiding en 3240 mét. Beide zoekers zetten `tie_break_loting: true` en
+`max_steps: 2500`, gelijk aan `v42_matrix_l2.json`.
+
+Verder in de zoekers:
+
+- **Kant-veto is nu relatief**: ijken op de nulmeting van dezelfde run, met 62%
+  als bodem en 85% als harde bovengrens, in plaats van vast 50 ± 15.
 - **Vaste seeds.** Kandidaten speelden `515000 + generatie * 1000` en werden
   afgezet tegen een kampioen die op ándere partijen was gemeten. Nu speelt
-  iedereen dezelfde 216 seeds: gepaarde vergelijking. Prijs: het voorstel kan
-  zich vastbijten in juist die seeds, dus altijd nameten met de nachtmatrix.
+  iedereen dezelfde seeds: gepaarde vergelijking. Prijs: het voorstel kan zich
+  vastbijten in juist die partijen, dus altijd nameten met de nachtmatrix.
 
 ## C18 — 31 juli 2026 (Krokodil ingeperkt, Wolf krijgt tempo)
 
@@ -64,6 +75,13 @@ allebei naar de facties zelf: Krokodil had exact het leger van Varken (13/6/3,
   nadeel: zwakkere kaarten dan de rest.
 - **Wolf**: krijgt die **+1 cavalerie-snelheid**. Past bij zijn karakter (gratis
   stap na melee, cavalerie die over vijandelijke infanterie springt).
+
+> **Nagekomen 3 augustus:** deze tabel is gemeten zonder `tie_break_loting`, en
+> L2 is zonder die knop volledig deterministisch. De "324 partijen" waren dus
+> 36 unieke potjes, negen keer overgetikt -- vandaar de twaalfden (83,3% / 8,3%
+> / 33,3%). Het besluit staat overeind (Krokodil had het leger van Varken plus
+> twee voordelen, en de nachtmatrix wees dezelfde kant op), maar deze getallen
+> zijn te dun om iets aan af te lezen. Nameten met een nachtrun.
 
 Gemeten op de campagne-regels, 324 partijen, L2 tegen L2, zelfde seeds als de
 nulmeting van de regelzoeker:
