@@ -252,3 +252,39 @@ func test_doctrine_override_via_config() -> void:
 	assert_eq(int(data.budget), 9, "override wint van DOCTRINE_DATA")
 	assert_eq(int(data.art_range_bonus), 2)
 	assert_eq(String(data.name), "Varken", "niet-overschreven velden blijven")
+
+
+# --- doctrine-override overleeft de rondreis (3 augustus) ----------------------
+
+## De agent bouwt zijn staat uit de view, en die draagt de regels als dict mee.
+## Ging de rondreis to_dict -> from_dict stuk, dan kreeg hij null terug en viel
+## hij bij ELKE beslissing terug op de eerste legale zet. Dat gebeurde stil:
+## alleen een lege doctrines-dict bleef heel, dus de nulmeting van de zoeker
+## klopte en al zijn kandidaten waren onzin.
+func test_doctrine_override_overleeft_rondreis() -> void:
+	var json_achtig: Dictionary = {
+		"doctrines": {"2": {"budget": 9.0, "comp": [6.0, 11.0, 2.0]}},
+	}
+	var c = RulesConfig.from_dict(json_achtig)
+	assert_true(c != null, "from_dict op een doctrines-blok mag niet null geven")
+	var heen: Dictionary = c.to_dict()
+	var c2 = RulesConfig.from_dict(heen)
+	assert_true(c2 != null, "en de tweede keer ook niet (de agent doet dit elke beurt)")
+	var data: Dictionary = c2.doctrine_data(2)
+	assert_eq(int(data.budget), 9, "override overleeft de rondreis")
+	assert_eq(String(data.name), "Leeuw", "niet-overschreven velden blijven")
+	var comp: Array = data.comp
+	assert_eq(comp.size(), 3)
+	for i in 3:
+		assert_true(comp[i] is int, "comp moet ints houden, geen JSON-floats")
+	assert_eq(int(comp[1]), 11)
+
+
+## Sleutels mogen als int of als string binnenkomen; beide moeten aankomen.
+func test_doctrine_override_sleutel_int_en_string() -> void:
+	var uit_int = RulesConfig.from_dict({"doctrines": {2: {"budget": 8}}})
+	assert_eq(int(uit_int.doctrine_data(2).budget), 8, "int-sleutel")
+	var uit_str = RulesConfig.from_dict({"doctrines": {"2": {"budget": 8}}})
+	assert_eq(int(uit_str.doctrine_data(2).budget), 8, "string-sleutel")
+	assert_eq(int(uit_str.doctrine_data(3).budget),
+		int(Constants.doctrine_data(3).budget), "andere facties blijven ongemoeid")

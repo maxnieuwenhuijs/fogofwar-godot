@@ -18,7 +18,7 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	# aan te vullen tot de startgrootte — max spawnen verstopte het bord en
 	# strandde de eigen haven-race. CP alleen op de ronde-3-kaarten.
 	if eerste_type == Actions.SPAWN:
-		var comp: Array = Constants.doctrine_data(int(view.doctrines[str(player_id)])).comp
+		var comp: Array = Agent.doctrine_data_uit_view(view, player_id).comp
 		var doel_groot: int = int(comp[0]) + int(comp[1]) + int(comp[2])
 		var op_bord: int = 0
 		for key in view.pawns:

@@ -128,7 +128,7 @@ def score_run(games):
     p1 = sum(1 for r in games if int(r["winner"]) == 1)
     p2 = sum(1 for r in games if int(r["winner"]) == 2)
     kant_share = 100.0 * p1 / max(p1 + p2, 1)
-    veto = abs(kant_share - 50.0) > 15.0
+    veto = kant_veto(kant_share)
     if veto:
         totaal *= 0.25
     detail = {
@@ -150,6 +150,36 @@ def lees_alle(paden):
     for p in paden:
         uit.extend(lees_games(p))
     return uit
+
+
+# Kant-drempel voor het veto. De zoeker meet ELKE kandidaat met dezelfde
+# seed-set, en in die set heeft speler 1 al een voorsprong: gemeten 61% bij de
+# 216 partijen van de zoeker tegen 51% over de 3240 partijen van de nachtrun.
+# Een vaste drempel op 65% schoot daardoor vrijwel elke kandidaat af (72 van de
+# 73 op 3 augustus). Daarom ijken we op de NULMETING van dezelfde run: een
+# kandidaat mag niet veel schever zijn dan het spel zelf al is.
+BASIS_KANT = 50.0          # wordt na de nulmeting op de gemeten waarde gezet
+KANT_SPELING = 12.0        # procentpunten die een kandidaat slechter mag zijn
+KANT_ABSOLUUT_MAX = 85.0   # hierboven is het altijd stuk, wat de basis ook doet
+
+
+# Alle kandidaten spelen DEZELFDE seeds als de nulmeting (515000). Eerder liep
+# de seed per generatie op, en dan werd een kandidaat vergeleken met een
+# kampioen die op andere partijen was gemeten: dobbelsteen-ruis telde mee als
+# verschil. Met vaste seeds is het een eerlijke, gepaarde vergelijking.
+#
+# Prijs: de zoeker kan zich vastbijten in juist deze 216 partijen. Het VOORSTEL
+# is dus een suggestie, geen bewijs -- draai het altijd na met de nachtmatrix op
+# andere seeds voor je iets overneemt.
+ZOEK_SEED = 515000
+
+
+def kant_grens():
+    return min(max(BASIS_KANT + KANT_SPELING, 62.0), KANT_ABSOLUUT_MAX)
+
+
+def kant_veto(kant_share):
+    return kant_share > kant_grens()
 
 
 def lees_games(pad):
@@ -251,7 +281,7 @@ def main():
 
     # Nulmeting: hoe scoort de huidige balans?
     procs0, paden0 = draai_kandidaat(map_pad, "gen0_basis", kampioen, args.potjes,
-                                     515000, args.procs)
+                                     ZOEK_SEED, args.procs)
     for pr in procs0:
         pr.wait()
     beste_score, beste_detail = score_run(lees_alle(paden0))
@@ -259,6 +289,11 @@ def main():
           "aanvullen %.2f, buit %.2f)" % (beste_score, beste_detail["gem_afwijking_van_50"],
           beste_detail["tiebreak_pct"], beste_detail["cycli"], beste_detail["spawns"],
           beste_detail["buit"]))
+    # Veto-drempel ijken op wat DIT spel met DEZE seeds al doet, en de
+    # nulmeting daarna opnieuw scoren zodat hij niet zijn eigen veto krijgt.
+    globals()["BASIS_KANT"] = float(beste_detail.get("speler1_wint_pct", 50.0))
+    beste_score, beste_detail = score_run(lees_alle(paden0))
+    print("[BALANS] kant-drempel geijkt: speler 1 wint %.0f%% in de nulmeting, veto boven %.0f%%" % (BASIS_KANT, kant_grens()))
     with open(log_pad, "a", encoding="utf-8") as f:
         f.write(json.dumps({"generatie": 0, "naam": "basis", "detail": beste_detail,
                             "regels": kampioen["campaign"]}, ensure_ascii=False) + "\n")
@@ -278,7 +313,7 @@ def main():
             kandidaat = muteer(kampioen, rng, sigma)
             naam = "gen%d_k%d" % (generatie, i)
             plist, gpaden = draai_kandidaat(map_pad, naam, kandidaat, args.potjes,
-                                            515000 + generatie * 1000, args.procs)
+                                            ZOEK_SEED, args.procs)
             procs.append((naam, kandidaat, plist, gpaden))
         for naam, kandidaat, plist, gpaden in procs:
             for pr in plist:

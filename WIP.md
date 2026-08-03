@@ -1,5 +1,45 @@
 # Fog of War — Work In Progress & Context
 
+## 3 augustus 2026 -- de factiezoeker speelde helemaal niet
+
+De run van 90 minuten leverde niets op: 72 van de 73 kandidaten kregen een VETO,
+de kampioen bewoog geen millimeter. Eerst leek dat mijn drempel (speler 1 mocht
+niet boven 65%, maar de nulmeting van de zoeker staat al op 61%). Dat klopte
+ook, maar het was niet de echte oorzaak.
+
+**De echte oorzaak: met een `doctrines`-blok in de regels speelden de bots
+niet meer.** De agent bouwt elke beurt zijn staat uit de view, en daar zit de
+regels-config als dict in. Die rondreis ging stuk op een sleutel-conversie
+(`String(int)` bestaat niet meer in Godot 4.7), `from_dict` gaf `null`, en de
+runner koos dan maar de eerste legale zet. Elke beurt. 236.928 noodkeuzes per
+216 partijen, tegen 0 bij de nulmeting.
+
+Zichtbaar in de cijfers zodra je ernaar kijkt: eliminaties verdwenen (78 -> 0),
+alles liep naar de cycluslimiet, en speler 1 sprong naar 85-90% *ongeacht wat er
+in het blok stond* (samenhang met "meer macht": r = -0,14, oftewel geen). Alleen
+een LEEG blok bleef heel, en juist de nulmeting had er een -- daarom zag de run
+er van buiten normaal uit.
+
+**Gerepareerd**: sleutels blijven string, waarden door `_diep_int` (JSON maakt
+van 6 een 6.0 en `comp` moet ints houden), en `l1_greedy` las de factietabel
+rechtstreeks uit `Constants` in plaats van de override -- die plande zijn
+aanvul-spawns dus met een leger dat hij niet had. Na de fix op dezelfde 36
+partijen: fallback 0, eliminaties terug, speler 1 van 89% naar 50%.
+
+**Canary**: `AgentTests.test_bots_blijven_spelen_met_doctrines_blok` eist
+`fallback_count = 0`. Dat is de enige controle die dit vangt -- er kwam immers
+gewoon een keurige uitslag uit.
+
+Twee dingen in de zoekers zelf gingen mee: het kant-veto ijkt nu op de
+nulmeting van dezelfde run (bodem 62%, harde bovengrens 85%), en alle
+generaties spelen dezelfde seeds, zodat een kandidaat niet meer wordt afgezet
+tegen een kampioen die op andere partijen is gemeten.
+
+**Nog open**: waarom de zoeker-seeds (216 partijen, base_seed 515000) op 61%
+uitkomen en de nachtmatrix (3240 partijen, base_seed 91000) op 51%. Zelfde
+regels, zelfde bots, zelfde matrix -- alleen andere seeds. Dat is geen
+regelverschil dat ik kan aanwijzen.
+
 ## 1 augustus 2026 -- de factiezoeker vond een gat in mijn eigen scorefunctie
 
 Eerste echte run: 86 generaties, 6 uur, eindscore 0,9117 met alle zes facties op

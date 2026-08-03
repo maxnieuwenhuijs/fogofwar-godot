@@ -1,5 +1,53 @@
 # Spelregels — CHANGELOG
 
+## Meetfout hersteld — 3 augustus 2026 (doctrines-blok legde de bots lam)
+
+**Geen regelwijziging. Wel: alle metingen mét een `doctrines`-blok waren tot
+vandaag waardeloos.** Dat raakt de hele eerste factiezoeker-run (1 en
+3 augustus). De nulmeting klopte, alle kandidaten niet.
+
+Wat er gebeurde: de agent bouwt elke beurt zijn eigen staat uit de view, en
+daar zit de regels-config als dict in. `RulesConfig.from_dict` normaliseerde de
+doctrine-sleutels naar **int**; bij de tweede rondreis (`to_dict` → `from_dict`,
+precies wat de agent doet) stond er dus een int in de sleutel en riep de code
+`String(int)` aan — een constructor die in Godot 4.7 niet meer bestaat.
+`from_dict` gaf `null` terug, `reconstruct_state` viel om, en de runner koos
+voor élke beurt maar `legal[0]`. De bots speelden dus niet meer, maar er kwam
+wel netjes een uitslag uit.
+
+Meetbaar aan de fallback-teller: **236.928 noodkeuzes** per 216 partijen (elke
+beurt) tegen **0** bij de nulmeting. Zichtbaar in de uitslagen: eliminaties
+verdwenen volledig (78 → 0), partijen liepen naar de cycluslimiet, en speler 1
+sprong van 61% naar 85-90% — ongeacht wát er in het blok stond. De
+identiteits-rem en het kant-veto rekenden vrolijk door op die onzin, dus 72 van
+de 73 kandidaten werden afgeschoten en de kampioen bewoog nooit.
+
+Alleen een **leeg** blok bleef heel (de lus draait dan niet), en juist de
+nulmeting had er een. Daarom zag de run er van buiten normaal uit.
+
+- `core/match/rules_config.gd`: doctrine-sleutels blijven **string**, zodat de
+  rondreis stabiel is; waarden gaan door `_diep_int` (JSON leest `6` terug als
+  `6.0` en `comp` moet ints houden).
+- `agents/agent.gd`: nieuwe helper `doctrine_data_uit_view()` — factie-data
+  zoals ze in dít potje gelden, tabel plus override.
+- `agents/l1_greedy.gd` las `Constants.doctrine_data()` rechtstreeks en plande
+  zijn aanvul-spawns dus met een leger dat hij niet had. Gebruikt nu de helper.
+- Canary's: `AgentTests.test_bots_blijven_spelen_met_doctrines_blok`
+  (fallback_count = 0) en twee rondreis-tests in `RulesConfigTests`.
+
+Twee dingen in de zoekers zelf gingen mee:
+
+- **Kant-veto is nu relatief.** Het stond vast op 50 ± 15, maar de nulmeting van
+  de zoeker zit op 61% (216 partijen, base_seed 515000) terwijl de nachtrun over
+  3240 partijen op 51% uitkomt. Een vaste drempel schiet dan alles af. Nu:
+  ijken op de nulmeting van dezelfde run, met 62% als bodem en 85% als harde
+  bovengrens. *Open vraag: dat verschil van 61% tegen 51% is een eigenschap van
+  de seed-set, geen bekend regelverschil.*
+- **Vaste seeds.** Kandidaten speelden `515000 + generatie * 1000` en werden
+  afgezet tegen een kampioen die op ándere partijen was gemeten. Nu speelt
+  iedereen dezelfde 216 seeds: gepaarde vergelijking. Prijs: het voorstel kan
+  zich vastbijten in juist die seeds, dus altijd nameten met de nachtmatrix.
+
 ## C18 — 31 juli 2026 (Krokodil ingeperkt, Wolf krijgt tempo)
 
 *Besluit Max: "zal ik eerst een harde verandering doen: krokodil 6 budget per

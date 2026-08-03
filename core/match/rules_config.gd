@@ -252,11 +252,18 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		}
 	var docs = d.get("doctrines", null)
 	if docs is Dictionary:
-		# JSON maakt sleutels strings; normaliseer naar int waar mogelijk.
+		# Sleutels blijven STRING ("2"). Ze eerder naar int normaliseren brak de
+		# rondreis to_dict -> from_dict: de tweede keer stond er een int in de
+		# sleutel en `String(int)` bestaat niet meer in Godot 4.7, waardoor
+		# from_dict null teruggaf. De agent reconstrueert zijn staat langs die
+		# weg, dus elke bot viel bij ELKE beslissing terug op legal[0] zodra er
+		# een doctrines-blok in de regels stond (3 augustus, factiezoeker).
+		# doctrine_data() zoekt op beide vormen, dus string is veilig.
+		# Waarden door _diep_int: JSON leest 6 terug als 6.0 en comp moet ints
+		# houden, anders lekken floats de legergrootte in.
 		c.doctrines = {}
 		for k in docs:
-			var ik: Variant = int(String(k)) if String(k).is_valid_int() else k
-			c.doctrines[ik] = (docs[k] as Dictionary).duplicate(true) if docs[k] is Dictionary else docs[k]
+			c.doctrines[str(k)] = _diep_int(docs[k]) if docs[k] is Dictionary else docs[k]
 	var camp = d.get("campaign", null)
 	if camp is Dictionary:
 		# Normaliseren: ontbrekende knoppen krijgen de F2.1-besluitwaarden.

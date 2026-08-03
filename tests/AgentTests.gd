@@ -120,3 +120,41 @@ func test_l2_ablatie_view_vs_full_state() -> void:
 	print("    [ABLATIE] L2-view %d — L2-full_state %d — remise %d (4 potjes, Krokodil-spiegel)" % [
 		view_wint, full_wint, remises])
 	assert_eq(view_wint + full_wint + remises, 4)
+
+
+# --- canary: een doctrines-blok mag de bots niet lam leggen (3 augustus) -------
+
+## De factiezoeker geeft zijn kandidaten mee als doctrines-blok in de regels.
+## Ging daar iets mis, dan gaf reconstruct_state null terug en koos de runner
+## bij elke beurt legal[0] — de bots speelden dus niet meer, maar er kwam wel
+## netjes een uitslag uit. Twee generaties zoekwerk waren daardoor waardeloos.
+## fallback_count = 0 is de enige harde controle die dat vangt.
+func test_bots_blijven_spelen_met_doctrines_blok() -> void:
+	var regels := _arena_rules()
+	regels.doctrines = {"2": {"budget": 9, "comp": [6, 11, 2]}, "4": {"cav_speed_bonus": 1}}
+	for paar in [[Constants.Doctrine.LEEUW, Constants.Doctrine.WOLF],
+			[Constants.Doctrine.WOLF, Constants.Doctrine.MUIS]]:
+		var runner := AgentRunner.new(AgentL2.new(), AgentL2.new(),
+			paar[0], paar[1], 51000, regels)
+		runner.run()
+		assert_true(runner.done, "partij hoort te eindigen")
+		assert_eq(runner.fallback_count, 0,
+			"L2 moet zelf blijven kiezen met een doctrines-blok in de regels")
+		assert_eq(runner.illegal_count, 0)
+
+
+## En L1 moet de OVERSCHREVEN legergrootte gebruiken, niet de tabel uit
+## Constants: anders vult hij bij tot een leger dat hij niet mag hebben.
+func test_l1_leest_de_overschreven_comp() -> void:
+	var view: Dictionary = {
+		"doctrines": {str(Constants.PLAYER_1): Constants.Doctrine.LEEUW},
+		"rules": {"doctrines": {"2": {"comp": [6, 11, 2]}}},
+	}
+	var data: Dictionary = Agent.doctrine_data_uit_view(view, Constants.PLAYER_1)
+	assert_eq(int((data.comp as Array)[1]), 11, "override wint")
+	var zonder: Dictionary = Agent.doctrine_data_uit_view(
+		{"doctrines": {str(Constants.PLAYER_1): Constants.Doctrine.LEEUW}, "rules": {}},
+		Constants.PLAYER_1)
+	assert_eq(int((zonder.comp as Array)[1]),
+		int((Constants.doctrine_data(Constants.Doctrine.LEEUW).comp as Array)[1]),
+		"zonder blok gewoon de tabel")

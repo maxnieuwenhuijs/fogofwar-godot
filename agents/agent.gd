@@ -36,6 +36,29 @@ func wants_view(_phase: int) -> bool:
 	return true
 
 
+## Factie-eigenschappen zoals ZE IN DIT POTJE GELDEN: de tabel uit Constants
+## met het doctrines-blok uit de regels eroverheen. Wie hier Constants direct
+## leest, plant met een leger dat hij niet heeft — precies wat de factiezoeker
+## op 3 augustus liet vastlopen (L1 rekende de spawn-doelgrootte uit de oude
+## comp). De view draagt de regels al mee, dus dit kost niets extra.
+static func doctrine_data_uit_view(view: Dictionary, player_id: int) -> Dictionary:
+	var doctrine: int = int((view.doctrines as Dictionary).get(str(player_id), 0))
+	var base: Dictionary = Constants.doctrine_data(doctrine)
+	var regels = view.get("rules", null)
+	if not (regels is Dictionary):
+		return base
+	var docs = (regels as Dictionary).get("doctrines", null)
+	if not (docs is Dictionary) or (docs as Dictionary).is_empty():
+		return base
+	var ov = (docs as Dictionary).get(str(doctrine), (docs as Dictionary).get(doctrine, null))
+	if not (ov is Dictionary):
+		return base
+	var merged: Dictionary = base.duplicate()
+	for k in ov:
+		merged[k] = ov[k]
+	return merged
+
+
 ## B11 — view → speelbare GameState. Gedekte "?"-stats worden puntschattingen;
 ## een gedekte pion heeft per definitie nog geen schade gehad (onthulling
 ## gebeurt bij schade), dus current = max klopt per constructie.
