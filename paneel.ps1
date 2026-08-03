@@ -187,12 +187,17 @@ $form.Controls.Add($lblFacties)
 $null = Maak-Knop "Facties uitproberen (balans)" "Probeert kaartbudget, perks en legers per factie; komt met een voorstel." 305 {
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numFacties.Value
-    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\balans.ps1",
-        "-Soort", "facties", "-Minuten", $duur, "-Potjes", 2,
-        "-Facties", $txtFacties.Text)
+    # Leeg factie-veld = alle zes facties. Een lege string MAG NIET in de
+    # argumentenlijst: Start-Process weigert die ("argument is null or empty").
+    # Daarom bouwen we de lijst op en plakken we -Facties er alleen bij als er
+    # echt iets ingevuld staat.
+    $balansArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "$repo\balans.ps1", "-Soort", "facties", "-Minuten", "$duur", "-Potjes", "2")
+    $welke = $txtFacties.Text.Trim()
+    if ($welke -ne "") { $balansArgs += @("-Facties", $welke) }
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList $balansArgs
     [System.Windows.Forms.MessageBox]::Show(
-        "De factiezoeker draait $duur minuten" + $(if ($txtFacties.Text) { " aan factie(s) " + $txtFacties.Text } else { " aan alle facties" }) + "." +
+        "De factiezoeker draait $duur minuten" + $(if ($txtFacties.Text.Trim()) { " aan factie(s) " + $txtFacties.Text } else { " aan alle facties" }) + "." +
         [Environment]::NewLine + "0 Varken - 1 Muis - 2 Leeuw - 3 Beer - 4 Wolf - 5 Krokodil" +
         [Environment]::NewLine + [Environment]::NewLine +
         "Hij schuift aan kaartbudget, kaarten per ronde, legersamenstelling en de perks, " +
