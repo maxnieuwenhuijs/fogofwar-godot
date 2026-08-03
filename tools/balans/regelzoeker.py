@@ -291,15 +291,15 @@ def main():
     for pr in procs0:
         pr.wait()
     beste_score, beste_detail = score_run(lees_alle(paden0))
-    print("[BALANS] huidige balans: score %.4f  (afwijking %.1f%%, tiebreak %.1f%%, cycli %d, "
-          "aanvullen %.2f, buit %.2f)" % (beste_score, beste_detail["gem_afwijking_van_50"],
-          beste_detail["tiebreak_pct"], beste_detail["cycli"], beste_detail["spawns"],
-          beste_detail["buit"]))
     # Veto-drempel ijken op wat DIT spel met DEZE seeds al doet, en de
     # nulmeting daarna opnieuw scoren zodat hij niet zijn eigen veto krijgt.
     globals()["BASIS_KANT"] = float(beste_detail.get("speler1_wint_pct", 50.0))
     beste_score, beste_detail = score_run(lees_alle(paden0))
     print("[BALANS] kant-drempel geijkt: speler 1 wint %.0f%% in de nulmeting, veto boven %.0f%%" % (BASIS_KANT, kant_grens()))
+    print("[BALANS] huidige balans: score %.4f  (afwijking %.1f%%, tiebreak %.1f%%, cycli %d, "
+          "aanvullen %.2f, buit %.2f)" % (beste_score, beste_detail["gem_afwijking_van_50"],
+          beste_detail["tiebreak_pct"], beste_detail["cycli"], beste_detail["spawns"],
+          beste_detail["buit"]))
     with open(log_pad, "a", encoding="utf-8") as f:
         f.write(json.dumps({"generatie": 0, "naam": "basis", "detail": beste_detail,
                             "regels": kampioen["campaign"]}, ensure_ascii=False) + "\n")
