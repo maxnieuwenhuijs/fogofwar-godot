@@ -1,9 +1,21 @@
-﻿# Fog of War - controlepaneel: een paar simpele knoppen, gewone taal.
+# Fog of War - controlepaneel: een paar simpele knoppen, gewone taal.
 # Starten: dubbelklik "FogOfWar Paneel.bat" (of: powershell -STA -File paneel.ps1)
 # Besluit Max 23-07: niets draait automatisch - alles start vanuit dit paneel.
 # Herbouw 28-07 (Max: "ik ben het spoor bijster"): jargon eruit (4.1/4.2/L1),
 # alleen de knoppen die Max echt gebruikt. Meet-gereedschap voor Claude
 # (fuzz, losse matrix, 4.1-training) draait via de CLI, zie CLAUDE.md.
+#
+# Herbouw 4-08 (Max: "nu lijkt het alsof potjes bij een andere knop hoort").
+# Dat was ook zo, en het waren drie fouten tegelijk:
+#   1. De invoervakjes stonden los in het formulier, met een x-positie die
+#      OVER de knop erboven heen viel. Ze hoorden visueel nergens bij.
+#   2. Het potjes-vakje hoorde bij de regelzoeker, maar de factiezoeker stuurde
+#      hardgecodeerd 2 potjes mee - dus dat vakje deed daar niets.
+#   3. Twee stuurtekens in de tekst (een kapotte \f en \v uit een eerdere
+#      bewerking) maakten van "results\facties_<tijd>\voorstel.json" onleesbare
+#      soep in het meldingsvenster.
+# Nu staat elke knop met zijn eigen instellingen in een eigen kader. Wat in het
+# kader staat, hoort bij die knop. Meer regel is het niet.
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -29,68 +41,69 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(430, 555)
+$form.Size = New-Object System.Drawing.Size(470, 800)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
 
 $lblStatus = New-Object System.Windows.Forms.Label
-$lblStatus.Location = New-Object System.Drawing.Point(15, 12)
-$lblStatus.Size = New-Object System.Drawing.Size(390, 22)
+$lblStatus.Location = New-Object System.Drawing.Point(15, 10)
+$lblStatus.Size = New-Object System.Drawing.Size(420, 20)
 $lblStatus.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
 $form.Controls.Add($lblStatus)
 
-function Maak-Knop([string]$tekst, [string]$uitleg, [int]$y, [scriptblock]$actie) {
+# --- bouwstenen ---------------------------------------------------------------
+# Elk kader is een groepje: titel, een regel uitleg, en daaronder de knop met
+# zijn eigen instellingen. Alles wat in het kader staat hoort bij die knop.
+
+function Maak-Kader([string]$titel, [int]$y, [int]$hoogte) {
+    $g = New-Object System.Windows.Forms.GroupBox
+    $g.Text = $titel
+    $g.Location = New-Object System.Drawing.Point(15, $y)
+    $g.Size = New-Object System.Drawing.Size(425, $hoogte)
+    $g.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+    $form.Controls.Add($g)
+    return $g
+}
+
+function Maak-Uitleg($kader, [string]$tekst) {
+    $l = New-Object System.Windows.Forms.Label
+    $l.Text = $tekst
+    $l.Location = New-Object System.Drawing.Point(12, 20)
+    $l.Size = New-Object System.Drawing.Size(400, 16)
+    $l.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+    $l.ForeColor = [System.Drawing.Color]::DimGray
+    $kader.Controls.Add($l)
+}
+
+function Maak-Knop($kader, [string]$tekst, [scriptblock]$actie) {
     $b = New-Object System.Windows.Forms.Button
     $b.Text = $tekst
-    $b.Location = New-Object System.Drawing.Point(15, $y)
-    $b.Size = New-Object System.Drawing.Size(280, 38)
-    $b.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+    $b.Location = New-Object System.Drawing.Point(12, 42)
+    $b.Size = New-Object System.Drawing.Size(185, 34)
+    $b.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Regular)
     $b.Add_Click($actie)
-    $form.Controls.Add($b)
-    if ($uitleg -ne "") {
-        $l = New-Object System.Windows.Forms.Label
-        $l.Text = $uitleg
-        $l.Location = New-Object System.Drawing.Point(17, ($y + 40))
-        $l.Size = New-Object System.Drawing.Size(390, 16)
-        $l.Font = New-Object System.Drawing.Font("Segoe UI", 8)
-        $l.ForeColor = [System.Drawing.Color]::DimGray
-        $form.Controls.Add($l)
-    }
+    $kader.Controls.Add($b)
     return $b
 }
 
-function Maak-Minuten([int]$y, [int]$standaard) {
+# Getal-vakje MET zijn label, binnen hetzelfde kader als de knop. De x-positie
+# is de enige parameter die verschuift, zodat twee vakjes naast elkaar passen.
+function Maak-Getal($kader, [int]$x, [int]$standaard, [int]$min, [int]$max, [string]$label) {
     $n = New-Object System.Windows.Forms.NumericUpDown
-    $n.Location = New-Object System.Drawing.Point(305, ($y + 6))
-    $n.Size = New-Object System.Drawing.Size(60, 26)
-    $n.Minimum = 5
-    $n.Maximum = 600
-    $n.Value = $standaard
-    $form.Controls.Add($n)
-    $lbl = New-Object System.Windows.Forms.Label
-    $lbl.Text = "min"
-    $lbl.Location = New-Object System.Drawing.Point(368, ($y + 11))
-    $lbl.Size = New-Object System.Drawing.Size(35, 18)
-    $form.Controls.Add($lbl)
-    return $n
-}
-
-# Klein getal-veldje naast een knop (bv. het aantal potjes per matchup voor de
-# regelzoeker). Zelfde vorm als Maak-Minuten, maar met een eigen label.
-function Maak-Getal([int]$y, [int]$standaard, [int]$min, [int]$max, [string]$label, [int]$x) {
-    $n = New-Object System.Windows.Forms.NumericUpDown
-    $n.Location = New-Object System.Drawing.Point($x, ($y + 6))
-    $n.Size = New-Object System.Drawing.Size(48, 26)
+    $n.Location = New-Object System.Drawing.Point($x, 47)
+    $n.Size = New-Object System.Drawing.Size(52, 26)
+    $n.Font = New-Object System.Drawing.Font("Segoe UI", 9)
     $n.Minimum = $min
     $n.Maximum = $max
     $n.Value = $standaard
-    $form.Controls.Add($n)
-    $lbl = New-Object System.Windows.Forms.Label
-    $lbl.Text = $label
-    $lbl.Location = New-Object System.Drawing.Point(($x + 50), ($y + 11))
-    $lbl.Size = New-Object System.Drawing.Size(55, 18)
-    $form.Controls.Add($lbl)
+    $kader.Controls.Add($n)
+    $l = New-Object System.Windows.Forms.Label
+    $l.Text = $label
+    $l.Location = New-Object System.Drawing.Point(($x + 54), 51)
+    $l.Size = New-Object System.Drawing.Size(46, 18)
+    $l.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+    $kader.Controls.Add($l)
     return $n
 }
 
@@ -120,7 +133,9 @@ function Start-Training([int]$minuten) {
 }
 
 # --- 1. De nacht-knop: bots leren, daarna meten, rapport klaar bij het ontbijt.
-$btnNacht = Maak-Knop "TRAINING-NACHT (8 uur)" "Bots leren 7 uur, daarna meten ze zich en staat het rapport klaar." 45 {
+$kadNacht = Maak-Kader "Een hele nacht" 36 86
+Maak-Uitleg $kadNacht "Bots leren 7 uur, daarna meten ze zich en staat het rapport klaar."
+$btnNacht = Maak-Knop $kadNacht "TRAINING-NACHT (8 uur)" {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Process powershell -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\training_nacht.ps1",
@@ -129,15 +144,19 @@ $btnNacht = Maak-Knop "TRAINING-NACHT (8 uur)" "Bots leren 7 uur, daarna meten z
 $btnNacht.BackColor = [System.Drawing.Color]::Honeydew
 
 # --- 2. Korte training overdag, duur zelf te kiezen.
-$numTrain = Maak-Minuten 110 60
-$null = Maak-Knop "Bots laten leren" "Zes bots trainen tegelijk; elke verbetering wordt direct bewaard." 110 {
+$kadTrain = Maak-Kader "Bots beter maken" 128 86
+Maak-Uitleg $kadTrain "Zes bots trainen tegelijk; elke verbetering wordt direct bewaard."
+$numTrain = Maak-Getal $kadTrain 205 60 5 600 "minuten"
+$null = Maak-Knop $kadTrain "Bots laten leren" {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Training ([int]$numTrain.Value)
 }
 
 # --- 3. Losse meting: bots spelen tegen elkaar, cijfers voor het rapport.
-$numMeet = Maak-Minuten 175 120
-$null = Maak-Knop "Bots laten spelen (meting)" "Botgevechten voor winst-cijfers per factie; zie daarna het rapport." 175 {
+$kadMeet = Maak-Kader "Meten hoe het ervoor staat" 220 86
+Maak-Uitleg $kadMeet "Botgevechten voor winst-cijfers per factie; zie daarna het rapport."
+$numMeet = Maak-Getal $kadMeet 205 120 5 600 "minuten"
+$null = Maak-Knop $kadMeet "Bots laten spelen (meting)" {
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numMeet.Value
     $fuzz = [Math]::Max(500, [Math]::Min(10000, $duur * 25))
@@ -146,16 +165,17 @@ $null = Maak-Knop "Bots laten spelen (meting)" "Botgevechten voor winst-cijfers 
         "-DuurMinuten", $duur, "-FuzzGames", $fuzz)
 }
 
-# --- 4. Rapport bekijken.
-# --- 3b. Regels uitproberen: zoekt zelf naar een betere ontwerp-balans.
-$numBalans = Maak-Minuten 240 60
+# --- 4. Regels uitproberen: zoekt zelf naar een betere ontwerp-balans.
+$kadRegels = Maak-Kader "Regels uitproberen" 312 86
+Maak-Uitleg $kadRegels "Probeert andere CP- en versterkings-instellingen; komt met een voorstel."
+$numRegels = Maak-Getal $kadRegels 205 60 5 600 "minuten"
 # Potjes per matchup: meer = minder ruis, maar tragere generaties. Onder de 2
 # is het verschil tussen 25% en 40% winrate niet meer van toeval te scheiden.
-$numPotjes = Maak-Getal 240 2 1 8 "potjes" 200
-$null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP- en versterkings-instellingen; komt met een voorstel." 240 {
+$numRegelsPotjes = Maak-Getal $kadRegels 306 2 1 8 "potjes"
+$null = Maak-Knop $kadRegels "Regels uitproberen" {
     if (-not (Bevestig-BijDrukte)) { return }
-    $duur = [int]$numBalans.Value
-    $potjes = [int]$numPotjes.Value
+    $duur = [int]$numRegels.Value
+    $potjes = [int]$numRegelsPotjes.Value
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\balans.ps1",
         "-Soort", "regels", "-Minuten", $duur, "-Potjes", $potjes)
@@ -165,51 +185,78 @@ $null = Maak-Knop "Regels uitproberen (balans)" "Probeert automatisch andere CP-
         "Meer potjes = betrouwbaardere cijfers maar tragere generaties." +
         [Environment]::NewLine + [Environment]::NewLine +
         "Hij verandert NIETS aan het spel: hij zet zijn beste vondst als voorstel.json in " +
-        "results\balans_<tijd>\, met een log van alles wat hij geprobeerd heeft. " +
+        'results\balans_<tijd>\, met een log van alles wat hij geprobeerd heeft. ' +
         "Daarna kijken we samen wat je ervan overneemt.", "Fog of War") | Out-Null
 }
 
-# --- 3c. Facties uitproberen: zoekt aan de factie-eigenschappen zelf.
-$numFacties = Maak-Minuten 305 360
-# Welke facties mag hij aanraken? Leeg = alle zes. Gericht zoeken (bv. "2,3" =
-# Leeuw en Beer) vindt veel sneller iets, want dan is elke kandidaat een
-# wijziging aan een factie in plaats van een mengsel van zes.
-$txtFacties = New-Object System.Windows.Forms.TextBox
-$txtFacties.Location = New-Object System.Drawing.Point(200, 311)
-$txtFacties.Size = New-Object System.Drawing.Size(48, 24)
-$txtFacties.Text = "2,3"
-$form.Controls.Add($txtFacties)
+# --- 5. Facties uitproberen: zoekt aan de factie-eigenschappen zelf.
+# Dit kader is hoger, want er hoort een derde instelling bij.
+$kadFacties = Maak-Kader "Facties uitproberen" 404 122
+Maak-Uitleg $kadFacties "Probeert kaartbudget, perks en legers per factie; komt met een voorstel."
+$numFacties = Maak-Getal $kadFacties 205 480 5 600 "minuten"
+# 2 potjes = 216 partijen per kandidaat. Met 1 potje schommelt een factie op
+# ruis alleen al 20 procentpunt, en adopteert de zoeker toeval.
+$numFactiesPotjes = Maak-Getal $kadFacties 306 2 1 8 "potjes"
+# Welke facties mag hij aanraken? LEEG = alle zes, en dat is de aanbevolen
+# stand. Gericht zoeken (bv. "2,3" = Leeuw en Beer) vindt sneller iets, want
+# dan is elke kandidaat een wijziging aan een factie in plaats van een mengsel.
 $lblFacties = New-Object System.Windows.Forms.Label
 $lblFacties.Text = "facties"
-$lblFacties.Location = New-Object System.Drawing.Point(250, 316)
-$lblFacties.Size = New-Object System.Drawing.Size(50, 18)
-$form.Controls.Add($lblFacties)
-$null = Maak-Knop "Facties uitproberen (balans)" "Probeert kaartbudget, perks en legers per factie; komt met een voorstel." 305 {
+$lblFacties.Location = New-Object System.Drawing.Point(12, 90)
+$lblFacties.Size = New-Object System.Drawing.Size(46, 18)
+$lblFacties.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$kadFacties.Controls.Add($lblFacties)
+$txtFacties = New-Object System.Windows.Forms.TextBox
+$txtFacties.Location = New-Object System.Drawing.Point(60, 86)
+$txtFacties.Size = New-Object System.Drawing.Size(56, 24)
+$txtFacties.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$txtFacties.Text = ""
+$kadFacties.Controls.Add($txtFacties)
+$lblFactiesHint = New-Object System.Windows.Forms.Label
+$lblFactiesHint.Text = "leeg = alle zes   |   0 Varken 1 Muis 2 Leeuw 3 Beer 4 Wolf 5 Krokodil"
+$lblFactiesHint.Location = New-Object System.Drawing.Point(124, 90)
+$lblFactiesHint.Size = New-Object System.Drawing.Size(288, 18)
+$lblFactiesHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$lblFactiesHint.ForeColor = [System.Drawing.Color]::DimGray
+$kadFacties.Controls.Add($lblFactiesHint)
+$null = Maak-Knop $kadFacties "Facties uitproberen" {
     if (-not (Bevestig-BijDrukte)) { return }
     $duur = [int]$numFacties.Value
+    $potjes = [int]$numFactiesPotjes.Value
     # Leeg factie-veld = alle zes facties. Een lege string MAG NIET in de
     # argumentenlijst: Start-Process weigert die ("argument is null or empty").
     # Daarom bouwen we de lijst op en plakken we -Facties er alleen bij als er
     # echt iets ingevuld staat.
     $balansArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-        "$repo\balans.ps1", "-Soort", "facties", "-Minuten", "$duur", "-Potjes", "2")
+        "$repo\balans.ps1", "-Soort", "facties", "-Minuten", "$duur", "-Potjes", "$potjes")
     $welke = $txtFacties.Text.Trim()
     if ($welke -ne "") { $balansArgs += @("-Facties", $welke) }
     Start-Process powershell -WorkingDirectory $repo -ArgumentList $balansArgs
+    $watVoor = if ($welke -ne "") { " aan factie(s) $welke" } else { " aan alle zes de facties" }
     [System.Windows.Forms.MessageBox]::Show(
-        "De factiezoeker draait $duur minuten" + $(if ($txtFacties.Text.Trim()) { " aan factie(s) " + $txtFacties.Text } else { " aan alle facties" }) + "." +
-        [Environment]::NewLine + "0 Varken - 1 Muis - 2 Leeuw - 3 Beer - 4 Wolf - 5 Krokodil" +
+        "De factiezoeker draait $duur minuten$watVoor, met $potjes potje(s) per matchup." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Potjes bepaalt hoe zeker de cijfers zijn, en dat kost tijd:" + [Environment]::NewLine +
+        "  1 potje = 108 partijen, marge per factie 9 pp, ruim 9 min per generatie" + [Environment]::NewLine +
+        "  2 potjes = 216 partijen, marge 6,5 pp, ruim 19 min per generatie" + [Environment]::NewLine +
+        "  4 potjes = 432 partijen, marge 4,6 pp, ruim 37 min per generatie" + [Environment]::NewLine +
+        "  6 potjes = 648 partijen, marge 3,7 pp, ruim 56 min per generatie" + [Environment]::NewLine +
+        "Marge = hoeveel een winrate op toeval alleen al kan schommelen. Is de marge " +
+        "groter dan de verbetering die je zoekt, dan adopteert de zoeker ruis." +
         [Environment]::NewLine + [Environment]::NewLine +
         "Hij schuift aan kaartbudget, kaarten per ronde, legersamenstelling en de perks, " +
         "met een rem erop: hoe verder van je oorspronkelijke ontwerp, hoe meer een kandidaat " +
-        "moet opleveren. Anders maakt hij van zes facties zes klonen." + [Environment]::NewLine +
-        [Environment]::NewLine +
-        "Het voorstel komt in resultsacties_<tijd>oorstel.json en verandert NIETS aan " +
-        "het spel: je kunt dat bestand direct aan de trainer meegeven om het te proberen.",
+        "moet opleveren. Anders maakt hij van zes facties zes klonen." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Het voorstel komt in " + 'results\facties_<tijd>\voorstel.json' + " en verandert " +
+        "NIETS aan het spel. Draai daarna het kijkgereedschap om te zien wat het doet.",
         "Fog of War") | Out-Null
 }
 
-$null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-percentages en trends." 370 {
+# --- 6. Bekijken wat er nu geldt en wat eruit gekomen is.
+$kadKijk = Maak-Kader "Bekijken" 530 122
+Maak-Uitleg $kadKijk "Het rapport met winst-percentages, of de factie-instellingen van nu."
+$null = Maak-Knop $kadKijk "Bekijk het rapport" {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
     $pad = "$repo\results\dashboard.html"
     if (Test-Path $pad) { Invoke-Item $pad }
@@ -218,9 +265,34 @@ $null = Maak-Knop "Bekijk het rapport" "Opent de resultaten-pagina met winst-per
             "Fog of War") | Out-Null
     }
 }
+# Tweede knop in hetzelfde kader: welke factie-instellingen gelden er NU?
+$btnFactieTabel = New-Object System.Windows.Forms.Button
+$btnFactieTabel.Text = "Welke facties gelden nu?"
+$btnFactieTabel.Location = New-Object System.Drawing.Point(210, 42)
+$btnFactieTabel.Size = New-Object System.Drawing.Size(203, 34)
+$btnFactieTabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnFactieTabel.Add_Click({
+    $console = $godot -replace "\.exe$", "_console.exe"
+    if (-not (Test-Path $console)) { $console = $godot }
+    $uit = Join-Path $repo "results\facties_nu.txt"
+    Start-Process $console -WorkingDirectory $repo -WindowStyle Hidden -Wait `
+        -RedirectStandardOutput $uit `
+        -ArgumentList @("--headless", "--path", ".", "res://tools/capture.tscn", "--", "facties")
+    if (Test-Path $uit) { Invoke-Item $uit }
+})
+$kadKijk.Controls.Add($btnFactieTabel)
+$lblKijkHint = New-Object System.Windows.Forms.Label
+$lblKijkHint.Text = "Draai dat laatste voor en na het aannemen van een voorstel: een sterretje wijst het verschil aan."
+$lblKijkHint.Location = New-Object System.Drawing.Point(12, 84)
+$lblKijkHint.Size = New-Object System.Drawing.Size(400, 28)
+$lblKijkHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$lblKijkHint.ForeColor = [System.Drawing.Color]::DimGray
+$kadKijk.Controls.Add($lblKijkHint)
 
-# --- 5. Alles stoppen.
-$btnStop = Maak-Knop "STOP alles" "Stopt elke lopende run. Trainingsvoortgang blijft bewaard." 435 {
+# --- 7. Alles stoppen.
+$kadStop = Maak-Kader "Noodrem" 656 86
+Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
+$btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots
     if ($n -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Er draait niets.", "Fog of War") | Out-Null
