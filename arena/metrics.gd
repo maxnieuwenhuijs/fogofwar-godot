@@ -22,6 +22,10 @@ var _per_speler: Dictionary = {}
 var _statue_kills_by_profile: Dictionary = {}
 var _link_matrix: Dictionary = {}
 var _cannon_shots: Dictionary = {}  # pion-id -> aantal schoten
+## V0: hoe vaak de uitputtingsklok heeft moeten ingrijpen. Hoog = de facties
+## graven zich in en het spel wordt door de honger beslist in plaats van door
+## de spelers; dat is een ontwerpsignaal, geen technisch detail.
+var _honger_doden: int = 0
 
 
 func _init() -> void:
@@ -94,6 +98,11 @@ func after_action(state: GameState, player: int, actie: Dictionary, events: Arra
 				stats.moves += 1
 		_:
 			pass
+	# V0: hongerdoden komen uit de cyclusovergang en hangen dus niet aan een
+	# actietype -- ze kunnen bij ELKE actie in de eventstroom zitten.
+	for ev in events:
+		if String(ev.type) == Reducer.EV_HONGER:
+			_honger_doden += 1
 	if t == Actions.SHOOT:
 		var schutter: Pawn = state.pawns.get(int(actie.shooter_id), null)
 		if schutter != null and schutter.unit_type == Constants.UnitType.ARTILLERY:
@@ -217,6 +226,8 @@ func finalize(runner: AgentRunner, d1: int, d2: int, seed_val: int, agent_labels
 		"steps": runner.steps,
 		"illegal": runner.illegal_count,
 		"fallback": runner.fallback_count,
+		"honger_doden": _honger_doden,
+		"afgekapt": runner.afgekapt,
 		"repetitions": _repetitions,
 		"haven_cells": haven_cells,
 		"statue_kills_by_profile": _statue_kills_by_profile,

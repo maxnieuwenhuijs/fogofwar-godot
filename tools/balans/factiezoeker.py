@@ -80,11 +80,47 @@ COMP_TOTAAL_MIN, COMP_TOTAAL_MAX = 16, 24   # legergrootte blijft in de buurt
 DOEL = {
     "evenwicht": 0.40,     # winrates rond 50% (zonder spiegelpartijen)
     "kant": 0.20,          # speler 1 mag niet structureel winnen
-    "beslissend": 0.12,    # weinig tiebreaks
+    "op_eigen_kracht": 0.12,  # partijen die de spelers zelf beslissen
     "duur": 0.08,          # mediaan cycli in de band
     "identiteit": 0.20,    # blijf in de buurt van het oorspronkelijke ontwerp
 }
-DUUR_ONDER, DUUR_BOVEN = 8, 13
+
+# V0 (3 augustus): "beslissend" (aandeel haven+eliminatie) werd dood gewicht,
+# want onder V0 is dat per definitie 100%. De eerste vervanging was FOUT en is
+# door een tegenspraak-ronde onderuit gehaald: die telde partijen waarin de
+# honger had ingegrepen, en dat is per constructie hetzelfde als "cycli >= 10"
+# (de honger vuurt onvoorwaardelijk vanaf die cyclus). De term mat dus gewoon de
+# partijduur nog een keer, tegengesteld aan de duur-term en met een klif waar
+# die een helling heeft. Elke mediaan van 1 tot en met 9 scoorde daardoor hoger
+# dan het echte spel op 10.
+#
+# Nu meet hij het AANDEEL van de doden dat door honger valt in plaats van door
+# gevecht. Dat is echt iets anders dan duur: een lange partij waarin de spelers
+# elkaar te lijf gaan scoort goed, een lange partij waarin ze zich ingraven en
+# de klok het werk laat doen scoort slecht. Precies het gedrag dat V0 moest
+# wegnemen in plaats van verstoppen.
+HONGER_VANAF = 10
+
+
+def honger_aandeel(games):
+    """Welk deel van alle gesneuvelde pionnen viel door de honger (0..1)."""
+    honger = 0
+    gevecht = 0
+    for r in games:
+        honger += int(r.get("honger_doden", 0))
+        for p in r.get("spelers", {}).values():
+            gevecht += int(p.get("kills", 0))
+    totaal = honger + gevecht
+    return (float(honger) / totaal) if totaal > 0 else 0.0
+DUUR_ONDER, DUUR_BOVEN = 6, 9   # gewenste mediaan cycli
+
+# De band moet STRIKT ONDER de hongerdrempel liggen. Lag hij eroverheen (8-13
+# met honger op 10), dan waren cyclus 10 tot 13 tegelijk "gewenst" en "door de
+# klok beslist", en scoorde elke kortere partij hoger dan het echte spel. Deze
+# controle voorkomt dat die twee getallen ooit weer stil uit elkaar lopen.
+assert DUUR_BOVEN < HONGER_VANAF, (
+    "de duur-band (%d-%d) moet onder de hongerdrempel (%d) blijven"
+    % (DUUR_ONDER, DUUR_BOVEN, HONGER_VANAF))
 
 
 def identiteits_score(doctrines):
@@ -129,7 +165,13 @@ def score_run(games, doctrines):
     kant_share = 100.0 * p1 / max(p1 + p2, 1)
     kant = max(0.0, 1.0 - abs(kant_share - 50.0) / 25.0)
     m = Counter(r["methode"] for r in games)
-    beslissend = (m["haven"] + m["eliminatie"]) / len(games)
+    honger_pct = 100.0 * honger_aandeel(games)
+    # 0% van de doden door honger = 1,0; 40% of meer = 0. Boven de 40% is het
+    # de klok die het duel beslist en niet de spelers.
+    op_eigen_kracht = max(0.0, 1.0 - honger_pct / 40.0)
+    # AFKAP: onder V0 is een partij zonder winnaar geen uitslag maar een fout in
+    # de klok. Zo'n meting zegt niets, dus die kandidaat gaat eruit.
+    afkap = m["afkap"] + m["remise"]
     cycli = st.median([int(r["cycli"]) for r in games])
     if DUUR_ONDER <= cycli <= DUUR_BOVEN:
         duur = 1.0
@@ -138,7 +180,7 @@ def score_run(games, doctrines):
         duur = max(0.0, 1.0 - mis / 8.0)
     identiteit = identiteits_score(doctrines)
     totaal = (DOEL["evenwicht"] * evenwicht + DOEL["kant"] * kant
-              + DOEL["beslissend"] * beslissend + DOEL["duur"] * duur
+              + DOEL["op_eigen_kracht"] * op_eigen_kracht + DOEL["duur"] * duur
               + DOEL["identiteit"] * identiteit)
     # VETO, geen aftrek. Een aftrek van 0,20 was niet genoeg: de kandidaat waar
     # speler 1 alles won scoorde daarmee nog steeds hoger dan het echte spel,
@@ -148,11 +190,17 @@ def score_run(games, doctrines):
     veto = kant_veto(kant_share)
     if veto:
         totaal *= 0.25
+    # Een afgekapte partij betekent dat de uitputtingsklok niet heeft gewerkt.
+    # De uitslagen van zo'n run zijn onbruikbaar, dus dat is een harde nul en
+    # geen aftrek: anders sluipt een kandidaat met een kapotte klok alsnog naar
+    # boven op zijn evenwicht-punten.
+    if afkap > 0:
+        totaal = 0.0
     return totaal, {
         "score": round(totaal, 4), "gem_afwijking_van_50": round(afwijking, 1),
         "speler1_wint_pct": round(kant_share, 1), "kant": round(kant, 3),
-        "veto_kant": veto,
-        "tiebreak_pct": round(100.0 * m["tiebreak"] / len(games), 1), "cycli": cycli,
+        "veto_kant": veto, "afkap": afkap,
+        "honger_pct": round(honger_pct, 1), "cycli": cycli,
         "identiteit": round(identiteit, 3),
         "winrates": {d: round(v, 1) for d, v in sorted(winrates.items(), key=lambda kv: -kv[1])},
         "partijen": len(games),
