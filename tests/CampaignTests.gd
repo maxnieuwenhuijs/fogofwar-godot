@@ -267,13 +267,29 @@ func test_testament_timeout_verbrandt() -> void:
 	assert_eq(c.pool_totaal_van(3), 0)
 
 
-func test_remise_beide_tiebreak_punt() -> void:
+## V0 (3 augustus): een duel kent geen gelijkspel meer. Tot vandaag boekte een
+## remise BEIDE vechters een punt en verloor niemand iets: precies de uitkomst
+## die V0 verbiedt. Zo'n uitslag hoort nu geweigerd te worden, niet stil
+## weggeboekt, want hij betekent dat het bord geen winnaar heeft opgeleverd.
+func test_v0_duel_zonder_winnaar_geweigerd() -> void:
 	var c := _mini()
 	_stem_unaniem(c, 0, 3)
 	_sluit_donaties(c)
-	assert_true(CReducer.apply(c, CActions.make_match_result(0, -1, "tiebreak", {}, {}), -1).ok)
-	assert_eq(c.punten_van(0), 1)
-	assert_eq(c.punten_van(3), 1)
+	var res: Dictionary = CReducer.apply(c, CActions.make_match_result(0, -1, "eliminatie", {}, {}), -1)
+	assert_false(res.ok, "winnaar -1 wordt geweigerd")
+	assert_eq(c.punten_van(0), 0, "en er wordt niets geboekt")
+	assert_eq(c.punten_van(3), 0)
+
+
+## De roem kent nog drie tredes: haven, eliminatie (ook bij opgeven) en verlies.
+func test_v0_roem_zonder_tiebreak_trede() -> void:
+	var r := CRules.new()
+	assert_eq(r.punten_voor_methode("haven"), r.punten_haven)
+	assert_eq(r.punten_voor_methode("eliminatie"), r.punten_eliminatie)
+	assert_eq(r.punten_voor_methode("resign"), r.punten_eliminatie,
+		"opgeven telt voor de winnaar als een eliminatie")
+	assert_eq(r.punten_voor_methode("tiebreak"), r.punten_verlies,
+		"de tiebreak-trede bestaat niet meer")
 
 
 func test_burgeroorlog_seeding_en_kampioen() -> void:

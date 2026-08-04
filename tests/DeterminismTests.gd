@@ -54,11 +54,13 @@ func test_seeded_rng_pick() -> void:
 func test_same_seed_same_match() -> void:
 	var runs: Array = []
 	for _r in 2:
+		var rules := RulesConfig.new()
+		rules.honger_vanaf_cyclus = 6  # V0: de partij speelt echt uit
 		var runner := MatchRunner.new(AIEasyScript.new(), AIEasyScript.new(),
-			Constants.Doctrine.MENS, Constants.Doctrine.MUIS, 424242)
-		runner.max_steps = 260
+			Constants.Doctrine.MENS, Constants.Doctrine.MUIS, 424242, rules)
+		runner.max_steps = 1400
 		var steps := 0
-		while not runner.done and steps < 400:
+		while not runner.done and steps < 1500:
 			runner.step()
 			steps += 1
 		runs.append("%d|%d|%d" % [runner.winner, runner.state().cycle, steps])
@@ -72,12 +74,18 @@ func test_same_seed_same_match() -> void:
 func test_different_seeds_vary_course() -> void:
 	var prints := {}
 	for s in [1, 2, 3, 4]:
+		# V0: de partijen moeten nu ECHT uitgespeeld worden, want de noodstop
+		# levert geen uitslag meer op. Zonder klok waren alle vier de seeds op
+		# stap 200 afgekapt en dus identiek (winnaar -1, zelfde cyclus): de test
+		# mat toen de afkap, niet het verloop.
+		var rules := RulesConfig.new()
+		rules.honger_vanaf_cyclus = 6
 		var runner := MatchRunner.new(AIEasyScript.new(), AIEasyScript.new(),
-			Constants.Doctrine.MENS, Constants.Doctrine.MENS, s)
-		runner.max_steps = 200
+			Constants.Doctrine.MENS, Constants.Doctrine.MENS, s, rules)
+		runner.max_steps = 1400
 		var steps := 0
 		var first_moves := []
-		while not runner.done and steps < 320:
+		while not runner.done and steps < 1500:
 			runner.step()
 			steps += 1
 			if steps <= 30:

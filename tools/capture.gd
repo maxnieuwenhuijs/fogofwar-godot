@@ -124,8 +124,8 @@ func _ready() -> void:
 			var seed_val: int = 42000 + i
 			var driver := SoloDriver.new(seed_val)
 			driver.duel_ai = "easy"  # snelle duels: de check meet flow/determinisme, niet AI-kwaliteit
-			driver.duel_cycle_limit = 4
-			driver.duel_max_steps = 400
+			driver.duel_honger_vanaf = 4
+			driver.duel_max_steps = 1500  # V0: de noodstop levert geen uitslag meer op
 			var kampioen: int = driver.run_headless()
 			var duur := (Time.get_ticks_msec() - t0) / 1000.0
 			if kampioen == -1:
@@ -137,12 +137,12 @@ func _ready() -> void:
 					driver.c.ronde, driver.feed.size(), duur])
 		var d1 := SoloDriver.new(42000)
 		d1.duel_ai = "easy"
-		d1.duel_cycle_limit = 4
-		d1.duel_max_steps = 400
+		d1.duel_honger_vanaf = 4
+		d1.duel_max_steps = 1500
 		var d2 := SoloDriver.new(42000)
 		d2.duel_ai = "easy"
-		d2.duel_cycle_limit = 4
-		d2.duel_max_steps = 400
+		d2.duel_honger_vanaf = 4
+		d2.duel_max_steps = 1500
 		var k1: int = d1.run_headless()
 		var k2: int = d2.run_headless()
 		var determinist: bool = k1 == k2 and d1.clog.entries.size() == d2.clog.entries.size()
@@ -169,8 +169,8 @@ func _ready() -> void:
 			for s_i in d_seeds:
 				var dd := SoloDriver.new(1000 + s_i, -1, d_spelers)
 				dd.duel_ai = d_ai
-				dd.duel_cycle_limit = limiet
-				dd.duel_max_steps = 4000 if limiet == 0 else 200 + limiet * 80
+				dd.duel_honger_vanaf = limiet
+				dd.duel_max_steps = 4000 if limiet == 0 else 400 + limiet * 120
 				dd.run_headless(1600)
 				rondes += dd.c.ronde
 				duels += dd.duels_gespeeld
@@ -1798,7 +1798,10 @@ func _arena_games_threaded(jobs: Array, ai_script) -> Array:
 		var d1: int = job.di if job.i_is_p1 else job.dj
 		var d2: int = job.dj if job.i_is_p1 else job.di
 		var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
-		runner.max_steps = 600  # snelle tiebreak bij patstelling (meten, geen training)
+		# V0 (3 augustus): de noodstop levert geen uitslag meer op, dus hij moet
+		# ruim boven de echte partijduur liggen. Gemeten met honger vanaf cyclus
+		# 10 over 216 partijen: mediaan 608 stappen, p90 737, max 932.
+		runner.max_steps = 1400
 		while not runner.done:
 			runner.step()
 		var winner: int = runner.winner
@@ -1852,7 +1855,7 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
 	# Patstellingen kosten anders tot 2500 stappen per potje; echte partijen zijn
 	# rond ~350 klaar. De tiebreak (materiaal → haven) geeft hetzelfde leersignaal.
-	runner.max_steps = 900
+	runner.max_steps = 1400  # V0: gemeten max 932 stappen met honger vanaf 10
 	while not runner.done:
 		runner.step()
 	var winner: int = runner.winner
@@ -1933,7 +1936,7 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 	var a1 = na if nieuw_is_p1 else oa
 	var a2 = oa if nieuw_is_p1 else na
 	var runner := MatchRunner.new(a1, a2, d, d, seed_val, _train_rules)
-	runner.max_steps = 900
+	runner.max_steps = 1400  # V0: gemeten max 932 stappen met honger vanaf 10
 	while not runner.done:
 		runner.step()
 	var winner: int = runner.winner
@@ -2109,7 +2112,7 @@ func _make_goldens() -> void:
 	_golden_charge_kill_verplichte_verplaatsing(dir)
 	_golden_vos_onthulling_bij_schade(dir)
 	_golden_kaart_vervalt_zonder_pion(dir)
-	_golden_cycluslimiet_remise(dir)
+	_golden_honger(dir)
 	_golden_spawn_geblokkeerd(dir)
 	_golden_cp_inzet(dir)
 	_golden_kanon_act(dir)
@@ -2211,16 +2214,20 @@ func _golden_kaart_vervalt_zonder_pion(dir: String) -> void:
 		[[Actions.make_link(c1.id, vrij.id), 1]])
 
 
-func _golden_cycluslimiet_remise(dir: String) -> void:
-	# Perfect gespiegelde eindstand op de cycluslimiet → echte remise (-1).
+func _golden_honger(dir: String) -> void:
+	# V0: de uitputtingsklok. Dezelfde gespiegelde stand die vroeger een remise
+	# gaf, eindigt nu beslissend: de honger eet om de beurt en er komt altijd
+	# een winnaar uit. Deze golden bewaakt precies dat.
 	var s := GameState.new()
 	s.rules = RulesConfig.new()
-	s.rules.cycle_limit = 1
+	s.rules.honger_vanaf_cyclus = 1
 	s.phase = Phase.Type.ACTION
 	s.current_player = 1
 	var mover := _golden_actieve_pion(s, 1, Vector2i(5, 8), Constants.UnitType.INFANTRY, 3, 1, 1)
+	s._spawn_pawn(1, Vector2i(2, 10))   # achterhoede: die verhongert het eerst
 	s._spawn_pawn(2, Vector2i(5, 3))
-	_golden_opnemen(dir + "cycluslimiet_remise.json", s,
+	s._spawn_pawn(2, Vector2i(8, 0))
+	_golden_opnemen(dir + "honger.json", s,
 		[[Actions.make_move(mover.id, Vector2i(5, 7)), 1]])
 
 

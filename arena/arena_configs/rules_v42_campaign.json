@@ -1,5 +1,5 @@
 {
- "_uitleg_cycluslimiet": "MEETGRENS, geen spelregel: in de echte campagne staat de cycluslimiet UIT (C9). Bots rekken partijen zonder limiet tot ~1570 stappen (gemeten 31 juli, 3x zo lang), waardoor een trainingsnacht een derde van de generaties haalt en 18% van de partijen op de meet-afkap eindigt. 25 cycli bindt in botspel vrijwel nooit (mediaan 9-10) en houdt de meting eerlijk.",
+ "_uitleg_honger": "V0 (3 augustus): een duel kent alleen haven en eliminatie. Geen remise, geen tiebreak, geen cycluslimiet. Vanaf deze cyclus verhongert elke speler een pion per cyclus (de achterste), zodat het einde uit de regels zelf komt. Gemeten zonder klok liep een partij door tot 330 cycli en 6001 stappen; met de honger op 10 blijft alles beslissend. Dit is dus GEEN meetgrens meer maar een spelregel, en hij geldt in campagne en los potje gelijk.",
  "basis_hp": {
   "cav": 2
  },
@@ -24,5 +24,5 @@
   "spawn_totaal_max": 15,
   "start_poolfactor": 0.5
  },
- "cycle_limit": 25
+ "honger_vanaf_cyclus": 10
 }

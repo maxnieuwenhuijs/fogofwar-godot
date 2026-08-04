@@ -261,9 +261,13 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 		return "Duel al verwerkt"
 	var p1: int = int(duel.p1)
 	var p2: int = int(duel.p2)
-	var winnaar: int = int(action.winnaar)  # speler-id of -1 (remise)
-	if winnaar != -1 and winnaar != p1 and winnaar != p2:
-		return "Winnaar hoort niet bij dit duel"
+	# V0 (3 augustus): een duel eindigt op de haven of op eliminatie, dus er IS
+	# altijd een winnaar. -1 was tot nu toe geldig (remise) en gaf beide
+	# vechters een punt; dat kan niet meer. Een -1 die hier binnenkomt betekent
+	# dat het bord geen uitslag heeft geleverd, en dat is een fout.
+	var winnaar: int = int(action.winnaar)
+	if winnaar != p1 and winnaar != p2:
+		return "Winnaar hoort niet bij dit duel (V0: een duel kent geen gelijkspel)"
 	var methode: String = String(action.methode)
 	# Pool-boekingen (op oplopende speler-id, NIET op dict-volgorde: het log
 	# reist als JSON en key-volgorde mag het ledger nooit veranderen).
@@ -300,20 +304,16 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 		var delta: int = int(action.cp_delta[sid_str])
 		if delta != 0:
 			_boek_ev(c, events, "cp_duel", sid, 0, 0, 0, delta, 0)
-	# Punten (C5); bij remise (-1) beide het tiebreak-punt.
-	if winnaar == -1:
-		_boek_ev(c, events, "punten", p1, 0, 0, 0, 0, c.rules.punten_tiebreak)
-		_boek_ev(c, events, "punten", p2, 0, 0, 0, 0, c.rules.punten_tiebreak)
-	else:
-		_boek_ev(c, events, "punten", winnaar, 0, 0, 0, 0, c.rules.punten_voor_methode(methode))
+	# Punten (C5). V0 (3 augustus): een duel kent geen gelijkspel meer, dus de
+	# tak "beiden een tiebreak-punt" bestaat niet. Winnaar -1 wordt hierboven
+	# al geweigerd; kwam hij toch binnen, dan was dat een stille bug waarin
+	# beide vechters een punt kregen en niemand iets verloor.
+	_boek_ev(c, events, "punten", winnaar, 0, 0, 0, 0, c.rules.punten_voor_methode(methode))
 	duel.klaar = true
 	# Uitvallen (C3): duel verloren en de voorraad is op.
 	if c.fase == CState.Fase.BURGEROORLOG:
 		# Knock-out: de verliezer ligt eruit, restant verbrandt (v1-keuze).
 		var verliezer_bo: int = p1 if winnaar == p2 else p2
-		if winnaar == -1:
-			# Remise in de bracket: de hoogste seed (p1) gaat door.
-			verliezer_bo = p2
 		_verbrand_alles(c, events, verliezer_bo)
 		c.spelers[verliezer_bo].status = "uitgevallen"
 		c.spelers[verliezer_bo].testament_af = true

@@ -33,11 +33,11 @@
   "increment_sec": 0,
   "reconnect_grace_sec": 20
  },
- "cycle_limit": 12,
  "doctrines": {},
  "fire_blocked": true,
  "fire_hits_inactive": true,
  "haven_score_cumulative": false,
+ "honger_vanaf_cyclus": 10,
  "inf_shot_cost": 1,
  "inf_shot_full_attack": true,
  "inf_shot_over_pawn": false,
@@ -50,8 +50,7 @@
   "inf": 1
  },
  "rounds_per_cycle": 3,
- "rules_version": "4.2.0+dracht5",
+ "rules_version": "4.3.1",
  "stamina_model": "pool",
- "statue_threshold": 0,
- "tiebreak": "material_haven_proximity"
+ "statue_threshold": 0
 }

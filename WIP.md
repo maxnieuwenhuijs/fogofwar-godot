@@ -1,5 +1,66 @@
 # Fog of War — Work In Progress & Context
 
+## 3 augustus 2026 (avond) -- V0: een duel kent geen gelijkspel meer
+
+Besluit Max uit `docs/campagne-intrige-voorstel.md`: een duel eindigt op de
+haven of op totale eliminatie, meer smaken zijn er niet. Geen remise, geen
+tiebreak, geen cycluslimiet. In plaats daarvan de **honger**: vanaf cyclus 10
+verliest elke speler bij het begin van een cyclus de pion die het verst van zijn
+doelhaven staat. De achterhoede verhongert het eerst, dus je wordt vooruit
+geduwd in plaats van achteruit.
+
+**Waarom dit meer is dan een regeltje**: als elk duel beslissend is, is elke
+nominatie in de raad een doodvonnis. De hele politieke laag van de campagne
+wordt er zwaarder van. En het is de afmaking van C9, waar de cycluslimiet er al
+uit ging omdat bots vrijwel alleen via de tiebreak wonnen.
+
+**Het getal komt uit meting, niet uit smaak.** 216 partijen, L2 tegen L2:
+
+| klok | cycli mediaan | cycli max | stappen max | beslissend |
+|---|---|---|---|---|
+| cycluslimiet 25 (oud) | 10 | 26 | 1.165 | 95% |
+| helemaal geen klok | 10 | **330** | **6.001** | 97% |
+| honger vanaf 10 | 10 | **16** | **932** | **100%** |
+
+De mediaan verandert niet: de klok doet niets voor een gewone partij en bestaat
+puur voor de staart. Die staart was erger dan gedacht (330 cycli, tegen de
+noodstop aan). Max koos 10 als middenweg tussen "zeldzame noodrem" en "voelbare
+klok".
+
+**Drie dingen aan de honger zijn correctheid, geen smaak**, en alle drie zijn ze
+door de verkenning boven water gekomen voordat ik ze fout kon bouwen:
+
+1. Om de beurt eten met een win-check ertussen, en wisselend wie begint. Anders
+   wist een dubbele wipe beide legers en leest de winstcheck dat als "nog geen
+   winnaar": het duel loopt dan eeuwig door.
+2. "De vijandelijke haven" is in code de haven van je EIGEN speler-id (die ligt
+   aan de vijandkant). Wie daar `opponent` schrijft laat zijn voorhoede
+   verhongeren, precies omgekeerd, en dat valt niet op in een symmetrische test.
+3. Honger boekt geen C15-buit. De cyclusreset ontkoppelt net alle pionnen, dus
+   elke vaandeldrager zou anders 2 punten opleveren voor iemand die niets deed.
+
+**De noodstop verzint geen uitslag meer.** Beide runners kapten bij `max_steps`
+stilletjes af met een tiebreak-winnaar. Nu blijft de winnaar leeg, gaat er een
+`afgekapt`-vlag aan en gilt er een fout. De arena boekt dat als eigen categorie,
+zodat een kapotte klok niet in een onschuldig ogende remise-kolom verdwijnt.
+
+**Opgeven telt voor de winnaar als eliminatie**, roem en CP. De staat draagt
+daarvoor een nieuw veld `eind_reden`, want de campagnelaag leidde de methode af
+uit de eindstaat en een opgave was daaraan niet te zien: die boekte als tiebreak
+en kostte de winnaar dus een punt roem.
+
+**Gevolgen die je moet weten**: de honger verschuift uitslagen van haven naar
+eliminatie (88/118 wordt 73/139), want hij dunt legers uit. De bots moeten
+hertraind: hun waardefunctie kende "overleven tot de limiet" als geldige
+uitkomst en die bestaat niet meer. Alle 15 goldens en drie ijk-sims zijn
+opnieuw opgenomen; de winnaar bleef in alle drie de sims dezelfde, dus de honger
+kort partijen in zonder uitslagen om te draaien. Versie 4.3.0 (met
+campagne-blok 4.3.1).
+
+**Nog te doen na deze stap**: de zoekers (kolom `remise` wordt `afkap`, en de
+term "beslissend" in de regelzoeker wordt structureel 1.0 en moet vervangen),
+hertrainen, en dan pas de factie-hermeting zonder `budget_bonus`.
+
 ## 3 augustus 2026 (later) -- C17 was een afspraak, geen mechanisme
 
 Keuze van Max: de campagne gelijktrekken met de duels, voordat er een

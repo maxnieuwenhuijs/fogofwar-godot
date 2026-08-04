@@ -23,6 +23,16 @@ var illegal_count: int = 0
 var fallback_count: int = 0
 var max_steps: int = 3000
 
+# V0 (3 augustus): de noodstop verzint geen uitslag meer. Tot nu toe riep de
+# runner bij max_steps stilletjes Reducer.tiebreak_winner aan, en dan kwam er
+# een keurige winnaar uit een partij die nooit is uitgespeeld. Onder V0 kent
+# een duel alleen haven en eliminatie, dus een afgekapte partij is een FOUT en
+# hoort als fout zichtbaar te zijn: winner blijft -1 en afgekapt gaat aan.
+# De arena telt ze apart, zodat je in een meting ziet of de uitputtingsklok
+# echt bijt in plaats van dat het probleem in de uitslagen verdwijnt.
+var afgekapt: bool = false
+var afkap_reden: String = ""
+
 ## Optionele metrics-collector (arena/metrics.gd): before_action/after_action
 ## worden rond elke geslaagde apply aangeroepen. Duck-typed — de runner blijft
 ## bruikbaar zonder arena-laag.
@@ -60,7 +70,10 @@ func step() -> void:
 	steps += 1
 	if steps > max_steps:
 		done = true
-		winner = Reducer.tiebreak_winner(_state)
+		afgekapt = true
+		afkap_reden = "max_steps"
+		push_error("AgentRunner: partij afgekapt op max_steps (%d) in cyclus %d — geen uitslag"
+			% [max_steps, _state.cycle])
 		return
 	if _state.phase == Phase.Type.GAME_OVER:
 		done = true
@@ -96,7 +109,10 @@ func step() -> void:
 		# (de reducer reset cycli zelf) — tel als anomalie en stop.
 		illegal_count += 1
 		done = true
-		winner = Reducer.tiebreak_winner(_state)
+		afgekapt = true
+		afkap_reden = "niemand_kan_handelen"
+		push_error("AgentRunner: niemand heeft een legale actie buiten GAME_OVER (fase %d, cyclus %d)"
+			% [_state.phase, _state.cycle])
 		return
 	if _state.phase == Phase.Type.GAME_OVER:
 		done = true

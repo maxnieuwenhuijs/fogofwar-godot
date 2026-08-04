@@ -167,7 +167,10 @@ func _verwerk_koppeling(state: GameState, player: int, actie: Dictionary) -> voi
 ## Sluit af en lever de jsonl-regel (zonder wallclock: reproduceerbaar).
 func finalize(runner: AgentRunner, d1: int, d2: int, seed_val: int, agent_labels: Dictionary) -> Dictionary:
 	var state: GameState = runner.state()
-	var methode := "remise"
+	# V0: een partij zonder winnaar is geen remise maar een AFKAP, en die hoort
+	# als zodanig in de meetdata te staan. Anders verdwijnt een kapotte
+	# uitputtingsklok in een kolom die er onschuldig uitziet.
+	var methode := "afkap" if runner.afgekapt else "remise"
 	var haven_cells: Array = []
 	if runner.winner != -1:
 		var verliezer: int = Constants.opponent(runner.winner)
@@ -183,7 +186,10 @@ func finalize(runner: AgentRunner, d1: int, d2: int, seed_val: int, agent_labels
 			methode = "tiebreak"
 	var remise_trigger := ""
 	if runner.winner == -1:
-		remise_trigger = "cycle_limit" if state.rules.cycle_limit > 0 and state.cycle > state.rules.cycle_limit else "tiebreak_gelijk"
+		if runner.afgekapt:
+			remise_trigger = runner.afkap_reden
+		else:
+			remise_trigger = "geen_winnaar"
 	var kanonnen_totaal: int = 0
 	var kanonnen_met_schot: int = _cannon_shots.size()
 	var kanon_schoten: int = 0

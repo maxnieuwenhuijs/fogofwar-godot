@@ -30,8 +30,29 @@
   en direct na de cyclus-reset. `GameSession.gd:349-371,391-398`
 - *Randgevallen:* voldoen beide spelers tegelijk aan de havenvoorwaarde, dan wint
   Speler 1 (checkvolgorde). Hebben beide spelers 0 pionnen, dan wijst de check
-  geen winnaar aan (-1); een remise-uitkomst bestaat in 4.1.9-hr niet.
-  `Rules.gd:33-42`
+  geen winnaar aan (-1); een remise-uitkomst bestaat niet. `Rules.gd:33-42`
+
+### V0 (3 augustus 2026): een duel kent geen gelijkspel
+
+Een duel eindigt op de **haven** of op **totale eliminatie**. Meer smaken zijn
+er niet: geen remise, geen tiebreak, geen winst op punten, geen cycluslimiet.
+
+- **Eliminatie kijkt naar INZETBARE reserve.** Spawnen is gecapt op
+  `spawn_totaal_max`; is die cap op, dan zijn je punten dood kapitaal en tellen
+  ze niet meer als leven.
+- **De uitputtingsklok (honger).** Vanaf `honger_vanaf_cyclus` (10) verliest
+  elke speler bij het begin van een cyclus de pion die het **verst van zijn
+  doelhaven** staat. De spelers eten om de beurt, met een win-check ertussen, en
+  wie begint wisselt per cyclus. Bij gelijke afstand valt de laagste pion-id.
+  Honger levert **geen buit** op (C15): het is geen kill door de vijand.
+- **Opgeven** telt voor de winnaar als een eliminatie, roem en CP.
+- **De noodstop is een fout, geen uitslag.** Bereikt een partij `max_steps`, dan
+  komt er geen winnaar uit en gilt de runner. Dat is per definitie een bug in de
+  klok.
+
+Gemeten over 216 partijen: zonder klok liep een partij door tot 330 cycli; met
+de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
+**100%** van de partijen op haven of eliminatie.
 
 ## 2. Partijverloop
 
@@ -323,7 +344,7 @@ er een afgeleide van, en de enige verschillen zijn schaal:
 | startreserve | `start_poolfactor` (0,5) x comp + `budget_bonus` | zelfde formule x `potje_factor` (0,35) |
 | start-CP | `cp_start` + budget-bonus | zelfde x `potje_factor` |
 | spawn-cap | 15 per duel | 8 |
-| cycluslimiet | uit | 20 (een los potje moet aflopen) |
+| uitputtingsklok | honger vanaf cyclus 10 | zelfde regel, zelfde getal |
 | duels | meerdere, met raad, donaties en testament | een |
 
 Alles wat je aan de balans verandert, verander je dus **in de campagne-regels**;

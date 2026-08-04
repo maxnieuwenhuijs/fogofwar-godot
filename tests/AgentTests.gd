@@ -14,7 +14,7 @@ func _class_name() -> String:
 ## Begrensde regels zodat random partijen gegarandeerd eindigen.
 func _arena_rules(limiet: int = 12) -> RulesConfig:
 	var r := RulesConfig.new()
-	r.cycle_limit = limiet
+	r.honger_vanaf_cyclus = limiet
 	return r
 
 

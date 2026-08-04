@@ -28,7 +28,11 @@ static func run(games: int, base_seed: int, out_dir: String, sabotage: bool = fa
 	for g in games:
 		var seed_val: int = base_seed + g
 		var rules := RulesConfig.new()
-		rules.cycle_limit = 12
+		# V0: de honger begrenst de looptijd nu, niet de cycluslimiet. De fuzz
+		# meet invarianten en geen balans, dus hij mag vroeg bijten: sneller
+		# klaar en de partij eindigt altijd echt (haven of eliminatie) in plaats
+		# van op de noodstop, die onder V0 een harde fout is.
+		rules.honger_vanaf_cyclus = 8
 		var d1: int = doctrines[(seed_val * 7) % doctrines.size()]
 		var d2: int = doctrines[(seed_val * 13 + 2) % doctrines.size()]
 		var runner := AgentRunner.new(AgentL0.new(), AgentL0.new(), d1, d2, seed_val, rules)

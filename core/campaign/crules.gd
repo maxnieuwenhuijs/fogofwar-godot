@@ -43,9 +43,10 @@ var testament_fractie: float = 0.5
 var testament_ontvangers_max: int = 2
 
 # Punten (C5): roem, bepaalt de burgeroorlog-seeding.
+# V0 (3 augustus): de tiebreak-trede bestaat niet meer. Een duel eindigt op de
+# haven of op eliminatie, dus er zijn nog twee winsttarieven en een verlies.
 var punten_haven: int = 3
 var punten_eliminatie: int = 2
-var punten_tiebreak: int = 1
 var punten_verlies: int = 0
 var punten_teambonus: int = 2             # aan het einde, ook voor doden
 
@@ -123,7 +124,6 @@ func to_dict() -> Dictionary:
 		"testament_ontvangers_max": testament_ontvangers_max,
 		"punten_haven": punten_haven,
 		"punten_eliminatie": punten_eliminatie,
-		"punten_tiebreak": punten_tiebreak,
 		"punten_verlies": punten_verlies,
 		"punten_teambonus": punten_teambonus,
 		"duel_spawn_totaal_max": duel_spawn_totaal_max,
@@ -158,7 +158,6 @@ static func from_dict(d: Dictionary) -> CRules:
 	c.testament_ontvangers_max = int(d.get("testament_ontvangers_max", c.testament_ontvangers_max))
 	c.punten_haven = int(d.get("punten_haven", c.punten_haven))
 	c.punten_eliminatie = int(d.get("punten_eliminatie", c.punten_eliminatie))
-	c.punten_tiebreak = int(d.get("punten_tiebreak", c.punten_tiebreak))
 	c.punten_verlies = int(d.get("punten_verlies", c.punten_verlies))
 	c.punten_teambonus = int(d.get("punten_teambonus", c.punten_teambonus))
 	c.duel_spawn_totaal_max = int(d.get("duel_spawn_totaal_max", c.duel_spawn_totaal_max))
@@ -176,6 +175,8 @@ func punten_voor_methode(methode: String) -> int:
 			return punten_haven
 		"eliminatie":
 			return punten_eliminatie
-		"tiebreak":
-			return punten_tiebreak
+		# V0: "resign" telt voor de winnaar als een eliminatie -- anders is
+		# opgeven een goedkope manier om de winst van je tegenstander te drukken.
+		"resign":
+			return punten_eliminatie
 	return punten_verlies

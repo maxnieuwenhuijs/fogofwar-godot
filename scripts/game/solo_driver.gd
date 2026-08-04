@@ -17,16 +17,18 @@ const AIEasyScript := preload("res://scripts/ai/AIEasy.gd")
 ## Duel-botniveau: "l1"/"l2" (F1-agents op views via AgentRunner — de snelle
 ## arena-route, hub-standaard sinds de hang-fix van 27 juli), of legacy
 ## "medium"/"easy" (MatchRunner + oude AI, blijft voor solocheck/duelstats).
-## Cycluslimiet 0 = uit (26 juli, Max): duels spelen uit tot haven of
-## eliminatie, net als een los potje; max_steps is de technische noodstop.
+## V0 (3 augustus): duels spelen uit tot haven of eliminatie, en de
+## uitputtingsklok (honger) dwingt dat einde af. De cycluslimiet bestaat niet
+## meer -- die verzon een winnaar voor een partij die niemand had gewonnen.
+## max_steps blijft de technische noodstop, maar levert GEEN uitslag meer op.
 var duel_ai: String = "medium"
-var duel_cycle_limit: int = 0
+var duel_honger_vanaf: int = 10
 var duel_max_steps: int = 3000
 
-## Aparte cycluslimiet voor BOT-duels (-1 = volg duel_cycle_limit). De hub zet
-## dit als vangnet tegen 3000-stappen-grindduels; het MENS-duel (via de brug,
-## duel_rules_voor zonder override) behoudt de volle duel_cycle_limit.
-var bot_duel_cycle_limit: int = -1
+## Aparte hongercyclus voor BOT-duels (-1 = volg duel_honger_vanaf). De hub kan
+## hem lager zetten als vangnet tegen lange grindduels; het MENS-duel (via de
+## brug, duel_rules_voor zonder override) houdt de gewone waarde.
+var bot_duel_honger_vanaf: int = -1
 
 ## Voortgang voor de UI (dwars door de werk-thread heen leesbaar): welke
 ## bot-klus er nu maalt. Leeg = geen langlopend werk.
@@ -378,7 +380,7 @@ func _stap_testament() -> void:
 ## De duel-config voor a-vs-b uit het campagne-bezit (C2/C7): comp gecapt op
 ## voorraad, rest wordt reserve, CP per speler. Bord-P1 = a, bord-P2 = b —
 ## de mens-duel-brug geeft daarom altijd de mens als a mee.
-func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
+func duel_rules_voor(a: int, b: int, p_honger_vanaf: int = -1) -> RulesConfig:
 	var bezit_a: Dictionary = c.pool_van(a)
 	var bezit_b: Dictionary = c.pool_van(b)
 	# C17: via de campagneregels, net als de startboeking in CState.setup.
@@ -405,7 +407,7 @@ func duel_rules_voor(a: int, b: int, p_cycle_limit: int = -1) -> RulesConfig:
 		start_b = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
 		pool_a = {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]}
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
-	return RulesConfig.from_dict({"cycle_limit": duel_cycle_limit if p_cycle_limit < 0 else p_cycle_limit,
+	return RulesConfig.from_dict({"honger_vanaf_cyclus": duel_honger_vanaf if p_honger_vanaf < 0 else p_honger_vanaf,
 		"basis_hp": {"cav": 2},  # C12: bigbro altijd minstens 2 HP, kaart erbovenop
 		# C17: de facties van DEZE campagne mee het bord op. Zonder dit blok
 		# vielen kaarten, budget en perks in elk campagne-duel terug op de
@@ -437,15 +439,20 @@ func _duel_reserve(bezit: Dictionary) -> Dictionary:
 ## Gedeeld door de bot-duels én het mens-duel op het echte bord (F3.4b).
 func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 		s: GameState, winnaar_kant: int) -> bool:
-	# Methode bepalen (zoals de arena-metrics).
-	var methode := "tiebreak"
-	if winnaar_kant != -1:
-		if Rules.count_pawns_in_haven(s, winnaar_kant) >= s.rules.pawns_in_haven_to_win:
-			methode = "haven"
-		else:
-			var verliezer_kant: int = Constants.opponent(winnaar_kant)
-			if s.count_alive_pawns_for(verliezer_kant) + s.pool_total(verliezer_kant) == 0:
-				methode = "eliminatie"
+	# Methode bepalen (zoals de arena-metrics). V0 (3 augustus): een duel kent
+	# alleen haven en eliminatie, dus er is geen "tiebreak"-default meer. Kwam
+	# er toch geen winnaar van het bord, dan is dat een fout in de
+	# uitputtingsklok en niet een uitslag die we stil moeten wegboeken.
+	if winnaar_kant == -1:
+		push_error("SoloDriver: duel %d zonder winnaar teruggekregen (V0: een duel kent geen gelijkspel)" % idx)
+		return false
+	var methode := "eliminatie"
+	if Rules.count_pawns_in_haven(s, winnaar_kant) >= s.rules.pawns_in_haven_to_win:
+		methode = "haven"
+	elif String(s.eind_reden) == "resign":
+		# Opgeven telt voor de winnaar als eliminatie (roem en CP), anders is
+		# opgeven een goedkope manier om zijn winst te drukken.
+		methode = "resign"
 	# Verliezen per type = geëlimineerde pionnen (voor het battlereport; onder
 	# het vol-team-model kosten die geen pool meer — de inzet doet dat).
 	var verliezen: Dictionary = {str(a): {"inf": 0, "cav": 0, "art": 0}, str(b): {"inf": 0, "cav": 0, "art": 0}}
@@ -503,7 +510,7 @@ func _speel_duel(idx: int, a: int, b: int) -> void:
 		String(c.spelers[a].naam), String(c.spelers[b].naam)]
 	var cp_a: int = c.cp_van(a)
 	var cp_b: int = c.cp_van(b)
-	var rules := duel_rules_voor(a, b, bot_duel_cycle_limit)
+	var rules := duel_rules_voor(a, b, bot_duel_honger_vanaf)
 	var seed_v: int = _rng.fork("duel_%d" % _duel_teller).randi_range(1, 1 << 30)
 	var eind_staat: GameState
 	var winnaar_kant: int

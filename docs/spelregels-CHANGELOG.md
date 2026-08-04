@@ -1,5 +1,91 @@
 # Spelregels — CHANGELOG
 
+## V0 — 3 augustus 2026 (geen gelijkspel, de uitputtingsklok, rules_version 4.3.0)
+
+*Besluit Max: "een duel eindigt op de haven of op totale eliminatie. Meer
+smaken zijn er niet." Bron: `docs/campagne-intrige-voorstel.md` §1b.*
+
+Dit is geen sfeerregel maar een fundament. Als elk duel beslissend is, is elke
+nominatie in de raad een doodvonnis, en dat maakt de hele politieke laag van de
+campagne zwaarder. Het is ook de afmaking van de C9-waarneming: bots wonnen
+vrijwel alleen via de tiebreak, dus ging de cycluslimiet er toen al uit.
+
+**Wat verdwijnt:**
+
+- `cycle_limit` en `tiebreak` als knoppen. De tiebreak-knop was al dood (de
+  string werd nergens gelezen, de reducer riep de functie onvoorwaardelijk aan).
+- `Reducer.tiebreak_winner` en `_haven_closeness`.
+- De trede `punten_tiebreak` in de campagne (roem kent nog haven, eliminatie en
+  verlies).
+- De campagne-tak waarin bij winnaar -1 **beide** vechters een punt kregen en
+  niemand iets verloor. Dat was precies de uitkomst die dit besluit verbiedt.
+- De bracket-regel "bij remise valt de laagste seed uit".
+
+**Wat ervoor terugkomt: de honger.** Vanaf `honger_vanaf_cyclus` verliest elke
+speler bij het begin van een cyclus een pion: de pion die het **verst van zijn
+doelhaven** staat. De achterhoede verhongert dus het eerst, en dat duwt je
+vooruit in plaats van achteruit. Thematisch de Russische veldtocht: niet de
+vijand maakt je leger op, de winter doet dat.
+
+Drie dingen daaraan zijn correctheid, geen smaak:
+
+1. De spelers eten **om de beurt, met een win-check ertussen**, en wie het eerst
+   eet wisselt per cyclus. Verhongeren beiden tegelijk hun laatste pion, dan
+   staat de winstcheck op nul tegen nul en leest die dat als "nog geen
+   winnaar": het duel zou eeuwig doorlopen. Een vaste volgorde zou de tweede
+   speler in precies die stand een gratis winst geven.
+2. Bij gelijke afstand valt de **laagste pion-id**, zodat de keuze niet aan de
+   invoegvolgorde van een dictionary hangt.
+3. Honger boekt **geen C15-buit**. De cyclusreset heeft net alle pionnen
+   ontkoppeld, dus elke vaandeldrager zou anders 2 punten opleveren voor iemand
+   die niets deed.
+
+**De winstvoorwaarde is bijgesteld**: eliminatie kijkt naar **inzetbare**
+reserve. Spawnen is gecapt op `spawn_totaal_max`, en is die cap op, dan zijn je
+punten dood kapitaal. Zonder die correctie kon je met een leeg bord en een volle
+pot "in leven" blijven, en dan houdt de honger nooit op.
+
+**De noodstop verzint geen uitslag meer.** Beide runners kapten bij `max_steps`
+stilletjes af met een tiebreak-winnaar; nu blijft `winner` op -1, gaat er een
+`afgekapt`-vlag aan en gilt een `push_error`. De arena boekt dat als eigen
+categorie in plaats van als remise, zodat een kapotte klok niet in een
+onschuldig ogende kolom verdwijnt. De stap-budgetten van trainer en solocheck
+zijn daarop verruimd (600/900 → 1400, gemeten max 932).
+
+**Opgeven telt voor de winnaar als een eliminatie**, roem én CP. Anders is
+opgeven een goedkope manier om de winst van je tegenstander te drukken. De staat
+draagt daarvoor een nieuw veld `eind_reden` ("haven" / "eliminatie" / "resign" /
+"timeout"), want de campagnelaag leidde de methode tot nu toe af uit de
+eindstaat en een opgave was daaraan niet te zien: die boekte als tiebreak.
+
+### Het getal, en waarom
+
+C17 (een regel, twee getallen) is hier één regel en één getal: **honger vanaf
+cyclus 10**, in campagne en los potje gelijk. Gemeten over 216 partijen, L2
+tegen L2 op de campagne-regels:
+
+| klok | cycli mediaan | cycli max | stappen max | beslissend |
+|---|---|---|---|---|
+| cycluslimiet 25 (oud) | 10 | 26 | 1.165 | 95% |
+| helemaal geen klok | 10 | **330** | **6.001** | 97% |
+| honger vanaf 10 | 10 | **16** | **932** | **100%** |
+
+De mediaan is in alle drie de gevallen 10 cycli: de klok doet niets voor een
+gewone partij en bestaat puur voor de staart. Die staart was erger dan gedacht,
+want zonder klok liep één partij door tot 330 cycli en knalde tegen de noodstop
+van 6.000 stappen.
+
+De honger verschuift de uitslagen wel: van 118 eliminatie / 88 haven naar 139 /
+73. Dat is logisch, want hij dunt legers uit. Bots moeten hier dus op hertraind
+worden; hun oude waardefunctie kende "overleven tot de limiet" als geldige
+uitkomst en die bestaat niet meer.
+
+**Ijk-sims:** drie van de vijf werden korter (seed 101: 23 → 17 cycli, seed 202:
+26 → 11, seed 303: 366 → 361 acties). De **winnaar bleef in alle drie dezelfde**:
+de honger kort partijen in zonder uitslagen om te draaien. Alle 15 golden
+replays zijn opnieuw opgenomen, want de hash dekt de volledige regels-config;
+`cycluslimiet_remise.json` is vervangen door `honger.json`.
+
 ## C17 afgemaakt — 3 augustus 2026 (de campagne volgt nu ook de facties)
 
 **Geen gedragswijziging zolang er geen `doctrines`-blok is.** Wel: tot vandaag

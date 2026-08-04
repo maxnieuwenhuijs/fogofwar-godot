@@ -14,7 +14,7 @@ func _class_name() -> String:
 
 
 func _campaign_rules() -> RulesConfig:
-	return RulesConfig.from_dict({"campaign": {}, "cycle_limit": 10})
+	return RulesConfig.from_dict({"campaign": {}, "honger_vanaf_cyclus": 6})
 
 
 func _speel(agent1: Agent, agent2: Agent, seed_val: int) -> Dictionary:

@@ -21,7 +21,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `golden_sims.json` regenereren). Lees factie-data NOOIT rechtstreeks uit
   `Constants.doctrine_data()` in speel-code; ga via `rules.doctrine_data()`,
   `c.rules.doctrine_data()` of `Agent.doctrine_data_uit_view()`.
-- **C15-buit (4.2.1)**: vaandeldrager neerleggen = 2 versterkingspunten,
+- **V0 — GEEN GELIJKSPEL (4.3.0)**: een duel eindigt op de **haven** of op
+  **totale eliminatie**. Geen remise, geen tiebreak, geen cycluslimiet. In
+  plaats daarvan de **honger**: vanaf `honger_vanaf_cyclus` (10, gelijk in
+  campagne en los potje) verliest elke speler bij het begin van een cyclus de
+  pion die het verst van zijn doelhaven staat. Om de beurt, met een win-check
+  ertussen, wisselend wie begint; gelijke afstand = laagste pion-id; **geen
+  C15-buit** (honger is geen kill). Eliminatie kijkt naar INZETBARE reserve
+  (spawn-cap op = punten zijn dood kapitaal). Opgeven telt voor de winnaar als
+  eliminatie. **De noodstop `max_steps` is een FOUT, geen uitslag**: de runners
+  zetten `afgekapt` en gillen, en de arena boekt dat als eigen categorie.
+  Bron: `docs/campagne-intrige-voorstel.md` §1b (V0-V19 = voorstellen; alleen V0
+  is aangenomen).
+- **C15-buit (4.3.1)**: vaandeldrager neerleggen = 2 versterkingspunten,
   tamboer = 2 CP, alleen als het slachtoffer ONgekoppeld is. De rol staat op de
   pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in de
   opstelfase. Knoppen: `buit_vaandel_pt`, `buit_tamboer_cp`, `vaandels_max`,

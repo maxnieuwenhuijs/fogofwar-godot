@@ -1,12 +1,13 @@
 {
- "matchups": "all",
- "games_per_matchup": 3,
  "agents": {
   "p1": "l2",
   "p2": "l2"
  },
  "base_seed": 90000,
+ "games_per_matchup": 3,
+ "matchups": "all",
  "max_steps": 1500,
- "track_repetitions": true,
- "tie_break_loting": true
+ "rules": "res://arena/arena_configs/v41_default.json",
+ "tie_break_loting": true,
+ "track_repetitions": true
 }

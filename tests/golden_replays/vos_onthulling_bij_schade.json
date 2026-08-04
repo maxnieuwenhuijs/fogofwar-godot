@@ -63,13 +63,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "09e450ae71e9c15c817ae89f5fb5807ae6f504eaeca2d972b1517d3b93d9005f",
+			"hash": "e926c3714e41a77e2c3d33457294eea40166551326896077aef35154e5a7810c",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785527177.248
+			"ts": 1785847003.036
 		}
 	],
-	"final_hash": "09e450ae71e9c15c817ae89f5fb5807ae6f504eaeca2d972b1517d3b93d9005f",
+	"final_hash": "e926c3714e41a77e2c3d33457294eea40166551326896077aef35154e5a7810c",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -117,6 +117,7 @@
 			"1": 0,
 			"2": 5
 		},
+		"eind_reden": "",
 		"haven_touches": {
 			"1": [],
 			"2": []
@@ -208,11 +209,11 @@
 				"increment_sec": 0,
 				"reconnect_grace_sec": 20
 			},
-			"cycle_limit": 0,
 			"doctrines": {},
 			"fire_blocked": true,
 			"fire_hits_inactive": true,
 			"haven_score_cumulative": false,
+			"honger_vanaf_cyclus": 0,
 			"inf_shot_cost": 1,
 			"inf_shot_full_attack": true,
 			"inf_shot_over_pawn": false,
@@ -225,11 +226,10 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.1.10-hr",
+			"rules_version": "4.3.0",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
-			"statue_threshold": 0,
-			"tiebreak": "material_haven_proximity"
+			"statue_threshold": 0
 		},
 		"spawn_commits": {
 			"1": [],
@@ -247,7 +247,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-31T21:46:17",
+		"created": "2026-08-04T14:36:43",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -296,6 +296,7 @@
 				"1": 0,
 				"2": 5
 			},
+			"eind_reden": "",
 			"haven_touches": {
 				"1": [],
 				"2": []
@@ -387,11 +388,11 @@
 					"increment_sec": 0,
 					"reconnect_grace_sec": 20
 				},
-				"cycle_limit": 0,
 				"doctrines": {},
 				"fire_blocked": true,
 				"fire_hits_inactive": true,
 				"haven_score_cumulative": false,
+				"honger_vanaf_cyclus": 0,
 				"inf_shot_cost": 1,
 				"inf_shot_full_attack": true,
 				"inf_shot_over_pawn": false,
@@ -404,11 +405,10 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.1.10-hr",
+				"rules_version": "4.3.0",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
-				"statue_threshold": 0,
-				"tiebreak": "material_haven_proximity"
+				"statue_threshold": 0
 			},
 			"spawn_commits": {
 				"1": [],
@@ -425,6 +425,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.1.10-hr"
+		"rules_version": "4.3.0"
 	}
 }

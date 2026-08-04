@@ -41,13 +41,28 @@ static func check_win(state: GameState) -> int:
 	# F2.2 (v4.2): eliminatie kijkt naar bord + pool — met reserves ben je nog
 	# niet verslagen (je spawnt volgende cyclus). Zonder campaign is de pool 0
 	# en is dit exact het 4.1-gedrag.
-	var p1_alive: int = state.count_alive_pawns_for(Constants.PLAYER_1) + state.pool_total(Constants.PLAYER_1)
-	var p2_alive: int = state.count_alive_pawns_for(Constants.PLAYER_2) + state.pool_total(Constants.PLAYER_2)
+	#
+	# V0 (3 augustus): het gaat om INZETBARE reserve. Spawnen is gecapt op
+	# spawn_totaal_max, en is die cap op, dan zijn je punten dood kapitaal: je
+	# krijgt er nooit meer een pion voor. Zonder deze correctie kon je met een
+	# leeg bord en een volle pot "in leven" blijven, en dan houdt de honger nooit
+	# op en eindigt het duel nooit. Precies de patstelling die V0 verbiedt.
+	var p1_alive: int = state.count_alive_pawns_for(Constants.PLAYER_1) + _inzetbare_reserve(state, Constants.PLAYER_1)
+	var p2_alive: int = state.count_alive_pawns_for(Constants.PLAYER_2) + _inzetbare_reserve(state, Constants.PLAYER_2)
 	if p1_alive == 0 and p2_alive > 0:
 		return Constants.PLAYER_2
 	if p2_alive == 0 and p1_alive > 0:
 		return Constants.PLAYER_1
 	return -1
+
+
+## Reserve die nog echt op het bord kan komen: nul zodra de spawn-cap op is.
+static func _inzetbare_reserve(state: GameState, player_id: int) -> int:
+	if not state.rules.campaign_actief():
+		return 0
+	if state.spawns_over(player_id) <= 0:
+		return 0
+	return state.pool_total(player_id)
 
 # =========================================================================
 # Bewegen

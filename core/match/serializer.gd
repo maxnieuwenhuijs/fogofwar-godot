@@ -65,6 +65,7 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		"initiative_player": state.initiative_player,
 		"last_initiative_winner": state.last_initiative_winner,
 		"winner": state.winner,
+		"eind_reden": state.eind_reden,
 		"pending_wolf_step_pawn": state.pending_wolf_step_pawn,
 		"turn_deadline": state.turn_deadline,
 		"clocks": state.clocks.duplicate(true),
@@ -98,6 +99,7 @@ static func state_from_dict(d: Dictionary) -> GameState:
 	s.initiative_player = int(d.get("initiative_player", Constants.PLAYER_1))
 	s.last_initiative_winner = int(d.get("last_initiative_winner", Constants.PLAYER_1))
 	s.winner = int(d.get("winner", -1))
+	s.eind_reden = String(d.get("eind_reden", ""))
 	s.pending_wolf_step_pawn = int(d.get("pending_wolf_step_pawn", -1))
 	s.turn_deadline = int(d.get("turn_deadline", 0))
 	s.clocks = {}

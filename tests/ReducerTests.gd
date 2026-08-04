@@ -128,41 +128,112 @@ func test_resign_in_elke_fase() -> void:
 	assert_false(na.ok, "resign na afloop is illegaal")
 
 
-func test_cycle_limit_tiebreak_materiaal() -> void:
-	# P1 heeft meer materiaal; bij de cycluslimiet wint P1 via de tiebreak.
+## V0 (3 augustus): de cycluslimiet en de tiebreak zijn vervangen door de
+## uitputtingsklok. Deze twee tests legden het oude gedrag vast en zijn
+## omgebouwd naar de honger. Wat ze bewaken is hetzelfde: een partij MOET
+## eindigen, en de uitkomst mag niet van de invoegvolgorde afhangen.
+
+func test_honger_eet_de_achterhoede() -> void:
+	# De pion die het VERST van zijn doelhaven staat verhongert het eerst.
+	# P1 moet naar y=0, dus zijn achterhoede staat op een hoge y.
 	var s := GameState.new()
 	s.rules = RulesConfig.new()
-	s.rules.cycle_limit = 1
+	s.rules.honger_vanaf_cyclus = 1
 	s.phase = Phase.Type.ACTION
 	s.current_player = 1
 	var mover: Pawn = s._spawn_pawn(1, Vector2i(5, 8))
-	var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)  # speed 1: één stap en klaar
+	var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)  # speed 1: een stap en klaar
 	s.all_cards[card.id] = card
 	mover.link_card(card)
-	s._spawn_pawn(1, Vector2i(0, 5))  # extra standbeeld: P1 2 pionnen, P2 1
+	var voorhoede: Pawn = s._spawn_pawn(1, Vector2i(5, 1))   # bijna in de haven
+	var achterhoede: Pawn = s._spawn_pawn(1, Vector2i(5, 10))  # helemaal achteraan
+	s._spawn_pawn(2, Vector2i(0, 5))
 	s._spawn_pawn(2, Vector2i(10, 5))
 	var res: Dictionary = Reducer.apply(s, Actions.make_move(mover.id, Vector2i(5, 7)), 1)
 	assert_true(res.ok)
-	assert_eq(s.phase, Phase.Type.GAME_OVER, "cycluslimiet bereikt -> partij beslist")
-	assert_eq(s.winner, Constants.PLAYER_1, "tiebreak op materiaal (2 vs 1)")
+	assert_true(achterhoede.is_eliminated, "de achterste pion van P1 verhongert")
+	assert_false(voorhoede.is_eliminated, "de voorhoede blijft staan")
 
 
-func test_cycle_limit_echte_remise() -> void:
-	# Perfect gespiegelde eindstand: materiaal, haven en nabijheid gelijk -> -1.
+func test_honger_kiest_deterministisch_bij_gelijke_afstand() -> void:
+	# Twee pionnen even ver: de laagste id gaat, ongeacht invoegvolgorde.
+	var uitslagen: Array = []
+	for volgorde in [0, 1]:
+		var s := GameState.new()
+		s.rules = RulesConfig.new()
+		s.rules.honger_vanaf_cyclus = 1
+		s.phase = Phase.Type.ACTION
+		s.current_player = 1
+		var mover: Pawn = s._spawn_pawn(1, Vector2i(5, 8))
+		var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)
+		s.all_cards[card.id] = card
+		mover.link_card(card)
+		# Twee even ver weg (beide y=10), in wisselende volgorde geplaatst.
+		var a: Pawn = s._spawn_pawn(1, Vector2i(3, 10) if volgorde == 0 else Vector2i(7, 10))
+		var b: Pawn = s._spawn_pawn(1, Vector2i(7, 10) if volgorde == 0 else Vector2i(3, 10))
+		s._spawn_pawn(2, Vector2i(0, 5))
+		Reducer.apply(s, Actions.make_move(mover.id, Vector2i(5, 7)), 1)
+		uitslagen.append("a" if a.is_eliminated else ("b" if b.is_eliminated else "geen"))
+	assert_eq(uitslagen[0], "a", "de laagste pion-id verhongert")
+	assert_eq(uitslagen[1], "a", "en dat hangt niet aan de invoegvolgorde")
+
+
+func test_honger_beslist_de_partij_zonder_remise() -> void:
+	# P2 heeft nog een pion, P1 verhongert zijn laatste: P2 wint. Geen -1.
 	var s := GameState.new()
 	s.rules = RulesConfig.new()
-	s.rules.cycle_limit = 1
+	s.rules.honger_vanaf_cyclus = 1
 	s.phase = Phase.Type.ACTION
 	s.current_player = 1
 	var mover: Pawn = s._spawn_pawn(1, Vector2i(5, 8))
 	var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)
 	s.all_cards[card.id] = card
 	mover.link_card(card)
-	s._spawn_pawn(2, Vector2i(5, 3))  # spiegel van (5,7): beide 7 van hun haven
+	s._spawn_pawn(2, Vector2i(0, 5))
+	s._spawn_pawn(2, Vector2i(10, 5))
 	var res: Dictionary = Reducer.apply(s, Actions.make_move(mover.id, Vector2i(5, 7)), 1)
 	assert_true(res.ok)
-	assert_eq(s.phase, Phase.Type.GAME_OVER)
-	assert_eq(s.winner, -1, "volledig gelijk -> echte remise")
+	assert_eq(s.phase, Phase.Type.GAME_OVER, "de honger maakt een einde aan de partij")
+	assert_eq(s.winner, Constants.PLAYER_2, "P1 heeft geen pionnen meer: P2 wint")
+	assert_eq(String(s.eind_reden), "eliminatie", "en dat is een eliminatie, geen remise")
+
+
+func test_honger_staat_uit_op_nul() -> void:
+	# honger_vanaf_cyclus 0 = geen klok: niemand verhongert.
+	var s := GameState.new()
+	s.rules = RulesConfig.new()
+	s.rules.honger_vanaf_cyclus = 0
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	var mover: Pawn = s._spawn_pawn(1, Vector2i(5, 8))
+	var card := Card.new(s.next_card_id(), 1, 1, 3, 1, 1)
+	s.all_cards[card.id] = card
+	mover.link_card(card)
+	var achterhoede: Pawn = s._spawn_pawn(1, Vector2i(5, 10))
+	s._spawn_pawn(2, Vector2i(0, 5))
+	Reducer.apply(s, Actions.make_move(mover.id, Vector2i(5, 7)), 1)
+	assert_false(achterhoede.is_eliminated, "zonder klok verhongert er niets")
+
+
+func test_resign_telt_als_eliminatie() -> void:
+	# V0: opgeven levert de winnaar het eliminatie-tarief op, en de reden staat
+	# in de staat zodat de campagnelaag hem niet hoeft te raden.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.phase = Phase.Type.ACTION
+	s.current_player = 1
+	s._spawn_pawn(1, Vector2i(5, 8))
+	s._spawn_pawn(2, Vector2i(5, 3))
+	var res: Dictionary = Reducer.apply(s, Actions.make_resign(), 1)
+	assert_true(res.ok)
+	assert_eq(s.winner, Constants.PLAYER_2, "wie opgeeft verliest")
+	assert_eq(String(s.eind_reden), "resign")
+	var tarief := 0
+	for ev in res.events:
+		if String(ev.type) == Reducer.EV_CP_EARNED:
+			tarief = int(ev.payload.amount)
+	assert_eq(tarief, int(s.rules.campaign.get("cp_eliminatie", 4)),
+		"de winnaar krijgt het eliminatie-tarief, niet niets")
 
 
 func test_gelijk_bod_geeft_p1_initiatief_in_cyclus1() -> void:

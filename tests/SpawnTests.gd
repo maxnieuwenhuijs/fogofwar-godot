@@ -41,10 +41,10 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.2.1", "campaign-activering = 4.2.1")
+	assert_eq(met.rules_version, "4.3.1", "campaign-activering = 4.3.1")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
-	assert_eq(zonder.rules_version, "4.1.10-hr", "zonder blok blijft 4.1.x")
+	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
 	assert_false(zonder.campaign_actief())
 
 

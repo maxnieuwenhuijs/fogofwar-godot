@@ -1,15 +1,57 @@
 {
-	"matchups": [
-		["muis", "mens"], ["mens", "muis"],
-		["muis", "muis"],
-		["muis", "leeuw"], ["leeuw", "muis"],
-		["muis", "beer"], ["beer", "muis"],
-		["muis", "wolf"], ["wolf", "muis"],
-		["muis", "vos"], ["vos", "muis"]
-	],
-	"games_per_matchup": 2,
-	"agents": {"p1": "l2", "p2": "l2"},
-	"base_seed": 97000,
-	"max_steps": 1500,
-	"track_repetitions": false
+ "agents": {
+  "p1": "l2",
+  "p2": "l2"
+ },
+ "base_seed": 97000,
+ "games_per_matchup": 2,
+ "matchups": [
+  [
+   "muis",
+   "mens"
+  ],
+  [
+   "mens",
+   "muis"
+  ],
+  [
+   "muis",
+   "muis"
+  ],
+  [
+   "muis",
+   "leeuw"
+  ],
+  [
+   "leeuw",
+   "muis"
+  ],
+  [
+   "muis",
+   "beer"
+  ],
+  [
+   "beer",
+   "muis"
+  ],
+  [
+   "muis",
+   "wolf"
+  ],
+  [
+   "wolf",
+   "muis"
+  ],
+  [
+   "muis",
+   "vos"
+  ],
+  [
+   "vos",
+   "muis"
+  ]
+ ],
+ "max_steps": 1500,
+ "rules": "res://arena/arena_configs/v41_default.json",
+ "track_repetitions": false
 }

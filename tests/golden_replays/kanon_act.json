@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3a0468b93b5e8c90f34505395a64cbb46a0572fcca261b58371c10a5d9b48ffe",
+			"hash": "bcadab0cbee628de6899fe233e688890a58471ac364b75d1020b9945218ee008",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1785527177.326
+			"ts": 1785847003.115
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "58482d2c515ea9f62f5ff27d8e122af6c60ccc02af05e9cd16babc010018ec9d",
+			"hash": "de7264beffc720a9510e830c270c5d1d5c5e2028171eb9c9a10e309ad5fa5c7f",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1785527177.328
+			"ts": 1785847003.115
 		}
 	],
-	"final_hash": "58482d2c515ea9f62f5ff27d8e122af6c60ccc02af05e9cd16babc010018ec9d",
+	"final_hash": "de7264beffc720a9510e830c270c5d1d5c5e2028171eb9c9a10e309ad5fa5c7f",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -162,6 +162,7 @@
 			"1": 0,
 			"2": 0
 		},
+		"eind_reden": "",
 		"haven_touches": {
 			"1": [],
 			"2": []
@@ -324,11 +325,11 @@
 				"increment_sec": 0,
 				"reconnect_grace_sec": 20
 			},
-			"cycle_limit": 0,
 			"doctrines": {},
 			"fire_blocked": true,
 			"fire_hits_inactive": true,
 			"haven_score_cumulative": false,
+			"honger_vanaf_cyclus": 0,
 			"inf_shot_cost": 1,
 			"inf_shot_full_attack": true,
 			"inf_shot_over_pawn": false,
@@ -341,11 +342,10 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.2.1",
+			"rules_version": "4.3.1",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
-			"statue_threshold": 0,
-			"tiebreak": "material_haven_proximity"
+			"statue_threshold": 0
 		},
 		"spawn_commits": {
 			"1": [],
@@ -363,7 +363,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-07-31T21:46:17",
+		"created": "2026-08-04T14:36:43",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -404,6 +404,7 @@
 				"1": 0,
 				"2": 0
 			},
+			"eind_reden": "",
 			"haven_touches": {
 				"1": [],
 				"2": []
@@ -566,11 +567,11 @@
 					"increment_sec": 0,
 					"reconnect_grace_sec": 20
 				},
-				"cycle_limit": 0,
 				"doctrines": {},
 				"fire_blocked": true,
 				"fire_hits_inactive": true,
 				"haven_score_cumulative": false,
+				"honger_vanaf_cyclus": 0,
 				"inf_shot_cost": 1,
 				"inf_shot_full_attack": true,
 				"inf_shot_over_pawn": false,
@@ -583,11 +584,10 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.2.1",
+				"rules_version": "4.3.1",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
-				"statue_threshold": 0,
-				"tiebreak": "material_haven_proximity"
+				"statue_threshold": 0
 			},
 			"spawn_commits": {
 				"1": [],
@@ -604,6 +604,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.2.1"
+		"rules_version": "4.3.1"
 	}
 }

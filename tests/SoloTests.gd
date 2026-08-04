@@ -110,8 +110,8 @@ func test_mens_duel_pauzeert_en_bord_uitslag_boekt() -> void:
 	var easy := preload("res://scripts/ai/AIEasy.gd")
 	var driver := SoloDriver.new(2026, 0, 6)
 	driver.duel_ai = "easy"
-	driver.duel_cycle_limit = 4
-	driver.duel_max_steps = 400
+	driver.duel_honger_vanaf = 4
+	driver.duel_max_steps = 1500  # V0: de noodstop levert geen uitslag meer op
 	var op_bord := 0
 	var vangnet := 0
 	while driver.c.fase != CState.Fase.KLAAR and vangnet < 900:
@@ -146,7 +146,7 @@ func test_mens_duel_pauzeert_en_bord_uitslag_boekt() -> void:
 				var runner := MatchRunner.new(easy.new(), easy.new(),
 					int(driver.c.spelers[0].doctrine), int(driver.c.spelers[b].doctrine),
 					4242 + op_bord, rules)
-				runner.max_steps = 400
+				runner.max_steps = 1500  # V0: de noodstop levert geen uitslag meer op
 				while not runner.done:
 					runner.step()
 				assert_true(driver.verwerk_duel_uitslag(int(d.idx), 0, b, cp_a, cp_b,
@@ -260,8 +260,8 @@ func test_bot_duels_simuleren_tijdens_mens_duel() -> void:
 	# de achtergrond uit; de ronde sluit pas als ook het mens-resultaat er is.
 	var driver := SoloDriver.new(3033, 0, 6)
 	driver.duel_ai = "easy"
-	driver.duel_cycle_limit = 4
-	driver.duel_max_steps = 400
+	driver.duel_honger_vanaf = 4
+	driver.duel_max_steps = 1500  # V0: de noodstop levert geen uitslag meer op
 	var vangnet := 0
 	while not driver.wacht_op_mens() and vangnet < 20:
 		vangnet += 1

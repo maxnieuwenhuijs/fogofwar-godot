@@ -36,7 +36,7 @@ var _info_label: Label = null
 const BOT_DUEL_AI := "easy"
 ## Vangnet tegen incidentele grind-duels tussen bots; het mens-duel op het
 ## echte bord behoudt cycluslimiet 0 (besluit 26 juli).
-const BOT_DUEL_CYCLE_LIMIT := 24
+const BOT_DUEL_HONGER_VANAF := 10
 
 const KLEUR_EIGEN := Color(0.30, 0.55, 0.95)
 const KLEUR_VIJAND := Color(0.90, 0.35, 0.35)
@@ -112,7 +112,7 @@ func _toon_hervat_keuze(oud_driver: SoloDriver) -> void:
 
 func _start() -> void:
 	driver.duel_ai = BOT_DUEL_AI
-	driver.bot_duel_cycle_limit = BOT_DUEL_CYCLE_LIMIT
+	driver.bot_duel_honger_vanaf = BOT_DUEL_HONGER_VANAF
 	if CampaignBridge.driver != driver:
 		CampaignBridge.feed_gezien = 0  # verse of hervatte campagne: teller opnieuw
 	CampaignBridge.driver = driver

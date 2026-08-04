@@ -72,6 +72,10 @@ var cp_bets: Dictionary = {}
 var cp_bet_done: Dictionary = {}
 
 var winner: int = -1
+## V0 (3 augustus): HOE het duel eindigde. De campagnelaag leidde dat tot nu toe
+## af uit de eindstaat, en een opgave was daaraan niet te zien: die boekte als
+## tiebreak. Waarden: "" (nog bezig), "haven", "eliminatie", "resign", "timeout".
+var eind_reden: String = ""
 
 var _next_pawn_id: int = 0
 var _next_card_id: int = 0
@@ -546,6 +550,7 @@ func clone() -> GameState:
 	copy.initiative_player = initiative_player
 	copy.last_initiative_winner = last_initiative_winner
 	copy.winner = winner
+	copy.eind_reden = eind_reden
 	copy.doctrines = doctrines.duplicate()
 	copy.placements_done = placements_done.duplicate()
 	copy.reveal_acks = reveal_acks.duplicate()

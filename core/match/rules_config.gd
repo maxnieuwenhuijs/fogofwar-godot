@@ -8,11 +8,11 @@ extends RefCounted
 #
 # Handhaving per knop:
 # - vuurmodel/schot/terugslag/stamina/haven: Rules.gd (deze stap, F0.2)
-# - cycle_limit + tiebreak: reducer (F0.4c)
+# - honger_vanaf_cyclus: reducer (V0, de uitputtingsklok)
 # - clock: engine-klokken (F0.8)
 # - campaign (cp/pool/spawn/cannon): v4.2 (F2); null = puur 4.1-gedrag
 
-var rules_version: String = "4.1.10-hr"
+var rules_version: String = "4.3.0"  # V0: geen gelijkspel, uitputtingsklok
 var rounds_per_cycle: int = 3
 var pawns_in_haven_to_win: int = 2
 
@@ -51,9 +51,13 @@ var retaliation: Dictionary = {"inf": 1, "cav": 2, "art": 0}
 # --- Actie-economie ---
 var stamina_model: String = "pool"    # "pool" (huisregel) | "one_action" (v4.1-doc: 1 actie per pion per cyclus)
 
-# --- Partijgrenzen (handhaving F0.4c) ---
-var cycle_limit: int = 0              # 0 = uit; anders remise/tiebreak na N cycli
-var tiebreak: String = "material_haven_proximity"
+# --- Partijgrenzen (V0, 3 augustus: de uitputtingsklok) ---
+# Een duel kent alleen haven en eliminatie. Geen remise, geen tiebreak, geen
+# cycluslimiet. In plaats daarvan verhongert vanaf deze cyclus elke speler een
+# pion per cyclus (de achterste), zodat het einde uit de regels zelf komt.
+# 0 = geen klok (dan kan een partij in theorie eeuwig duren).
+# C17: een regel, twee getallen -- campagne-duel later dan een los potje.
+var honger_vanaf_cyclus: int = 0
 
 # --- Klokken (handhaving F0.8) ---
 var clock: Dictionary = {"bank_sec": 0, "increment_sec": 0, "reconnect_grace_sec": 20}
@@ -66,7 +70,7 @@ var campaign = null
 
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
-## rules_version naar 4.2.1 (C15: buit op figuranten); zonder blok speelt de
+## rules_version naar 4.3.1 (C15-buit bovenop V0); zonder blok speelt de
 ## engine exact 4.1.x.
 const CAMPAIGN_DEFAULTS := {
 	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
@@ -206,8 +210,7 @@ func to_dict() -> Dictionary:
 		"art_shot_cost": art_shot_cost,
 		"retaliation": retaliation.duplicate(),
 		"stamina_model": stamina_model,
-		"cycle_limit": cycle_limit,
-		"tiebreak": tiebreak,
+		"honger_vanaf_cyclus": honger_vanaf_cyclus,
 		"clock": clock.duplicate(),
 		"doctrines": doctrines.duplicate(true),
 		"campaign": (campaign as Dictionary).duplicate(true) if campaign is Dictionary else null,
@@ -241,8 +244,12 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 	if ret is Dictionary:
 		c.retaliation = {"inf": int(ret.get("inf", 1)), "cav": int(ret.get("cav", 2)), "art": int(ret.get("art", 0))}
 	c.stamina_model = String(d.get("stamina_model", c.stamina_model))
-	c.cycle_limit = int(d.get("cycle_limit", c.cycle_limit))
-	c.tiebreak = String(d.get("tiebreak", c.tiebreak))
+	# V0: cycle_limit en tiebreak bestaan niet meer. Oude configs en oude
+	# replays dragen ze nog; die worden STIL genegeerd, want ze beschrijven
+	# een regel die er niet meer is. Wie een oude arena-config draait krijgt
+	# dus geen klok: daarom staat de nieuwe sleutel in elke meegeleverde
+	# config, en gilt de runner als een partij op de noodstop eindigt.
+	c.honger_vanaf_cyclus = int(d.get("honger_vanaf_cyclus", c.honger_vanaf_cyclus))
 	var clk = d.get("clock", null)
 	if clk is Dictionary:
 		c.clock = {
@@ -290,8 +297,12 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 			push_error("RulesConfig: campaign vereist stamina_model 'pool' — one_action geweigerd, teruggezet naar pool")
 			c.stamina_model = "pool"
 		# Activering van het campaign-blok IS de regelversie-overgang (B7).
-		if c.rules_version.begins_with("4.1"):
-			c.rules_version = "4.2.1"
+		# V0 (3 augustus): het duel kent geen gelijkspel meer en de honger
+		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
+		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
+		# eigen trede daarboven.
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0":
+			c.rules_version = "4.3.1"
 	else:
 		c.campaign = null
 	return c

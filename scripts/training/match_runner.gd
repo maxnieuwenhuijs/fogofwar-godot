@@ -12,9 +12,13 @@ var done: bool = false
 var winner: int = -1
 var _state: GameState
 var _guard: int = 0
-## Stap-limiet: bij overschrijding beslist de tiebreak (Reducer.tiebreak_winner).
-## Lager = snellere metingen (arena), hoger = zuiverder (training).
+## Stap-limiet. V0 (3 augustus): bij overschrijding beslist NIETS meer. Een
+## duel kent alleen haven en eliminatie, dus een afgekapte partij is een fout
+## en geen uitslag: winner blijft -1 en afgekapt gaat aan. Lager = snellere
+## metingen (arena), hoger = zuiverder (training).
 var max_steps: int = 2500
+var afgekapt: bool = false
+var afkap_reden: String = ""
 
 
 func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS, seed_val: int = 0, rules: RulesConfig = null) -> void:
@@ -48,9 +52,11 @@ func step() -> void:
 		return
 	_guard += 1
 	if _guard > max_steps:
-		# Patstelling → beslis op materiaal, dan haven-voortgang (trainings-signaal).
 		done = true
-		winner = Reducer.tiebreak_winner(_state)
+		afgekapt = true
+		afkap_reden = "max_steps"
+		push_error("MatchRunner: partij afgekapt op max_steps (%d) in cyclus %d -- geen uitslag"
+			% [max_steps, _state.cycle])
 		return
 	var ph: int = _state.phase
 	if ph == Phase.Type.GAME_OVER:
@@ -96,6 +102,9 @@ func step() -> void:
 			Reducer.apply(_state, Actions.make_link(int(link.card_id), int(link.pawn_id)), _state.current_player)
 		else:
 			done = true
+			afgekapt = true
+			afkap_reden = "geen_koppeling"
+			push_error("MatchRunner: agent leverde geen koppeling in cyclus %d" % _state.cycle)
 	elif ph == Phase.Type.ACTION:
 		if _state.pending_wolf_step_pawn != -1:
 			var wolf: Dictionary = cur.choose_wolf_step(_state)
@@ -107,6 +116,9 @@ func step() -> void:
 			var act: Dictionary = cur.choose_action(_state)
 			if act.is_empty():
 				done = true
+				afgekapt = true
+				afkap_reden = "geen_actie"
+				push_error("MatchRunner: agent leverde geen actie in cyclus %d" % _state.cycle)
 			else:
 				# F2.5/B3: onder campaign spreekt artillerie CANNON_ACT.
 				var camp: bool = _state.rules.campaign_actief()

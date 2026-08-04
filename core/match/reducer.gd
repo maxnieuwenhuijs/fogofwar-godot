@@ -23,6 +23,7 @@ const EV_WOLF_PENDING := "wolf_step_pending"  # {pawn_id}
 const EV_TURN := "turn_changed"               # {player_id}
 const EV_PHASE := "phase_changed"             # {new_phase, old_phase}
 const EV_CYCLE_STARTED := "cycle_started"     # {cycle}
+const EV_HONGER := "honger"                   # V0: {player_id, pawn_id, position, cycle}
 const EV_GAME_OVER := "game_over"             # {winner}
 const EV_CYCLE_ADMIN := "cycle_admin"         # F2.2: {cycle, pools} — ledger-moment in RESET.
 	# LET OP (D12/F4): de payload bevat BEIDE pools en is server/log-only —
@@ -311,13 +312,12 @@ static func _start_new_cycle(state: GameState, events: Array) -> void:
 	state.reset_for_new_cycle()
 	if _check_game_over(state, events):
 		return
-	# Cycluslimiet-remise (F0.4c): voorbij de limiet beslist de tiebreak
-	# (materiaal → haven → nabijheid; -1 = echte remise). Voorkomt oneindige
-	# patstellingen (bv. twee deterministische AI's die elkaar eeuwig ontwijken).
-	if state.rules.cycle_limit > 0 and state.cycle > state.rules.cycle_limit:
-		state.winner = tiebreak_winner(state)
-		_set_phase(state, Phase.Type.GAME_OVER, events)
-		_ev(events, EV_GAME_OVER, {"winner": state.winner})
+	# V0 (3 augustus): de uitputtingsklok. Vervangt de cycluslimiet-tiebreak,
+	# die een uitslag verzon voor een partij die niemand had gewonnen. Nu
+	# dwingen de regels zelf het einde af: vanaf een ingestelde cyclus gaat er
+	# per speler een pion af. Zie _honger().
+	_honger(state, events)
+	if state.phase == Phase.Type.GAME_OVER:
 		return
 	# F2.2 (v4.2): onder campaign eerst de zichtbare RESET-administratiefase
 	# (ledger-moment, geen spelerinput) en daarna de blinde spawn-fase.
@@ -397,42 +397,80 @@ static func _reveal_spawns(state: GameState, events: Array) -> void:
 ## RESIGN (F0.4c): opgeven kan in elke speelbare fase; de tegenstander wint.
 static func _do_resign(state: GameState, player_id: int, events: Array) -> void:
 	state.winner = Constants.opponent(player_id)
+	# V0 (3 augustus): opgeven telt voor de WINNAAR als een eliminatie, roem en
+	# CP allebei. Zonder dat tarief is opgeven een goedkope manier om de winst
+	# van je tegenstander te drukken.
+	state.eind_reden = "resign"
+	_earn_cp_for_win(state, state.winner, events)
 	_set_phase(state, Phase.Type.GAME_OVER, events)
 	_ev(events, EV_GAME_OVER, {"winner": state.winner})
 
 
-## Tiebreak bij de cycluslimiet (was: MatchRunner-heuristiek, nu spelregel):
-## 1) meeste pionnen over, 2) meeste in de haven, 3) verst opgerukt richting
-## de eigen doelhaven. Alles gelijk → -1 (remise).
-static func tiebreak_winner(state: GameState) -> int:
-	var a1: int = state.get_alive_pawns_for(Constants.PLAYER_1).size()
-	var a2: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
-	if a1 != a2:
-		return Constants.PLAYER_1 if a1 > a2 else Constants.PLAYER_2
-	var h1: int = Rules.count_pawns_in_haven(state, Constants.PLAYER_1)
-	var h2: int = Rules.count_pawns_in_haven(state, Constants.PLAYER_2)
-	if h1 != h2:
-		return Constants.PLAYER_1 if h1 > h2 else Constants.PLAYER_2
-	var p1: int = _haven_closeness(state, Constants.PLAYER_1)
-	var p2: int = _haven_closeness(state, Constants.PLAYER_2)
-	if p1 != p2:
-		return Constants.PLAYER_1 if p1 > p2 else Constants.PLAYER_2
-	return -1
+# =========================================================================
+# V0 — de uitputtingsklok (honger)
+# =========================================================================
 
-
-static func _haven_closeness(state: GameState, side: int) -> int:
-	var haven: Array = Constants.get_haven_for_player(side)
-	var total: int = 0
-	for pawn in state.pawns.values():
-		if pawn.owner_id != side or pawn.is_eliminated:
+## Vanaf `honger_vanaf_cyclus` verliest elke speler bij het begin van een
+## cyclus een pion: de pion die het VERST van zijn doelhaven staat. De
+## achterhoede verhongert dus het eerst, en dat duwt je vooruit in plaats van
+## achteruit. Zo eindigt een duel wiskundig, ook zonder cycluslimiet en zonder
+## tiebreak: legers zijn eindig (comp + spawn_totaal_max) en er gaat elke
+## cyclus een pion af.
+##
+## LET OP, drie dingen die makkelijk misgaan:
+##
+## 1. "De vijandelijke haven" is in code `get_haven_for_player(EIGEN id)`: dat
+##    is de haven die je moet BEREIKEN en die ligt aan de vijandkant. Wie hier
+##    `opponent` schrijft, laat zijn voorhoede verhongeren, precies omgekeerd.
+## 2. Om de beurt eten, met een win-check ertussen. Verhongeren beide spelers
+##    tegelijk hun laatste pion, dan staat `Rules.check_win` op nul tegen nul
+##    en dat leest hij als "nog geen winnaar": het duel zou eeuwig doorlopen.
+##    Wie het eerst eet wisselt per cyclus, anders heeft de tweede speler in
+##    precies die stand een gratis winst.
+## 3. Honger is geen kill door de vijand: er wordt GEEN C15-buit geboekt. De
+##    cyclusreset heeft net alle pionnen ontkoppeld, dus elke vaandeldrager zou
+##    anders 2 punten opleveren voor iemand die niets deed.
+static func _honger(state: GameState, events: Array) -> void:
+	var vanaf: int = int(state.rules.honger_vanaf_cyclus)
+	if vanaf <= 0 or state.cycle < vanaf:
+		return
+	# Wie het eerst aan de beurt is wisselt per cyclus (even/oneven).
+	var volgorde: Array = [Constants.PLAYER_1, Constants.PLAYER_2]
+	if state.cycle % 2 == 1:
+		volgorde.reverse()
+	for speler in volgorde:
+		if state.winner != -1 or state.phase == Phase.Type.GAME_OVER:
+			return
+		var slachtoffer: Pawn = _hongerslachtoffer(state, speler)
+		if slachtoffer == null:
 			continue
-		var best: int = 999
+		var pos: Vector2i = slachtoffer.position
+		state.remove_pawn(slachtoffer)
+		_ev(events, EV_HONGER, {"player_id": speler, "pawn_id": slachtoffer.id,
+			"position": pos, "cycle": state.cycle})
+		# Meteen kijken of dit de partij beslist, VOOR de ander eet.
+		if _check_game_over(state, events):
+			return
+
+
+## De pion die het verst van zijn doelhaven staat. Gelijke afstand: de laagste
+## pion-id, zodat de keuze niet aan de invoegvolgorde van de dictionary hangt.
+static func _hongerslachtoffer(state: GameState, speler: int) -> Pawn:
+	var haven: Array = Constants.get_haven_for_player(speler)
+	var beste: Pawn = null
+	var beste_afstand: int = -1
+	for pawn in state.pawns.values():
+		if pawn.owner_id != speler or pawn.is_eliminated:
+			continue
+		var afstand: int = 999
 		for h in haven:
 			var d: int = absi(pawn.position.x - h.x) + absi(pawn.position.y - h.y)
-			if d < best:
-				best = d
-		total += Constants.BOARD_SIZE * 2 - best
-	return total
+			if d < afstand:
+				afstand = d
+		if afstand > beste_afstand or (afstand == beste_afstand and beste != null and pawn.id < beste.id):
+			beste = pawn
+			beste_afstand = afstand
+	return beste
 
 
 # =========================================================================
@@ -583,6 +621,9 @@ static func _check_game_over(state: GameState, events: Array) -> bool:
 	if winner == -1:
 		return false
 	state.winner = winner
+	# V0: leg vast HOE het duel eindigde, zodat de campagnelaag dat niet uit de
+	# eindstaat hoeft te raden (een opgave was daaraan niet te zien).
+	state.eind_reden = "haven" if Rules.count_pawns_in_haven(state, winner) >= state.rules.pawns_in_haven_to_win else "eliminatie"
 	_earn_cp_for_win(state, winner, events)
 	_set_phase(state, Phase.Type.GAME_OVER, events)
 	_ev(events, EV_GAME_OVER, {"winner": winner})
@@ -671,6 +712,7 @@ static func _do_claim_timeout(state: GameState, _claimant: int, now_ms: int, eve
 		_ensure_clocks(state)
 		state.clocks[state.current_player].bank_ms = 0
 		state.winner = Constants.opponent(state.current_player)
+		state.eind_reden = "timeout"
 		_set_phase(state, Phase.Type.GAME_OVER, events)
 		_ev(events, EV_GAME_OVER, {"winner": state.winner})
 		return
