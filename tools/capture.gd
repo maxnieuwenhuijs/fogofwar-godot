@@ -526,6 +526,98 @@ func _ready() -> void:
 			covering, subject.id, str(GameSession.state.pawns[subject.id].position == front)])
 		get_tree().quit()
 		return
+	elif "tunercheck" in args:
+		# Doet de Model-tuner het nog, en kan hij opslaan? (4 augustus, na de
+		# map-hernaming en de nieuwe leeuw/varken-modellen.) Drie dingen:
+		# 1. welk model vindt het spel per factie/type/archetype,
+		# 2. bouwt de tuner-scene zonder fouten op,
+		# 3. overleeft de afstelling een rondje opslaan-en-teruglezen, met
+		#    dezelfde sleutels (<factie>/<bestandsnaam>, map-onafhankelijk).
+		var arch_lijst: Array = ["base", "spd", "hp", "atk", "mix"]
+		var gevonden := 0
+		var ontbreekt: Array = []
+		print("[TUNER] model per factie en archetype (- = valt terug op base):")
+		for doc in Constants.DOCTRINE_DATA.keys():
+			var fac: String = Constants.doctrine_folder(int(doc))
+			var regel: String = "[TUNER]   %-9s %-11s" % [Constants.doctrine_name(int(doc)), fac]
+			for arch in arch_lijst:
+				var naam := "infantry_%s.glb" % arch
+				var pad := Bestandsindex.vind("res://assets/models/" + fac, naam)
+				if pad != "" and ResourceLoader.exists(pad):
+					regel += " %s=ja  " % arch
+					gevonden += 1
+				else:
+					regel += " %s=-   " % arch
+					ontbreekt.append("%s/%s" % [fac, arch])
+			print(regel)
+		print("[TUNER] %d modellen gevonden, %d nog niet geleverd" % [gevonden, ontbreekt.size()])
+		# Musketten en gibs erbij: die hangen aan hetzelfde model.
+		var zonder_gibs: Array = []
+		for doc2 in Constants.DOCTRINE_DATA.keys():
+			var fac2: String = Constants.doctrine_folder(int(doc2))
+			for arch2 in arch_lijst:
+				var mp := Bestandsindex.vind("res://assets/models/" + fac2, "infantry_%s.glb" % arch2)
+				if mp == "" or not ResourceLoader.exists(mp):
+					continue
+				var gp := Bestandsindex.vind("res://assets/models/" + fac2, "infantry_%s_gibs.glb" % arch2)
+				if gp == "" or not ResourceLoader.exists(gp):
+					zonder_gibs.append("%s/infantry_%s" % [fac2, arch2])
+		if zonder_gibs.is_empty():
+			print("[TUNER] gibs: compleet")
+		else:
+			print("[TUNER] ZONDER GIBS (die pion valt niet uiteen): %s" % ", ".join(zonder_gibs))
+		# 2. Bouwt de tuner op?
+		var tuner_fouten := 0
+		var scene: PackedScene = load("res://scenes/tools/ModelTuner.tscn")
+		if scene == null:
+			print("[TUNER] FOUT: ModelTuner.tscn laadt niet")
+			tuner_fouten += 1
+		else:
+			var t: Node = scene.instantiate()
+			if t == null:
+				print("[TUNER] FOUT: ModelTuner instantieert niet")
+				tuner_fouten += 1
+			else:
+				add_child(t)
+				await get_tree().process_frame
+				await get_tree().process_frame
+				print("[TUNER] scene opgebouwd: %d kind-nodes" % t.get_child_count())
+				t.queue_free()
+				await get_tree().process_frame
+		# 3. Opslaan en teruglezen.
+		var voor: Dictionary = PawnView.model_tuning()
+		var proef := "user://tunercheck_proef.json"
+		var fh := FileAccess.open(proef, FileAccess.WRITE)
+		if fh == null:
+			print("[TUNER] FOUT: kan de afstelling niet wegschrijven")
+			tuner_fouten += 1
+		else:
+			fh.store_string(JSON.stringify(voor, "\t") + "\n")
+			fh.close()
+			var terug = JSON.parse_string(FileAccess.get_file_as_string(proef))
+			if not (terug is Dictionary):
+				print("[TUNER] FOUT: de weggeschreven afstelling is geen geldige JSON")
+				tuner_fouten += 1
+			elif JSON.stringify(terug, "\t") != JSON.stringify(voor, "\t"):
+				print("[TUNER] FOUT: opslaan en teruglezen levert iets anders op")
+				tuner_fouten += 1
+			else:
+				print("[TUNER] opslaan/teruglezen: %d sleutels, byte-identiek terug" % voor.size())
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(proef))
+		# Sleutels moeten map-onafhankelijk zijn: <factie>/<bestandsnaam>.
+		var rare: Array = []
+		for k in voor.keys():
+			var s := String(k)
+			if s.count("/") != 1 or s.contains("infanterie") or s.contains("wapens"):
+				rare.append(s)
+		if rare.is_empty():
+			print("[TUNER] sleutels: allemaal <factie>/<bestandsnaam>, geen mapnaam erin")
+		else:
+			print("[TUNER] FOUT: sleutels met een mapnaam erin: %s" % ", ".join(rare))
+			tuner_fouten += 1
+		print("[TUNER] klaar: %d fout(en)" % tuner_fouten)
+		get_tree().quit(0 if tuner_fouten == 0 else 1)
+		return
 	elif "facties" in args:
 		# Waar spelen we nu eigenlijk mee? (C17, 3 augustus.) Drukt per factie
 		# de kale tabel uit constants.gd af naast de ACTIEVE waarden, dus met

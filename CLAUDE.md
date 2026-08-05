@@ -103,6 +103,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `doctrines`-blok eroverheen, plus de startvoorraad die een campagne daarmee
   boekt, en een proefcampagne die bewijst dat grootboek en duelregels hetzelfde
   leger gebruiken). Draai dit vóór en ná het aannemen van een voorstel.
+- Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
+  archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
+  opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek
+  overleeft). Draai dit na elke map- of modelwijziging; het is meteen het
+  statusbord van "wat is er al geleverd".
 - Kijken zonder te spelen: `-- cliplengtes` (elke animatie met lengte EN de
   naam die het spel ervan maakt) en `-- geluidcheck` (elke geluidscategorie met
   aantal varianten, mix-dB, tuner-dB en vertraging; meldt categorieen zonder
