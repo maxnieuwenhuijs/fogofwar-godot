@@ -271,6 +271,21 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		c.doctrines = {}
 		for k in docs:
 			c.doctrines[str(k)] = _diep_int(docs[k]) if docs[k] is Dictionary else docs[k]
+			# Een leger moet OP HET BORD PASSEN: je stelt op in twee rijen van
+			# elf, dus 22 pionnen is de bovengrens. Paste het niet, dan kwam de
+			# partij de opstelfase niet uit en liep hij stil door tot de
+			# noodstop -- op 4 augustus een derde van een hele zoekrun. Zo'n
+			# config is kapot en hoort dat te zeggen, niet te hangen.
+			var ov = c.doctrines[str(k)]
+			if ov is Dictionary and (ov as Dictionary).has("comp"):
+				var comp: Array = (ov as Dictionary)["comp"]
+				var totaal: int = 0
+				for n in comp:
+					totaal += int(n)
+				if totaal > Constants.PAWNS_PER_PLAYER:
+					push_error(("RulesConfig: doctrine %s heeft een leger van %d pionnen, " +
+						"maar er passen er maar %d op het bord. Die partij loopt vast " +
+						"in de opstelfase.") % [str(k), totaal, Constants.PAWNS_PER_PLAYER])
 	var camp = d.get("campaign", null)
 	if camp is Dictionary:
 		# Normaliseren: ontbrekende knoppen krijgen de F2.1-besluitwaarden.

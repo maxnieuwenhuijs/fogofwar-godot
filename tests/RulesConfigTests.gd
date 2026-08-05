@@ -288,3 +288,21 @@ func test_doctrine_override_sleutel_int_en_string() -> void:
 	assert_eq(int(uit_str.doctrine_data(2).budget), 8, "string-sleutel")
 	assert_eq(int(uit_str.doctrine_data(3).budget),
 		int(Constants.doctrine_data(3).budget), "andere facties blijven ongemoeid")
+
+
+## Een leger moet op het bord passen: twee rijen van elf = 22 pionnen. Ging dat
+## mis, dan kwam de partij de opstelfase niet uit en liep hij tot de noodstop
+## door. Op 4 augustus kostte dat een derde van een zoekrun, zonder dat er ook
+## maar iets over klaagde.
+func test_doctrine_comp_past_op_het_bord() -> void:
+	var passend = RulesConfig.from_dict({"doctrines": {"1": {"comp": [18, 4, 0]}}})
+	assert_eq(int((passend.doctrine_data(1).comp as Array)[0]), 18,
+		"22 pionnen is precies vol en blijft gewoon werken")
+	assert_eq(Constants.PAWNS_PER_PLAYER, 22, "twee rijen van elf")
+	# Te groot mag nog steeds geladen worden (de config is data), maar hij hoort
+	# een fout te geven. Hier toetsen we dat de waarde intact blijft, zodat een
+	# meting die tocht draait niet stil iets anders speelt dan er staat.
+	var te_groot = RulesConfig.from_dict({"doctrines": {"1": {"comp": [20, 4, 0]}}})
+	var comp: Array = te_groot.doctrine_data(1).comp
+	assert_eq(int(comp[0]) + int(comp[1]) + int(comp[2]), 24,
+		"de waarde wordt niet stilletjes bijgeknipt")

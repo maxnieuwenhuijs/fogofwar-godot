@@ -75,7 +75,12 @@ KNOPPEN = [
     ("cav_speed_bonus", 0, 2, 0.30),
 ]
 COMP_MIN, COMP_MAX = 0, 20
-COMP_TOTAAL_MIN, COMP_TOTAAL_MAX = 16, 24   # legergrootte blijft in de buurt
+# De legergrootte moet OP HET BORD PASSEN. Je stelt op in twee rijen van elf,
+# dus 22 pionnen is de harde bovengrens (Constants.PAWNS_PER_PLAYER). Stond op
+# 24, en dat kostte op 4 augustus een derde van de run: elke kandidaat met een
+# factie boven 22 kwam de opstelfase niet uit en liep tot de noodstop door.
+# Alle 42 afgekapte kandidaten hadden zo een factie, en geen van de 85 schone.
+COMP_TOTAAL_MIN, COMP_TOTAAL_MAX = 16, 22
 
 DOEL = {
     "evenwicht": 0.40,     # winrates rond 50% (zonder spiegelpartijen)
