@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dr0uo0y2s3mp7"
-path="res://.godot/imported/infantry_base_gibs_NormalGL_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-1a1585d671ff2fff62fdb5a6c4c915f0.ctex"
+uid="uid://unk1ww2vru7e"
+path="res://.godot/imported/infantry_base_Color_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-13cf6bb1511dc50c1338b2845fa4bba0.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "73c42176327a838c0ecbe5c79726ecf3"
+"md5": "e97ae8b81b5722d8c6150671b3a0e687"
 }
 
 [deps]
 
-source_file="res://assets/models/mouse/infantry/infantry_base_gibs_NormalGL_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg"
-dest_files=["res://.godot/imported/infantry_base_gibs_NormalGL_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-1a1585d671ff2fff62fdb5a6c4c915f0.ctex"]
+source_file="res://assets/models/mouse/infantry/infantry_base_Color_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg"
+dest_files=["res://.godot/imported/infantry_base_Color_d8188b58-534e-4fe1-ab58-9ac08e2cdf21.jpg-13cf6bb1511dc50c1338b2845fa4bba0.ctex"]
 
 [params]
 
