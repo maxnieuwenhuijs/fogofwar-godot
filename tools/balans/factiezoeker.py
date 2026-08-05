@@ -263,6 +263,29 @@ def lees_alle(paden):
     return uit
 
 
+# Knoppen die NIETS kunnen doen bij een bepaalde legersamenstelling. Muis heeft
+# comp [18, 4, 0], dus geen artillerie, en Validator._spawn_legaal blokkeert het
+# kopen van een type dat je factie niet kent ("bugfix Max 28 juli: Muis kocht
+# kanonnen"). Een art_range_bonus voor Muis is dus letterlijk dood, en toch
+# draaide de zoeker eraan EN rekende de identiteits-rem er een halve punt voor
+# (4 augustus: "muis heeft niet eens artillerie"). Een kandidaat betaalde dus
+# voor niets. Dit geldt dynamisch: verandert een kandidaat de comp naar 0
+# kanonnen, dan is de knop daar ook dood.
+DODE_KNOPPEN = {
+    "art_range_bonus": 2,   # index in comp die > 0 moet zijn
+    "cav_speed_bonus": 1,
+}
+
+
+def snoei_dode_knoppen(ov, basis):
+    """Haal knoppen weg die bij DEZE legersamenstelling niets kunnen doen."""
+    comp = list(ov.get("comp", basis["comp"]))
+    for naam, idx in DODE_KNOPPEN.items():
+        if naam in ov and int(comp[idx]) <= 0:
+            ov.pop(naam)
+    return ov
+
+
 def muteer(regels, rng, sigma, alleen=None):
     """Eén kandidaat: schuif per factie aan een paar knoppen.
 
@@ -298,6 +321,9 @@ def muteer(regels, rng, sigma, alleen=None):
             totaal = sum(comp)
             if COMP_TOTAAL_MIN <= totaal <= COMP_TOTAAL_MAX:
                 ov["comp"] = comp
+        # Dode knoppen eruit VOORDAT we opschonen: anders draait de zoeker aan
+        # iets wat niets kan doen en betaalt hij er identiteit voor.
+        ov = snoei_dode_knoppen(ov, basis)
         # Knoppen die gelijk zijn aan de basis houden we uit het voorstel: dan
         # blijft leesbaar WAT er nu eigenlijk verandert.
         for naam in list(ov.keys()):
