@@ -10,9 +10,9 @@ assets/models/
   board/                  het bord
   props/                  gedeelde voorwerpen (prop_drum, prop_pole, ...)
   <factie>/               per factie, bv mouse/
-    infanterie/           de modellen zelf + gibs + musket-variant + teamkleuren
-    wapens/               musket.glb en zijn texturen
-    bron-texturen/        losse Tripo-jpg's; het spel gebruikt ze NIET
+    infantry/           de modellen zelf + gibs + musket-variant + teamkleuren
+    weapons/               musket.glb en zijn texturen
+    source-textures/        losse Tripo-jpg's; het spel gebruikt ze NIET
   model_tuning.json       jouw afstelwerk (tuner)
   effects_tuning.json     effect-knoppen
 ```
@@ -24,7 +24,7 @@ assets/models/
   gezocht, niet via de index.
 - **Gibs** (`<model>_gibs.glb` of `<model>.gibs.glb`) mogen overal staan, maar
   naast het model is het overzichtelijkst.
-- **bron-texturen/** kun je leeg gooien zonder gevolgen; de texturen zitten
+- **source-textures/** kun je leeg gooien zonder gevolgen; de texturen zitten
   ingebakken in de glb. Ze staan er alleen voor als je later opnieuw wil bakken.
 
 ## Afstel-sleutels veranderen NIET door verhuizen

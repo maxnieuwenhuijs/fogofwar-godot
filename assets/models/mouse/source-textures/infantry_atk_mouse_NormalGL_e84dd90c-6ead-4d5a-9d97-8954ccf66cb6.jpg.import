@@ -1,0 +1,44 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://bu60qrjvp0yx3"
+path.s3tc="res://.godot/imported/infantry_atk_mouse_NormalGL_e84dd90c-6ead-4d5a-9d97-8954ccf66cb6.jpg-fca012e864032d5695c37f82d3bff356.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "78e7f8682284603974a1f8925118678f"
+}
+
+[deps]
+
+source_file="res://assets/models/mouse/source-textures/infantry_atk_mouse_NormalGL_e84dd90c-6ead-4d5a-9d97-8954ccf66cb6.jpg"
+dest_files=["res://.godot/imported/infantry_atk_mouse_NormalGL_e84dd90c-6ead-4d5a-9d97-8954ccf66cb6.jpg-fca012e864032d5695c37f82d3bff356.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/normal_map=1
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=1
+roughness/src_normal="res://assets/models/mouse/animated/infantry_atk_mouse_NormalGL_e84dd90c-6ead-4d5a-9d97-8954ccf66cb6.jpg"
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0

@@ -32,9 +32,9 @@ aan hand/heup als deel `prop`; deze modellen krijgen GEEN musket.
 - [ ] Bestandsnamen mogen kort (`infantry_atk.glb` / `infantry_atk_gibs.glb`)
       of lang (`infantry_atk_mouse.glb` / `infantry_atk_mouse.gibs.glb`) zijn;
       het spel accepteert beide en zoekt in die volgorde.
-- [ ] **Waar neerzetten:** `assets/models/<factie>/infanterie/`. De map maakt
+- [ ] **Waar neerzetten:** `assets/models/<factie>/infantry/`. De map maakt
       niet uit (het spel zoekt op naam), maar teamkleur-png's moeten naast hun
-      glb liggen. Losse texturen uit de generator gaan naar `bron-texturen/`:
+      glb liggen. Losse texturen uit de generator gaan naar `source-textures/`:
       die zitten al ingebakken in de glb.
 
 ## D. Clips + rechtdraaien

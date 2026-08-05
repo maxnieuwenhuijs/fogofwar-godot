@@ -5,16 +5,16 @@ niet op pad**, dus verplaatsen mag; een nieuwe submap ook.
 
 ```
 sounds/
-  vuren/          musket, kanon, lont, strijdkreet, terugslag
+  firing/          musket, kanon, lont, strijdkreet, terugslag
   impact/         wat er geraakt wordt: vlees, kuras, hout, bot, afketser, bloed
-  dood/           inf_die, horse_die, kanon vernietigd, wiel schiet los
-  val/            wat er op de grond valt: lijf, hoed, musket, vlag, trommel...
-  beweging/       stappen, paard, kanon rollen, pion plaatsen, blokkade
-  selectie/       pion/kanon/paard aanklikken en deselecteren
-  kaarten/        kaarten pakken, kiezen, stats schuiven, koppelen, onthullen
-  spel/           fase, klok, initiatief, haven, winst, verlies
+  death/           inf_die, horse_die, kanon vernietigd, wiel schiet los
+  falling/            wat er op de grond valt: lijf, hoed, musket, vlag, trommel...
+  movement/       stappen, paard, kanon rollen, pion plaatsen, blokkade
+  selection/       pion/kanon/paard aanklikken en deselecteren
+  cards/        kaarten pakken, kiezen, stats schuiven, koppelen, onthullen
+  game/           fase, klok, initiatief, haven, winst, verlies
   ui/             knoppen, hover, menu's
-  facties/<factie>/  factie-eigen kreten (nu alleen mouse)
+  factions/<factie>/  factie-eigen kreten (nu alleen mouse)
   sound_tuning.json  jouw dB- en vertraging-afstelling per categorie
 ```
 

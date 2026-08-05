@@ -112,8 +112,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
 ## Mappen (30 juli)
 
-`assets/models/<factie>/{infanterie,wapens,bron-texturen}/` en
-`sounds/{vuren,impact,dood,val,beweging,selectie,kaarten,spel,ui,facties/<factie>}/`.
+`assets/models/<factie>/{infantry,weapons,source-textures}/` en
+`sounds/{firing,impact,death,falling,movement,selection,cards,game,ui,factions/<factie>}/`.
 Het spel zoekt assets op **bestandsnaam** via `scripts/core/bestandsindex.gd`,
 niet op pad: submappen bijmaken of dingen verschuiven mag. Teamkleur-png's
 moeten wel naast hun glb blijven (die gaan op modelnaam). Afstel-sleutels in
