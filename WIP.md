@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## Werkafspraak 5 augustus -- nog geen factie-voorstel aannemen
+
+Besluit Max: "laten we het nog even zo laten, want tot nu toe was er altijd wel
+iets mis met de training."
+
+De factiezoeker START elke run vanaf `rules_v42_campaign.json`
+(factiezoeker.py:413), en daar staat GEEN doctrines-blok in. Alle runs tot nu toe
+zijn dus vanaf dezelfde blanco stand vertrokken en hebben hun eerste generaties
+besteed aan het opnieuw vinden van dezelfde zetten. Binnen een run bouwt hij wel
+voort op zijn eigen kampioen; tussen runs niet.
+
+Doorbouwen kan pas als een voorstel wordt aangenomen, en dat is een echte
+regelwijziging: hetzelfde bestand stuurt spel, trainer, arena en ijk-sims
+tegelijk. Aannemen betekent goldens en `golden_sims.json` regenereren, een
+CHANGELOG-entry, en de bots hertrainen.
+
+Dat gebeurt bewust nog NIET. In twee dagen kwamen er vijf gebreken uit de
+meetketen, waarvan vier pas nadat een run geslaagd leek:
+  1. doctrines-blok legde de bots lam (elke kandidaat speelde niet)
+  2. geen loting: 36 partijen gemeten terwijl de zoeker 216 dacht te hebben
+  3. scorefunctie te bespelen: korte partijen +0,20 zonder beter spel
+  4. dode knoppen (artilleriedracht voor een factie zonder artillerie)
+  5. legers boven 22 liepen vast in de opstelfase (een derde van een run)
+
+Een voorstel vastzetten terwijl dat gebeurt, bakt een meetfout in de spelregels
+en is daarna niet meer terug te draaien: goldens geregenereerd, bots hertraind,
+oude stand weg. Voorwaarde om dit te heroverwegen: een run die doorkomt zonder
+dat er achteraf iets aan blijkt te mankeren.
+
+
 ## 3 augustus 2026 (avond) -- V0: een duel kent geen gelijkspel meer
 
 Besluit Max uit `docs/campagne-intrige-voorstel.md`: een duel eindigt op de
