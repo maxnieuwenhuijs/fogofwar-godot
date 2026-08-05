@@ -13,11 +13,18 @@ partijen kwamen daardoor de opstelfase niet eens uit.
 Gebruik:
     blender --background --python tools/blender_strip_baked_weapon.py -- \
         --in  assets/models/pig/infantry/infantry_mix.glb \
-        --out assets/models/pig/infantry/infantry_mix.glb
+        --out assets/models/pig/infantry/infantry_mix.glb \
+        --wapen-uit assets/models/pig/infantry/infantry_mix_musket.glb
 
 Zonder --out schrijft hij naast het origineel als <naam>_strip.glb.
 De animaties, het skelet en de overige delen blijven ongemoeid; alleen de
 wapen-meshes gaan eruit.
+
+Met --wapen-uit wordt dat wapen eerst als LOS, statisch model weggeschreven.
+Dat is meteen de musket-prop die het spel aan de hand hangt, dus je hoeft er
+geen apart bestand voor aan te leveren: het model draagt zijn eigen wapen al
+mee, in precies de juiste laagpoly-versie (4 augustus: de los aangeleverde
+musket-fbx'en waren 917.031 driehoeken terwijl de ingebakken versie er 946 had).
 """
 import bpy
 import sys
@@ -26,6 +33,7 @@ import os
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 IN = ""
 OUT = ""
+WAPEN_UIT = ""
 i = 0
 while i < len(argv):
     if argv[i] == "--in":
@@ -34,6 +42,9 @@ while i < len(argv):
     elif argv[i] == "--out":
         i += 1
         OUT = argv[i]
+    elif argv[i] == "--wapen-uit":
+        i += 1
+        WAPEN_UIT = argv[i]
     i += 1
 if not IN:
     print("STRIP: geef --in <model.glb>")
@@ -77,6 +88,30 @@ else:
     for o in weg:
         o.data.calc_loop_triangles()
         print("STRIP: weg -> %-38s %8d driehoeken" % (o.name, len(o.data.loop_triangles)))
+    if WAPEN_UIT:
+        # Eerst als LOSSE, statische prop wegschrijven: armature-modifier eraf
+        # en losknippen van het skelet, net als bij de gibs. Anders exporteer je
+        # een geskinde mesh die aan een skelet hangt dat er niet meer is.
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in weg:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = weg[0]
+        bpy.ops.object.duplicate()
+        kopie = list(bpy.context.selected_objects)
+        for o in kopie:
+            for m in list(o.modifiers):
+                if m.type == 'ARMATURE':
+                    o.modifiers.remove(m)
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in kopie:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = kopie[0]
+        bpy.ops.export_scene.gltf(filepath=os.path.abspath(WAPEN_UIT),
+                                  export_format='GLB', use_selection=True,
+                                  export_image_format='JPEG', export_jpeg_quality=85)
+        print("STRIP: wapen apart -> %s" % WAPEN_UIT)
+        bpy.ops.object.delete()
     bpy.ops.object.select_all(action='DESELECT')
     for o in weg:
         o.select_set(True)
