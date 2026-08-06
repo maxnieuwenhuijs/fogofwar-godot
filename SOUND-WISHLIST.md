@@ -142,6 +142,11 @@ tabel onderaan, dan heb je alle varianten in een generatie.
 
 ## 7b. Sterven per FACTIE (besluit Max, 28 juli)
 
+> **Overzicht bijhouden:** `python tools/bouw_geluid_tracker.py` bouwt
+> `sound-tracker.html` (of de paneelknop "Welke geluiden ontbreken?"). Die leest
+> de `sounds/`-mappen en dit bestand, dus hij loopt nooit achter: per factie zie
+> je in kleur wat er ligt, wat mist, en de prompt om te kopieren.
+
 Een muis die sneuvelt piept; een grizzly brult. Daarom naast de algemene
 sterfgeluiden een **factie-variant per type**: 5 varianten per factie per type,
 zodat een gevecht nooit gaat ratelen.
@@ -225,6 +230,25 @@ varken = *shrill snorting squeal* · leeuw = *cheetah chirp* (inf) / *lion growl
 (rijdier) · beer = *raccoon screech* (inf) / *chesty bear grunt* (rijdier) ·
 wolf = *fox scream* (inf) / *wolf yelp* (rijdier) · krokodil = *lizard hiss*
 (inf) / *crocodile bellow* (rijdier).
+
+### Prompts -- kanonkreet per FACTIE (`inf_kanon_die_<factie>`)
+
+Een kanontreffer gilt ALTIJD (zie hierboven), dus deze kreet hoor je veel vaker
+dan de gewone. Hij is korter en heftiger: de klap kapt hem af, en hij begint al
+voor de inslag. Mik op 0,4-0,8s per take.
+
+Ontbreekt hij, dan leent het spel de muizenkreet -- en dan gilt jouw grizzly als
+een muis. Dit is dus de eerste die je per factie wilt opnemen, nog voor de
+gewone doodskreet.
+
+| Bestand | Prompt |
+|---|---|
+| `inf_kanon_die_pig` | 6 very short violent pig squeals in a row, each about 0.3 seconds, shrill and snorting, chopped off instantly, silence between each, one pig only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_lion` | 6 very short violent cheetah shrieks in a row, each about 0.25 seconds, high and strangled, chopped off instantly, silence between each, one cat only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_bear` | 6 very short violent raccoon screeches in a row, each about 0.3 seconds, rattling and chattering, chopped off instantly, silence between each, one animal only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_wolf` | 6 very short piercing fox screams in a row, each about 0.25 seconds, eerie and snapped off mid-cry, silence between each, one fox only, dry close mono recording, no reverb, no music |
+| `inf_kanon_die_crocodile` | 6 very short sharp lizard hisses in a row, each about 0.3 seconds, sputtering and choked off instantly, silence between each, one reptile only, dry close mono recording, no reverb, no music |
+
 
 ## 7b-2. Kreten per MODEL (archetype) -- de dikke klinkt niet als de dunne
 

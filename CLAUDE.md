@@ -103,6 +103,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `doctrines`-blok eroverheen, plus de startvoorraad die een campagne daarmee
   boekt, en een proefcampagne die bewijst dat grootboek en duelregels hetzelfde
   leger gebruiken). Draai dit vóór en ná het aannemen van een voorstel.
+- Geluid per factie: `python tools/bouw_geluid_tracker.py` bouwt
+  `sound-tracker.html` (paneelknop "Welke geluiden ontbreken?"). Leest de
+  `sounds/`-mappen en SOUND-WISHLIST.md, dus hij kan niet verouderen: per factie
+  zie je wat er ligt, wat mist, en de ElevenLabs-prompt om te kopieren. Een
+  factie telt als gedekt zodra alle vijf de archetype-varianten er zijn (dan
+  wordt de factie-categorie nooit bereikt).
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

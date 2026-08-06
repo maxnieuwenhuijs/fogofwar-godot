@@ -41,7 +41,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 800)
+$form.Size = New-Object System.Drawing.Size(470, 838)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -254,7 +254,7 @@ $null = Maak-Knop $kadFacties "Facties uitproberen" {
 }
 
 # --- 6. Bekijken wat er nu geldt en wat eruit gekomen is.
-$kadKijk = Maak-Kader "Bekijken" 530 122
+$kadKijk = Maak-Kader "Bekijken" 530 160
 Maak-Uitleg $kadKijk "Het rapport met winst-percentages, of de factie-instellingen van nu."
 $null = Maak-Knop $kadKijk "Bekijk het rapport" {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
@@ -281,16 +281,33 @@ $btnFactieTabel.Add_Click({
     if (Test-Path $uit) { Invoke-Item $uit }
 })
 $kadKijk.Controls.Add($btnFactieTabel)
+# Derde knop: de geluid-tracker opnieuw opbouwen en openen. Hij leest de mappen
+# en de wishlist, dus wat je zojuist hebt opgenomen staat er meteen groen in.
+$btnGeluidTracker = New-Object System.Windows.Forms.Button
+$btnGeluidTracker.Text = "Welke geluiden ontbreken?"
+$btnGeluidTracker.Location = New-Object System.Drawing.Point(12, 82)
+$btnGeluidTracker.Size = New-Object System.Drawing.Size(401, 34)
+$btnGeluidTracker.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnGeluidTracker.Add_Click({
+    try { & python (Join-Path $repo "tools\bouw_geluid_tracker.py") | Out-Null } catch {}
+    $pad = "$repo\sound-tracker.html"
+    if (Test-Path $pad) { Invoke-Item $pad }
+    else {
+        [System.Windows.Forms.MessageBox]::Show("De tracker kon niet worden opgebouwd.",
+            "Fog of War") | Out-Null
+    }
+})
+$kadKijk.Controls.Add($btnGeluidTracker)
 $lblKijkHint = New-Object System.Windows.Forms.Label
-$lblKijkHint.Text = "Draai dat laatste voor en na het aannemen van een voorstel: een sterretje wijst het verschil aan."
-$lblKijkHint.Location = New-Object System.Drawing.Point(12, 84)
+$lblKijkHint.Text = "Facties: draai voor en na het aannemen van een voorstel, een sterretje wijst het verschil aan. Geluid: per factie zien wat er nog mist, met de prompt erbij."
+$lblKijkHint.Location = New-Object System.Drawing.Point(12, 122)
 $lblKijkHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblKijkHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblKijkHint.ForeColor = [System.Drawing.Color]::DimGray
 $kadKijk.Controls.Add($lblKijkHint)
 
 # --- 7. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 656 86
+$kadStop = Maak-Kader "Noodrem" 694 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots
