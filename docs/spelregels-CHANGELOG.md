@@ -1,5 +1,71 @@
 # Spelregels — CHANGELOG
 
+## C19 — 7 augustus 2026 (facties aangenomen: het eerste doctrines-blok)
+
+*Besluit Max, na de zoekrun van 6 augustus, het nameten daarvan en drie eigen
+correcties.* Dit is het EERSTE blok dat echt wordt aangenomen; alle eerdere
+voorstellen zijn bekeken en weer weggelegd.
+
+| factie | was | wordt |
+|---|---|---|
+| Varken | 3k b7 [13,6,3] | budget **6**, comp **[12,6,3]** |
+| Muis | 4k b5 [18,4,0] | **5 kaarten**, comp **[16,4,0]** |
+| Leeuw | 2k b9 [6,10,2] | comp **[12,4,2]** |
+| Beer | 3k b7 [16,3,3] | comp **[19,3,0]** |
+| Wolf | 3k b7 [11,8,3] | cavalerie-snelheid **2** |
+| Krokodil | 3k b6 [13,6,3] | comp **[13,5,3]** |
+
+Drie van deze zes gaan bewust IN TEGEN wat de zoeker voorstelde, en in twee
+gevallen had Max gelijk:
+
+- **Leeuw** kreeg van de zoeker meer budget (9 → 10) terwijl hij met 84% de
+  sterkste was. Dat de meting toch een daling liet zien, kwam doordat de rest
+  harder steeg: wegpoetsen, geen indammen. Nu blijft het budget 9 en gaat het
+  mes in zijn leger: tien cavaleristen worden er vier. Zie de vondst hieronder.
+- **Varken** houdt zijn drie kaarten (de zoeker wilde er twee) en levert in
+  plaats daarvan de cavalerie-snelheid in plus een budgetpunt. Een kaart bleek
+  daar 33 procentpunt waard, dus dat is de zwaarste knop van het spel.
+- **Beer** houdt een vol leger van 22 pionnen, maar zonder artillerie. Hier had
+  Max ONgelijk: zijn wens om het kanon te behouden kostte 21 procentpunt.
+
+### De vondst die dit stuurde: artillerie is slecht voor een RENNER
+
+Gemeten over 432 partijen per variant, alleen Beer's comp verschilt:
+
+| Beer | winst |
+|---|---|
+| [15,3,0] 18 pionnen, geen kanon | 49,2% |
+| [17,3,0] 20 pionnen, geen kanon | **49,2%** |
+| [15,3,2] 20 pionnen, 2 kanonnen | 33,3% |
+| [17,3,2] 22 pionnen, 2 kanonnen | 23,3% |
+
+Legergrootte doet NIETS (49,2 tegen 49,2). Artillerie kost 21 procentpunt.
+
+De oorzaak staat in de regels: `art_move 1` (`Rules.gd:75`) laat een kanon een
+vak per ACTIE verzetten waar infanterie zijn hele Speed in een keer loopt, een
+kanon kan geen melee en heeft terugslag 0. Onder het vol-team-model staat je
+comp elk duel op het bord, dus twee kanonnen zijn permanent twee lopers minder.
+
+En Beer is een renner: 58% van zijn winsten komt uit de haven. Leeuw daarentegen
+won 91 partijen en NUL keer via de haven, Varken 76 en een keer. Die twee vegen
+het bord leeg. Daarom hielpen budget-knoppen niet bij Leeuw: hij is sterk omdat
+ELIMINATIE het wint van RENNEN, niet omdat zijn kaarten goed zijn. Vandaar het
+mes in zijn cavalerie.
+
+### Gevolgen
+
+**De ijk-sims zijn opnieuw geijkt.** Alle vijf werden LANGER (seed 404: 6 → 16
+cycli, seed 777: 4 → 7), maar de WINNAAR bleef in alle vijf dezelfde. De nieuwe
+legers vechten trager, niet anders. Let op: langere partijen betekent dat de
+honger (vanaf cyclus 10) vaker gaat bijten dan bij de meting van 3 augustus.
+
+**De bots zijn NIET hertraind.** Ze hebben op de oude facties leren spelen, dus
+elke meting hierna is een meting met verouderde bots tot dat gebeurd is.
+
+**Leeuw [12,4,2] is als enige NIET los doorgemeten.** De drie metingen die
+daarvoor liepen zijn afgebroken toen Max de machine nodig had. Dat is bewust:
+het doortesten gebeurt nu via het paneel, vanaf deze nieuwe nulmeting.
+
 ## V0 — 3 augustus 2026 (geen gelijkspel, de uitputtingsklok, rules_version 4.3.0)
 
 *Besluit Max: "een duel eindigt op de haven of op totale eliminatie. Meer

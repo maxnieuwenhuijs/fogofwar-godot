@@ -207,8 +207,13 @@ func test_mens_factie_keuze_vast_voor_campagne() -> void:
 	assert_eq(int(driver.c.spelers[0].doctrine), Constants.Doctrine.LEEUW,
 		"gekozen factie toegepast op de mens")
 	var pool: Dictionary = driver.c.pool_van(0)
-	assert_eq(int(pool.cav), int(floor(10 * driver.c.rules.start_poolfactor)),
-		"reinforcements volgen de gekozen factie (Leeuw: 10 cav x poolfactor)")
+	# C19: de legersamenstelling komt uit de ACTIEVE regels, niet uit een
+	# hardgecodeerd getal. Deze test stond op "Leeuw heeft 10 cavalerie" en brak
+	# zodra Max dat aanpaste, terwijl er niets mis was: hij toetst de kóppeling
+	# tussen factiekeuze en startvoorraad, niet een specifiek leger.
+	var comp: Array = driver.c.rules.doctrine_data(Constants.Doctrine.LEEUW).comp
+	assert_eq(int(pool.cav), int(floor(int(comp[1]) * driver.c.rules.start_poolfactor)),
+		"reinforcements volgen de gekozen factie (cavalerie x poolfactor)")
 	var zonder := SoloDriver.new(6002, 0, 6)
 	assert_eq(int(zonder.c.spelers[0].doctrine), 0,
 		"zonder keuze blijft de oude round-robin (tests/headless ongewijzigd)")

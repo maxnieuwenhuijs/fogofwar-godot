@@ -1,5 +1,44 @@
 # Fog of War — Work In Progress & Context
 
+## 7 augustus (avond) -- C19: het eerste factie-blok is aangenomen
+
+Besluit Max: "ja pas aan en dan doen we het doortesten met de fogofwarpanel."
+Voor het eerst staat er een `doctrines`-blok in `rules_v42_campaign.json`, en
+daarmee spelen campagne, los potje, trainer en arena allemaal deze facties.
+
+| factie | was | wordt |
+|---|---|---|
+| Varken | 3k b7 [13,6,3] | budget 6, [12,6,3] |
+| Muis | 4k b5 [18,4,0] | 5 kaarten, [16,4,0] |
+| Leeuw | 2k b9 [6,10,2] | [12,4,2] |
+| Beer | 3k b7 [16,3,3] | [19,3,0] |
+| Wolf | 3k b7 [11,8,3] | cavalerie-snelheid 2 |
+| Krokodil | 3k b6 [13,6,3] | [13,5,3] |
+
+Drie ervan gaan tegen de zoeker in. Bij Leeuw en Varken had Max gelijk (de
+zoeker gaf Leeuw MEER budget terwijl hij de sterkste was), bij Beer niet: zijn
+kanon behouden kostte 21 procentpunt.
+
+**Ijk-sims opnieuw geijkt.** Alle vijf werden LANGER (seed 404: 6 -> 16 cycli),
+winnaar in alle vijf hetzelfde. De nieuwe legers vechten trager, niet anders.
+Gevolg: de honger vanaf cyclus 10 gaat nu veel vaker bijten dan op 3 augustus.
+Dat is iets om in de gaten te houden bij de eerste meting.
+
+**Test die brak en waarom dat goed nieuws was:**
+`SoloTests.test_mens_factie_keuze_vast_voor_campagne` had "Leeuw heeft 10
+cavalerie" hardgecodeerd. Hij toetst de koppeling tussen factiekeuze en
+startvoorraad, niet een specifiek leger, dus hij leest de comp nu uit de actieve
+regels. De rest van de suite is nagelopen: dit was de laatste met zo'n vast
+getal erin.
+
+**Wat er NIET is gebeurd, en wat de volgorde nu is:**
+De bots zijn niet hertraind. Ze hebben leren spelen tegen een Leeuw met tien
+cavaleristen en een Beer met kanonnen. Elke meting nu meet dus botonkunde, geen
+factiebalans. Daarom eerst TRAINING-NACHT (traint 7 uur, meet 1 uur), en pas
+daarna de factiezoeker. Ook niet los doorgemeten: Leeuw [12,4,2]; die drie
+metingen zijn afgebroken toen Max de machine nodig had.
+
+
 ## 7 augustus -- de facties spelen twee verschillende spellen
 
 Gevonden tijdens het nameten van het factie-voorstel, en dit is belangrijker dan
