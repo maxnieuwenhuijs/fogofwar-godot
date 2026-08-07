@@ -1,5 +1,52 @@
 # Fog of War — Work In Progress & Context
 
+## 7 augustus -- de facties spelen twee verschillende spellen
+
+Gevonden tijdens het nameten van het factie-voorstel, en dit is belangrijker dan
+het voorstel zelf. Hoe wint elke factie eigenlijk? (432 partijen, huidige
+regels, L2 tegen L2.)
+
+| factie | comp | winst | via haven |
+|---|---|---|---|
+| Muis | [18,4,0] | 44 | 37 (84%) |
+| Krokodil | [13,6,3] | 76 | 44 (58%) |
+| Beer | [16,3,3] | 33 | 19 (58%) |
+| Wolf | [11,8,3] | 40 | 22 (55%) |
+| Varken | [13,6,3] | 76 | 1 (1%) |
+| Leeuw | [6,10,2] | 91 | **0 (0%)** |
+
+Leeuw wint 91 keer en NUL keer via de haven. Varken 76 keer en een keer. Die
+twee rennen niet, die vegen het bord leeg. Muis doet het omgekeerde: 84% van
+zijn winsten komt uit de haven-race.
+
+**Gevolg 1: artillerie is niet slecht, artillerie is slecht voor een RENNER.**
+Beer met 20 pionnen en 0 kanonnen haalt 49,2%; met 20 pionnen en 2 kanonnen
+33,3%. Zelfde legergrootte, twee infanteristen ingeruild voor twee kanonnen,
+16 procentpunt eraf. En legergrootte zelf doet niets: [15,3,0] en [17,3,0]
+scoren allebei exact 49,2%.
+
+De oorzaak staat in de regels: `art_move 1` (Rules.gd:75) laat een kanon een
+vak per ACTIE verzetten waar infanterie zijn hele Speed in een keer loopt, en
+een kanon kan geen melee en heeft terugslag 0. Onder het vol-team-model staat je
+comp elk duel op het bord, dus twee kanonnen zijn permanent twee lopers minder.
+Beer haalt 58% van zijn winst uit de haven; voor hem is dat dodelijk. Bij Leeuw
+maakt het niets uit, want die gaat toch nergens heen.
+
+**Gevolg 2: de zoeker kreeg Leeuw niet omlaag met economie-knoppen, en dat is
+logisch.** Leeuw is niet sterk doordat zijn kaarten goed zijn maar doordat
+ELIMINATIE het wint van RENNEN, en hij met tien cavaleristen de meest complete
+slachter is. Een kaart of een budgetpunt verandert dat niet.
+
+**De echte ontwerpvraag** is dus niet welke knop je verzet, maar of de
+haven-race een gelijkwaardige manier van winnen mag zijn. Zo ja, dan is er iets
+structureels nodig (de haven belonen of eliminatie duurder maken). Zo nee, dan
+zijn Muis en Beer verkeerd ontworpen.
+
+*Voorbehoud:* deze bots hebben op de OUDE facties leren spelen. Het patroon is
+te sterk om toeval te zijn (0 van de 91), maar hertrainen hoort erbij voordat er
+een besluit op valt.
+
+
 ## Werkafspraak 5 augustus -- nog geen factie-voorstel aannemen
 
 Besluit Max: "laten we het nog even zo laten, want tot nu toe was er altijd wel
