@@ -491,3 +491,35 @@ func test_c17_oude_save_zonder_doctrines() -> void:
 	assert_true(oud.doctrines.is_empty(), "ontbrekende sleutel = leeg blok")
 	assert_eq(int(oud.doctrine_data(2).budget),
 		int(Constants.doctrine_data(2).budget), "en dus gewoon de kale tabel")
+
+
+## De SCHERMEN moeten dezelfde facties tonen als het spel opstelt.
+## Gevonden 8 augustus: de factiekiezer, de tegenstanderkiezer en het
+## help-scherm lazen `Constants.DOCTRINE_DATA` rechtstreeks en beloofden dus
+## "4 kaarten" bij een Muis die er vijf uitdeelt. Ze gaan nu via
+## `CRules.actieve_tabel()`; deze test bewaakt dat die ingang blijft werken.
+func test_c19_actieve_tabel_voor_de_schermen() -> void:
+	var tabel := CRules.actieve_tabel()
+	var blok := CRules.facties_uit_bestand()
+	assert_eq(tabel.doctrines.size(), blok.size(),
+		"actieve_tabel draagt hetzelfde blok als het regels-bestand")
+	for sleutel in blok:
+		var doc := int(sleutel)
+		var nu: Dictionary = tabel.doctrine_data(doc)
+		for veld in (blok[sleutel] as Dictionary):
+			assert_eq(JSON.stringify(nu.get(veld)), JSON.stringify(blok[sleutel][veld]),
+				"factie %d, veld %s komt uit het blok" % [doc, String(veld)])
+		# Wat het blok NIET overschrijft blijft gewoon de kale tabel.
+		assert_eq(String(nu.name), String(Constants.doctrine_data(doc).name),
+			"de naam blijft uit constants.gd komen")
+
+
+## Zonder bestand (of met een onleesbaar pad) mag het scherm niet omvallen:
+## dan hoort het gewoon de kale tabel te tonen, net als de engine doet.
+func test_c19_actieve_tabel_zonder_bestand() -> void:
+	var tabel := CRules.actieve_tabel("res://bestaat_niet_xyz.json")
+	assert_true(tabel.doctrines.is_empty(), "geen bestand = leeg blok")
+	for doc in Constants.DOCTRINE_DATA.keys():
+		assert_eq(int(tabel.doctrine_data(int(doc)).cards),
+			int(Constants.doctrine_data(int(doc)).cards),
+			"en dus de kale tabel, zonder te crashen")

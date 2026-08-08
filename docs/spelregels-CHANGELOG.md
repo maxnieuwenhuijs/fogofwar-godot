@@ -64,13 +64,53 @@ beloond die deze wijzigingen terugdraaien.
 **De bots moeten hertraind**: hun gewichten komen van de nacht van 7 augustus,
 dus van vóór deze twee correctierondes.
 
+### Nasleep: de rest van het spel kende de nieuwe facties nog niet
+
+Bij het doorlopen van alle documentatie en schermen bleek het blok op een aantal
+plekken langs de tekst heen te gaan. Geen regelwijzigingen, wel dingen die de
+speler en de assetlijst verkeerd voorlichtten:
+
+- **Drie schermen lazen `Constants.DOCTRINE_DATA` rechtstreeks** (factiekiezer
+  in het hoofdmenu, tegenstanderkiezer, help-scherm). Die beloofden dus de kale
+  tabel: "4 kaarten" bij een Muis die er vijf uitdeelt, budget 9 bij een Leeuw
+  met 8. Ze gaan nu via `CRules.actieve_tabel()`. De campagne-lobby toonde
+  alleen pro/con-tekst en had hetzelfde probleem via de i18n-regels.
+- **De pro/con-teksten noemen geen verschuifbare getallen meer.** Kaartaantal,
+  budget en legergrootte staan er in de schermen toch al live naast; de tekst
+  zegt nu alleen wat kwalitatief vastligt. Krokodil's PRO beloofde bovendien nog
+  "+1 Speed op cavalerie", een perk die in C18 naar de Wolf is verhuisd.
+- **Muis en Beer hebben geen artillerie meer.** `GameState.kent_type()` verbiedt
+  ze een kanon te spawnen, dus `artillery_base` en `cannon_die_<factie>` zijn
+  voor die twee verloren werk. MODEL-WISHLIST, SOUND-WISHLIST, model-tracker en
+  de geluidtracker weten dat nu; de geluidtracker leest de comps rechtstreeks
+  uit de regels, dus die corrigeert zichzelf als de facties weer schuiven.
+- **`toon_economie.py` rekende met legers die niemand meer opstelt.** Legt nu
+  hetzelfde blok eroverheen als het spel, en toont `honger_vanaf_cyclus` in
+  plaats van de allang afgeschafte `cycle_limit`.
+- **Beer's speedplafond stond in drie documenten als 3.** Het is 4 sinds C13
+  (29 juli); die wijziging stond wel in deze changelog maar was nooit in de spec
+  doorgevoerd. Gevolg voor het asset-spoor: de Beer heeft drie `spd`-kaarten in
+  plaats van één, alleen de uiterste 1/5/1 valt voor hem af.
+
+Let op bij een volgende tekstwijziging: het spel leest de gecompileerde
+`i18n/*.translation`, en een headless run bouwt die NIET opnieuw. Alleen de csv
+aanpassen verandert dus niets aan wat de speler ziet. Herbouwen met
+`<godot> --headless --path . --import`, en de twee `.translation`-bestanden
+meecommitten. Twee regressietests (`CampaignTests.test_c19_actieve_tabel_*`)
+bewaken voortaan dat de schermtabel het regels-blok volgt en dat een ontbrekend
+regels-bestand netjes terugvalt op `constants.gd`.
+
 ## C19 — 7 augustus 2026 (facties aangenomen: het eerste doctrines-blok)
 
 *Besluit Max, na de zoekrun van 6 augustus, het nameten daarvan en drie eigen
 correcties.* Dit is het EERSTE blok dat echt wordt aangenomen; alle eerdere
 voorstellen zijn bekeken en weer weggelegd.
 
-| factie | was | wordt |
+> **Historie, niet de geldende stand.** Twee correctierondes later ziet de
+> tabel er anders uit; zie "C19 definitief" bovenaan. Varken schoof hier het
+> verst door: budget 6 bleek 30 procentpunt te duur en ging weer naar 7.
+
+| factie | was | wordt (op 7 augustus) |
 |---|---|---|
 | Varken | 3k b7 [13,6,3] | budget **6**, comp **[12,6,3]** |
 | Muis | 4k b5 [18,4,0] | **5 kaarten**, comp **[16,4,0]** |

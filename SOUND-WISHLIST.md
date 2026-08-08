@@ -175,6 +175,14 @@ paarden waren); die namen houden we aan, zodat de terugval automatisch klopt.
 | Cavalerie (big bro) | `horse_die` | `horse_die_<factie>` | 5 |
 | Artillerie | `cannon_die` | `cannon_die_<factie>` | 5 |
 
+**Muis en Beer hebben geen kanon** (stand C19, 8 augustus 2026: hun comp is
+[16,4,0] en [19,3,0]). Ze mogen er ook nooit een spawnen, dus `cannon_die_mouse`
+en `cannon_die_bear` zouden nooit klinken: die twee hoef je niet op te nemen.
+`sound-tracker.html` vraagt er sindsdien ook niet meer om, en leest die comps
+rechtstreeks uit de regels, dus dat corrigeert zichzelf als de facties ooit
+weer schuiven. De algemene `cannon_die` blijft wel nodig: je hoort hem als het
+kanon van je TEGENSTANDER sneuvelt.
+
 **Wanneer klinkt de factie-kreet?** (besluit Max, 28 juli) Op **kans**, niet
 bij elke dode: standaard 15% (`kreet_kans` in `effects_tuning.json`, 0..1).
 Een **kanontreffer gilt altijd** -- en dan met de eigen, kortere kanonkreet
@@ -208,7 +216,7 @@ noem ze `<bestand>1..6`. Het lijf-op-de-grond en de vallende musket komen uit
 |---|---|
 | `inf_die_mouse` ✓ (2) | 6 short high-pitched mouse squeaks in a row, each about 0.3 seconds, thin and cut off abruptly, silence between each, one small rodent only, dry close mono recording, no reverb, no music |
 | `horse_die_mouse` | 6 short deep rodent squeals in a row, each about 0.4 seconds, raspy and dropping in pitch, silence between each, one animal only, dry close mono recording, no reverb, no music |
-| `cannon_die_mouse` | 6 short bursts of splintering thin wood and snapping small iron fittings in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `cannon_die_mouse` (niet nodig: Muis heeft geen artillerie) | 6 short bursts of splintering thin wood and snapping small iron fittings in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |
 | `inf_die_pig` | 6 short shrill pig squeals in a row, each about 0.4 seconds, snorting and breaking into a wet gurgle, silence between each, one pig only, dry close mono recording, no reverb, no music |
 | `horse_die_pig` | 6 short deep boar grunts in a row, each about 0.5 seconds, snorting and rattling, silence between each, one boar only, dry close mono recording, no reverb, no music |
 | `cannon_die_pig` | 6 short bursts of thick oak splitting and iron bands popping in a row, each about 0.5 seconds, silence between each, dry close mono recording, no reverb, no music |
@@ -217,7 +225,7 @@ noem ze `<bestand>1..6`. Het lijf-op-de-grond en de vallende musket komen uit
 | `cannon_die_lion` | 6 short bursts of brass fittings snapping and hardwood splintering in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |
 | `inf_die_bear` | 6 short raccoon screeches in a row, each about 0.3 seconds, rattling and chattering, cut off abruptly, silence between each, one animal only, dry close mono recording, no reverb, no music |
 | `horse_die_bear` | 6 short low chesty bear grunts in a row, each about 0.5 seconds, wet and rumbling, silence between each, one bear only, dry close mono recording, no reverb, no music |
-| `cannon_die_bear` | 6 short bursts of thick iron cracking and heavy oak bursting in a row, each about 0.5 seconds, silence between each, dry close mono recording, no reverb, no music |
+| `cannon_die_bear` (niet nodig: Beer heeft geen artillerie) | 6 short bursts of thick iron cracking and heavy oak bursting in a row, each about 0.5 seconds, silence between each, dry close mono recording, no reverb, no music |
 | `inf_die_wolf` | 6 short piercing fox screams in a row, each about 0.3 seconds, eerie and cut off mid-cry, silence between each, one fox only, dry close mono recording, no reverb, no music |
 | `horse_die_wolf` | 6 short broken wolf yelps in a row, each about 0.4 seconds, dropping into a growl, silence between each, one wolf only, dry close mono recording, no reverb, no music |
 | `cannon_die_wolf` | 6 short bursts of scrap iron clattering and cracked wood splitting in a row, each about 0.4 seconds, silence between each, dry close mono recording, no reverb, no music |

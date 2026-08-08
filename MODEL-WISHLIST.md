@@ -58,6 +58,9 @@ laag/rond = hp, breed = atk.
 
 Formaat **HP / Speed / Aanval**. Archetype = strikt hoogste stat; gelijkspel = `mix`.
 
+Budgetten per factie sinds C19 (8 augustus 2026): Muis 5, Krokodil 6,
+Varken/Beer/Wolf 7, Leeuw 8.
+
 ### Budget 5 — Muis (6 combinaties)
 
 | Kaart | Archetype | Lees je als |
@@ -69,35 +72,51 @@ Formaat **HP / Speed / Aanval**. Archetype = strikt hoogste stat; gelijkspel = `
 | 2/1/2 | `mix` | standaard |
 | 1/2/2 | `mix` | standaard |
 
-### Budget 7 — Varken, Beer, Wolf, Krokodil (15 combinaties)
-
-| Kaart | Archetype | | Kaart | Archetype | | Kaart | Archetype |
-|---|---|---|---|---|---|---|---|
-| 5/1/1 | `hp` | | 2/4/1 | `spd` ⛔beer | | 2/2/3 | `atk` |
-| 4/2/1 | `hp` | | 2/3/2 | `spd` | | 2/1/4 | `atk` |
-| 4/1/2 | `hp` | | 1/5/1 | `spd` ⛔beer | | 1/2/4 | `atk` |
-| 3/2/2 | `hp` | | 1/4/2 | `spd` ⛔beer | | 1/1/5 | `atk` |
-| 3/3/1 | `mix` | | 3/1/3 | `mix` | | 1/3/3 | `mix` |
-
-⛔beer = kan niet bij de Beer (Speed-cap 3). De Beer heeft dus maar één
-`spd`-combinatie (2/3/2) — een snelle beer is zeldzaam; dat mag het model
-ook uitstralen (verrassend lichtvoetig).
-
-### Budget 9 — Leeuw (28 combinaties)
+### Budget 6 — Krokodil (10 combinaties)
 
 | Kaart | Arch. | | Kaart | Arch. | | Kaart | Arch. | | Kaart | Arch. |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 7/1/1 | `hp` | | 3/5/1 | `spd` | | 3/2/4 | `atk` | | 4/4/1 | `mix` |
-| 6/2/1 | `hp` | | 3/4/2 | `spd` | | 3/1/5 | `atk` | | 4/1/4 | `mix` |
-| 6/1/2 | `hp` | | 2/6/1 | `spd` | | 2/3/4 | `atk` | | 3/3/3 | `mix` |
-| 5/3/1 | `hp` | | 2/5/2 | `spd` | | 2/2/5 | `atk` | | 1/4/4 | `mix` |
-| 5/2/2 | `hp` | | 2/4/3 | `spd` | | 2/1/6 | `atk` | | | |
-| 5/1/3 | `hp` | | 1/7/1 | `spd` | | 1/3/5 | `atk` | | | |
-| 4/3/2 | `hp` | | 1/6/2 | `spd` | | 1/2/6 | `atk` | | | |
-| 4/2/3 | `hp` | | 1/5/3 | `spd` | | 1/1/7 | `atk` | | | |
+| 4/1/1 | `hp` | | 1/4/1 | `spd` | | 1/1/4 | `atk` | | 2/2/2 | `mix` |
+| 3/2/1 | `hp` | | 2/3/1 | `spd` | | 2/1/3 | `atk` | | | |
+| 3/1/2 | `hp` | | 1/3/2 | `spd` | | 1/2/3 | `atk` | | | |
 
-**Telling**: 49 combinaties totaal, maar dankzij de archetype-bucketing zijn er
-maar **5 looks per type** nodig. Binnen een archetype verschilt de intensiteit
+Het krappe budget is de prijs van de schutkleur-perk. Eén mix-kaart maar
+(2/2/2): een krokodil is bijna altijd ergens uitgesproken in.
+
+### Budget 7 — Varken, Beer, Wolf (15 combinaties)
+
+| Kaart | Archetype | | Kaart | Archetype | | Kaart | Archetype |
+|---|---|---|---|---|---|---|---|
+| 5/1/1 | `hp` | | 2/4/1 | `spd` | | 2/2/3 | `atk` |
+| 4/2/1 | `hp` | | 2/3/2 | `spd` | | 2/1/4 | `atk` |
+| 4/1/2 | `hp` | | 1/5/1 | `spd` ⛔beer | | 1/2/4 | `atk` |
+| 3/2/2 | `hp` | | 1/4/2 | `spd` | | 1/1/5 | `atk` |
+| 3/3/1 | `mix` | | 3/1/3 | `mix` | | 1/3/3 | `mix` |
+
+⛔beer = kan niet bij de Beer. Zijn `speed_max` is **4**, niet 3 (dat getal
+stond hier en in twee andere documenten fout): alleen de uiterste 1/5/1 valt
+voor hem af. Een echt harde beer-`spd` bestaat dus wel, maar nooit de extreemste
+variant; dat mag het model uitstralen — snel voor een beer, niet snel voor een
+muis.
+
+### Budget 8 — Leeuw (21 combinaties)
+
+| Kaart | Arch. | | Kaart | Arch. | | Kaart | Arch. | | Kaart | Arch. |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 6/1/1 | `hp` | | 1/6/1 | `spd` | | 1/1/6 | `atk` | | 2/3/3 | `mix` |
+| 5/2/1 | `hp` | | 1/5/2 | `spd` | | 1/2/5 | `atk` | | 3/2/3 | `mix` |
+| 5/1/2 | `hp` | | 2/5/1 | `spd` | | 2/1/5 | `atk` | | 3/3/2 | `mix` |
+| 4/3/1 | `hp` | | 1/4/3 | `spd` | | 1/3/4 | `atk` | | | |
+| 4/2/2 | `hp` | | 2/4/2 | `spd` | | 2/2/4 | `atk` | | | |
+| 4/1/3 | `hp` | | 3/4/1 | `spd` | | 3/1/4 | `atk` | | | |
+
+Leeuw ging op 8 augustus van budget 9 naar 8 (hij was met 63,7% winst veruit de
+sterkste). Zijn hoogste losse stat is daarmee 6 in plaats van 7 — behalve als er
+in de campagne een CP op de kaart ligt: dan is het weer 9 en komt 7 terug.
+
+**Telling**: 52 combinaties over de vier budgetten, maar dankzij de
+archetype-bucketing zijn er maar **5 looks per type** nodig. Binnen een
+archetype verschilt de intensiteit
 (1/1/7 is extremer dan 2/2/3) — dat hoeft het model niet te tonen; de
 HP-blokjes en het kaartpaneel geven de exacte cijfers.
 
@@ -122,12 +141,36 @@ HP-blokjes en het kaartpaneel geven de exacte cijfers.
 
 | Factie | Infanterie (klein broertje) | Big bro cavalerie (groot, ook 2 benen) |
 |---|---|---|
-| Muis | muis | **dikke bruine rat** (big bro; besluit Max 30 juli: het ruiter-op-konijn-idee van 25 juli is teruggedraaid); comp 18/4/0, dus 4 cavalerie-eenheden |
+| Muis | muis | **dikke bruine rat** (big bro; besluit Max 30 juli: het ruiter-op-konijn-idee van 25 juli is teruggedraaid) |
 | Varken (ex-Mens) | varken | **everzwijn** met slagtanden |
 | Leeuw | **cheetah** (slank, gevlekt, snel) | **leeuw** met volle manen |
 | Beer | **wasbeer** (gemaskerd gezicht) | massieve grizzly |
 | Wolf (= Wolf+Vos samengevoegd) | **vos** (kleine broer van de wolf) | reusachtige **dire wolf** |
-| Krokodil (ex-Vos-slot, erft schutkleur-perk) | **hagedis** met camouflage-schubben | **krokodil** (gepantserd, explosieve uitval = +1 Speed) |
+| Krokodil (ex-Vos-slot, erft schutkleur-perk) | **hagedis** met camouflage-schubben | **krokodil** (gepantserd) |
+
+**Hoeveel van elk, en wie heeft er GEEN kanon** (stand C19, 8 augustus 2026 —
+uit het `doctrines`-blok, te controleren met `-- facties`). Dit bepaalt hoe vaak
+een model in beeld komt en welke props je dus niet hoeft te maken:
+
+| Factie | Infanterie | Big bro | Artillerie |
+|---|---|---|---|
+| Muis | 16 | 4 | **geen** |
+| Varken | 11 | 5 | 3 |
+| Leeuw | 12 | 4 | 2 |
+| Beer | 19 | 3 | **geen** |
+| Wolf | 11 | **8** | 3 |
+| Krokodil | 13 | 5 | 3 |
+
+- **Muis en Beer krijgen geen kanon.** Nul artillerie in de comp betekent dat
+  `GameState.kent_type()` ze verbiedt er ooit een te spawnen, ook met een volle
+  reserve. Een muizen- of berenkanon is dus verloren werk, net als de
+  bijbehorende gibs en het `cannon_die`-geluid. (Beer verloor zijn kanonnen op
+  8 augustus: ze kostten hem 21 procentpunt winst, want hij wint met rennen en
+  een kanon verzet één vak per actie.)
+- **Wolf heeft met acht de meeste big bro's**, en die zijn ook nog eens +2
+  Speed. Dat model komt het vaakst en het snelst in beeld: de loop-clip mag daar
+  de beste zijn.
+- **Beer is met 19 het meest infanterie-zwaar**, Varken en Wolf met 11 het minst.
 
 **Prompt-opbouw infanterie**: `Single character, <bouw>
 anthropomorphic <dier> <kenmerken>, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey
@@ -166,11 +209,15 @@ aan infanterie); de big bro krijgt een MELEE-wapen als losse prop, zie 3c-2.
 Cavalerie-audio (nu paarden-galop) vervangen we later per
 familie (brul/grom/gepiep).
 
-### Muis -- infanterie + dikke rat als big bro + licht kanon
+### Muis -- infanterie + dikke rat als big bro
 
 *Cavalerie teruggedraaid naar de familie-regel (besluit Max 30 juli): de big
 bro is de dikke bruine rat, tweebenig, dus gewoon de Mixamo-pijplijn zoals bij
 elke andere factie. Het ruiter-op-konijn-plan van 25 juli vervalt.*
+
+> **`artillery_base` hieronder is NIET meer nodig.** De Muis heeft nul
+> artillerie in zijn comp en mag er dus ook nooit een spawnen. De prompt blijft
+> staan voor het geval de comp ooit weer artillerie krijgt.
 
 | Bestand | Prompt |
 |---|---|
@@ -236,6 +283,11 @@ elke andere factie. Het ruiter-op-konijn-plan van 25 juli vervalt.*
 | `artillery_mix` | Single prop, ornate Napoleonic field cannon on a weathered dark wooden carriage with pewter detailing, with a small anthropomorphic cheetah gunner crouched on the gun carriage. Gritty realistic AAA-game concept art, highly detailed. Clean neutral studio background, the cannon and one gunner only, no text. |
 
 ### Beer -- wasbeer-infanterie + grizzly als big bro
+
+> **`artillery_base` hieronder is NIET meer nodig.** De Beer verloor zijn
+> kanonnen op 8 augustus (C19): ze kostten hem 21 procentpunt winst. Zijn comp
+> is [19,3,0], dus hij mag er ook geen spawnen. De prompt blijft staan voor het
+> geval de comp ooit weer artillerie krijgt.
 
 | Bestand | Prompt |
 |---|---|

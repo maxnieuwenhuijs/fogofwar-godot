@@ -43,6 +43,40 @@ ARCHETYPES = ["base", "spd", "hp", "atk", "mix"]
 # Alleen deze twee kennen archetype-varianten (zie wishlist par. 7b-2).
 MET_ARCHETYPE = ["inf_die", "inf_kanon_die"]
 
+# Categorieen die alleen bestaan als de factie dat eenheidstype ook HEEFT.
+# Sinds C19 (8 augustus) hebben Muis en Beer nul artillerie in hun comp, en
+# `GameState.kent_type()` verbiedt ze dan ook een kanon te spawnen. Een
+# `cannon_die_bear` zou dus nooit klinken: die vragen we niet meer.
+ALLEEN_BIJ_TYPE = {"cannon_die": 2}   # 2 = artillerie-slot in comp [inf,cav,art]
+
+REGELS_BESTAND = "arena/arena_configs/rules_v42_campaign.json"
+
+
+def actieve_comps():
+    """Naam -> comp [inf,cav,art], zoals het spel hem NU opstelt.
+
+    Kale tabel uit `constants.gd` (die staat in doctrine-volgorde MENS, MUIS,
+    LEEUW, BEER, WOLF, VOS = index 0 t/m 5), met het `doctrines`-blok uit het
+    regels-bestand eroverheen. Precies wat `-- facties` laat zien.
+    """
+    kaal = []
+    try:
+        bron = io.open("scripts/core/constants.gd", encoding="utf-8").read()
+    except OSError:
+        return {}
+    for m in re.finditer(r'"name":\s*"([^"]+)".*?"comp":\s*\[(\d+),\s*(\d+),\s*(\d+)\]',
+                         bron, re.S):
+        kaal.append([m.group(1), [int(m.group(2)), int(m.group(3)), int(m.group(4))]])
+    try:
+        blok = (json.load(io.open(REGELS_BESTAND, encoding="utf-8")) or {}).get("doctrines") or {}
+    except (OSError, ValueError):
+        blok = {}
+    uit = {}
+    for i, (naam, comp) in enumerate(kaal):
+        ov = blok.get(str(i)) or {}
+        uit[naam] = [int(n) for n in ov.get("comp", comp)]
+    return uit
+
 
 def gevonden_categorieen():
     """Categorie -> aantal varianten, precies zoals AudioManager ze groepeert."""
@@ -71,12 +105,17 @@ def prompts_uit_wishlist():
 def bouw():
     heeft = gevonden_categorieen()
     prompts = prompts_uit_wishlist()
+    comps = actieve_comps()
     facties = []
     totaal_moet = totaal_heeft = 0
     for sleutel, naam, kleur in FACTIES:
         rijen = []
         f_moet = f_heeft = 0
+        comp = comps.get(naam, [])
         for cat, label, uitleg in BASIS:
+            slot = ALLEEN_BIJ_TYPE.get(cat)
+            if slot is not None and comp and int(comp[slot]) == 0:
+                continue    # deze factie heeft dat eenheidstype niet
             naam_cat = "%s_%s" % (cat, sleutel)
             n = heeft.get(naam_cat, 0)
             extra = []
@@ -99,7 +138,8 @@ def bouw():
         totaal_moet += f_moet
         totaal_heeft += f_heeft
         facties.append({"sleutel": sleutel, "naam": naam, "kleur": kleur,
-                        "rijen": rijen, "moet": f_moet, "heeft": f_heeft})
+                        "rijen": rijen, "moet": f_moet, "heeft": f_heeft,
+                        "comp": comp})
     return facties, totaal_moet, totaal_heeft
 
 
@@ -166,8 +206,12 @@ def schrijf(facties, moet, heeft):
     uit = [kop.replace("__PCT__", str(pct)).replace("__HEEFT__", str(heeft)).replace("__MOET__", str(moet))]
     for f in facties:
         uit.append('<section style="--fc:%s">' % f["kleur"])
-        uit.append('<div class="fkop"><h2>%s</h2><div class="tel">%s &middot; %d van %d</div></div>'
-                   % (esc(f["naam"]), esc(f["sleutel"]), f["heeft"], f["moet"]))
+        leger = ""
+        if f.get("comp"):
+            c = f["comp"]
+            leger = " &middot; leger %d inf / %d cav / %d art" % (c[0], c[1], c[2])
+        uit.append('<div class="fkop"><h2>%s</h2><div class="tel">%s &middot; %d van %d%s</div></div>'
+                   % (esc(f["naam"]), esc(f["sleutel"]), f["heeft"], f["moet"], leger))
         uit.append("<table><thead><tr><th>Wat</th><th>Bestand</th><th>Status</th>"
                    "<th>Prompt / toelichting</th></tr></thead><tbody>")
         for r in f["rijen"]:

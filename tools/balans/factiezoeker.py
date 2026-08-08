@@ -45,9 +45,11 @@ BASIS = os.path.join(PROJECT, "arena", "arena_configs", "rules_v42_campaign.json
 
 FACTIES = {"0": "Varken", "1": "Muis", "2": "Leeuw", "3": "Beer", "4": "Wolf", "5": "Krokodil"}
 
-# De huidige facties (spiegelt scripts/core/constants.gd, stand na C18). Dit is
-# het ijkpunt voor de identiteits-rem: hoe verder een kandidaat hiervandaan,
-# hoe meer hij moet opleveren.
+# De KALE facties (spiegelt scripts/core/constants.gd, stand na C18). Dit is
+# nog niet het ijkpunt: `_actieve_facties()` hieronder legt er het aangenomen
+# doctrines-blok overheen, en DAT is waar de identiteits-rem vanaf meet. Hoe
+# verder een kandidaat van de actieve stand af drijft, hoe meer hij moet
+# opleveren.
 BASIS_FACTIES = {
     "0": {"cards": 3, "budget": 7, "comp": [13, 6, 3], "speed_max": 0, "hp_bonus": 0,
           "art_range_bonus": 0, "cav_speed_bonus": 0},

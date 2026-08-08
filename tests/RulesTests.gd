@@ -468,12 +468,15 @@ func test_leeuw_artillery_range_seven() -> void:
 	_link_simple(state, too_far, 5, 1, 1)
 	assert_false(Rules.get_valid_shot_targets(state, gun.id).has(too_far.id))
 
-func test_vos_cavalry_speed_bonus_at_link() -> void:
+func test_cavalry_speed_bonus_at_link() -> void:
+	# De cavalerie-snelheidsperk zit sinds juli op WOLF (constants.gd), niet meer
+	# op Vos; deze test controleert alleen de rekensom in link_card, dus hij geeft
+	# de bonus zelf mee en is factie-onafhankelijk.
 	var state := GameState.new()
 	var cav := _spawn(state, Constants.PLAYER_1, Vector2i(5, 5), Constants.UnitType.CAVALRY)
 	var card := Card.new(state.next_card_id(), Constants.PLAYER_1, 1, 3, 2, 2)
 	state.all_cards[card.id] = card
-	cav.link_card(card, 0, 1)  # Vos-perk: sessie geeft cavalerie +1 Speed
+	cav.link_card(card, 0, 1)  # cav_speed_bonus komt uit de doctrine
 	assert_eq(cav.max_stamina, 3)
 	assert_eq(cav.remaining_stamina, 3)
 

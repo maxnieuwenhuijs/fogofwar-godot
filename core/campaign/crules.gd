@@ -98,6 +98,19 @@ static func facties_uit_bestand(pad: String = REGELS_BESTAND) -> Dictionary:
 	return RulesConfig.from_dict({"doctrines": docs}).doctrines
 
 
+## De factie-tabel zoals het spel hem NU opstelt, voor SCHERMEN die nog geen
+## match- of campagneregels bij de hand hebben: de factiekiezer in het
+## hoofdmenu, de campagne-lobby en het help-scherm. Zonder dit lazen die
+## rechtstreeks uit `Constants.DOCTRINE_DATA` en stond er dus "4 kaarten" bij
+## een Muis die er vijf uitdeelt (gevonden 8 augustus, na C19).
+## Speel-code gaat NIET hierlangs maar via `state.rules.doctrine_data()`.
+## Bouw hem eenmalig op en bevraag hem dan zes keer: elke aanroep leest de json.
+static func actieve_tabel(pad: String = REGELS_BESTAND) -> RulesConfig:
+	var cfg := RulesConfig.new()
+	cfg.doctrines = facties_uit_bestand(pad)
+	return cfg
+
+
 ## Factie-data zoals ze in DEZE campagne gelden: de tabel uit Constants met
 ## het eigen doctrines-blok eroverheen. Leeg blok = het snelle pad.
 ## Bewust niet gecachet: dit wordt bij de start en per duel gelezen, niet in

@@ -86,13 +86,14 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 ## 4. Kaarten definiëren
 
 - Per setup-ronde dient elke speler kaarten in: **het doctrine-aantal
-  (Varken/Beer/Wolf/Krokodil 3, Muis 4, Leeuw 2), maar nooit méér dan je
+  (Varken/Beer/Wolf/Krokodil 3, Muis 5, Leeuw 2), maar nooit méér dan je
   vrije (levende, ongekoppelde) pionnen** (4.1.10-hr). Nul vrije pionnen =
   ronde overslaan; de tegenstander gaat alleen door. Eénmalig, simultaan en
   blind (commit-gate: pas door als iedereen die moet, binnen is).
   `Validator.expected_define_count, Reducer._check_define_gate`
 - Een kaart heeft **HP / Speed / Aanval**: elke stat ≥ 1 en de som **exact** het
-  doctrine-budget (5/7/9). Beer: Speed ≤ 3. Eén ongeldige kaart verwerpt de hele
+  doctrine-budget (5 t/m 8, zie §11). Beer: Speed ≤ 4 (`speed_max`, constants.gd:92 —
+  het stond hier als 3, maar C13 heeft het op 29 juli op 4 gezet). Eén ongeldige kaart verwerpt de hele
   indiening. Hoogst mogelijke losse stat = budget − 2. `Card.gd:22-27`
 - Kaarten zijn **typeloos**: elke kaart mag op elk eigen pion-type gekoppeld
   worden; de betekenis van de stats ontstaat pas bij de koppeling.
@@ -125,7 +126,7 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
   van jou + levend + zonder kaart. Een pion draagt maximaal 1 kaart per cyclus.
   `GameSession.gd:147-161`
 - **Effect:** pion wordt actief; HP = kaart-HP (+1 Beer), stamina-voorraad =
-  kaart-Speed (+1 Muis; +1 Krokodil-cavalerie), Aanval = kaart-Aanval. Bonussen
+  kaart-Speed (+1 Muis; +2 Wolf-cavalerie), Aanval = kaart-Aanval. Bonussen
   vallen buiten het budget. `Pawn.gd:28-36, GameSession.gd:162-168`
 - **Staartkoppelen:** de beurt wisselt alleen naar een speler mét koppelwerk
   (ongekoppelde kaart uit deze ronde + vrije pion); anders koppel je door.
@@ -200,18 +201,61 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 
 ## 11. Doctrines
 
+**Dit is de GELDENDE tabel (C19, 8 augustus 2026).** Hij staat niet in
+`constants.gd` maar in het `doctrines`-blok van
+`arena/arena_configs/rules_v42_campaign.json`; zie §11b voor waarom.
+
 | Doctrine (display) | Kaarten/ronde | Budget | Leger [inf,cav,art] | Perks |
 |---|---|---|---|---|
-| **Varken** (enum MENS) | 3 | 7 | [13,6,3] = 22 | geen — allrounder |
-| **Muis** | 4 | 5 | **[18,4,0] = 22** | +1 Speed op elke koppeling; beweegt door eigen pionnen (zwerm) |
-| **Leeuw** | 2 | 9 | [6,10,2] = 18 | artilleriedracht +1 (7) |
-| **Beer** | 3 | 7 | [16,3,3] = 22 | +1 HP op elke koppeling; kaart-Speed max 4 |
-| **Wolf** | 3 | 7 | [11,8,3] = 22 | gratis stap na elke melee; cav springt over vijandelijke infanterie |
-| **Krokodil** (enum VOS) | 3 | 7 | [13,6,3] = 22 | verborgen koppeling; +1 Speed op cavalerie |
+| **Varken** (enum MENS) | 3 | 7 | [11,5,3] = 19 | geen — allrounder |
+| **Muis** | **5** | 5 | [16,4,0] = 20 | +1 Speed op elke koppeling; beweegt door eigen pionnen (zwerm) |
+| **Leeuw** | 2 | **8** | [12,4,2] = 18 | artilleriedracht +1 (7) |
+| **Beer** | 3 | 7 | [19,3,0] = 22 | +1 HP op elke koppeling; kaart-Speed max 4 |
+| **Wolf** | 3 | 7 | [11,8,3] = 22 | gratis stap na elke melee; **cavalerie +2 Speed**; cav springt over vijandelijke infanterie |
+| **Krokodil** (enum VOS) | 3 | 6 | [13,5,3] = 21 | verborgen koppeling |
 
-`constants.gd:54-101` — Muis [18,4,0] is het BIG BRO-besluit (juli 2026),
-doorgevoerd in F0.0; arena-hermeting volgt in F1.6. Onbekende doctrine-id valt
-terug op Varken. `constants.gd:120-121`
+Gemeten evenwicht op 1152 partijen (andere seeds dan waarop is afgesteld):
+44,7% tot 56,2% winst, spreiding 4,4 procentpunt. En met twee verschillende
+manieren om te winnen naast elkaar: Beer haalt 93% van zijn zeges met rennen,
+Leeuw 99% met slachten, en ze staan allebei rond de 53%. Zie
+`spelregels-CHANGELOG.md` "C19 definitief".
+
+Onbekende doctrine-id valt terug op Varken. `constants.gd:132-133`
+
+### 11b. Waar de factie-getallen staan (en waarom niet in constants.gd)
+
+`constants.gd:65-114` bevat een **kale tabel**: het oorspronkelijke ontwerp van
+juli 2026. Die tabel is nog steeds de terugval als er geen `doctrines`-blok is,
+en dus wat de tests zonder regels-bestand meten. Maar in het spel zoals het nu
+gespeeld en gemeten wordt, ligt het blok er altijd overheen.
+
+| | kale tabel (`constants.gd`) | actief (`doctrines`-blok) |
+|---|---|---|
+| Varken | 3k b7 [13,6,3] | comp **[11,5,3]** |
+| Muis | 4k b5 [18,4,0] | **5 kaarten**, comp **[16,4,0]** |
+| Leeuw | 2k b9 [6,10,2] | budget **8**, comp **[12,4,2]** |
+| Beer | 3k b7 [16,3,3] | comp **[19,3,0]** |
+| Wolf | 3k b7 [11,8,3] | cavalerie-snelheid **2** |
+| Krokodil | 3k b6 [13,6,3] | comp **[13,5,3]** |
+
+Dat blok is één bron voor álles: campagne, los potje, trainer, arena, ijk-sims
+en de zoekers lezen het uit hetzelfde bestand (C17, "EEN REGELSET"). De campagne
+**bevriest** het bij de start in haar save, zodat een lopende campagne niet
+verandert als jij morgen aan de knoppen zit.
+
+Speel-code leest factie-data daarom NOOIT rechtstreeks uit
+`Constants.doctrine_data()`, maar via `rules.doctrine_data()`,
+`c.rules.doctrine_data()` of `Agent.doctrine_data_uit_view()`. **Schermen** die
+nog geen regels bij de hand hebben (de factiekiezer in het hoofdmenu, de
+campagne-lobby, het help-scherm) gaan via `CRules.actieve_tabel()`. Wat er op
+dit moment werkelijk geldt zie je met `-- facties`; die modus zet de kale tabel
+en de actieve waarden naast elkaar en zet een `*` bij elke afwijking.
+
+**Gevolg dat makkelijk over het hoofd wordt gezien:** Muis en Beer hebben nul
+artillerie in hun comp, en `GameState.kent_type()` leidt daaruit af welke types
+je mag spawnen. Die twee kunnen dus nooit een kanon op het bord krijgen, ook
+niet met een volle reserve. Voor het asset-spoor betekent dat: geen kanon-model,
+geen gibs en geen `cannon_die_<factie>` voor mouse en bear.
 
 ## 12. Krokodil: verborgen koppeling
 
@@ -250,7 +294,7 @@ naar de engine-klokken migreert:
   (`campaign.cp_effect_mode = "define_budget"`). Validator: som(stats) ≤
   doctrine-budget + cp_op_kaart.
 - **Inzet (D4):** max **1 CP per kaart, geen plafond** — het maximum per ronde
-  is dus het aantal daadwerkelijk gedefinieerde kaarten (Muis 4, Leeuw 2; onder
+  is dus het aantal daadwerkelijk gedefinieerde kaarten (Muis 5, Leeuw 2; onder
   4.1.10-hr eventueel minder). `campaign.cp_inzet_max = "per_kaart"`.
 - **Levensloop (D2):** ingezet = **verbrand**, ook als de kaart nooit gekoppeld
   raakt (`campaign.cp_refund = "none"`). Verdientabel (startwaarden, F2.6/F7.3

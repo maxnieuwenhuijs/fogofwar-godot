@@ -250,8 +250,11 @@ func _tab_factions() -> String:
 		tr("HELP_FACTIONS_COMP"),
 		"",
 	]
+	# De ACTIEVE tabel, niet de kale uit Constants: anders belooft het
+	# help-scherm een leger dat je niet krijgt (C19, 8 augustus).
+	var tabel := CRules.actieve_tabel()
 	for doctrine in Constants.DOCTRINE_DATA.keys():
-		var d: Dictionary = Constants.doctrine_data(doctrine)
+		var d: Dictionary = tabel.doctrine_data(doctrine)
 		lines.append(tr("HELP_FACTIONS_ROW") % [
 			Constants.doctrine_display_name(doctrine), int(d.cards), int(d.budget), d.comp[0], d.comp[1], d.comp[2]])
 		lines.append("[color=#7fdd7f]✚ %s[/color]" % Constants.doctrine_pro(doctrine))

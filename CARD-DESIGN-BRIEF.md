@@ -21,14 +21,18 @@ Kaarten zijn **geen vaste collectie** — de speler stelt ze elke setup-ronde ze
 
 ### Per doctrine
 
+Stand C19 (8 augustus 2026). Deze getallen komen uit het `doctrines`-blok in
+`arena/arena_configs/rules_v42_campaign.json`, niet uit `constants.gd`; met
+`-- facties` controleer je wat er nu geldt.
+
 | Doctrine | Kaarten/ronde | Budget | Ontwerp-accent |
 |---|---|---|---|
-| Mens | 3 | 7 | neutraal referentie-ontwerp |
-| Muis | 4 | 5 | zwerm: klein, veel, snel leesbaar naast elkaar |
-| Leeuw | 2 | 9 | elite: groter/zwaarder aanvoelend, hogere statwaarden mogelijk (tot 7) |
-| Beer | 3 | 7 | toont "+1 HP" bonus buiten budget; Speed max 3 |
+| Varken (enum Mens) | 3 | 7 | neutraal referentie-ontwerp |
+| Muis | **5** | 5 | zwerm: klein, veel, snel leesbaar naast elkaar — vijf naast elkaar is de krapste hand-balk van het spel |
+| Leeuw | 2 | **8** | elite: groter/zwaarder aanvoelend, hoogste losse stat 6 (7 met een CP erop) |
+| Beer | 3 | 7 | toont "+1 HP" bonus buiten budget; Speed max **4** |
 | Wolf | 3 | 7 | standaard frame, roedel-insigne |
-| Vos | 3 | 7 | moet ook een **verborgen/anonieme** variant hebben (gedekt koppelen) |
+| Krokodil (enum Vos) | 3 | **6** | moet ook een **verborgen/anonieme** variant hebben (gedekt koppelen) |
 
 ## 3. Kaartstates (allemaal visueel te onderscheiden)
 
@@ -40,12 +44,12 @@ Kaarten zijn **geen vaste collectie** — de speler stelt ze elke setup-ronde ze
 
 ## 4. Layout-eisen
 
-- **Formaat:** staand, ~2:3. Moet leesbaar blijven op klein formaat: de Muis toont 4 kaarten naast elkaar in de hand-balk, en gekoppelde kaarten kunnen als mini-badge bij een pion verschijnen.
+- **Formaat:** staand, ~2:3. Moet leesbaar blijven op klein formaat: de Muis toont **5** kaarten naast elkaar in de hand-balk (dat is de maat waar het ontwerp op moet passen), en gekoppelde kaarten kunnen als mini-badge bij een pion verschijnen.
 - **Stats:** 3 grote cijfers met icoon, verticaal of in een rij:
   - HP → hart of schild
   - Speed → laars of hoefijzer
   - Attack → gekruiste sabels of musketten
-- **Cijfers zijn het hoofdelement** — groter dan al het andere. Bereik 1–7 (Leeuw), plus "6*" weergave voor Beer-HP met bonus.
+- **Cijfers zijn het hoofdelement** — groter dan al het andere. Bereik 1–6 in een gewoon potje (Leeuw, budget 8), 1–7 zodra er een CP op de kaart ligt; plus "6*" weergave voor Beer-HP met bonus. Ontwerp dus op twee cijferposities.
 - **Spelerskleur:** rood (speler 1) / blauw (speler 2) als duidelijke rand- of zegelkleur.
 - **Doctrine-insigne:** klein wapenschild/embleem per dier (muis, leeuw, beer, wolf, vos, mens) op een vaste plek, bv. bovenaan als regimentszegel.
 - **Editable-modus:** ruimte voor +/− knoppen per stat en een budget-teller ("nog 2 punten"), zonder de layout te breken wanneer die knoppen verdwijnen.

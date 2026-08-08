@@ -224,7 +224,8 @@ static func _do_link(state: GameState, action: Dictionary, player_id: int, event
 	var pawn: Pawn = state.pawns.get(int(action.pawn_id), null)
 	var doctrine: Dictionary = state.doctrine_data_of(player_id)
 	# Beer: +1 HP buiten het budget (v4.1 §6.4). Speed-bonus buiten het budget:
-	# Muis krijgt +1 op elke pion (zwerm-mobiliteit), Vos +1 op cavalerie.
+	# Muis krijgt +1 op elke pion (zwerm-mobiliteit), Wolf +2 op cavalerie
+	# (C19; de perk zat oorspronkelijk op Vos en is in juli verhuisd).
 	var speed_bonus: int = int(doctrine.get("speed_bonus", 0))
 	if pawn.unit_type == Constants.UnitType.CAVALRY:
 		speed_bonus += int(doctrine.cav_speed_bonus)

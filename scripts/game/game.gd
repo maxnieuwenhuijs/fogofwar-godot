@@ -469,8 +469,12 @@ func _after_help_closed() -> void:
 func _show_doctrine_menu() -> void:
 	var names: Array = []
 	var lines: Array = []
+	# C17: dezelfde facties als de campagne, de trainer en de arena. Lees je
+	# hier de kale tabel uit Constants, dan kiest de speler een leger dat het
+	# potje daarna niet opstelt.
+	var tabel := CRules.actieve_tabel()
 	for doctrine in Constants.DOCTRINE_DATA.keys():
-		var data: Dictionary = Constants.doctrine_data(doctrine)
+		var data: Dictionary = tabel.doctrine_data(doctrine)
 		names.append(tr("MENU_DOCTRINE_OPTION") % [
 			Constants.doctrine_display_name(doctrine), int(data.cards), int(data.budget),
 			data.comp[0], data.comp[1], data.comp[2]])
@@ -495,8 +499,9 @@ func _on_doctrine_choice(index: int) -> void:
 ## handig om te oefenen tegen een specifieke matchup.
 func _show_opponent_menu() -> void:
 	var names: Array = [tr("MENU_OPP_SURPRISE")]
+	var tabel := CRules.actieve_tabel()
 	for key in Constants.DOCTRINE_DATA.keys():
-		var data: Dictionary = Constants.doctrine_data(key)
+		var data: Dictionary = tabel.doctrine_data(key)
 		names.append(tr("MENU_OPP_OPTION") % [Constants.doctrine_display_name(key), data.comp[0], data.comp[1], data.comp[2]])
 	_overlay.show_choice(
 		tr("MENU_OPP_TITLE"),

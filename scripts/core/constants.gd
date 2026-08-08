@@ -50,6 +50,18 @@ enum UiPhase { DEFINE, LINKING, DONE }
 # art_range_bonus: extra dracht op de vaste 6; cav_speed_bonus: +Speed op
 # cavalerie bij koppeling; cav_jump_infantry: cavalerie springt óók over
 # VIJANDELIJKE infanterie. (Cavalerie springt sowieso over eigen pionnen.)
+#
+# LET OP: dit is de KALE tabel, de terugval. Wat er werkelijk gespeeld wordt is
+# deze tabel met het `doctrines`-blok uit `rules_v42_campaign.json` eroverheen
+# (C17/C19). Lees dit dus nooit rechtstreeks in speel- of schermcode: ga via
+# `state.rules.doctrine_data()` of `CRules.actieve_tabel()`. Controleren wat er
+# nu geldt: `capture.tscn -- facties`.
+#
+# De pro/con-teksten staan in de UI (via de i18n-sleutels DOCTRINE_<n>_PRO/CON;
+# wat hieronder staat is alleen de terugval als de vertaling ontbreekt). Ze
+# noemen daarom BEWUST geen kaartaantallen, budgetten of legergroottes meer:
+# die kan het blok verschuiven, en de schermen printen ze er toch al live
+# naast. Alleen wat kwalitatief vastligt staat in de tekst.
 const DOCTRINE_DATA: Dictionary = {
 	Doctrine.MENS: {
 		"name": "Varken", "cards": 3, "budget": 7, "comp": [13, 6, 3],
@@ -64,32 +76,32 @@ const DOCTRINE_DATA: Dictionary = {
 		"move_through_own": true, "hp_bonus": 0, "speed_max": 0, "speed_bonus": 1,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
-		"pro": "4 kaarten, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)",
-		"con": "Budget 5: stats max 3, geen kanonnen",
+		"pro": "De meeste kaarten van het spel, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)",
+		"con": "Het laagste kaartbudget: zwakke stats, en geen kanonnen",
 	},
 	Doctrine.LEEUW: {
 		"name": "Leeuw", "cards": 2, "budget": 9, "comp": [6, 10, 2],
 		"move_through_own": false, "hp_bonus": 0, "speed_max": 0,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 1, "cav_speed_bonus": 0, "cav_jump_infantry": false,
-		"pro": "Budget 9: monsterkaarten (tot Aanval 7) en kanonnen met dracht 7",
-		"con": "Maar 2 kaarten per ronde en 18 pionnen",
+		"pro": "Het hoogste kaartbudget: monsterkaarten, en kanonnen met dracht 7",
+		"con": "Maar twee kaarten per ronde, dus zelden meer dan een handvol pionnen wakker",
 	},
 	Doctrine.BEER: {
 		"name": "Beer", "cards": 3, "budget": 7, "comp": [16, 3, 3],
 		"move_through_own": false, "hp_bonus": 1, "speed_max": 4,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
-		"pro": "Elke koppeling gratis +1 HP: muren tot 6 HP",
-		"con": "Speed max 4: traag over het bord",
+		"pro": "Elke koppeling gratis +1 HP: pionnen waar niets doorheen komt",
+		"con": "Kaart-Speed gaat nooit boven 4: traag over het bord",
 	},
 	Doctrine.WOLF: {
 		"name": "Wolf", "cards": 3, "budget": 7, "comp": [11, 8, 3],
 		"move_through_own": false, "hp_bonus": 0, "speed_max": 0,
 		"wolf_step": true, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 1, "cav_jump_infantry": true,
-		"pro": "Gratis stap na elke melee; cavalerie +1 Speed en springt óók over vijandelijke infanterie",
-		"con": "Stap geldt niet na schoten; lichte samenstelling",
+		"pro": "Gratis stap na elke melee; snelle cavalerie die óók over vijandelijke infanterie springt",
+		"con": "Die stap geldt niet na schoten; lichte samenstelling",
 	},
 	Doctrine.VOS: {
 		"name": "Krokodil", "cards": 3, "budget": 6, "comp": [13, 6, 3],
@@ -97,7 +109,7 @@ const DOCTRINE_DATA: Dictionary = {
 		"wolf_step": false, "hidden_link": true,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
 		"pro": "Schutkleur: koppeling blijft geheim tot de eerste schade (hinderlaag)",
-		"con": "Budget 6: zwakkere kaarten dan de rest; kaarten zelf zijn openbaar",
+		"con": "Krap kaartbudget: zwakkere kaarten dan de meeste; de kaarten zelf zijn openbaar",
 	},
 }
 

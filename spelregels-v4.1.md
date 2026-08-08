@@ -1,5 +1,13 @@
 # Fog of War — Spelregels v4.1: Vuurlijnen & Melee
 
+> **HISTORISCH DOCUMENT.** De geldende regels staan in
+> `docs/spelregels-v4.2.md`, met de wijzigingen per stap in
+> `docs/spelregels-CHANGELOG.md`. Sinds C13 (29 juli 2026) is 4.1 geen
+> speelbare optie meer: elk potje draait campagneregels. Wat hieronder staat is
+> dus de stand van juli en op een paar punten achterhaald, met name de
+> factietabel in §6 (herzien door C19 op 8 augustus) en het Beer-speedplafond
+> (3 hier, 4 sinds C13).
+
 Deze versie **vervangt v4**. Enige wijziging: het infanterieschot gaat niet langer over een tussenliggende pion heen — **vuur wordt nu zonder uitzondering geblokkeerd**. Verder bouwt alles voort op `game_description.md` (v1); wat hier niet expliciet wordt gewijzigd, blijft gelden zoals in v1 beschreven.
 
 **Kern.** Elke pion heeft een vast **eenheidstype** (Infanterie, Cavalerie, Artillerie) dat bepaalt wat de kaart-stats betekenen. Infanterie kan schieten op afstand 2 over open grond. Artillerie schiet in vrije rechte lijnen zover als zijn Speed draagt. Vuur raakt **alles**, ook niet-geactiveerde pionnen — maar dekking is fysiek en absoluut: elke tussenliggende pion blokkeert elke vuurlijn. Alleen wat vrij zicht heeft, kan geraakt worden. Kaarten blijven typeloos; daarbovenop kiest elke speler vóór de partij een vaste **doctrine** (asymmetrisch, niet wisselbaar).

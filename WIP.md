@@ -1,9 +1,88 @@
 # Fog of War — Work In Progress & Context
 
+## 8 augustus (later) -- de rest van het spel kende de nieuwe facties nog niet
+
+Opdracht Max: "update alle context en bestanden en uitleg met de nieuwe facties
+en werk alle progress etc bij." Dat werd meer dan een tekstrondje, want op drie
+plekken liep de code langs het aangenomen blok heen.
+
+**De speler kreeg verkeerde informatie voorgeschoteld.** De factiekiezer in het
+hoofdmenu, de tegenstanderkiezer en het help-scherm lazen `Constants.DOCTRINE_DATA`
+rechtstreeks. Ze beloofden dus de kale tabel: "4 kaarten" bij een Muis die er
+vijf uitdeelt, "budget 9" bij een Leeuw die er 8 heeft. Precies wat CLAUDE.md
+verbiedt ("lees factie-data NOOIT rechtstreeks uit `Constants.doctrine_data()`"),
+maar die regel was geschreven voor speel-code en de schermen waren nooit
+nagelopen. Nieuwe ingang: `CRules.actieve_tabel()`.
+
+**De pro/con-teksten noemden getallen die kunnen schuiven.** Die staan in
+`i18n/strings.csv`, niet in de code, dus het bijwerken van `constants.gd` alleen
+had niets opgelost. Ze zeggen nu alleen nog wat kwalitatief vastligt ("de meeste
+kaarten van het spel", "het hoogste kaartbudget"); de schermen printen de exacte
+getallen er toch al live naast. Bijvangst: Krokodil's PRO beloofde nog steeds
+"+1 Speed op cavalerie", een perk die in C18 (31 juli) naar de Wolf is verhuisd.
+
+En een valkuil die er bijna doorheen glipte: het spel leest de GECOMPILEERDE
+`i18n/*.translation`, niet de csv, en een headless run bouwt die niet opnieuw.
+De csv aanpassen en committen had dus niets aan het scherm veranderd. Herbouwen
+gaat met `<godot> --headless --path . --import`; nagelopen door beide talen uit
+de gecompileerde tabel terug te lezen.
+
+**Twee regressietests erbij** (`CampaignTests.test_c19_actieve_tabel_*`): één die
+eist dat elk veld uit het regels-blok ook echt in de schermtabel landt, en één
+die eist dat een ontbrekend regels-bestand netjes terugvalt op de kale tabel in
+plaats van om te vallen. Dit soort fout (scherm en engine lezen verschillende
+bronnen) is nu twee keer voorgekomen, dus hij hoort in de suite.
+
+**Muis en Beer hebben geen artillerie meer, en dat scheelt werk.**
+`GameState.kent_type()` leidt uit de comp af welke types je mag spawnen, dus met
+`[16,4,0]` en `[19,3,0]` kunnen die twee nooit een kanon op het bord krijgen. Een
+berenkanon, zijn gibs en `cannon_die_bear` zijn dus verloren moeite. De
+geluidtracker vraagt er niet meer om (22 geluiden in plaats van 24) en leest die
+comps rechtstreeks uit de regels, dus dat corrigeert zichzelf als de facties ooit
+weer schuiven. Zelfde noot in MODEL-WISHLIST, SOUND-WISHLIST en model-tracker.
+
+**Beer's speedplafond stond in drie documenten als 3.** Het is 4 sinds C13 (29
+juli); die wijziging stond wél in de changelog maar was nooit in de spec
+doorgevoerd. Gevolg voor het asset-spoor: de Beer heeft drie `spd`-kaarten, niet
+één. Alleen de uiterste 1/5/1 valt voor hem af.
+
+**`toon_economie.py` rekende met legers die niemand meer opstelt** (kale comps
+hardgecodeerd) en toonde `cycle_limit`, dat V0 op 3 augustus heeft afgeschaft.
+Legt nu hetzelfde blok eroverheen als het spel, met dezelfde terugval als
+`game.gd` gebruikt voor een los potje.
+
+Verder bijgewerkt: `docs/spelregels-v4.2.md` §11 (nieuwe tabel + een §11b dat
+uitlegt waarom de getallen niet in `constants.gd` staan), `CLAUDE.md`
+(factie-tabel + "waar we zijn" stond nog op 26 juli), `README.md` (beschreef nog
+een 2-spelerspel zonder campagne, met twee .bat-bestanden die niet bestaan),
+`MASTERBOUWPLAN.md` (F1.6 gehaald: 44,7-56,2%, ruimer dan het werkdoel 25-75%),
+`CARD-DESIGN-BRIEF.md` en `MODEL-WISHLIST.md` (kaartcombinaties per budget 5/6/7/8
+opnieuw uitgerekend; het waren er 5/7/9).
+
+**Nog een observatie, geen wijziging:** `arena_nacht.ps1` verdeelt de meettijd
+om-en-om over de 4.1-matrix en de v4.2-matrix, en de 4.1-kant draait op
+`v41_default.json` dat GEEN doctrines-blok heeft. De helft van de meting gaat dus
+over facties die niemand meer speelt. Voor vanavond niets aan gedaan (dat is een
+keuze over wat je wilt meten, niet een fout), maar het is zonde van de uren.
+
+
 ## 8 augustus -- de facties staan (4,4 procentpunt spreiding)
 
 Twee correctierondes op C19, elk gestuurd door een meting, en bevestigd op 1152
 partijen met ANDERE seeds dan waarop is afgesteld.
+
+**De geldende facties** (het `doctrines`-blok in
+`arena/arena_configs/rules_v42_campaign.json`; met `-- facties` zie je ze naast
+de kale tabel uit `constants.gd`):
+
+| factie | kaarten | budget | leger [inf,cav,art] | perk |
+|---|---|---|---|---|
+| Varken | 3 | 7 | [11,5,3] = 19 | - (allrounder) |
+| Muis | 5 | 5 | [16,4,0] = 20 | +1 Speed op elke pion, loopt door eigen pionnen |
+| Leeuw | 2 | 8 | [12,4,2] = 18 | artilleriedracht 7 |
+| Beer | 3 | 7 | [19,3,0] = 22 | +1 HP per koppeling, kaart-Speed max 4 |
+| Wolf | 3 | 7 | [11,8,3] = 22 | gratis stap na melee, cavalerie +2 Speed en springt over vijanden |
+| Krokodil | 3 | 6 | [13,5,3] = 21 | koppeling blijft geheim tot de eerste schade |
 
 | factie | winst | haven-aandeel |
 |---|---|---|

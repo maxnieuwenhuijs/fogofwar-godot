@@ -7,7 +7,8 @@
 > **De C-besluiten:** C1 twee teams van 8 · C2 je neemt je volledige bezit
 > mee het duel in · C3 uitvallen = duel verloren én voorraad te klein voor
 > een nieuwe startopstelling · C4 burgeroorlog zodra een team is
-> uitgeschakeld · C5 punten: haven 3 / eliminatie 2 / tiebreak 1 / verlies 0,
+> uitgeschakeld · C5 punten: haven 3 / eliminatie 2 / verlies 0 (de tiebreak
+> van 1 punt verviel met V0 op 3 augustus: geen gelijkspel meer),
 > teambonus +2 per lid (ook doden) · C6 flow: raad → doneren → duels ·
 > C7 duel-start: doctrine-comp opstellen (gecapt op voorraad), rest =
 > spawn-reserve · C8 de 15-spawns-per-potje-cap geldt ook in campagne-duels.
@@ -106,9 +107,11 @@ Regels (vastgelegd, masterplan):
 ## 5. Punten en de burgeroorlog
 
 - **Punten (C5)** meten roem, los van de CP/pion-economie: duelwinst via de
-  haven 3, via eliminatie 2, via de tiebreak 1, verlies 0. Teamwinst-bonus
-  aan het einde: +2 per lid, **ook voor gesneuvelde teamgenoten** (de doden
-  droegen bij).
+  haven 3, via eliminatie 2, verlies 0. Teamwinst-bonus aan het einde: +2 per
+  lid, **ook voor gesneuvelde teamgenoten** (de doden droegen bij).
+  *De tiebreak-uitslag (1 punt) is op 3 augustus vervallen met V0: een duel kent
+  geen gelijkspel meer. `punten_tiebreak` bestaat niet meer in CRules; opgeven
+  telt voor de winnaar als eliminatie.*
 - **Burgeroorlog (C4):** zodra één team volledig is uitgeschakeld vechten
   de overlevenden van het winnende team onderling om
   het kampioenschap: knock-out-bracket, seeding op punten → CP → pool;

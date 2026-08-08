@@ -141,6 +141,19 @@ tests/                unit-suites  golden_replays/  fuzz/
 | **F7 — Campagne-arena** | F6 | 16-bot-campagnes headless, campagnegewichten-evolutie, formatmetrieken, config-sweeps | Poolfactor & CP-tabel vastgesteld op data |
 | **F8 — Optioneel** | F7 | L4 neuraal, determinized sampling (B11), C#-acceleratie, web-replay-viewer, toeschouwersmodus, cosmetica | — |
 
+**Stand op 8 augustus 2026:** F0, F1, F2 en F3 zijn AF — alle substappen afgevinkt. Het spel is
+speelbaar van begin tot kampioen, de regels staan (4.3.1, met V0 en de C15-buit), en de facties zijn
+op meetdata afgesteld tot een spreiding van 4,4 procentpunt (C19). **Volgende fase is F4 (online).**
+
+Twee dingen die je moet weten voordat je verder bouwt:
+
+- **De regels zijn sinds het schrijven van dit plan drie keer principieel veranderd**, en die
+  besluiten staan niet in de fasetabel hierboven maar in `docs/spelregels-CHANGELOG.md`: C17 (één
+  regelset, de campagne IS het spel), V0 (geen gelijkspel meer) en C19 (het factie-blok). Wie een
+  fasebeschrijving leest die over `cycle_limit` of een tiebreak praat, leest iets verouderds.
+- **De bots lopen achter op de regels.** Ze worden opnieuw getraind; tot dat klaar is meet elke
+  arena-run vooral botonkunde.
+
 **Volgorde-rationale** (bouwplan §12 blijft geldig): F1 vóór alles met mensen — bots vinden regelbugs
 gratis. F2 vóór F3 — de campagne staat op de v4.2-economie. F3 vóór F4/F5 — de campagne-loop bewijzen
 zonder netwerkvariabelen. F7 ná F5 — campagne-arena heeft de definitieve campagneregels nodig.
@@ -163,9 +176,11 @@ Elke stap laat de volledige bestaande testsuite + de UI groen.
      doc): opmaakbare stamina (stap 1 / melee 1 / schot 1 / charge stappen+1; terugslag & Wolf-stap
      gratis), artillerie 1 actie/beurt met vaste dracht 6 (+1 Leeuw) en dode zone 1, infanterieschot
      afstand exact 2 met **volle** Attack, terugslag {inf 1, cav 2, art 0}, cav springt over eigen
-     pionnen (Wolf-cav ook over vijandelijke inf), Muis +1 Speed doctrine-breed, Vos-cav +1 Speed,
+     pionnen (Wolf-cav ook over vijandelijke inf), Muis +1 Speed doctrine-breed, Wolf-cav +1 Speed
+     (die perk zat oorspronkelijk op Vos; sinds C19 staat hij op +2 bij Wolf),
      doctrine-comps zoals `DOCTRINE_DATA` (**besluit Max juli 2026: Muis wordt [18,4,0]** — het BIG
-     BRO-besluit van 6 juli wordt in F0.0 doorgevoerd, arena-hermeting in F1.6; zie §15.1),
+     BRO-besluit van 6 juli wordt in F0.0 doorgevoerd, arena-hermeting in F1.6; zie §15.1;
+     de comps zijn op 8 augustus door C19 herzien en staan nu in het `doctrines`-blok),
      presentatienamen Varken/Krokodil, beschieting raakt óók inactieve pionnen en elimineert
      standbeelden ongeacht HP (Rules.gd get_valid_shot_targets + apply_shot — de basis onder F0.2's
      `fire_hits_inactive`/`statue_threshold`-knoppen).
@@ -472,6 +487,22 @@ balansconclusies op steunen.
 **CHECK:** arena-matrix ná patch: geen doctrine <25% of >75% totaal-winrate op L2 (werkdoel);
 convergentiecheck gerapporteerd; alle goldens bewust ge-bumpt waar regels wijzigden.
 
+**GEHAALD, en ruimer dan het werkdoel (C19, 8 augustus 2026).** De band is
+**44,7% tot 56,2%** op L2, spreiding 4,4 procentpunt, gemeten over 1152 partijen
+op andere seeds dan waarop is afgesteld. Beginstand was 28-76%. Dat gebeurde
+niet meer met losse knoppen maar met een compleet `doctrines`-blok (zie
+`CLAUDE.md` en `spelregels-v4.2.md` §11) plus de V0-regelwijziging die het
+gelijkspel afschafte. Twee dingen die daaruit zijn geleerd en die deze fase
+eigenlijk pas afmaken:
+
+- **De knoppen zijn niet even zwaar.** Kaartbudget ~30 procentpunt per punt,
+  cavalerie ~18 per ruiter, infanterie en legergrootte vrijwel niets. Wie hier
+  met budget aan draait, verplaatst een factie meteen door de hele band heen.
+- **Winrate alleen zegt te weinig.** Beer haalt 93% van zijn zeges uit de haven
+  en Leeuw 99% uit eliminatie, terwijl ze allebei rond 53% staan. De metriek die
+  telt is dus winrate PLUS haven-aandeel; een matrix die alleen winrate toont
+  kan twee compleet verschillende spellen als "in balans" wegschrijven.
+
 ---
 
 ## 6. FASE F2 — Regels v4.2 (de campagne-economie in de match)
@@ -546,14 +577,21 @@ overdragen en team-uitruil als geleerd gedrag (decide_campaign). Plan:
 rules_v42_campaign (de train-CLI kan het al), (b) in F3 de campagne-agent met
 donatie/testament-beslissingen op de campagne-ledger.
 
-### ☐ F2.6 — Arena-hermeting + UI onder v4.2
+### ☑ F2.6 — Arena-hermeting + UI onder v4.2 — AF (25 juli gebouwd, 3 augustus opgelost)
 
-**STATUS (25 juli): deel A (metingen) grotendeels AF** — `v42_default.json` bestaat, sim-CLI speelt
-v4.2 uit, de nachtrun meet elke nacht beide matrices (B17), en de eerste volle v4.2-L2-meting (22.680
-partijen) staat: alle doctrines binnen 25-75, spawns 36/partij, CP 12/partij, MAAR 76% eindigt op de
-cycluslimiet-tiebreak → D15-sweeps (poolfactor 1.5/2/2.5, haven-1) lopen; besluit volgt op die data
-(B16). Knop-sweeps op L1 bleken ongevoelig (partijen te kort); L2 is de meetlat. **Deel B (UI) is de
-openstaande klus** — daarna kan Max zijn eerste v4.2-duel spelen (= de MAX-check).
+**Deel B (UI) is af sinds 25 juli**: regelset-keuze bij de matchstart, CP-bod-overlay, kaartwaaier met
+per-kaart CP-budget, versterkingen-overlay in CYCLE_SPAWN, kanon-vertaling op alle vier de
+submit-plekken, Reserve+CP in de HUD. Max heeft zijn v4.2-duel gespeeld. MatchSetup-presets
+(Aanvallend/Gebalanceerd/Verdedigend) zijn bewust doorgeschoven: de bestaande
+moeilijkheid+doctrine+regelset-flow dekt de matchstart al.
+
+**Deel A liep vast op iets dat geen meetprobleem bleek.** De eerste volle v4.2-L2-meting (22.680
+partijen) had alle doctrines binnen 25-75, maar **76% eindigde op de cycluslimiet-tiebreak**: driekwart
+van de partijen werd niet gewonnen maar afgeblazen. De D15-sweeps (poolfactor 1.5/2/2.5, haven-1) die
+daarop volgden zijn geparkeerd (B16), want het antwoord lag niet in de economie. **V0 (3 augustus)
+heeft de tiebreak afgeschaft**: een duel eindigt op de haven of op eliminatie, en vanaf cyclus 10
+knaagt de honger tot dat gebeurt. Sindsdien is het aandeel onbesliste partijen niet verkleind maar
+NUL, per constructie. Laatste meting: 1152 partijen, geen enkele afkapping, mediaan 9 cycli.
 
 **Werk (rest):** UI: spawn-UI (hergebruik placement-flow), CP-toggle in de kaartwaaier, actiepot-badge,
 en het **MatchSetup**-scherm uit bouwplan §4.1: 3 kaarten met sliders + presets
@@ -879,6 +917,10 @@ Genummerd; het plan noemt ze op de plek waar ze vallen.
 1. ~~**Muis-samenstelling**~~ **BESLOTEN (juli 2026): 18/4/0** — het BIG BRO-besluit wordt in F0.0
    doorgevoerd (comp-wijziging + spec + CHANGELOG); arena-hermeting en eventuele bijstelling in F1.6.
    De dikke rat (Muis-cavalerie) komt op de modellenlijst (MODEL-WISHLIST).
+   *(Bijgesteld op 8 augustus 2026 door C19: de Muis speelt nu [16,4,0] met 5 kaarten. De vorm van
+   het besluit — infanterie-zwerm plus een paar dikke ratten, geen artillerie — staat nog overeind;
+   alleen de getallen zijn op meetdata bijgeschaafd. De geldende tabel staat in `CLAUDE.md` en
+   `docs/spelregels-v4.2.md` §11, niet meer in `constants.gd`.)*
 2. **v4.2-economie-details** (CP-effect op kaart, poolfactor-basis, spawnvakken, kanon-actiepot-details,
    dracht 5 vs 6): → F2.1-ontwerpsessie.
 3. **Campagne-spec-details** die niet in het bouwplan staan (pool-afboeking na duel, exacte

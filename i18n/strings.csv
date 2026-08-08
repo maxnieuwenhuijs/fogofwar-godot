@@ -92,20 +92,20 @@ DOCTRINE_0_NAME,Pig,Varken
 DOCTRINE_0_PRO,All-rounder with no weaknesses,Allrounder zonder zwaktes
 DOCTRINE_0_CON,Best at nothing,Nergens de beste in
 DOCTRINE_1_NAME,Mouse,Muis
-DOCTRINE_1_PRO,"4 cards, +1 Speed on every mouse, moves through own pawns (swarm)","4 kaarten, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)"
-DOCTRINE_1_CON,"Budget 5: stats capped at 3, no cannons","Budget 5: stats max 3, geen kanonnen"
+DOCTRINE_1_PRO,"The most cards in the game, +1 Speed on every mouse, moves through own pawns (swarm)","De meeste kaarten van het spel, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)"
+DOCTRINE_1_CON,"The lowest card budget: weak stats, and no cannons","Het laagste kaartbudget: zwakke stats, en geen kanonnen"
 DOCTRINE_2_NAME,Lion,Leeuw
-DOCTRINE_2_PRO,Budget 9: monster cards (up to Attack 7) and cannons with range 7,Budget 9: monsterkaarten (tot Aanval 7) en kanonnen met dracht 7
-DOCTRINE_2_CON,Only 2 cards per round and 18 pawns,Maar 2 kaarten per ronde en 18 pionnen
+DOCTRINE_2_PRO,"The highest card budget: monster cards, and cannons with range 7","Het hoogste kaartbudget: monsterkaarten, en kanonnen met dracht 7"
+DOCTRINE_2_CON,"Only two cards per round, so rarely more than a handful of pawns awake","Maar twee kaarten per ronde, dus zelden meer dan een handvol pionnen wakker"
 DOCTRINE_3_NAME,Bear,Beer
-DOCTRINE_3_PRO,Every link grants a free +1 HP: walls of up to 6 HP,Elke koppeling gratis +1 HP: muren tot 6 HP
-DOCTRINE_3_CON,Speed capped at 3: slow across the board,Speed max 3: traag over het bord
+DOCTRINE_3_PRO,Every link grants a free +1 HP: pawns nothing gets through,Elke koppeling gratis +1 HP: pionnen waar niets doorheen komt
+DOCTRINE_3_CON,Card Speed never goes above 4: slow across the board,Kaart-Speed gaat nooit boven 4: traag over het bord
 DOCTRINE_4_NAME,Wolf,Wolf
-DOCTRINE_4_PRO,Free step after every melee; cavalry also jumps over enemy infantry,Gratis stap na elke melee; cavalerie springt óók over vijandelijke infanterie
-DOCTRINE_4_CON,No step after shots; light composition,Stap geldt niet na schoten; lichte samenstelling
+DOCTRINE_4_PRO,Free step after every melee; fast cavalry that also jumps over enemy infantry,Gratis stap na elke melee; snelle cavalerie die ook over vijandelijke infanterie springt
+DOCTRINE_4_CON,That step does not apply after shots; light composition,Die stap geldt niet na schoten; lichte samenstelling
 DOCTRINE_5_NAME,Crocodile,Krokodil
-DOCTRINE_5_PRO,"Camouflage: link stays secret until first damage, and cavalry gets +1 Speed (ambush)","Schutkleur: koppeling geheim tot eerste schade, en cavalerie +1 Speed (hinderlaag)"
-DOCTRINE_5_CON,The cards themselves are public; standard army,Kaarten zelf zijn openbaar; standaard leger
+DOCTRINE_5_PRO,Camouflage: the link stays secret until the first damage (ambush),Schutkleur: de koppeling blijft geheim tot de eerste schade (hinderlaag)
+DOCTRINE_5_CON,Tight card budget: weaker cards than most; the cards themselves are public,Krap kaartbudget: zwakkere kaarten dan de meeste; de kaarten zelf zijn openbaar
 UNIT_INFANTRY,Infantry,Infanterie
 UNIT_CAVALRY,Cavalry,Cavalerie
 UNIT_ARTILLERY,Artillery,Artillerie

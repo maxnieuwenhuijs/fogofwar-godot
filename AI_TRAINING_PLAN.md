@@ -12,7 +12,9 @@ De engine is omgebouwd (zie `WIP.md` §2b); dat verandert het trainingslandschap
 - **Veel grotere actieruimte**: naast bewegen/melee nu ook **schoten** (infanterie afstand 2,
   artillerie vaste dracht 6, Leeuw 7), **charges** (cavalerie: bewegen + melee in één actie)
   en de **Wolf-stap** (aparte beslissing via `choose_wolf_step`). `enumerate_actions` dekt alles.
-- **Leerbare gewichten** (`AIController.default_weights`, 32 stuks) in drie groepen:
+- **Leerbare gewichten** (`AIController.default_weights`; 32 in juli, **38 sinds C15/v4.2** —
+  de CP-inzet `cp_bet_r1..r3`, `spawn_drempel`/`spawn_duur` en `buit_jacht`/`buit_hoede`
+  zijn erbij gekomen) in drie groepen:
   1. **Evaluatie** (16): `haven`, `prox_scale`, `prox_second`, `guard`, `material`,
      `cav_value`, `art_value`, `hp`, `protect` (melee-dreiging), `ranged` (vuurdreiging),
      `reach`, `card_atk`, `card_hp`, `card_stam`, `r3_initiative`.

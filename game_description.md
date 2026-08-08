@@ -1,9 +1,11 @@
 # Fog of War - Spelbeschrijving (v1 — basisdocument)
 
-> **LET OP: de actuele spelregels zijn `spelregels-v4.1.md`** (eenheidstypes, vuurlijnen,
-> melee/terugslag, doctrines, vrije opstelling, initiatief-bod). Dat document bouwt voort
-> op dit v1-document: wat daar niet expliciet gewijzigd wordt, blijft gelden zoals hier
-> beschreven. Lees dit document dus als de basis, v4.1 als de geldende overlay.
+> **LET OP: de actuele spelregels zijn `docs/spelregels-v4.2.md`** (eenheidstypes, vuurlijnen,
+> melee/terugslag, doctrines, vrije opstelling, initiatief-bod, plus de campagne-economie met
+> CP en versterkingen). Dat document bouwt voort op dit v1-document: wat daar niet expliciet
+> gewijzigd wordt, blijft gelden zoals hier beschreven. Lees dit document dus als de basis en
+> v4.2 als de geldende overlay; `spelregels-v4.1.md` is de tussenstap en inmiddels historie.
+> Wijzigingen per stap staan in `docs/spelregels-CHANGELOG.md`.
 
 ## 1. Speltype en Doel
 

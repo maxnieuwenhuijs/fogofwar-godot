@@ -21,6 +21,26 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `golden_sims.json` regenereren). Lees factie-data NOOIT rechtstreeks uit
   `Constants.doctrine_data()` in speel-code; ga via `rules.doctrine_data()`,
   `c.rules.doctrine_data()` of `Agent.doctrine_data_uit_view()`.
+- **De facties zelf (C19, 8 augustus 2026)** — dit is wat er NU gespeeld wordt.
+  `constants.gd` draagt nog de kale tabel van juli; die is alleen de terugval:
+
+  | factie | kaarten | budget | leger [inf,cav,art] | perk |
+  |---|---|---|---|---|
+  | Varken (enum MENS) | 3 | 7 | [11,5,3] | - allrounder |
+  | Muis | 5 | 5 | [16,4,0] | +1 Speed op elke pion, loopt door eigen pionnen |
+  | Leeuw | 2 | 8 | [12,4,2] | artilleriedracht 7 |
+  | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-Speed max 4 |
+  | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 Speed en springt over vijanden |
+  | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
+
+  Gemeten: 44,7-56,2% winst over 1152 partijen op verse seeds (spreiding 4,4
+  procentpunt). **Muis en Beer hebben nul artillerie**, en `kent_type()`
+  verbiedt ze er dus ook een te spawnen: geen kanon-model, geen gibs, geen
+  `cannon_die_<factie>` voor die twee. Controleer de actuele stand altijd met
+  `-- facties`, nooit door `constants.gd` te lezen. Welke knop hoeveel doet:
+  kaartbudget ~30 procentpunt per punt, cavalerie ~18 per ruiter, infanterie en
+  legergrootte vrijwel niets, artillerie -21 voor een renner en neutraal voor
+  een slachter.
 - **V0 — GEEN GELIJKSPEL (4.3.0)**: een duel eindigt op de **haven** of op
   **totale eliminatie**. Geen remise, geen tiebreak, geen cycluslimiet. In
   plaats daarvan de **honger**: vanaf `honger_vanaf_cyclus` (10, gelijk in
@@ -120,6 +140,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   geluid of die niemand afspeelt). Beide via `res://tools/capture.tscn`.
 - Fuzz: `<godot> --headless --path . res://arena/arena.tscn -- --fuzz [games] [seed]`
   (`--fuzz-selftest` = test-de-tester).
+- **UI-teksten wijzigen**: de strings staan in `i18n/strings.csv` (+ de
+  losse fragmenten), maar het spel leest de GECOMPILEERDE
+  `i18n/strings.{nl,en}.translation`, en een gewone headless run bouwt die
+  **niet** opnieuw. Na elke csv-wijziging dus `<godot> --headless --path .
+  --import` draaien en de twee `.translation`-bestanden meecommitten, anders
+  verandert er niets aan wat de speler ziet.
 
 ## Mappen (30 juli)
 
@@ -142,20 +168,33 @@ staat (incl. pools/cp), `GameSession.gd` is de signal-shim voor de UI
 (game.gd, 2441-regel monoliet). `agents/` = L0-L3 op views;
 `arena/` = runner/metrics/fuzz; `tools/capture.gd` = CLI-modes + trainer.
 
-## Waar we zijn (26 juli 2026)
+## Waar we zijn (8 augustus 2026)
 
-F0 + F1 + F2 af (v4.2-duel speelbaar; D15 geparkeerd, B16). F3 grotendeels af:
-C1-C8-spec, CampaignCore (ledger, CReducer, CView, CLog), SoloDriver + 8
-persoonlijkheden, CampagneHub-UI, persistentie (append-only jsonl-autosave in
-`user://campaigns/solo/`, hervatten = fold, "durf te sluiten") én het
-mens-duel op het echte bord (autoload `CampaignBridge`, hoofdmenu-optie
-"Solo-campagne (v4.2)"). **De F3-MAX-check is nu speelbaar: solo-campagne
-begin→kampioen.** Grootboek-scherm, BracketView, MatchReport-detail en de
-touch-contextknop op het bord zijn er ook (26 juli): het F3-UI-blok is af.
-Playtest-iteratie C9 (26 juli, Max): ronde 1 = loting (16 random 1v1-paren
-als log-data), ronde 2+ = iedereen vecht (raad stemt paren), doneren aan elke
-teamgenoot, cycluslimiet op campagne-duels UIT (was 6 → alles tiebreak);
-hub-UI = teamkolommen met bolletjes + chatlog. Pre-C9-saves folden onder hun
-oude regels (from_dict-fallback), de hub start dan vers. Daarna F4 (online).
-1v1-setting (25 juli): cp_start 10, poolfactor 1.5, spawn_totaal_max 15 per
-potje; achterrij-pionnen krijgen koppel-voorrang onder campaign.
+**F0 + F1 + F2 + F3 af.** Het spel is speelbaar van begin tot kampioen:
+CampaignCore (ledger, CReducer, CView, CLog), SoloDriver + 8 persoonlijkheden,
+CampagneHub-UI, append-only jsonl-autosave in `user://campaigns/solo/`
+(hervatten = fold), het mens-duel op het echte bord via autoload
+`CampaignBridge`, plus grootboek-scherm, BracketView en MatchReport-detail.
+Daarna komt F4 (online).
+
+Sinds eind juli is de aandacht verschoven van bouwen naar **kloppend krijgen**,
+en dat is nu op vier punten gebeurd:
+
+- **C17 — EEN REGELSET (31 juli).** De campagne is het spel; een los 1v1 is
+  dezelfde formule maal `potje_factor` (0,35). Er staat nergens nog een tweede
+  economie. 1v1-instelling: cp_start 10, poolfactor 1,5, spawn_totaal_max 15.
+- **V0 — geen gelijkspel meer (3 augustus, 4.3.0).** Een duel eindigt op de
+  haven of op eliminatie. Vanaf cyclus 10 knaagt de honger: elke speler verliest
+  bij het begin van een cyclus zijn achterste pion. Geen remise, geen
+  cycluslimiet, geen tiebreak.
+- **C15-buit (4.3.1).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
+  tamboer 2 CP, alleen bij een ongekoppeld slachtoffer.
+- **C19 — de facties staan (8 augustus).** Zie de tabel bij de kernregels
+  hierboven. Band 44,7-56,2% over 1152 partijen; was 28-76%.
+
+**Wat nu open staat:** de bots zijn nog niet hertraind op deze facties (hun
+gewichten komen van de nacht van 7 augustus, dus van vóór de laatste twee
+correctierondes). Zolang dat niet is gebeurd meet elke nieuwe arena-run
+botonkunde en geen factiebalans. Volgorde: eerst TRAINING-NACHT, daarna pas de
+factiezoeker weer. Het asset-spoor (modellen, geluid) loopt daar los naast en
+blokkeert niets.

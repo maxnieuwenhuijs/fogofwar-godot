@@ -6,6 +6,11 @@ Afvinken per nieuw model. Uitleg: `MODEL-WISHLIST.md` sectie 4. Kanon: zie
 **Naam-conventie:** `assets/models/<factie>/<type>_<archetype>.glb`
 factie: `mouse pig lion bear wolf crocodile` · type: `infantry cavalry artillery` ·
 archetype: `base spd hp atk mix`
+
+**Geen artillerie voor `mouse` en `bear`** (stand C19, 8 augustus 2026): hun
+legersamenstelling is [16,4,0] en [19,3,0], en `GameState.kent_type()` verbiedt
+ze dan ook een kanon te spawnen. Sla voor die twee dus zowel het model als de
+gibs over. Controleren wat er nu geldt: `capture.tscn -- facties`.
 Regimentsrollen (wishlist 3d): `infantry_flag drum horn sapper officer canteen scout medic` -- attribuut apart genereren en in Blender parenten
 aan hand/heup als deel `prop`; deze modellen krijgen GEEN musket.
 
