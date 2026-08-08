@@ -1,5 +1,53 @@
 # Fog of War — Work In Progress & Context
 
+## 8 augustus (avond) -- alles op het echte spel, en de fuzz vond meteen een bug
+
+Max: "alles moet op echte facties en de 4.2 campagne." Dat bleek geen
+opruimklusje maar een steen die je omdraait.
+
+**Wat er stond.** De nachtrun verdeelde zijn meettijd om-en-om over de
+4.1-matrix en de campagne-matrix, dus de helft ging over een economie en dieren
+die niemand speelt. `arena.ps1` startte standaard de 4.1-matrix, `arena.bat` en
+de runner de 4.1-quickrun. En de fuzz, het vangnet dat elke nacht 10.000
+partijen nakijkt, draaide op een kale `RulesConfig`: geen campagne-blok, geen
+factie-blok. Hij heeft dus nooit een Muis met 5 kaarten gezien, nooit een Beer
+zonder artillerie, en nooit een spawn of een CP-inzet.
+
+**Wat er nu staat.** Nachtrun, arena-defaults en de drie live configs draaien op
+`rules_v42_campaign.json`. `arena/run.gd` legt bovendien het aangenomen
+factie-blok over elk regels-bestand dat er zelf geen draagt (net als `game.gd`
+voor een los potje), en schrijft in de run-metadata welke facties er gespeeld
+zijn. Zo kan geen enkele config nog stilletjes de kale tabel meten.
+
+**En toen was de fuzz meteen rood: 60 van de 60 partijen.** Twee oorzaken, en de
+tweede is de vervelende:
+
+1. **De fuzz kende de versterkingen niet.** Zijn regel "pion-ids liggen vast na
+   de opstelling" komt uit 4.1. Sinds F2.2 zet je in CYCLE_SPAWN nieuwe pionnen
+   op het bord en horen er nieuwe ids bij te komen. Dat mag nu, maar alleen in
+   de actie die `spawns_revealed` meldt.
+2. **De C15-rol viel uit elk opgenomen potje weg.** `Actions.to_dict` schreef
+   van een opstelling alleen type en positie, niet `rol`. De opstelling gaat als
+   `place`-actie het log in, dus elke opgenomen campagne-partij verloor zijn
+   vaandeldragers en tamboers. Naspelen leverde dan nooit de C15-buit op
+   (2 punten / 2 CP per drager) en de nagespeelde partij liep vanaf actie 0 uit
+   de pas. **Replays van campagne-duels waren sinds 30 juli dus niet
+   betrouwbaar.** Niemand zag het: de fuzz draaide op 4.1, waar rollen niet
+   bestaan, en de goldens vergelijken eindstanden, geen tussenstappen.
+
+Hoe het gevonden is, voor de volgende keer: de fold meldde "Onvoldoende CP" op
+actie 681, wat naar CP wijst maar niet naar de oorzaak. Door het log tijdelijk
+MET per-actie-hash op te nemen (een regel in `fuzz.gd`) schoof de melding naar
+actie 0, en dat is de opstelling. Die aanwijzing staat nu in de code.
+
+`rol` reist nu mee, en alleen als hij gevuld is, dus oude logs blijven
+byte-identiek. Geen versie-bump: de gespeelde regels zijn niet veranderd.
+
+Checks: fuzz 60/0 op campagneregels, zelftest PASS (het vangnet vangt sabotage
+nog steeds), simcheck 0 afwijkingen, arena-proefrun laat zien dat het
+factie-blok wordt overgelegd en in de metadata landt.
+
+
 ## 8 augustus (later) -- de rest van het spel kende de nieuwe facties nog niet
 
 Opdracht Max: "update alle context en bestanden en uitleg met de nieuwe facties

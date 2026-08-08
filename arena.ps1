@@ -1,9 +1,11 @@
 # Fog of War - arena multi-proces-launcher (F1.2)
-# Gebruik: .\arena.ps1 [-Config arena/arena_configs/matrix_l1.json] [-Procs 0] [-Naam run1]
+# Gebruik: .\arena.ps1 [-Config arena/arena_configs/v42_matrix_l2.json] [-Procs 0] [-Naam run1]
 # Procs 0 = automatisch (cores - 1). Elk proces krijgt een eigen seed-offset
 # en submap; na afloop worden de games.jsonl-bestanden samengevoegd.
+# Default sinds 8 augustus de campagne-matrix op L2: dat is het spel (C17) en
+# L2 is de meetlat (L1-partijen zijn te kort om knoppen te voelen).
 param(
-    [string]$Config = "arena/arena_configs/matrix_l1.json",
+    [string]$Config = "arena/arena_configs/v42_matrix_l2.json",
     [int]$Procs = 0,
     [string]$Naam = ""
 )

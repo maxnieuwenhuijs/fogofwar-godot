@@ -1,7 +1,7 @@
 # Fog of War - VOLLE TRAINING-NACHT (besluit Max 27-07: een knop, alles vanzelf):
 # 1) 6 parallelle v4.2-trainers (campagne-fitness, wanhoop-modus, logbestanden)
 # 2) wachten tot alle trainers klaar zijn
-# 3) automatisch een arena-meting (4.1 + v4.2 matrix) over de NIEUWE gewichten
+# 3) automatisch een arena-meting (campagne-matrix) over de NIEUWE gewichten
 # 4) dashboard verversen -> results\dashboard.html staat 's ochtends klaar
 param(
     [int]$TrainMinuten = 420,
@@ -40,7 +40,8 @@ $procs | Wait-Process
 "[NACHT] trainers klaar om $(Get-Date -Format HH:mm) - arena-meting starten" |
     Out-File (Join-Path $logmap "pijplijn.log") -Append -Encoding utf8
 
-# Arena-meting over de verse gewichten (4.1- en v4.2-matrix om-en-om).
+# Arena-meting over de verse gewichten (campagne-matrix; sinds 8 augustus geen
+# 4.1-helft meer, die mat facties en een economie die niemand speelt).
 & powershell -NoProfile -ExecutionPolicy Bypass -File "$repo\arena_nacht.ps1" `
     -DuurMinuten $ArenaMinuten -FuzzGames 500
 

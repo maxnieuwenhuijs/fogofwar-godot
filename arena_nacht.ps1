@@ -4,7 +4,14 @@
 #
 # Gebruik: .\arena_nacht.ps1 [-DuurMinuten 480] [-Procs 0] [-FuzzGames 10000] [-Kort]
 #   -Kort = smoke-run voor de end-to-end-check: 1 arena-batch + 100 fuzz-games.
-#   -Config <pad> = alleen die ene config (default: om-en-om 4.1 EN v4.2, F2.6).
+#   -Config <pad> = een andere config dan de standaard campagne-matrix.
+#
+# 8 augustus: de nacht meet nog maar EEN programma, de campagne-matrix. Tot
+# vandaag wisselde hij om-en-om met de 4.1-matrix (F2.6/B17), maar sinds C17 is
+# de campagne het spel en sinds C19 staan de facties daarin: die 4.1-helft mat
+# een economie en dieren die niemand speelt, en kostte dus de halve nacht. De
+# regressie-bewaking zit niet in die matrix maar in de goldens en de fuzz, en
+# die draaien allebei op de campagne-regels.
 param(
     [int]$DuurMinuten = 480,
     [int]$Procs = 0,
@@ -47,11 +54,12 @@ Get-Content "$uit/fuzz.log" | Where-Object { $_ -match "\[FUZZ" } | ForEach-Obje
 if (-not $fuzzOk) { Log "[NACHT] LET OP: fuzz vond schendingen (zie results/fuzz/ voor repro's)" }
 
 # 3) Arena, tijdgebonden: batches van $Procs parallelle matrix-runs tot de
-# deadline; de batches wisselen om-en-om tussen de programma's (F2.6: default
-# 4.1-matrix EN v4.2-matrix in een nacht — met -Config draait alleen die ene).
+# deadline. De lus kan meerdere programma's om-en-om draaien; sinds 8 augustus
+# staat er standaard maar EEN in, de campagne-matrix (zie de kop). Wil je iets
+# anders meten, geef dan -Config mee.
 # Elke batch/proc krijgt een unieke seed-offset (nacht-epoch erin, zodat elke
 # nacht verse seeds loot; de offset staat in run_meta = reproduceerbaar).
-$programmas = @("arena/arena_configs/matrix_l2.json", "arena/arena_configs/v42_matrix_l2.json")
+$programmas = @("arena/arena_configs/v42_matrix_l2.json")
 if ($Config -ne "") { $programmas = @($Config) }
 $labels = @()
 foreach ($p in $programmas) { $labels += [IO.Path]::GetFileNameWithoutExtension($p) }
@@ -79,7 +87,7 @@ while ($true) {
 }
 
 # 4) Samenvoegen: per programma een eigen run-map (het dashboard ziet ze als
-# aparte runs en mengt 4.1- en v4.2-cijfers dus nooit).
+# aparte runs en mengt cijfers van verschillende programma's dus nooit).
 for ($ci = 0; $ci -lt $programmas.Count; $ci++) {
     $bronnen = @(Get-ChildItem -Path $uit -Directory -Filter "c${ci}_*")
     if ($bronnen.Count -eq 0) { continue }  # programma niet aan bod gekomen

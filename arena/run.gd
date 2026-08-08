@@ -10,11 +10,20 @@ extends Node
 #     "games_per_matchup": 5,
 #     "agents": {"p1": "l1", "p2": "l1"},            # l0 | l1 | l2 | l3 | l3u
 #     "base_seed": 1000,
-#     "rules": "res://arena/arena_configs/v41_default.json",  # optioneel
+#     "rules": "res://arena/arena_configs/rules_v42_campaign.json",  # optioneel
 #     "max_steps": 1500,
 #     "track_repetitions": true,
-#     "full_state": {"p1": false, "p2": false}       # B8-ablatie
+#     "full_state": {"p1": false, "p2": false},      # B8-ablatie
+#     "facties_uit_bestand": false                   # zie hieronder, default true
 #   }
+#
+# FACTIES (8 augustus): draagt het regels-bestand zelf geen `doctrines`-blok,
+# dan legt de runner het AANGENOMEN blok (CRules.REGELS_BESTAND) eroverheen, net
+# zoals game.gd dat doet voor een los potje. Anders meet je de kale tabel uit
+# constants.gd: dieren die niemand speelt. Dat gold tot vandaag voor elke config
+# die naar v41_default.json of v42_default.json wees -- de halve nachtrun dus.
+# Wil je expres de kale tabel meten, zet dan "facties_uit_bestand": false; de
+# run-metadata legt in beide gevallen vast wat er gespeeld is.
 #
 # Uitvoer: <out>/games.jsonl — regel 1 = run-metadata (git-sha, config, ts),
 # daarna één regel per partij (ZONDER wallclock: zelfde config+seed ⇒
@@ -36,7 +45,7 @@ func _ready() -> void:
 	if args.has("--fuzz") or args.has("--fuzz-selftest"):
 		_fuzz(args)
 		return
-	var config_pad := _arg(args, "--config", "res://arena/arena_configs/quick_l1.json")
+	var config_pad := _arg(args, "--config", "res://arena/arena_configs/v42_matrix_l2.json")
 	var out_map := _arg(args, "--out", "res://results/run")
 	var seed_offset := int(_arg(args, "--seed-offset", "0"))
 	var config = JSON.parse_string(FileAccess.get_file_as_string(config_pad))
@@ -56,6 +65,19 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 	var rules: RulesConfig = null
 	if config.has("rules"):
 		rules = RulesConfig.load_from_file(String(config.rules))
+	# C17/C19: meet de facties die het spel ook echt opstelt (zie de kop).
+	var facties_bron := ""
+	if bool(config.get("facties_uit_bestand", true)):
+		if rules == null:
+			rules = RulesConfig.defaults()
+		if (rules.doctrines as Dictionary).is_empty():
+			var blok := CRules.facties_uit_bestand()
+			if not blok.is_empty():
+				rules.doctrines = blok
+				facties_bron = CRules.REGELS_BESTAND
+				print("[ARENA] facties uit %s (het regels-bestand droeg er geen)" % facties_bron)
+		else:
+			facties_bron = String(config.get("rules", ""))
 	var max_steps := int(config.get("max_steps", 1500))
 	var per := int(config.get("games_per_matchup", 5))
 	var base_seed := int(config.get("base_seed", 1000))
@@ -71,6 +93,10 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		"config": config,
 		"seed_offset": seed_offset,
 		"rules_version": (rules.rules_version if rules != null else RulesConfig.defaults().rules_version),
+		# Welke dieren er zijn gespeeld: zonder dit kun je achteraf niet zien of
+		# een run over de aangenomen facties of over de kale tabel ging.
+		"facties_bron": facties_bron,
+		"doctrines": (rules.doctrines if rules != null else {}),
 	}))
 	var matrix: Dictionary = {}
 	var games := 0

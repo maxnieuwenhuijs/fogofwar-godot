@@ -8,6 +8,8 @@ rem  "capture.tscn -- arena <n> <level>" (zie arena.bat.oud).
 rem ============================================================
 setlocal
 set CONFIG=%~1
+rem quick_l1 = 2 facties x 5 potjes op de CAMPAGNE-regels (sinds 8 augustus;
+rem daarvoor wees hij naar de 4.1-economie met de kale factietabel).
 if "%CONFIG%"=="" set CONFIG=arena/arena_configs/quick_l1.json
 set GODOT=%GODOT_PATH%
 if "%GODOT%"=="" set GODOT=C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe

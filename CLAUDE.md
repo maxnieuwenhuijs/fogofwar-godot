@@ -104,8 +104,16 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   regels). Scoort op factie-evenwicht 45%, beslissende partijen 25%, speelduur
   15%, levende economie 15%. Raakt het spel niet aan: schrijft `voorstel.json`
   + een log per kandidaat in `results/balans_<tijd>/`.
-- Nachtrun: `.\arena_nacht.ps1 [-DuurMinuten] [-Kort]` — draait 4.1- én
-  v4.2-matrix om-en-om naar aparte run-mappen (B17).
+- Nachtrun: `.\arena_nacht.ps1 [-DuurMinuten] [-Kort]` — draait de
+  **campagne-matrix** (`v42_matrix_l2.json`). De 4.1-helft is er op 8 augustus
+  uit gegaan: die mat een economie en facties die niemand speelt. B17's
+  om-en-om-lus staat er nog voor als je meerdere programma's wilt.
+- **Alles meet het echte spel (8 augustus).** `arena/run.gd` legt het aangenomen
+  `doctrines`-blok over elk regels-bestand dat er zelf geen draagt, net als
+  `game.gd` voor een los potje; de run-metadata schrijft `facties_bron` + het
+  blok op. Ook de **fuzz** draait op `rules_v42_campaign.json`, dus mét
+  campagne-economie en de echte facties. Wil je expres de kale tabel meten:
+  `"facties_uit_bestand": false` in de config.
 - Arena: `.\arena.ps1 -Config arena/arena_configs/<x>.json -Procs N -Naam run`
   (machine heeft 32 threads). Dashboard: `python tools/dashboard/build_dashboard.py`
   → `results/dashboard.html`; vergelijken: `python tools/dashboard/compare_runs.py A B`.

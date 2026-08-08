@@ -1,5 +1,50 @@
 # Spelregels — CHANGELOG
 
+## Alles meet nu het echte spel — 8 augustus 2026 (en dat legde een bug bloot)
+
+*Besluit Max: "alles moet op echte facties en de 4.2 campagne."* Geen
+regelwijziging, wel een meetwijziging, en die vond meteen iets dat al ruim een
+week stuk was.
+
+**Wat er is omgezet.** De nachtrun verdeelde zijn tijd om-en-om over de
+4.1-matrix en de campagne-matrix (F2.6/B17); de 4.1-helft mat een economie die
+niemand meer speelt, met de kale factietabel erbij. Die helft is eruit. Verder
+wijzen `quick_l1`, `matrix_l1` en `matrix_l2` nu naar
+`rules_v42_campaign.json` (met `max_steps` 1500 → 2500, want onder V0 duren
+partijen langer en is een afkapping een fout), en de defaults van `arena.ps1`,
+`arena.bat` en de runner zelf staan op de campagne-matrix.
+
+**Een vangnet eronder.** `arena/run.gd` legt voortaan het aangenomen
+`doctrines`-blok over elk regels-bestand dat er zelf geen draagt, precies zoals
+`game.gd` dat voor een los potje doet. Elke config meet dus de dieren die het
+spel ook opstelt, ook de oude sweep-configs. De run-metadata schrijft op welke
+facties zijn gespeeld (`facties_bron` + het blok), zodat je dat achteraf niet
+hoeft te raden; `"facties_uit_bestand": false` in een config zet het uit.
+
+**En de fuzz draait nu zelf ook op de echte regels.** Dat was de belangrijkste
+wijziging, want daar zaten twee dingen onder:
+
+- **De fuzz kende de VERSTERKINGEN niet.** Zijn invariant "pion-ids liggen vast
+  na de opstelling" komt uit 4.1. Sinds F2.2 zetten spelers in CYCLE_SPAWN
+  nieuwe pionnen op het bord, en dat is legitiem. Nieuwe ids mogen nu ontstaan
+  in de actie die `spawns_revealed` meldt, en daarbuiten nog steeds niet.
+- **De C15-rol viel uit elk opgenomen potje weg.** `Actions.to_dict` schreef
+  van een opstelling alleen type en positie, niet `rol`. De opstelling gaat als
+  `place`-actie het log in, dus elke opgenomen campagne-partij verloor zijn
+  vaandeldragers en tamboers. Bij het naspelen kwam de C15-buit (2 punten /
+  2 CP per drager) dan nooit binnen, en liep de nagespeelde partij vanaf actie 0
+  uit de pas. Dat betekent: **replays van campagne-duels waren sinds C15 (30
+  juli) niet betrouwbaar**, en de campagne-logs die daarop leunen evenmin. De
+  fuzz zag het niet omdat hij zelf op 4.1-regels draaide, waar figurant-rollen
+  niet bestaan; de goldens zagen het niet omdat die eindstanden vergelijken.
+  `rol` reist nu mee, en alleen als hij gevuld is: logs van vóór vandaag blijven
+  byte-identiek en spelen zich af zoals ze zijn opgenomen. Geen versie-bump,
+  want de gespeelde regels zijn niet veranderd; dit is een formaat-uitbreiding.
+
+Twee regressietests erbij (`SerializerTests`): de rol moet de actie-rondreis
+overleven zonder dat een lege rol een sleutel toevoegt, en een campagne-staat
+moet byte-identiek door de serializer komen, inclusief campagne- en factie-blok.
+
 ## C19 definitief — 8 augustus 2026 (facties afgesteld op 4,4 procentpunt)
 
 Twee correctierondes na de eerste aanname, elk gestuurd door een meting.

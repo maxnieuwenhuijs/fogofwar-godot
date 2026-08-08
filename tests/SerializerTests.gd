@@ -173,3 +173,57 @@ func test_haven_touches_round_trip() -> void:
 	var terug := _roundtrip(s)
 	assert_true(terug.haven_touches[1].has(pawn.id), "touch overleeft de round-trip")
 	assert_eq(Rules.count_pawns_in_haven(terug, 1), 1, "cumulatieve telling blijft kloppen")
+
+
+## 8 augustus: de fuzz draait sinds vandaag op de ECHTE regels (campagne +
+## factie-blok) en zijn fold brak meteen op actie 0. Deze test knipt dat op:
+## overleeft een CAMPAGNE-staat de rondreis door de serializer, inclusief de
+## regels zelf? Zonder dit is elk campagne-replay (en dus elke golden) blind.
+func test_campagne_staat_rondreist() -> void:
+	var regels := RulesConfig.load_from_file(CRules.REGELS_BESTAND)
+	var s := GameState.new()
+	s.rules = regels
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MUIS
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.BEER
+	s.phase = Phase.Type.PLACEMENT
+	s.init_pools()
+	var voor: Dictionary = Serializer.state_to_dict(s)
+	var terug: GameState = Serializer.state_from_dict(voor)
+	var na: Dictionary = Serializer.state_to_dict(terug)
+	assert_eq(JSON.stringify(na), JSON.stringify(voor), "campagne-staat rondreist byte-identiek")
+	assert_eq(Zobrist.state_hash(terug), Zobrist.state_hash(s), "en dezelfde zobrist-hash")
+	# De regels moeten mee: zonder campagne-blok of factie-blok speelt de
+	# nagespeelde partij een ander spel dan de opgenomen partij.
+	assert_true(terug.rules.campaign_actief(), "campagne-blok overleeft de rondreis")
+	assert_eq((terug.rules.doctrines as Dictionary).size(),
+		(regels.doctrines as Dictionary).size(), "factie-blok overleeft de rondreis")
+	assert_eq(int(terug.doctrine_data_of(Constants.PLAYER_1).cards),
+		int(regels.doctrine_data(Constants.Doctrine.MUIS).cards),
+		"en de Muis houdt zijn kaartaantal")
+
+
+## C15-BUGFIX (8 augustus): de figurant-rol viel uit de ACTIE weg, niet uit de
+## pion. De opstelling gaat als `place`-actie het log in; `Actions.to_dict`
+## schreef alleen type en positie, dus elke opgenomen campagne-partij verloor
+## zijn vaandeldragers en tamboers. Bij het naspelen viel de C15-buit dan weg
+## (2 punten / 2 CP per drager) en liep de staat meteen uit de pas. De fuzz zag
+## het niet omdat die tot vandaag op 4.1-regels draaide, waar rollen niet
+## bestaan. Deze test is het slot op de deur.
+func test_c15_rol_overleeft_de_actie_rondreis() -> void:
+	var actie: Dictionary = Actions.make_place([
+		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(0, 10), "rol": "flag"},
+		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(2, 10), "rol": "drum"},
+		{"type": Constants.UnitType.CAVALRY, "pos": Vector2i(4, 10)},
+	])
+	var terug: Dictionary = Actions.from_dict(Actions.to_dict(actie))
+	var plc: Array = terug.placements
+	assert_eq(plc.size(), 3)
+	assert_eq(String(plc[0].get("rol", "")), "flag", "vaandel reist mee")
+	assert_eq(String(plc[1].get("rol", "")), "drum", "tamboer reist mee")
+	assert_eq(plc[2].pos, Vector2i(4, 10), "positie blijft een Vector2i")
+	# Zonder rol GEEN sleutel: logs van voor de fix blijven byte-identiek en
+	# spelen zich precies zo af als toen ze werden opgenomen.
+	var kaal: Dictionary = Actions.to_dict(Actions.make_place([
+		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(1, 10)}]))
+	assert_false((kaal.placements[0] as Dictionary).has("rol"),
+		"lege rol voegt geen sleutel toe")

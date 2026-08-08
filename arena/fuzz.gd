@@ -27,7 +27,12 @@ static func run(games: int, base_seed: int, out_dir: String, sabotage: bool = fa
 	var repro_paden: Array = []
 	for g in games:
 		var seed_val: int = base_seed + g
-		var rules := RulesConfig.new()
+		# C17/C19 (8 augustus): fuzz op de regels die we ECHT spelen, dus de
+		# campagne-economie met het aangenomen factie-blok. Op een kale
+		# RulesConfig zag het vangnet nooit een Muis met 5 kaarten, een Beer
+		# zonder artillerie, of de spawn- en CP-paden: precies de plekken waar
+		# de laatste twee weken de bugs zaten.
+		var rules := RulesConfig.load_from_file(CRules.REGELS_BESTAND)
 		# V0: de honger begrenst de looptijd nu, niet de cycluslimiet. De fuzz
 		# meet invarianten en geen balans, dus hij mag vroeg bijten: sneller
 		# klaar en de partij eindigt altijd echt (haven of eliminatie) in plaats
@@ -94,6 +99,11 @@ class FuzzChecker:
 	func after_action(state: GameState, player: int, actie: Dictionary, events: Array) -> void:
 		_acties += 1
 		_log.record(player, actie, events, state, false)  # zonder per-actie-hash (snel)
+		# Zoek je WAAR een fold uit de pas loopt in plaats van dat hij dat doet:
+		# zet die false op true en draai een enkele seed. Dan stopt `-- replay`
+		# op de eerste hash-mismatch in plaats van pas op de eerste illegale
+		# zet. Kost ~6x zoveel tijd, dus niet aanlaten (8 augustus: zo is de
+		# verdwenen C15-rol in het log gevonden).
 		# Zelftest-sabotage: twee stiekeme mutaties die de checks MOETEN vangen.
 		# a) spook-pion (geëlimineerd, raakt gameplay niet) → bevroren-ids-check;
 		# b) +1 HP precies op een gevechtsactie → HP-delta-check. Een kale +1 HP
@@ -114,6 +124,19 @@ class FuzzChecker:
 						_hp_gesaboteerd = true
 						break
 		# 1) Pion-ids bevroren na de opstelling; geëlimineerd blijft geëlimineerd.
+		#
+		# Uitzondering sinds F2.2: VERSTERKINGEN. Onder de campagne-economie
+		# zetten spelers in CYCLE_SPAWN nieuwe pionnen op het bord, en dan horen
+		# er nieuwe ids bij te komen. Ze mogen alleen ontstaan in de actie die
+		# `spawns_revealed` meldt; daarbuiten is een nieuw id nog steeds een pion
+		# uit het niets. Deze uitzondering ontbrak twee weken zonder dat iemand
+		# het zag, want de fuzz draaide zelf nog op 4.1-regels en daar wordt
+		# helemaal niet gespawnd (8 augustus).
+		var spawn_in_events: bool = false
+		for ev in events:
+			if String(ev.type) == Reducer.EV_SPAWNS_REVEALED:
+				spawn_in_events = true
+				break
 		if not _ids_bevroren and state.phase != Phase.Type.PLACEMENT:
 			for id in state.pawns:
 				_bevroren_ids[id] = true
@@ -121,7 +144,10 @@ class FuzzChecker:
 		elif _ids_bevroren:
 			for id in state.pawns:
 				if not _bevroren_ids.has(id):
-					schendingen.append("actie %d: pion %d ontstond uit het niets" % [_acties, id])
+					if spawn_in_events:
+						_bevroren_ids[id] = true    # legitieme versterking
+					else:
+						schendingen.append("actie %d: pion %d ontstond uit het niets" % [_acties, id])
 		for id in state.pawns:
 			var pawn: Pawn = state.pawns[id]
 			if pawn.is_eliminated:

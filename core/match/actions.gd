@@ -157,7 +157,19 @@ static func to_dict(a: Dictionary) -> Dictionary:
 		elif k == "placements" or k == "spawns":
 			var lst: Array = []
 			for entry in v:
-				lst.append({"type": int(entry.type), "pos": [entry.pos.x, entry.pos.y]})
+				# C15-BUGFIX (8 augustus): `rol` moet mee. Zonder dit viel de
+				# vaandeldrager/tamboer uit elke opgenomen partij weg, want de
+				# opstelling gaat via deze dict het log in. Gevolg: een replay
+				# van een campagne-partij kende geen dragers, dus geen buit, dus
+				# andere CP en versterkingen dan de echte partij -- de fold liep
+				# meteen op actie 0 uit de pas. Onzichtbaar tot vandaag omdat de
+				# fuzz op 4.1-regels draaide, waar figurant-rollen niet bestaan.
+				# Alleen schrijven als er echt een rol staat: logs van voor
+				# vandaag blijven daardoor byte-identiek.
+				var e: Dictionary = {"type": int(entry.type), "pos": [entry.pos.x, entry.pos.y]}
+				if String(entry.get("rol", "")) != "":
+					e["rol"] = String(entry.rol)
+				lst.append(e)
 			out[k] = lst
 		elif k == "cards":
 			var cl: Array = []
@@ -178,7 +190,13 @@ static func from_dict(d: Dictionary) -> Dictionary:
 			var lst: Array = []
 			for entry in v:
 				var p = entry.pos
-				lst.append({"type": int(entry.type), "pos": Vector2i(int(p[0]), int(p[1])) if p is Array else p})
+				var e: Dictionary = {"type": int(entry.type),
+					"pos": Vector2i(int(p[0]), int(p[1])) if p is Array else p}
+				# Ontbreekt `rol` (elk log van voor 8 augustus), dan blijft hij
+				# leeg en gedraagt de replay zich precies als toen: geen dragers.
+				if String(entry.get("rol", "")) != "":
+					e["rol"] = String(entry.rol)
+				lst.append(e)
 			out[k] = lst
 		elif k == "cards" and v is Array:
 			var cl: Array = []
