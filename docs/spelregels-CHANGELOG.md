@@ -1,5 +1,69 @@
 # Spelregels — CHANGELOG
 
+## C19 definitief — 8 augustus 2026 (facties afgesteld op 4,4 procentpunt)
+
+Twee correctierondes na de eerste aanname, elk gestuurd door een meting.
+
+| factie | kaarten | budget | comp | perk |
+|---|---|---|---|---|
+| Varken | 3 | 7 | [11, 5, 3] | - |
+| Muis | 5 | 5 | [16, 4, 0] | - |
+| Leeuw | 2 | 8 | [12, 4, 2] | artilleriedracht +1 |
+| Beer | 3 | 7 | [19, 3, 0] | HP +1 |
+| Wolf | 3 | 7 | [11, 8, 3] | cavalerie-snelheid +2 |
+| Krokodil | 3 | 6 | [13, 5, 3] | - |
+
+**Bevestigd op 1152 partijen en ANDERE seeds** (515000) dan waarop is afgesteld
+(91000), dus dit is geen overfitting:
+
+| factie | winst | haven-aandeel |
+|---|---|---|
+| Varken | 56,2% | 1% |
+| Beer | 54,4% | 93% |
+| Leeuw | 52,5% | 1% |
+| Wolf | 46,9% | 79% |
+| Krokodil | 45,3% | 51% |
+| Muis | 44,7% | 97% |
+
+Spreiding **4,4 procentpunt**, band 45-56%, niemand verder dan 6,2 van de 50.
+Beginstand was 28-76%.
+
+En let op die havenkolom: Beer wint met 93% rennen, Leeuw met 99% slachten, en
+ze staan allebei rond de 53%. Twee compleet verschillende manieren om te winnen,
+even sterk. De zorg van 7 augustus dat eliminatie het structureel wint van
+rennen is daarmee weerlegd.
+
+### Wat we onderweg over de knoppen hebben geleerd
+
+Dit is bruikbaarder dan de tabel zelf, want het zegt welke knop je moet pakken:
+
+- **Kaartbudget is veruit de zwaarste.** Een punt is ongeveer 30 procentpunt.
+  Leeuw ging van 63,7 naar 46,7 op budget 9 -> 8; Varken van 33,2 naar 64,2 op
+  6 -> 7. Te grof om mee af te stellen, alleen voor grote correcties.
+- **Cavalerie is de tweede**: een ruiter meer of minder is ongeveer 18 punten.
+- **Infanterie doet vrijwel niets** en **legergrootte op zichzelf helemaal
+  niets**: Beer scoorde met [15,3,0] en [17,3,0] exact hetzelfde (49,2%).
+- **Artillerie is een last voor een RENNER en neutraal voor een slachter.**
+  Beer verloor er 21 procentpunt aan, Leeuw houdt de zijne zonder bezwaar.
+- **Het leger van een factie bepaalt zijn spelstijl NIET.** Leeuw ging van tien
+  cavaleristen naar vier en bleef 0% haven: een pure slachter.
+
+### Ceremonie
+
+Ijk-sims drie keer opnieuw geijkt (per correctieronde). De winnaar bleef in alle
+vijf de sims steeds dezelfde; alleen de partijduur schoof. Partijen zijn per
+saldo NIET langer geworden: mediaan 9 cycli, hongerdoden 8,0% van alle doden,
+nul afkappingen over 1152 partijen. Stap-budget van de trainer (1400) is ruim:
+gemeten maximum 957.
+
+**De factiezoeker meet nu vanaf de ACTIEVE facties** in plaats van de kale tabel
+uit `constants.gd`. Dat was stuk geworden door de aanname: hij gaf het
+aangenomen blok identiteit 0,49 in plaats van 1,00 en zou dus kandidaten hebben
+beloond die deze wijzigingen terugdraaien.
+
+**De bots moeten hertraind**: hun gewichten komen van de nacht van 7 augustus,
+dus van vóór deze twee correctierondes.
+
 ## C19 — 7 augustus 2026 (facties aangenomen: het eerste doctrines-blok)
 
 *Besluit Max, na de zoekrun van 6 augustus, het nameten daarvan en drie eigen

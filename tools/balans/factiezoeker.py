@@ -74,6 +74,39 @@ KNOPPEN = [
     ("art_range_bonus", 0, 3, 0.25),
     ("cav_speed_bonus", 0, 2, 0.30),
 ]
+# --- De ACTIEVE facties, niet de kale tabel ---------------------------------
+# BASIS_FACTIES hierboven spiegelt `scripts/core/constants.gd`. Zodra er een
+# doctrines-blok is AANGENOMEN (C19, 7 augustus) is dat niet meer het ontwerp
+# waar de zoeker vanaf hoort te meten: de identiteits-rem zou dan afdrijving
+# beboeten van iets wat Max net bewust heeft vastgesteld, en kandidaten belonen
+# die het terugdraaien. Gemeten op 8 augustus: de nulmeting kreeg identiteit
+# 0,49 in plaats van 1,00 en gaf dus 0,10 punt weg voordat hij begon.
+#
+# Daarom leggen we het blok uit BASIS eroverheen. Staat er geen blok, dan
+# verandert er niets en is dit precies de kale tabel.
+def _actieve_facties():
+    try:
+        with open(BASIS, encoding="utf-8") as f:
+            blok = (json.load(f) or {}).get("doctrines") or {}
+    except (OSError, ValueError):
+        return BASIS_FACTIES
+    if not blok:
+        return BASIS_FACTIES
+    uit = {}
+    for sleutel, kaal in BASIS_FACTIES.items():
+        samen = dict(kaal)
+        ov = blok.get(sleutel) or blok.get(int(sleutel) if sleutel.isdigit() else sleutel) or {}
+        for naam, waarde in (ov or {}).items():
+            if naam == "comp":
+                samen["comp"] = [int(n) for n in waarde]
+            elif naam in samen:
+                samen[naam] = int(waarde)
+        uit[sleutel] = samen
+    return uit
+
+
+BASIS_FACTIES = _actieve_facties()
+
 COMP_MIN, COMP_MAX = 0, 20
 # De legergrootte moet OP HET BORD PASSEN. Je stelt op in twee rijen van elf,
 # dus 22 pionnen is de harde bovengrens (Constants.PAWNS_PER_PLAYER). Stond op
@@ -264,7 +297,7 @@ def lees_alle(paden):
 
 
 # Knoppen die NIETS kunnen doen bij een bepaalde legersamenstelling. Muis heeft
-# comp [18, 4, 0], dus geen artillerie, en Validator._spawn_legaal blokkeert het
+# geen artillerie in zijn comp, en Validator._spawn_legaal blokkeert het
 # kopen van een type dat je factie niet kent ("bugfix Max 28 juli: Muis kocht
 # kanonnen"). Een art_range_bonus voor Muis is dus letterlijk dood, en toch
 # draaide de zoeker eraan EN rekende de identiteits-rem er een halve punt voor

@@ -1,5 +1,44 @@
 # Fog of War — Work In Progress & Context
 
+## 8 augustus -- de facties staan (4,4 procentpunt spreiding)
+
+Twee correctierondes op C19, elk gestuurd door een meting, en bevestigd op 1152
+partijen met ANDERE seeds dan waarop is afgesteld.
+
+| factie | winst | haven-aandeel |
+|---|---|---|
+| Varken | 56,2% | 1% |
+| Beer | 54,4% | 93% |
+| Leeuw | 52,5% | 1% |
+| Wolf | 46,9% | 79% |
+| Krokodil | 45,3% | 51% |
+| Muis | 44,7% | 97% |
+
+Band 45-56%, niemand verder dan 6,2 van de 50. Beginstand vanochtend: 28-76%.
+
+Beer wint met 93% rennen, Leeuw met 99% slachten, allebei rond 53%. Twee
+speelstijlen, even sterk: de zorg van 7 augustus dat eliminatie het structureel
+wint van rennen is weerlegd.
+
+**Welke knop doet wat** (het bruikbaarste dat we hebben opgehaald):
+kaartbudget ~30 punten per punt (te grof om mee af te stellen), cavalerie ~18
+per ruiter, infanterie vrijwel niets, legergrootte op zichzelf niets, artillerie
+-21 voor een renner en neutraal voor een slachter. En: het leger van een factie
+bepaalt zijn spelstijl NIET (Leeuw ging van 10 naar 4 cavaleristen en bleef 0%
+haven).
+
+**Factiezoeker gerepareerd**: die mat afdrijving vanaf `constants.gd` en gaf het
+aangenomen blok dus identiteit 0,49 in plaats van 1,00. Hij zou vannacht
+kandidaten hebben beloond die Max' werk terugdraaien. Leest nu het actieve blok
+uit het regels-bestand.
+
+**Trainer hoefde niets**: die leest hetzelfde bestand. Stap-budget 1400 is ruim
+(gemeten maximum 957 over 864 partijen, nul afkappingen).
+
+**Nu aan de beurt: hertrainen.** De gewichten komen van de nacht van 7 augustus,
+dus van voor deze twee correctierondes.
+
+
 ## 7 augustus (avond) -- C19: het eerste factie-blok is aangenomen
 
 Besluit Max: "ja pas aan en dan doen we het doortesten met de fogofwarpanel."
