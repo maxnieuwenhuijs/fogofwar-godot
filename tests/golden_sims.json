@@ -1,6 +1,6 @@
 {
  "_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
- "gemeten_op": "C19 (7 augustus 2026): factie-instellingen aangenomen (doctrines-blok in rules_v42_campaign.json). Alle vijf de sims werden LANGER (bv seed 404: 6 -> 16 cycli), maar de WINNAAR bleef in alle vijf dezelfde. De nieuwe legers vechten dus trager, niet anders.",
+ "gemeten_op": "C19 ronde 2 (8 augustus): Varken budget terug naar 7, Leeuw 9 -> 8. Drie sims schoven, winnaar overal hetzelfde. Partijen worden nog langer (seed 404 nu 19 cycli, was 6 voor C19): let op het honger-aandeel in de volgende meting.",
  "sims": [
   {
    "p1": "easy",
@@ -19,8 +19,8 @@
    "d2": "vos",
    "seed": 101,
    "winner": 1,
-   "cyclus": 17,
-   "acties": 412
+   "cyclus": 16,
+   "acties": 407
   },
   {
    "p1": "easy",
@@ -29,8 +29,8 @@
    "d2": "beer",
    "seed": 202,
    "winner": 2,
-   "cyclus": 16,
-   "acties": 401
+   "cyclus": 19,
+   "acties": 481
   },
   {
    "p1": "medium",
@@ -49,8 +49,8 @@
    "d2": "leeuw",
    "seed": 404,
    "winner": 1,
-   "cyclus": 16,
-   "acties": 392
+   "cyclus": 19,
+   "acties": 455
   }
  ],
  "rules": "res://arena/arena_configs/rules_v42_campaign.json"

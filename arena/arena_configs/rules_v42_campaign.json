@@ -1,5 +1,5 @@
 {
- "_uitleg_doctrines": "C19 (7 augustus): factie-instellingen zoals Max ze heeft vastgesteld na de zoekrun van 6 augustus en het nameten daarvan. Dit blok stuurt het spel, de campagne, de trainer, de arena en de ijk-sims tegelijk. Wijzig je hier iets, dan is dat een regelwijziging: golden_sims.json opnieuw ijken en de bots hertrainen.",
+ "_uitleg_doctrines": "C19 (7-8 augustus): factie-instellingen zoals Max ze heeft vastgesteld. Ronde 2 na de nachtmeting van 6480 partijen: Varken's budget-nerf was te hard (33,2%) en Leeuw bleef met budget 9 de sterkste (63,7%) ondanks een compleet ander leger. Kaartbudget is de zwaarste knop van het spel. Dit blok stuurt spel, campagne, trainer, arena en ijk-sims tegelijk: wijzigen = regelwijziging, dus golden_sims.json opnieuw ijken.",
  "_uitleg_honger": "V0 (3 augustus): een duel kent alleen haven en eliminatie. Geen remise, geen tiebreak, geen cycluslimiet. Vanaf deze cyclus verhongert elke speler een pion per cyclus (de achterste), zodat het einde uit de regels zelf komt. Gemeten zonder klok liep een partij door tot 330 cycli en 6001 stappen; met de honger op 10 blijft alles beslissend. Dit is dus GEEN meetgrens meer maar een spelregel, en hij geldt in campagne en los potje gelijk.",
  "basis_hp": {
   "cav": 2
@@ -27,7 +27,6 @@
  },
  "doctrines": {
   "0": {
-   "budget": 6,
    "comp": [
     12,
     6,
@@ -43,6 +42,7 @@
    ]
   },
   "2": {
+   "budget": 8,
    "comp": [
     12,
     4,
