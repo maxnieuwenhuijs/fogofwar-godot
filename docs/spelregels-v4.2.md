@@ -214,11 +214,18 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 | **Wolf** | 3 | 7 | [11,8,3] = 22 | gratis stap na elke melee; **cavalerie +2 Speed**; cav springt over vijandelijke infanterie |
 | **Krokodil** (enum VOS) | 3 | 6 | [13,5,3] = 21 | verborgen koppeling |
 
-Gemeten evenwicht op 1152 partijen (andere seeds dan waarop is afgesteld):
-44,7% tot 56,2% winst, spreiding 4,4 procentpunt. En met twee verschillende
-manieren om te winnen naast elkaar: Beer haalt 93% van zijn zeges met rennen,
-Leeuw 99% met slachten, en ze staan allebei rond de 53%. Zie
-`spelregels-CHANGELOG.md` "C19 definitief".
+Krokodil krijgt sinds C20 (9 augustus) **+3 startpunten** compensatie via
+`campaign.budget_bonus["5"]` — geen kaartbudget maar voorraad; zie §11c.
+
+Gemeten evenwicht daarna: band **45,6-53,3%, spreiding 7,8 procentpunt** (1080
+partijen, alle 36 matchups). Daarvóór, over 6480 partijen: Beer 55,0 · Varken
+54,7 · Leeuw 52,1 · Wolf 48,9 · Muis 46,9 · Krokodil 42,4, dus 12,6 procentpunt.
+Twee manieren om te winnen
+staan naast elkaar: Beer haalt 93% van zijn zeges met rennen, Leeuw 100% met
+slachten, en ze staan allebei rond de 53%. Over de hele run eindigt 51% van de
+partijen op de haven en 49% op eliminatie. Zie `spelregels-CHANGELOG.md`
+"Correctie op C19" — een eerdere run van 1152 partijen suggereerde 4,4
+procentpunt, maar dat was binnen zijn eigen foutmarge.
 
 Onbekende doctrine-id valt terug op Varken. `constants.gd:132-133`
 
@@ -256,6 +263,30 @@ artillerie in hun comp, en `GameState.kent_type()` leidt daaruit af welke types
 je mag spawnen. Die twee kunnen dus nooit een kanon op het bord krijgen, ook
 niet met een volle reserve. Voor het asset-spoor betekent dat: geen kanon-model,
 geen gibs en geen `cannon_die_<factie>` voor mouse en bear.
+
+### 11c. Startcompensatie per factie (C11-`budget_bonus`)
+
+Naast het leger en het kaartbudget krijgt een factie extra **startvoorraad**.
+Dat is de fijne knop: het zijn reservepunten, geen kaartkracht.
+
+| factie | extra punten | extra CP | sinds |
+|---|---|---|---|
+| Muis | +4 | - | C11 (27 juli) |
+| Beer | +3 | - | C11 |
+| Wolf | +2 | +4 | C11 |
+| **Krokodil** | **+3** | - | **C20 (9 augustus)** |
+
+Waarom Krokodil: hij deelt 3 × 6 = 18 statpunten per ronde uit tegen 21 voor
+Varken, Beer en Wolf, en zijn schutkleur-perk bleek die drie punten niet waard
+(meting: de C13-verzwakking terugdraaien gaf hem +2,0, binnen de foutmarge van
+niets). Een kaartbudgetpunt erbij is géén optie: dat is gemeten op +27
+procentpunt en gooide hem naar 69,3%. Zie `spelregels-CHANGELOG.md` C20.
+
+**Let op waar deze tabel staat.** Anders dan het `doctrines`-blok wordt
+`budget_bonus` níét uit het regels-bestand gelezen door de campagnelaag. Hij
+staat daarom op drie plekken die gelijk moeten blijven: `CRules.budget_bonus`,
+`campaign.budget_bonus` in `rules_v42_campaign.json`, en in `v42_default.json`.
+`CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
 ## 12. Krokodil: verborgen koppeling
 

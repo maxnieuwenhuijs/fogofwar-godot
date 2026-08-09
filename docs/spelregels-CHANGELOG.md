@@ -1,5 +1,98 @@
 # Spelregels — CHANGELOG
 
+## C20 — 9 augustus 2026 (Krokodil krijgt startcompensatie, band naar 7,8)
+
+*Besluit Max: "+3 startpunten doe maar."* Krokodil stond met 42,4% als enige
+noemenswaardig onder het midden (zie de correctie hieronder). Hij krijgt nu
+`budget_bonus` **+3 startpunten**, net als Beer, in `campaign.budget_bonus["5"]`.
+
+| | Krokodil | band | spreiding |
+|---|---|---|---|
+| ervoor | 42,4% | 42,4-55,0 | 12,6 pp |
+| **+3 startpunten** | **45,8%** | **45,6-53,3** | **7,8 pp** |
+
+1080 partijen, alle 36 matchups, nul afkappingen, marge ±2,6. De smalste band
+die dit spel ooit gemeten heeft; beginstand in juli was 48 procentpunt.
+
+### Drie kandidaten gemeten, en dat was het hele punt
+
+Max vroeg eerst om een kaartbudgetpunt. Dat is gemeten en **afgewezen**:
+
+| kandidaat | Krokodil | spreiding | oordeel |
+|---|---|---|---|
+| budget 6 → 7 | 69,3% (+26,9) | 27,1 pp | afgewezen: van zwakste naar veruit sterkste |
+| schutkleur-perk terug (C13 ongedaan) | 44,4% (+2,0) | 10,8 pp | te weinig |
+| **+3 startpunten** | **45,8% (+3,4)** | **7,8 pp** | **aangenomen** |
+
+- **Een kaartbudgetpunt is geen afstelknop.** 2160 partijen: +26,9 procentpunt,
+  terwijl de hele band 12,6 breed was. Je verplaatst er een factie mee, je stelt
+  er niets mee bij. Datzelfde gold in C19 voor Leeuw (9→8) en Varken (6→7); die
+  kwamen toevallig goed uit.
+- **De schutkleur van Krokodil is bijna niets waard.** De verzwakking van C13
+  (29 juli: de gedekte koppeling valt ook weg naast een actieve vijand)
+  terugdraaien levert hem +2,0 op, binnen de foutmarge van niets. Zijn perk
+  compenseert dus niet wat hij ervoor betaalt.
+- **Wat hij ervoor betaalt is zichtbaar in één tabel.** Statpunten per ronde:
+  Muis 5×5=25, Varken/Beer/Wolf 3×7=21, **Krokodil 3×6=18**, Leeuw 2×8=16 (met
+  monsterkaarten). Krokodil legde drie punten per ronde in voor een perk zonder
+  meetbare waarde. De startcompensatie geeft hem dat terug in voorraad in plaats
+  van in kaartkracht, en dat is fijn genoeg gedoseerd om niet door te schieten.
+
+### Waar de knop staat (drie plekken, en dat is een valkuil)
+
+`budget_bonus` wordt — anders dan het `doctrines`-blok — **niet** uit het
+regels-bestand gelezen door de campagnelaag. De tabel staat daarom op drie
+plekken die gelijk moeten blijven: `CRules.budget_bonus` (campagne),
+`campaign.budget_bonus` in `rules_v42_campaign.json` (duels, trainer, arena) en
+in `v42_default.json` (los potje). Alle drie bijgewerkt, en
+`CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt voortaan dat ze niet
+uit elkaar lopen.
+
+**Geen versie-bump** (blijft 4.3.1), zelfde behandeling als het doctrines-blok
+in C19: `rules_version` volgt wat de ENGINE doet, niet welke waarde er op een
+knop staat. Wel opnieuw geijkt: van de vijf ijk-sims schoof er precies één, en
+dat is de enige met een Krokodil erin (seed 101, 16 → 19 cycli, 432 → 475
+acties, winnaar gelijk). De andere vier bleven byte-identiek, wat bevestigt dat
+de wijziging alleen die factie raakt. Golden replays draaien op kale regels
+zonder campagne-blok en zijn dus niet geraakt.
+
+## Correctie op C19 — 9 augustus 2026 (de spreiding is 12,6, niet 4,4)
+
+De nacht van 8 augustus leverde een meting van **6480 partijen** op, ruim vijf
+keer zoveel als de 1152 waarop "C19 definitief" hieronder is geschreven. Dit is
+de betere schatting, en hij is minder mooi:
+
+| factie | winst | wint door |
+|---|---|---|
+| Beer | 55,0% | rennen (93% van zijn zeges via de haven) |
+| Varken | 54,7% | slachten |
+| Leeuw | 52,1% | slachten (100%) |
+| Wolf | 48,9% | rennen (73%) |
+| Muis | 46,9% | rennen (96%) |
+| Krokodil | 42,4% | half om half (46%) |
+
+Band **42,4-55,0%, spreiding 12,6 procentpunt.** Nul afkappingen; 3294 partijen
+eindigen op de haven tegen 3186 op eliminatie, dus de twee manieren om te winnen
+zijn nagenoeg even vaak beslissend.
+
+**Waarom het eerst 4,4 leek.** Bij 1152 partijen is de foutmarge per factie
+±3,6 procentpunt; die meting kon een spreiding van 12,6 dus helemaal niet van
+4,4 onderscheiden. Bij 6480 partijen is de marge ±1,1. De twee metingen spreken
+elkaar niet tegen (elk verschil valt binnen één foutmarge) en de rangorde is op
+één plek na identiek, maar het getal 4,4 was een gelukkige greep en is te
+stellig opgeschreven. **Les voor de volgende keer: onder ~2000 partijen kun je
+geen uitspraak doen over een spreiding van een paar procentpunt.**
+
+Wat wél overeind blijft: de beginstand was 28-76% (48 procentpunt), dus C19
+heeft de band met driekwart teruggebracht. En Beer (93% haven) tegen Leeuw
+(100% eliminatie) staan nog steeds allebei rond de 53 met tegengestelde
+speelstijlen, dus die vondst houdt stand.
+
+**Krokodil is de zwakke plek**, 7,6 onder het midden. De factiezoeker zag dat
+onafhankelijk ook (in zijn eigen nulmeting stond Krokodil op 35%) maar kon er
+in 17 generaties en 8,4 uur niets beters voor vinden: geen enkele kandidaat
+kwam boven de huidige facties uit (0,72 tegen 0,82).
+
 ## Alles meet nu het echte spel — 8 augustus 2026 (en dat legde een bug bloot)
 
 *Besluit Max: "alles moet op echte facties en de 4.2 campagne."* Geen
@@ -45,7 +138,12 @@ Twee regressietests erbij (`SerializerTests`): de rol moet de actie-rondreis
 overleven zonder dat een lege rol een sleutel toevoegt, en een campagne-staat
 moet byte-identiek door de serializer komen, inclusief campagne- en factie-blok.
 
-## C19 definitief — 8 augustus 2026 (facties afgesteld op 4,4 procentpunt)
+## C19 definitief — 8 augustus 2026 (facties afgesteld)
+
+> **De cijfers in dit blok zijn achterhaald.** Ze komen uit een run van 1152
+> partijen, te klein voor de precisie die er staat; zie "Correctie op C19"
+> bovenaan voor de 6480-partijenmeting. De aangenomen factie-tabel zelf klopt
+> nog wel: die is niet gewijzigd.
 
 Twee correctierondes na de eerste aanname, elk gestuurd door een meting.
 

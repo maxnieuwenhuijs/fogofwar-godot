@@ -523,3 +523,32 @@ func test_c19_actieve_tabel_zonder_bestand() -> void:
 		assert_eq(int(tabel.doctrine_data(int(doc)).cards),
 			int(Constants.doctrine_data(int(doc)).cards),
 			"en dus de kale tabel, zonder te crashen")
+
+
+## De startcompensatie per factie (C11) staat op DRIE plekken en wordt, anders
+## dan het doctrines-blok, NIET uit het regels-bestand gelezen: `CRules` heeft
+## zijn eigen tabel voor de campagnelaag, en `campaign.budget_bonus` staat in
+## rules_v42_campaign.json (duels/arena/trainer) en in v42_default.json (los
+## potje). Lopen ze uit elkaar, dan krijgt een factie zijn punten wel in een
+## duel en niet in de campagne -- precies de soort splitsing die C17 verbiedt.
+## Toegevoegd op 9 augustus, toen Krokodil er +3 bij kreeg.
+func test_c19_budget_bonus_overal_gelijk() -> void:
+	var kern: Dictionary = CRules.new().budget_bonus
+	for pad in ["res://arena/arena_configs/rules_v42_campaign.json",
+			"res://arena/arena_configs/v42_default.json"]:
+		assert_true(FileAccess.file_exists(pad), "regels-bestand bestaat: %s" % pad)
+		var j = JSON.parse_string(FileAccess.get_file_as_string(pad))
+		assert_true(j is Dictionary, "leesbare json: %s" % pad)
+		var bb = ((j as Dictionary).get("campaign", {}) as Dictionary).get("budget_bonus", null)
+		assert_true(bb is Dictionary, "%s draagt een budget_bonus" % pad)
+		assert_eq((bb as Dictionary).size(), kern.size(),
+			"%s: evenveel facties met compensatie als CRules" % pad)
+		for sleutel in kern:
+			var uit_bestand = (bb as Dictionary).get(sleutel, null)
+			assert_true(uit_bestand is Dictionary, "%s kent factie %s" % [pad, sleutel])
+			assert_eq(int((uit_bestand as Dictionary).get("pt", 0)),
+				int((kern[sleutel] as Dictionary).get("pt", 0)),
+				"%s factie %s: pt gelijk aan CRules" % [pad, sleutel])
+			assert_eq(int((uit_bestand as Dictionary).get("cp", 0)),
+				int((kern[sleutel] as Dictionary).get("cp", 0)),
+				"%s factie %s: cp gelijk aan CRules" % [pad, sleutel])

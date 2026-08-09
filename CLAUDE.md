@@ -33,8 +33,18 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 Speed en springt over vijanden |
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
 
-  Gemeten: 44,7-56,2% winst over 1152 partijen op verse seeds (spreiding 4,4
-  procentpunt). **Muis en Beer hebben nul artillerie**, en `kent_type()`
+  **Startcompensatie (C11-`budget_bonus`, geen kaartbudget):** Muis +4 punten,
+  Beer +3, Wolf +2 punten en 4 CP, **Krokodil +3** (C20, 9 augustus). Die tabel
+  staat op DRIE plekken die gelijk moeten blijven — `CRules.budget_bonus`,
+  `campaign.budget_bonus` in `rules_v42_campaign.json` en in `v42_default.json`
+  — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
+  gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
+
+  Gemeten na C20: band **45,6-53,3%, spreiding 7,8 procentpunt** (1080 partijen,
+  alle 36 matchups). Daarvoor 42,4-55,0 / 12,6 over 6480 partijen; in juli 48.
+  (Een eerder gemeld "4,4" kwam uit 1152 partijen met een foutmarge van ±3,6 per
+  factie: te klein voor die uitspraak. Vuistregel: onder ~2000 partijen geen
+  conclusies over een paar procentpunt.) **Muis en Beer hebben nul artillerie**, en `kent_type()`
   verbiedt ze er dus ook een te spawnen: geen kanon-model, geen gibs, geen
   `cannon_die_<factie>` voor die twee. Controleer de actuele stand altijd met
   `-- facties`, nooit door `constants.gd` te lezen. Welke knop hoeveel doet:
@@ -198,7 +208,8 @@ en dat is nu op vier punten gebeurd:
 - **C15-buit (4.3.1).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
   tamboer 2 CP, alleen bij een ongekoppeld slachtoffer.
 - **C19 — de facties staan (8 augustus).** Zie de tabel bij de kernregels
-  hierboven. Band 44,7-56,2% over 1152 partijen; was 28-76%.
+  hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 45,6-53,3%;
+  was 28-76% in juli.
 
 **Wat nu open staat:** de bots zijn nog niet hertraind op deze facties (hun
 gewichten komen van de nacht van 7 augustus, dus van vóór de laatste twee

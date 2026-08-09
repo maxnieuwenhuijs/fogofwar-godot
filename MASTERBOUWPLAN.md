@@ -143,7 +143,7 @@ tests/                unit-suites  golden_replays/  fuzz/
 
 **Stand op 8 augustus 2026:** F0, F1, F2 en F3 zijn AF — alle substappen afgevinkt. Het spel is
 speelbaar van begin tot kampioen, de regels staan (4.3.1, met V0 en de C15-buit), en de facties zijn
-op meetdata afgesteld tot een spreiding van 4,4 procentpunt (C19). **Volgende fase is F4 (online).**
+op meetdata afgesteld tot een spreiding van 12,6 procentpunt (C19; was 48). **Volgende fase is F4 (online).**
 
 Twee dingen die je moet weten voordat je verder bouwt:
 
@@ -487,21 +487,28 @@ balansconclusies op steunen.
 **CHECK:** arena-matrix ná patch: geen doctrine <25% of >75% totaal-winrate op L2 (werkdoel);
 convergentiecheck gerapporteerd; alle goldens bewust ge-bumpt waar regels wijzigden.
 
-**GEHAALD, en ruimer dan het werkdoel (C19, 8 augustus 2026).** De band is
-**44,7% tot 56,2%** op L2, spreiding 4,4 procentpunt, gemeten over 1152 partijen
-op andere seeds dan waarop is afgesteld. Beginstand was 28-76%. Dat gebeurde
-niet meer met losse knoppen maar met een compleet `doctrines`-blok (zie
-`CLAUDE.md` en `spelregels-v4.2.md` §11) plus de V0-regelwijziging die het
-gelijkspel afschafte. Twee dingen die daaruit zijn geleerd en die deze fase
-eigenlijk pas afmaken:
+**GEHAALD (C19, 9 augustus 2026).** De band is **42,4% tot 55,0%** op L2,
+spreiding 12,6 procentpunt, gemeten over 6480 partijen. Beginstand was 28-76%,
+dus 48 procentpunt: driekwart eraf. Ruim binnen het werkdoel 25-75, maar niet
+perfect: Krokodil zit met 42,4% als enige noemenswaardig onder het midden.
+Dat gebeurde niet meer met losse knoppen maar met een compleet
+`doctrines`-blok (zie `CLAUDE.md` en `spelregels-v4.2.md` §11) plus de
+V0-regelwijziging die het gelijkspel afschafte. Drie dingen die daaruit zijn
+geleerd en die deze fase eigenlijk pas afmaken:
 
-- **De knoppen zijn niet even zwaar.** Kaartbudget ~30 procentpunt per punt,
-  cavalerie ~18 per ruiter, infanterie en legergrootte vrijwel niets. Wie hier
-  met budget aan draait, verplaatst een factie meteen door de hele band heen.
+- **De knoppen zijn niet even zwaar.** Kaartbudget 17 tot 31 procentpunt per
+  punt, cavalerie ~18 per ruiter, infanterie en legergrootte vrijwel niets. Wie
+  hier met budget aan draait, verplaatst een factie meteen door de hele band
+  heen. Er is geen FIJNE knop, en dat is de reden dat die laatste 7,6
+  procentpunt bij Krokodil blijft staan.
 - **Winrate alleen zegt te weinig.** Beer haalt 93% van zijn zeges uit de haven
-  en Leeuw 99% uit eliminatie, terwijl ze allebei rond 53% staan. De metriek die
+  en Leeuw 100% uit eliminatie, terwijl ze allebei rond 53% staan. De metriek die
   telt is dus winrate PLUS haven-aandeel; een matrix die alleen winrate toont
   kan twee compleet verschillende spellen als "in balans" wegschrijven.
+- **Meet groot genoeg.** Een run van 1152 partijen gaf 4,4 procentpunt
+  spreiding, en die is als conclusie opgeschreven. De foutmarge per factie was
+  daar ±3,6: het antwoord paste niet in de meting. Onder ~2000 partijen dus geen
+  uitspraken over een paar procentpunt.
 
 ---
 

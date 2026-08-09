@@ -1,5 +1,67 @@
 # Fog of War — Work In Progress & Context
 
+## 9 augustus -- C20: Krokodil krijgt startpunten, band naar 7,8 procentpunt
+
+Drie dingen op een dag: de trainer en de factiezoeker zijn allebei uitgeconvergeerd,
+mijn balanscijfer van gisteren bleek te mooi, en Krokodil is gerepareerd.
+
+**Beide zoekers zijn klaar.** De trainingsnacht liep helemaal af (trainers 13:39
+tot 20:52, arena tot 22:20, dashboard 22:21, fuzz schoon) maar leverde in **418
+generaties precies één adoptie** op: Varken, een kwartier na de start. Alle zes
+de facties loggen herhaald "plateau". De factiezoeker draaide daarna 8,4 uur en
+kwam met een voorstel dat identiek is aan wat er al stond: geen van de 17
+generaties kwam boven de huidige facties uit (0,72 tegen 0,82). Met deze
+gereedschappen valt er niets meer te halen.
+
+**Correctie: de spreiding was geen 4,4 maar 12,6 procentpunt.** De meting van
+6480 partijen gaf Beer 55,0 · Varken 54,7 · Leeuw 52,1 · Wolf 48,9 · Muis 46,9 ·
+Krokodil 42,4. Mijn "4,4" van gisteren kwam uit 1152 partijen, waar de foutmarge
+per factie ±3,6 is: dat antwoord paste niet in die meting. De twee runs spreken
+elkaar niet tegen en de rangorde is op één plek na gelijk, maar ik heb een
+gelukkige greep als conclusie opgeschreven. Vuistregel eruit: **onder ~2000
+partijen geen uitspraken over een paar procentpunt.**
+
+**Krokodil, drie kandidaten:**
+
+| kandidaat | Krokodil | spreiding | |
+|---|---|---|---|
+| ervoor | 42,4% | 12,6 pp | |
+| budget 6 → 7 | 69,3% (+26,9) | 27,1 pp | afgewezen |
+| schutkleur-perk terug | 44,4% (+2,0) | 10,8 pp | te weinig |
+| **+3 startpunten** | **45,8% (+3,4)** | **7,8 pp** | **aangenomen** |
+
+Wat we daarvan leren is meer waard dan het resultaat:
+
+- **Een kaartbudgetpunt is geen afstelknop.** +26,9 procentpunt over 2160
+  partijen, terwijl de hele band 12,6 breed was. In C19 gebruikte ik hem twee
+  keer (Leeuw 9→8, Varken 6→7) en dat kwam toevallig goed uit.
+- **Krokodils schutkleur is bijna niets waard.** De C13-verzwakking van 29 juli
+  terugdraaien geeft hem +2,0, binnen de foutmarge van niets. En hij betaalt er
+  wel voor: 3 × 6 = 18 statpunten per ronde tegen 21 voor Varken, Beer en Wolf.
+  Dat gat is precies zijn achterstand.
+- **`budget_bonus` is de fijne knop** en die bestond al (C11, 27 juli). Voorraad
+  in plaats van kaartkracht, dus fijn genoeg gedoseerd.
+
+**Valkuil onderweg:** `budget_bonus` wordt, anders dan het doctrines-blok, NIET
+uit het regels-bestand gelezen door de campagnelaag. De tabel staat op drie
+plekken (`CRules`, `rules_v42_campaign.json`, `v42_default.json`). Zonder alle
+drie had Krokodil zijn punten wel in een duel gekregen en niet in de campagne:
+precies de splitsing die C17 verbiedt. Alle drie bijgewerkt, en
+`CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt het voortaan.
+
+**En een les over interim-cijfers.** Ik heb tijdens deze meting twee keer een
+tussenstand gerapporteerd en beide keren zat ik ernaast (eerst "+10,6 hoopvol",
+toen "+0,2, doet niets", uiteindelijk +3,4). Oorzaak: de arena speelt de
+matchups op volgorde, dus bij een halve run is de dekking scheef en zeggen de
+percentages niets. **Niet meer naar een lopende arena-run kijken voordat alle 36
+matchups rond zijn.**
+
+Geen versie-bump (blijft 4.3.1), zelfde behandeling als het doctrines-blok:
+`rules_version` volgt wat de engine doet, niet welke waarde er op een knop staat.
+Eén ijk-sim opnieuw geijkt (seed 101, de enige met een Krokodil: 16 → 19 cycli),
+de andere vier byte-identiek.
+
+
 ## 8 augustus (avond) -- alles op het echte spel, en de fuzz vond meteen een bug
 
 Max: "alles moet op echte facties en de 4.2 campagne." Dat bleek geen
@@ -114,7 +176,10 @@ over facties die niemand meer speelt. Voor vanavond niets aan gedaan (dat is een
 keuze over wat je wilt meten, niet een fout), maar het is zonde van de uren.
 
 
-## 8 augustus -- de facties staan (4,4 procentpunt spreiding)
+## 8 augustus -- de facties staan (spreiding: zie de correctie van 9 augustus)
+
+> De 4,4 procentpunt in dit stuk klopt niet. Een run van 6480 partijen zet hem
+> op 12,6; zie de entry van 9 augustus. De factie-tabel zelf is niet gewijzigd.
 
 Twee correctierondes op C19, elk gestuurd door een meting, en bevestigd op 1152
 partijen met ANDERE seeds dan waarop is afgesteld.

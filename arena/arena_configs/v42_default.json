@@ -19,6 +19,10 @@
    "4": {
     "cp": 4,
     "pt": 2
+   },
+   "5": {
+    "cp": 0,
+    "pt": 3
    }
   },
   "cp_bijschrijving": "campagnelaag",

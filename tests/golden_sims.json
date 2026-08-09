@@ -1,6 +1,6 @@
 {
  "_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
- "gemeten_op": "C19 definitief (8 augustus): Varken [11,5,3]. Bevestigd op 1152 partijen en andere seeds: spreiding 4,4 pp, band 45-56%. Alleen seed 101 schoof nog (407 -> 432 acties), winnaar en cyclus gelijk.",
+ "gemeten_op": "C19 + Krokodil-compensatie (9 augustus): Krokodil krijgt +3 startpunten (campaign.budget_bonus \"5\"). Gemeten over 1080 partijen: Krokodil 42,4 -> 45,8%, band 45,6-53,3, spreiding 12,6 -> 7,8 procentpunt. Alleen seed 101 schoof, en dat is de enige sim met een Krokodil erin: 16 -> 19 cycli, 432 -> 475 acties, winnaar gelijk. De andere vier zijn byte-identiek gebleven, wat bevestigt dat de wijziging alleen die factie raakt.",
  "sims": [
   {
    "p1": "easy",
@@ -19,8 +19,8 @@
    "d2": "vos",
    "seed": 101,
    "winner": 1,
-   "cyclus": 16,
-   "acties": 432
+   "cyclus": 19,
+   "acties": 475
   },
   {
    "p1": "easy",

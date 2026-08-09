@@ -32,7 +32,20 @@ var budget_bonus: Dictionary = {
 	"1": {"pt": 4, "cp": 0},    # Muis
 	"3": {"pt": 3, "cp": 0},    # Beer
 	"4": {"pt": 2, "cp": 4},    # Wolf
+	"5": {"pt": 3, "cp": 0},    # Krokodil (9 augustus, zie hieronder)
 }
+# LET OP -- deze tabel staat op DRIE plekken en ze moeten gelijk blijven:
+# hier (campagnelaag), `campaign.budget_bonus` in rules_v42_campaign.json
+# (duels, trainer, arena) en in v42_default.json (los potje). Anders krijgt een
+# factie zijn compensatie wel in een duel en niet in de campagne. Anders dan het
+# doctrines-blok wordt dit NIET uit het regels-bestand gelezen;
+# CampaignTests.test_c19_budget_bonus_overal_gelijk bewaakt dat ze niet uit
+# elkaar lopen.
+#
+# Krokodil erbij op 9 augustus: hij stond op 42,4% over 6480 partijen, 7,6 onder
+# het midden. Een kaartbudgetpunt bleek +27 procentpunt (hij schoot naar 69,3%
+# en de spreiding verdubbelde), zijn schutkleur-perk terugdraaien leverde +2,0.
+# +3 startpunten gaf +3,4 en trok de hele band van 12,6 naar 7,8 procentpunt.
 
 # Donaties (per ontvanger per raadsronde):
 var donatie_cap_pionnen: int = 10
