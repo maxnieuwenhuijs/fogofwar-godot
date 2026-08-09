@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8srvworker01"]
+
+[ext_resource type="Script" path="res://tools/server_worker.gd" id="1_wrk"]
+
+[node name="ServerWorker" type="Node"]
+script = ExtResource("1_wrk")

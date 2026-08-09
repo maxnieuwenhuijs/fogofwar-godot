@@ -32,13 +32,18 @@ $env:DB_URL = "mysql://root@127.0.0.1:3316/fogofwar"; npm run dev
 De databaseserver luistert alleen op 127.0.0.1:3316, root zonder wachtwoord:
 prima voor lokaal ontwikkelen, uiteraard nooit voor de droplet.
 
-## Wat er staat (F4.1) en wat nog niet
+## Wat er staat (F4.1 + F4.2)
 
 Accounts (gast-eerst op device-token, e-mail-upgrade, profaniteitsfilter,
 avatar, vriendcodes), matches met het idempotente actieprotocol
-(seq_expected + idem_key, 409-met-inhaal), WebSocket + inhaal-endpoint.
+(seq_expected + idem_key, 409-met-inhaal), WebSocket + inhaal-endpoint, en
+sinds F4.2 de **Godot-worker**: elke actie gaat door de echte engine
+(`tools/server_worker.tscn`, gespawnd door `src/worker.ts`, NDJSON over een
+lokale TCP-poort). Illegaal = 422. `GET /matches/:id/view` = jouw gefilterde
+fog-view, `GET /versie` = de core-hash van de engine. De pariteit is bewezen:
+een volledige offline opgenomen partij door de server naspelen eindigt op
+dezelfde zobrist-hash.
 
-Nog niet: de Godot-worker (F4.2) die acties door de echte engine haalt — tot
-die er is echoot de server acties als `action_accepted`. OAuth-login komt
-later als extra loginmethode (e-mail dekt cross-device al); de Redis-jobqueue
-komt samen met zijn consument in F4.2.
+De worker heeft de Godot-binary nodig: env `GODOT_PAD` (valt terug op het
+bekende pad van deze machine). Nog niet: OAuth-login (e-mail dekt
+cross-device al) en Redis (komt met de matchmaking-wachtrij, F4.4+).

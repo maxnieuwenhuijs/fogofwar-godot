@@ -64,16 +64,39 @@ De idempotentie leunt op de unieke index `(match_id, idem_key)`, het
 seq-nummer op een `FOR UPDATE`-lock op de match-rij — beide zijn
 database-garanties, geen applicatielogica.
 
-### Wat F4.2 hieraan toevoegt (nog niet gebouwd)
+### De scheidsrechter (F4.2 — gebouwd)
 
-In F4.1 accepteert de server acties als transport: het event is een
-`action_accepted`-echo. De Godot-worker (F4.2) gaat elke actie door
-`Validator.is_legal` + `Reducer.apply` halen; het event wordt dan de ECHTE
-reducer-uitvoer (per speler geredigeerd via `View.client_events`), plus een
-snapshot elke 50 events. De 200/409/idem-semantiek verandert daarbij niet —
-alleen de inhoud van `events`, en een illegale actie wordt een `4xx` in
-plaats van een echo. Kloktijden: de worker stempelt `now_ms` (servertijd) en
-het log draagt hem mee (F4.0b), zodat elke partij hash-getrouw naspeelbaar is.
+Elke actie gaat door de **Godot-worker**: een headless engine-proces met
+exact dezelfde `core/`-bestanden als de client, gespawnd en beheerd door de
+Node-backend, sprekend over NDJSON op een lokale TCP-poort. De worker is
+**stateloos**: per verzoek krijgt hij het jongste snapshot plus de staart van
+acties sindsdien (het MatchLog-fold-formaat), herbouwt de staat, haalt de
+actie door `Validator`/`Reducer`, en geeft de reducer-events, de nieuwe staat
+en de zobrist-hash terug. Node bewaart één rij per actie
+(`action_applied`, payload `{action, events, hash}` — hetzelfde formaat als
+een MatchLog-entry) en elke 50 acties een snapshot.
+
+- Een **illegale actie** is een `422 {fout}` met de validator-tekst.
+- **now_ms**: de server stempelt zijn eigen tijd; zonder klokken in de regels
+  wordt bewust `-1` doorgegeven zodat een online partij byte-identiek blijft
+  aan een offline replay (F4.0b).
+- **Redactie**: clients krijgen nooit `payload.action` (draagt blinde
+  keuzes) en nooit de twee server-only admin-events — de Node-kant spiegelt
+  `View.client_events`, met tests op beide oevers.
+- **Crash-veiligheid**: de database schrijft pas ná een worker-antwoord, dus
+  een worker die midden in een verzoek sterft heeft niets veranderd; de pool
+  herstart hem en de client-retry (zelfde `idem_key`) is per definitie
+  veilig.
+- `GET /matches/:id/view` levert jouw gefilterde `View.for_player`-dict (het
+  render- en reconnect-startpunt voor de F4.3-client); `GET /versie` geeft de
+  `core_hash` van de worker zodat een client kan weigeren met een andere
+  engine te praten (bouwplan §11.5).
+
+*Afwijking van het oorspronkelijke plan:* de masterplan-tekst noemde een
+Redis-jobqueue tussen backend en worker. Dit is een synchrone zijspan
+geworden — zelfde stateloosheid en schaalbaarheid (N workers), één bewegend
+deel minder. Redis komt terug zodra er echt een wachtrij nodig is
+(matchmaking-queues, F4.4+).
 
 ## Versies
 

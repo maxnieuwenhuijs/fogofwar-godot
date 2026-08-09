@@ -811,18 +811,29 @@ JSON op de match.
 zelfde idem_key → geen duplicaat; seq-conflict → 409 met inhaal-events; gast-upgrade-flow;
 profaniteitsfilter weigert testwoorden.
 
-### ☐ F4.2 — Godot headless worker
+### ☑ F4.2 — Godot headless worker — AF (9 augustus 2026)
 
-**Bestanden:** `server/workers/` (job-consumer), Godot export-preset "worker" (of `--headless --script`).
+Gebouwd met één bewuste afwijking: **geen Redis-jobqueue maar een synchrone zijspan.** De worker
+(`tools/server_worker.tscn`, een scene want `--script` laadt de autoloads niet) draait headless als
+kindproces van de Node-backend en spreekt NDJSON over een lokale TCP-poort (stdio kan niet:
+`OS.read_string_from_stdin` blokkeert op een open pijp tot 64K of EOF — gemeten). Node laadt
+snapshot+staart uit MySQL en stuurt die mee; de worker is volledig stateloos, herbouwt via
+`MatchLog.fold`, haalt de actie door `Validator`/`Reducer` (zelfde `core/` als de client) en geeft
+events + nieuwe staat + zobrist-hash terug. Node bewaart één rij per actie (het MatchLog-formaat),
+een snapshot elke 50, en `now_ms` per rij (servertijd; `-1` zonder klokken zodat online byte-identiek
+blijft aan offline). Illegale actie = 422 met de validator-tekst. `GET /versie` geeft de core-hash
+(§11.5); `GET /matches/:id/view` levert de gefilterde View.for_player-dict (het F4.3-startpunt).
+Clients krijgen nooit `payload.action` of de twee admin-events (Node spiegelt `View.client_events`).
+Schalen = N workers; Redis komt terug zodra er echt een wachtrij nodig is (matchmaking, F4.4+).
 
-**Werk:** worker consumeert Redis-jobs `{job: "apply", match, action, player}`: laadt snapshot+staart
-uit MySQL, `Validator.is_legal` + `Reducer.apply`, appendt events, schrijft snapshot elke 50 events,
-ack't. Stateless → `fow-worker@N` schalen. Zelfde `core/`-bestanden als de client (kernprincipe één
-waarheid); een `core-hash`-endpoint vergelijkt de hash van de `core/`-map tussen client-build en worker
-(bouwplan §11.5).
+**CHECK gehaald:** volledige opgenomen partij (capture `-- record`, muis-wolf seed 777) actie voor
+actie door de server nagespeeld → **zelfde eind-zobrist als lokaal**; worker gekilld midden in het
+spel → heropgepakt zonder dubbele events (idem-herhaling blijft één rij). Plus: 422-weigering,
+view-lekcheck, en een Node/Windows-vondst: readline op een socket levert bij een stervende peer een
+tweede onvangbare ECONNRESET — de brug gebruikt daarom een handmatige regelknipper.
 
-**CHECK:** worker-integratietest: volledige partij via de queue naspelen = zelfde eind-zobrist als
-lokaal; kill van een worker midden in een job → job wordt heropgepakt zonder dubbele events (idempotent).
+*Oorspronkelijk plan ter referentie:* worker consumeert Redis-jobs; laadt snapshot+staart uit MySQL;
+`Validator.is_legal` + `Reducer.apply`; snapshot elke 50; stateless schalen; core-hash-endpoint.
 
 ### ☐ F4.3 — Client: LocalSession/RemoteSession + render-vanaf-snapshot
 

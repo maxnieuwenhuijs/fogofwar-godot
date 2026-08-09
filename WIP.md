@@ -1,5 +1,52 @@
 # Fog of War — Work In Progress & Context
 
+## 9 augustus (avond, later) -- F4.2 af: de server is nu een scheidsrechter
+
+**De server echoot niet meer, hij oordeelt.** Elke actie die via
+`POST /matches/:id/acties` binnenkomt gaat nu door de Godot-worker: een
+headless engine-proces (`tools/server_worker.tscn`) dat door de Node-backend
+wordt gespawnd en beheerd, en dat exact dezelfde `core/`-bestanden draait als
+het spel zelf. De worker is stateloos: per verzoek krijgt hij het jongste
+snapshot plus de staart van acties (het MatchLog-fold-formaat), herbouwt de
+staat, en haalt de actie door Validator en Reducer. Illegaal = 422 met de
+validator-tekst. Node bewaart een rij per actie (action/events/hash -- het
+MatchLog-formaat, dus replay en battlereport zijn gratis), een snapshot elke
+50 acties, en de servertijd per rij (F4.0b). `GET /matches/:id/view` geeft je
+gefilterde fog-view (het F4.3-render- en reconnect-startpunt), `GET /versie`
+de core-hash zodat een client weigert met een andere engine te praten.
+
+**De pariteitstest is de kroon op vier dagen werk**: een volledige partij,
+offline opgenomen met `capture -- record` (muis-wolf, seed 777), actie voor
+actie door de server nagespeeld -- inclusief de blinde factie-keuzes vooraf,
+want online begint in PRE_GAME (F4.0) -- eindigt op EXACT dezelfde
+zobrist-hash als de offline opname. De server en het offline spel zijn
+bewezen hetzelfde spel. En de kill-test: worker hard doodgemaakt midden in de
+partij, volgende actie herstart hem vanzelf, en de idem-herhaling van voor de
+kill blijft een herhaling -- geen dubbele events (de database schrijft pas na
+een worker-antwoord, dus een gestorven verzoek heeft niets veranderd).
+
+**Drie afwijkingen/vondsten, alle drie gedocumenteerd:**
+
+1. **Geen Redis maar een synchrone zijspan** (masterplan noemde Redis-jobs).
+   Zelfde stateloosheid, zelfde schaalbaarheid (N workers), een bewegend deel
+   minder. Redis komt terug bij de matchmaking-wachtrij (F4.4+).
+2. **TCP in plaats van stdio**: `OS.read_string_from_stdin` blokkeert op een
+   open pijp tot 64K of EOF -- een gesprek over stdin/stdout loopt dus vast.
+   En stdout door een pijp buffert tot exit zonder
+   `application/run/flush_stdout_on_print=true` (staat nu aan in
+   project.godot). En een worker als `--script` faalt omdat autoloads dan
+   niet laden (Constants) -- vandaar een scene, net als capture.tscn.
+3. **readline is gevaarlijk op sockets** (Node/Windows): sterft de peer
+   terwijl er net geschreven is, dan komt er een TWEEDE ECONNRESET die langs
+   elke error-luisteraar gaat (geisoleerd bewezen in een 40-regelig
+   experiment). De brug knipt regels daarom zelf op 'data'-events.
+
+Checks: 12/12 server-integratietests groen zonder onafgevangen fouten
+(pariteit, kill, 422, idem, seq-conflict, view-lek, accounts), tsc schoon,
+Godot-suite + simcheck groen (engine ongewijzigd; alleen de flush-vlag en
+twee nieuwe tool-bestanden erbij).
+
+
 ## 9 augustus (avond) -- F4.1 af: de backend staat, ondanks Docker
 
 **Het skelet van de online-server bestaat en zijn tests zijn groen.** `server/`

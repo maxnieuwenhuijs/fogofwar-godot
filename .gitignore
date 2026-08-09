@@ -12,3 +12,6 @@ __pycache__/
 # F4 Node-backend
 server/node_modules/
 server/dist/
+
+# F4.2-testcache (referentiepartij, regenereert vanzelf)
+server/test/.cache/
