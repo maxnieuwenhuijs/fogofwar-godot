@@ -1,5 +1,46 @@
 # Fog of War — Work In Progress & Context
 
+## 9 augustus (middag) -- F4 gestart: verkenning + de factie-keuze zit in de engine
+
+Max: "lets go online." F4 is open. Eerst vijf verkenners de code in gestuurd om
+het online-plan van 3 juli tegen de werkelijkheid te houden, en dat scheelde
+een hoop dubbel werk: **vrijwel elk engine-gat uit dat plan is sindsdien al
+gedicht** door F0.4-F0.8 (RESIGN, per-speler reveal-ack, klokken met
+CLAIM_TIMEOUT en per-fase defaults, View.for_player als kant-en-klare
+client-payload, kaart-identiteit, en V0 heeft de remise-kwestie opgeheven).
+De volledige nulmeting met de zeven ECHTE restgaten staat in het masterplan
+onder F4; de twee belangrijkste: MatchLog slaat `now_ms` niet op (partijen met
+klokken zijn niet hash-getrouw te folden) en game.gd rendert van de volle
+staat in plaats van uit views (render-vanaf-snapshot is de grote clientklus).
+
+**F4.0 gebouwd: de blinde factie-keuze als engine-actie.** Het laatste gat uit
+de verkenning. CHOOSE_DOCTRINE is alleen legaal in PRE_GAME, een keer per
+speler, en volgt exact het DEFINE/SPAWN/BET_CP-patroon: blinde commit in
+`doctrine_commits`, gate-check na elke commit, simultane onthulling. Beide
+binnen -> doctrines toegepast, `init_pools()` (de startreserve hangt aan de
+comp!), EV_DOCTRINES_REVEALED, opstelfase open. Vanaf dat punt is de partij
+byte-identiek aan een die via `start_new_game` over PRE_GAME heen sprong.
+Timeout in PRE_GAME = standaard-factie voor de slaper. De view toont je eigen
+commit en van de ander alleen DAT hij koos; de serializer schrijft de sleutel
+alleen bij een lopende keuze, dus alle bestaande snapshots en goldens blijven
+hash-identiek (dat is getest).
+
+Waarom dit eerst moest: online kiezen twee mensen hun factie blind en
+gelijktijdig (v4.1 §4.1), dus de keuze moet in het log en door de reducer, niet
+in een menu op een van de twee schermen. Nu kan een server een kale GameState
+opzetten en beide clients laten kiezen zonder eigen lobby-logica.
+
+**Koers (voor wie dit later leest):** het masterplan-F4 is de route
+(Node/Fastify-backend + Godot headless workers); het ONLINE-PLAYTEST-PLAN van
+3 juli is deels verouderd maar zijn client-voorwerk zit in F4.3. F4.1 (backend)
+wacht op Docker Desktop of MySQL op deze machine -- geen van beide staat er.
+Het voorwerk (F4.0, straks F4.3-clientwerk) heeft daar niets van nodig.
+
+Checks: 1695 asserts groen (was 1638; +57 over de gate, de pools-boeking,
+legal_actions, timeout-default, serializer-rondreis en de lek-test), simcheck
+0 afwijkingen, fuzz 60/0.
+
+
 ## 9 augustus -- C20: Krokodil krijgt startpunten (+2,3 procentpunt)
 
 Drie dingen op een dag: de trainer en de factiezoeker zijn allebei uitgeconvergeerd,

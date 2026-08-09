@@ -10,6 +10,7 @@ signal wolf_step_pending(pawn_id: int)
 signal cycle_started(cycle_number: int)
 signal game_over(winner_id: int)
 signal error_occurred(player_id: int, message: String)
+signal doctrines_revealed(doctrines: Dictionary)  # F4.0: beide keuzes tegelijk onthuld
 
 var state: GameState = null
 
@@ -35,6 +36,19 @@ func start_new_game(doctrine_p1: int = Constants.Doctrine.MENS, doctrine_p2: int
 	state.init_pools()  # F2.5: pools + CP onder een campaign-config (anders no-op)
 	_transition_to(Phase.Type.PLACEMENT)
 	state_updated.emit(state)
+
+## F4.0 — online-start: de partij begint in PRE_GAME en de facties komen binnen
+## via CHOOSE_DOCTRINE (blind en simultaan; de reducer opent de opstelfase zodra
+## beide binnen zijn). Offline blijft start_new_game de route: die springt over
+## PRE_GAME heen en is byte-identiek aan voorheen.
+func start_new_game_pre_game(rules_config: RulesConfig = null) -> void:
+	state = GameState.new()
+	if rules_config != null:
+		state.rules = rules_config
+	state_updated.emit(state)
+
+func submit_choose_doctrine(player_id: int, doctrine: int) -> bool:
+	return _apply_action(player_id, Actions.make_choose_doctrine(doctrine))
 
 ## Gemak: start + standaard-opstelling voor beide spelers (tests, sims, AI-partijen).
 func start_new_game_default(doctrine_p1: int = Constants.Doctrine.MENS, doctrine_p2: int = Constants.Doctrine.MENS) -> void:
@@ -166,6 +180,8 @@ func _relay_events(events: Array) -> void:
 				cards_revealed_event.emit(ev.payload.totals_p1, ev.payload.totals_p2, ev.payload.winner)
 			Reducer.EV_CYCLE_STARTED:
 				cycle_started.emit(ev.payload.cycle)
+			Reducer.EV_DOCTRINES_REVEALED:
+				doctrines_revealed.emit(ev.payload.doctrines)
 
 func _transition_to(new_phase: int) -> void:
 	var old: int = state.phase

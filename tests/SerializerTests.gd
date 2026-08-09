@@ -227,3 +227,33 @@ func test_c15_rol_overleeft_de_actie_rondreis() -> void:
 		{"type": Constants.UnitType.INFANTRY, "pos": Vector2i(1, 10)}]))
 	assert_false((kaal.placements[0] as Dictionary).has("rol"),
 		"lege rol voegt geen sleutel toe")
+
+
+## F4.0 -- een halve blinde factie-keuze moet de rondreis overleven (server
+## herstart midden in de lobby-gate), en de sleutel moet WEG blijven uit elke
+## staat zonder lopende keuze: anders verschuift elke bestaande golden-hash.
+func test_f4_doctrine_commits_rondreis_en_compat() -> void:
+	var s := GameState.new()
+	var res: Dictionary = Reducer.apply(s, Actions.make_choose_doctrine(Constants.Doctrine.BEER), 2)
+	assert_true(res.ok, "keuze p2 hoort te slagen")
+	var d: Dictionary = Serializer.state_to_dict(s)
+	assert_true(d.has("doctrine_commits"), "lopende keuze zit in het snapshot")
+	var terug: GameState = Serializer.state_from_dict(d)
+	assert_eq(JSON.stringify(Serializer.state_to_dict(terug)), JSON.stringify(d),
+		"halve gate rondreist byte-identiek")
+	assert_eq(int(terug.doctrine_commits[2]), Constants.Doctrine.BEER)
+	# En de gate loopt op de herstelde staat gewoon af.
+	assert_true(Reducer.apply(terug, Actions.make_choose_doctrine(Constants.Doctrine.MUIS), 1).ok)
+	assert_eq(terug.phase, Phase.Type.PLACEMENT)
+	assert_eq(int(terug.doctrines[1]), Constants.Doctrine.MUIS)
+	# Compat: een gewone partij (start via GameSession/runner-pad) draagt de
+	# sleutel NIET -- dit bewaakt dat alle bestaande snapshots identiek blijven.
+	var gewoon := GameState.new()
+	gewoon.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	gewoon.doctrines[Constants.PLAYER_2] = Constants.Doctrine.VOS
+	gewoon.phase = Phase.Type.PLACEMENT
+	assert_false(Serializer.state_to_dict(gewoon).has("doctrine_commits"),
+		"zonder lopende keuze bestaat de sleutel niet (golden-compat)")
+	# Clone neemt de commits mee (AI-snapshots, server-kopieen).
+	var kloon: GameState = s.clone()
+	assert_eq(int(kloon.doctrine_commits[2]), Constants.Doctrine.BEER, "clone draagt de commit")

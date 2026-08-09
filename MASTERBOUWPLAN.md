@@ -735,6 +735,44 @@ client-voorwerk uit het online-plan (camera-flip, render-from-snapshot, web-spik
 
 **Prereq:** Docker Desktop geïnstalleerd en gestart (voor testcontainers-MySQL/Redis in de
 integratietests); anders fallback: lokale MySQL + `DB_URL`-env. Check dit als eerste substap.
+*Stand 9 augustus: geen van beide staat op de machine — F4.1 wacht daarop; het voorwerk hieronder niet.*
+
+**Nulmeting F4 (9 augustus, vijf verkenners over de code).** Het online-plan van 3 juli somde
+engine-gaten op; daarvan bestaat inmiddels vrijwel alles, want F0.4-F0.8 zijn erna gebouwd:
+RESIGN, per-speler reveal-ack, de klokken mét CLAIM_TIMEOUT en per-fase defaults (server geeft
+now_ms mee — de reducer leest zelf nooit een klok), View.for_player als JSON-klare, per speler
+gefilterde client-payload met leak-canary's, kaart-identiteit veilig door de serializer, en V0
+heeft het remise-probleem opgeheven. De doctrine-keuze was het laatste engine-gat en zit er sinds
+F4.0 in (zie F4.3). Wat de verkenning aan ECHTE resterende gaten vond:
+
+- **MatchLog slaat `now_ms` niet op** en fold speelt zonder tijd af: een partij mét klokken is niet
+  hash-getrouw te folden (turn_deadline zit in de hash). Fixen vóór de server klokken aanzet.
+- **game.gd rendert van de volle staat** en gebruikt de views nergens; geheimen worden handmatig
+  afgedekt in de renderer. Render-vanaf-snapshot (F4.3) is dus echt de grote clientklus.
+- **`acknowledge_reveal()` is een shim die voor BEIDE spelers ackt** — online moet de client naar
+  `submit_ack_reveal(eigen_id)`, de shim mag daar nooit heen.
+- **EV_CYCLE_ADMIN/EV_CP_ADMIN** dragen beide pools/saldi: de event-stream naar clients moet ze per
+  speler redigeren (staat als eis in de reducer-comments), net als DEFINE/CHOOSE_DOCTRINE-acties in
+  het rauwe log.
+- **Web-spike is 0%**: geen export_presets.cfg, Forward+/D3D12, Jolt, en de AI draait op een Thread
+  (game.gd:1604) — werkt niet in een single-threaded webbuild.
+- **De verrassings-loting** van de tegenstander-factie gebruikt bewust ongeseede randi()
+  (game.gd:517) — online moet de server loten.
+- **Er bestaat nog geen klokprofiel-config** (alles bank_sec 0); de beslisagenda noemt bank 180 /
+  increment 5 / grace 60 als startwaarden.
+
+### ☑ F4.0 — Doctrine-keuze in de engine — AF (9 augustus 2026)
+
+CHOOSE_DOCTRINE als vijftiende+1 actietype: alleen legaal in PRE_GAME, één keer per speler, blinde
+commit (`GameState.doctrine_commits`) volgens exact het DEFINE/SPAWN/BET_CP-gate-patroon. Beide
+binnen → doctrines toegepast, `init_pools()` (de startreserve hangt aan de comp), simultane
+onthulling via EV_DOCTRINES_REVEALED en de opstelfase opent — vanaf daar byte-identiek aan een
+partij die via `start_new_game` over PRE_GAME heen sprong. CLAIM_TIMEOUT in PRE_GAME geeft de trage
+kiezer de standaard-factie. View: eigen commit zichtbaar, van de ander alleen een boolean.
+Serialisatie: sleutel alleen aanwezig bij een lopende keuze, dus elke bestaande snapshot/golden
+blijft hash-identiek. GameSession: `start_new_game_pre_game()`, `submit_choose_doctrine()`, signal
+`doctrines_revealed`. CHECK: 1695 asserts groen (blinde gate, pools-boeking, legal_actions,
+timeout-default, rondreis, lek-test), simcheck 0 afwijkingen, fuzz 60/0.
 
 ### ☐ F4.1 — Backend-skelet + datamodel + accounts
 

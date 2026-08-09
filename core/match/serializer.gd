@@ -57,7 +57,7 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		cp_bets_d[key] = int(state.cp_bets.get(player_id, 0))
 		cp_bet_done_d[key] = bool(state.cp_bet_done.get(player_id, false))
 		spawn_totaal_d[key] = int(state.spawn_totaal.get(player_id, 0))
-	return {
+	var out := {
 		"phase": state.phase,
 		"cycle": state.cycle,
 		"round_number": state.round_number,
@@ -88,6 +88,15 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		"next_pawn_id": state._next_pawn_id,
 		"next_card_id": state._next_card_id,
 	}
+	# F4.0 — alleen aanwezig terwijl een blinde PRE_GAME-keuze loopt. Weggelaten
+	# als leeg, zodat elk bestaand snapshot (goldens, saves, replays) byte- en
+	# dus hash-identiek blijft aan voor deze uitbreiding.
+	if not state.doctrine_commits.is_empty():
+		var commits_d: Dictionary = {}
+		for pid in state.doctrine_commits:
+			commits_d[str(pid)] = int(state.doctrine_commits[pid])
+		out["doctrine_commits"] = commits_d
+	return out
 
 
 static func state_from_dict(d: Dictionary) -> GameState:
@@ -166,4 +175,6 @@ static func state_from_dict(d: Dictionary) -> GameState:
 			s.spawn_totaal[player_id] = st_tot
 	s._next_pawn_id = int(d.get("next_pawn_id", 0))
 	s._next_card_id = int(d.get("next_card_id", 0))
+	for k in d.get("doctrine_commits", {}):
+		s.doctrine_commits[int(String(k))] = int(d.doctrine_commits[k])
 	return s

@@ -223,3 +223,25 @@ func test_c13_schutkleur_valt_weg_van_dichtbij() -> void:
 	s.rules.schutkleur_onthul_nabij = false
 	var v4: Dictionary = View.for_player(s, Constants.PLAYER_2)
 	assert_eq(v4.pawns[str(gedekt.id)].current_hp, View.HIDDEN, "knop uit: blijft gedekt")
+
+
+## F4.0 -- de blinde factie-keuze is een geheim tot beide binnen zijn. De view
+## van de tegenstander mag alleen weten DAT er gekozen is, nooit WAT.
+func test_f4_doctrine_keuze_lekt_niet() -> void:
+	var s := GameState.new()
+	assert_true(Reducer.apply(s, Actions.make_choose_doctrine(Constants.Doctrine.VOS), 1).ok)
+	var eigen: Dictionary = View.for_player(s, 1)
+	assert_eq(int(eigen.own_doctrine_commit), Constants.Doctrine.VOS, "je ziet je eigen keuze")
+	assert_false(bool(eigen.enemy_has_chosen), "en dat de ander nog niet koos")
+	var vijand: Dictionary = View.for_player(s, 2)
+	assert_eq(int(vijand.own_doctrine_commit), -1, "zelf nog niet gekozen")
+	assert_true(bool(vijand.enemy_has_chosen), "wel zichtbaar DAT p1 koos")
+	assert_false(JSON.stringify(vijand).contains("doctrine_commits"),
+		"de commit-tabel zelf zit nooit in een view")
+	assert_eq(int((vijand.doctrines as Dictionary)["1"]), Constants.Doctrine.MENS,
+		"doctrines tonen de startdefault, niet de geheime keuze")
+	# Na de reveal is de keuze gewoon openbaar.
+	assert_true(Reducer.apply(s, Actions.make_choose_doctrine(Constants.Doctrine.BEER), 2).ok)
+	var na: Dictionary = View.for_player(s, 2)
+	assert_eq(int((na.doctrines as Dictionary)["1"]), Constants.Doctrine.VOS, "na de reveal openbaar")
+	assert_eq(int(na.own_doctrine_commit), -1, "commits zijn weer leeg")

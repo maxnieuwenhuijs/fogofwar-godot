@@ -22,6 +22,13 @@ var last_initiative_winner: int = Constants.PLAYER_1
 # Doctrine per speler (Constants.Doctrine); vast voor de hele partij.
 var doctrines: Dictionary = {}
 
+# F4.0 — blinde factie-keuze in PRE_GAME (v4.1 §4.1: simultaan en blind).
+# doctrine_commits[speler] = de gekozen doctrine, GEHEIM tot beide binnen zijn;
+# dan past de reducer ze toe op `doctrines`, boekt hij de pools en opent hij de
+# opstelfase. Buiten PRE_GAME (en in elke partij die via start_new_game begint,
+# dus de hele offline flow) blijft dit leeg en wordt het niet geserialiseerd.
+var doctrine_commits: Dictionary = {}
+
 var pawns: Dictionary = {}
 var board: Array = []
 
@@ -552,6 +559,7 @@ func clone() -> GameState:
 	copy.winner = winner
 	copy.eind_reden = eind_reden
 	copy.doctrines = doctrines.duplicate()
+	copy.doctrine_commits = doctrine_commits.duplicate()
 	copy.placements_done = placements_done.duplicate()
 	copy.reveal_acks = reveal_acks.duplicate()
 	copy.pending_wolf_step_pawn = pending_wolf_step_pawn

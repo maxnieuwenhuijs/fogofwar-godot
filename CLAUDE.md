@@ -214,9 +214,10 @@ en dat is nu op vier punten gebeurd:
   hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 44,7-56,7%;
   was 28-76% in juli.
 
-**Wat nu open staat:** de bots zijn nog niet hertraind op deze facties (hun
-gewichten komen van de nacht van 7 augustus, dus van vóór de laatste twee
-correctierondes). Zolang dat niet is gebeurd meet elke nieuwe arena-run
-botonkunde en geen factiebalans. Volgorde: eerst TRAINING-NACHT, daarna pas de
-factiezoeker weer. Het asset-spoor (modellen, geluid) loopt daar los naast en
-blokkeert niets.
+**F4 (online) is op 9 augustus geopend.** De nulmeting staat in het masterplan
+onder F4: vrijwel elk engine-gat uit het online-plan van 3 juli bleek al
+gedicht door F0.4-F0.8; F4.0 (blinde factie-keuze als CHOOSE_DOCTRINE-actie in
+PRE_GAME) is af. De backend (F4.1, Node+MySQL+Redis) wacht op Docker Desktop
+op deze machine; het clientvoorwerk (F4.3) kan zonder. De bots zijn na C19/C20
+getraind tot een plateau; het asset-spoor (modellen, geluid) loopt los van
+alles en blokkeert niets.

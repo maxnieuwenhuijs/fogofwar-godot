@@ -314,3 +314,85 @@ func test_define_beide_zonder_vrije_pionnen_schuift_meteen_door() -> void:
 	# De fase-entry-gate (aangeroepen bij het betreden van elke define-fase).
 	Reducer._check_define_gate(s, [])
 	assert_true(Phase.is_reveal(s.phase), "niemand hoeft te definiëren -> meteen door")
+
+
+# =========================================================================
+# F4.0 -- blinde factie-keuze in PRE_GAME (de eerste online-bouwsteen)
+# =========================================================================
+
+func test_f4_doctrine_keuze_blinde_gate() -> void:
+	var s := GameState.new()  # verse staat start in PRE_GAME
+	assert_eq(s.phase, Phase.Type.PRE_GAME)
+	# Buiten PRE_GAME is de keuze illegaal.
+	var laat := _fresh_state()
+	var fout: Dictionary = Reducer.apply(laat, Actions.make_choose_doctrine(Constants.Doctrine.VOS), 1)
+	assert_false(fout.ok, "kiezen na de start is illegaal")
+	assert_eq(fout.error, "De facties liggen al vast")
+	# Onbekende factie geweigerd.
+	assert_false(Reducer.apply(s, Actions.make_choose_doctrine(99), 1).ok, "factie 99 bestaat niet")
+	# P1 kiest: blind, fase blijft staan, geen reveal-event.
+	var res1: Dictionary = _apply_ok(s, Actions.make_choose_doctrine(Constants.Doctrine.VOS), 1, "keuze p1")
+	assert_eq(s.phase, Phase.Type.PRE_GAME, "na een keuze blijft PRE_GAME staan")
+	for ev in res1.events:
+		assert_true(String(ev.type) != Reducer.EV_DOCTRINES_REVEALED, "geen reveal na een keuze")
+	# Dubbel kiezen geweigerd, ook een andere factie.
+	var dubbel: Dictionary = Reducer.apply(s, Actions.make_choose_doctrine(Constants.Doctrine.MUIS), 1)
+	assert_false(dubbel.ok, "een keuze is definitief")
+	assert_eq(dubbel.error, "Al een factie gekozen")
+	# P2 kiest: gate rond -- doctrines toegepast, commits leeg, opstelfase open.
+	var res2: Dictionary = _apply_ok(s, Actions.make_choose_doctrine(Constants.Doctrine.BEER), 2, "keuze p2")
+	assert_eq(s.phase, Phase.Type.PLACEMENT, "beide binnen: de opstelfase opent")
+	assert_eq(int(s.doctrines[1]), Constants.Doctrine.VOS)
+	assert_eq(int(s.doctrines[2]), Constants.Doctrine.BEER)
+	assert_true(s.doctrine_commits.is_empty(), "commits zijn opgeruimd na de reveal")
+	var reveal_gezien := false
+	for ev in res2.events:
+		if String(ev.type) == Reducer.EV_DOCTRINES_REVEALED:
+			reveal_gezien = true
+			assert_eq(int(ev.payload.doctrines["1"]), Constants.Doctrine.VOS)
+			assert_eq(int(ev.payload.doctrines["2"]), Constants.Doctrine.BEER)
+	assert_true(reveal_gezien, "de onthulling is een event (voor de event-stream)")
+	# En de partij speelt gewoon door vanaf hier.
+	_apply_ok(s, Actions.make_place(s.default_placement(1)), 1, "place p1 na keuze")
+	_apply_ok(s, Actions.make_place(s.default_placement(2)), 2, "place p2 na keuze")
+	assert_eq(s.phase, Phase.Type.SETUP_1_DEFINE)
+
+
+func test_f4_doctrine_gate_boekt_de_pools() -> void:
+	# init_pools hoort NA de keuze te draaien: de startreserve hangt aan de comp.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {"pool_model": "punten", "pools": {"1": 30, "2": 30}}})
+	_apply_ok(s, Actions.make_choose_doctrine(Constants.Doctrine.MUIS), 1, "keuze p1")
+	assert_true(s.pools.is_empty(), "geen pools zolang de gate open staat")
+	_apply_ok(s, Actions.make_choose_doctrine(Constants.Doctrine.MENS), 2, "keuze p2")
+	assert_false(s.pools.is_empty(), "gate rond: de pools zijn geboekt")
+	assert_true(s.pool_count(1, Constants.UnitType.INFANTRY) > 0, "muis kan soldaten kopen")
+	assert_false(s.kent_type(1, Constants.UnitType.ARTILLERY), "en kent nog steeds geen kanon")
+
+
+func test_f4_doctrine_keuze_in_legal_actions() -> void:
+	var s := GameState.new()
+	var opties: Array = Validator.legal_actions(s, 1)
+	assert_eq(opties.size(), Constants.DOCTRINE_DATA.size(), "elke factie is een optie")
+	_apply_ok(s, opties[0], 1, "eerste optie is speelbaar")
+	assert_true(Validator.legal_actions(s, 1).is_empty(), "na je keuze wacht je op de ander")
+	assert_eq(Validator.legal_actions(s, 2).size(), Constants.DOCTRINE_DATA.size(), "de ander kiest nog")
+
+
+func test_f4_doctrine_timeout_geeft_default() -> void:
+	# Klokken aan: de trage kiezer krijgt de standaard-factie, zoals de
+	# default-opstelling en de default-loadout in de andere setup-fasen.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"clock": {"bank_sec": 60, "increment_sec": 5}})
+	# Met now_ms, want de klok armt pas bij een actie met tijd erbij.
+	var k1: Dictionary = Reducer.apply(s, Actions.make_choose_doctrine(Constants.Doctrine.WOLF), 1, 1000)
+	assert_true(k1.ok, "keuze p1 hoort te slagen (kreeg: %s)" % k1.error)
+	assert_true(s.turn_deadline > 0, "de deadline staat na de eerste actie")
+	# Te vroeg claimen: geweigerd (deadline is net gezet).
+	var vroeg: Dictionary = Reducer.apply(s, Actions.make_claim_timeout(), 1, 1000)
+	assert_false(vroeg.ok, "claim voor de deadline is illegaal")
+	var claim: Dictionary = Reducer.apply(s, Actions.make_claim_timeout(), 1, s.turn_deadline + 1)
+	assert_true(claim.ok, "claim na de deadline slaagt (kreeg: %s)" % claim.error)
+	assert_eq(s.phase, Phase.Type.PLACEMENT, "de partij is gewoon begonnen")
+	assert_eq(int(s.doctrines[1]), Constants.Doctrine.WOLF, "de kiezer houdt zijn keuze")
+	assert_eq(int(s.doctrines[2]), Constants.Doctrine.MENS, "de slaper krijgt de standaard")

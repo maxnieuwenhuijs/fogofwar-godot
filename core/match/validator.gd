@@ -66,6 +66,15 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 			return _check_bet_cp(state, action, player_id)
 		Actions.CANNON_ACT:
 			return _check_cannon_act(state, action, player_id)
+		Actions.CHOOSE_DOCTRINE:
+			# F4.0 — alleen in PRE_GAME, één keer per speler, bestaande factie.
+			if state.phase != Phase.Type.PRE_GAME:
+				return _nee("De facties liggen al vast")
+			if state.doctrine_commits.has(player_id):
+				return _nee("Al een factie gekozen")
+			if not Constants.DOCTRINE_DATA.has(int(action.doctrine)):
+				return _nee("Onbekende factie")
+			return _ok()
 	return _nee("Onbekend actietype")
 
 
@@ -278,7 +287,7 @@ static func gate_check(state: GameState, action: Dictionary, player_id: int) -> 
 			return _check_place(state, action, player_id)
 		Actions.DEFINE_CARDS:
 			return _check_define(state, action, player_id)
-		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT, Actions.SPAWN, Actions.BET_CP:
+		Actions.ACK_REVEAL, Actions.LINK, Actions.SKIP_WOLF_STEP, Actions.RESIGN, Actions.CLAIM_TIMEOUT, Actions.SPAWN, Actions.BET_CP, Actions.CHOOSE_DOCTRINE:
 			return is_legal(state, action, player_id)  # al goedkoop: geen dure checks
 		Actions.MOVE, Actions.CHARGE:
 			var gate := _action_turn(state, player_id)
@@ -496,7 +505,13 @@ static func _check_skip_wolf(state: GameState, player_id: int) -> Dictionary:
 static func legal_actions(state: GameState, player_id: int) -> Array:
 	var out: Array = []
 	match state.phase:
-		Phase.Type.PRE_GAME, Phase.Type.GAME_OVER:
+		Phase.Type.GAME_OVER:
+			return out
+		Phase.Type.PRE_GAME:
+			# F4.0 — blinde factie-keuze: wie al koos, wacht op de ander.
+			if not state.doctrine_commits.has(player_id):
+				for doc in Constants.DOCTRINE_DATA.keys():
+					out.append(Actions.make_choose_doctrine(int(doc)))
 			return out
 		Phase.Type.PLACEMENT:
 			if not state.placements_done.get(player_id, false):

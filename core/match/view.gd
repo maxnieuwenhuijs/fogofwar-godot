@@ -145,6 +145,11 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"own_cp_bet": int(state.cp_bets.get(player_id, 0)),
 		"own_cp_bet_done": bool(state.cp_bet_done.get(player_id, false)),
 		"enemy_defined_ids_hidden": redacted,
+		# F4.0 — blinde factie-keuze (PRE_GAME): de eigen commit is zichtbaar,
+		# van de ander alleen DAT hij gekozen heeft. Let op: `doctrines`
+		# hierboven toont in PRE_GAME nog de startdefaults, niet de commits.
+		"own_doctrine_commit": int(state.doctrine_commits.get(player_id, -1)),
+		"enemy_has_chosen": state.doctrine_commits.has(enemy),
 	}
 
 

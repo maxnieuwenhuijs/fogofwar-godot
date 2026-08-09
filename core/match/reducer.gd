@@ -36,6 +36,10 @@ const EV_CP_ADMIN := "cp_admin"               # F2.3: {bets, saldi} bij de revea
 	# cycle_admin server/log-only (D12): de F4-event-stream redigeert per speler.
 const EV_CP_EARNED := "cp_earned"             # F2.3/D13: {player_id, reden, amount} — ledger-event
 	# voor de campagnelaag; NIET in-match uitgeefbaar (saldo blijft onaangeraakt).
+const EV_DOCTRINE_COMMITTED := "doctrine_committed"   # F4.0: {player_id} (de keuze blijft blind)
+const EV_DOCTRINES_REVEALED := "doctrines_revealed"   # F4.0: {doctrines} — simultane onthulling.
+	# LET OP (F4): de CHOOSE_DOCTRINE-actie in het rauwe log draagt de keuze;
+	# de event-stream naar de tegenstander redigeert die tot dit reveal-event.
 
 
 static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: int = -1) -> Dictionary:
@@ -85,6 +89,8 @@ static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: 
 			fout = "Ongeldige kanon-actie"
 		Actions.RESIGN:
 			_do_resign(state, player_id, events)
+		Actions.CHOOSE_DOCTRINE:
+			_do_choose_doctrine(state, action, player_id, events)
 		Actions.CLAIM_TIMEOUT:
 			if now_ms < 0 or not _clocks_on(state) or state.turn_deadline <= 0 or now_ms <= state.turn_deadline:
 				return {"ok": false, "events": [], "error": "Deadline nog niet verstreken"}
@@ -112,6 +118,33 @@ static func handles(action_type: String) -> bool:
 # =========================================================================
 # Setup-fasen (F0.4b)
 # =========================================================================
+
+## F4.0 — blinde factie-keuze in PRE_GAME (v4.1 §4.1: simultaan en blind).
+## Zelfde patroon als DEFINE/SPAWN/BET_CP: commit per speler, gate-check na elke
+## commit, simultane onthulling. Zodra beide binnen zijn gebeurt hier exact wat
+## GameSession.start_new_game out-of-band doet (doctrines, cyclus 1, pools) en
+## opent de opstelfase — een partij die in PRE_GAME begon loopt vanaf dat punt
+## dus byte-identiek aan een partij die daar via start_new_game overheen sprong.
+static func _do_choose_doctrine(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	state.doctrine_commits[player_id] = int(action.doctrine)
+	_ev(events, EV_DOCTRINE_COMMITTED, {"player_id": player_id})
+	_ev(events, EV_STATE, {})
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		if not state.doctrine_commits.has(speler):
+			return  # wachten op de ander (blind)
+	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		state.doctrines[speler] = int(state.doctrine_commits[speler])
+	state.doctrine_commits = {}
+	state.cycle = 1
+	state.round_number = 1
+	state.init_pools()  # pools + CP hangen aan de comp, dus pas nu boekbaar
+	_ev(events, EV_DOCTRINES_REVEALED, {"doctrines": {
+		str(Constants.PLAYER_1): int(state.doctrines[Constants.PLAYER_1]),
+		str(Constants.PLAYER_2): int(state.doctrines[Constants.PLAYER_2]),
+	}})
+	_set_phase(state, Phase.Type.PLACEMENT, events)
+	_ev(events, EV_STATE, {})
+
 
 static func _do_place(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
 	state.apply_placement(player_id, action.placements)
@@ -716,6 +749,13 @@ static func _do_claim_timeout(state: GameState, _claimant: int, now_ms: int, eve
 		state.eind_reden = "timeout"
 		_set_phase(state, Phase.Type.GAME_OVER, events)
 		_ev(events, EV_GAME_OVER, {"winner": state.winner})
+		return
+	if ph == Phase.Type.PRE_GAME:
+		# F4.0: de trage kiezer krijgt de standaard-factie (Varken/MENS) —
+		# zelfde gedachte als de default-opstelling en de default-loadout.
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			if not state.doctrine_commits.has(speler):
+				_merge_sub_apply(state, Actions.make_choose_doctrine(Constants.Doctrine.MENS), speler, now_ms, events)
 		return
 	if ph == Phase.Type.PLACEMENT:
 		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
