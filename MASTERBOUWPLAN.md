@@ -745,15 +745,18 @@ gefilterde client-payload met leak-canary's, kaart-identiteit veilig door de ser
 heeft het remise-probleem opgeheven. De doctrine-keuze was het laatste engine-gat en zit er sinds
 F4.0 in (zie F4.3). Wat de verkenning aan ECHTE resterende gaten vond:
 
-- **MatchLog slaat `now_ms` niet op** en fold speelt zonder tijd af: een partij mét klokken is niet
-  hash-getrouw te folden (turn_deadline zit in de hash). Fixen vóór de server klokken aanzet.
+- ~~**MatchLog slaat `now_ms` niet op**~~ **GEDICHT (F4.0b, 9 augustus):** de entry draagt nu
+  `now_ms` (alleen als er echt een tijd was — oude logs byte-identiek) en fold speelt ermee af;
+  `test_f4_klokpartij_foldt_hash_getrouw` bewijst per-actie-hash-verificatie op een klok-partij.
 - **game.gd rendert van de volle staat** en gebruikt de views nergens; geheimen worden handmatig
   afgedekt in de renderer. Render-vanaf-snapshot (F4.3) is dus echt de grote clientklus.
 - **`acknowledge_reveal()` is een shim die voor BEIDE spelers ackt** — online moet de client naar
   `submit_ack_reveal(eigen_id)`, de shim mag daar nooit heen.
-- **EV_CYCLE_ADMIN/EV_CP_ADMIN** dragen beide pools/saldi: de event-stream naar clients moet ze per
-  speler redigeren (staat als eis in de reducer-comments), net als DEFINE/CHOOSE_DOCTRINE-acties in
-  het rauwe log.
+- ~~**EV_CYCLE_ADMIN/EV_CP_ADMIN** dragen beide pools/saldi~~ **GEDICHT (F4.0c, 9 augustus):**
+  `View.client_events()` is de verplichte doorgang voor elke event-stream naar een client en houdt
+  de twee server/log-only events tegen (eigen saldi bereiken de client al via zijn view; de
+  battlereport leest ze post-match uit het log). Let op: het RAUWE log zelf blijft server-only —
+  DEFINE/CHOOSE_DOCTRINE-acties daarin dragen de blinde keuzes.
 - **Web-spike is 0%**: geen export_presets.cfg, Forward+/D3D12, Jolt, en de AI draait op een Thread
   (game.gd:1604) — werkt niet in een single-threaded webbuild.
 - **De verrassings-loting** van de tegenstander-factie gebruikt bewust ongeseede randi()

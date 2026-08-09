@@ -153,6 +153,24 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	}
 
 
+## F4.0c — de event-stream naar een client. De reducer-events zijn vrijwel
+## allemaal al blind-veilig (commit-events dragen alleen een player_id), maar
+## twee zijn expliciet server/log-only omdat hun payload de saldi van BEIDE
+## kanten draagt: EV_CYCLE_ADMIN (pools) en EV_CP_ADMIN (bets + saldi). Die
+## blijven bij de server; de battlereport leest ze post-match uit het log, en
+## de eigen saldi bereiken de client toch al via zijn view. Alles wat hier
+## doorheen komt mag 1-op-1 naar elke client — de canary in ViewTests bewaakt
+## dat deze lijst niet stilletjes achterloopt op nieuwe events.
+static func client_events(events: Array) -> Array:
+	var uit: Array = []
+	for ev in events:
+		var t := String(ev.type)
+		if t == Reducer.EV_CYCLE_ADMIN or t == Reducer.EV_CP_ADMIN:
+			continue
+		uit.append(ev)
+	return uit
+
+
 ## C13 (besluit Max, 29 juli): schutkleur valt ook weg als er een ACTIEVE
 ## vijandelijke pion NAAST hem staat -- van zo dichtbij zie je wie je voor je
 ## hebt. Puur een kijk-regel: de staat verandert niet, dus replays en goldens

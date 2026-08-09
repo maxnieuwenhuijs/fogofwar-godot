@@ -28,15 +28,24 @@ func setup(initial_state: GameState, extra_meta: Dictionary = {}) -> void:
 ## Eén geaccepteerde actie bijschrijven (met post-actie-hash als checksum).
 ## with_hash=false (F1.4-fuzz): sla de sha256 per actie over — de fold-
 ## vergelijking op de eindstaat vangt afwijkingen alsnog, tegen 10k games/nacht.
-func record(player_id: int, action: Dictionary, events: Array, state_after: GameState, with_hash: bool = true) -> void:
-	entries.append({
+##
+## now_ms (F4.0b): de kloktijd waarmee de actie is toegepast. ZONDER dit veld
+## is een partij mét klokken niet na te spelen: de reducer zet turn_deadline en
+## eet de bank op basis van now_ms, en die velden zitten in de hash — een fold
+## zonder tijd geeft dan gegarandeerd een hash-mismatch. -1 (alle bestaande
+## aanroepers, klokken uit) laat het veld weg: oude logs blijven byte-identiek.
+func record(player_id: int, action: Dictionary, events: Array, state_after: GameState, with_hash: bool = true, now_ms: int = -1) -> void:
+	var entry := {
 		"seq": entries.size(),
 		"player_id": player_id,
 		"action": Actions.to_dict(action),
 		"events": _jsonify(events),
 		"hash": Zobrist.state_hash(state_after) if with_hash else "",
 		"ts": Time.get_unix_time_from_system(),
-	})
+	}
+	if now_ms >= 0:
+		entry["now_ms"] = now_ms
+	entries.append(entry)
 
 
 ## Replay: beginstaat reconstrueren en alle acties opnieuw toepassen.
@@ -46,7 +55,9 @@ static func fold(initial_state_dict: Dictionary, log_entries: Array, verify_hash
 	var s: GameState = Serializer.state_from_dict(initial_state_dict)
 	for e in log_entries:
 		var action: Dictionary = Actions.from_dict(e.action)
-		var res: Dictionary = Reducer.apply(s, action, int(e.player_id))
+		# F4.0b: speel met dezelfde kloktijd af als de opname (afwezig = -1,
+		# het klokloze pad — precies wat elke pre-F4-log deed).
+		var res: Dictionary = Reducer.apply(s, action, int(e.player_id), int(e.get("now_ms", -1)))
 		if not res.ok:
 			return {"ok": false, "seq": int(e.seq), "fout": "actie geweigerd: %s" % res.error, "state": s}
 		if verify_hashes and String(e.hash) != "":

@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## 9 augustus (later) -- F4.0b+c: kloktijd in het log, event-stream gefilterd
+
+De twee bovenste restgaten uit de F4-nulmeting, allebei klein maar dragend:
+
+**F4.0b — het log draagt nu de kloktijd.** De reducer zet `turn_deadline` en
+eet de bank op basis van `now_ms`, en die velden zitten in de zobrist-hash.
+Maar `MatchLog.record` sloeg de tijd niet op en `fold` speelde zonder tijd af:
+elke partij MET klokken was dus niet hash-getrouw na te spelen -- precies het
+mechanisme waar reconnect, replay-verificatie en de F4.5-solo-sync op leunen.
+Nu: `record(..., now_ms)` schrijft het veld alleen als er echt een tijd was
+(oude logs blijven byte-identiek), `fold` geeft het door aan `Reducer.apply`.
+GameSession's `submit_claim_timeout` loopt nu ook gewoon door `_apply_action`
+(scheelt een gedupliceerd pad) en de tijd reist mee het log in.
+
+**F4.0c — `View.client_events()` is de poort voor de event-stream.** De
+reducer-events zijn bijna allemaal blind-veilig, maar EV_CYCLE_ADMIN en
+EV_CP_ADMIN dragen de saldi van BEIDE kanten en stonden al sinds F2.2 in de
+code gemarkeerd als "server/log-only, de F4-event-stream MOET dit redigeren".
+Die verplichting is nu een functie in plaats van een comment: de filter houdt
+die twee tegen, al het andere gaat 1-op-1 door. Eigen saldi bereiken de client
+toch al via zijn view; de battlereport leest ze post-match uit het log.
+Canary-test op zowel synthetische als echte reducer-events (een campagne-
+define met CP-inzet produceert het admin-event; na de filter is hij weg en de
+reveal niet).
+
+Daarmee is de F4-nulmetinglijst: twee van de zeven dicht op de eerste avond.
+De volgende drie zijn clientwerk (render-vanaf-snapshot, camera-flip,
+ack-shim) en twee zijn serverwerk zodra Docker er staat.
+
+
 ## 9 augustus (middag) -- F4 gestart: verkenning + de factie-keuze zit in de engine
 
 Max: "lets go online." F4 is open. Eerst vijf verkenners de code in gestuurd om

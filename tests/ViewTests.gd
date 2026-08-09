@@ -245,3 +245,44 @@ func test_f4_doctrine_keuze_lekt_niet() -> void:
 	var na: Dictionary = View.for_player(s, 2)
 	assert_eq(int((na.doctrines as Dictionary)["1"]), Constants.Doctrine.VOS, "na de reveal openbaar")
 	assert_eq(int(na.own_doctrine_commit), -1, "commits zijn weer leeg")
+
+
+## F4.0c -- de event-stream naar clients: de twee server/log-only events (met
+## beide saldi in de payload) blijven achter, al het andere gaat 1-op-1 door.
+func test_f4_client_events_redigeert_admin() -> void:
+	# Synthetisch: elk relevant type een keer, de filter kent er precies twee.
+	var stroom: Array = [
+		{"type": Reducer.EV_STATE, "payload": {}},
+		{"type": Reducer.EV_CYCLE_ADMIN, "payload": {"cycle": 2, "pools": {"1": {"pt": 9}, "2": {"pt": 4}}}},
+		{"type": Reducer.EV_SPAWN_COMMITTED, "payload": {"player_id": 1}},
+		{"type": Reducer.EV_CP_ADMIN, "payload": {"bets": {"1": 2, "2": 0}, "saldi": {"1": 8, "2": 10}}},
+		{"type": Reducer.EV_DOCTRINE_COMMITTED, "payload": {"player_id": 2}},
+	]
+	var door: Array = View.client_events(stroom)
+	assert_eq(door.size(), 3, "twee admin-events blijven bij de server")
+	assert_false(JSON.stringify(door).contains("pools"), "geen pools in de client-stream")
+	assert_false(JSON.stringify(door).contains("saldi"), "geen saldi in de client-stream")
+	# En op ECHTE reducer-events: een campagne-define met CP-inzet produceert
+	# EV_CP_ADMIN bij de reveal; na de filter is die weg en de reveal niet.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {"pool_model": "punten", "pools": {"1": 12, "2": 12}}})
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	s.init_pools()
+	s.phase = Phase.Type.PLACEMENT
+	assert_true(Reducer.apply(s, Actions.make_place(s.default_placement(1)), 1).ok)
+	assert_true(Reducer.apply(s, Actions.make_place(s.default_placement(2)), 2).ok)
+	var kaarten: Array = [{"hp": 3, "stamina": 2, "attack": 2},
+		{"hp": 2, "stamina": 2, "attack": 3}, {"hp": 2, "stamina": 3, "attack": 2}]
+	assert_true(Reducer.apply(s, Actions.make_bet_cp(1), 1).ok, "CP-inzet p1")
+	assert_true(Reducer.apply(s, Actions.make_define_cards(kaarten), 1).ok)
+	var laatste: Dictionary = Reducer.apply(s, Actions.make_define_cards(kaarten), 2)
+	assert_true(laatste.ok)
+	var typen_voor: Array = []
+	for ev in laatste.events:
+		typen_voor.append(String(ev.type))
+	assert_true(typen_voor.has(Reducer.EV_CP_ADMIN), "de reveal draagt het admin-event")
+	var geredigeerd: Array = View.client_events(laatste.events)
+	for ev in geredigeerd:
+		assert_true(String(ev.type) != Reducer.EV_CP_ADMIN, "maar de client krijgt hem nooit")
+	assert_true(JSON.stringify(geredigeerd).contains(Reducer.EV_CARDS_REVEALED), "de reveal zelf gaat gewoon door")

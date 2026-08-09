@@ -125,14 +125,7 @@ func submit_cannon_shoot(player_id: int, pawn_id: int, target_id: int) -> bool:
 ## Timeout claimen (F0.8) — offline is game.gd de klok-autoriteit en geeft
 ## die zijn eigen now_ms mee; online wordt dat de server (F4).
 func submit_claim_timeout(player_id: int, now_ms: int) -> bool:
-	var action := Actions.make_claim_timeout()
-	var res: Dictionary = Reducer.apply(state, action, player_id, now_ms)
-	if not res.ok:
-		error_occurred.emit(player_id, res.error)
-		return false
-	_record(player_id, action, res.events)
-	_relay_events(res.events)
-	return true
+	return _apply_action(player_id, Actions.make_claim_timeout(), now_ms)
 
 func skip_wolf_step(player_id: int) -> bool:
 	# Stil bij weigering (bestaand gedrag: geen error_occurred-signaal).
@@ -146,18 +139,20 @@ func skip_wolf_step(player_id: int) -> bool:
 
 ## F0.4a-shim: actiefase-acties gaan door Reducer.apply; de events worden
 ## 1-op-1 naar de bestaande signals vertaald zodat game.gd niets merkt.
-func _apply_action(player_id: int, action: Dictionary) -> bool:
-	var res: Dictionary = Reducer.apply(state, action, player_id)
+## now_ms (F4.0b): kloktijd van de aanroeper; -1 = klokloos (de hele offline
+## flow). Reist door naar het log, anders is een klok-partij niet na te spelen.
+func _apply_action(player_id: int, action: Dictionary, now_ms: int = -1) -> bool:
+	var res: Dictionary = Reducer.apply(state, action, player_id, now_ms)
 	if not res.ok:
 		error_occurred.emit(player_id, res.error)
 		return false
-	_record(player_id, action, res.events)
+	_record(player_id, action, res.events, now_ms)
 	_relay_events(res.events)
 	return true
 
-func _record(player_id: int, action: Dictionary, events: Array) -> void:
+func _record(player_id: int, action: Dictionary, events: Array, now_ms: int = -1) -> void:
 	if match_log != null:
-		match_log.record(player_id, action, events, state)
+		match_log.record(player_id, action, events, state, true, now_ms)
 
 func _relay_events(events: Array) -> void:
 	for ev in events:

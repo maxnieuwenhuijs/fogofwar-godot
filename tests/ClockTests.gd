@@ -153,3 +153,40 @@ func test_timeout_in_linking_koppelt_automatisch() -> void:
 	assert_true(res.ok)
 	assert_eq(vrij.linked_card_id, kaart.id, "timeout koppelt automatisch de eerste legale optie")
 	assert_false(Phase.is_linking(s.phase), "geen koppelwerk meer -> fase schuift door")
+
+
+## F4.0b -- een partij MET klokken moet hash-getrouw uit het log te folden
+## zijn. De reducer zet turn_deadline en eet de bank op basis van now_ms, en
+## die velden zitten in de zobrist-hash; zonder de tijd in de log-entry faalt
+## elke per-actie-verificatie van een online partij. Dit was gat 1 uit de
+## F4-nulmeting van 9 augustus.
+func test_f4_klokpartij_foldt_hash_getrouw() -> void:
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"clock": {"bank_sec": 60, "increment_sec": 5}})
+	var log := MatchLog.new()
+	log.setup(s)
+	var klok: int = 1000
+	var stappen: Array = [
+		[Actions.make_choose_doctrine(Constants.Doctrine.MUIS), 1],
+		[Actions.make_choose_doctrine(Constants.Doctrine.BEER), 2],
+	]
+	for stap in stappen:
+		klok += 700
+		var res: Dictionary = Reducer.apply(s, stap[0], stap[1], klok)
+		assert_true(res.ok, "actie hoort te slagen (kreeg: %s)" % res.error)
+		log.record(stap[1], stap[0], res.events, s, true, klok)
+	klok += 700
+	var pl1: Dictionary = Reducer.apply(s, Actions.make_place(s.default_placement(1)), 1, klok)
+	assert_true(pl1.ok)
+	log.record(1, Actions.make_place(s.default_placement(1)), pl1.events, s, true, klok)
+	assert_true(s.turn_deadline > 0, "de klok loopt")
+	# Met now_ms in de entries: fold reproduceert elke hash exact.
+	var uitkomst: Dictionary = MatchLog.fold(log.meta.initial_state, log.entries, true)
+	assert_true(uitkomst.ok, "klok-fold hoort te slagen (kreeg: %s)" % String(uitkomst.get("fout", "")))
+	assert_eq(Zobrist.state_hash(uitkomst.state), Zobrist.state_hash(s), "eindstaat identiek")
+	# En de entries dragen de tijd; een klokloze entry (oude logs) blijft zonder.
+	assert_true(log.entries[0].has("now_ms"), "kloktijd zit in de entry")
+	var oud := MatchLog.new()
+	oud.setup(GameState.new())
+	oud.record(1, Actions.make_choose_doctrine(0), [], GameState.new())
+	assert_false(oud.entries[0].has("now_ms"), "zonder tijd geen veld (oude logs byte-identiek)")
