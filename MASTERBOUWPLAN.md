@@ -143,7 +143,7 @@ tests/                unit-suites  golden_replays/  fuzz/
 
 **Stand op 8 augustus 2026:** F0, F1, F2 en F3 zijn AF — alle substappen afgevinkt. Het spel is
 speelbaar van begin tot kampioen, de regels staan (4.3.1, met V0 en de C15-buit), en de facties zijn
-op meetdata afgesteld tot een spreiding van 12,6 procentpunt (C19; was 48). **Volgende fase is F4 (online).**
+op meetdata afgesteld tot een spreiding van ongeveer 12 procentpunt (C19/C20; was 48). **Volgende fase is F4 (online).**
 
 Twee dingen die je moet weten voordat je verder bouwt:
 

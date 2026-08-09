@@ -1,6 +1,6 @@
 # Fog of War — Work In Progress & Context
 
-## 9 augustus -- C20: Krokodil krijgt startpunten, band naar 7,8 procentpunt
+## 9 augustus -- C20: Krokodil krijgt startpunten (+2,3 procentpunt)
 
 Drie dingen op een dag: de trainer en de factiezoeker zijn allebei uitgeconvergeerd,
 mijn balanscijfer van gisteren bleek te mooi, en Krokodil is gerepareerd.
@@ -23,12 +23,25 @@ partijen geen uitspraken over een paar procentpunt.**
 
 **Krokodil, drie kandidaten:**
 
-| kandidaat | Krokodil | spreiding | |
-|---|---|---|---|
-| ervoor | 42,4% | 12,6 pp | |
-| budget 6 → 7 | 69,3% (+26,9) | 27,1 pp | afgewezen |
-| schutkleur-perk terug | 44,4% (+2,0) | 10,8 pp | te weinig |
-| **+3 startpunten** | **45,8% (+3,4)** | **7,8 pp** | **aangenomen** |
+| kandidaat | Krokodil | spreiding | n | |
+|---|---|---|---|---|
+| ervoor | 42,4% | 12,6 pp | 6480 | |
+| budget 6 → 7 | 69,3% (+26,9) | 27,1 pp | 2160 | afgewezen |
+| schutkleur-perk terug | 44,4% (+2,0) | 10,8 pp | 1080 | te weinig |
+| +3 startpunten (afstelrun) | 45,8% (+3,4) | 7,8 pp | 1080 | |
+| **+3 startpunten, verse seeds** | **44,7% (+2,3)** | **11,9 pp** | **2160** | **aangenomen** |
+
+**En daar ging ik voor de derde keer op dezelfde manier de mist in.** Ik nam het
+besluit op de afstelrun van 1080 partijen (marge ±2,6) en schreef "band naar 7,8"
+op — in dezelfde entry waarin ik de vuistregel "onder ~2000 partijen geen
+uitspraken" formuleerde. De bevestiging op verse seeds zegt 11,9. Het echte
+effect van C20 is Krokodil +2,3 procentpunt (marge ±2,2, dus net-aan
+significant); de band wordt er niet merkbaar smaller van en Beer is met 56,7% de
+nieuwe bovenkant. C20 blijft staan, want het is de goede richting voor de
+zwakste factie, maar het is een duwtje en geen doorbraak.
+
+**Werkafspraak, nu echt:** stel af op minstens 2160 partijen, en bevestig op
+VERSE seeds voordat er een getal in een document komt.
 
 Wat we daarvan leren is meer waard dan het resultaat:
 

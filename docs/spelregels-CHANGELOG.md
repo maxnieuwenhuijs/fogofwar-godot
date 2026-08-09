@@ -1,18 +1,30 @@
 # Spelregels — CHANGELOG
 
-## C20 — 9 augustus 2026 (Krokodil krijgt startcompensatie, band naar 7,8)
+## C20 — 9 augustus 2026 (Krokodil krijgt startcompensatie: +2,3 procentpunt)
 
 *Besluit Max: "+3 startpunten doe maar."* Krokodil stond met 42,4% als enige
 noemenswaardig onder het midden (zie de correctie hieronder). Hij krijgt nu
 `budget_bonus` **+3 startpunten**, net als Beer, in `campaign.budget_bonus["5"]`.
 
-| | Krokodil | band | spreiding |
-|---|---|---|---|
-| ervoor | 42,4% | 42,4-55,0 | 12,6 pp |
-| **+3 startpunten** | **45,8%** | **45,6-53,3** | **7,8 pp** |
+| | Krokodil | band | spreiding | n |
+|---|---|---|---|---|
+| ervoor | 42,4% | 42,4-55,0 | 12,6 pp | 6480 |
+| afstelrun | 45,8% | 45,6-53,3 | 7,8 pp | 1080 |
+| **bevestiging, verse seeds** | **44,7%** | **44,7-56,7** | **11,9 pp** | **2160** |
 
-1080 partijen, alle 36 matchups, nul afkappingen, marge ±2,6. De smalste band
-die dit spel ooit gemeten heeft; beginstand in juli was 48 procentpunt.
+**Neem de onderste rij.** Het echte effect is **Krokodil +2,3 procentpunt**
+(42,4 → 44,7), met een gecombineerde marge van ±2,2 dus net-aan significant. De
+spreiding gaat van 12,6 naar 11,9 en dat verschil is ruis: de band wordt er niet
+merkbaar smaller van, Beer schuift juist naar 56,7 en is nu de bovenkant.
+
+De 7,8 uit de afstelrun was een gelukkige greep op 1080 partijen (marge ±2,6) —
+dezelfde fout als het "4,4" van 8 augustus, en gemaakt in dezelfde week dat de
+vuistregel eronder is opgeschreven. **Stel af op minstens 2160 partijen en
+bevestig altijd op verse seeds voordat je een getal opschrijft.**
+
+C20 blijft staan: het is een kleine verbetering voor de zwakste factie en
+schaadt niets. Maar het is een duwtje, geen doorbraak; de band van dit ontwerp
+ligt rond de 12 procentpunt. Beginstand in juli was 48.
 
 ### Drie kandidaten gemeten, en dat was het hele punt
 
@@ -22,7 +34,7 @@ Max vroeg eerst om een kaartbudgetpunt. Dat is gemeten en **afgewezen**:
 |---|---|---|---|
 | budget 6 → 7 | 69,3% (+26,9) | 27,1 pp | afgewezen: van zwakste naar veruit sterkste |
 | schutkleur-perk terug (C13 ongedaan) | 44,4% (+2,0) | 10,8 pp | te weinig |
-| **+3 startpunten** | **45,8% (+3,4)** | **7,8 pp** | **aangenomen** |
+| **+3 startpunten** | **44,7% (+2,3)** | **11,9 pp** | **aangenomen** |
 
 - **Een kaartbudgetpunt is geen afstelknop.** 2160 partijen: +26,9 procentpunt,
   terwijl de hele band 12,6 breed was. Je verplaatst er een factie mee, je stelt

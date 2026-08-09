@@ -217,9 +217,10 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 Krokodil krijgt sinds C20 (9 augustus) **+3 startpunten** compensatie via
 `campaign.budget_bonus["5"]` — geen kaartbudget maar voorraad; zie §11c.
 
-Gemeten evenwicht daarna: band **45,6-53,3%, spreiding 7,8 procentpunt** (1080
-partijen, alle 36 matchups). Daarvóór, over 6480 partijen: Beer 55,0 · Varken
-54,7 · Leeuw 52,1 · Wolf 48,9 · Muis 46,9 · Krokodil 42,4, dus 12,6 procentpunt.
+Gemeten evenwicht daarna, op verse seeds (2160 partijen): Beer 56,7 · Varken
+53,2 · Leeuw 51,0 · Wolf 48,9 · Muis 45,6 · Krokodil 44,7. Band **44,7-56,7%,
+spreiding 11,9 procentpunt**. Daarvóór, over 6480 partijen: 42,4-55,0, dus 12,6.
+C20 gaf Krokodil +2,3 procentpunt en liet de band verder zoals hij was.
 Twee manieren om te winnen
 staan naast elkaar: Beer haalt 93% van zijn zeges met rennen, Leeuw 100% met
 slachten, en ze staan allebei rond de 53%. Over de hele run eindigt 51% van de

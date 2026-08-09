@@ -40,15 +40,18 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  Gemeten na C20: band **45,6-53,3%, spreiding 7,8 procentpunt** (1080 partijen,
-  alle 36 matchups). Daarvoor 42,4-55,0 / 12,6 over 6480 partijen; in juli 48.
+  Gemeten na C20 op verse seeds (2160 partijen): band **44,7-56,7%, spreiding
+  11,9 procentpunt**. Daarvoor 42,4-55,0 / 12,6 over 6480 partijen; in juli 48.
+  C20 gaf Krokodil +2,3 en liet de band verder zoals hij was. Beer is nu met
+  56,7% de bovenkant.
   (Een eerder gemeld "4,4" kwam uit 1152 partijen met een foutmarge van ±3,6 per
   factie: te klein voor die uitspraak. Vuistregel: onder ~2000 partijen geen
   conclusies over een paar procentpunt.) **Muis en Beer hebben nul artillerie**, en `kent_type()`
   verbiedt ze er dus ook een te spawnen: geen kanon-model, geen gibs, geen
   `cannon_die_<factie>` voor die twee. Controleer de actuele stand altijd met
   `-- facties`, nooit door `constants.gd` te lezen. Welke knop hoeveel doet:
-  kaartbudget ~30 procentpunt per punt, cavalerie ~18 per ruiter, infanterie en
+  kaartbudget ~27 procentpunt per punt (gemeten op 2160 partijen: Krokodil
+  6 → 7 gaf +26,9), cavalerie ~18 per ruiter, infanterie en
   legergrootte vrijwel niets, artillerie -21 voor een renner en neutraal voor
   een slachter.
 - **V0 — GEEN GELIJKSPEL (4.3.0)**: een duel eindigt op de **haven** of op
@@ -208,7 +211,7 @@ en dat is nu op vier punten gebeurd:
 - **C15-buit (4.3.1).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
   tamboer 2 CP, alleen bij een ongekoppeld slachtoffer.
 - **C19 — de facties staan (8 augustus).** Zie de tabel bij de kernregels
-  hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 45,6-53,3%;
+  hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 44,7-56,7%;
   was 28-76% in juli.
 
 **Wat nu open staat:** de bots zijn nog niet hertraind op deze facties (hun

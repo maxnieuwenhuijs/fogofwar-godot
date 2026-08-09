@@ -20,7 +20,7 @@ bewust maar één regelset (besluit C17).
   cyclus de pion die het verst van zijn doelhaven staat. Dus geen remise, geen
   cycluslimiet, geen eindeloze partijen.
 - **Zes facties** met eigen legers, kaartbudgetten en perks (stand 8 augustus
-  2026, gemeten op 45,6-53,3% winst):
+  2026, gemeten op 44,7-56,7% winst over 2160 partijen):
 
   | Factie | Kaarten | Budget | Leger [inf,cav,art] | Perk |
   |---|---|---|---|---|
