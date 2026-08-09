@@ -1,5 +1,50 @@
 # Fog of War — Work In Progress & Context
 
+## 9 augustus (avond) -- F4.1 af: de backend staat, ondanks Docker
+
+**Het skelet van de online-server bestaat en zijn tests zijn groen.** `server/`
+is een Node 22 + Fastify-backend met het schema uit bouwplan §5.1 (users,
+sessies, vrienden, matches, seats, event-log, snapshots; ratings en
+campagnetabellen alvast leeg erbij, arena-tabellen bewust niet -- B10),
+accounts §9.1 (gast-eerst op device-token, e-mail-upgrade voor cross-device,
+profaniteitsfilter met leet-normalisatie, avatar, vriendcodes in het
+31-alfabet) en het actieprotocol uit §10: `POST /matches/:id/acties` met
+`seq_expected` + `idem_key`, idempotentie via een unieke database-index,
+seq-conflict = 409 mét inhaal-events, WebSocket per match plus een
+inhaal-endpoint. Contract in `docs/protocol.md`. In F4.1 echoot de server
+acties (`action_accepted`); F4.2 hangt de Godot-worker ertussen die er echte
+reducer-events van maakt, zonder de 200/409/idem-semantiek te raken.
+
+**De Docker-saga, voor wie hier later iets mee moet.** Docker Desktop start op
+deze machine niet. Elke start maakt AF_UNIX-socketbestanden aan
+(`run/dockerInference`, `docker-secrets-engine/engine.sock`) en crasht bij een
+VOLGENDE start op het verwijderen ervan: fout 1920, "het systeem kan geen
+toegang verkrijgen tot het bestand". Die bestanden zijn ook handmatig
+onverwijderbaar -- del, fsutil reparsepoint delete: alles 1920 -- en dat
+overleeft een herstart van Windows, dus het zijn geen vastgehouden handles
+maar kapotte/geblokkeerde reparse-points (Windows 11 26200, alleen Defender).
+Mappen HERNOEMEN werkt wel, maar elke nieuwe crash laat nieuwe restanten
+achter: klop-de-mol. Vier startpogingen, toen gestopt met vechten.
+
+**De uitweg stond al in het masterplan: lokale MySQL.** MySQL 8.0.44 als
+zip-zonder-installatie in `~/fogofwar-mysql/` (geen adminrechten, alleen
+127.0.0.1:3316), starten met `server/db-lokaal.ps1`. De integratietests
+kregen een schakelaar: `FOW_TEST_DB_URL` gezet = die server (de database uit
+de URL wordt per run GEWIST), niet gezet = testcontainers zoals gepland (CI).
+Zelfde tests, zelfde dekking. Redis is pas in F4.2 nodig (de worker is de
+enige consument); tegen die tijd Memurai lokaal of Docker op de droplet.
+
+Onderweg nog twee lessen: vitest/vite zoekt omhoog naar een postcss-config en
+vond er een uit een ANDER project in de thuismap (opgelost met een eigen
+`vitest.config.ts`: css.postcss leeg), en de migratie-splitser gooide een heel
+SQL-blok weg omdat het met commentaarregels begon (commentaar wordt nu per
+regel gestript -- de FK-fout "Failed to open the referenced table" was het
+symptoom).
+
+Checks: `npx tsc --noEmit` schoon, 8/8 integratietests groen tegen een echte
+MySQL 8.0.44. De Godot-kant is deze commit niet aangeraakt.
+
+
 ## 9 augustus (later) -- F4.0b+c: kloktijd in het log, event-stream gefilterd
 
 De twee bovenste restgaten uit de F4-nulmeting, allebei klein maar dragend:

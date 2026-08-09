@@ -8,3 +8,7 @@ _shot*.png.import
 # Arena-uitvoer (reproduceerbaar uit config+seed, B10)
 results/
 __pycache__/
+
+# F4 Node-backend
+server/node_modules/
+server/dist/

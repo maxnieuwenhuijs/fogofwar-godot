@@ -214,10 +214,14 @@ en dat is nu op vier punten gebeurd:
   hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 44,7-56,7%;
   was 28-76% in juli.
 
-**F4 (online) is op 9 augustus geopend.** De nulmeting staat in het masterplan
-onder F4: vrijwel elk engine-gat uit het online-plan van 3 juli bleek al
-gedicht door F0.4-F0.8; F4.0 (blinde factie-keuze als CHOOSE_DOCTRINE-actie in
-PRE_GAME) is af. De backend (F4.1, Node+MySQL+Redis) wacht op Docker Desktop
-op deze machine; het clientvoorwerk (F4.3) kan zonder. De bots zijn na C19/C20
-getraind tot een plateau; het asset-spoor (modellen, geluid) loopt los van
-alles en blokkeert niets.
+**F4 (online) is op 9 augustus geopend en F4.0 + F4.1 zijn af.** De nulmeting
+staat in het masterplan onder F4. F4.0: blinde factie-keuze als
+CHOOSE_DOCTRINE-actie, kloktijd in het log, `View.client_events()`. F4.1: de
+Node+Fastify-backend in `server/` (accounts, matches, idempotent
+actieprotocol; contract in `docs/protocol.md`). **Docker Desktop start op deze
+machine NIET** (Windows-AF_UNIX-bug, zie WIP 9 augustus): de database is een
+lokale MySQL 8.0.44 zonder Docker, starten met `server/db-lokaal.ps1`, tests
+met `FOW_TEST_DB_URL=mysql://root@127.0.0.1:3316/fogofwar_test`. Volgende
+stappen: F4.2 (Godot-worker) en F4.3 (client: render-vanaf-snapshot,
+camera-flip). De bots zijn na C19/C20 getraind tot een plateau; het
+asset-spoor loopt los van alles en blokkeert niets.

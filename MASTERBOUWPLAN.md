@@ -735,7 +735,13 @@ client-voorwerk uit het online-plan (camera-flip, render-from-snapshot, web-spik
 
 **Prereq:** Docker Desktop geïnstalleerd en gestart (voor testcontainers-MySQL/Redis in de
 integratietests); anders fallback: lokale MySQL + `DB_URL`-env. Check dit als eerste substap.
-*Stand 9 augustus: geen van beide staat op de machine — F4.1 wacht daarop; het voorwerk hieronder niet.*
+*Stand 9 augustus: Docker Desktop is geïnstalleerd maar start op deze machine NIET — Windows-bug
+waarbij AF_UNIX-socketbestanden onverwijderbare reparse-points worden (fout 1920, overleeft een
+herstart; elke crash laat nieuwe achter). Na vier startpogingen is de FALLBACK in gebruik: een
+lokale MySQL 8.0.44 zonder Docker in `~/fogofwar-mysql/` (start: `server/db-lokaal.ps1`). De
+integratietests zijn tweetalig: `FOW_TEST_DB_URL` gezet = die server (database wordt per run
+gewist), niet gezet = testcontainers (CI). Redis is pas in F4.2 echt nodig; tegen die tijd:
+Memurai of Docker op de droplet.*
 
 **Nulmeting F4 (9 augustus, vijf verkenners over de code).** Het online-plan van 3 juli somde
 engine-gaten op; daarvan bestaat inmiddels vrijwel alles, want F0.4-F0.8 zijn erna gebouwd:
@@ -777,7 +783,18 @@ blijft hash-identiek. GameSession: `start_new_game_pre_game()`, `submit_choose_d
 `doctrines_revealed`. CHECK: 1695 asserts groen (blinde gate, pools-boeking, legal_actions,
 timeout-default, rondreis, lek-test), simcheck 0 afwijkingen, fuzz 60/0.
 
-### ☐ F4.1 — Backend-skelet + datamodel + accounts
+### ☑ F4.1 — Backend-skelet + datamodel + accounts — AF (9 augustus 2026)
+
+Gebouwd zoals hieronder gepland, met twee eerlijke doorschuivingen: **OAuth** is een latere extra
+loginmethode (de e-mail-upgrade dekt cross-device al; de flow gast → e-mail → login op een tweede
+apparaat is getest), en de **Redis-queue** landt in F4.2 samen met zijn enige consument (de worker).
+Het actieprotocol accepteert acties nu als transport (`action_accepted`-echo, exact
+`Actions.to_dict`-formaat); F4.2 vervangt de echo door echte reducer-events zonder de
+200/409/idem-semantiek te raken. CHECK gehaald: 8 integratietests tegen een echte MySQL — actie →
+event met dicht seq, dubbele idem_key → geen duplicaat (unieke index, geen check-then-act), 
+seq-conflict → 409 mét inhaal-events en een geslaagde herindiening, gast-upgrade-flow,
+profaniteitsfilter (ook leet-speak), buitenstaander → 403. Zie `server/README.md` en
+`docs/protocol.md`.
 
 **Bestanden:** `server/` (Node 22 + Fastify), `server/db/migrations/*` (MySQL), Redis, `docs/protocol.md`.
 
