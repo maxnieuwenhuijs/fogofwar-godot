@@ -20,6 +20,18 @@ bestaan voor deze drie niet -- prompts staan in MODEL-WISHLIST par. 7b).
 
 Les voor de inventaris: nooit een `find | head` als volledigheids-check.
 
+**Max' vervolgtest ving de echte bug: er vloog NOOIT een ledemaat af, bij
+geen enkele factie.** De bestanden waren goed; de runtime-koppeling niet.
+`_fling_single_gib` vergeleek gib-namen met `to_lower()`, maar Godot hernoemt
+`Arm.L.001` bij het importeren naar `Arm_L_001`, en "arm_l_001" bevat "arml"
+niet. Alleen het hoedje matchte (geen scheidingsteken in de naam), dus doden
+oogden levendig genoeg om dit maandenlang te verbergen. De levende kant
+gebruikte al de kale-naam-functie (strip alles behalve letters); nu de
+gib-kant ook -- een regel. Bewijs vooraf met een naam-dump over de echte
+scenes (oud=false, kaal=true voor arml/armr/legl/legr bij muis, beer en
+wolf), bewijs achteraf met `-- meleecheck` (PASS) en `-- play`. Het VOLLE
+uiteenklappen (kanon) werkte altijd al: dat pad pakt alle delen naamloos.
+
 **En de gib-vraag van Max ("komen de armen en benen wel los?") ving een oude
 bug.** Een meetscript (`tools/_gibcheck.gd`: delen tellen, hoogte-spreiding
 van de zwaartepunten, stapel-detectie) bewees dat de NIEUWE facties perfect

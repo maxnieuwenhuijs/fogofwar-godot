@@ -1515,7 +1515,12 @@ func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_sc
 	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
 	var chosen: Node3D = null
 	for part in parts_root.find_children("*", "MeshInstance3D", true, false):
-		if chosen == null and String(part.name).to_lower().contains(part_name):
+		# KAAL vergelijken, net als de levende kant (_shed_one): Godot maakt
+		# van "Arm.L.001" bij het importeren "Arm_L_001", en "arm_l_001"
+		# bevat "arml" niet. Met to_lower() matchte hier dus alleen het
+		# hoedje en vloog er NOOIT een ledemaat af, bij geen enkele factie
+		# (gevonden 15 augustus, toen Max het bij de nieuwe modellen miste).
+		if chosen == null and _kale_deelnaam(String(part.name)).contains(part_name):
 			chosen = part as Node3D
 		else:
 			(part as MeshInstance3D).visible = false
