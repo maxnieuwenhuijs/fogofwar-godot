@@ -15,3 +15,7 @@ server/dist/
 
 # F4.2-testcache (referentiepartij, regenereert vanzelf)
 server/test/.cache/
+
+# Inbox voor verse modeluploads (blend-bronnen, honderden MB's; de verwerkte
+# glb's landen in assets/models/ en gaan WEL mee)
+assets/new 3d models/

@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 15 augustus -- wasbeer- en hagedis-infanterie erin (Beer + Krokodil compleet)
+
+Max leverde tien .blend-bestanden in de inbox (`assets/new 3d models/`): de
+volledige infanterie-archetypes voor Beer (wasbeer) en Krokodil (hagedis),
+base/spd/hp/atk/mix. Alle tien verwerkt; het statusbord (`-- tunercheck`)
+staat nu op VIER complete infanterie-facties (muis, varken, leeuw, beer,
+krokodil = vijf zelfs) met gibs compleet en 0 fouten. Alleen de
+Wolf-infanterie (de vos) ontbreekt nog.
+
+**De route is nu een pijplijn** in plaats van handwerk:
+
+1. `tools/blender_export_blend.py` (nieuw): .blend -> geanimeerde .glb.
+   Verwijdert de `tripo_node*`-mesh (het onopgeknipte generator-origineel dat
+   naast de losse delen blijft hangen -- dubbele geometrie plus een tweede
+   4K-textureset), ruimt wees-afbeeldingen op, verkleint textures naar 1024
+   en exporteert met ACTIONS-modus (Mixamo-namen blijven; het spel vertaalt
+   ze bij het laden).
+2. `blender_merge_character.py --base <glb> --gibs` (bestond al): de
+   kwartslag-fix plus de statische gibs-glb uit de losse delen.
+
+Resultaat per model: ~1,3 MB geanimeerd (11 delen, 17 clips) + ~250 KB gibs.
+Ter vergelijking: de leeuw-modellen dragen het tripo-duplicaat WEL mee
+(inclusief een compleet lijf als gib-brok) -- daar staat een opruim-chip voor
+klaar (taak "Ontdubbel lion/pig-modellen").
+
+**Twee near-misses die de moeite van het onthouden waard zijn:** de inbox-map
+was NIET gitignored -- 984 MB aan blends was bij de volgende `git add -A`
+het repo ingegaan (nu in .gitignore, plus een .gdignore zodat de editor er
+niet in gaat scannen). En de teamkleur-textures (`_red`/`_blue` png's) zaten
+niet in de upload: beer en krokodil spelen net als de leeuw op hun ingebakken
+textuur tot Max die genereert (prompts in MODEL-WISHLIST par. 7).
+
+Checks: import schoon, tunercheck 0 fouten (25 van 30 infanterie-modellen
+geleverd, gibs compleet, tuner-opslag byte-identiek), cliplengtes vertaalt
+alle 17 clips correct per model, play draait.
+
+
 ## 9 augustus (avond, later) -- F4.2 af: de server is nu een scheidsrechter
 
 **De server echoot niet meer, hij oordeelt.** Elke actie die via
