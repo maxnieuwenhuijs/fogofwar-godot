@@ -20,6 +20,19 @@ bestaan voor deze drie niet -- prompts staan in MODEL-WISHLIST par. 7b).
 
 Les voor de inventaris: nooit een `find | head` als volledigheids-check.
 
+**En de gib-vraag van Max ("komen de armen en benen wel los?") ving een oude
+bug.** Een meetscript (`tools/_gibcheck.gd`: delen tellen, hoogte-spreiding
+van de zwaartepunten, stapel-detectie) bewees dat de NIEUWE facties perfect
+uiteenklappen (11 delen, spreiding ~0,8 zoals de muis-referentie) -- maar
+ving bij die referentie zelf een uitschieter: muis-atk had 12 delen waarvan
+een op 18 eenheden afstand. Bleek in TWAALF oude gibs-bestanden te zitten
+(heel leeuw, vier muis, drie varken): het tripo-duplicaat als spook-brokstuk
+dat bij een volle gib uit het niets komt aanvliegen.
+`tools/_strip_gib_verstekeling.py` heeft alle twaalf geschoond; de scan
+staat nu op nul verstekelingen over alle 30 gibs-bestanden. De GEANIMEERDE
+leeuw/varken-glbs dragen het duplicaat nog wel (alleen bloat, geen
+zichtbare fout) -- daarvoor staat een bijgewerkte opruim-chip klaar.
+
 
 ## 15 augustus -- wasbeer- en hagedis-infanterie erin (Beer + Krokodil compleet)
 
