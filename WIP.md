@@ -1,5 +1,26 @@
 # Fog of War — Work In Progress & Context
 
+## 15 augustus (vervolg) -- vos-infanterie + muis-musket: het modelbord is VOL
+
+Max wees op twee dingen die ik had gemist, allebei terecht. (1) De
+wolf-mappen STONDEN al in de inbox -- mijn eerste inventaris was afgekapt op
+40 regels en de wolf sorteerde achteraan. Alle vijf de vos-archetypes zijn
+alsnog door dezelfde pijplijn: tunercheck zegt nu 30/30 modellen, gibs
+compleet, 0 fouten -- ALLE ZES de infanterie-facties zijn binnen. (2) "De
+musketten zitten er ook in": in de vijftien blends bleek GEEN enkel
+musket-object te zitten (per blend gecontroleerd op mesh-namen), maar in de
+inbox-root lag wel de nooit verwerkte muis-base-musket van 5 augustus. Die
+staat nu als `infantry_base_musket.fbx` (+ twee png's met size_limit 1024 en
+mipmaps, conform checklist E) naast de andere vier muis-musketten.
+
+Wapenstand per factie: muis/varken/leeuw volledig bewapend; beer, krokodil
+en wolf spelen ONGEWAPEND tot hun musketten gegenereerd zijn (de zoeker
+`weapon_for` vindt per-model eerst, dan <factie>/musket.glb|fbx, en die
+bestaan voor deze drie niet -- prompts staan in MODEL-WISHLIST par. 7b).
+
+Les voor de inventaris: nooit een `find | head` als volledigheids-check.
+
+
 ## 15 augustus -- wasbeer- en hagedis-infanterie erin (Beer + Krokodil compleet)
 
 Max leverde tien .blend-bestanden in de inbox (`assets/new 3d models/`): de
