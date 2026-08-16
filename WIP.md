@@ -1,5 +1,61 @@
 # Fog of War — Work In Progress & Context
 
+## 16 augustus -- het ingebakken musket IS het wapen (idee van Max)
+
+Max zag wat ik over het hoofd bleef zien: "de animator neemt altijd de musket
+al mee in de animaties" -- waarom zouden we een stijve prop in de hand hangen
+als de generator het wapen al meebakt? Onderzoek bevestigde het mechanisme:
+de `tripo_node` is BOT-GEPARENT aan `mixamorig:RightHand` (geen skinning
+nodig), dus hij richt, draagt en steekt in elke Mixamo-clip exact mee. Godot
+maakt daar bij import vanzelf een BoneAttachment3D van.
+
+Omgebouwd ("ja dus voor alle facties he doe maar"):
+
+- `pawn_view.gd`: draagt het model een MEEBEWEGEND ingebakken wapen (geskind
+  of bot-geparent) en ligt er een musket-glb naast, dan blijft het ingebakken
+  musket gewoon zichtbaar -- geen prop, geen musket-tuning meer nodig. Bij de
+  dood wordt het bot-geparente mesh ZELF losgekoppeld en weggeslingerd:
+  exact vanaf de plek, stand en maat waarmee de pion hem vasthield (idee van
+  Max: "als iemand sterft net als een gibs spawnen vanaf die plek dat hij
+  het vast houdt"). Geskinde exemplaren: verbergen + statische glb op de
+  handpositie. Team-texture blijft van het wapen af (eigen atlas). Vangrails:
+  figuranten (trommel/vaandel), statische bakken en modellen zonder
+  musket-glb vallen automatisch terug op de oude prop-route.
+- `blender_export_blend.py` houdt het musket voortaan IN de karakter-export
+  (`--zonder-wapen` voor het oude kale gedrag); `blender_merge_character.py`
+  weert wapen-meshes uit de gibs (anders vliegt het musket dubbel -- het
+  spook-gib-probleem van gisteren).
+- Alle 15 beer/krokodil/wolf-modellen her-geexporteerd uit de inbox-blends
+  (15 exports, 15 gibs a 11 delen, 0 fouten).
+- Nieuw controlegereedschap `tools/_wapencheck.gd` (na `--import` draaien):
+  **27 van de 30 modellen dragen een meebewegend, getextureerd musket** --
+  ook muis-spd/hp/atk/mix en alle leeuwen, die bleken het al die tijd al bij
+  zich te hebben. Alleen muis-base, varken-spd en varken-mix blijven op de
+  prop-route (geen ingebakken wapen in die bestanden). Geen wapen meer in
+  welke gibs dan ook.
+
+Checks: testsuite 1716/1716, simcheck 0 afwijkingen, meleecheck PASS,
+tunercheck 30/30 + gibs compleet + roundtrip byte-identiek, play OK. De
+`choose_spawn`-errors die in de simcheck-log ratelen zijn PRE-EXISTING
+(empirisch bewezen: HEAD-pawn_view geeft dezelfde 70) -- los klusje
+aangemeld: null-guard in game.gd:1550.
+
+Een adversariele review (3 lenzen, elk geverifieerd) ving nog een echte bug
+voor de commit: de baked-route liet `_weapon_tune_key` op de default
+"mouse/musket" staan, waardoor de hand-schuifjes in de Model-tuner voor 27
+modellen stilletjes de MUIS-afstelling zouden overschrijven. Gefikst (sleutel
+wordt nu ook op de baked-route gezet); tunercheck + meleecheck opnieuw groen.
+
+LET OP: de losse achtergrondtaak "Strip tripo-duplicaat uit lion/pig-modellen"
+(worktree objective-curie-296992, commit c65d154) doet precies het OMGEKEERDE
+van dit besluit -- die strippt de ingebakken muskets die het spel nu
+gebruikt. NIET mergen; gewoon weggooien.
+
+Wat Max nog zelf beoordeelt: hoe het er in het echt uitziet (tuner +
+potje) -- de musket-schuifjes in de tuner doen voor ingebakken-musket-
+modellen niets meer, dat is verwacht.
+
+
 ## 15 augustus (avond) -- CORRECTIE: de tripo_node WAS het musket
 
 Max bleef aandringen ("de musketten zitten in die files") en had voor de

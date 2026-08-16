@@ -65,6 +65,8 @@ var _tune_key: String = ""   # "mouse/infantry_base" — sleutel in model_tuning
 var _weapon_tune_key: String = "mouse/musket"   # actieve musket-tuning-sleutel
 var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb)
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
+var _baked_wapens: Array = []  # zichtbare INGEBAKKEN muskets (geskinde MeshInstance3D's)
+var _baked_prop_pad: String = ""  # statische musket-glb die bij de dood vanaf de hand vliegt
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
 var _ring_mat_team: StandardMaterial3D = null  # gloeiende teamkleur (actief)
@@ -999,17 +1001,10 @@ func _val_categorie() -> String:
 
 
 func _fling_weapon(world_dir: Vector3) -> void:
-	if _weapon == null or not is_instance_valid(_weapon):
-		return
-	var w: Node3D = _weapon
-	_weapon = null
-	var scene_parent := get_parent()
-	if scene_parent == null:
+	var w: Node3D = _los_wapen_voor_worp()
+	if w == null:
 		return
 	var xf := w.global_transform
-	w.get_parent().remove_child(w)
-	scene_parent.add_child(w)
-	w.global_transform = xf
 	var land := Vector3(xf.origin.x, global_position.y + 0.04, xf.origin.z) + world_dir * 0.65
 	var peak := xf.origin.lerp(land, 0.5) + Vector3.UP * 0.55
 	# Tollen alleen tijdens de vlucht; daarna snel plat op de grond.
@@ -1025,6 +1020,112 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	arc.tween_property(w, "rotation", _flat_rotation(w), 0.12)
 	# Het musket blijft op het bord liggen (opruiming via battlefield_debris).
 	w.add_to_group("battlefield_debris")
+
+
+## Maak het wapen los voor de doodsworp. Twee routes:
+## 1) de hand-prop (muis, figuranten): loskoppelen en herouderen, zoals altijd;
+## 2) het INGEBAKKEN musket (16 augustus): dat is geskind en kan dus niet los
+##    slingeren — verberg het en zet de statische per-model musket-glb op de
+##    plek van de rechterhand, precies waar de pion hem vasthield. Die vliegt.
+## Retour: een scene-geouderd wapen klaar voor de worp, of null (niets te doen).
+func _los_wapen_voor_worp() -> Node3D:
+	var scene_parent := get_parent()
+	if scene_parent == null:
+		return null
+	if _weapon != null and is_instance_valid(_weapon):
+		var w: Node3D = _weapon
+		_weapon = null
+		var xf := w.global_transform
+		w.get_parent().remove_child(w)
+		scene_parent.add_child(w)
+		w.global_transform = xf
+		return w
+	if _baked_wapens.is_empty():
+		return null
+	# 2a: BOT-GEPARENT musket (generator hangt hem aan mixamorig:RightHand;
+	# Godot maakt daar bij import een BoneAttachment3D van). Dat is een gewone
+	# rigide node — koppel hem los en gooi hem ZELF: exact de plek, stand,
+	# maat en textuur waarmee de pion hem vasthield. Geen los bestand nodig.
+	for mi in _baked_wapens:
+		if not is_instance_valid(mi) or not (mi as MeshInstance3D).visible:
+			continue
+		var n: Node = mi.get_parent()
+		var rigide := false
+		while n != null and n != _piece:
+			if n is BoneAttachment3D:
+				rigide = true
+				break
+			n = n.get_parent()
+		if not rigide:
+			continue
+		var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+		if not skels.is_empty():
+			(skels[0] as Skeleton3D).force_update_all_bone_transforms()
+		var wxf := (mi as Node3D).global_transform
+		mi.get_parent().remove_child(mi)
+		scene_parent.add_child(mi)
+		(mi as Node3D).global_transform = wxf
+		# Overige wapen-meshes (dubbele nodes) verbergen; er vliegt er één.
+		for ander in _baked_wapens:
+			if ander != mi and is_instance_valid(ander):
+				(ander as MeshInstance3D).visible = false
+		_baked_wapens = []
+		return mi
+	# 2b: GESKIND musket: kan niet los (de mesh hangt aan het hele skelet).
+	# Verberg het en zet de statische per-model musket-glb op de hand-positie.
+	if _baked_prop_pad == "":
+		return null
+	# Hand-positie meten VOOR we iets verbergen (skelet staat nog in de
+	# leef-pose; de die-clip start pas na deze aanroep).
+	var hand := _hand_positie()
+	var had_zichtbaar := false
+	for mi in _baked_wapens:
+		if is_instance_valid(mi) and (mi as MeshInstance3D).visible:
+			had_zichtbaar = true
+			(mi as MeshInstance3D).visible = false
+	_baked_wapens = []
+	if not had_zichtbaar or not ResourceLoader.exists(_baked_prop_pad):
+		return null
+	var prop: Node3D = (load(_baked_prop_pad) as PackedScene).instantiate()
+	scene_parent.add_child(prop)
+	prop.force_update_transform()
+	# Zelfde normalisatie als _attach_weapon: langste as -> ~0.55 wereld-unit.
+	var ab := _combined_aabb(prop)
+	var longest: float = maxf(ab.size.x, maxf(ab.size.y, ab.size.z))
+	var parent_scale: float = prop.global_transform.basis.get_scale().x
+	if parent_scale <= 0.0001 or not is_finite(parent_scale):
+		parent_scale = 1.0
+	if longest > 0.0001:
+		var factor := 0.55 / (longest * parent_scale)
+		prop.scale = Vector3(factor, factor, factor)
+	prop.global_position = hand
+	# Startstand maakt weinig uit (de worp tolt hem meteen rond); een
+	# willekeurige draai voorkomt dat elke dode hetzelfde plaatje geeft.
+	prop.rotation_degrees = Vector3(0.0, randf() * 360.0, 0.0)
+	return prop
+
+
+## Wereldpositie van de rechterhand (waar het musket zit); valt terug op
+## borsthoogte als er geen skelet of hand-bot te vinden is.
+func _hand_positie() -> Vector3:
+	if _piece != null:
+		var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+		if not skels.is_empty():
+			var skel: Skeleton3D = skels[0]
+			var bone := -1
+			for cand in ["mixamorig:RightHand", "RightHand"]:
+				bone = skel.find_bone(cand)
+				if bone >= 0:
+					break
+			if bone < 0:
+				for i in skel.get_bone_count():
+					if String(skel.get_bone_name(i)).contains("RightHand"):
+						bone = i
+						break
+			if bone >= 0:
+				skel.force_update_all_bone_transforms()
+				return (skel.global_transform * skel.get_bone_global_pose(bone)).origin
+	return global_position + Vector3.UP * 0.35
 
 
 ## Het lijk/brokstuk blijft op het bord tot de volgende definieerfase;
@@ -1943,10 +2044,14 @@ static func weapon_for(model_path: String, fac: String) -> Dictionary:
 const LIJF_DELEN: Array = ["arm", "forarm", "leg", "upleg", "body", "head", "hat", "tail", "foot"]
 
 
-## Het meegebakken musket verbergen (Max, 29 juli): we hangen zelf een prop in
-## de hand die we in de tuner kunnen afstellen en die bij de dood wegvliegt.
-## Twee muskets tegelijk zou dubbel staan. Blender hoeft er niet aan te pas.
-func _verberg_ingebakken_wapen() -> void:
+## Alle INGEBAKKEN wapen-meshes in het model (de tripo_node/musket-meshes die
+## de generator meelevert). Herkenning: een wapenwoord of een naamloos
+## generator-meshje, en NOOIT iets dat als lijfdeel herkend wordt — onbekende
+## lijfdelen van oudere modellen blijven zo gewoon staan.
+func _vind_ingebakken_wapens() -> Array:
+	var uit: Array = []
+	if _piece == null:
+		return uit
 	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
 		var kaal := _kale_deelnaam(String(mi.name))
 		var is_lijf := false
@@ -1956,17 +2061,62 @@ func _verberg_ingebakken_wapen() -> void:
 				break
 		if is_lijf:
 			continue
-		# Alleen verbergen als het duidelijk uitrusting is: een wapenwoord, of
-		# een naamloos generator-meshje (tripo_node_...). Onbekende lijfdelen
-		# van oudere modellen blijven zo gewoon staan.
-		var wapen := kaal.contains("musket") or kaal.contains("rifle") 				or kaal.contains("gun") or kaal.contains("weapon") 				or kaal.contains("triponode")
+		var wapen := kaal.contains("musket") or kaal.contains("rifle") or kaal.contains("gun") or kaal.contains("weapon") or kaal.contains("triponode")
 		if wapen:
-			(mi as MeshInstance3D).visible = false
+			uit.append(mi)
+	return uit
+
+
+## Het meegebakken musket verbergen — alleen nog voor de PROP-route (muis,
+## figuranten, modellen zonder eigen musket-glb): daar hangen we zelf een prop
+## in de hand en zou het ingebakken wapen dubbel staan. Sinds 16 augustus is
+## de hoofdroute juist om het ingebakken musket te LATEN staan (zie
+## _attach_weapon): geskind beweegt het met richten en steken mee.
+func _verberg_ingebakken_wapen() -> void:
+	for mi in _vind_ingebakken_wapens():
+		(mi as MeshInstance3D).visible = false
 
 
 func _attach_weapon(fac: String) -> void:
 	if _unit_type != 0:
 		return  # v1: alleen infanterie draagt het musket
+	_baked_wapens = []
+	_baked_prop_pad = ""
+	# Besluit Max (16 augustus): draagt het model zijn musket MEEGEBAKKEN, dan
+	# is dát het wapen. Het is geskind, dus het richt, draagt en steekt met de
+	# animaties mee — precies wat een stijve hand-prop nooit kan. Geen prop
+	# erbovenop; bij de dood verbergt _los_wapen_voor_worp dit mesh en vliegt
+	# de statische musket-glb vanaf de hand weg. Figuranten (trommel/vaandel)
+	# en modellen zonder eigen musket-glb houden de oude prop-route.
+	var ingebakken: Array = _vind_ingebakken_wapens()
+	# Vangrail: alleen wapens die echt MEEBEWEGEN (geskind, of bot-geparent →
+	# BoneAttachment3D). Een statisch meegebakken musket (sommige oudere
+	# modellen) zou stokstijf in de lucht hangen — die blijven op de prop-route.
+	var meebewegend: Array = []
+	for mi in ingebakken:
+		var beweegt: bool = mi.get_parent() is Skeleton3D
+		var n: Node = mi.get_parent()
+		while n != null and n != _piece and not beweegt:
+			if n is BoneAttachment3D:
+				beweegt = true
+			n = n.get_parent()
+		if beweegt:
+			meebewegend.append(mi)
+	if _rol == "" and not meebewegend.is_empty() and meebewegend.size() == ingebakken.size():
+		var bp := weapon_for(_model_path, fac)
+		if String(bp["file"]) != "":
+			_baked_wapens = meebewegend
+			_baked_prop_pad = String(bp["file"])
+			# Sleutel WEL zetten, ook al leest de baked-route geen tuning: de
+			# Model-tuner toont en bewerkt _weapon_tune_key, en zonder deze
+			# regel bleef de declaratie-default "mouse/musket" actief — elke
+			# hand-schuifje-draai op een baked model zou dan stilletjes de
+			# MUIS-afstelling overschrijven (gevonden in review, 16 augustus).
+			_weapon_tune_key = String(bp["key"])
+			# Warm laden (zelfde patroon als _preload_gib_assets): de doodsworp
+			# pakt hem straks zonder frame-hapering uit de cache.
+			ResourceLoader.load_threaded_request(_baked_prop_pad)
+			return
 	_verberg_ingebakken_wapen()
 	var wp := weapon_for(_model_path, fac)
 	if _rol != "":
@@ -2275,6 +2425,11 @@ func _apply_team_texture() -> void:
 	if _piece == null or _model_path == "":
 		return
 	apply_albedo_to(_piece, team_texture(_model_path, team, false))
+	# Het team-uniform hoort alleen op het LIJF. Het ingebakken musket heeft
+	# zijn eigen texture-atlas: met de team-png erover wordt het een bonte
+	# vlek. Override eraf = het houdt gewoon zijn eigen glb-materiaal.
+	for mi in _vind_ingebakken_wapens():
+		(mi as MeshInstance3D).material_override = null
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):

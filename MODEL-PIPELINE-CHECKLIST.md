@@ -43,9 +43,24 @@ blender --background --python tools/blender_merge_character.py -- --base <map>/i
 
 LET OP: de `tripo_node_<uuid>`-mesh in zo'n blend is het INGEBAKKEN MUSKET
 (niet een duplicaat -- die vergissing is op 15 augustus gemaakt en gefikst).
-Stap 1 haalt hem eruit als per-model musket-prop; stap 2 exporteert het
-karakter zonder wapen; stap 3 doet de kwartslag-fix en de gibs. Twijfel je
-wat een mesh is: RENDER hem even, een naam-scan is geen inhouds-controle.
+De generator hangt hem bot-geparent aan `mixamorig:RightHand`, dus hij
+beweegt in ELKE animatie mee: richten, dragen, bajonetstoot.
+
+Sinds 16 augustus (besluit Max) gebruikt het spel dat ingebakken musket ZELF:
+- Stap 1 haalt een losse kopie eruit (nog steeds nodig: terugval-prop en
+  referentie), stap 2 exporteert het karakter MET het musket erin (vlag
+  `--zonder-wapen` voor het oude kale gedrag), stap 3 doet de kwartslag-fix
+  en de gibs -- het wapen wordt daar automatisch uit de gibs geweerd.
+- In het spel laat `pawn_view` het meebewegende musket gewoon staan (geen
+  prop, musket-tuning niet meer nodig) en gooit het bij de dood los vanaf de
+  hand. Modellen ZONDER meebewegend musket (muis, oude statische bakken)
+  vallen automatisch terug op de prop-in-de-hand.
+- Controle na import: `<godot> --headless --path . --script
+  tools/_wapencheck.gd` (30 modellen: beweegt het wapen mee, heeft het z'n
+  texture, zit er niets in de gibs).
+
+Twijfel je wat een mesh is: RENDER hem even, een naam-scan is geen
+inhouds-controle.
 
 ## C-oud. Twee exports uit hetzelfde .blend (handmatig)
 - [ ] **Export 1** het model **+ Armature** · **Skinning AAN · Animation AAN**

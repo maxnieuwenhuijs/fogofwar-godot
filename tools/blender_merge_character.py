@@ -341,6 +341,18 @@ def make_gibs(model_out):
     meerdere mesh-objecten bestaat (1 mesh = 1 brok)."""
     gibs_path = os.path.splitext(os.path.abspath(model_out))[0] + "_gibs.glb"
     mesh_objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    # Het INGEBAKKEN MUSKET (tripo_node/musket/...) is GEEN lichaamsdeel: bij
+    # de dood vliegt de losse musket-glb al vanaf de hand weg (pawn_view,
+    # 16 augustus). Als gib zou hij dubbel vliegen — dat was precies het
+    # spook-gib-probleem dat op 15 augustus uit 12 oude bestanden is geschoond.
+    # Kale naam (alleen letters), net als het spel: "tripo_node_ab3" -> "triponodeab".
+    def kale_naam(n):
+        return ''.join(c for c in n.lower() if c.isalpha())
+    WAPEN_WOORDEN = ("triponode", "musket", "rifle", "gun", "weapon")
+    wapens = [o for o in mesh_objs if any(w in kale_naam(o.name) for w in WAPEN_WOORDEN)]
+    for o in wapens:
+        print("  gib overgeslagen (wapen): %s — het musket vliegt bij de dood als eigen prop" % o.name)
+    mesh_objs = [o for o in mesh_objs if o not in wapens]
     if not mesh_objs:
         print("GIBS overgeslagen: geen mesh-objecten.")
         return
