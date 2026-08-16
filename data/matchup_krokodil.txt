@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Krokodil
-Generaties: 68 · adopties: 1 · minuten: 425.2
+Generaties: 66 · adopties: 0 · minuten: 422.8
 Winrate van Krokodil tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   70.9%  (408 potjes)
-  vs Muis     27.1%  (408 potjes)
-  vs Leeuw    38.0%  (408 potjes)
-  vs Beer     28.8%  (408 potjes)
-  vs Wolf     14.6%  (408 potjes)
-  vs Krokodil  56.2%  (408 potjes)
+  vs Varken   56.4%  (396 potjes)
+  vs Muis     32.5%  (396 potjes)
+  vs Leeuw    59.8%  (396 potjes)
+  vs Beer     23.0%  (396 potjes)
+  vs Wolf     10.6%  (396 potjes)
+  vs Krokodil  64.6%  (396 potjes)

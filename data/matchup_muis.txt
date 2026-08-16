@@ -1,9 +1,9 @@
 Fog of War — trainings-matchup voor Muis
-Generaties: 26 · adopties: 1 · minuten: 427.4
+Generaties: 21 · adopties: 0 · minuten: 432.8
 Winrate van Muis tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   58.5%  (156 potjes)
-  vs Muis     42.7%  (156 potjes)
-  vs Leeuw    36.8%  (156 potjes)
-  vs Beer     42.1%  (156 potjes)
-  vs Wolf     28.8%  (156 potjes)
-  vs Krokodil  63.9%  (156 potjes)
+  vs Varken   52.9%  (126 potjes)
+  vs Muis     44.6%  (126 potjes)
+  vs Leeuw    60.0%  (126 potjes)
+  vs Beer     39.8%  (126 potjes)
+  vs Wolf     27.5%  (126 potjes)
+  vs Krokodil  68.8%  (126 potjes)
