@@ -31,7 +31,23 @@ aan hand/heup als deel `prop`; deze modellen krijgen GEEN musket.
       death1 / walk1 / bayonet1. Herkende woorden: idle, walk, death|die,
       hit|reaction, fire|shoot, bayon|butt|stab|melee|attack, aim|ready.
 
-## C. Twee exports uit hetzelfde .blend
+## C. Drie exports uit hetzelfde .blend (sinds 15 augustus gescript)
+
+Levert de generator een .blend met losse delen, dan doet de pijplijn alles:
+
+```
+blender --background model.blend --python tools/blender_export_musket.py -- --uit <map>/infantry_<arch>_musket.glb
+blender --background model.blend --python tools/blender_export_blend.py  -- --uit <map>/infantry_<arch>.glb
+blender --background --python tools/blender_merge_character.py -- --base <map>/infantry_<arch>.glb --gibs
+```
+
+LET OP: de `tripo_node_<uuid>`-mesh in zo'n blend is het INGEBAKKEN MUSKET
+(niet een duplicaat -- die vergissing is op 15 augustus gemaakt en gefikst).
+Stap 1 haalt hem eruit als per-model musket-prop; stap 2 exporteert het
+karakter zonder wapen; stap 3 doet de kwartslag-fix en de gibs. Twijfel je
+wat een mesh is: RENDER hem even, een naam-scan is geen inhouds-controle.
+
+## C-oud. Twee exports uit hetzelfde .blend (handmatig)
 - [ ] **Export 1** het model **+ Armature** · **Skinning AAN · Animation AAN**
 - [ ] **Export 2** de gibs — dezelfde delen, **Animation UIT**
 - [ ] Bestandsnamen mogen kort (`infantry_atk.glb` / `infantry_atk_gibs.glb`)
