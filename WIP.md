@@ -1,5 +1,36 @@
 # Fog of War — Work In Progress & Context
 
+## 15 augustus (avond) -- CORRECTIE: de tripo_node WAS het musket
+
+Max bleef aandringen ("de musketten zitten in die files") en had voor de
+derde keer vandaag gelijk. De `tripo_node_<uuid>`-mesh die ik overal als
+"karakter-duplicaat" heb weggeknipt is het INGEBAKKEN MUSKET dat de
+generator meelevert -- het staat nota bene in de docstring van
+`blender_strip_baked_weapon.py`, die op 4 augustus voor precies dit doel is
+gebouwd. Mijn driehoeken-telling zette me op het verkeerde been (een musket
+is ~900 tris, een laagpoly-karakter ook); een headless RENDER (musket met
+bajonet, onmiskenbaar) besliste het.
+
+Wat er klopte en wat niet: de tripo_node uit de karakter-glbs knippen was
+toevallig JUIST (het spel verbergt hem toch en hangt zijn eigen prop op;
+scheelt dode geometrie), en hem uit de twaalf oude gibs-bestanden strippen
+ook (een musket hoort geen lichaams-brokstuk te zijn; het echte
+musket-prop vliegt apart weg). Maar het wapen WEGGOOIEN in plaats van
+exporteren was fout, en de verhalen in twee commits en dit logboek noemden
+hem ten onrechte een duplicaat.
+
+Rechtgezet: `tools/blender_export_musket.py` (de blend-variant van
+--wapen-uit) haalt het wapen los -- armature eraf, stand behouden, texture
+naar 1024 -- en alle VIJFTIEN musketten van beer, krokodil en wolf staan nu
+als `infantry_<arch>_musket.glb` naast hun model, waar `weapon_for()` ze
+vanzelf vindt. Elke factie draagt nu zijn eigen wapen; de "ongewapend tot
+Max genereert"-melding van vanmiddag vervalt.
+
+Les, hard geleerd: een naam-scan is geen inhouds-controle. RENDER het
+gewoon even -- kijken kost een minuut, en drie keer "Max had gelijk" op een
+dag is het bewijs dat de bestanden beter wisten dan mijn aannames.
+
+
 ## 15 augustus (vervolg) -- vos-infanterie + muis-musket: het modelbord is VOL
 
 Max wees op twee dingen die ik had gemist, allebei terecht. (1) De

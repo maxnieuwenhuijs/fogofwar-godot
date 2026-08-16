@@ -4,11 +4,13 @@
 #   blender --background model.blend --python tools/blender_export_blend.py -- --uit pad/naar/infantry_base.glb
 #
 # Wat hij doet, en waarom:
-#   - tripo_node*-meshes gaan ERUIT: dat is het onopgeknipte origineel van de
-#     generator dat naast de losse delen in het bestand blijft hangen. In de
-#     muis-referentie zit hij niet; in de leeuw is hij per ongeluk mee
-#     geexporteerd (dubbele geometrie + een extra 4K-textureset, en als
-#     "gib-brok" een compleet lijk dat wegvliegt).
+#   - tripo_node*-meshes gaan ERUIT: dat is het INGEBAKKEN MUSKET dat de
+#     generator als los mesh meelevert (zie blender_strip_baked_weapon.py --
+#     op 15 augustus eerst aangezien voor een karakter-duplicaat, tot een
+#     render de bajonet liet zien). Het spel verbergt hem toch en hangt zijn
+#     eigen afstelbare prop in de hand; haal het wapen VOOR deze export los
+#     met tools/blender_export_musket.py, dan heeft het model zijn eigen
+#     per-model musket zonder dode geometrie in de karakter-glb.
 #   - textures worden verkleind naar max 1024 (zelfde beleid als het
 #     merge-script: de albedo wordt in het spel toch vervangen door de losse
 #     team-textures, 4K in de glb is alleen maar bloat).
