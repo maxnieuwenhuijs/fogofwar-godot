@@ -348,6 +348,7 @@ beginnen.
 |---|---|---|---|
 | `val_prop` | 3 | terugval voor alles | 6 short wooden and iron object clatters on packed dirt in a row, each about 0.4 seconds, dull knock with a brief metal rattle, silence between each, dry close mono recording, no reverb, no music |
 | `val_musket` | 3 ✓ (2) | musket | 6 short musket drops on dirt in a row, each about 0.4 seconds, heavy wooden stock thud with an iron barrel rattle, silence between each, one musket only, dry close mono recording, no reverb, no music |
+| `val_melee` | 2-3 | sabel/bijl/lans van de big bro (valt nu terug op val_prop) | 6 short heavy sabre drops on packed dirt in a row, each about 0.4 seconds, ringing steel blade clatter with a dull grip thud, silence between each, one weapon only, dry close mono recording, no reverb, no music |
 | `val_drum` | 3 | trommel | 6 short side drum drops on dirt in a row, each about 0.5 seconds, hollow thump with rope and snare rattle, silence between each, one drum only, dry close mono recording, no reverb, no music |
 | `val_flag` | 2 | vaandelstok | 6 short wooden pole clatters on dirt in a row, each about 0.4 seconds, hard hollow knock with a single cloth flap, silence between each, dry close mono recording, no reverb, no music |
 | `val_horn` | 2 | hoorn | 6 short brass bugle drops on dirt in a row, each about 0.4 seconds, bright metallic clank with a faint ring, silence between each, dry close mono recording, no reverb, no music |

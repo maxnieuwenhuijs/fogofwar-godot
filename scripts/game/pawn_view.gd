@@ -994,10 +994,20 @@ static func impact_categorie(unit_type: int, arch: String) -> String:
 	return "impact_flesh"
 
 
+## Val-categorie van het handwapen/attribuut. STATISCH zodat de Model-tuner
+## exact dezelfde regel gebruikt als het spel — nooit twee kopieen van een
+## categorie-keuze (dat was precies de tuner/spel-divergentie die de audit
+## van 30 juli voor impact_categorie heeft weggewerkt).
+static func val_categorie_voor(unit_type: int, rol: String) -> String:
+	if rol != "":
+		return "val_" + rol
+	if unit_type == Constants.UnitType.CAVALRY:
+		return "val_melee"  # sabel/bijl/lans van de big bro
+	return "val_musket"
+
+
 func _val_categorie() -> String:
-	if _rol == "":
-		return "val_musket"
-	return "val_" + _rol
+	return val_categorie_voor(_unit_type, _rol)
 
 
 func _fling_weapon(world_dir: Vector3) -> void:
@@ -2017,21 +2027,23 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	_update_material()
 
 
-## Bepaal welke musket-mesh + tuning-sleutel bij een model horen. Voorkeur:
-## een per-model musket naast het model (<model>_musket.glb, eigen sleutel),
-## anders de factie-musket (<factie>/musket.glb). Zo krijgt elk model dat met
+## Bepaal welke wapen-mesh + tuning-sleutel bij een model horen. Voorkeur:
+## een per-model wapen naast het model (<model>_<soort>.glb, eigen sleutel),
+## anders het factie-wapen (<factie>/<soort>.glb). Zo krijgt elk model dat met
 ## z'n eigen wapen wordt geleverd dat automatisch, met eigen fijnafstelling.
-static func weapon_for(model_path: String, fac: String) -> Dictionary:
+## soort = "musket" (infanterie) of "melee" (big bro: cavalry_<arch>_melee.glb,
+## zie MODEL-WISHLIST 3c-2 -- ingebouwd 16 augustus).
+static func weapon_for(model_path: String, fac: String, soort: String = "musket") -> Dictionary:
 	var basis := model_path.get_file().get_basename()
 	for ext in [".glb", ".fbx"]:
-		var per := Bestandsindex.vind(MODELS_DIR + fac, basis + "_musket" + ext)
+		var per := Bestandsindex.vind(MODELS_DIR + fac, basis + "_" + soort + ext)
 		if per != "" and ResourceLoader.exists(per):
-			return {"file": per, "key": "%s/%s_musket" % [fac, basis]}
+			return {"file": per, "key": "%s/%s_%s" % [fac, basis, soort]}
 	for ext in [".glb", ".fbx"]:
-		var fp := Bestandsindex.vind(MODELS_DIR + fac, "musket" + ext)
+		var fp := Bestandsindex.vind(MODELS_DIR + fac, soort + ext)
 		if fp != "" and ResourceLoader.exists(fp):
-			return {"file": fp, "key": "%s/musket" % fac}
-	return {"file": "", "key": "%s/musket" % fac}
+			return {"file": fp, "key": "%s/%s" % [fac, soort]}
+	return {"file": "", "key": "%s/%s" % [fac, soort]}
 
 
 ## Wapen-prop (musket) aan de rechterhand van het karaktermodel. Conventie:
@@ -2044,13 +2056,26 @@ static func weapon_for(model_path: String, fac: String) -> Dictionary:
 const LIJF_DELEN: Array = ["arm", "forarm", "leg", "upleg", "body", "head", "hat", "tail", "foot"]
 
 
-## Alle INGEBAKKEN wapen-meshes in het model (de tripo_node/musket-meshes die
+## Naamwoorden die een INGEBAKKEN wapen verraden: de generator levert het als
+## tripo_node_<uuid>, maar na een Blender-bewerking kan het ook gewoon
+## "musket" of "sabre" heten. Melee-woorden erbij sinds 16 augustus: de big
+## bros komen net als de infanterie met hun wapen vast in het geanimeerde
+## model (zonder herkenning zou het wapen dubbel staan: ingebakken + prop).
+## "blade" staat er bewust NIET in (shoulder_blade zou vals matchen).
+const WAPEN_WOORDEN: Array = ["musket", "rifle", "gun", "weapon", "triponode",
+	"sabre", "saber", "sword", "axe", "lance", "pike", "spear", "cutlass",
+	"scythe", "hatchet", "falchion", "dagger"]
+
+
+## Alle INGEBAKKEN wapen-meshes in het model (de tripo_node/wapen-meshes die
 ## de generator meelevert). Herkenning: een wapenwoord of een naamloos
 ## generator-meshje, en NOOIT iets dat als lijfdeel herkend wordt — onbekende
-## lijfdelen van oudere modellen blijven zo gewoon staan.
+## lijfdelen van oudere modellen blijven zo gewoon staan. Artillerie doet
+## niet mee: het kanon IS het model, en mesh-namen als "gunner" of
+## "gun_carriage" zouden vals als handwapen matchen.
 func _vind_ingebakken_wapens() -> Array:
 	var uit: Array = []
-	if _piece == null:
+	if _piece == null or _unit_type == Constants.UnitType.ARTILLERY:
 		return uit
 	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
 		var kaal := _kale_deelnaam(String(mi.name))
@@ -2061,9 +2086,10 @@ func _vind_ingebakken_wapens() -> Array:
 				break
 		if is_lijf:
 			continue
-		var wapen := kaal.contains("musket") or kaal.contains("rifle") or kaal.contains("gun") or kaal.contains("weapon") or kaal.contains("triponode")
-		if wapen:
-			uit.append(mi)
+		for woord in WAPEN_WOORDEN:
+			if kaal.contains(String(woord)):
+				uit.append(mi)
+				break
 	return uit
 
 
@@ -2078,8 +2104,14 @@ func _verberg_ingebakken_wapen() -> void:
 
 
 func _attach_weapon(fac: String) -> void:
-	if _unit_type != 0:
-		return  # v1: alleen infanterie draagt het musket
+	if _unit_type == Constants.UnitType.ARTILLERY:
+		return  # het kanon IS het model; geen handwapen
+	# Infanterie draagt het musket; de big bro (cavalerie) zijn melee-wapen
+	# (sabel/bijl/lans, MODEL-WISHLIST 3c-2 -- ingebouwd 16 augustus). Zodra
+	# cavalry_<arch>_melee.glb of <factie>/melee.glb naast het model ligt,
+	# hangt hij vanzelf in de hand; tot die tijd vecht de big bro met blote
+	# handen (wp.file leeg = nette no-op).
+	var soort := "melee" if _unit_type == Constants.UnitType.CAVALRY else "musket"
 	_baked_wapens = []
 	_baked_prop_pad = ""
 	# Besluit Max (16 augustus): draagt het model zijn musket MEEGEBAKKEN, dan
@@ -2103,7 +2135,7 @@ func _attach_weapon(fac: String) -> void:
 		if beweegt:
 			meebewegend.append(mi)
 	if _rol == "" and not meebewegend.is_empty() and meebewegend.size() == ingebakken.size():
-		var bp := weapon_for(_model_path, fac)
+		var bp := weapon_for(_model_path, fac, soort)
 		if String(bp["file"]) != "":
 			_baked_wapens = meebewegend
 			_baked_prop_pad = String(bp["file"])
@@ -2118,7 +2150,7 @@ func _attach_weapon(fac: String) -> void:
 			ResourceLoader.load_threaded_request(_baked_prop_pad)
 			return
 	_verberg_ingebakken_wapen()
-	var wp := weapon_for(_model_path, fac)
+	var wp := weapon_for(_model_path, fac, soort)
 	if _rol != "":
 		# Figurant: trommel/vaandel in plaats van het musket. Ontbreekt de
 		# prop, dan valt hij terug op het gewone wapen (niets gaat stuk).

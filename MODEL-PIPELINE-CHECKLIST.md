@@ -33,7 +33,10 @@ aan hand/heup als deel `prop`; deze modellen krijgen GEEN musket.
 
 ## C. Drie exports uit hetzelfde .blend (sinds 15 augustus gescript)
 
-Levert de generator een .blend met losse delen, dan doet de pijplijn alles:
+Levert de generator een .blend met losse delen, dan doet de pijplijn alles.
+**Geldt ook voor de big bros (cavalerie)**: zelfde drie stappen, alleen heet
+het wapen dan `cavalry_<arch>_melee.glb` in plaats van
+`infantry_<arch>_musket.glb` (sabel/bijl/lans in plaats van musket).
 
 ```
 blender --background model.blend --python tools/blender_export_musket.py -- --uit <map>/infantry_<arch>_musket.glb

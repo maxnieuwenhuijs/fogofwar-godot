@@ -23,6 +23,10 @@ const BANK := {
 	"inf_kanon_die_mouse": ["mouse_hit_canon_1.wav", "mouse_hit_canon_2.wav"],
 	"inf_die_mouse": ["mouse_shot_die_1.wav", "mouse_shot_die_2.wav", "mouse_shot_die_3.wav"],
 	"val_musket":    ["musket_hits_floor.wav", "musket_hit_floor_2.wav"],
+	# val_melee (big bro laat sabel/bijl/lans vallen) staat hier BEWUST niet
+	# in: een lege val_*-categorie valt netjes terug op val_prop, en zodra
+	# val_melee.wav in sounds/ ligt doet die vanzelf mee. Een placeholder in
+	# de BANK zou de echte opname juist blijven verdringen (review 16 aug).
 	"val_hoed":      ["hat_hit_floor_2.wav"],
 	# Materiaal-laag onder de treffer (SOUND-WISHLIST 7b-2): je hoort WAT er
 	# geraakt wordt. Extra opnames (impact_flesh_3.wav, ...) doen automatisch

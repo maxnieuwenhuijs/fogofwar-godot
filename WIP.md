@@ -1,6 +1,48 @@
 # Fog of War — Work In Progress & Context
 
-## 16 augustus -- het ingebakken musket IS het wapen (idee van Max)
+## 16 augustus (later) -- big bros krijgen hun wapen: prompts EN spel
+
+Drie verzoeken van Max in een middag, allemaal rond "de archetypes moeten
+visueel uit elkaar":
+
+1. **Cavalerie-prompts** (MODEL-WISHLIST): elk archetype een eigen
+   uitrustingsstuk op een eigen plek op het lijf (base X-bandeliers op de
+   borst, spd verenpluim op de kop, hp kuras om de romp, atk spikes op de
+   schouder, mix dekenrol dwars over de borst), elke factie zijn gehavende
+   factie-hoed (zelfde hoeden-taal als de infanterie), en de bouw-woorden
+   extremer zodat de generator ze niet afvlakt. Zelfde slag voor de
+   **artillerie**: houding van het bemanningsdier (staat op / duwt / zit op
+   de loop / hangt over de loop / zit op een kruitvat) plus opgesjorde
+   stukken -- alles vast aan het kanon, want dat rolt over het bord.
+2. **Melee-wapens** (3c-2): type-variatie ook BINNEN de factie (was: muis en
+   leeuw vijf klingen, varken vijf bijlen, beer vijf lansen). Nu volgt het
+   TYPE het archetype (base sabel, spd lans/piek, hp korte bijl, atk het
+   overmaatse familie-stuk, mix kort en kaal) en zit de factie in materiaal
+   en afwerking.
+3. **Ingebouwd in het spel**: de big bro draagt zijn melee-wapen zoals de
+   infanterie het musket. Zelfde systeem, twee routes: komt het wapen
+   INGEBAKKEN in het geanimeerde model mee (bot-geparent, tripo_node of een
+   naam als sabre/axe/lance -- woordenlijst WAPEN_WOORDEN, gedeeld met de
+   gibs-uitsluiting in de pijplijn), dan blijft het staan en zwaait het mee;
+   anders hangt het spel `cavalry_<arch>_melee.glb` (terugval
+   `<factie>/melee.glb`) aan de rechterhand. Doodsworp identiek aan het
+   musket, kletter-categorie `val_melee`. Artillerie doet expliciet NIET mee
+   in de wapendetectie ("gunner"/"gun_carriage" zou vals matchen en de
+   team-kleuring van kanon-modellen slopen).
+
+Een review-workflow (2 lenzen, geverifieerd) ving voor de commit drie echte
+gaten in de geluidskant: val_melee had geen tuning-entry (zou 9 dB te hard
+spelen), de BANK-placeholder zou een echte opname voorgoed verdringen (nu:
+geen placeholder, nette terugval op val_prop, en val_melee.wav doet vanzelf
+mee zodra hij er ligt + rij in SOUND-WISHLIST 7bis), en de tuner-Geluid-tab
+kende de categorie niet. Dat laatste was een kopie van de categorie-regel
+in de tuner -- precies de divergentie die de audit van 30 juli al eens
+wegwerkte -- dus de regel is nu een gedeelde static
+(`PawnView.val_categorie_voor`) die tuner en spel allebei gebruiken.
+
+Er bestaan nog geen cavalerie-karaktermodellen of melee-glbs: tot Max ze
+genereert vecht de big bro met blote handen (lege wapen-file = nette
+no-op) en verandert er niets aan het zichtbare spel.
 
 Max zag wat ik over het hoofd bleef zien: "de animator neemt altijd de musket
 al mee in de animaties" -- waarom zouden we een stijve prop in de hand hangen

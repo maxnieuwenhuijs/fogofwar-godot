@@ -488,9 +488,20 @@ De big bro vecht met zijn handen tot hij een wapen heeft; elk krijgt een
 **eigen melee-wapen-glb** (`cavalry_<archetype>_melee.glb`, naast het model).
 Alles komt uit het **echte Napoleontische arsenaal** (besluit Max, 30 juli):
 briquet-sabels, sapeurs-bijlen, pallasch, lansen, partizanen-buit en
-enter-wapens -- geen fantasy-knotsen. Nog niet ingebouwd in het spel (props
-hangen nu alleen aan infanterie): de bestandsnaam-conventie staat vast zodat
-de inbouw later zonder hernoemen kan.
+enter-wapens -- geen fantasy-knotsen. **Ingebouwd in het spel sinds
+16 augustus, zelfde systeem als het infanterie-musket.** Het geanimeerde
+big bro-model komt net als de infanterie met het wapen VAST erin (de
+generator bakt het bot-geparent aan de rechterhand, meestal als
+`tripo_node_<uuid>`): het spel herkent zo'n meebewegend ingebakken wapen
+(ook op naam-woorden als sabre/axe/lance) en laat het gewoon staan -- het
+zwaait dan mee met de melee-clips. De losse `cavalry_<archetype>_melee.glb`
+uit dit hoofdstuk is (net als bij de musketten) de DOODSWORP-prop en de
+terugval voor modellen zonder ingebakken wapen: haal hem uit de blend met
+`tools/blender_export_musket.py -- --uit <map>/cavalry_<arch>_melee.glb`.
+Zelfde auto-schaal (~0,55 wereld-unit; een LANS dus in de Model-tuner
+groter zetten via de wapen-schaal), kletter-categorie `val_melee`,
+tuning-sleutel `<factie>/cavalry_<arch>_melee`. Tot de bestanden er liggen
+vecht de big bro gewoon met blote handen.
 
 **Type per archetype (16 augustus, verzoek Max: ook BINNEN de factie
 varieren met sabels en bijlen -- eerst was elke factie een dozijn van

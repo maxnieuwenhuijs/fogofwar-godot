@@ -26,6 +26,10 @@
 		"db": -7.0,
 		"vertraging": 0.0
 	},
+	"val_melee": {
+		"db": -9.0,
+		"vertraging": -0.5
+	},
 	"val_musket": {
 		"db": -9.0,
 		"vertraging": -0.5

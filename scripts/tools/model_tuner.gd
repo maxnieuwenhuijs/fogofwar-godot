@@ -1704,10 +1704,14 @@ func _geluid_rijen() -> Array:
 		rijen.append({"cat": "cannon_die_" + fac, "wat": "vernietigd (factie)", "terugval": "cannon_die"})
 		rijen.append({"cat": "cannon_wheel_loose", "wat": "wiel schiet los (60%)"})
 	rijen.append({"cat": "body_hit_floor", "wat": "lijf raakt de grond"})
-	if tp == Constants.UnitType.INFANTRY:
-		var rol := _hand_rol()
-		var vc := "val_musket" if rol == "" else "val_" + rol
+	if tp == Constants.UnitType.INFANTRY or tp == Constants.UnitType.CAVALRY:
+		# Zelfde regel als het spel (PawnView.val_categorie_voor) -- nooit
+		# een eigen kopie van de categorie-keuze (audit 30 juli); cavalerie
+		# krijgt zo vanzelf val_melee (sabel/bijl die uit de handen valt).
+		var rol := _hand_rol() if tp == Constants.UnitType.INFANTRY else ""
+		var vc := PawnView.val_categorie_voor(tp, rol)
 		rijen.append({"cat": vc, "wat": "voorwerp valt", "terugval": "val_prop"})
+	if tp == Constants.UnitType.INFANTRY:
 		rijen.append({"cat": "val_hoed", "wat": "hoedje valt"})
 	rijen.append({"cat": "blood_splash", "wat": "bloedspat"})
 	# Materiaal-laag: exact de categorie die het spel voor DIT model kiest,
