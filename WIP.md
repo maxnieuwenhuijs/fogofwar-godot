@@ -55,6 +55,18 @@ Wat Max nog zelf beoordeelt: hoe het er in het echt uitziet (tuner +
 potje) -- de musket-schuifjes in de tuner doen voor ingebakken-musket-
 modellen niets meer, dat is verwacht.
 
+NAKOMER (zelfde dag): Max ving in het spel laadfouten -- "Resource file not
+found: infantry_base_Color_....jpg". Mijn fout: de losse jpg's naast de
+nieuwe glb's waren GEEN Blender-bijproduct maar door GODOT bij de import
+UITGEPAKTE textures (embedded_image_handling=extract; de geimporteerde scene
+verwijst ernaar). Ik controleerde alleen de glb (textures embedded: klopt)
+en niet de geimporteerde scene, en gooide ze weg. Herstel: import-cache voor
+de infanterie-glbs gewist, her-import pakt ze opnieuw uit, en nu gewoon
+GECOMMIT -- net als de musket-jpg's van de 15e, die om precies dezelfde
+reden bestaan. Wapencheck PASS, tunercheck 0 fouten, play schoon. Les: "dit
+bestand gebruikt niemand" bewijs je op de GEIMPORTEERDE resource, niet op de
+bron; en verwijderen hoort VOOR de laatste check-ronde, niet erna.
+
 
 ## 15 augustus (avond) -- CORRECTIE: de tripo_node WAS het musket
 
