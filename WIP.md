@@ -34,6 +34,16 @@ Voor Max: tuner-pass (schaal/positie -- de big bro hoort boven zijn
 infanterie uit te torenen, auto-fit maakt ze gelijk), en de resterende
 team-atlassen + de drie ontbrekende facties wanneer hij wil.
 
+NAKOMER (zelfde dag, Max: "alle cav maken ook gebruik van hun wapen"): de
+aanval-flow bleek al goed (aangrenzende cavalerie-aanval en de charge gaan
+allebei door play_melee, nooit door het musket-pad), maar het bewijs
+ontbrak. `-- meleecheck` meet nu TWEE scenario's: de infanterie-bajonet en
+de cavalerie-stoot, zelfde choreografie-eisen (stoot-clip speelt, aanvaller
+blijft op zijn vak tot stoot-frame + opruk-vertraging). Uitslag: infanterie
+melee2 en cavalerie melee3 (een van de nieuwe wapen-clips), allebei
+vertrek 1,40s bij 1,50 verwacht -- PASS. De cavalerie zwaait dus echt met
+zijn ingebakken sabel/bijl in het echte spel.
+
 Drie verzoeken van Max in een middag, allemaal rond "de archetypes moeten
 visueel uit elkaar":
 
