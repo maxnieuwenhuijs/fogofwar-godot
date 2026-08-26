@@ -1,0 +1,44 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://ch0o7ypftk5nk"
+path.s3tc="res://.godot/imported/cavalry_hp_gibs_Color_0c8a8808-3fa4-4321-a605-3de3eb243b94.jpg-8badf7272bb24129b7932cada15ae385.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "d01b0579af012b4842f5a37de24236db"
+}
+
+[deps]
+
+source_file="res://assets/models/pig/cavalry/cavalry_hp_gibs_Color_0c8a8808-3fa4-4321-a605-3de3eb243b94.jpg"
+dest_files=["res://.godot/imported/cavalry_hp_gibs_Color_0c8a8808-3fa4-4321-a605-3de3eb243b94.jpg-8badf7272bb24129b7932cada15ae385.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0

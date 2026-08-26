@@ -1,6 +1,38 @@
 # Fog of War — Work In Progress & Context
 
-## 16 augustus (later) -- big bros krijgen hun wapen: prompts EN spel
+## 26 augustus -- de eerste ECHTE big bros: cavalerie voor muis, leeuw en varken
+
+Max leverde 15 cavalerie-blends (Mouse/Lion/Pig x base/spd/hp/atk/mix) in de
+inbox, plus (via zijn texture-workflow, aangewezen in Downloads) de eerste
+team-atlassen: rood en blauw voor de muis-base. Precies wat het systeem van
+de 16e verwachtte: losse lijfdelen, een melee-clipset (Idle 1-3, Walking 1-2,
+zes Death-varianten, Attack/Thrust/Pommel strike, Ready, Hit) en het wapen
+bot-geparent aan mixamorig:RightHand. Renders bevestigden identiteit en
+wapens VOOR de pijplijn draaide: de rat stoot met een beugelgevest-sabel, de
+leeuw met een korte kling, het varken hakt met een bijl.
+
+Drie dingen aangepast tijdens het verwerken:
+
+- **Tripo-gruis**: de leeuw- en varken-blends dragen naast het echte wapen
+  geskinde tripo-fragmentjes van 1 driehoek. Beide exportscripts filteren nu
+  alles onder de 20 tris (anders: zwevende splinters in wapen-glb en model).
+- **"Pommel strike"** herkend als melee-variant (woord "strike" in
+  CLIP_WOORDEN); de "Run"-clips blijven bewust ongebruikt (niet gedetrende
+  root-motion zou laten wegglijden als walk-variant).
+- **_wapencheck.gd** bestrijkt nu infanterie EN cavalerie (ontbrekende
+  cavalerie is daar geen fout: beer/wolf/krokodil komen nog).
+
+Verwerking: drie-export-pijplijn x 15 (melee-glb, karakter-glb met wapen,
+kwartslag-fix + gibs), 0 fouten. Godot-import liep dit keer via Max' OPEN
+editor (live mee-importerend); de team-png's kregen hun .import
+voorgeschreven (md5-pad-formule geverifieerd, mipmaps + 1024-limiet) zodat
+de eerste import meteen goed staat. De rood/blauw-atlassen dekken alleen
+muis-base; de andere 14 modellen houden hun neutrale glb-texture tot Max
+meer atlassen genereert.
+
+Voor Max: tuner-pass (schaal/positie -- de big bro hoort boven zijn
+infanterie uit te torenen, auto-fit maakt ze gelijk), en de resterende
+team-atlassen + de drie ontbrekende facties wanneer hij wil.
 
 Drie verzoeken van Max in een middag, allemaal rond "de archetypes moeten
 visueel uit elkaar":

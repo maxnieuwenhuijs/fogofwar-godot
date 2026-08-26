@@ -26,6 +26,13 @@ if not uit:
     sys.exit(1)
 
 wapens = [o for o in bpy.data.objects if o.type == "MESH" and o.name.lower().startswith("tripo_node")]
+# Degeneraat gruis overslaan: de cavalerie-blends (16 aug) hebben naast het
+# echte wapen ook geskinde tripo-fragmentjes van 1 driehoek. Die horen niet
+# in de wapen-glb (ze zouden als zwevende splinter meevliegen bij de dood).
+gruis = [o for o in wapens if len(o.data.polygons) < 20]
+for o in gruis:
+    print("  overgeslagen (gruis, %d tris): %s" % (len(o.data.polygons), o.name))
+wapens = [o for o in wapens if o not in gruis]
 if not wapens:
     print("GEEN ingebakken wapen in dit bestand")
     sys.exit(1)

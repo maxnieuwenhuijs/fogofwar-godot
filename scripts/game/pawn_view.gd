@@ -713,7 +713,8 @@ const CLIP_WOORDEN: Array = [
 	{"woorden": ["hit", "reaction", "flinch"], "doel": "hit"},
 	# "fir" i.p.v. "fire": de HP-muis heet "Firing Rifile ankle shot".
 	{"woorden": ["fir", "shoot", "shot"], "doel": "attack"},
-	{"woorden": ["bayon", "butt", "stab", "melee", "attack"], "doel": "melee"},
+	# "strike": de cavalerie-blends (16 aug) hebben een "Pommel strike"-clip.
+	{"woorden": ["bayon", "butt", "stab", "melee", "attack", "strike"], "doel": "melee"},
 ]
 
 

@@ -1,12 +1,16 @@
-# Eenmalig (15 augustus): render het karakter MET ingebakken musket midden in
-# een paar animaties, om te beoordelen of de skinning goed genoeg is om het
-# musket-in-de-animatie-idee van Max te dragen.
-#   blender --background model.blend --python tools/_render_anim.py -- <uitmap>
+# Render het karakter MET ingebakken wapen midden in een paar animaties, om
+# identiteit en skinning te beoordelen voor de export-pijplijn draait
+# (les van 15 augustus: renderen, niet aannemen).
+#   blender --background model.blend --python tools/_render_anim.py -- <uitmap> [clipnaam ...]
+# Zonder clipnamen: de vier infanterie-clips van de eerste keer.
 import bpy
 import sys
 from mathutils import Vector
 
-uitmap = sys.argv[sys.argv.index("--") + 1]
+_argv = sys.argv[sys.argv.index("--") + 1:]
+uitmap = _argv[0]
+clips = _argv[1:] if len(_argv) > 1 else [
+    "Rifle idle 1", "Walk 1", "Bayonet Attack", "Rifle fire ankle shot"]
 
 arm = None
 for o in bpy.data.objects:
@@ -43,7 +47,7 @@ sc.render.resolution_y = 512
 if arm.animation_data is None:
     arm.animation_data_create()
 
-for naam in ["Rifle idle 1", "Walk 1", "Bayonet Attack", "Rifle fire ankle shot"]:
+for naam in clips:
     act = bpy.data.actions.get(naam)
     if act is None:
         print("ONTBREEKT:", naam)

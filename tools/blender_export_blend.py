@@ -35,8 +35,16 @@ if not uit:
     print("FOUT: geef --uit <pad.glb> mee")
     sys.exit(1)
 
-# 1. Het ingebakken musket: standaard HOUDEN (zie kop), op verzoek strippen.
+# 1. Het ingebakken wapen: standaard HOUDEN (zie kop), op verzoek strippen.
+#    Degeneraat gruis (geskinde tripo-fragmentjes van 1 driehoek, gezien in de
+#    cavalerie-blends van 16 aug) gaat er ALTIJD uit: het is geen wapen en
+#    geen lijfdeel, alleen ruis in de karakter-glb.
 wapens = [o for o in bpy.data.objects if o.name.lower().startswith("tripo_node")]
+gruis = [o for o in wapens if len(o.data.polygons) < 20]
+for o in gruis:
+    print("  gruis verwijderd (%d tris): %s" % (len(o.data.polygons), o.name))
+    bpy.data.objects.remove(o, do_unlink=True)
+wapens = [o for o in wapens if o not in gruis]
 if zonder_wapen:
     for o in wapens:
         print("  ingebakken wapen verwijderd (--zonder-wapen): %s (%d tris)" % (o.name, len(o.data.polygons)))

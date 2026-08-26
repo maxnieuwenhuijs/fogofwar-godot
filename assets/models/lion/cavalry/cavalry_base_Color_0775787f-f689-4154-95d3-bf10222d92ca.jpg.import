@@ -1,0 +1,44 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://bog7addq13wr"
+path.s3tc="res://.godot/imported/cavalry_base_Color_0775787f-f689-4154-95d3-bf10222d92ca.jpg-9a55a0c695ba723e9e2a0d3ef17fa7a5.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "c4511c3d3381e1ad6ffbc8409b5ae5ea"
+}
+
+[deps]
+
+source_file="res://assets/models/lion/cavalry/cavalry_base_Color_0775787f-f689-4154-95d3-bf10222d92ca.jpg"
+dest_files=["res://.godot/imported/cavalry_base_Color_0775787f-f689-4154-95d3-bf10222d92ca.jpg-9a55a0c695ba723e9e2a0d3ef17fa7a5.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0
