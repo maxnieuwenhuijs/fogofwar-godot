@@ -1269,6 +1269,10 @@ func _ready() -> void:
 		for mc_scenario in [[Constants.UnitType.INFANTRY, "infanterie"], [Constants.UnitType.CAVALRY, "cavalerie"]]:
 			var mc_ok: bool = await _meleecheck_scenario(game, st3, int(mc_scenario[0]), String(mc_scenario[1]))
 			mc_alles_ok = mc_alles_ok and mc_ok
+		# Derde scenario (26 aug): de CHARGE -- aanrijden op de rush-clip,
+		# sprong-stoot ("charge"-clip) bij aankomst.
+		var mc_charge_ok: bool = await _meleecheck_charge(game, st3)
+		mc_alles_ok = mc_alles_ok and mc_charge_ok
 		print("[MELEE] " + ("PASS" if mc_alles_ok else "FAIL"))
 		get_tree().quit(0 if mc_alles_ok else 1)
 		return
@@ -2410,4 +2414,79 @@ func _meleecheck_scenario(game, st3: GameState, unit_type: int, naam: String) ->
 		print("[MELEE][%s] FAIL: veel te laat overgestoken (%.2fs tegen %.2fs verwacht)" % [naam, vertrek, verwacht])
 		mc_ok = false
 	return mc_ok
+
+
+## Charge-scenario voor `-- meleecheck` (26 aug, Max: "jump en dan melee, dat
+## is voor de charge"): een cavalerist rijdt een vak aan en velt de
+## aangrenzende infanterist. Eis: tijdens het aanrijden speelt een
+## rush-clip, bij aankomst de charge-sprongstoot (terugval walk/melee telt
+## ook, voor facties zonder die clips -- maar de muis heeft ze).
+func _meleecheck_charge(game, st3: GameState) -> bool:
+	st3.current_player = 1
+	if st3.phase != Phase.Type.ACTION:
+		st3.phase = Phase.Type.ACTION
+	var ruiter: Pawn = null
+	var slachtoffer: Pawn = null
+	for pawn in st3.pawns.values():
+		if pawn.is_eliminated:
+			continue
+		if pawn.owner_id == st3.current_player and ruiter == null \
+				and pawn.unit_type == Constants.UnitType.CAVALRY:
+			ruiter = pawn
+			ruiter.is_active = true
+		elif pawn.owner_id != st3.current_player and slachtoffer == null \
+				and pawn.unit_type == Constants.UnitType.INFANTRY:
+			slachtoffer = pawn
+			slachtoffer.is_active = true
+	if ruiter == null or slachtoffer == null:
+		print("[MELEE][charge] geen bruikbaar paar gevonden")
+		return false
+	ruiter.remaining_stamina = maxi(ruiter.remaining_stamina, 3)
+	var start := Vector2i(5, 6)
+	var tussen := Vector2i(5, 5)
+	var doelvak := Vector2i(5, 4)
+	for bezet in st3.pawns.values():
+		if bezet != ruiter and bezet != slachtoffer and not bezet.is_eliminated \
+				and (bezet.position == start or bezet.position == tussen or bezet.position == doelvak):
+			st3.set_pawn_position(bezet, Vector2i(0, 0) if bezet.position != Vector2i(0, 0) else Vector2i(10, 9))
+	st3.set_pawn_position(ruiter, start)
+	st3.set_pawn_position(slachtoffer, doelvak)
+	slachtoffer.current_hp = 1
+	game._refresh_all()
+	await get_tree().create_timer(0.3).timeout
+	var rv = game._pawn_views.get(ruiter.id)
+	var gelukt: bool = GameSession.submit_charge(st3.current_player, ruiter.id, tussen, slachtoffer.id)
+	if not gelukt:
+		var act := Actions.make_charge(ruiter.id, tussen, slachtoffer.id)
+		var res: Dictionary = Validator.is_legal(st3, act, st3.current_player)
+		print("[MELEE][charge] charge geweigerd: %s (stamina=%d posities=%s->%s doel=%s)" % [
+			JSON.stringify(res), ruiter.remaining_stamina, str(start), str(tussen), str(doelvak)])
+		return false
+	# Clip-verloop bemonsteren: eerst hoort er een rush/walk te spelen,
+	# daarna de charge/melee-stoot.
+	var gezien: Array = []
+	var t := 0.0
+	while t < 1.2:
+		if rv != null and is_instance_valid(rv):
+			var clip := String(rv.huidige_clip())
+			if clip != "" and (gezien.is_empty() or gezien[gezien.size() - 1] != clip):
+				gezien.append(clip)
+		await get_tree().create_timer(0.03).timeout
+		t += 0.03
+	print("[MELEE][charge] clip-verloop: %s" % ", ".join(gezien))
+	var reed := false
+	var stootte := false
+	var stoot_na_rit := false
+	for clip in gezien:
+		var c := String(clip)
+		if c.begins_with("rush") or c.begins_with("walk"):
+			reed = true
+		elif c.begins_with("charge") or c.begins_with("melee"):
+			stootte = true
+			if reed:
+				stoot_na_rit = true
+	var ok := reed and stootte and stoot_na_rit
+	if not ok:
+		print("[MELEE][charge] FAIL: aanrijden=%s stoot=%s volgorde-goed=%s" % [reed, stootte, stoot_na_rit])
+	return ok
 

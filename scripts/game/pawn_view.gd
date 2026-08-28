@@ -595,6 +595,25 @@ func play_melee() -> void:
 		_play_variant(anim_attack, false, 1.0, true)
 
 
+## Aanrij-loop tijdens de charge-beweging (26 aug): run-clip als het model
+## die heeft (cavalerie: "Run"/"Run and jump" -> rush1/rush2), anders walk.
+func play_rush() -> void:
+	if _anim != null and not _variants_of("rush").is_empty():
+		_play_variant("rush", true)
+	else:
+		play_walk()
+
+
+## Charge-stoot (26 aug, Max: "jump en dan melee"): de sprong-aanval
+## ("Standing Melee Run Jump Attack" -> "charge") als het model die heeft,
+## anders de gewone melee-stoot. Raakmoment stem je af met charge_hit_delay.
+func play_charge() -> void:
+	if _anim != null and not _variants_of("charge").is_empty():
+		_play_variant("charge", false, melee_fx("charge_speed", "charge_speed", 1.2), true)
+	else:
+		play_melee()
+
+
 func play_die() -> void:
 	_play_variant(anim_die, false, 1.0, true)
 
@@ -711,6 +730,11 @@ const CLIP_WOORDEN: Array = [
 	{"woorden": ["death", "die"], "doel": "die"},
 	{"woorden": ["aim", "ready"], "doel": "ready"},
 	{"woorden": ["hit", "reaction", "flinch"], "doel": "hit"},
+	# Cavalerie-charge (26 aug, Max: "jump en dan melee, dat is voor de
+	# charge"): de sprong-aanval is de charge-stoot, de run-clips zijn de
+	# aanrij-loop. VOOR de melee-regel, anders vangt "attack" ze weg.
+	{"woorden": ["jump attack"], "doel": "charge"},
+	{"woorden": ["run"], "doel": "rush"},
 	# "fir" i.p.v. "fire": de HP-muis heet "Firing Rifile ankle shot".
 	{"woorden": ["fir", "shoot", "shot"], "doel": "attack"},
 	# "strike": de cavalerie-blends (16 aug) hebben een "Pommel strike"-clip.
@@ -833,7 +857,9 @@ func _variants_of(base: String) -> Array:
 
 ## Sta- en loopclips horen te herhalen (glTF-clips loopen niet vanzelf).
 func _make_loops() -> void:
-	for base in [anim_idle, anim_walk]:
+	# "rush" (26 aug): de aanrij-loop van de cavalerie-charge loopt net als
+	# walk door zolang de beweging duurt.
+	for base in [anim_idle, anim_walk, "rush"]:
 		for full in _variants_of(base):
 			_anim.get_animation(full).loop_mode = Animation.LOOP_LINEAR
 

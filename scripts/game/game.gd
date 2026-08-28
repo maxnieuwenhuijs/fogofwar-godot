@@ -1879,29 +1879,42 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 		"charge":
 			Audio.play("charge_yell")  # strijdkreet bij het aanrijden
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
+			# Choreografie in fasen (26 aug, Max: "jump en dan melee, dat is
+			# voor de charge"): eerst aanrijden op de rush-clip, dan bij
+			# aankomst de sprong-stoot ("charge"-clip), en de klap op het
+			# stoot-frame -- niet meer de vaste 0.4s dwars door het rijden.
+			var rij_dur := 0.0
 			if result.get("moved", false) or result.get("forced_move", false):
-				_animate_move(action.pawn_id, result.charge_from, end_pos)
+				_animate_move(action.pawn_id, result.charge_from, end_pos, true)
+				var rij_dist: int = absi(end_pos.x - result.charge_from.x) + absi(end_pos.y - result.charge_from.y)
+				rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
 			_check_haven_score(action.pawn_id, end_pos)
 			var cav: PawnView = _pawn_views.get(action.pawn_id)
 			if cav != null and action.get("defender_id", -1) != -1:
-				cav.play_melee()
+				var richting: Vector2i = result.defender_pos - end_pos
+				get_tree().create_timer(rij_dur + 0.02).timeout.connect(func() -> void:
+					if is_instance_valid(cav):
+						if richting != Vector2i.ZERO:
+							cav.face_dir(richting)
+						cav.play_charge())
 			if action.get("defender_id", -1) != -1:
-				# Na de aanrij-animatie: klap op het doelwit, evt. terugslag op het paard.
-				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", 0.4)
+				var klap_del: float = rij_dur + (cav.melee_fx("charge_hit_delay", "charge_hit_delay", 0.35) if cav != null else 0.35)
+				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", klap_del)
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
-					result.get("eliminated", false), 0.4, true)
-				_hit_feedback(action.defender_id, result.defender_pos, result.damage, 0.4,
+					result.get("eliminated", false), klap_del, true)
+				_hit_feedback(action.defender_id, result.defender_pos, result.damage, klap_del,
 					result.charge_from, result.get("eliminated", false), 0.85)
 				if result.get("eliminated", false):
-					_death_sound(action.defender_id, 0.5)
+					_death_sound(action.defender_id, klap_del + 0.1)
 				if result.get("retaliation", false):
-					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), 0.75,
+					var ret_del: float = klap_del + 0.35
+					_hit_feedback(action.pawn_id, result.move_target, result.get("retaliation_damage", 1), ret_del,
 						result.defender_pos, result.get("attacker_eliminated", false), 0.5)
-					_retaliation_sound(action.defender_id, 0.75)
+					_retaliation_sound(action.defender_id, ret_del)
 					_impact_laag(action.pawn_id, int(result.get("retaliation_damage", 1)),
-						result.get("attacker_eliminated", false), 0.75, true)
+						result.get("attacker_eliminated", false), ret_del, true)
 					if result.get("attacker_eliminated", false):
-						_death_sound(action.pawn_id, 0.8)
+						_death_sound(action.pawn_id, ret_del + 0.05)
 		"wolf_step":
 			_animate_move(action.pawn_id, action.from, action.target)
 			_check_haven_score(action.pawn_id, action.target)
@@ -2632,12 +2645,16 @@ func _begin_advance(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> v
 	_animate_move(pawn_id, from_coord, to_coord)
 
 
-func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> void:
+func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush: bool = false) -> void:
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
 	pv.face_dir(to_coord - from_coord)
-	pv.play_walk()
+	# rush (26 aug): de cavalerie-charge rijdt aan op de run-clip.
+	if rush:
+		pv.play_rush()
+	else:
+		pv.play_walk()
 	var start := tile_position(from_coord.x, from_coord.y) + Vector3(0.0, PAWN_Y, 0.0)
 	var end := tile_position(to_coord.x, to_coord.y) + Vector3(0.0, PAWN_Y, 0.0)
 	pv.position = start

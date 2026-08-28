@@ -280,9 +280,14 @@ for act in list(bpy.data.actions):
         fix_quarter_turn(act, q_rest_hips, q_ref_arm, "handmatige --forceyaw", FORCE_YAW[act.name])
     elif q_ref_arm is not None and not act.name.startswith("idle"):
         fix_quarter_turn(act, q_rest_hips, q_ref_arm, ref_act.name)
-    if act.name.startswith(("hit", "bayonet", "melee")):
+    naam_laag = act.name.lower()
+    if naam_laag.startswith(("hit", "bayonet", "melee")):
         lock_hips_location(act)
-    elif act.name.startswith(("walk", "idle")):
+    elif naam_laag.startswith(("walk", "idle", "run")) or "jump attack" in naam_laag:
+        # Kleine letters + run/jump erbij (26 aug): de cavalerie-sprongaanval
+        # ("Standing Melee Run Jump Attack") draagt ~170 eenheden z-drift en
+        # zou op de tegel voorbij zijn doelwit schieten; in-place maken zoals
+        # walk/idle. Death-clips houden hun drift (het lijk valt opzij).
         detrend_root_motion(act)
 
 for clip_name, path in CLIPS:
@@ -312,9 +317,10 @@ for clip_name, path in CLIPS:
             fix_quarter_turn(act, q_rest_hips, q_ref_arm, "handmatige --forceyaw", FORCE_YAW[clip_name])
         elif q_ref_arm is not None and not clip_name.startswith("idle"):
             fix_quarter_turn(act, q_rest_hips, q_ref_arm, ref_act.name)
-        if clip_name.startswith(("hit", "bayonet", "melee")):
+        clip_laag = clip_name.lower()
+        if clip_laag.startswith(("hit", "bayonet", "melee")):
             lock_hips_location(act)
-        elif clip_name.startswith(("walk", "idle")):
+        elif clip_laag.startswith(("walk", "idle", "run")) or "jump attack" in clip_laag:
             detrend_root_motion(act)
         add_track(base, act, clip_name)
         print("clip toegevoegd:", clip_name)

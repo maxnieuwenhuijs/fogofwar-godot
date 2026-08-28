@@ -34,6 +34,23 @@ Voor Max: tuner-pass (schaal/positie -- de big bro hoort boven zijn
 infanterie uit te torenen, auto-fit maakt ze gelijk), en de resterende
 team-atlassen + de drie ontbrekende facties wanneer hij wil.
 
+NAKOMER 2 (zelfde dag, Max: "je hebt ook een jump en dan een melee, dat is
+voor rush en attack cav -- check ook alle gibs"): de charge gebruikt nu de
+clips waarvoor ze bedoeld zijn. "Run"/"Run and jump" heten na het laden
+rush1/rush2 (loopend, in-place), "Standing Melee Run Jump Attack" heet
+"charge". De sprong-aanval droeg ~174 eenheden z-drift (hij rende zelf naar
+voren en zou voorbij het doelwit schieten); de fix-pass detrend nu ook
+run/jump-clips (case-insensitive, meteen de oude kleine-letter-blindheid
+van walk/idle gefikst) en alle 15 cavalerie-glbs zijn opnieuw door de pass.
+De charge-flow in game.gd is in fasen: aanrijden op de rush-clip, bij
+aankomst de sprong-stoot (play_charge, terugval play_melee), en de klap op
+rij-tijd + charge_hit_delay (0,35 default, tunebaar) in plaats van de vaste
+0,4s dwars door het rijden. Meleecheck heeft er een DERDE scenario bij dat
+het hele verloop bemonstert: rush1 -> charge1 -> (die2: de ruiter sneuvelde
+aan de terugslag, ook dat klopt) -- PASS. En de gibcheck is verbreed naar
+ALLE 45 gibs-bestanden: 11 delen infanterie / 10 cavalerie (geen hoedje in
+die blends), ledemaat-namen overal vindbaar, geen stapels -- PASS.
+
 NAKOMER (zelfde dag, Max: "alle cav maken ook gebruik van hun wapen"): de
 aanval-flow bleek al goed (aangrenzende cavalerie-aanval en de charge gaan
 allebei door play_melee, nooit door het musket-pad), maar het bewijs
