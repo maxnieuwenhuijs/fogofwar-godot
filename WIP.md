@@ -204,7 +204,14 @@ haven/ring-kleuren en cyaan vakken buiten het palet, camera-framing,
 hp-chips van 5,5 px, koppelring onzichtbaar, `?`-knop boven het dim-vlak
 (bewust: uitleg altijd bereikbaar).
 
-**Merge met F4.3e (proefmerge gedaan):** twee conflictblokken: WIP.md (beide
+**Merge met main (F4.3f, 3 september 18:55):** vier conflicten (WIP.md,
+game.gd `_toon_reveal`, tests.ps1, TestRunner.gd) opgelost; F4.3e's
+`_toon_linking_hand` geeft de kaartwaaier nu factie, kleur en CP-zegel mee.
+Na de merge: suites 908 groen, carddist exact, uicheck PASS, uispel 777
+zelfde zobrist en 270 acties, naadcheck PASS, `-- herstelcheck 777` en
+`4242 wolf` allebei PASS met 0 verschillen en 0 canary.
+
+**Merge-recept (proefmerge, achterhaald door de echte merge hierboven):** twee conflictblokken: WIP.md (beide
 koppen houden) en game.gd (`_toon_reveal` van F4.3e houden en daarin de
 OnthulScherm-aanroep zetten); daarna in F4.3e's `_toon_linking_hand` de
 `configure(...)` van de hand `_human_id, _human_doctrine` meegeven en per
