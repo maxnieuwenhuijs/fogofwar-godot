@@ -1,18 +1,9 @@
-extends Node
+extends SessionInterface
 
-signal state_updated(state: GameState)
-signal phase_changed(new_phase: int, old_phase: int)
-signal placement_submitted(player_id: int)
-signal cards_revealed_event(totals_p1: Dictionary, totals_p2: Dictionary, initiative_winner: int)
-signal turn_changed(player_id: int)
-signal action_performed(action: Dictionary, result: Dictionary)
-signal wolf_step_pending(pawn_id: int)
-signal cycle_started(cycle_number: int)
-signal game_over(winner_id: int)
-signal error_occurred(player_id: int, message: String)
-signal doctrines_revealed(doctrines: Dictionary)  # F4.0: beide keuzes tegelijk onthuld
-
-var state: GameState = null
+# F4.3b — GameSession IS de LocalSession: de signals, `state` en
+# `_relay_events` staan in SessionInterface (scripts/core/session_interface.gd);
+# hier alleen de in-proces implementatie (Validator/Reducer, event-log).
+# game.gd praat via `session`; offline wijst die naar deze autoload.
 
 ## F0.7: opt-in event-log — zet een MatchLog (na start_new_game) en elke
 ## geaccepteerde actie wordt bijgeschreven. Gebruikt door -- record en straks
@@ -154,34 +145,7 @@ func _record(player_id: int, action: Dictionary, events: Array, now_ms: int = -1
 	if match_log != null:
 		match_log.record(player_id, action, events, state, true, now_ms)
 
-func _relay_events(events: Array) -> void:
-	for ev in events:
-		match String(ev.type):
-			Reducer.EV_ACTION:
-				action_performed.emit(ev.payload.action, ev.payload.result)
-			Reducer.EV_STATE:
-				state_updated.emit(state)
-			Reducer.EV_WOLF_PENDING:
-				wolf_step_pending.emit(ev.payload.pawn_id)
-			Reducer.EV_TURN:
-				turn_changed.emit(ev.payload.player_id)
-			Reducer.EV_PHASE:
-				phase_changed.emit(ev.payload.new_phase, ev.payload.old_phase)
-			Reducer.EV_GAME_OVER:
-				game_over.emit(ev.payload.winner)
-			Reducer.EV_PLACEMENT:
-				placement_submitted.emit(ev.payload.player_id)
-			Reducer.EV_CARDS_REVEALED:
-				cards_revealed_event.emit(ev.payload.totals_p1, ev.payload.totals_p2, ev.payload.winner)
-			Reducer.EV_CYCLE_STARTED:
-				cycle_started.emit(ev.payload.cycle)
-			Reducer.EV_DOCTRINES_REVEALED:
-				doctrines_revealed.emit(ev.payload.doctrines)
-
 func _transition_to(new_phase: int) -> void:
 	var old: int = state.phase
 	state.phase = new_phase
 	phase_changed.emit(new_phase, old)
-
-func get_state() -> GameState:
-	return state

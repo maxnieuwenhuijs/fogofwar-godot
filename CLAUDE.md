@@ -140,9 +140,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
   eind-zobrist; seed 777 moet `890b6cb4…` geven (270 acties, cyclus 6, zie
   WIP 3 september). Elke F4.3-stap: uispel gelijk, én `-- record
-  user://ref_na.json easy easy muis wolf 777` byte-gelijk aan
-  `user://ref_voor.json`. Het bouwplan met de vaste regressieset staat in
-  `docs/F4.3-bouwplan.md`.
+  user://ref_na.json easy easy muis wolf 777` gevolgd door `python
+  tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
+  entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Het
+  bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).

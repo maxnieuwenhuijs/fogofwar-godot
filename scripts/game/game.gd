@@ -84,8 +84,16 @@ const PHASE_TIME_LIMIT := 20.0
 var _human_id: int = Constants.PLAYER_1
 var _ai_id: int = Constants.PLAYER_2
 
+## F4.3b -- de sessie waar game.gd tegen praat. Offline de autoload
+## GameSession (die IS de LocalSession), online straks een RemoteSession met
+## dezelfde signals en submits. De enige regel die GameSession nog bij naam
+## noemt is de toewijzing in _ready.
+var session: SessionInterface = null
+var _verbonden_sessie: Object = null
+
 
 func _ready() -> void:
+	session = GameSession
 	_board = BOARD_SCENE.instantiate()
 	_world.add_child(_board)
 	_world.move_child(_board, 0)
@@ -129,7 +137,7 @@ func _process(delta: float) -> void:
 			_timer_active = false
 			_on_phase_timeout()
 		else:
-			var st: GameState = GameSession.state
+			var st: GameState = session.state
 			_top_label.text = tr("HUD_TOPBAR_TIMER") % [
 				st.cycle, st.round_number, _phase_label(st.phase), int(ceil(_timer_left))]
 			# Aftel-tik in de laatste 5 sec; de laatste 3 sec tikt dezelfde klok
@@ -151,8 +159,8 @@ func _start_phase_timer(seconds: float) -> void:
 	_timer_active = true
 	# F0.8: staan er klokken in de match-config (state.turn_deadline gezet),
 	# dan is de engine-deadline leidend; anders het vaste offline-limiet.
-	if GameSession.state != null and GameSession.state.turn_deadline > 0:
-		_timer_left = maxf(0.1, float(GameSession.state.turn_deadline - Time.get_ticks_msec()) / 1000.0)
+	if session.state != null and session.state.turn_deadline > 0:
+		_timer_left = maxf(0.1, float(session.state.turn_deadline - Time.get_ticks_msec()) / 1000.0)
 	else:
 		_timer_left = seconds
 	_last_tick_second = -1  # aftel-tikken opnieuw laten beginnen
@@ -160,14 +168,14 @@ func _start_phase_timer(seconds: float) -> void:
 
 ## Opgeven met bevestiging; de winst gaat via het normale game_over-pad.
 func _on_resign_pressed() -> void:
-	var ph: int = GameSession.state.phase
+	var ph: int = session.state.phase
 	if ph == Phase.Type.GAME_OVER or ph == Phase.Type.PRE_GAME:
 		return
 	var dlg := ConfirmationDialog.new()
 	dlg.dialog_text = tr("MENU_RESIGN_CONFIRM")
 	dlg.ok_button_text = tr("MENU_RESIGN_OK")
 	dlg.cancel_button_text = tr("MENU_RESIGN_CANCEL")
-	dlg.confirmed.connect(func() -> void: GameSession.submit_resign(_human_id))
+	dlg.confirmed.connect(func() -> void: session.submit_resign(_human_id))
 	$UI.add_child(dlg)
 	dlg.popup_centered()
 
@@ -177,25 +185,25 @@ func _stop_phase_timer() -> void:
 
 
 func _on_phase_timeout() -> void:
-	var ph: int = GameSession.state.phase
-	if Phase.is_define(ph) and GameSession.state.cards_defined[_human_id].size() == 0:
-		if GameSession.state.rules.campaign_actief() and not _card_hand.visible:
+	var ph: int = session.state.phase
+	if Phase.is_define(ph) and session.state.cards_defined[_human_id].size() == 0:
+		if session.state.rules.campaign_actief() and not _card_hand.visible:
 			# CP-bod-overlay stond nog open: zonder inzet door naar de waaier.
 			_overlay.hide()
-			_open_define_hand(int(GameSession.state.cp_bets.get(_human_id, 0)))
+			_open_define_hand(int(session.state.cp_bets.get(_human_id, 0)))
 		_card_hand._on_confirm_pressed()  # auto-bevestig (altijd geldig)
-	elif ph == Phase.Type.CYCLE_SPAWN and not GameSession.state.spawn_done.get(_human_id, false):
+	elif ph == Phase.Type.CYCLE_SPAWN and not session.state.spawn_done.get(_human_id, false):
 		_overlay.hide()
 		_update_hud(tr("HUD_TIMEOUT_SPAWN"))
-		GameSession.submit_spawn(_human_id, Validator.aanvul_spawn_actie(GameSession.state, _human_id).spawns)
+		session.submit_spawn(_human_id, Validator.aanvul_spawn_actie(session.state, _human_id).spawns)
 	elif Phase.is_linking(ph):
 		_auto_link_human = true
-		if GameSession.state.current_player == _human_id:
+		if session.state.current_player == _human_id:
 			_auto_link(_human_id)
 	elif ph == Phase.Type.PLACEMENT and _placement_mode:
 		# Tijd om tijdens zelf opstellen → val terug op de standaard-opstelling.
 		_cancel_manual_placement()
-	elif ph == Phase.Type.ACTION and GameSession.state.current_player == _human_id:
+	elif ph == Phase.Type.ACTION and session.state.current_player == _human_id:
 		# Tijd om in de actiefase → het spel doet een redelijke zet voor je.
 		_auto_action_human()
 
@@ -218,13 +226,13 @@ func _cancel_manual_placement() -> void:
 
 ## Timeout in de actiefase: kies greedy een zet voor de mens (zelfde motor als de AI).
 func _auto_action_human() -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if state.phase != Phase.Type.ACTION or state.current_player != _human_id:
 		return
 	_deselect()
 	if state.pending_wolf_step_pawn != -1:
 		_end_wolf_step_mode()
-		GameSession.skip_wolf_step(_human_id)
+		session.skip_wolf_step(_human_id)
 		return
 	if _human_auto_ai == null:
 		_human_auto_ai = AUTO_AI_SCRIPT.new()
@@ -236,18 +244,18 @@ func _auto_action_human() -> void:
 	match String(action.type):
 		"move":
 			if _kanon_v42(int(action.pawn_id)):
-				GameSession.submit_cannon_roll(_human_id, action.pawn_id, action.target)
+				session.submit_cannon_roll(_human_id, action.pawn_id, action.target)
 			else:
-				GameSession.submit_move(_human_id, action.pawn_id, action.target)
+				session.submit_move(_human_id, action.pawn_id, action.target)
 		"attack":
-			GameSession.submit_attack(_human_id, action.attacker_id, action.defender_id)
+			session.submit_attack(_human_id, action.attacker_id, action.defender_id)
 		"shot":
 			if _kanon_v42(int(action.shooter_id)):
-				GameSession.submit_cannon_shoot(_human_id, action.shooter_id, action.target_id)
+				session.submit_cannon_shoot(_human_id, action.shooter_id, action.target_id)
 			else:
-				GameSession.submit_shot(_human_id, action.shooter_id, action.target_id)
+				session.submit_shot(_human_id, action.shooter_id, action.target_id)
 		"charge":
-			GameSession.submit_charge(_human_id, action.pawn_id, action.move_target, action.defender_id)
+			session.submit_charge(_human_id, action.pawn_id, action.move_target, action.defender_id)
 
 
 func _exit_tree() -> void:
@@ -432,7 +440,7 @@ func _update_context_knop() -> void:
 		_context_knop.text = tr("HUD_BTN_SKIP")
 		_context_knop.visible = true
 		return
-	var st: GameState = GameSession.state
+	var st: GameState = session.state
 	if st != null and st.phase == Phase.Type.ACTION and _selected_pawn_id >= 0 \
 			and st.current_player == _human_id:
 		_context_knop.text = tr("HUD_BTN_DESELECT")
@@ -446,7 +454,7 @@ func _on_context_knop() -> void:
 		_undo_placement()
 	elif _wolf_step_mode:
 		_end_wolf_step_mode()
-		GameSession.skip_wolf_step(_human_id)
+		session.skip_wolf_step(_human_id)
 	elif _selected_pawn_id >= 0:
 		_deselect()
 
@@ -556,7 +564,7 @@ func _start_match(difficulty: int) -> void:
 		var facties := CRules.facties_uit_bestand()
 		if not facties.is_empty():
 			regels.doctrines = facties
-	GameSession.start_new_game(_human_doctrine, _ai_doctrine, regels)
+	session.start_new_game(_human_doctrine, _ai_doctrine, regels)
 	_show_placement_overlay()
 
 
@@ -592,7 +600,7 @@ func _on_placement_menu_choice(index: int) -> void:
 ## de infanterie vult daarna automatisch aan (voorste rij, centrum eerst).
 func _begin_manual_placement() -> void:
 	_overlay.hide()
-	var comp: Array = GameSession.state.doctrine_data_of(_human_id).comp
+	var comp: Array = session.state.doctrine_data_of(_human_id).comp
 	var order: Array = [
 		{"type": Constants.UnitType.ARTILLERY, "count": int(comp[2])},
 		{"type": Constants.UnitType.CAVALRY, "count": int(comp[1])},
@@ -601,8 +609,8 @@ func _begin_manual_placement() -> void:
 	# C15 (besluit Max, 30 juli): je zet je vaandeldragers en tamboers ZELF neer.
 	# Ze staan vooraan in de plaats-reeks als losse stappen, dus je kiest hun vak
 	# net als bij een kanon. Wat je niet plaatst, wordt gewone infanterie.
-	var camp: Dictionary = GameSession.state.rules.campaign
-	if GameSession.state.rules.campaign_actief():
+	var camp: Dictionary = session.state.rules.campaign
+	if session.state.rules.campaign_actief():
 		for rol_stap in [["flag", int(camp.get("vaandels_max", 2))],
 				["drum", int(camp.get("tamboers_max", 2))]]:
 			if int(rol_stap[1]) > 0:
@@ -734,13 +742,13 @@ func _spawn_placement_preview(unit_type: int, coord: Vector2i) -> void:
 	pv.face_dir(Vector2i(0, -1) if _human_id == Constants.PLAYER_1 else Vector2i(0, 1))
 	pv.set_unit_type(unit_type)
 	# Neutraal factie-model (basis) als dat bestaat; kaarten zijn er nog niet.
-	pv.set_character(GameSession.state.doctrine_of(_human_id), unit_type, null)
+	pv.set_character(session.state.doctrine_of(_human_id), unit_type, null)
 	_placement_previews[coord] = pv
 
 
 func _finish_manual_placement() -> void:
 	# Infanterie vult de open vakken aan: voorste rij eerst, centrum naar buiten.
-	var comp: Array = GameSession.state.doctrine_data_of(_human_id).comp
+	var comp: Array = session.state.doctrine_data_of(_human_id).comp
 	# BUG-FIX (Max, 30 juli: "de hover highlight dat een ring gloeit is niet
 	# meer"). Sinds C15 plaats je zelf vaandeldragers en tamboers, en dat zijn
 	# ook INFANTERIE. Zonder deze aftrek vulde de code er nog comp[0] bij, kwam
@@ -773,8 +781,8 @@ func _finish_manual_placement() -> void:
 	for pv in _placement_previews.values():
 		pv.queue_free()
 	_placement_previews = {}
-	GameSession.submit_placement(_ai_id, _ai.choose_placement(GameSession.state))
-	GameSession.submit_placement(_human_id, _placement_placed)
+	session.submit_placement(_ai_id, _ai.choose_placement(session.state))
+	session.submit_placement(_human_id, _placement_placed)
 	_placement_placed = []
 	_build_pawn_views()
 	_refresh_all()
@@ -782,8 +790,8 @@ func _finish_manual_placement() -> void:
 
 func _confirm_placement() -> void:
 	_overlay.hide()
-	GameSession.submit_placement(_ai_id, _ai.choose_placement(GameSession.state))
-	GameSession.submit_default_placement(_human_id)
+	session.submit_placement(_ai_id, _ai.choose_placement(session.state))
+	session.submit_default_placement(_human_id)
 	_build_pawn_views()
 	_refresh_all()
 
@@ -807,14 +815,42 @@ func _setup_ai() -> void:
 		_ai.weights = (profile.get(int(_ai_doctrine), AIController.default_weights()) as Dictionary).duplicate()
 
 
+## F4.3b -- idempotent per sessie-object: wisselt de sessie (online), dan
+## gaan de oude koppelingen los en komen dezelfde op de nieuwe. Volgorde is
+## die van altijd; de twee laatste zijn de online-haken (lichaam in F4.3c/g).
+func _sessie_verbindingen() -> Array:
+	return [
+		["phase_changed", _on_phase_changed],
+		["cards_revealed_event", _on_cards_revealed],
+		["wolf_step_pending", _on_wolf_step_pending],
+		["turn_changed", _on_turn_changed],
+		["action_performed", _on_action_performed],
+		["cycle_started", _on_cycle_started],
+		["game_over", _on_game_over],
+		["doctrines_revealed", _on_doctrines_revealed],
+		["state_updated", _on_state_updated],
+	]
+
+
 func _connect_session_signals() -> void:
-	GameSession.phase_changed.connect(_on_phase_changed)
-	GameSession.cards_revealed_event.connect(_on_cards_revealed)
-	GameSession.wolf_step_pending.connect(_on_wolf_step_pending)
-	GameSession.turn_changed.connect(_on_turn_changed)
-	GameSession.action_performed.connect(_on_action_performed)
-	GameSession.cycle_started.connect(_on_cycle_started)
-	GameSession.game_over.connect(_on_game_over)
+	if session == _verbonden_sessie:
+		return
+	if _verbonden_sessie != null:
+		for paar in _sessie_verbindingen():
+			if _verbonden_sessie.is_connected(paar[0], paar[1]):
+				_verbonden_sessie.disconnect(paar[0], paar[1])
+	for paar in _sessie_verbindingen():
+		session.connect(paar[0], paar[1])
+	_verbonden_sessie = session
+
+
+## F4.3b -- haken voor de online-sessie; offline gebeurt hier (nog) niets.
+func _on_doctrines_revealed(_doctrines: Dictionary) -> void:
+	pass
+
+
+func _on_state_updated(_state: GameState) -> void:
+	pass
 
 
 ## Hoornstoot bij een nieuwe cyclus (niet de allereerste — daar loopt de setup al).
@@ -866,7 +902,7 @@ func _build_pawn_views() -> void:
 	for child in _pawns_root.get_children():
 		child.queue_free()
 	_pawn_views.clear()
-	for pawn in GameSession.state.pawns.values():
+	for pawn in session.state.pawns.values():
 		_maak_pawn_view(pawn)
 	_build_health_bars()
 
@@ -903,7 +939,7 @@ var _figurant_rollen: Dictionary = {}   # pawn_id -> "flag"/"drum"
 ## met een harde ondergrens van FIGURANT_MIN_AFSTAND vakken tussen twee gelijke
 ## rollen. Deterministisch (kandidaten op pion-id), dus replays blijven gelijk.
 func _werk_figurant_rollen_bij() -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if state == null:
 		return
 	for pid in _figurant_rollen.keys():
@@ -1016,7 +1052,7 @@ func _zet_figurant_info(pv: PawnView, pawn: Pawn) -> void:
 	pv.rol_vast = String(pawn.rol) if String(pawn.rol) != "" \
 			else String(_figurant_rollen.get(pawn.id, ""))
 	var ids: Array = []
-	for p in GameSession.state.pawns.values():
+	for p in session.state.pawns.values():
 		if p.owner_id == pawn.owner_id and p.unit_type == Constants.UnitType.INFANTRY:
 			ids.append(p.id)
 	ids.sort()
@@ -1026,7 +1062,7 @@ func _zet_figurant_info(pv: PawnView, pawn: Pawn) -> void:
 
 func _sync_new_pawn_views() -> void:
 	var vers: Array = []
-	for pawn in GameSession.state.pawns.values():
+	for pawn in session.state.pawns.values():
 		if pawn.is_eliminated or _pawn_views.has(pawn.id):
 			continue
 		_maak_pawn_view(pawn)
@@ -1037,7 +1073,7 @@ func _sync_new_pawn_views() -> void:
 	# Poef-reveal (besluit Max, 27 juli): verse spawns verschijnen één voor
 	# één op het bord vóórdat de define-hand opent — alleen mid-match
 	# (cyclus 2+); de opstellingsfase bouwt gewoon in stilte.
-	if GameSession.state.cycle >= 2:
+	if session.state.cycle >= 2:
 		_poef_reveal(vers)
 
 
@@ -1075,7 +1111,7 @@ func _build_health_bars() -> void:
 	for child in _hp_layer.get_children():
 		child.free()
 	_hp_bars.clear()
-	for pawn in GameSession.state.pawns.values():
+	for pawn in session.state.pawns.values():
 		var holder := Control.new()
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		holder.visible = false
@@ -1109,7 +1145,7 @@ func _build_health_bars() -> void:
 func _update_health_bars() -> void:
 	if _camera == null:
 		return
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	var total_w := HP_COLS * HP_BLOCK_SIZE + (HP_COLS - 1) * HP_BLOCK_GAP
 	var total_h := HP_ROWS * HP_BLOCK_SIZE + (HP_ROWS - 1) * HP_BLOCK_GAP
 	for pid in _hp_bars:
@@ -1142,7 +1178,7 @@ func _update_health_bars() -> void:
 # --- State-sync --------------------------------------------------------------
 
 func _refresh_all() -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	_werk_figurant_rollen_bij()   # vaandels/trommels ruimtelijk verdelen
 	_sync_new_pawn_views()  # F2.6: verse spawns direct zichtbaar en klikbaar
 	_update_piece_counts()
@@ -1193,7 +1229,7 @@ func _refresh_all() -> void:
 
 ## Blinde CP-inzet (D1): elke CP maakt 1 kaart deze ronde budget+1.
 func _show_cp_overlay() -> void:
-	var st: GameState = GameSession.state
+	var st: GameState = session.state
 	var saldo: int = int(st.cp.get(_human_id, 0))
 	var maximaal: int = mini(saldo, Validator.expected_define_count(st, _human_id))
 	var opties: Array = []
@@ -1208,7 +1244,7 @@ func _show_cp_overlay() -> void:
 func _on_cp_choice(index: int) -> void:
 	_overlay.hide()
 	if index > 0:
-		GameSession.submit_bet_cp(_human_id, index)
+		session.submit_bet_cp(_human_id, index)
 	_open_define_hand(index)
 
 
@@ -1219,12 +1255,12 @@ func _open_define_hand(bonus: int) -> void:
 	var nu: int = Time.get_ticks_msec()
 	if nu < _spawn_reveal_tot_ms:
 		await get_tree().create_timer(float(_spawn_reveal_tot_ms - nu) / 1000.0 + 0.1).timeout
-		if GameSession.state == null or not Phase.is_define(GameSession.state.phase):
+		if session.state == null or not Phase.is_define(session.state.phase):
 			return
-	var doctrine: Dictionary = GameSession.state.doctrine_data_of(_human_id)
+	var doctrine: Dictionary = session.state.doctrine_data_of(_human_id)
 	# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
 	# engine deze ronde zelf over en schuift de fase vanzelf door).
-	var kaart_aantal: int = Validator.expected_define_count(GameSession.state, _human_id)
+	var kaart_aantal: int = Validator.expected_define_count(session.state, _human_id)
 	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus)
 	_card_hand.open_for_define()
 	var uitleg := tr("HUD_DEFINE_PROMPT") % [kaart_aantal, int(doctrine.budget)]
@@ -1241,7 +1277,7 @@ var _spawn_keuze: Array = []
 
 
 func _show_spawn_overlay() -> void:
-	var st: GameState = GameSession.state
+	var st: GameState = session.state
 	var kosten: Array = [st.spawn_kosten(0), st.spawn_kosten(1), st.spawn_kosten(2)]
 	var besteed := 0
 	var telling: Array = [0, 0, 0]
@@ -1293,7 +1329,7 @@ func _on_spawn_choice(index: int) -> void:
 		_show_spawn_overlay()
 		return
 	# Bevestigen: vakken toewijzen in haven-prioriteitsvolgorde.
-	var st: GameState = GameSession.state
+	var st: GameState = session.state
 	var vrij: Array = Validator.vrije_spawn_vakken(st, _human_id)
 	var inzet: Array = []
 	for i in _spawn_keuze.size():
@@ -1301,14 +1337,14 @@ func _on_spawn_choice(index: int) -> void:
 			break
 		inzet.append({"type": int(_spawn_keuze[i]), "pos": vrij[i]})
 	_spawn_keuze = []
-	GameSession.submit_spawn(_human_id, inzet)
+	session.submit_spawn(_human_id, inzet)
 
 
 ## F2.4/B3: onder campaign spreekt artillerie CANNON_ACT (roll/shoot).
 func _kanon_v42(pawn_id: int) -> bool:
-	if not GameSession.state.rules.campaign_actief():
+	if not session.state.rules.campaign_actief():
 		return false
-	var p: Pawn = GameSession.state.pawns.get(pawn_id, null)
+	var p: Pawn = session.state.pawns.get(pawn_id, null)
 	return p != null and p.unit_type == Constants.UnitType.ARTILLERY
 
 
@@ -1317,19 +1353,19 @@ func _kanon_v42(pawn_id: int) -> bool:
 func _on_define_confirmed(_cards: Array) -> void:
 	var dicts: Array = _card_hand.get_defined_dicts()
 	_card_hand.visible = false
-	GameSession.submit_define_cards(_human_id, dicts)
+	session.submit_define_cards(_human_id, dicts)
 	# F2.6 (v4.2): AI-bet op de ronde-3-kaarten (zelfde heuristiek als de arena).
-	var st_ai: GameState = GameSession.state
+	var st_ai: GameState = session.state
 	var ai_bet: int = _ai.choose_cp_bet(st_ai)
 	if ai_bet > 0:
-		GameSession.submit_bet_cp(_ai_id, ai_bet)
-	var ai_cards: Array = _ai.generate_cards(GameSession.state)
+		session.submit_bet_cp(_ai_id, ai_bet)
+	var ai_cards: Array = _ai.generate_cards(session.state)
 	for i in mini(ai_bet, ai_cards.size()):
 		ai_cards[i].hp = int(ai_cards[i].hp) + 1
-	if not GameSession.submit_define_cards(_ai_id, ai_cards) and ai_bet > 0:
+	if not session.submit_define_cards(_ai_id, ai_cards) and ai_bet > 0:
 		for i in mini(ai_bet, ai_cards.size()):
 			ai_cards[i].hp = int(ai_cards[i].hp) - 1
-		GameSession.submit_define_cards(_ai_id, ai_cards)
+		session.submit_define_cards(_ai_id, ai_cards)
 
 
 # --- Reveal (initiatief-bod, v4.1 §4.3-B) -------------------------------------
@@ -1350,7 +1386,7 @@ func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) 
 
 func _continue_after_reveal() -> void:
 	_overlay.hide()
-	GameSession.acknowledge_reveal()
+	session.acknowledge_reveal()
 
 
 # --- Linking (mens interactief, AI automatisch) -----------------------------
@@ -1359,14 +1395,14 @@ func _begin_human_linking() -> void:
 	_selected_link_card_id = -1
 	_clear_highlights()
 	var flags: Array = []
-	for card in GameSession.state.cards_revealed[_human_id]:
+	for card in session.state.cards_revealed[_human_id]:
 		flags.append(card.is_linked())
 	_card_hand.open_for_linking(flags)
 	_set_turn_prompt(tr("HUD_LINK_PROMPT"), _human_id)
 
 
 func _on_link_card_picked(index: int) -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if not Phase.is_linking(state.phase) or state.current_player != _human_id:
 		return
 	var cards: Array = state.cards_revealed[_human_id]
@@ -1384,10 +1420,10 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 	if _selected_link_card_id < 0:
 		_update_hud(tr("HUD_LINK_PICK_CARD_FIRST"))
 		return
-	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	var pawn: Pawn = session.state.pawns.get(pawn_id)
 	if pawn == null or pawn.owner_id != _human_id or pawn.is_eliminated or pawn.linked_card_id != -1:
 		return
-	GameSession.submit_link(_human_id, _selected_link_card_id, pawn_id)
+	session.submit_link(_human_id, _selected_link_card_id, pawn_id)
 	_animate_link(pawn_id)
 	if _pawn_views.has(pawn_id):
 		(_pawn_views[pawn_id] as PawnView).set_ring_link_state(0)
@@ -1401,19 +1437,19 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 func _highlight_own_unlinked_pawns() -> void:
 	_clear_highlights()
 	for pid in _pawn_views:
-		var pawn: Pawn = GameSession.state.pawns.get(pid)
+		var pawn: Pawn = session.state.pawns.get(pid)
 		if pawn == null or pawn.is_eliminated:
 			continue
 		(_pawn_views[pid] as PawnView).set_ring_link_state(1 if pawn.linked_card_id == -1 else 0)
 
 
 func _auto_link(player_id: int) -> void:
-	for card in GameSession.state.cards_revealed[player_id]:
+	for card in session.state.cards_revealed[player_id]:
 		if card.is_linked():
 			continue
 		var pawn: Pawn = _pick_link_pawn(player_id)
 		if pawn != null:
-			GameSession.submit_link(player_id, card.id, pawn.id)
+			session.submit_link(player_id, card.id, pawn.id)
 			_animate_link(pawn.id)
 		return
 
@@ -1439,15 +1475,15 @@ func _animate_link(pawn_id: int) -> void:
 		_spawn_smoke(pv.position + Vector3(0.0, 0.45, 0.0), puff, 0.2,
 			Vector3.UP * 0.25, 1.3, "white_smoke")
 	# Onder de pof: naar het archetype-model wisselen + daar de ready-flourish.
-	var link_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	var link_pawn: Pawn = session.state.pawns.get(pawn_id)
 	var link_card: Card = null
 	if link_pawn != null and link_pawn.linked_card_id >= 0:
-		link_card = GameSession.state.all_cards.get(link_pawn.linked_card_id)
+		link_card = session.state.all_cards.get(link_pawn.linked_card_id)
 	get_tree().create_timer(0.14).timeout.connect(func() -> void:
 		if not is_instance_valid(pv):
 			return
 		if link_pawn != null:
-			pv.set_character(GameSession.state.doctrine_of(link_pawn.owner_id), link_pawn.unit_type, link_card)
+			pv.set_character(session.state.doctrine_of(link_pawn.owner_id), link_pawn.unit_type, link_card)
 		if randf() < PawnView.fx("ready_chance", 0.3):
 			pv.play_ready())
 	_tweening_pawns[pawn_id] = true
@@ -1463,7 +1499,7 @@ func _animate_link(pawn_id: int) -> void:
 ## precies de omgekeerde beweging van de koppel-pof. Reserves (al base)
 ## en lege vakken doen niks mee.
 func _uncouple_cascade() -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	var idx := 0
 	for pid in _pawn_views:
 		var pv: PawnView = _pawn_views[pid]
@@ -1488,7 +1524,7 @@ func _pick_link_pawn(player_id: int) -> Pawn:
 	# Bij voorkeur een pion met ademruimte (kan bewegen/aanvallen); anders
 	# eindig je met ingeklemde achterste-rij pionnen die niks kunnen.
 	var fallback: Pawn = null
-	for pawn in GameSession.state.pawns.values():
+	for pawn in session.state.pawns.values():
 		if pawn.owner_id != player_id or pawn.is_eliminated or pawn.linked_card_id != -1:
 			continue
 		if fallback == null:
@@ -1499,7 +1535,7 @@ func _pick_link_pawn(player_id: int) -> Pawn:
 
 
 func _pawn_has_room(pawn: Pawn) -> bool:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	for neighbor in Constants.manhattan_neighbors(pawn.position):
 		if not Constants.is_on_board(neighbor):
 			continue
@@ -1523,12 +1559,12 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			_refresh_all()
 			_update_hud(tr("HUD_ROUND_DONE"))
 			await get_tree().create_timer(0.9).timeout
-		if GameSession.state.round_number <= 1:
+		if session.state.round_number <= 1:
 			_clear_footprints()  # nieuwe cyclus: vers slagveld
 			_uncouple_cascade()  # gekoppelde stukken poffen snel terug naar base
 		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
 		# F2.6 (v4.2): eerst de blinde CP-inzet (D1), dan de kaartwaaier.
-		var st_def: GameState = GameSession.state
+		var st_def: GameState = session.state
 		if st_def.rules.campaign_actief() and not st_def.cp_bet_done.get(_human_id, false) \
 				and int(st_def.cp.get(_human_id, 0)) > 0 \
 				and Validator.expected_define_count(st_def, _human_id) > 0:
@@ -1546,10 +1582,10 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		_card_hand.visible = false
 		_refresh_all()
 		_update_hud(tr("PHASE_SPAWN_TITLE"))
-		if not GameSession.state.spawn_done.get(_ai_id, false):
-			GameSession.submit_spawn(_ai_id, _ai.choose_spawn(GameSession.state))
-		if GameSession.state.phase == Phase.Type.CYCLE_SPAWN \
-				and not GameSession.state.spawn_done.get(_human_id, false):
+		if not session.state.spawn_done.get(_ai_id, false):
+			session.submit_spawn(_ai_id, _ai.choose_spawn(session.state))
+		if session.state.phase == Phase.Type.CYCLE_SPAWN \
+				and not session.state.spawn_done.get(_human_id, false):
 			_show_spawn_overlay()
 			_start_phase_timer(PHASE_TIME_LIMIT)
 	else:
@@ -1557,7 +1593,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 
 
 func _on_turn_changed(player_id: int) -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if Phase.is_linking(state.phase):
 		_refresh_all()
 		if player_id == _human_id:
@@ -1576,7 +1612,7 @@ func _on_turn_changed(player_id: int) -> void:
 			if denktijd > 0.0:
 				await get_tree().create_timer(denktijd).timeout
 			# Fase kan intussen zijn doorgeschoven (timeout, forfeit).
-			var nu: GameState = GameSession.state
+			var nu: GameState = session.state
 			if not Phase.is_linking(nu.phase) or nu.current_player != player_id:
 				return
 			_auto_link(player_id)
@@ -1597,10 +1633,10 @@ func _on_turn_changed(player_id: int) -> void:
 
 func _ai_action_turn() -> void:
 	await get_tree().create_timer(0.3).timeout
-	if GameSession.state.phase != Phase.Type.ACTION or GameSession.state.current_player != _ai_id:
+	if session.state.phase != Phase.Type.ACTION or session.state.current_player != _ai_id:
 		return
 	# Reken de AI-zet op een aparte thread → de animaties bevriezen niet.
-	var snapshot: GameState = GameSession.state.clone()
+	var snapshot: GameState = session.state.clone()
 	var thread := Thread.new()
 	_ai_thread = thread
 	thread.start(_ai.choose_action.bind(snapshot))
@@ -1612,39 +1648,39 @@ func _ai_action_turn() -> void:
 		return
 	var action: Dictionary = thread.wait_to_finish()
 	_ai_thread = null
-	if GameSession.state.phase != Phase.Type.ACTION or GameSession.state.current_player != _ai_id:
+	if session.state.phase != Phase.Type.ACTION or session.state.current_player != _ai_id:
 		return
 	if action.is_empty():
 		return
 	match String(action.type):
 		"move":
 			if _kanon_v42(int(action.pawn_id)):
-				GameSession.submit_cannon_roll(_ai_id, action.pawn_id, action.target)
+				session.submit_cannon_roll(_ai_id, action.pawn_id, action.target)
 			else:
-				GameSession.submit_move(_ai_id, action.pawn_id, action.target)
+				session.submit_move(_ai_id, action.pawn_id, action.target)
 		"attack":
-			GameSession.submit_attack(_ai_id, action.attacker_id, action.defender_id)
+			session.submit_attack(_ai_id, action.attacker_id, action.defender_id)
 		"shot":
 			if _kanon_v42(int(action.shooter_id)):
-				GameSession.submit_cannon_shoot(_ai_id, action.shooter_id, action.target_id)
+				session.submit_cannon_shoot(_ai_id, action.shooter_id, action.target_id)
 			else:
-				GameSession.submit_shot(_ai_id, action.shooter_id, action.target_id)
+				session.submit_shot(_ai_id, action.shooter_id, action.target_id)
 		"charge":
-			GameSession.submit_charge(_ai_id, action.pawn_id, action.move_target, action.defender_id)
+			session.submit_charge(_ai_id, action.pawn_id, action.move_target, action.defender_id)
 
 
 ## Wolf-doctrine: na een melee mag de aanvaller 1 gratis stap zetten.
 func _on_wolf_step_pending(pawn_id: int) -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if state.current_player == _ai_id:
 		await get_tree().create_timer(0.35).timeout
-		if GameSession.state.pending_wolf_step_pawn != pawn_id:
+		if session.state.pending_wolf_step_pawn != pawn_id:
 			return
-		var step: Dictionary = _ai.choose_wolf_step(GameSession.state)
+		var step: Dictionary = _ai.choose_wolf_step(session.state)
 		if step.has("target"):
-			GameSession.submit_wolf_step(_ai_id, step.target)
+			session.submit_wolf_step(_ai_id, step.target)
 		else:
-			GameSession.skip_wolf_step(_ai_id)
+			session.skip_wolf_step(_ai_id)
 		return
 	# Mens: klik een gemarkeerd vak, of rechtermuis/pion-klik om over te slaan.
 	_wolf_step_mode = true
@@ -1671,17 +1707,17 @@ func _end_wolf_step_mode() -> void:
 ## Chime als een pion de doelhaven bereikt (maar de partij nog niet gewonnen is —
 ## de winnende 2e pion krijgt de win-fanfare, niet deze chime).
 func _check_haven_score(pawn_id: int, coord: Vector2i) -> void:
-	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	var pawn: Pawn = session.state.pawns.get(pawn_id)
 	if pawn == null or pawn.is_eliminated:
 		return
-	if Rules.is_haven_for_player(coord, pawn.owner_id) and Rules.check_win(GameSession.state) == -1:
+	if Rules.is_haven_for_player(coord, pawn.owner_id) and Rules.check_win(session.state) == -1:
 		Audio.play("haven_score", 0.25)
 
 
 ## Terugslag-geluid: als de terugslaande verdediger een paard is, hoor je het
 ## paard (hoefgetrappel/hinnik). Bij infanterie-terugslag dekt de melee-klap het al.
 func _retaliation_sound(defender_id: int, delay: float) -> void:
-	var def: Pawn = GameSession.state.pawns.get(defender_id)
+	var def: Pawn = session.state.pawns.get(defender_id)
 	if def == null:
 		return
 	if def.unit_type == Constants.UnitType.CAVALRY:
@@ -1706,7 +1742,7 @@ func _retaliation_sound(defender_id: int, delay: float) -> void:
 ## Tijden en volumes stel je per categorie af in de tuner (Geluid-tab).
 func _impact_laag(target_id: int, damage: int, gedood: bool, delay: float,
 		melee: bool = false) -> void:
-	var pawn: Pawn = GameSession.state.pawns.get(target_id)
+	var pawn: Pawn = session.state.pawns.get(target_id)
 	if pawn == null or damage <= 0:
 		return
 	var pv: PawnView = _pawn_views.get(target_id)
@@ -1724,7 +1760,7 @@ func _impact_laag(target_id: int, damage: int, gedood: bool, delay: float,
 
 
 func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
-	var pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+	var pawn: Pawn = session.state.pawns.get(pawn_id)
 	if pawn == null:
 		return
 	if kanon and pawn.unit_type == Constants.UnitType.INFANTRY:
@@ -1733,7 +1769,7 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 		# Archetype van dit model erbij: een dikke hp-pion mag anders klinken.
 		var pv_k: PawnView = _pawn_views.get(pawn_id)
 		var arch: String = pv_k._archetype if pv_k != null else ""
-		Audio.play_factie("inf_kanon_die", GameSession.state.doctrine_of(pawn.owner_id),
+		Audio.play_factie("inf_kanon_die", session.state.doctrine_of(pawn.owner_id),
 			delay, 0.0, "inf_die", arch)
 		# De pion weet nu dat zijn kreet al klonk en zwijgt bij de inslag.
 		if pv_k != null:
@@ -1741,7 +1777,7 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 		return
 	# Factie-variant als die bestaat (SOUND-WISHLIST 7b), anders het algemene
 	# geluid: een muis piept, een grizzly brult.
-	var doc: int = GameSession.state.doctrine_of(pawn.owner_id)
+	var doc: int = session.state.doctrine_of(pawn.owner_id)
 	match pawn.unit_type:
 		# Infanterie: het sterfgeluid van de FACTIE (Max, 30 juli: "ik hoor nog
 		# gewoon de normale die sound"). Hier stond `Audio.play("inf_die")`, dus
@@ -1852,7 +1888,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				shooter.face_dir(result.defender_pos - result.attacker_from_pos)
 				shooter.play_attack()
 			# Projectiel + muzzle flash + rook; de treffer-feedback wacht op de inslag.
-			var shooter_pawn: Pawn = GameSession.state.pawns.get(action.shooter_id)
+			var shooter_pawn: Pawn = session.state.pawns.get(action.shooter_id)
 			var shooter_type: int = shooter_pawn.unit_type if shooter_pawn != null else Constants.UnitType.INFANTRY
 			var travel: float = _fire_projectile(result.attacker_from_pos, result.defender_pos, shooter_type, action.shooter_id)
 			# Geluid: afvuren nu, inslag bij aankomst van het projectiel.
@@ -2408,7 +2444,7 @@ func _spawn_footprints(a: Vector3, b: Vector3, dur: float, mover: Pawn = null) -
 		return
 	var fac := ""
 	if mover != null:
-		fac = Constants.doctrine_name(GameSession.state.doctrine_of(mover.owner_id)).to_lower()
+		fac = Constants.doctrine_name(session.state.doctrine_of(mover.owner_id)).to_lower()
 	var is_cav: bool = mover != null and mover.unit_type == Constants.UnitType.CAVALRY
 	var count := int(dist / 0.28)
 	for i in range(count):
@@ -2519,7 +2555,7 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 	else:
 		var pv: PawnView = _pawn_views.get(pawn_id)
 		# Levende stukken (infanterie/cavalerie) bloeden; een kanon niet.
-		var hit_pawn: Pawn = GameSession.state.pawns.get(pawn_id)
+		var hit_pawn: Pawn = session.state.pawns.get(pawn_id)
 		var bloedt: bool = hit_pawn != null and hit_pawn.unit_type != Constants.UnitType.ARTILLERY
 		if pv != null and pv.visible:
 			pv.flash_hit()
@@ -2664,7 +2700,7 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush:
 	# Beweeggeluid afhankelijk van het eenheidstype. Cavalerie: één galop-clip
 	# per beweging (bevat zelf al meerdere hoefslagen). Infanterie/artillerie:
 	# één klap per gelopen vakje (losse voetstappen / wielrollen).
-	var mover: Pawn = GameSession.state.pawns.get(pawn_id)
+	var mover: Pawn = session.state.pawns.get(pawn_id)
 	_spawn_footprints(start, end, dur, mover)
 	if mover != null and mover.unit_type == Constants.UnitType.CAVALRY:
 		Audio.play("horse_move")
@@ -2692,7 +2728,7 @@ func _on_game_over(winner_id: int) -> void:
 			tr("END_CAMPAIGN_BODY"),
 			[tr("END_BACK_TO_CAMPAIGN")],
 			func(_i: int) -> void:
-				CampaignBridge.rond_af(GameSession.state, winner_id)
+				CampaignBridge.rond_af(session.state, winner_id)
 				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
 		return
 	_overlay.show_choice(
@@ -2731,7 +2767,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if not mb.pressed:
 		return
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if state.current_player != _human_id:
 		return
 	# Zelf opstellen: klik een vrij vak in je thuisrijen; rechtermuis = ongedaan.
@@ -2749,10 +2785,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			var step_coord: Vector2i = _pick_wolf_tile(mb.position)
 			if step_coord.x >= 0:
 				_end_wolf_step_mode()
-				GameSession.submit_wolf_step(_human_id, step_coord)
+				session.submit_wolf_step(_human_id, step_coord)
 				return
 		_end_wolf_step_mode()
-		GameSession.skip_wolf_step(_human_id)
+		session.skip_wolf_step(_human_id)
 		return
 	# Rechtermuis = deselecteren (in de actiefase).
 	if mb.button_index == MOUSE_BUTTON_RIGHT:
@@ -2787,7 +2823,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_pawn_clicked(pawn_id: int) -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	var pawn: Pawn = state.pawns.get(pawn_id)
 	if pawn == null:
 		return
@@ -2798,18 +2834,18 @@ func _on_pawn_clicked(pawn_id: int) -> void:
 	if pawn.owner_id == _human_id:
 		_select_pawn(pawn_id)
 	elif _selected_pawn_id >= 0 and _valid_attacks.has(pawn_id):
-		GameSession.submit_attack(_human_id, _selected_pawn_id, pawn_id)
+		session.submit_attack(_human_id, _selected_pawn_id, pawn_id)
 	elif _selected_pawn_id >= 0 and _valid_charges.has(pawn_id):
-		GameSession.submit_charge(_human_id, _selected_pawn_id, _valid_charges[pawn_id], pawn_id)
+		session.submit_charge(_human_id, _selected_pawn_id, _valid_charges[pawn_id], pawn_id)
 	elif _selected_pawn_id >= 0 and _valid_shots.has(pawn_id):
 		if _kanon_v42(_selected_pawn_id):
-			GameSession.submit_cannon_shoot(_human_id, _selected_pawn_id, pawn_id)
+			session.submit_cannon_shoot(_human_id, _selected_pawn_id, pawn_id)
 		else:
-			GameSession.submit_shot(_human_id, _selected_pawn_id, pawn_id)
+			session.submit_shot(_human_id, _selected_pawn_id, pawn_id)
 
 
 func _update_piece_counts() -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	var red: int = state.get_alive_pawns_for(Constants.PLAYER_1).size()
 	var blue: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
 	var total_red: int = Constants.pawn_total(state.doctrine_of(Constants.PLAYER_1))
@@ -2838,13 +2874,13 @@ func _deselect() -> void:
 func _on_tile_clicked(coord: Vector2i) -> void:
 	if _selected_pawn_id >= 0 and _valid_moves.has(coord):
 		if _kanon_v42(_selected_pawn_id):
-			GameSession.submit_cannon_roll(_human_id, _selected_pawn_id, coord)
+			session.submit_cannon_roll(_human_id, _selected_pawn_id, coord)
 		else:
-			GameSession.submit_move(_human_id, _selected_pawn_id, coord)
+			session.submit_move(_human_id, _selected_pawn_id, coord)
 
 
 func _select_pawn(pawn_id: int) -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	if not Rules.can_pawn_act(state, pawn_id):
 		Audio.play("ui_error")
 		_update_hud(tr("HUD_PAWN_CANNOT_ACT"))
@@ -2901,7 +2937,7 @@ func _select_pawn(pawn_id: int) -> void:
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
 			if pawn.attack_value >= 2:
-				hint += tr("HUD_HINT_INF_SHOT") % Rules.shot_damage(GameSession.state, pawn)
+				hint += tr("HUD_HINT_INF_SHOT") % Rules.shot_damage(session.state, pawn)
 			else:
 				hint += tr("HUD_HINT_INF_NO_SHOT")
 		Constants.UnitType.CAVALRY:
@@ -2941,7 +2977,7 @@ func _compute_charge_targets(state: GameState, pawn_id: int, move_paths: Diction
 # --- Raycast helpers ---------------------------------------------------------
 
 func _update_hover(screen_pos: Vector2) -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	var hovered := -1
 	if state.current_player == _human_id:
 		if Phase.is_linking(state.phase):
@@ -2974,7 +3010,7 @@ func _update_hover(screen_pos: Vector2) -> void:
 func _raycast_pawn(screen_pos: Vector2) -> int:
 	if _camera == null:
 		return -1
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	var best_id := -1
 	var best_dist := 44.0
 	for pid in _pawn_views:
@@ -3090,7 +3126,7 @@ func _clear_highlights() -> void:
 # --- HUD ---------------------------------------------------------------------
 
 func _update_hud(prompt: String = "") -> void:
-	var state: GameState = GameSession.state
+	var state: GameState = session.state
 	_top_label.text = tr("HUD_TOPBAR") % [
 		state.cycle, state.round_number, _phase_label(state.phase)
 	]

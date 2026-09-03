@@ -1,5 +1,40 @@
 # Fog of War — Work In Progress & Context
 
+## 3 september (avond) -- F4.3b: SessionInterface, game.gd praat via `session`
+
+Eén naad tussen game.gd en "wie het spel bijhoudt". Nieuw
+`scripts/core/session_interface.gd` (`class_name SessionInterface extends
+Node`): de 11 signals, `state`, de volledige submit-set als stubs die luid
+weigeren, `_relay_events` LETTERLIJK uit GameSession verhuisd, en zes haken
+met offline-identieke defaults: `local_player_id()` (speler 1), `klok()`
+(paar deadline/servertijd), `naam_van()`, `pion_gedekt()` (exact de oude
+blokjes-expressie), `tegenstander_status()`, `is_online()`. GameSession
+`extends SessionInterface` en IS daarmee de LocalSession; autoload-naam
+blijft, tests, capture en de worker merken niets.
+
+game.gd: `var session: SessionInterface`, `session = GameSession` als
+eerste regel van `_ready`, en alle 136 `GameSession.`-voorkomens mechanisch
+naar `session.` (hulpscript `tools/f43_vervang_session.py`, bewaard als
+bewijs van wat er gebeurd is). `_connect_session_signals` is idempotent per
+sessie-object (koppelt los van de vorige sessie, verbindt in de oude
+volgorde) en verbindt twee nieuwe lege handlers `_on_doctrines_revealed` en
+`_on_state_updated` (lichaam in c/g).
+
+Twee lessen: (1) een nieuwe `class_name` staat pas na `godot --headless
+--path . --import` in de class-cache; tot die tijd compileert alles wat hem
+gebruikt niet en blijven headless runs hangen. Dus na elk nieuw script met
+class_name eerst importeren. (2) De "record-diff leeg" uit het bouwplan kan
+nooit: `meta.created` en `ts` per entry zijn wandkloktijd. Nieuw
+`tools/vergelijk_opname.py` vergelijkt eind-zobrist, eindstaat en elke
+entry zonder `ts`; dat is voortaan regressiestap 4.
+
+Checks: `grep -c "GameSession\." game.gd` = 0 (alleen de toewijzing zonder
+punt), uispel 777 zobrist `890b6cb4…` gelijk, opname gelijk (365 entries,
+eind-zobrist 3bff2f11…), play/vosview/meleecheck PASS, GameSessionTests
+100 asserts groen incl. de nieuwe interface-test, volledige suite 1808
+asserts groen (0 fouten, 358 s), simcheck 0 afwijkingen.
+
+
 ## 3 september (later) -- F4.3a: nulmeting op game.gd-niveau
 
 Eerste stap van het F4.3-bouwplan (`docs/F4.3-bouwplan.md`): een hard getal

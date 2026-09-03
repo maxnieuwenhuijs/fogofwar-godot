@@ -11,6 +11,44 @@ func _cards_for(hp1: int, s1: int, a1: int, hp2: int, s2: int, a2: int, hp3: int
 	]
 
 # =========================================================================
+# F4.3b -- GameSession is de LocalSession achter SessionInterface
+# =========================================================================
+
+func test_f43_gamesession_is_sessioninterface() -> void:
+	assert_true(GameSession is SessionInterface, "de autoload IS de LocalSession")
+	assert_eq(GameSession.local_player_id(), Constants.PLAYER_1, "offline speelt de mens speler 1")
+	assert_false(GameSession.is_online())
+	GameSession.start_new_game()
+	assert_eq(int(GameSession.klok().deadline_ms), 0, "offline geen deadline")
+	assert_eq(int(GameSession.klok().server_now_ms), -1, "offline geen servertijd")
+	assert_eq(GameSession.naam_van(1), "", "geen sessienaam offline: game.gd valt terug op jij/AI")
+	GameSession.submit_default_placement(Constants.PLAYER_1)
+	GameSession.submit_default_placement(Constants.PLAYER_2)
+	var eigen_id := -1
+	var vijand_id := -1
+	for p in GameSession.state.pawns.values():
+		if p.owner_id == Constants.PLAYER_1 and eigen_id == -1:
+			eigen_id = p.id
+		elif p.owner_id == Constants.PLAYER_2 and vijand_id == -1:
+			vijand_id = p.id
+	# card_revealed staat standaard op true en gaat alleen bij een gedekte
+	# Krokodil-koppeling op false; de haak spiegelt exact de oude
+	# blokjes-expressie `owner_id != mens and not card_revealed`.
+	assert_false(GameSession.pion_gedekt(eigen_id), "eigen pion nooit gedekt")
+	assert_false(GameSession.pion_gedekt(vijand_id), "onthulde vijand niet gedekt")
+	GameSession.state.pawns[vijand_id].card_revealed = false
+	assert_true(GameSession.pion_gedekt(vijand_id), "gedekte vijand (schutkleur) wel")
+	GameSession.state.pawns[eigen_id].card_revealed = false
+	assert_false(GameSession.pion_gedekt(eigen_id), "eigen pion blijft zichtbaar, ook ongeonthuld")
+	assert_false(GameSession.pion_gedekt(99999), "onbekende pion: niet gedekt, geen crash")
+	# De kale interface ondersteunt niets: elke submit meldt zich en weigert.
+	var kaal := SessionInterface.new()
+	assert_false(kaal.submit_resign(Constants.PLAYER_1), "kale interface weigert")
+	assert_true(kaal.tegenstander_status().is_empty())
+	kaal.free()
+
+
+# =========================================================================
 # Opstelling (PLACEMENT-fase)
 # =========================================================================
 
