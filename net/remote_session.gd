@@ -29,6 +29,7 @@ var _pomp_bezig: bool = false
 var _view_onderweg: bool = false
 var _inhaal_onderweg: bool = false
 var _gestart: bool = false
+var _rebase_wacht: Dictionary = {}  # F4.3i: herindiening na 409 wacht op de inhaal
 ## F4.3h — polling als het transport geen push heeft (HTTP zonder WS).
 var poll_interval: float = 0.5
 var _poll_accum: float = 0.0
@@ -131,6 +132,7 @@ func _pomp() -> void:
 		seq = s
 		_relay_events(events)
 	_pomp_bezig = false
+	_probeer_rebase()
 
 
 func _op_view(a: Dictionary) -> void:
@@ -200,16 +202,37 @@ func _op_antwoord(a: Dictionary, action: Dictionary, dict: Dictionary, idem: Str
 			if fout.begins_with("De match is afgelopen"):
 				_einde_via_status()
 				return
-			_ontvang(a.get("events", []))
-			# Rebase: één herindiening als de actie op de nieuwe staat nog kan.
-			if poging == 0 and state != null and Validator.is_legal(state, action, seat).legal:
-				transport.acties(seq, dict, idem, func(b: Dictionary) -> void: _op_antwoord(b, action, dict, idem, 1))
-			else:
+			var rijen: Array = a.get("events", [])
+			_ontvang(rijen)
+			if poging > 0:
 				error_occurred.emit(seat, "De situatie is veranderd")
+				return
+			# Rebase: één herindiening, maar pas als de inhaal-rijen ook echt
+			# zijn afgespeeld (met HTTP komen view en rijen later binnen; de
+			# staat van NU is dan nog de oude en `seq` loopt nog achter).
+			var tot: int = seq
+			for r in rijen:
+				tot = maxi(tot, int(r.seq))
+			_rebase_wacht = {"action": action, "dict": dict, "idem": idem, "tot": tot}
+			_probeer_rebase()
 		422:
 			error_occurred.emit(seat, String(a.get("fout", "Ongeldige actie")))
 		_:
 			error_occurred.emit(seat, "Verbinding: %s" % String(a.get("fout", "?")))
+
+
+## De uitgestelde herindiening na een 409: zodra `seq` de inhaal heeft
+## ingehaald, de actie opnieuw toetsen op de dan geldende staat en één keer
+## opnieuw indienen (zelfde idem-key: de server heeft hem nooit gezien).
+func _probeer_rebase() -> void:
+	if _rebase_wacht.is_empty() or seq < int(_rebase_wacht.tot):
+		return
+	var w: Dictionary = _rebase_wacht
+	_rebase_wacht = {}
+	if state != null and Validator.is_legal(state, w.action, seat).legal:
+		transport.acties(seq, w.dict, w.idem, func(b: Dictionary) -> void: _op_antwoord(b, w.action, w.dict, w.idem, 1))
+	else:
+		error_occurred.emit(seat, "De situatie is veranderd")
 
 
 ## De einde-route zonder rij: de status van de match zegt wie won.

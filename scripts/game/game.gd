@@ -326,10 +326,162 @@ func _show_multi_menu() -> void:
 			elif i == 1:
 				_start_oefenpotje(Constants.PLAYER_2)
 			elif i == 2:
-				_update_hud(tr("MENU_MULTI_SOON"))
-				_show_multi_menu()
+				_show_online_lobby()
 			else:
 				_show_difficulty_menu())
+
+
+# --- Online lobby (F4.3i) --------------------------------------------------------
+
+var _online_wachten: bool = false
+
+
+## Verbinden (gast-login + core-hash) en dan de keuzes tonen.
+func _show_online_lobby() -> void:
+	_overlay.hide()
+	_update_hud(tr("MENU_ONLINE_CONNECTING"))
+	OnlineBridge.verbind(func(ok: bool, fout: String) -> void:
+		if not ok:
+			_online_fout(fout, func() -> void: _show_multi_menu())
+			return
+		_show_online_keuzes()
+	)
+
+
+func _show_online_keuzes() -> void:
+	var id: Identiteit = OnlineBridge.laad_identiteit()
+	var opties: Array = [tr("MENU_ONLINE_NEW"), tr("MENU_ONLINE_JOIN")]
+	var hervat: bool = id.laatste_match_id != ""
+	if hervat:
+		opties.append(tr("MENU_ONLINE_RESUME"))
+	opties.append(tr("MENU_BACK"))
+	_update_hud("")
+	_overlay.show_choice(tr("MENU_MULTI_ONLINE_TITLE"),
+		tr("MENU_ONLINE_BODY") % [id.naam, id.server_url], opties,
+		func(i: int) -> void:
+			if i == 0:
+				_online_nieuwe_match()
+			elif i == 1:
+				_online_meedoen()
+			elif hervat and i == 2:
+				_online_hervatten()
+			else:
+				_show_multi_menu(),
+		Color.WHITE, true)
+
+
+func _online_fout(fout: String, terug: Callable) -> void:
+	_overlay.show_choice(tr("MENU_ONLINE_ERROR_TITLE"), fout, [tr("MENU_BACK")],
+		func(_i: int) -> void: terug.call())
+
+
+func _online_nieuwe_match() -> void:
+	OnlineBridge.nieuwe_match(_potje_regels(), func(a: Dictionary) -> void:
+		if not bool(a.get("ok", false)):
+			_online_fout(String(a.get("fout", "?")), func() -> void: _show_online_keuzes())
+			return
+		_wacht_op_tegenstander()
+	)
+
+
+## De match-id groot in beeld (met kopieerknop) tot de ander meedoet.
+func _wacht_op_tegenstander() -> void:
+	var id: String = OnlineBridge.match_id
+	_overlay.show_choice(tr("MENU_ONLINE_WAIT_TITLE"), tr("MENU_ONLINE_WAIT_BODY") % id,
+		[tr("MENU_ONLINE_COPY"), tr("MENU_ONLINE_CANCEL")],
+		func(i: int) -> void:
+			if i == 0:
+				DisplayServer.clipboard_set(id)
+				_wacht_op_tegenstander()
+			else:
+				_online_wachten = false
+				OnlineBridge.klaar_met_match()
+				_show_online_keuzes())
+	if not _online_wachten:
+		_online_wachten = true
+		_poll_tot_bezig()
+
+
+func _poll_tot_bezig() -> void:
+	if not _online_wachten:
+		return
+	OnlineBridge.status(func(a: Dictionary) -> void:
+		if not _online_wachten:
+			return
+		if bool(a.get("ok", false)) and String(a.get("status", "")) == "bezig":
+			_online_wachten = false
+			_overlay.hide()
+			_start_online(OnlineBridge.sessie())
+		else:
+			get_tree().create_timer(2.0).timeout.connect(_poll_tot_bezig)
+	)
+
+
+## Meedoen: een invoerveld voor de match-id (het klembord vult hem in als
+## daar net een id op staat).
+func _online_meedoen() -> void:
+	_overlay.hide()
+	var midden := CenterContainer.new()
+	midden.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var paneel := PanelContainer.new()
+	midden.add_child(paneel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	paneel.add_child(box)
+	var kop := Label.new()
+	kop.text = tr("MENU_ONLINE_JOIN_HINT")
+	kop.add_theme_font_size_override("font_size", 24)
+	box.add_child(kop)
+	var invoer := LineEdit.new()
+	invoer.custom_minimum_size = Vector2(620, 48)
+	invoer.add_theme_font_size_override("font_size", 22)
+	var klem: String = DisplayServer.clipboard_get().strip_edges()
+	if klem.length() == 36 and klem.count("-") == 4:
+		invoer.text = klem
+	box.add_child(invoer)
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", 12)
+	box.add_child(rij)
+	var ok := Button.new()
+	ok.text = tr("MENU_ONLINE_JOIN")
+	ok.custom_minimum_size = Vector2(300, 52)
+	rij.add_child(ok)
+	var terug := Button.new()
+	terug.text = tr("MENU_BACK")
+	terug.custom_minimum_size = Vector2(200, 52)
+	rij.add_child(terug)
+	$UI.add_child(midden)
+	invoer.grab_focus()
+	terug.pressed.connect(func() -> void:
+		midden.queue_free()
+		_show_online_keuzes())
+	var doe := func() -> void:
+		var id: String = invoer.text.strip_edges()
+		if id.length() < 8:
+			return
+		midden.queue_free()
+		OnlineBridge.meedoen(id, func(a: Dictionary) -> void:
+			if not bool(a.get("ok", false)):
+				_online_fout(String(a.get("fout", "?")), func() -> void: _show_online_keuzes())
+				return
+			_start_online(OnlineBridge.sessie()))
+	ok.pressed.connect(doe)
+	invoer.text_submitted.connect(func(_t: String) -> void: doe.call())
+
+
+func _online_hervatten() -> void:
+	OnlineBridge.hervatten(func(a: Dictionary) -> void:
+		var st: String = String(a.get("status", ""))
+		if not bool(a.get("ok", false)):
+			_online_fout(String(a.get("fout", "?")), func() -> void: _show_online_keuzes())
+		elif st == "bezig":
+			_start_online(OnlineBridge.sessie())
+		elif st == "klaar":
+			OnlineBridge.klaar_met_match()
+			_online_fout(tr("MENU_ONLINE_FINISHED"), func() -> void: _show_online_keuzes())
+		else:
+			_wacht_op_tegenstander()
+	)
 
 
 func _show_solo_menu() -> void:
@@ -3165,6 +3317,9 @@ func _verlaat_online() -> void:
 		_connect_session_signals()
 		oude.queue_free()
 	_loopback = null
+	_online_wachten = false
+	if OnlineBridge.match_actief:
+		OnlineBridge.klaar_met_match()  # F4.3i: niets meer te hervatten
 	_human_id = Constants.PLAYER_1
 	_ai_id = Constants.PLAYER_2
 	_orient_camera_for(_human_id)

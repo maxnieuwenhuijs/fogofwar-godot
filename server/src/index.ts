@@ -11,5 +11,8 @@ if (dbUrl.length === 0) {
 
 const { app } = await bouwApp({ databaseUrl: dbUrl, logger: true });
 const poort = Number(process.env.POORT ?? 8787);
-await app.listen({ port: poort, host: "127.0.0.1" });
-console.log(`Fog of War backend luistert op 127.0.0.1:${poort}`);
+// HOST=0.0.0.0 voor een playtest over het eigen netwerk (F4.3i); zonder
+// TLS en rate-limiting hoort dat nooit verder dan het LAN te reiken.
+const host = process.env.HOST ?? "127.0.0.1";
+await app.listen({ port: poort, host });
+console.log(`Fog of War backend luistert op ${host}:${poort}`);

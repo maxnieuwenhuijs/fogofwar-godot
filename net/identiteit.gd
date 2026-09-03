@@ -31,10 +31,12 @@ static func laad(profiel: String = "") -> Identiteit:
 		id.naam = String(cf.get_value("identiteit", "naam", ""))
 		id.server_url = String(cf.get_value("identiteit", "server_url", id.server_url))
 		id.laatste_match_id = String(cf.get_value("identiteit", "laatste_match_id", ""))
-	# Overschrijven vanaf de commandoregel: -- server=<url>
+	# Overschrijven vanaf de commandoregel: -- server=<url> en -- naam=<naam>
 	for a in OS.get_cmdline_user_args():
 		if String(a).begins_with("server="):
 			id.server_url = String(a).substr(7)
+		elif String(a).begins_with("naam="):
+			id.naam = String(a).substr(5)
 	if id.device_token == "":
 		id.device_token = LoopbackTransport._uuid()
 		id.bewaar()

@@ -26,10 +26,40 @@ node -e "require('mysql2/promise').createConnection('mysql://root@127.0.0.1:3316
 $env:DB_URL = "mysql://root@127.0.0.1:3316/fogofwar"; npm run dev
 ```
 
-Client-kant testen tegen die server (F4.3h): in de projectmap
+Client-kant testen tegen die server (F4.3h/i): in de projectmap
 `<godot> --headless --path . res://tools/capture.tscn -- nettest http://127.0.0.1:8787`
 (twee gast-accounts, versiecheck, match maken en joinen, beide blinde
-factiekeuzes via polling, tot beide clients in PLACEMENT staan).
+factiekeuzes via polling, tot beide clients in PLACEMENT staan) en
+`-- lobbycheck http://127.0.0.1:8787` (dezelfde weg, maar via de echte
+lobby-code van game.gd: nieuwe match, wachtscherm, meedoen, factie-menu,
+opstelling).
+
+## Twee mensen tegen elkaar (F4.3i, "morgen testen")
+
+1. Server op de machine van de host:
+   ```powershell
+   ./db-lokaal.ps1
+   cd server
+   $env:DB_URL = "mysql://root@127.0.0.1:3316/fogofwar"; $env:HOST = "0.0.0.0"; npm run dev
+   ```
+   `HOST=0.0.0.0` laat de server op het hele netwerk luisteren (alleen LAN;
+   geen TLS, geen rate-limiting, dus nooit naar buiten open zetten). Windows
+   vraagt de eerste keer om de firewall-toestemming voor node: toestaan op
+   privénetwerken. Het IP van de host: `ipconfig` (IPv4-adres).
+2. Speler 1 (op de host): het spel starten, MULTIPLAYER, "Online (via de
+   server)", "Nieuwe match", de match-id kopiëren en doorgeven.
+3. Speler 2: het spel starten met de server-url erbij, bijvoorbeeld vanuit
+   de Godot-editor met de projectinstelling of vanaf de commandoregel:
+   `<godot> --path . -- server=http://192.168.1.23:8787 naam=Anna`
+   (`identity.cfg` onthoudt de url daarna). MULTIPLAYER, "Online",
+   "Meedoen met een match-id", de id plakken.
+4. Twee vensters op één machine: het tweede venster met
+   `-- identiteit=B` (eigen `identity_B.cfg`, anders krijgen beide vensters
+   hetzelfde account en zit de tweede "herhaald" op seat 1).
+5. Valt een venster weg: opnieuw starten, MULTIPLAYER, "Online", "Laatste
+   match hervatten" (de match-id staat in `identity.cfg`). Verbindingsverlies
+   midden in een zet en de WebSocket-push zijn F4.3j; nu pollt de client elke
+   halve seconde.
 
 - **`FOW_TEST_DB_URL` gezet** → de tests gebruiken die server en WISSEN de
   database uit de URL per run (dus nooit een database met echte data invullen).
