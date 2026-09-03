@@ -22,6 +22,7 @@ Constants="*res://scripts/core/constants.gd"
 GameSession="*res://scripts/core/GameSession.gd"
 Audio="*res://scripts/core/audio_manager.gd"
 CampaignBridge="*res://scripts/game/campaign_bridge.gd"
+UiThema="*res://scripts/ui/ui_thema.gd"
 
 [display]
 
@@ -39,5 +40,7 @@ locale/translations=PackedStringArray("res://i18n/strings.en.translation", "res:
 3d/physics_engine="Jolt Physics"
 
 [rendering]
+
+textures/canvas_textures/default_texture_filter=2
 
 rendering_device/driver.windows="d3d12"

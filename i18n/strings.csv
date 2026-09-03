@@ -395,3 +395,4 @@ HUB_RESUME_TITLE,"CAMPAIGN IN PROGRESS","LOPENDE CAMPAGNE"
 HUB_RESUME_INFO,"You have a campaign in round %d (playing as %s). Continue, or start fresh with a new faction choice?","Je hebt een campagne in ronde %d (je speelt als %s). Doorgaan, of opnieuw beginnen met een nieuwe factiekeuze?"
 HUB_RESUME_CONTINUE,"Continue campaign","Doorgaan met deze campagne"
 HUB_RESUME_NEW,"Start a new campaign (choose faction)","Nieuwe campagne (kies je factie)"
+UI_FACTION_CARDS,%d cards × budget %d,%d kaarten × budget %d

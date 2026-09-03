@@ -19,6 +19,75 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 
+	if "uicheck" in OS.get_cmdline_user_args():
+		# UI-assetpack (3 september): het statusbord van wat er ligt. Per
+		# spec-id het bestand, de zes emblemen, de kaartdelen, elke knop- en
+		# paneelstijl met zijn 9-patch-marges, de fonts per rol (bedoeld of
+		# terugval), en of het thema en de widgets bouwen. Exit 1 als een
+		# bekend bestand ontbreekt of het thema niet bouwt.
+		var fouten := 0
+		print("[UICHECK] iconen (spec-id -> bestand):")
+		for id in UiAssets.icoon_ids():
+			var tex := UiAssets.icoon(String(id))
+			var bron: String = UiAssets._eerste_aanwezige(UiAssets.ICONEN[id])
+			if tex == null:
+				fouten += 1
+			print("  %-16s %s" % [id, bron if tex != null else "ONTBREEKT"])
+		print("[UICHECK] nog niet geleverd (tekst-terugval): %s" % ", ".join(UiAssets.ontbrekende_iconen()))
+		print("[UICHECK] emblemen:")
+		for d in Constants.DOCTRINE_DATA.keys():
+			var e := UiAssets.embleem(int(d))
+			if e == null:
+				fouten += 1
+			print("  %-10s %s" % [Constants.doctrine_name(int(d)), e.resource_path.get_file() if e != null else "ONTBREEKT"])
+		print("[UICHECK] kaartdelen:")
+		for deel in UiAssets.KAART.keys():
+			var k := UiAssets.kaart(String(deel))
+			if k == null:
+				fouten += 1
+			print("  %-20s %s" % [deel, "%s (%dx%d)" % [k.resource_path.get_file(), int(k.get_width()), int(k.get_height())] if k != null else "ONTBREEKT"])
+		print("[UICHECK] knoppen (variant: staten, 9-patch-marge x/y):")
+		for variant in UiAssets.KNOPPEN.keys():
+			var staten: Array = []
+			for staat in UiAssets.KNOP_STATEN.keys():
+				var sb := UiAssets.knop_stijl(String(variant), String(staat))
+				if sb == null:
+					fouten += 1
+				staten.append("%s=%s" % [staat, "ok" if sb != null else "ONTBREEKT"])
+			var spec: Array = UiAssets.KNOPPEN[variant]
+			print("  %-12s %-52s marge %d/%d" % [variant, " ".join(staten), int(spec[1]), int(spec[2])])
+		print("[UICHECK] panelen:")
+		for naam in UiAssets.PANELEN.keys():
+			var sb := UiAssets.paneel_stijl(String(naam))
+			if sb == null:
+				fouten += 1
+			var spec: Array = UiAssets.PANELEN[naam]
+			print("  %-12s %-30s marge %d/%d %s" % [naam, spec[0], int(spec[1]), int(spec[2]), "" if sb != null else "ONTBREEKT"])
+		print("[UICHECK] fonts (rol: bestand, bedoeld door de ontwerper?):")
+		for rol in ["tekst", "kop", "cijfers"]:
+			var bron := UiAssets.font_bron(rol)
+			print("  %-8s %-28s %s" % [rol, bron if bron != "" else "(Godot-standaard)",
+				"bedoeld" if UiAssets.font_is_bedoeld(rol) else "TERUGVAL, drop %s in assets/ui/fonts" % UiAssets.FONTS_BEDOELD[rol]])
+		var thema := UiAssets.thema()
+		var thema_ok: bool = thema != null and thema.has_stylebox("normal", "Button") and thema.has_stylebox("panel", "PaneelPapier")
+		if not thema_ok:
+			fouten += 1
+		print("[UICHECK] thema bouwt: %s (default_font=%s)" % ["ja" if thema_ok else "NEE",
+			thema.default_font.resource_path.get_file() if thema != null and thema.default_font != null else "standaard"])
+		var widget_ok := true
+		var portret := UiPortret.new(64)
+		portret.zet(Constants.Doctrine.BEER, "rood", true)
+		portret.free()
+		var kaart := UiFactieKaart.new(Constants.Doctrine.WOLF, CRules.actieve_tabel().doctrine_data(Constants.Doctrine.WOLF))
+		widget_ok = kaart.get_child_count() >= 2
+		kaart.free()
+		if not widget_ok:
+			fouten += 1
+		print("[UICHECK] widgets bouwen: %s" % ("ja" if widget_ok else "NEE"))
+		print("[UICHECK] %s: %d fouten" % ["PASS" if fouten == 0 else "FAIL", fouten])
+		get_tree().quit(0 if fouten == 0 else 1)
+		return
+
 	if "arena" in OS.get_cmdline_user_args():
 		# Meet-toernooi (géén training): speelt elke doctrine-matchup en print een
 		# winrate-matrix "wie wint tegen wie" met het huidige opgeslagen profiel.
