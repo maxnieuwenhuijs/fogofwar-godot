@@ -28,6 +28,10 @@ extends Node
 #   {"op":"core_hash"}
 #       → {ok, core_hash}
 #   {"op":"ping"} → {ok:true}
+#
+# Handshake bij verbinden: {ok, gereed, core_hash, server_only_events}. De
+# events die NOOIT naar een client mogen (View.SERVER_ONLY_EVENTS) reizen mee
+# zodat de Node-kant zijn spiegel-lijst kan controleren (F4.2b).
 
 var _peer: StreamPeerTCP = null
 var _buffer := ""
@@ -52,7 +56,12 @@ func _ready() -> void:
 	while not server.is_connection_available():
 		OS.delay_msec(5)
 	_peer = server.take_connection()
-	_antwoord({"ok": true, "gereed": true, "core_hash": _core_hash()})
+	# De handshake draagt de redactielijst mee (F4.2b): Node vergelijkt hem
+	# met zijn eigen SERVER_ONLY_EVENTS en weigert te starten bij verschil.
+	_antwoord({
+		"ok": true, "gereed": true, "core_hash": _core_hash(),
+		"server_only_events": Array(View.SERVER_ONLY_EVENTS),
+	})
 	while true:
 		var regel := _lees_regel()
 		if regel.is_empty():

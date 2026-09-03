@@ -225,6 +225,10 @@ partij door de server = zelfde eind-zobrist). **Docker Desktop start op deze
 machine NIET** (Windows-AF_UNIX-bug, zie WIP 9 augustus): de database is een
 lokale MySQL 8.0.44 zonder Docker, starten met `server/db-lokaal.ps1`, tests
 met `FOW_TEST_DB_URL=mysql://root@127.0.0.1:3316/fogofwar_test` (Godot-pad
-via `GODOT_PAD`). Volgende stap: F4.3 (client: render-vanaf-snapshot,
-camera-flip, RemoteSession). De bots zijn na C19/C20 getraind tot een
+via `GODOT_PAD`). **F4.2b (3 september):** de client-stream is sluitend
+geredigeerd (geen `hash`, geen `cp_bet`; lijst in `View.SERVER_ONLY_EVENTS`,
+Node weigert te starten bij verschil), WS en `/events` alleen met een seat,
+`GET /matches/:id` voor de lobby. Volgende stap: F4.3 (client:
+SessionInterface/LocalSession, RemoteSession + lobby, render-vanaf-snapshot
+op `Agent.reconstruct_state`, camera-flip). De bots zijn na C19/C20 getraind tot een
 plateau; het asset-spoor loopt los van alles en blokkeert niets.

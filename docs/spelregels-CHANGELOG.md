@@ -1,5 +1,17 @@
 # Spelregels — CHANGELOG
 
+## F4.2b — 3 september 2026 (actieformaat: CP-inzet als veld op de define; geen regelwijziging)
+
+`rules_version` blijft 4.3.1 en geen golden verandert. `define_cards` kent
+het optionele veld `cp_bet` (alleen aanwezig als > 0): dezelfde inzet als een
+losse `bet_cp`, in dezelfde actie geboekt, byte-identieke eindstaat
+(`CpTests.test_define_met_cp_bet_veld_is_een_actie_met_dezelfde_eindstaat`).
+Reden: online is elke actie een rij met `seq` en `player_seat`, en een losse
+inzet-rij verraadt via de rij-telling dat er ingezet is, precies wat de view
+verbergt. De losse `bet_cp` blijft legaal (offline, arena, bestaande logs),
+maar een online client hoort de ingebedde vorm te sturen. Zie
+`docs/protocol.md`.
+
 ## C20 — 9 augustus 2026 (Krokodil krijgt startcompensatie: +2,3 procentpunt)
 
 *Besluit Max: "+3 startpunten doe maar."* Krokodil stond met 42,4% als enige

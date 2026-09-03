@@ -107,6 +107,60 @@ func test_dikke_kaart_met_bet_en_reveal_flow() -> void:
 	assert_eq(int(admin.saldi["1"]), 9)
 
 
+## F4.2b -- de inzet als veld op de define: één actie, zelfde eindstaat als
+## bet-dan-define, en dus online één rij in plaats van een verklappende extra.
+func test_define_met_cp_bet_veld_is_een_actie_met_dezelfde_eindstaat() -> void:
+	var los := _define_staat()
+	assert_true(Reducer.apply(los, Actions.make_bet_cp(1), 1).ok)
+	assert_true(Reducer.apply(los, Actions.make_define_cards([_kaart(los, 1, 1)]), 1).ok)
+	var samen := _define_staat()
+	var actie: Dictionary = Actions.make_define_cards([_kaart(samen, 1, 1)], 1)
+	assert_eq(int(actie.cp_bet), 1, "het veld reist mee")
+	assert_true(Validator.is_legal(samen, actie, 1).legal, "define mét inzet is legaal")
+	var res: Dictionary = Reducer.apply(samen, actie, 1)
+	assert_true(res.ok)
+	var typen: Array = []
+	for ev in res.events:
+		typen.append(String(ev.type))
+	assert_true(typen.has(Reducer.EV_CP_BET), "de inzet produceert nog steeds het (server-only) cp_bet-event")
+	assert_eq(int(samen.cp[1]), int(los.cp[1]), "saldo gelijk aan de losse route")
+	assert_eq(int(samen.cp_bets[1]), 1)
+	assert_true(bool(samen.cp_bet_done[1]))
+	assert_eq(Zobrist.state_hash(samen), Zobrist.state_hash(los), "eindstaat byte-identiek aan bet-dan-define")
+	# Zonder inzet blijft de actie-dict exact zoals hij altijd was.
+	assert_false(Actions.make_define_cards([_kaart(samen, 1, 0)]).has("cp_bet"), "geen veld zonder inzet")
+	# En de dict-rondreis (log, netwerk) bewaart het veld.
+	var terug: Dictionary = Actions.from_dict(JSON.parse_string(JSON.stringify(Actions.to_dict(actie))))
+	assert_eq(int(terug.cp_bet), 1, "cp_bet overleeft to_dict/from_dict via JSON")
+
+
+func test_define_met_cp_bet_volgt_de_inzetregels() -> void:
+	var s := _define_staat()
+	# Geen campagne: geen inzet, ook niet ingebed.
+	var kaal := GameState.new()
+	kaal.phase = Phase.Type.SETUP_1_DEFINE
+	kaal.current_player = 1
+	kaal._spawn_pawn(1, Vector2i(5, 9))
+	kaal._spawn_pawn(2, Vector2i(5, 1))
+	assert_false(Validator.is_legal(kaal, Actions.make_define_cards([_kaart(kaal, 1, 0)], 1), 1).legal,
+		"zonder campagne geen ingebedde inzet")
+	# Boven saldo.
+	var teveel: Dictionary = Actions.make_define_cards([_kaart(s, 1, 1)], int(s.cp[1]) + 1)
+	assert_false(Validator.is_legal(s, teveel, 1).legal, "boven saldo geweigerd")
+	# Meer CP dan kaarten (1 kaart deze ronde).
+	assert_false(Validator.is_legal(s, Actions.make_define_cards([_kaart(s, 1, 1)], 2), 1).legal,
+		"meer CP dan kaarten geweigerd")
+	# Dikke kaart zonder ingebedde inzet blijft geweigerd.
+	assert_false(Validator.is_legal(s, Actions.make_define_cards([_kaart(s, 1, 1)]), 1).legal)
+	# Na een losse inzet is een tweede (ingebedde) inzet niet toegestaan.
+	assert_true(Reducer.apply(s, Actions.make_bet_cp(1), 1).ok)
+	var dubbel: Dictionary = Validator.is_legal(s, Actions.make_define_cards([_kaart(s, 1, 1)], 1), 1)
+	assert_false(dubbel.legal, "losse plus ingebedde inzet geweigerd")
+	assert_eq(String(dubbel.reason), "Al CP ingezet deze ronde")
+	# Maar de losse inzet dekt de dikke kaart gewoon nog.
+	assert_true(Reducer.apply(s, Actions.make_define_cards([_kaart(s, 1, 1)]), 1).ok)
+
+
 func test_initiatief_via_stats_d3() -> void:
 	# D3: geen aparte bod-regel — het extra punt in Aanval wint het bod vanzelf.
 	var s := _define_staat()

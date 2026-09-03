@@ -55,9 +55,17 @@ const _VEC_FIELDS := ["target", "move_target"]
 static func make_place(placements: Array) -> Dictionary:
 	return {"type": PLACE, "placements": placements}
 
-static func make_define_cards(cards: Array) -> Dictionary:
+static func make_define_cards(cards: Array, cp_bet: int = 0) -> Dictionary:
 	# cards: [{hp, stamina, attack}, ...]
-	return {"type": DEFINE_CARDS, "cards": cards}
+	# cp_bet (F4.2b): de blinde CP-inzet in DEZELFDE actie als de definitie.
+	# Online is dat de enige veilige vorm: een losse BET_CP is een eigen rij in
+	# het log, en de rij-telling verraadt dan dat er ingezet is. Het veld staat
+	# er alleen bij als het > 0 is, zodat bestaande logs en goldens byte-
+	# identiek blijven.
+	var a: Dictionary = {"type": DEFINE_CARDS, "cards": cards}
+	if cp_bet > 0:
+		a["cp_bet"] = cp_bet
+	return a
 
 static func make_ack_reveal() -> Dictionary:
 	return {"type": ACK_REVEAL}

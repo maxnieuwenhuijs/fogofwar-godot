@@ -763,6 +763,12 @@ F4.0 in (zie F4.3). Wat de verkenning aan ECHTE resterende gaten vond:
   de twee server/log-only events tegen (eigen saldi bereiken de client al via zijn view; de
   battlereport leest ze post-match uit het log). Let op: het RAUWE log zelf blijft server-only —
   DEFINE/CHOOSE_DOCTRINE-acties daarin dragen de blinde keuzes.
+- ~~**De client-rij droeg `payload.hash` en het `cp_bet`-event** (gevonden 3 september bij de
+  herlezing: de hash is de zobrist over de VOLLEDIGE staat en met dezelfde engine te brute-forcen,
+  aangetoond met de echte worker: factiekeuze uit 6, kaartdefinitie uit 1296 in 11,5 s; `cp_bet`
+  verklapte de blinde inzet die de view bewust verbergt)~~ **GEDICHT (F4.2b, 3 september):** zie
+  hieronder. De nulmeting van 9 augustus boekte gat 4 als dicht op grond van de twee admin-events;
+  de Node-redactie zelf was toen door geen enkele test gedekt.
 - **Web-spike is 0%**: geen export_presets.cfg, Forward+/D3D12, Jolt, en de AI draait op een Thread
   (game.gd:1604) — werkt niet in een single-threaded webbuild.
 - **De verrassings-loting** van de tegenstander-factie gebruikt bewust ongeseede randi()
@@ -835,7 +841,54 @@ tweede onvangbare ECONNRESET — de brug gebruikt daarom een handmatige regelkni
 *Oorspronkelijk plan ter referentie:* worker consumeert Redis-jobs; laadt snapshot+staart uit MySQL;
 `Validator.is_legal` + `Reducer.apply`; snapshot elke 50; stateless schalen; core-hash-endpoint.
 
+### ☑ F4.2b — Stream-redactie sluitend + toegang — AF (3 september 2026)
+
+Gebouwd vóór de eerste client bestaat, omdat de herlezing van 3 september een echt fog-lek vond in
+de stream van F4.2. Een client-rij is nu uitsluitend `{seq, player_seat, type, payload: {events}}`:
+**geen `hash`** (blijft in de database voor replay-verificatie en battlereport) en **`cp_bet`** is
+server-only geworden naast `cycle_admin`/`cp_admin`. De redactie is een expliciete tweedeling in de
+engine (`View.SERVER_ONLY_EVENTS` + `View.CLIENT_EVENTS`); `ViewTests` loopt ALLE `EV_`-constanten
+van de reducer af en faalt op een event zonder plek. Node draagt dezelfde lijst, de worker meldt de
+zijne bij de handshake en `GodotWorker.start()` **weigert bij verschil**. Toegang: `/events` en de
+WebSocket alleen met een seat (WS-identiteit ook via `?token=`, sluitcodes 4401/4403/4404), nieuw
+`GET /matches/:id` (status, seats, winnaar, eindreden, hoogste seq: het lobby- en einde-startpunt
+voor F4.3), "De match is afgelopen" na `klaar`. Robuustheid: een ontbrekende Godot-binary is een
+nette fout in plaats van een outage (er was geen `error`-luisteraar op het kindproces). Docs:
+`protocol.md`, `server/README.md` (incl. de verplichte `--import` op een verse checkout, gemeten:
+110 s en ~7,5 GB piek).
+
+**Na de adversariële review (zelfde dag):** een event-filter dicht niet dat een actie een RIJ is.
+Een losse `bet_cp` is een eigen `seq` met `player_seat`; wie in het define-venster een vijandelijke
+rij ziet zonder dat `enemy_has_defined` omslaat, weet dat er ingezet is. Daarom kent `define_cards`
+nu het optionele veld **`cp_bet`** (zelfde checks en boeking als de losse inzet, byte-identieke
+eindstaat, veld alleen aanwezig als > 0: geen log of golden verandert, `rules_version` blijft
+4.3.1). Online is dat de enige vorm; de losse `bet_cp` blijft legaal voor offline en arena. Verder:
+worker start **eager** in `bouwApp` (lijstverschil of ontbrekende binary = opstartfout, blijvend
+onthouden in plaats van twee Godot-starts per verzoek), idem-lookup vóór de statuscheck (blinde
+herhaling van de partij-beëindigende actie blijft 200), WS-abonnement kan niet meer blijven hangen
+als de client sluit tijdens de auth-awaits, `?token=` wordt uit het access-log geredigeerd, en
+worker-fouten worden een neutrale 500 (`setErrorHandler`). Geaccepteerd en gedocumenteerd: een
+lege vijandelijke pool is afleidbaar uit het meteen sluiten van de spawn-gate; 404/403 verraadt
+dat een match-id bestaat.
+
+**CHECK gehaald:** 20/20 integratietests (8 nieuw: inzet-in-define geeft één rij zonder hash of
+cp_bet terwijl het rauwe log beide draagt, spiegellijst Node = worker plus weigering bij verschil
+zonder herspawn, idempotente herhaling na `klaar`, neutrale 500, 403 zonder seat op events/status,
+status na afloop met winnaar/reden/409, de eerste echte WebSocket-test met 4401/4403/4404 en een
+geredigeerde push, en de ontbrekende-binary-fout), pariteitstest leest de hash uit het server-only
+log en klopt nog steeds; CpTests bewijzen dat `cp_bet`-in-define dezelfde zobrist geeft als
+bet-dan-define; ViewTests-canary over 18 reducer-events; volledige suite, simcheck en fuzz groen.
+
 ### ☐ F4.3 — Client: LocalSession/RemoteSession + render-vanaf-snapshot
+
+**Bouwplan (3 september 2026): `docs/F4.3-bouwplan.md`** — elf substappen a t/m k, elk apart
+committeerbaar met een vaste regressieset (suite, simcheck, play/vosview/meleecheck, record-diff,
+de nieuwe `-- uispel`-nulmeting). Kern: GameSession wórdt de LocalSession (`extends
+SessionInterface`), game.gd praat via een `session`-variabele, de bot-naad zit achter `_ai == null`,
+`ClientState.uit_view` bouwt op `Agent.reconstruct_state` (bewezen 4672/4672), `-- herstelcheck`
+bewijst render-vanaf-snapshot offline vóór er een byte netwerk is, en een in-proces
+LoopbackTransport maakt RemoteSession headless testbaar. Open besluiten voor Max staan onderaan
+dat document. De tekst hieronder is het oorspronkelijke plan van juli.
 
 **Bestanden:** `net/net_client.gd`, `net/event_stream.gd`, `net/offline_queue.gd`, `game.gd`-splitsing,
 `ui/screens/lobby`.

@@ -374,6 +374,15 @@ static func _check_define(state: GameState, action: Dictionary, player_id: int) 
 		return _nee("Geen vrije pionnen — deze ronde sla je over")
 	if action.cards.size() != expected:
 		return _nee("Moet %d kaarten definiëren" % expected)
+	# F4.2b: de CP-inzet mag als veld `cp_bet` op de define meereizen (één
+	# actie, dus online één rij: een losse BET_CP verraadt via de rij-telling
+	# dat er ingezet is). Zelfde regels als een losse inzet, dus ook "Al CP
+	# ingezet deze ronde" als er al een losse BET_CP voor stond.
+	var inzet: int = int(action.get("cp_bet", 0))
+	if inzet != 0:
+		var inzet_check: Dictionary = _check_bet_cp(state, {"amount": inzet}, player_id)
+		if not inzet_check.legal:
+			return inzet_check
 	# F2.3 (D1): elke ingezette CP staat precies 1 kaart met budget+1 toe
 	# (max 1 CP per kaart, D4). Zonder campaign/bet is dit exact het 4.1-pad.
 	var budget: int = int(doctrine.budget)
@@ -387,7 +396,7 @@ static func _check_define(state: GameState, action: Dictionary, player_id: int) 
 			cp_kaarten += 1
 			continue
 		return _nee("Ongeldige statistieken (som moet %d zijn, elk minstens 1)" % budget)
-	if cp_kaarten > int(state.cp_bets.get(player_id, 0)):
+	if cp_kaarten > int(state.cp_bets.get(player_id, 0)) + inzet:
 		return _nee("Kaart boven budget zonder CP-inzet")
 	return _ok()
 

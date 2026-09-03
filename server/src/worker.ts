@@ -31,6 +31,13 @@ export interface WorkerOpties {
   projectPad: string;
   poort?: number;
   requestTimeoutMs?: number;
+  /**
+   * F4.2b: de redactielijst die de Node-kant hanteert (SERVER_ONLY_EVENTS in
+   * matches.ts). De worker meldt de zijne (View.SERVER_ONLY_EVENTS) bij de
+   * handshake; verschillen ze, dan start de worker NIET. Zo kan een nieuw
+   * server-only event in de engine nooit stilletjes langs Node naar clients.
+   */
+  verwachtServerOnly?: readonly string[];
 }
 
 interface Wachtende {
@@ -61,7 +68,13 @@ export class GodotWorker {
   private buffer = "";
   private wachtende: Wachtende | null = null;
   private wachtrij: Promise<unknown> = Promise.resolve();
-  private gereedInfo: { core_hash: string } | null = null;
+  private gereedInfo: { core_hash: string; server_only_events: string[] } | null = null;
+  /**
+   * Een fout die niet overgaat door opnieuw te spawnen (binary ontbreekt,
+   * redactielijst verschilt). Daarna weigert elk verzoek meteen, zonder de
+   * engine nog eens (twee keer per verzoek) op te starten.
+   */
+  private fataal: Error | null = null;
 
   constructor(private readonly opties: WorkerOpties) {}
 
@@ -69,11 +82,17 @@ export class GodotWorker {
     return this.gereedInfo?.core_hash ?? "";
   }
 
+  /** De redactielijst zoals de worker hem meldde (leeg vóór de eerste start). */
+  get serverOnlyEvents(): string[] {
+    return [...(this.gereedInfo?.server_only_events ?? [])];
+  }
+
   private get leeft(): boolean {
     return this.proc !== null && this.proc.exitCode === null && this.sock !== null && !this.sock.destroyed;
   }
 
   async start(): Promise<void> {
+    if (this.fataal) throw this.fataal;
     if (this.leeft) return;
     this.stop();
     const poort = this.opties.poort ?? (await vrijePoort());
@@ -83,10 +102,20 @@ export class GodotWorker {
       { stdio: ["ignore", "ignore", "ignore"], cwd: this.opties.projectPad },
     );
     this.proc = proc;
+    // Een binary die niet bestaat (of geen rechten) komt als 'error'-event
+    // op het kindproces; zonder luisteraar is dat een onafgevangen exceptie
+    // die het HELE Node-proces omlegt. Hier wordt het een nette fout op het
+    // verzoek (500) met het pad erin, in plaats van een outage.
+    let spawnFout: Error | null = null;
+    proc.on("error", (e) => { spawnFout = e; });
     // Verbinden met geduld: de engine heeft 1-5 s opstarttijd.
     let sock: net.Socket | null = null;
     let laatste: unknown = null;
     for (let i = 0; i < 120; i++) {
+      if (spawnFout) {
+        this.fataal = new Error(`Godot-binary niet te starten (${this.opties.godotPad}): ${(spawnFout as Error).message}`);
+        throw this.fataal;
+      }
       if (proc.exitCode !== null) throw new Error("worker stierf tijdens het opstarten");
       try {
         sock = await new Promise<net.Socket>((resolve, reject) => {
@@ -112,9 +141,25 @@ export class GodotWorker {
     });
     this.sock = sock;
     this.buffer = "";
-    const gereed = (await this.leesRegel(30_000)) as { gereed?: boolean; core_hash?: string };
+    const gereed = (await this.leesRegel(30_000)) as {
+      gereed?: boolean; core_hash?: string; server_only_events?: unknown;
+    };
     if (!gereed?.gereed) throw new Error("worker meldde zich niet gereed");
-    this.gereedInfo = { core_hash: String(gereed.core_hash ?? "") };
+    const gemeld = Array.isArray(gereed.server_only_events)
+      ? gereed.server_only_events.map(String).sort()
+      : [];
+    if (this.opties.verwachtServerOnly) {
+      const verwacht = [...this.opties.verwachtServerOnly].sort();
+      if (JSON.stringify(gemeld) !== JSON.stringify(verwacht)) {
+        this.stop();
+        this.fataal = new Error(
+          `redactielijst loopt uit elkaar: worker meldt [${gemeld.join(", ")}], ` +
+          `Node verwacht [${verwacht.join(", ")}] (View.SERVER_ONLY_EVENTS vs matches.ts SERVER_ONLY_EVENTS)`,
+        );
+        throw this.fataal;
+      }
+    }
+    this.gereedInfo = { core_hash: String(gereed.core_hash ?? ""), server_only_events: gemeld };
   }
 
   private opData(stuk: Buffer): void {
@@ -157,6 +202,7 @@ export class GodotWorker {
   /** Eén verzoek; verzoeken worden geserialiseerd (één tegelijk in de pijp). */
   async vraag(verzoek: Record<string, unknown>): Promise<WorkerAntwoord> {
     const beurt = this.wachtrij.then(async () => {
+      if (this.fataal) throw this.fataal;
       // Eén herstart-poging als de worker dood blijkt: het verzoek heeft
       // niets gemuteerd (de database schrijft pas ná een antwoord).
       for (let poging = 0; poging < 2; poging++) {

@@ -247,21 +247,48 @@ func test_f4_doctrine_keuze_lekt_niet() -> void:
 	assert_eq(int(na.own_doctrine_commit), -1, "commits zijn weer leeg")
 
 
-## F4.0c -- de event-stream naar clients: de twee server/log-only events (met
-## beide saldi in de payload) blijven achter, al het andere gaat 1-op-1 door.
+## F4.2b -- de redactielijst is sluitend: ELKE EV_-constante van de reducer
+## staat in precies een van de twee lijsten. Een nieuw event zonder plek in
+## een van beide laat deze test falen, dus niets lekt stilletjes naar clients.
+func test_f42b_redactielijst_dekt_elk_reducer_event() -> void:
+	var script: Script = load("res://core/match/reducer.gd")
+	var consts: Dictionary = script.get_script_constant_map()
+	var gezien := 0
+	for naam in consts.keys():
+		if not String(naam).begins_with("EV_"):
+			continue
+		gezien += 1
+		var t := String(consts[naam])
+		var server_only: bool = View.SERVER_ONLY_EVENTS.has(t)
+		var client: bool = View.CLIENT_EVENTS.has(t)
+		assert_true(server_only or client, "%s (%s) staat in geen van beide redactielijsten" % [naam, t])
+		assert_false(server_only and client, "%s (%s) staat in beide lijsten" % [naam, t])
+		# En de filter doet wat de lijst zegt.
+		var door: Array = View.client_events([{"type": t, "payload": {}}])
+		assert_eq(door.size(), 0 if server_only else 1, "filter volgt de lijst voor %s" % t)
+	assert_eq(gezien, View.SERVER_ONLY_EVENTS.size() + View.CLIENT_EVENTS.size(),
+		"elk reducer-event is precies een keer ingedeeld")
+	assert_true(gezien >= 18, "de reducer kent minstens 18 events (anders is de telling stuk)")
+
+
+## F4.0c/F4.2b -- de event-stream naar clients: de server/log-only events (de
+## twee met beide saldi in de payload, en de blinde CP-inzet) blijven achter,
+## al het andere gaat 1-op-1 door.
 func test_f4_client_events_redigeert_admin() -> void:
-	# Synthetisch: elk relevant type een keer, de filter kent er precies twee.
+	# Synthetisch: elk relevant type een keer, de filter kent er precies drie.
 	var stroom: Array = [
 		{"type": Reducer.EV_STATE, "payload": {}},
 		{"type": Reducer.EV_CYCLE_ADMIN, "payload": {"cycle": 2, "pools": {"1": {"pt": 9}, "2": {"pt": 4}}}},
 		{"type": Reducer.EV_SPAWN_COMMITTED, "payload": {"player_id": 1}},
 		{"type": Reducer.EV_CP_ADMIN, "payload": {"bets": {"1": 2, "2": 0}, "saldi": {"1": 8, "2": 10}}},
+		{"type": Reducer.EV_CP_BET, "payload": {"player_id": 1}},
 		{"type": Reducer.EV_DOCTRINE_COMMITTED, "payload": {"player_id": 2}},
 	]
 	var door: Array = View.client_events(stroom)
-	assert_eq(door.size(), 3, "twee admin-events blijven bij de server")
+	assert_eq(door.size(), 3, "twee admin-events en de blinde inzet blijven bij de server")
 	assert_false(JSON.stringify(door).contains("pools"), "geen pools in de client-stream")
 	assert_false(JSON.stringify(door).contains("saldi"), "geen saldi in de client-stream")
+	assert_false(JSON.stringify(door).contains(Reducer.EV_CP_BET), "geen cp_bet in de client-stream")
 	# En op ECHTE reducer-events: een campagne-define met CP-inzet produceert
 	# EV_CP_ADMIN bij de reveal; na de filter is die weg en de reveal niet.
 	var s := GameState.new()
@@ -274,7 +301,14 @@ func test_f4_client_events_redigeert_admin() -> void:
 	assert_true(Reducer.apply(s, Actions.make_place(s.default_placement(2)), 2).ok)
 	var kaarten: Array = [{"hp": 3, "stamina": 2, "attack": 2},
 		{"hp": 2, "stamina": 2, "attack": 3}, {"hp": 2, "stamina": 3, "attack": 2}]
-	assert_true(Reducer.apply(s, Actions.make_bet_cp(1), 1).ok, "CP-inzet p1")
+	var inzet: Dictionary = Reducer.apply(s, Actions.make_bet_cp(1), 1)
+	assert_true(inzet.ok, "CP-inzet p1")
+	var inzet_typen: Array = []
+	for ev in inzet.events:
+		inzet_typen.append(String(ev.type))
+	assert_true(inzet_typen.has(Reducer.EV_CP_BET), "de inzet produceert het cp_bet-event")
+	assert_false(JSON.stringify(View.client_events(inzet.events)).contains(Reducer.EV_CP_BET),
+		"maar de client-stream verklapt de inzet niet (de view verbergt hem ook)")
 	assert_true(Reducer.apply(s, Actions.make_define_cards(kaarten), 1).ok)
 	var laatste: Dictionary = Reducer.apply(s, Actions.make_define_cards(kaarten), 2)
 	assert_true(laatste.ok)

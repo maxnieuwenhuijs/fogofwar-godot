@@ -14,15 +14,24 @@
 // formaat als een MatchLog-entry, dus replay en battlereport zijn gratis.
 // Elke 50 acties een snapshot. now_ms per rij (F4.0b): servertijd.
 //
-// LEK-DISCIPLINE: het rauwe log is server-only (payload.action draagt blinde
-// keuzes; twee admin-events dragen beide saldi). Alles wat een client ziet
-// gaat door naarClientRij(): action eruit, admin-events eruit (spiegelt
-// View.client_events; de test bewaakt dat dit niet uit elkaar loopt).
+// LEK-DISCIPLINE (F4.2b): het rauwe log is server-only. Een client-rij is
+// uitsluitend {seq, player_seat, type, payload.events} en daarin alleen de
+// events uit View.CLIENT_EVENTS. Wat er NOOIT in zit, en waarom:
+//   - payload.action: draagt blinde keuzes (define, spawn, bet, doctrine);
+//   - payload.hash: de zobrist over de VOLLEDIGE staat, inclusief de blinde
+//     keuzes. Met dezelfde engine is die te brute-forcen (3 september:
+//     factiekeuze uit 6, kaartdefinitie uit 1296 in 11,5 s). De hash blijft
+//     in de database voor replay-verificatie en de battlereport;
+//   - de server-only events (SERVER_ONLY_EVENTS): cycle_admin en cp_admin
+//     dragen de saldi van beide kanten, cp_bet verklapt de blinde inzet.
+// De lijst hieronder MOET gelijk zijn aan View.SERVER_ONLY_EVENTS; de worker
+// meldt zijn lijst bij de handshake en GodotWorker.start() weigert bij
+// verschil (zie worker.ts). De integratietests dekken beide oevers.
 import { randomUUID } from "node:crypto";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import type { Db } from "./db.js";
-import { wieIsDit } from "./auth.js";
+import { wieIsDit, type Ingelogd } from "./auth.js";
 import type { GodotWorker } from "./worker.js";
 
 interface EventRij {
@@ -32,10 +41,11 @@ interface EventRij {
   payload: { action?: unknown; events?: unknown[]; hash?: string; [k: string]: unknown };
 }
 
-// Server/log-only reducer-events (D12) — spiegel van View.client_events().
-const SERVER_ONLY_EVENTS = new Set(["cycle_admin", "cp_admin"]);
+/** Server/log-only reducer-events (D12) — spiegel van View.SERVER_ONLY_EVENTS. */
+export const SERVER_ONLY_EVENTS: readonly string[] = ["cycle_admin", "cp_admin", "cp_bet"];
+const SERVER_ONLY = new Set(SERVER_ONLY_EVENTS);
 
-/** De vorm die een client mag zien: geen actie, geen admin-events. */
+/** De vorm die een client mag zien: geen actie, geen hash, geen server-only events. */
 export function naarClientRij(rij: EventRij): Record<string, unknown> {
   const events = Array.isArray(rij.payload.events) ? rij.payload.events : [];
   return {
@@ -43,10 +53,33 @@ export function naarClientRij(rij: EventRij): Record<string, unknown> {
     player_seat: rij.player_seat,
     type: rij.type,
     payload: {
-      events: events.filter((e) => !SERVER_ONLY_EVENTS.has(String((e as { type?: unknown }).type))),
-      hash: rij.payload.hash ?? "",
+      events: events.filter((e) => !SERVER_ONLY.has(String((e as { type?: unknown }).type))),
     },
   };
+}
+
+/** Seat van deze gebruiker in deze match, of 0 als hij er niet in zit. */
+async function seatVan(conn: PoolConnection | Db, matchId: string, userId: string): Promise<number> {
+  const [rows] = await conn.query<RowDataPacket[]>(
+    "SELECT seat FROM match_seats WHERE match_id = ? AND user_id = ?", [matchId, userId]);
+  return rows[0] ? Number(rows[0].seat) : 0;
+}
+
+/**
+ * Identiteit voor de WebSocket-route: een browser kan geen Authorization-
+ * header op een WS-upgrade zetten, dus daar geldt ook `?token=<sessie_token>`.
+ * Alle andere routes blijven Bearer-only.
+ */
+async function wieIsDitWs(db: Db, req: FastifyRequest): Promise<Ingelogd | null> {
+  const viaKop = await wieIsDit(db, req);
+  if (viaKop) return viaKop;
+  const token = String((req.query as { token?: string }).token ?? "");
+  if (token.length === 0) return null;
+  const [rows] = await db.query<RowDataPacket[]>(
+    "SELECT u.id, u.naam FROM sessies s JOIN users u ON u.id = s.user_id WHERE s.token = ?", [token]);
+  const rij = rows[0];
+  if (!rij) return null;
+  return { userId: rij.id as string, naam: rij.naam as string };
 }
 
 async function rijenSinds(conn: PoolConnection | Db, matchId: string, na: number): Promise<EventRij[]> {
@@ -171,17 +204,20 @@ export function registreerMatchRoutes(app: FastifyInstance, db: Db): void {
         "SELECT seat FROM match_seats WHERE match_id = ? AND user_id = ?", [matchId, ik.userId]);
       if (!seatRows[0]) { await conn.rollback(); return reply.code(403).send({ fout: "Je zit niet in deze match" }); }
       const seat = Number(seatRows[0].seat);
-      if (String(m[0].status) !== "bezig") {
-        await conn.rollback();
-        return reply.code(409).send({ fout: "De match is nog niet begonnen" });
-      }
-      // Idempotentie eerst: dezelfde idem_key → exact het eerdere antwoord.
+      // Idempotentie ECHT eerst, ook vóór de statuscheck: de herhaling van de
+      // laatste actie (die de match op 'klaar' zette) moet het oorspronkelijke
+      // antwoord krijgen, anders is de blinde retry uit protocol.md niet waar.
       const [eerder] = await conn.query<RowDataPacket[]>(
         "SELECT seq FROM match_events WHERE match_id = ? AND idem_key = ?", [matchId, idemKey]);
       if (eerder[0]) {
         const events = await clientRijenSinds(conn, matchId, Number(eerder[0].seq) - 1);
         await conn.commit();
         return { events, herhaald: true };
+      }
+      if (String(m[0].status) !== "bezig") {
+        await conn.rollback();
+        const fout = String(m[0].status) === "klaar" ? "De match is afgelopen" : "De match is nog niet begonnen";
+        return reply.code(409).send({ fout, events: [] });
       }
       const [top] = await conn.query<RowDataPacket[]>(
         "SELECT COALESCE(MAX(seq), 0) AS hoogste FROM match_events WHERE match_id = ?", [matchId]);
@@ -249,11 +285,43 @@ export function registreerMatchRoutes(app: FastifyInstance, db: Db): void {
     }
   });
 
-  // Inhaal-endpoint (reconnect / WS-gaten / polling-fallback).
+  // Matchstatus (F4.2b): wat de lobby en de client moeten weten zonder de
+  // staat aan te raken. Alleen voor wie een seat heeft.
+  app.get("/matches/:id", async (req, reply) => {
+    const ik = await wieIsDit(db, req);
+    if (!ik) return reply.code(401).send({ fout: "Niet ingelogd" });
+    const matchId = String((req.params as { id: string }).id);
+    const [m] = await db.query<RowDataPacket[]>(
+      "SELECT status, rules_version, winnaar_seat, eind_reden FROM matches WHERE id = ?", [matchId]);
+    if (!m[0]) return reply.code(404).send({ fout: "Onbekende match" });
+    const [seats] = await db.query<RowDataPacket[]>(
+      "SELECT s.seat, s.user_id, u.naam FROM match_seats s JOIN users u ON u.id = s.user_id WHERE s.match_id = ? ORDER BY s.seat",
+      [matchId]);
+    const eigen = seats.find((s) => s.user_id === ik.userId);
+    if (!eigen) return reply.code(403).send({ fout: "Je zit niet in deze match" });
+    const [top] = await db.query<RowDataPacket[]>(
+      "SELECT COALESCE(MAX(seq), 0) AS hoogste FROM match_events WHERE match_id = ?", [matchId]);
+    return {
+      match_id: matchId,
+      status: String(m[0].status),
+      rules_version: String(m[0].rules_version),
+      seat: Number(eigen.seat),
+      seats: seats.map((s) => ({ seat: Number(s.seat), naam: String(s.naam) })),
+      winnaar_seat: m[0].winnaar_seat === null ? null : Number(m[0].winnaar_seat),
+      eind_reden: m[0].eind_reden === null ? null : String(m[0].eind_reden),
+      seq: Number(top[0]?.hoogste ?? 0),
+    };
+  });
+
+  // Inhaal-endpoint (reconnect / WS-gaten / polling-fallback). Alleen voor
+  // wie een seat heeft: de events zijn geredigeerd, maar geen toeschouwers.
   app.get("/matches/:id/events", async (req, reply) => {
     const ik = await wieIsDit(db, req);
     if (!ik) return reply.code(401).send({ fout: "Niet ingelogd" });
     const matchId = String((req.params as { id: string }).id);
+    if ((await seatVan(db, matchId, ik.userId)) === 0) {
+      return reply.code(403).send({ fout: "Je zit niet in deze match" });
+    }
     const na = Number((req.query as { after?: string }).after ?? 0);
     const events = await clientRijenSinds(db, matchId, Number.isInteger(na) && na >= 0 ? na : 0);
     return { events };
@@ -286,12 +354,27 @@ export function registreerMatchRoutes(app: FastifyInstance, db: Db): void {
   });
 
   // WS: live events per match; gaten dicht je met GET /events?after=seq.
-  app.get("/matches/:id/ws", { websocket: true }, (socket, req) => {
+  // Identiteit via Bearer-header of `?token=`; zonder seat gaat de socket
+  // dicht met een app-code (4401 niet ingelogd, 4403 geen seat, 4404
+  // onbekende match) zodat de client weet waarom.
+  app.get("/matches/:id/ws", { websocket: true }, async (socket, req) => {
     const matchId = String((req.params as { id: string }).id);
+    // De client kan sluiten terwijl wij nog op de database wachten; zonder
+    // deze vlag zou het abonnement hieronder dan voor altijd blijven hangen
+    // (de close-luisteraar komt pas ná de awaits en vuurt dan nooit meer).
+    let dicht = false;
+    socket.once("close", () => { dicht = true; });
+    const ik = await wieIsDitWs(db, req);
+    if (!ik) { socket.close(4401, "Niet ingelogd"); return; }
+    const [m] = await db.query<RowDataPacket[]>("SELECT id FROM matches WHERE id = ?", [matchId]);
+    if (!m[0]) { socket.close(4404, "Onbekende match"); return; }
+    if ((await seatVan(db, matchId, ik.userId)) === 0) { socket.close(4403, "Je zit niet in deze match"); return; }
+    if (dicht || socket.readyState !== socket.OPEN) return;
     const stop = app.matchStream.abonneer(matchId, (events) => {
-      socket.send(JSON.stringify({ match_id: matchId, events }));
+      if (socket.readyState === socket.OPEN) socket.send(JSON.stringify({ match_id: matchId, events }));
     });
     socket.on("close", stop);
+    socket.on("error", stop);
   });
 }
 

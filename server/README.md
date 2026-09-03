@@ -44,6 +44,24 @@ fog-view, `GET /versie` = de core-hash van de engine. De pariteit is bewezen:
 een volledige offline opgenomen partij door de server naspelen eindigt op
 dezelfde zobrist-hash.
 
-De worker heeft de Godot-binary nodig: env `GODOT_PAD` (valt terug op het
-bekende pad van deze machine). Nog niet: OAuth-login (e-mail dekt
-cross-device al) en Redis (komt met de matchmaking-wachtrij, F4.4+).
+De worker heeft de Godot-binary nodig: env `GODOT_PAD` of `GODOT_PATH` (valt
+terug op het bekende pad van deze machine; een pad dat niet bestaat geeft een
+nette fout op het verzoek, geen crash). Op een **verse checkout** eerst
+éénmalig `godot --headless --path . --import` draaien: zonder de
+`.godot/`-cache compileert de engine niet en meldt de worker zich nooit. Nog
+niet: OAuth-login (e-mail dekt cross-device al) en Redis (komt met de
+matchmaking-wachtrij, F4.4+).
+
+## F4.2b (3 september): redactie en toegang
+
+Een client-rij is alleen nog `{seq, player_seat, type, payload: {events}}`:
+geen `action`, geen `hash` (brute-forceerbaar met dezelfde engine), en geen
+`cycle_admin`/`cp_admin`/`cp_bet`. De lijst staat in `View.SERVER_ONLY_EVENTS`
+(engine) en `SERVER_ONLY_EVENTS` in `src/matches.ts`; de worker meldt de zijne
+bij de handshake en de backend weigert te starten als ze verschillen.
+`GET /matches/:id` geeft de matchstatus; `/events` en de WebSocket zijn alleen
+voor wie een seat heeft (WS: `?token=`, sluitcodes 4401/4403/4404). De
+CP-inzet gaat online als veld `cp_bet` op `define_cards` mee (een losse
+`bet_cp` is een eigen rij en verraadt via de rij-telling dat er ingezet is).
+De worker start eager bij `bouwApp`: een ontbrekende binary of een
+redactielijst-verschil is een opstartfout.

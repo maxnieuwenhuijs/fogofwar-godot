@@ -1,5 +1,90 @@
 # Fog of War — Work In Progress & Context
 
+## 3 september -- F4.2b: het stream-lek gedicht voordat de client bestaat
+
+Max: "waar staan we met de multiplayer mode" en daarna "laten we gewoon
+beginnen". Eerst een volledige herlezing van F4 (zeven lezers, een
+kritiekronde, zes toetsen met echte metingen). Stand: F4.0-F4.2 staan en zijn
+vandaag opnieuw groen gemeten (tsc schoon, 12/12, worker 5-16 ms per actie),
+F4.3 is nul (geen regel netwerkcode in de client, ook niet in zijtakken), en
+sinds 9 augustus raakte geen enkele commit server, engine of worker. De
+meevaller: `Agent.reconstruct_state` bouwt uit de fog-view al een speelbare
+staat (4672/4672 identieke legale acties in een proef over alle fasen), dus
+render-vanaf-snapshot heeft een fundament.
+
+**De tegenvaller, en die is vandaag gedicht:** de client-stream van F4.2 was
+niet fog-veilig. `payload.hash` was de zobrist over de VOLLEDIGE staat, dus
+inclusief blinde factiekeuze, ongeonthulde kaartdefinities, spawn-commits en
+CP-inzet, en met dezelfde engine te brute-forcen. Met de echte worker
+aangetoond: factiekeuze uit 6 kandidaten, kaartdefinitie (Muis, 1296
+combinaties) in 11,5 s gevonden. Daarnaast passeerde `cp_bet {player_id}`
+beide filters terwijl de view de vijandelijke inzet bewust verbergt
+(CpTests). En de WebSocket had geen auth, `/events` geen seat-check. De
+nulmeting van 9 augustus boekte "admin-events gefilterd" als dicht; dat klopte
+voor die twee events, maar de Node-redactie werd door geen test bewaakt en de
+canary testte vijf synthetische types van de achttien.
+
+Gebouwd (F4.2b):
+
+- **Engine:** `View.SERVER_ONLY_EVENTS` (cycle_admin, cp_admin, cp_bet) naast
+  `View.CLIENT_EVENTS`; `client_events()` volgt de lijst. Nieuwe canary in
+  ViewTests laadt `reducer.gd`, loopt alle `EV_`-constanten af en faalt op een
+  event dat in geen van beide lijsten staat (of in beide).
+- **Worker:** meldt `server_only_events` in de handshake.
+- **Node:** `naarClientRij` levert alleen nog `{events}` (geen hash), de lijst
+  bevat `cp_bet`, en `GodotWorker.start()` vergelijkt de gemelde lijst met de
+  eigen en weigert te starten bij verschil. Ontbrekende Godot-binary: nette
+  fout met het pad (er was geen `error`-luisteraar op het kindproces, dus het
+  hele Node-proces viel om). `/events` eist een seat; de WS eist identiteit
+  (Bearer of `?token=`) en een seat, sluitcodes 4401/4403/4404. Nieuw
+  `GET /matches/:id` (status, seats met namen, winnaar, eindreden, hoogste
+  seq). Na `klaar` zegt `/acties` "De match is afgelopen".
+- **Tests:** 18/18 (6 nieuw), waaronder de eerste echte WebSocket-test (Node
+  22 heeft een ingebouwde client; `app.listen` op poort 0). De pariteitstest
+  leest de eind-hash nu uit het server-only log en klopt nog.
+- **Docs:** protocol.md, server/README.md (incl. de verplichte `--import` op
+  een verse checkout: zonder `.godot/` compileert de engine niet; gemeten 110 s
+  en ~7,5 GB piek), masterplan nulmeting + F4.2b.
+
+**De review erachteraan (32 agents, elke bevinding door twee sceptici) vond
+nog een laag dieper:** een event-filter dicht niet dat een actie een RIJ is.
+Een losse `bet_cp` is een eigen `seq` met `player_seat`, en wie in het
+define-venster een vijandelijke rij ziet zonder dat `enemy_has_defined`
+omslaat, weet dat er ingezet is. Elke afzender in de repo stuurt bovendien
+alleen een `bet_cp` bij een inzet > 0. Oplossing in de engine, zonder
+regelwijziging: `define_cards` kent het optionele veld `cp_bet` (zelfde
+checks als de losse inzet, zelfde boeking, byte-identieke eindstaat, veld
+alleen aanwezig als > 0 dus alle logs en goldens blijven gelijk). Online is
+dat de enige vorm; de losse `bet_cp` blijft legaal voor offline en arena.
+Verder uit de review: de WS-handler kon een abonnement eeuwig laten hangen
+als de client sloot tijdens de auth-awaits (vlag vóór de awaits); `?token=`
+stond in het access-log (request-serializer redigeert hem); de idem-lookup
+stond ná de statuscheck, dus de blinde herhaling van een partij-beëindigende
+actie kreeg 409 in plaats van het oorspronkelijke antwoord (volgorde
+omgedraaid, test erbij); "Node weigert te starten" was lui en per verzoek
+met twee Godot-starts (worker start nu eager in `bouwApp`, blijvende fouten
+worden onthouden); en worker-fouten gingen met serverpad als 500-body naar
+de client (`setErrorHandler`: neutraal, details in het log). Geaccepteerd en
+gedocumenteerd: een lege vijandelijke pool is afleidbaar uit het meteen
+sluiten van de spawn-gate, en 404/403 verraadt dat een match-id bestaat.
+
+Niet gedaan, bewust: sessies verlopen nog niet, geen rate limiting, geen
+protocol_version/rules_hash-handshake (klein, hoort bij de eerste client),
+geen klokprofiel (besluit van Max). De volgende stap is F4.3: SessionInterface
++ LocalSession eerst (vs-AI byte-identiek), dan RemoteSession + lobby, dan
+render-vanaf-snapshot op `reconstruct_state`.
+
+Checks: volledige Godot-suite 1795 asserts groen (0 fouten, 364 s parallel;
+vóór de review-fixes 1775), simcheck 0 afwijkingen, fuzz 30 partijen 0
+schendingen, servertests 20/20, tsc schoon.
+
+Meteen erachteraan het **F4.3-bouwplan** laten ontwerpen (drie architecten,
+drie juryleden, synthese): `docs/F4.3-bouwplan.md`, elf substappen a t/m k
+met een vaste regressieset en de open besluiten voor Max onderaan. Terzijde: simcheck laat sinds juli een
+script-fout uit game.gd:1550 zien (`_ai` is Nil in de sim-context bij
+CYCLE_SPAWN); staat los van deze stap, wel opruimen.
+
+
 ## 26 augustus -- de eerste ECHTE big bros: cavalerie voor muis, leeuw en varken
 
 Max leverde 15 cavalerie-blends (Mouse/Lion/Pig x base/spd/hp/atk/mix) in de

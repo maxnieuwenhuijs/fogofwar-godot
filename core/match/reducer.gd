@@ -159,6 +159,12 @@ static func _do_place(state: GameState, action: Dictionary, player_id: int, even
 
 
 static func _do_define(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	# F4.2b: een ingebedde CP-inzet (`cp_bet` op de define) wordt exact als een
+	# losse BET_CP geboekt, alleen in dezelfde actie. De eindstaat is identiek
+	# aan bet-dan-define; het scheelt online een verklappende rij.
+	var inzet: int = int(action.get("cp_bet", 0))
+	if inzet > 0:
+		_do_bet_cp(state, {"amount": inzet}, player_id, events)
 	var new_cards: Array = []
 	for d in action.cards:
 		var card := Card.new(

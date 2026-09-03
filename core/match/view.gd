@@ -153,19 +153,46 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	}
 
 
-## F4.0c — de event-stream naar een client. De reducer-events zijn vrijwel
-## allemaal al blind-veilig (commit-events dragen alleen een player_id), maar
-## twee zijn expliciet server/log-only omdat hun payload de saldi van BEIDE
-## kanten draagt: EV_CYCLE_ADMIN (pools) en EV_CP_ADMIN (bets + saldi). Die
-## blijven bij de server; de battlereport leest ze post-match uit het log, en
-## de eigen saldi bereiken de client toch al via zijn view. Alles wat hier
-## doorheen komt mag 1-op-1 naar elke client — de canary in ViewTests bewaakt
-## dat deze lijst niet stilletjes achterloopt op nieuwe events.
+## F4.0c/F4.2b — de event-stream naar een client. De redactie is een
+## EXPLICIETE tweedeling: elk reducer-event staat of in SERVER_ONLY_EVENTS of
+## in CLIENT_EVENTS, en de canary in ViewTests loopt alle EV_-constanten van
+## de reducer af en gilt bij een event dat in geen van beide staat. Zo kan een
+## nieuw event nooit stilletjes naar clients lekken.
+##
+## Server/log-only (D12):
+##   EV_CYCLE_ADMIN  — pools van BEIDE kanten (ledger-moment in RESET);
+##   EV_CP_ADMIN     — bets + saldi van beide kanten bij de reveal;
+##   EV_CP_BET       — {player_id}: de view verbergt bewust of de vijand in het
+##                     define-venster CP inzet (CpTests: geen enemy_cp_bet), dus
+##                     het event mag dat evenmin verklappen. De eigen inzet
+##                     staat in de eigen view (own_cp_bet).
+## De battlereport leest de admin-events post-match uit het rauwe log; de
+## eigen saldi bereiken de client toch al via zijn view.
+##
+## De Node-backend draagt dezelfde lijst (SERVER_ONLY_EVENTS in
+## server/src/matches.ts) en de worker meldt deze lijst bij het opstarten;
+## lopen ze uit elkaar, dan weigert de backend te starten.
+const SERVER_ONLY_EVENTS: Array[String] = [
+	Reducer.EV_CYCLE_ADMIN, Reducer.EV_CP_ADMIN, Reducer.EV_CP_BET,
+]
+
+## Alles wat 1-op-1 naar elke client mag. Commit-events dragen alleen een
+## player_id; reveal-events dragen wat op dat moment voor beide kanten openbaar
+## is; EV_ACTION.result draagt alleen stats van pionnen die de resolutie zelf
+## al onthuld heeft (card_revealed gaat vóór de schade op true).
+const CLIENT_EVENTS: Array[String] = [
+	Reducer.EV_ACTION, Reducer.EV_STATE, Reducer.EV_PLACEMENT,
+	Reducer.EV_CARDS_REVEALED, Reducer.EV_WOLF_PENDING, Reducer.EV_TURN,
+	Reducer.EV_PHASE, Reducer.EV_CYCLE_STARTED, Reducer.EV_HONGER,
+	Reducer.EV_GAME_OVER, Reducer.EV_SPAWN_COMMITTED, Reducer.EV_SPAWNS_REVEALED,
+	Reducer.EV_CP_EARNED, Reducer.EV_DOCTRINE_COMMITTED, Reducer.EV_DOCTRINES_REVEALED,
+]
+
+
 static func client_events(events: Array) -> Array:
 	var uit: Array = []
 	for ev in events:
-		var t := String(ev.type)
-		if t == Reducer.EV_CYCLE_ADMIN or t == Reducer.EV_CP_ADMIN:
+		if SERVER_ONLY_EVENTS.has(String(ev.type)):
 			continue
 		uit.append(ev)
 	return uit
