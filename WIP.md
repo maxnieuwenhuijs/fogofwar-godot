@@ -1,5 +1,72 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september -- F4.3e: render-vanaf-snapshot, offline bewezen
+
+De grootste post van F4.3: elke fase van game.gd opbouwbaar uit de staat
+ALLEEN, zonder events, als het normale startpad van een online partij. En
+bewezen zonder een byte netwerk.
+
+**game.gd.** Drie refactors zonder gedragswijziging (`_open_define_fase`,
+`_toon_reveal`, `_open_spawn_fase`: de fase-UI die aan de signals hing is nu
+aanroepbaar vanuit de staat). Nieuw `_start_vanaf_sessie(sessie)`: geen bot,
+sessie erin, signals overkoppelen, `_toon_fase_vanaf_staat()`. Die laatste
+bouwt per fase het scherm: doctrine-menu of wachten, opstel-overlay of
+wachten, CP-bod/waaier of wachten, onthul-scherm (uit
+`Rules.compute_initiative`, dezelfde getallen als het event) of wachten,
+koppel-waaier + ringen + beurt, actiefase + open wolf-stap, spawn-overlay,
+einde. Plus `render_digest()` (deterministische samenvatting van het scherm)
+en `is_rustig()`.
+
+**`-- herstelcheck [seed] [factie]`** (capture): de live scene speelt zonder
+bot, de mens via het timeout-pad, de tegenstander (L1) buiten game.gd om via
+GameSession, zoals een server. Op elk nieuw moment (fasewissel, beurtwissel,
+eigen commit, open wolf-stap) start een VERSE game.tscn op alleen de
+fog-view van speler 1, door JSON-tekst, en wordt de digest vergeleken.
+Canary: geen hp-blokje met een getal voor een pion die in de view '?' droeg.
+
+**Wat de check aan het licht bracht (en gefixt is):** de koppel-waaier
+kwam uit de define-configuratie (na een koude start toonde hij de standaard
+drie kaarten): nu `_toon_linking_hand()` uit `cards_revealed`, en de waaier
+staat de hele koppel-fase in beeld. De koppel-ringen stonden ook op
+VIJANDELIJKE ongekoppelde pionnen (`_refresh_all` en
+`_highlight_own_unlinked_pawns`): dat verried offline de koppelstaat van
+gedekte Krokodil-pionnen, iets wat de view niet geeft. Nu alleen eigen
+pionnen. De hp-blokjes volgden een andere dekkingsregel dan de view (C13
+"van dichtbij zie je hem" ontbrak offline): `View.pion_gedekt_voor` is nu
+dé regel, voor view én renderer (vosview aangepast). De topbalk kende de
+spawn-fase niet en werd bij het CP-bod niet ververst. Na een eigen commit
+zegt de prompt online nu "Wachten op de tegenstander". Verder twee
+harnas-vlaggen (`_fase_overgang_bezig`, `_define_open_bezig`) zodat
+"rustig" ook de 0,9 s ronde-pauze en de poef-reveal dekt, en posities op
+halve tegels (een stagger mag uitlopen, een verkeerde tegel valt er nog uit).
+
+Uitslag: seed 777 (Krokodil-tegenstander) 131 momenten, seed 4242 (Wolf)
+139 momenten, 0 verschillen, 0 canary, alle fasen van SETUP_1_DEFINE tot
+CYCLE_SPAWN. Niet gedekt door de check: PRE_GAME (offline begint game.gd na
+de keuze; stap g) en het GAME_OVER-scherm (naadcheck dekt het pad, de
+digest niet).
+
+**Uit de review erachteraan (46 agents):** twee bewuste gedragswijzigingen
+in het vs-AI-pad die de uispel/record-meting niet ziet, hier vastgelegd:
+(1) laat de mens in ronde 2/3 het CP-bod verlopen, dan dient de timeout nu
+altijd de standaardverdeling in; voorheen stond de koppel-waaier van de
+vorige ronde nog onder het CP-bod en diende de timeout stilletjes de
+kaarten van de VORIGE ronde opnieuw in (of liep vast als daar een CP-kaart
+tussen zat). (2) heeft de mens deze ronde geen vrije pionnen
+(`expected_define_count` 0, laat in de partij), dan opent er geen lege
+waaier meer met een bevestigknop die een ongeldige define stuurt; de bot
+komt meteen aan de beurt (`_ai_define_beurt`), online wacht je. Verder:
+`_animate_link` zette bij een koppeling van de tegenstander het
+karaktermodel uit de ECHTE kaart, ook voor een gedekte Krokodil-pion (het
+archetype verried de kaart, een offline fog-lek van voor F4): nu door
+dezelfde gate. Na een eigen opstelling online: "wachten". De
+eindvergelijking van de herstelcheck wacht nu ook op een stil scherm.
+
+Checks: herstelcheck 777 en 4242 wolf 0 verschillen, uispel 777 zobrist
+gelijk, opname gelijk, naadcheck/vosview/play/meleecheck PASS, simcheck 0
+afwijkingen, fuzz 30/0, volledige suite 1849 asserts groen (0 fouten).
+
+
 ## 3 september (nacht) -- F4.3d: view compleet, ClientState, EventCodec
 
 De engine-kant van de client, zonder een byte netwerk: alles wat nodig is om

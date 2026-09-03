@@ -131,15 +131,16 @@ func naam_van(_player_id: int) -> String:
 	return ""
 
 ## F0.6/F4.3: staat een pion voor MIJ gedekt (Krokodil-schutkleur)? Offline
-## exact de expressie die de hp-blokjes altijd al gebruikten; online komt het
-## '?'-sentinel uit de view.
+## dezelfde kijkregel als de view (View.pion_gedekt_voor, incl. C13: van
+## dichtbij zie je hem); online komt het '?'-sentinel uit de view. Zo toont
+## het scherm offline exact wat de online view zou geven (F4.3e).
 func pion_gedekt(pawn_id: int) -> bool:
 	if state == null:
 		return false
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null:
 		return false
-	return pawn.owner_id != local_player_id() and not pawn.card_revealed
+	return View.pion_gedekt_voor(state, pawn, local_player_id())
 
 ## Online: {enemy_has_chosen, enemy_has_defined, enemy_has_spawned} uit de
 ## view, voor de wachtteksten. Offline leeg: de AI dient altijd meteen in.

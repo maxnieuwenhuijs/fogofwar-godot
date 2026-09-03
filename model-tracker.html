@@ -278,6 +278,19 @@ const TEXTURES = [
   { id: "<model>_<team>_gore.png", naam: "Gore-variant", rol: "voor de gibs", tekst: "Same texture, identical UV layout, battle damage version: dark blood soaked into the grey wool, red splatter across the white belts, torn fabric edges, dulled and scratched metal. Gritty realistic AAA-game texture, no text, no logo." },
 ];
 
+/* Factie-emblemen, het DUO-wapen (MODEL-WISHLIST par. 3f, verzoek Max 3 september).
+   Een factie is altijd een duo: klein broertje (infanterie) + big bro (cavalerie).
+   Het bestaande UI-pack toont er telkens maar EEN van; deze zes tekenen ze samen,
+   in de houtsnede-stijl van dat pack. UI-werk, geen model: geen rig, geen glb. */
+const EMBLEMEN = [
+  { id: "emblem_mouse_duo.png", naam: "Muis", rol: "muis + dikke rat", tekst: "Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic fat brown rat general bust with a blunt whiskered snout, beady eyes and a notched ear, in three-quarter view facing right, wearing a Napoleonic general's bicorne hat worn fore-and-aft with the points to the front and back, edged with braid, a round cockade on the front point and a single very tall thin upright feather plume, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic mouse soldier bust with oversized round ears, long twitching whiskers and a pointed snout, about half his height, facing the same way and wearing a tall Napoleonic shako with a chin scale and an upright feather plume. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the fur. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner." },
+  { id: "emblem_pig_duo.png", naam: "Varken", rol: "varken + everzwijn", tekst: "Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic wild boar general bust with enormous upward-curving tusks, a broad snout and a bristly spined mane, in three-quarter view facing right, wearing a classic Napoleonic general's bicorne hat worn athwart with a wide gold-braided edge, a round cockade with a rosette badge on the side and heavy acorn tassels hanging from both points, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic pig soldier bust with a big flat upturned snout, floppy ears and a round jowly face, about half his height, facing the same way and wearing a smaller plain Napoleonic bicorne hat. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the bristles. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner." },
+  { id: "emblem_lion_duo.png", naam: "Leeuw", rol: "cheetah + leeuw", tekst: "Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic lion general bust with a full flowing mane and a proud raised muzzle, in three-quarter view facing right, wearing a marshal's bicorne hat with the entire brim edged in a dense fringe of ostrich feathers, gold lace and a round cockade, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic cheetah soldier bust with bold black rosette spots and long teardrop face stripes, about half his height, facing the same way and wearing a tall black bearskin grenadier cap with a chin cord. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the mane. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner." },
+  { id: "emblem_bear_duo.png", naam: "Beer", rol: "wasbeer + grizzly", tekst: "Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic grizzly bear general bust with a massive head, small round ears and a heavy shaggy neck, in three-quarter view facing right, wearing a tall Russian general's fur papakha cap with a heavy cord across the front and a soft cloth crown flopping over to one side, and a high standing-collar double-breasted greatcoat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic raccoon soldier bust with a dark bandit mask across the eyes and tufted ears, about half his height, facing the same way and wearing a round Russian ushanka fur hat with the ear flaps tied up. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the thick fur. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner." },
+  { id: "emblem_wolf_duo.png", naam: "Wolf", rol: "vos + dire wolf", tekst: "Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic dire wolf general bust with a long scarred muzzle, ragged pointed ears and a shaggy ruff, in three-quarter view facing right, wearing a battered bicorne hat cocked crooked on his head with one point torn open, a snapped-off feather plume and a knotted rag tied around the crown, and a high standing-collar double-breasted uniform coat, frayed and battle-worn, with tarnished braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic fox soldier bust with huge pointed ears and a sharp narrow snout, about half his height, facing the same way and wearing a soft Napoleonic forage cap with a hanging tassel. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the fur. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner." },
+  { id: "emblem_crocodile_duo.png", naam: "Krokodil", rol: "hagedis + krokodil", tekst: "Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic crocodile general bust with a long toothy snout, hooded eyes and heavy armoured scutes along the neck, in three-quarter view facing right, wearing an old-fashioned general's tricorne hat edged with gold lace worn low over his eyes, with a scrap of camouflage netting tucked under the hat band, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic lizard soldier bust with camouflage-patterned scales and big lidded eyes, about half his height, facing the same way and wearing a Napoleonic tricorne hat under a loose hood. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights on the scales. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner." },
+];
+
 /* Generatie-prompts per factie/unit (MODEL-WISHLIST par. 3) */
 const PROMPTS = {
 mouse: {
@@ -616,6 +629,52 @@ function bouw() {
       </div>`;
     tsec.innerHTML = th;
     main.appendChild(tsec);
+  }
+
+  {
+    const esec = document.createElement("section");
+    esec.className = "factie";
+    esec.id = "f-emblemen";
+    esec.style.setProperty("--fc", "#c9b03a");
+    let eh = `
+      <div class="fkop"><h2>Factie-emblemen (duo)</h2>
+      <div class="fsub">2D UI-icoon per factie, houtsnede-stijl van het UI-pack</div></div>
+      <div class="fbody">
+      <div class="facnote">Een factie is <b>altijd een duo</b>: het kleine broertje (infanterie)
+      en de big bro (cavalerie). De zes emblemen in
+      <code>UI_assets_pack/Emblems/</code> tonen er telkens maar een van; deze zes tekenen ze
+      samen, in dezelfde zwart-wit houtsnede. De big bro is de <b>generaal</b> en draagt bij
+      elke factie een <b>andere generaalshoed</b> (Varken klassieke bicorne met kwasten, Muis
+      bicorne andersom met hoge pluim, Leeuw maarschalksbicorne met struisveren-franje, Beer
+      bonten papacha, Wolf gedeukte bicorne met lap, Krokodil tricorne met camouflagenet); het
+      broertje draagt de factie-eigen hoed uit par. 3. Dit is UI-werk: geen rig, geen glb,
+      geen teamkleur (rood en blauw komen uit de UI eromheen).</div>
+      <div class="tabelwrap"><table><thead><tr><th class="unit">Bestand</th><th title="Embleem getekend/gegenereerd, 1024x1024 op wit">Embleem</th><th title="Uitsnede met alpha (emblem_<factie>_duo_cut.png)">Uitsnede</th><th title="In Godot geimporteerd en in de UI gezet (factiekaart, grootboek)">Godot</th><th>Prompt</th><th class="unit">Notitie</th></tr></thead><tbody>`;
+    for (const em of EMBLEMEN) {
+      let cellen = "";
+      for (const sid of ["gen", "cut", "godot"]) {
+        const key = `embl.${em.id}.${sid}`;
+        cellen += `<td><input type="checkbox" class="opt" data-key="${key}" ${state.checks[key] ? "checked" : ""}></td>`;
+      }
+      const noteKey = `embl.${em.id}`;
+      const emId = `pr-embl-${em.id.replace(/[^a-z]/gi, "")}`;
+      eh += `
+        <tr class="optioneel" data-rij="embl.${em.id}">
+          <td class="unit">${esc(em.id)}<span class="tag">${em.rol}</span></td>
+          ${cellen}
+          <td><button class="pknop" data-toggle="${emId}">prompt &#9662;</button></td>
+          <td class="notes"><input type="text" data-note="${noteKey}" value="${esc(state.notes[noteKey] || "")}" placeholder=""></td>
+        </tr>
+        <tr class="promptrij" id="${emId}" hidden><td colspan="6"><div class="promptbox">${promptGroepHtml(em.naam + " (" + em.rol + ")", em.tekst, true)}</div></td></tr>`;
+    }
+    eh += `</tbody></table></div>
+      <div class="legenda"><b>De enige echte test:</b> verklein naar 64 px (factiekaart) en kijk of
+      de twee koppen nog uit elkaar vallen; zo niet, broertje kleiner en de witte kier breder.
+      Slibt het bij 32 px (grootboekrij) alsnog dicht, gebruik daar het bestaande enkele-kop-embleem
+      uit het pack. Zie MODEL-WISHLIST.md par. 3f.</div>
+      </div>`;
+    esec.innerHTML = eh;
+    main.appendChild(esec);
   }
 
   for (const f of FACTIES) {

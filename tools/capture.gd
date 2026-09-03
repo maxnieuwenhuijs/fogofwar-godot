@@ -1196,7 +1196,8 @@ func _ready() -> void:
 			var entry = game._hp_bars.get(pawn.id, null)
 			if entry == null or not entry.has("qlabel"):
 				continue
-			var hoort_gedekt: bool = pawn.owner_id == 2 and pawn.is_active and not pawn.card_revealed
+			# F4.3e: dezelfde kijkregel als de view (incl. C13: van dichtbij zie je hem).
+			var hoort_gedekt: bool = View.pion_gedekt_voor(GameSession.state, pawn, 1)
 			if hoort_gedekt:
 				gedekt_gecheckt += 1
 				if not entry.qlabel.visible or entry.qlabel.text != "?":
@@ -1275,6 +1276,87 @@ func _ready() -> void:
 		mc_alles_ok = mc_alles_ok and mc_charge_ok
 		print("[MELEE] " + ("PASS" if mc_alles_ok else "FAIL"))
 		get_tree().quit(0 if mc_alles_ok else 1)
+		return
+	elif "herstelcheck" in args:
+		# F4.3e — render-vanaf-snapshot, offline bewezen (masterplan-M3 zonder
+		# netwerk). De live scene speelt ZONDER bot (de online-situatie): de
+		# mens via het timeout-pad, de tegenstander (een L1-agent) buiten
+		# game.gd om via GameSession, zoals een server dat doet. Op elk nieuw
+		# "moment" (fasewissel, beurtwissel, eigen commit, open wolf-stap)
+		# start een VERSE game.tscn op alleen de fog-view van speler 1 (door
+		# JSON-tekst) en wordt het scherm vergeleken met het live scherm.
+		# Canary: geen hp-blokje met een getal voor een pion die in de view
+		# '?' droeg. Gebruik: -- herstelcheck [seed] [factie-tegenstander]
+		var hi := args.find("herstelcheck")
+		var h_seed: int = int(args[hi + 1]) if args.size() > hi + 1 else 777
+		var h_d2: int = _sim_doctrine(String(args[hi + 2])) if args.size() > hi + 2 else Constants.Doctrine.VOS
+		seed(h_seed)
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = h_d2
+		game._start_match(1)
+		await get_tree().create_timer(0.2).timeout
+		game._confirm_placement()  # beide opstellingen: de bot is er nog
+		await get_tree().create_timer(0.3).timeout
+		game._ai = null
+		game._stop_phase_timer()  # de define-timer liep nog met bot; vanaf nu drijft het harnas
+		game._update_hud()  # topbalk zonder de "nog 20s" van die timer
+		var h_bot := AgentL1.new()
+		h_bot.player_id = 2
+		h_bot.rng = SeededRng.new(h_seed).fork("p2")
+		var momenten := 0
+		var verschillen := 0
+		var canary := 0
+		var laatste_sleutel := ""
+		var h_acties := 0
+		var h_t0 := Time.get_ticks_msec()
+		var fasen_gezien: Dictionary = {}
+		while GameSession.state.phase != Phase.Type.GAME_OVER and h_acties < 240 \
+				and Time.get_ticks_msec() - h_t0 < 15 * 60 * 1000:
+			var w := 0
+			while not game.is_rustig() and w < 600:  # poef-reveal van spawns kan seconden duren
+				w += 1
+				await get_tree().create_timer(0.05).timeout
+			await get_tree().create_timer(0.35).timeout
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var st: GameState = GameSession.state
+			var sleutel := "%s|%d|%d|%d|%d|%s|%s|%s|%s" % [Phase.to_string_phase(st.phase), st.cycle,
+				st.round_number, st.current_player, st.pending_wolf_step_pawn,
+				str(st.placements_done.get(1, false)), str(st.cards_defined.get(1, []).size() > 0),
+				str(st.reveal_acks.get(1, false)), str(st.spawn_done.get(1, false))]
+			if sleutel != laatste_sleutel:
+				laatste_sleutel = sleutel
+				momenten += 1
+				fasen_gezien[st.phase] = true
+				var uitkomst: Dictionary = await _herstel_vergelijk(game, st, momenten)
+				verschillen += int(uitkomst.verschillen)
+				canary += int(uitkomst.canary)
+			if GameSession.state.phase == Phase.Type.GAME_OVER:
+				break
+			if _herstel_zet(game, h_bot):
+				h_acties += 1
+			else:
+				await get_tree().create_timer(0.1).timeout
+		# Ook het einde zelf vergelijken (of de laatste stand bij afkappen),
+		# pas als het scherm stilstaat (ronde-pauze, opruk, ragdoll).
+		var we := 0
+		while not game.is_rustig() and we < 600:
+			we += 1
+			await get_tree().create_timer(0.05).timeout
+		await get_tree().create_timer(0.5).timeout
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var eind: Dictionary = await _herstel_vergelijk(game, GameSession.state, momenten + 1)
+		verschillen += int(eind.verschillen)
+		canary += int(eind.canary)
+		fasen_gezien[GameSession.state.phase] = true
+		var fasen_lijst: Array = []
+		for f in fasen_gezien:
+			fasen_lijst.append(Phase.to_string_phase(f))
+		var hok: bool = verschillen == 0 and canary == 0 and momenten >= 8
+		print("[HERSTEL] %s: seed=%d momenten=%d verschillen=%d canary=%d acties=%d fasen=%s" % [
+			"PASS" if hok else "FAIL", h_seed, momenten + 1, verschillen, canary, h_acties, ", ".join(fasen_lijst)])
+		get_tree().quit(0 if hok else 1)
 		return
 	elif "naadcheck" in args:
 		# F4.3c — de bot-naad. Na de opstelling gaat de AI op null: vanaf dan
@@ -2690,3 +2772,103 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 		print("[MELEE][charge] FAIL: aanrijden=%s stoot=%s volgorde-goed=%s" % [reed, stootte, stoot_na_rit])
 	return ok
 
+
+
+## F4.3e -- sessie die alleen een (herbouwde) staat heeft: wat een client na
+## een koude start in handen heeft. Geen submits (die gaan online naar de
+## server), wel de haken die de renderer nodig heeft.
+class SnapshotSession extends SessionInterface:
+	var view: Dictionary = {}
+
+	func _init(v: Dictionary) -> void:
+		view = v
+		state = ClientState.uit_view(v)
+
+	func local_player_id() -> int:
+		return int(view.get("viewer", Constants.PLAYER_1))
+
+	func pion_gedekt(pawn_id: int) -> bool:
+		return ClientState.pion_gedekt(view, pawn_id)
+
+	func is_online() -> bool:
+		return true
+
+
+## F4.3e -- één moment vergelijken: het live scherm tegen een verse scene die
+## alleen de fog-view van speler 1 kreeg (door JSON-tekst heen).
+func _herstel_vergelijk(game: Node, st: GameState, moment: int) -> Dictionary:
+	var live: Dictionary = game.render_digest()
+	var view: Dictionary = JSON.parse_string(JSON.stringify(View.for_player(st, 1)))
+	var snap := SnapshotSession.new(view)
+	var vers: Node = load("res://scenes/game/game.tscn").instantiate()
+	add_child(vers)
+	await get_tree().process_frame
+	vers._start_vanaf_sessie(snap)
+	await get_tree().create_timer(0.3).timeout
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var hersteld: Dictionary = vers.render_digest()
+	var fouten: Array = _digest_verschillen(live, hersteld)
+	var canary := 0
+	for key in view.pawns:
+		if (view.pawns[key] as Dictionary).get("current_hp", 0) is String:
+			var p = (hersteld.pawns as Dictionary).get(String(key), null)
+			if p != null and (not bool(p.vraagteken) or String(p.blokjes).contains("1")):
+				canary += 1
+	print("[HERSTEL] moment %2d %-16s %s%s" % [moment, String(live.fase),
+		"OK" if fouten.is_empty() and canary == 0 else "VERSCHIL: " + ", ".join(fouten),
+		"" if canary == 0 else " (canary: %d gedekte pionnen tonen stats)" % canary])
+	vers.queue_free()
+	await get_tree().process_frame
+	return {"verschillen": fouten.size(), "canary": canary}
+
+
+func _digest_verschillen(a: Dictionary, b: Dictionary) -> Array:
+	var uit: Array = []
+	for key in a:
+		if key == "pawns":
+			var pa: Dictionary = a.pawns
+			var pb: Dictionary = b.pawns
+			for pid in pa:
+				if not pb.has(pid):
+					uit.append("pion %s ontbreekt hersteld" % pid)
+				elif JSON.stringify(pa[pid]) != JSON.stringify(pb[pid]):
+					uit.append("pion %s: %s -> %s" % [pid, JSON.stringify(pa[pid]), JSON.stringify(pb[pid])])
+			for pid in pb:
+				if not pa.has(pid):
+					uit.append("pion %s alleen hersteld" % pid)
+		elif JSON.stringify(a[key]) != JSON.stringify(b.get(key, null)):
+			uit.append("%s: %s -> %s" % [key, JSON.stringify(a[key]), JSON.stringify(b.get(key, null))])
+		if uit.size() >= 6:
+			break
+	return uit
+
+
+## F4.3e -- één zet in de herstelcheck: de mens via het timeout-pad zodra hij
+## iets moet doen, anders de tegenstander (L1) buiten game.gd om.
+func _herstel_zet(game: Node, bot: Agent) -> bool:
+	var st: GameState = GameSession.state
+	if Phase.is_define(st.phase):
+		if st.cards_defined.get(1, []).size() == 0 and Validator.expected_define_count(st, 1) > 0:
+			game._on_phase_timeout()
+			return true
+	elif Phase.is_reveal(st.phase):
+		if not bool(st.reveal_acks.get(1, false)):
+			game._continue_after_reveal()
+			return true
+	elif Phase.is_linking(st.phase) or st.phase == Phase.Type.ACTION:
+		if st.current_player == 1:
+			game._on_phase_timeout()
+			return true
+	elif st.phase == Phase.Type.CYCLE_SPAWN:
+		if not bool(st.spawn_done.get(1, false)):
+			game._on_phase_timeout()
+			return true
+	# De tegenstander, zoals een server hem zou aanleveren.
+	var legal: Array = Validator.legal_actions(st, 2)
+	if legal.is_empty():
+		return false
+	var actie: Dictionary = bot.decide(View.for_player(st, 2), legal, bot.rng)
+	if actie.is_empty():
+		actie = legal[0]
+	return GameSession._apply_action(2, actie)

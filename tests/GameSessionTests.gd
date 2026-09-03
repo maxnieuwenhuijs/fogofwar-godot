@@ -32,13 +32,18 @@ func test_f43_gamesession_is_sessioninterface() -> void:
 		elif p.owner_id == Constants.PLAYER_2 and vijand_id == -1:
 			vijand_id = p.id
 	# card_revealed staat standaard op true en gaat alleen bij een gedekte
-	# Krokodil-koppeling op false; de haak spiegelt exact de oude
-	# blokjes-expressie `owner_id != mens and not card_revealed`.
+	# Krokodil-koppeling op false; de haak volgt de kijkregel van de view
+	# (View.pion_gedekt_voor): eigen, inactieve en onthulde pionnen zie je,
+	# een actieve gedekte vijand niet, tenzij hij naast een eigen actieve
+	# pion staat (C13).
 	assert_false(GameSession.pion_gedekt(eigen_id), "eigen pion nooit gedekt")
 	assert_false(GameSession.pion_gedekt(vijand_id), "onthulde vijand niet gedekt")
 	GameSession.state.pawns[vijand_id].card_revealed = false
-	assert_true(GameSession.pion_gedekt(vijand_id), "gedekte vijand (schutkleur) wel")
+	assert_false(GameSession.pion_gedekt(vijand_id), "inactieve (ongekoppelde) vijand: niets te verbergen")
+	GameSession.state.pawns[vijand_id].is_active = true
+	assert_true(GameSession.pion_gedekt(vijand_id), "actieve gedekte vijand (schutkleur) wel")
 	GameSession.state.pawns[eigen_id].card_revealed = false
+	GameSession.state.pawns[eigen_id].is_active = true
 	assert_false(GameSession.pion_gedekt(eigen_id), "eigen pion blijft zichtbaar, ook ongeonthuld")
 	assert_false(GameSession.pion_gedekt(99999), "onbekende pion: niet gedekt, geen crash")
 	# De kale interface ondersteunt niets: elke submit meldt zich en weigert.

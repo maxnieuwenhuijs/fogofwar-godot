@@ -144,8 +144,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
   entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Sinds
   F4.3c ook `-- naadcheck` (game.gd zonder bot: dient nooit iets namens
-  speler 2 in, wacht in elke commit-fase, geen lokale timer zonder klok).
-  Het bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
+  speler 2 in, wacht in elke commit-fase, geen lokale timer zonder klok) en
+  sinds F4.3e `-- herstelcheck [seed] [factie]` (elk moment van een partij
+  een verse scene op alleen de fog-view starten en het scherm vergelijken;
+  777 en `4242 wolf` moeten 0 verschillen geven). Het bouwplan met de vaste
+  regressieset staat in `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
