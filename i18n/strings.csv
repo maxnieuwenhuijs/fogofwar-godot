@@ -417,10 +417,33 @@ that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief
 die speler koppelt én handelt straks als eerste."
 END_BACK_TO_MENU,Back to the menu,Terug naar het menu
 END_REASON,Reason: %s,Reden: %s
-MENU_MULTI_BODY,"Practice the online route against a bot, as red or as blue (board turned). Playing online against a person arrives with the lobby.","Oefen de online-weg tegen een bot, als rood of als blauw (bord gedraaid). Online tegen een mens komt met de lobby."
+MENU_MULTI_BODY,"Practice the online route against a bot, as red or as blue (board turned), or play online against a person via the server.","Oefen de online-weg tegen een bot, als rood of als blauw (bord gedraaid), of speel online tegen een mens via de server."
 MENU_MULTI_PRACTICE_RED,Practice online route (as red),Oefenen via de online-weg (als rood)
 MENU_MULTI_PRACTICE_BLUE,Practice online route (as blue),Oefenen via de online-weg (als blauw)
-MENU_MULTI_ONLINE,Online (coming soon),Online (binnenkort)
+MENU_MULTI_ONLINE,Online (via the server),Online (via de server)
 MENU_MULTI_YOU,You,Jij
 MENU_MULTI_PRACTICE_BOT,Practice bot,Oefenbot
 MENU_MULTI_NO_CONNECTION,No connection with the match.,Geen verbinding met de partij.
+MENU_MULTI_ONLINE_TITLE,Play online,Online spelen
+MENU_ONLINE_CONNECTING,Connecting to the server...,Verbinden met de server...
+MENU_ONLINE_BODY,"You play as %s on %s.
+Create a new match and hand the match id to your opponent, or join with theirs.","Je speelt als %s op %s.
+Maak een nieuwe match en geef de match-id aan je tegenstander, of doe mee met die van de ander."
+MENU_ONLINE_NEW,New match,Nieuwe match
+MENU_ONLINE_JOIN,Join with a match id,Meedoen met een match-id
+MENU_ONLINE_JOIN_HINT,Paste your opponent's match id:,Plak de match-id van je tegenstander:
+MENU_ONLINE_RESUME,Resume last match,Laatste match hervatten
+MENU_ONLINE_WAIT_TITLE,Waiting for your opponent,Wachten op je tegenstander
+MENU_ONLINE_WAIT_BODY,"Hand over this match id:
+
+%s
+
+The game starts as soon as they join.","Geef deze match-id door:
+
+%s
+
+Zodra de ander meedoet, begint de partij."
+MENU_ONLINE_COPY,Copy match id,Kopieer match-id
+MENU_ONLINE_CANCEL,Cancel,Annuleren
+MENU_ONLINE_ERROR_TITLE,That did not work,Dat lukte niet
+MENU_ONLINE_FINISHED,That match is already over.,Die match is al afgelopen.

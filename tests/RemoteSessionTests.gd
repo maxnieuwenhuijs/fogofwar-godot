@@ -344,13 +344,15 @@ class VertraagdTransport extends Transport:
 	func events(after: int, klaar: Callable) -> void:
 		binnen.events(after, func(a: Dictionary) -> void: wachtend.append([klaar, a]))
 
+	## Levert alleen wat NU klaarstaat; wat tijdens de levering nieuw wordt
+	## aangevraagd wacht op de volgende lever(). Zo stapt een test door een
+	## keten heen zoals een echt netwerk dat doet: antwoord voor antwoord.
 	func lever() -> int:
-		var n := 0
-		while not wachtend.is_empty():
-			var p: Array = wachtend.pop_front()
+		var nu: Array = wachtend.duplicate()
+		wachtend.clear()
+		for p in nu:
 			(p[0] as Callable).call(p[1])
-			n += 1
-		return n
+		return nu.size()
 
 
 func test_asynchroon_transport_rij_wacht_op_zijn_view() -> void:
@@ -416,3 +418,36 @@ func test_gat_wordt_ingehaald_via_events() -> void:
 	assert_eq(namen.count("doctrines_revealed"), 1, "rij 2 is precies één keer afgespeeld")
 	assert_eq(namen.count("placement_submitted"), 1)
 	assert_eq(fouten.size(), 0, str(fouten))
+
+
+func test_409_rebase_wacht_op_de_inhaal_bij_asynchroon_transport() -> void:
+	# Twee clients dienen tegelijk hun blinde keuze in met seq 0. De tweede
+	# krijgt 409 met een inhaal-rij, maar zijn view komt LATER binnen (HTTP).
+	# De herindiening mag pas na die inhaal, anders gaat hij opnieuw met
+	# seq 0 de deur uit en eindigt in "De situatie is veranderd".
+	var lb := LoopbackTransport.new(_regels())
+	var vt := VertraagdTransport.new(lb.voor_seat(2))
+	var s1 := RemoteSession.new(lb.voor_seat(1), 1)
+	var s2 := RemoteSession.new(vt, 2)
+	s1.start()
+	s2.start()
+	vt.lever()
+	var e2: LoopbackTransport.Eindpunt = lb.voor_seat(2)
+	e2.stil = true  # s2 hoort niets van de rij van s1 (alleen de 409 vertelt het)
+	var fouten: Array = []
+	s2.error_occurred.connect(func(_p, m): fouten.append(m))
+	assert_true(s1.submit_choose_doctrine(1, Constants.Doctrine.MUIS))
+	assert_true(s2.submit_choose_doctrine(2, Constants.Doctrine.WOLF))  # seq 0 -> 409, antwoord hangt
+	assert_eq(lb.seq, 1, "alleen de keuze van s1 staat er")
+	assert_eq(vt.lever(), 1, "stap 1: de 409 komt binnen; de inhaal-rij wacht op zijn view")
+	assert_eq(s2.seq, 0, "nog niets afgespeeld: de view is onderweg")
+	assert_eq(lb.seq, 1, "en er is NIET blind opnieuw ingediend")
+	assert_eq(vt.lever(), 1, "stap 2: de view komt aan")
+	assert_eq(s2.seq, 1, "rij 1 afgespeeld")
+	assert_eq(lb.seq, 2, "en daarna pas de herindiening, die slaagde")
+	e2.stil = false
+	assert_eq(vt.lever(), 1, "stap 3: het 200-antwoord op de herindiening")
+	assert_eq(vt.lever(), 1, "stap 4: de view voor rij 2")
+	assert_eq(s2.seq, 2, "s2 loopt bij")
+	assert_eq(s2.state.phase, Phase.Type.PLACEMENT, "beide keuzes binnen")
+	assert_eq(fouten.size(), 0, "geen 'situatie veranderd': %s" % str(fouten))

@@ -22,6 +22,7 @@ Constants="*res://scripts/core/constants.gd"
 GameSession="*res://scripts/core/GameSession.gd"
 Audio="*res://scripts/core/audio_manager.gd"
 CampaignBridge="*res://scripts/game/campaign_bridge.gd"
+OnlineBridge="*res://scripts/game/online_bridge.gd"
 UiThema="*res://scripts/ui/ui_thema.gd"
 
 [display]

@@ -1,5 +1,43 @@
 # Fog of War — Work In Progress & Context
 
+## 5 september -- F4.3i: de lobby, twee mensen tegen de dev-server
+
+Max: "dus morgen kunnen we gaan testen, is het heus?" Ja, op het eigen
+netwerk. Dit is masterplan-M1: twee clients tegen de dev-server.
+
+- Autoload `OnlineBridge` (`scripts/game/online_bridge.gd`, patroon van
+  CampaignBridge): identiteit, `HttpTransport` (HTTPRequest-kinderen aan de
+  bridge, overleven een scene-wissel), `verbind` (gast-login + core-hash),
+  `nieuwe_match`, `meedoen`, `hervatten`, `sessie()`, `klaar_met_match`.
+  De laatste match-id staat in `identity.cfg` (hervatten).
+- Lobby in game.gd: MULTIPLAYER → "Online (via de server)" → verbinden →
+  "Nieuwe match" (wachtscherm met de match-id groot in beeld, kopieerknop,
+  elke 2 s `GET /matches/:id` tot `bezig`, dan `_start_online`),
+  "Meedoen met een match-id" (invoerpaneel; het klembord vult een uuid
+  alvast in), "Laatste match hervatten" (status: bezig → starten, klaar →
+  melding, lobby → wachten). Fouten in één overlay met "Terug".
+  `_verlaat_online` maakt de match-id schoon.
+- `Identiteit`: ook `-- naam=<naam>`. Server: `HOST` env (0.0.0.0 voor het
+  LAN). README: het stappenplan "Twee mensen tegen elkaar".
+- `-- lobbycheck [url]` (capture): A via de echte lobby-code (keuzes,
+  nieuwe match, wachtscherm), B als tweede client, A's wachtscherm ziet de
+  join en opent het factie-menu, beide keuzes, opstel-overlay, B ziet de
+  opstelling, hervat-id in identity.cfg. **10 van 10 PASS.**
+
+**Vondst, en precies waar de loopback blind voor was:** bij een 409 diende
+`RemoteSession` meteen opnieuw in, terwijl de inhaal-rijen en de view per
+HTTP nog onderweg waren: de herindiening ging met de oude seq de deur uit
+en eindigde in "De situatie is veranderd". In de lobbycheck viel dat op
+zodra beide spelers tegelijk hun factie kozen. Nu wacht de herindiening
+(`_rebase_wacht`) tot `seq` de inhaal heeft ingehaald; `VertraagdTransport`
+in de tests levert nu antwoord voor antwoord (`lever()` snapshot), en een
+elfde test stapt precies door die keten. RemoteSessionTests 148 asserts.
+
+Checks: lobbycheck 10/10, RemoteSessionTests 148, play online seat 2,
+uispel 777 zobrist gelijk, play/vosview/meleecheck/naadcheck PASS,
+volledige suite 1997 asserts groen (0 fouten).
+
+
 ## 4 september (nacht, later) -- nazorg g: het licht draait mee voor blauw
 
 Max speelde de oefenmodus als blauw: "lijkt te werken, alleen het licht is
@@ -307,10 +345,11 @@ haven/ring-kleuren en cyaan vakken buiten het palet, camera-framing,
 hp-chips van 5,5 px, koppelring onzichtbaar, `?`-knop boven het dim-vlak
 (bewust: uitleg altijd bereikbaar).
 
-**Merge met F4.3h + nazorg (e7b6525, 3 september 20:35):** zonder
-conflicten. Daarna is main gefast-forward naar de branch (besluit Max: "gooi
-de UI er maar in") en in de hoofdmap een `--import` gedraaid voor de nieuwe
-textures en fonts.
+**Merge met F4.3h + nazorg (e7b6525) en F4.3i (c8eb306), 3 september avond:**
+alleen project.godot (beide autoloads: OnlineBridge en UiThema) en de
+gecompileerde vertalingen botsten. Daarna is main gefast-forward naar de
+branch (besluit Max: "gooi de UI er maar in") en in de hoofdmap een
+`--import` gedraaid voor de nieuwe textures en fonts.
 
 **Merge met F4.3g (983fffc, 3 september 19:20):** conflicten in de csv
 (beide blokken nieuwe sleutels) en opnieuw `_toon_reveal` (F4.3g's

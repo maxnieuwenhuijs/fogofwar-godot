@@ -151,9 +151,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `-- play online [2]`, `-- vosview online [2]` en `-- resumecheck [seed]
   [seat]` (dezelfde koude herstart, maar op de online-weg: RemoteSession op
   een loopback met bot; `777 1` en `4242 2` moeten 0 verschillen geven over
-  alle veertien fasen), en sinds F4.3h `-- nettest [url]` (tegen een
-  draaiende dev-server: 13 stappen PASS). Het bouwplan met de vaste
-  regressieset staat in `docs/F4.3-bouwplan.md`.
+  alle veertien fasen), sinds F4.3h `-- nettest [url]` (tegen een draaiende
+  dev-server: 13 stappen PASS) en sinds F4.3i `-- lobbycheck [url]` (de
+  echte lobby-code van game.gd tegen de dev-server: 10 stappen PASS). Het
+  bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
@@ -281,10 +282,15 @@ beide stoelen over alle fasen; (h) `net/http_transport.gd`,
 `net/identiteit.gd` (`user://identity.cfg`, `-- identiteit=<naam>`,
 `-- server=<url>`), `scripts/core/core_hash.gd` (client en worker dezelfde
 functie), polling in `RemoteSession._process`, `GET /view` meldt de seq
-van vóór de fold, `-- nettest [url]` 13/13 tegen de dev-server. **Volgende
-stap: i** (lobby: `OnlineBridge`, match maken/meedoen/hervatten op
-match-id, twee Godot-instanties `-- identiteit=A/B` tegen `npm run dev`),
-dan j (WS-push, reconnect, OfflineQueue), k (botclient, M3). Dev-server:
+van vóór de fold, `-- nettest [url]` 13/13 tegen de dev-server; (i) de
+lobby: autoload `OnlineBridge` (`scripts/game/online_bridge.gd`),
+MULTIPLAYER → "Online (via de server)" → nieuwe match met match-id,
+meedoen, hervatten; `HOST` env op de server voor het LAN;
+`-- lobbycheck [url]` 10/10; de 409-herindiening wacht op de inhaal
+(asynchroon bewezen met `VertraagdTransport`). Handleiding voor een
+playtest met twee mensen: `server/README.md` "Twee mensen tegen elkaar".
+**Volgende stap: j** (WS-push, reconnect met backoff, OfflineQueue op
+schijf, stiltetest), dan k (botclient, M3). Dev-server:
 `server/db-lokaal.ps1`, database `fogofwar` aanmaken (README), dan
 `npm run dev` in `server/`.
 Open besluiten voor Max staan onderaan het bouwplan; tot nu toe zijn de

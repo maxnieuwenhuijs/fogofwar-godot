@@ -1235,6 +1235,16 @@ func _ready() -> void:
 			await get_tree().create_timer(0.4).timeout
 		print("[LINK] fase=%s beurt=%d" % [Phase.to_string_phase(GameSession.state.phase), GameSession.state.current_player])
 		out = "res://_shot_link.png"
+	elif "lobbycheck" in args:
+		# F4.3i — de lobby van game.gd tegen de ECHTE backend: A maakt via de
+		# lobby-code een match, B (een tweede client) doet mee, A's wachtscherm
+		# ziet dat en start de partij; beide kiezen blind, A stelt op.
+		# Gebruik: -- lobbycheck [http://127.0.0.1:8787]   (server: npm run dev)
+		var li := args.find("lobbycheck")
+		var l_url: String = String(args[li + 1]) if args.size() > li + 1 else "http://127.0.0.1:8787"
+		var l_ok: bool = await _lobbycheck(game, l_url)
+		get_tree().quit(0 if l_ok else 1)
+		return
 	elif "nettest" in args:
 		# F4.3h — twee gast-accounts tegen de ECHTE backend: login, versiecheck,
 		# match maken en joinen, beide blinde factiekeuzes via RemoteSession +
@@ -3257,4 +3267,71 @@ func _nettest(game: Node, url: String) -> bool:
 	meld.call("GET /matches/:id", bool(a.ok) and String(a.get("status", "")) == "bezig" and int(a.get("seq", 0)) == 3,
 		"status=%s seq=%s" % [String(a.get("status", "")), str(a.get("seq", "?"))])
 	print("[NETTEST] %s: %d stappen, %d fouten, match %s" % ["PASS" if teller[1] == 0 else "FAIL", teller[0], teller[1], match_id])
+	return teller[1] == 0
+
+
+## F4.3i -- wachten tot een conditie waar is (max `sec` seconden).
+func _wacht_tot(cond: Callable, sec: float = 15.0) -> bool:
+	var t0 := Time.get_ticks_msec()
+	while not cond.call() and Time.get_ticks_msec() - t0 < int(sec * 1000):
+		await get_tree().create_timer(0.1).timeout
+	return cond.call()
+
+
+func _lobbycheck(game: Node, url: String) -> bool:
+	var teller: Array = [0, 0]
+	var meld := func(naam: String, ok: bool, extra: String = "") -> void:
+		teller[0] += 1
+		if not ok:
+			teller[1] += 1
+		print("[LOBBY] %2d %-40s %s %s" % [teller[0], naam, "PASS" if ok else "FAIL", extra])
+	# A = game.gd met een eigen identiteit; server via de bridge.
+	OnlineBridge.identiteit = Identiteit.laad("lobby_A")
+	OnlineBridge.identiteit.server_url = url
+	var overlay = game._overlay
+	game._show_online_lobby()
+	var ok: bool = await _wacht_tot(func() -> bool: return overlay.visible and String(overlay._title.text) == game.tr("MENU_MULTI_ONLINE_TITLE"))
+	meld.call("lobby: verbonden, keuzes in beeld", ok, String(overlay._title.text))
+	if not ok:
+		return false
+	overlay._pick(0)  # Nieuwe match
+	ok = await _wacht_tot(func() -> bool: return OnlineBridge.match_id != "" and overlay.visible and String(overlay._title.text) == game.tr("MENU_ONLINE_WAIT_TITLE"))
+	meld.call("nieuwe match, wachtscherm met match-id", ok, OnlineBridge.match_id)
+	if not ok:
+		return false
+	var match_id: String = OnlineBridge.match_id
+	# B = een tweede client, direct op het transport.
+	var idB := Identiteit.laad("lobby_B")
+	var tB := HttpTransport.new(self, url)
+	var bak: Array = []
+	tB.login(idB.device_token, "LobbyB", func(a): bak.append(a))
+	var a: Dictionary = await _wacht_op(bak)
+	meld.call("B ingelogd", bool(a.ok), String(a.get("fout", "")))
+	bak.clear()
+	tB.join(match_id, func(j): bak.append(j))
+	a = await _wacht_op(bak)
+	meld.call("B doet mee (seat 2)", bool(a.ok) and int(a.get("seat", 0)) == 2, String(a.get("fout", "")))
+	var sB := RemoteSession.new(tB, 2)
+	add_child(sB)
+	bak.clear()
+	sB.start(func(k): bak.append({"ok": k}))
+	a = await _wacht_op(bak)
+	meld.call("sessie B verbonden", bool(a.ok))
+	# A's wachtscherm pollt elke 2 s en start dan de partij: het keuze-menu.
+	ok = await _wacht_tot(func() -> bool: return game.session != null and game.session.is_online() and overlay.visible and String(overlay._title.text) == game.tr("MENU_DOCTRINE_TITLE"), 20.0)
+	meld.call("A ziet dat B meedoet en krijgt het factie-menu", ok, "mens=%d" % game._human_id)
+	if not ok:
+		return false
+	var keuze: int = Constants.DOCTRINE_DATA.keys().find(Constants.Doctrine.MUIS)
+	game._on_doctrine_choice(maxi(keuze, 0))
+	sB.submit_choose_doctrine(2, Constants.Doctrine.WOLF)
+	ok = await _wacht_tot(func() -> bool: return game.session.state.phase == Phase.Type.PLACEMENT and sB.state.phase == Phase.Type.PLACEMENT)
+	meld.call("beide keuzes binnen, beide in PLACEMENT", ok, "seqA=%d seqB=%d" % [game.session.seq, sB.seq])
+	ok = await _wacht_tot(func() -> bool: return overlay.visible and String(overlay._title.text) == game.tr("PHASE_PLACEMENT"))
+	meld.call("A krijgt de opstel-overlay", ok)
+	game._confirm_placement()
+	ok = await _wacht_tot(func() -> bool: return bool(sB.state.placements_done.get(1, false)))
+	meld.call("B ziet dat A opstelde", ok)
+	meld.call("hervat-id staat in identity.cfg", OnlineBridge.identiteit.laatste_match_id == match_id)
+	print("[LOBBY] %s: %d stappen, %d fouten, match %s" % ["PASS" if teller[1] == 0 else "FAIL", teller[0], teller[1], match_id])
 	return teller[1] == 0
