@@ -229,8 +229,8 @@ PHASE_LINKING,Linking,Koppelen
 PHASE_ACTION,Action,Actie
 PHASE_GAME_OVER,End,Einde
 HUD_PLAYER_CAMPAIGN_AI,%s (AI),%s (AI)
-HUD_PLAYER_YOU,Red (you),Rood (jij)
-HUD_PLAYER_AI,Blue (AI),Blauw (AI)
+HUD_PLAYER_YOU,%s (you),%s (jij)
+HUD_PLAYER_AI,%s (AI),%s (AI)
 HELP_TITLE,How to Play,Speluitleg
 HELP_CLOSE,Close,Sluiten
 HELP_TAB_GAME_TITLE,The Game,Het spel
@@ -239,7 +239,7 @@ HELP_TAB_UNITS_TITLE,Units,Eenheden
 HELP_TAB_COMBAT_TITLE,Combat,Vechten
 HELP_TAB_FACTIONS_TITLE,Factions,Facties
 HELP_GAME_WHAT_TITLE,[b]What is Fog of War?[/b],[b]Wat is Fog of War?[/b]
-HELP_GAME_WHAT_BODY,"Two armies face off on a board of 11×11 tiles. You are red, the AI is blue.","Twee legers staan tegenover elkaar op een bord van 11×11 vakken. Jij bent rood, de AI is blauw."
+HELP_GAME_WHAT_BODY,"Two armies face off on a board of 11×11 tiles. Player 1 is red, player 2 is blue.","Twee legers staan tegenover elkaar op een bord van 11×11 vakken. Speler 1 is rood, speler 2 is blauw."
 HELP_GAME_WIN_TITLE,[b]How to win[/b],[b]Zo win je[/b]
 HELP_GAME_WIN_1,"• Get [b]2 of your pawns[/b] onto the harbor on the far side (the colored edge tiles), or","• Zet [b]2 van je pionnen[/b] op de haven aan de overkant (de gekleurde randvakken), óf"
 HELP_GAME_WIN_2,• defeat [b]all[/b] enemy pawns.,• versla [b]alle[/b] vijandelijke pionnen.
@@ -408,3 +408,19 @@ REVEAL_UI_BOD,bid %d%% · attack %d · speed %d,bod %d%% · aanval %d · speed %
 REVEAL_UI_UITLEG,"The highest attack bid takes the initiative: that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief: die speler koppelt én handelt straks als eerste."
 HUB_UI_FEED_EVENT,R%d · %s,R%d · %s
 HUB_UI_SALDI_KORT,%s (team %d)%s,%s (team %d)%s
+HUD_COLOR_RED,Red,Rood
+HUD_COLOR_BLUE,Blue,Blauw
+HUD_PLAYER_OPP,%s,%s
+PHASE_REVEAL_LINE,%s: bid %d%% · attack %d · speed %d,%s: bod %d%% · aanval %d · speed %d
+PHASE_REVEAL_FOOT,"The highest attack bid takes the initiative:
+that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief:
+die speler koppelt én handelt straks als eerste."
+END_BACK_TO_MENU,Back to the menu,Terug naar het menu
+END_REASON,Reason: %s,Reden: %s
+MENU_MULTI_BODY,"Practice the online route against a bot, as red or as blue (board turned). Playing online against a person arrives with the lobby.","Oefen de online-weg tegen een bot, als rood of als blauw (bord gedraaid). Online tegen een mens komt met de lobby."
+MENU_MULTI_PRACTICE_RED,Practice online route (as red),Oefenen via de online-weg (als rood)
+MENU_MULTI_PRACTICE_BLUE,Practice online route (as blue),Oefenen via de online-weg (als blauw)
+MENU_MULTI_ONLINE,Online (coming soon),Online (binnenkort)
+MENU_MULTI_YOU,You,Jij
+MENU_MULTI_PRACTICE_BOT,Practice bot,Oefenbot
+MENU_MULTI_NO_CONNECTION,No connection with the match.,Geen verbinding met de partij.

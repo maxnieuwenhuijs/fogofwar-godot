@@ -1,5 +1,53 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september (avond) -- F4.3g: game.gd speelt via de online-weg, ook als seat 2
+
+De speelbare tussenstand zonder server, en het eerste dat Max zelf kan zien.
+Onder MULTIPLAYER staat nu een menu: "Oefenen via de online-weg (als rood)",
+"(als blauw)", "Online (binnenkort)". Oefenen = een `LoopbackTransport` op
+de potje-regels met een L1-bot op de andere stoel, en game.gd op een
+`RemoteSession` erop: exact het pad dat straks tegen de server loopt (alleen
+de eigen view, wachtteksten in elke commit-fase, de blinde factiekeuze als
+actie, de CP-inzet in de define).
+
+- `_potje_regels()` uit `_start_match` getrokken; `_start_online(sessie)`
+  verbindt (status + eerste view) en gaat dan door `_start_vanaf_sessie`
+  (stap e). `_start_oefenpotje(seat)` bouwt de loopback (`_loopback` houdt
+  hem in leven; het transport houdt alleen een weakref).
+- **Camera:** `_orient_camera_for(pid)` draait voor speler 2 de camera 180
+  graden om het bordcentrum (board-lokaal), `_cam_base` mee. Geen
+  coördinaat-spiegeling; picking, blokjes en highlights volgen vanzelf.
+  Gemeten: (3.185, 5, 9.84) wordt (6.815, 5, 0.16).
+- Fase-flow zonder bot: `_on_doctrine_choice` online → `submit_choose_doctrine`
+  + wachten; `_on_doctrines_revealed` zet de facties uit de staat;
+  `_on_phase_changed` opent online de opstel-overlay bij PLACEMENT;
+  `_on_cp_choice` online onthoudt de inzet (`_cp_bet_keuze`) en
+  `_on_define_confirmed` geeft hem mee aan `submit_define_cards(..., cp_bet)`
+  (F4.2b: één rij). Offline blijft de losse `submit_bet_cp`: byte-identiek.
+- Namen: `_player_name` volgt de seat (rood = 1, blauw = 2) plus wie erop
+  zit (jij / AI / de naam uit de sessie, terugval kleur). Strings
+  `HUD_PLAYER_YOU`/`_AI` zijn nu "%s (jij)"/"%s (AI)" met `HUD_COLOR_RED`/
+  `_BLUE`; offline leest dat als vanouds. Het onthul-scherm is per seat een
+  `PHASE_REVEAL_LINE` met die naam (offline: "Rood (jij)" waar het "Jij
+  (rood)" was), `HELP_GAME_WHAT_BODY` is neutraal.
+- Einde online: winnaar + `eind_reden`, "Terug naar het menu"
+  (`_verlaat_online`: sessie weg, camera terug, hoofdmenu). Nooit
+  `CampaignBridge.rond_af` (assert in `_start_vanaf_sessie`).
+- capture: `-- play online [2]`, `-- vosview online [2]` (bot = Krokodil,
+  '?'-check via `session.pion_gedekt`) en `-- resumecheck [seed] [seat]`:
+  de koude herstart op de online-weg, elk moment een verse scene met een
+  verse RemoteSession op dezelfde loopback.
+
+Uitslag: play online seat 1 en 2 PASS (11 stappen tot de actiefase),
+resumecheck 777 seat 1 en 4242 seat 2 PASS: 46 momenten, 0 verschillen,
+0 canary, ALLE veertien fasen van PRE_GAME tot GAME_OVER (de bot won
+binnen 160 acties). Dat is masterplan-M3 zonder netwerk, voor beide stoelen.
+
+Checks: uispel 777 zobrist gelijk, opname gelijk, play/vosview/meleecheck/
+naadcheck PASS, herstelcheck 777 PASS, simcheck 0, RemoteSessionTests +
+GameSessionTests 235, volledige suite 1983 asserts groen (0 fouten).
+
+
 ## 4 september (later) -- F4.3f: RemoteSession, Transport, LoopbackTransport
 
 De online sessie, headless bewezen tegen een server-in-het-klein die alleen
@@ -203,6 +251,18 @@ buiten scope (3D-bord, later): zwevende musket-props na het plaatsen,
 haven/ring-kleuren en cyaan vakken buiten het palet, camera-framing,
 hp-chips van 5,5 px, koppelring onzichtbaar, `?`-knop boven het dim-vlak
 (bewust: uitleg altijd bereikbaar).
+
+**Merge met F4.3g (983fffc, 3 september 19:20):** conflicten in de csv
+(beide blokken nieuwe sleutels) en opnieuw `_toon_reveal` (F4.3g's
+tekstregels per seat vervallen: het OnthulScherm toont de namen per seat
+al). Op het online-pad (`-- play online 2`) bleef het factie-keuzescherm
+open staan, omdat de keuze daar niet via een tik binnenkomt: het scherm
+sluit nu in `_on_doctrine_choice`/`_on_opponent_choice` en bij elke
+`_start_match`/`_start_vanaf_sessie`. Na de merge: suites 970 groen,
+carddist exact, uicheck PASS, uispel 777 zelfde zobrist, naadcheck PASS,
+`-- resumecheck 777 1` en `4242 2` PASS (0 verschillen, 0 canary). Main
+staat inmiddels vuil met F4.3h-werk van de andere sessie; fast-forwarden
+kan pas als die map schoon is (`git merge --ff-only ui-assets-pack`).
 
 **Merge met main (F4.3f, 3 september 18:55):** vier conflicten (WIP.md,
 game.gd `_toon_reveal`, tests.ps1, TestRunner.gd) opgelost; F4.3e's
