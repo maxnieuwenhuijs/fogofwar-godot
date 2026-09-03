@@ -1276,6 +1276,52 @@ func _ready() -> void:
 		print("[MELEE] " + ("PASS" if mc_alles_ok else "FAIL"))
 		get_tree().quit(0 if mc_alles_ok else 1)
 		return
+	elif "uispel" in args:
+		# F4.3a — nulmeting op game.gd-niveau: een volledige partij vs-AI waarin
+		# de MENS uitsluitend via het bestaande timeout-pad speelt (auto-define,
+		# aanvul-spawn, auto-link, greedy zet) en de AI zoals altijd. Dit dekt
+		# de submit-VOLGORDE van game.gd (AI-opstelling voor de mens, AI-bet en
+		# -define na de mens, AI-spawn voor de overlay), die simcheck, goldens
+		# en `-- record` niet raken. Gebruik: -- uispel [seed]
+		var ui := args.find("uispel")
+		var ui_seed: int = int(args[ui + 1]) if args.size() > ui + 1 else 777
+		seed(ui_seed)
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.WOLF
+		var acties := [0]
+		GameSession.action_performed.connect(func(_a: Dictionary, _r: Dictionary) -> void: acties[0] += 1)
+		game._start_match(1)
+		var t0 := Time.get_ticks_msec()
+		var afgekapt := false
+		var stil_sinds := Time.get_ticks_msec()
+		while GameSession.state.phase != Phase.Type.GAME_OVER:
+			if Time.get_ticks_msec() - t0 > 20 * 60 * 1000:
+				afgekapt = true
+				break
+			var st: GameState = GameSession.state
+			if st.phase == Phase.Type.PLACEMENT and not st.placements_done.get(1, false):
+				game._confirm_placement()
+				stil_sinds = Time.get_ticks_msec()
+			elif Phase.is_reveal(st.phase) and not st.reveal_acks.get(1, false):
+				game._continue_after_reveal()
+				stil_sinds = Time.get_ticks_msec()
+			elif game._timer_active:
+				# De echte timeout-route: _process ziet 0 en vuurt _on_phase_timeout.
+				game._timer_left = 0.0
+				stil_sinds = Time.get_ticks_msec()
+			elif Time.get_ticks_msec() - stil_sinds > 3000 and st.current_player == 1:
+				if st.phase == Phase.Type.ACTION or Phase.is_linking(st.phase):
+					# Vangnet: de mens is aan zet zonder lopende klok (bv. een
+					# open wolf-stap). Zelfde pad als een timeout.
+					game._on_phase_timeout()
+					stil_sinds = Time.get_ticks_msec()
+			await get_tree().create_timer(0.05).timeout
+		var us: GameState = GameSession.state
+		print("[UISPEL] seed=%d winner=%d acties=%d cyclus=%d afgekapt=%s duur=%ds zobrist=%s" % [
+			ui_seed, us.winner, acties[0], us.cycle, str(afgekapt),
+			int((Time.get_ticks_msec() - t0) / 1000), Zobrist.state_hash(us)])
+		get_tree().quit(1 if afgekapt else 0)
+		return
 	elif "play" in args:
 		# `-- play [factie]` — bv. `play muis` om karaktermodellen te bekijken.
 		var fnames := {"mens": Constants.Doctrine.MENS, "varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,

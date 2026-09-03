@@ -136,6 +136,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   v4.2-regels traint hij op campagne-fitness: haven 3 > eliminatie 2 >
   tiebreak 1 > verlies 0 + spaarbonus restleger/CP — één generatie duurt
   met cycle_limit 20 zo'n 10-15 min per factie).
+- **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
+  vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
+  eind-zobrist; seed 777 moet `890b6cb4…` geven (270 acties, cyclus 6, zie
+  WIP 3 september). Elke F4.3-stap: uispel gelijk, én `-- record
+  user://ref_na.json easy easy muis wolf 777` byte-gelijk aan
+  `user://ref_voor.json`. Het bouwplan met de vaste regressieset staat in
+  `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).

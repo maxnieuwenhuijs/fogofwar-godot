@@ -1,5 +1,51 @@
 # Fog of War — Work In Progress & Context
 
+## 3 september (later) -- F4.3a: nulmeting op game.gd-niveau
+
+Eerste stap van het F4.3-bouwplan (`docs/F4.3-bouwplan.md`): een hard getal
+voor "vs-AI blijft byte-identiek" dat de submit-VOLGORDE van game.gd dekt.
+Simcheck, goldens en `-- record` lopen via GameSession en `_run_sim`, dus die
+zien niet of game.gd de AI-opstelling vóór de mens indient, de AI-bet en
+-define ná de mens, en de AI-spawn vóór de overlay. Nieuwe capture-modus
+`-- uispel [seed]`: een volledige partij (Muis vs Wolf, AI easy) waarin de
+mens uitsluitend via het bestaande timeout-pad speelt (`_timer_left = 0`,
+dus `_process` vuurt `_on_phase_timeout`: auto-define, aanvul-spawn,
+auto-link, greedy zet; opstelling en reveal-ack zoals `-- play`). Print
+winner, acties, cyclus, duur en de eind-zobrist; exit 1 als de partij na 20
+minuten niet uit is.
+
+**Contract (seed 777, drie runs, alle drie gelijk):** winner=2, acties=270,
+cyclus=6, zobrist `890b6cb46241617aa7de3189e622913fbe3089d72eb7e78ea6e75c1bc345b97d`,
+duur 106-107 s (de AI-thread en de animaties lopen in echte tijd). Dat de
+zobrist over drie runs gelijk is betekent dat de AI-thread-timing de
+actievolgorde niet beïnvloedt; het sterke contract geldt dus, niet het
+zwakkere "winner + cyclus + acties".
+
+Referentie-opname vóór enige clientwijziging: `-- record user://ref_voor.json
+easy easy muis wolf 777` (275 KB, buiten de repo in `user://`). Elke
+F4.3-stap eindigt met een nieuwe opname naar `user://ref_na.json` en een
+lege `fc`.
+
+Audit-greps (uitgangspunt voor stap b): `GameSession\.` in game.gd = 128;
+membervariabelen van het type Pawn of Card in game.gd = 0 (goed: online wordt
+de staat per batch vervangen, niets mag een oude Pawn vasthouden); private
+leden van game.gd die capture.gd aanstuurt en dus in F4.3 hun naam houden:
+`_start_match` (18x), `_confirm_placement` (17), `_on_link_pawn_clicked` (13),
+`_on_link_card_picked` (13), `_pawn_views` (12), `_continue_after_reveal`
+(12), `_pawn_has_room` (11), `_select_pawn` (7), `_human_doctrine`,
+`_camera`, `_ai_doctrine` (6), `_board`, `_ai` (4), en verder `_valid_moves`,
+`_refresh_all`, `_raycast_pawn`, `_on_placement_tile_clicked`, `_valid_shots`,
+`_tiles`, `_spawn_footprints`, `_on_tile_clicked`, `_on_pawn_clicked`,
+`_update_placement_ghost`, `_update_health_bars`, `_undo_placement`,
+`_uncouple_cascade`, `_toggle_ambiance_panel`, `_spawn_wheel_tracks`,
+`_show_rules_overlay`, `_show_opponent_menu`, `_show_doctrine_menu`,
+`_selected_pawn_id`, `_pick_move_tile`, `_hp_bars`, `_build_pawn_views`,
+`_begin_manual_placement`.
+
+Checks: uispel 3x gelijk, simcheck 0 afwijkingen (suite en fuzz ongewijzigd
+sinds F4.2b: alleen capture.gd kreeg een modus).
+
+
 ## 3 september -- F4.2b: het stream-lek gedicht voordat de client bestaat
 
 Max: "waar staan we met de multiplayer mode" en daarna "laten we gewoon
