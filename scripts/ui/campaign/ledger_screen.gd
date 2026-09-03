@@ -143,7 +143,7 @@ func open(c: CState, mens_id: int) -> void:
 	kop.add_child(sluit)
 	inhoud.add_child(kop)
 	var uitleg := Label.new()
-	uitleg.theme_type_variation = "LabelInktZacht"
+	uitleg.theme_type_variation = "LabelInkt"
 	uitleg.text = tr("LEDGER_EXPLAIN")
 	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	uitleg.add_theme_font_size_override("font_size", 20)

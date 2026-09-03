@@ -415,11 +415,11 @@ func _ververs() -> void:
 	if c.fase == CState.Fase.KLAAR and c.winnaar != -1:
 		_header.text = tr("HUB_CHAMPION") % String(c.spelers[c.winnaar].naam)
 	var pool: Dictionary = c.pool_van(mens_id)
-	_saldi.text = tr("HUB_BALANCE_PT") % [
+	# Naam en team als tekst; de getallen dragen de iconen eronder (de oude
+	# volledige saldi-regel wrapte en zei hetzelfde twee keer).
+	_saldi.text = tr("HUB_UI_SALDI_KORT") % [
 		String(mijn.get("naam", "?")), int(mijn.get("team", 0)),
-		_pool_punten(pool), c.cp_van(mens_id), c.punten_van(mens_id),
 		"" if String(mijn.get("status", "")) == "actief" else tr("HUB_ELIMINATED_SUFFIX")]
-	# Dezelfde getallen als in de saldi-regel, als icoon + getal.
 	_saldi_pool.zet_tekst(str(_pool_punten(pool)))
 	_saldi_cp.zet_tekst(str(c.cp_van(mens_id)))
 	_saldi_score.zet_tekst(str(c.punten_van(mens_id)))
@@ -485,7 +485,6 @@ func _team_rij(c: CState, sid: int, eigen: bool, vecht: bool) -> Control:
 	if vecht and not dood:
 		# Vecht nu: gekruiste sabels in goud naast de naam.
 		var sabels := UiAssets.icoon_rect("act-melee", 22, UiAssets.SELECTIE_GOUD)
-		sabels.tooltip_text = tr("HUB_FIGHTING_SUFFIX").strip_edges()
 		rij.add_child(sabels)
 	var saldo := HBoxContainer.new()
 	saldo.add_theme_constant_override("separation", 12)
@@ -567,7 +566,7 @@ func _feed_kaartje(e: Dictionary) -> PanelContainer:
 		label.text = tr("HUB_FEED_BARK") % [int(e.ronde), String(e.naam), String(e.tekst)]
 	elif String(e.type) == "event":
 		# Donaties/testamenten: ook je eigen acties (27 juli, Max).
-		label.text = "R%d · %s" % [int(e.ronde), String(e.tekst)]
+		label.text = tr("HUB_UI_FEED_EVENT") % [int(e.ronde), String(e.tekst)]
 	elif String(e.type) == "report":
 		var p1n := String(c.spelers[int(e.p1)].naam)
 		var p2n := String(c.spelers[int(e.p2)].naam)
@@ -640,7 +639,10 @@ func _toon_report(e: Dictionary) -> void:
 # --- Fasepaneel -------------------------------------------------------------------
 
 func _wis_paneel() -> void:
+	# Eerst uit de boom, dan vrijgeven: anders staat de oude FasePapier dit
+	# frame nog naast de nieuwe en hernoemt Godot de nieuwe (naamconflict).
 	for kind in _paneel.get_children():
+		_paneel.remove_child(kind)
 		kind.queue_free()
 	_papier_inhoud = null
 

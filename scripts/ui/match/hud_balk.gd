@@ -6,6 +6,7 @@ extends PanelContainer
 ## ($UI/TopLabel, $UI/PromptLabel, $UI/CountLabel). Die blijven directe
 ## kinderen van $UI met hun naam en type (capture.gd en de tools resolven ze
 ## zo); de balk maakt ze inkt-op-perkament en tekent links het fase-icoon.
+## Het thema onder de CanvasLayer regelt UiThema (node_added), niet deze balk.
 ##
 ##   _hud_balk = HUD_BALK_SCRIPT.new()            # preload: parst zonder klassencache
 ##   _hud_balk.bouw_in($UI, _top_label, _prompt_label, _count_label)
@@ -22,7 +23,7 @@ extends PanelContainer
 const BALK_LINKS := 10.0
 const BALK_RECHTS := 960.0
 const BALK_BOVEN := 4.0
-const BALK_ONDER := 170.0
+const BALK_ONDER := 190.0
 ## De knoppenkolom rechts van de balk (breedte 88, x 976..1064).
 const KOLOM_X := 976.0
 const KOLOM_BREEDTE := 88.0
@@ -78,29 +79,9 @@ func bouw_in(ui: Node, top: Label, prompt: Label, telling: RichTextLabel) -> voi
 	_top = top
 	_prompt = prompt
 	_telling = telling
-	_thema_op_laag(ui)
 	ui.add_child(self)
 	ui.move_child(self, 0)
 	_stijl_labels()
-
-
-## Thema-doorgifte onder een CanvasLayer. UiThema zet het thema op het
-## root-venster, maar Godot geeft een thema alleen door via Control- en
-## Window-OUDERS (ThemeOwner.assign_theme_on_parented): een Control direct
-## onder een CanvasLayer, zoals alles onder $UI in game.tscn, ziet het niet en
-## valt terug op het Godot-standaardthema (grijze knoppen, witte labels).
-## Daarom krijgt elk Control/Window-kind van de laag het thema zelf, ook wat
-## er later bijkomt (dialogen, sfeerpaneel). Hoort eigenlijk in UiThema thuis.
-func _thema_op_laag(laag: Node) -> void:
-	for kind in laag.get_children():
-		_thema_op_kind(kind)
-	if not laag.child_entered_tree.is_connected(_thema_op_kind):
-		laag.child_entered_tree.connect(_thema_op_kind)
-
-
-func _thema_op_kind(kind: Node) -> void:
-	if (kind is Control or kind is Window) and kind.theme == null:
-		kind.theme = UiAssets.thema()
 
 
 ## Tekst op perkament = inkt (regel uit het contract). De offsets en
@@ -161,8 +142,9 @@ func _zet_timer_rood(aan: bool) -> void:
 ## Een kleine knop (bv. 88x60) op een 9-patch die voor grotere vlakken is
 ## getekend: de hoekplaten (36-48 px) passen niet in de knopmaat en de
 ## inhoudsmarges rekken de knop op tot buiten beeld. Hier worden per staat de
-## texture-marges op de halve knopmaat begrensd, de inhoudsmarges klein
-## gehouden en wordt de tekst geknipt in plaats van de knop opgerekt.
+## texture-marges op de halve knopmaat begrensd (of, als zelfs dat niet past,
+## de hele texture geschaald), de inhoudsmarges klein gehouden en wordt de
+## tekst geknipt in plaats van de knop opgerekt.
 static func compacte_knop(knop: Button, variant: String, maat: Vector2,
 		marge: Vector2i = Vector2i(6, 4)) -> void:
 	knop.custom_minimum_size = maat
@@ -176,10 +158,18 @@ static func compacte_knop(knop: Button, variant: String, maat: Vector2,
 			sb = UiAssets.knop_stijl(variant, "normaal")
 		if sb == null:
 			continue
-		sb.texture_margin_left = minf(sb.texture_margin_left, float(max_x))
-		sb.texture_margin_right = minf(sb.texture_margin_right, float(max_x))
-		sb.texture_margin_top = minf(sb.texture_margin_top, float(max_y))
-		sb.texture_margin_bottom = minf(sb.texture_margin_bottom, float(max_y))
+		if sb.texture_margin_left + sb.texture_margin_right + 8.0 > maat.x 				or sb.texture_margin_top + sb.texture_margin_bottom + 8.0 > maat.y:
+			# Past de 9-patch niet: de hele texture geschaald tekenen, anders
+			# stoten de vier hoekplaten in het midden op elkaar (kruisnaad).
+			sb.texture_margin_left = 0.0
+			sb.texture_margin_right = 0.0
+			sb.texture_margin_top = 0.0
+			sb.texture_margin_bottom = 0.0
+		else:
+			sb.texture_margin_left = minf(sb.texture_margin_left, float(max_x))
+			sb.texture_margin_right = minf(sb.texture_margin_right, float(max_x))
+			sb.texture_margin_top = minf(sb.texture_margin_top, float(max_y))
+			sb.texture_margin_bottom = minf(sb.texture_margin_bottom, float(max_y))
 		sb.content_margin_left = marge.x
 		sb.content_margin_right = marge.x
 		sb.content_margin_top = marge.y
@@ -215,8 +205,12 @@ static func reserve_bbcode(pool: int, cp: int) -> String:
 	var pool_icoon := img_bbcode("pool", kleur)
 	var cp_icoon := img_bbcode("cp", kleur)
 	if pool_icoon == "" or cp_icoon == "":
-		return "    [color=#%s]%s[/color]" % [kleur.to_html(false),
-			TranslationServer.translate("HUD_UI_RESERVE_TEKST") % [pool, cp]]
+		# Tekst-terugval; zonder gecompileerde vertaling is dit de sleutel zelf
+		# (geen %-plekken), dan niet formatteren.
+		var tekst := TranslationServer.translate("HUD_UI_RESERVE_TEKST")
+		if tekst.find("%") != -1:
+			tekst = tekst % [pool, cp]
+		return "    [color=#%s]%s[/color]" % [kleur.to_html(false), tekst]
 	return "    [color=#%s]%s %d   %s %d[/color]" % [kleur.to_html(false), pool_icoon, pool, cp_icoon, cp]
 
 

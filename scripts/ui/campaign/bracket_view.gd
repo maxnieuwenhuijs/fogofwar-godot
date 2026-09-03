@@ -9,7 +9,7 @@ extends VBoxContainer
 # de voetregel gedempt. De duel-regels blijven Labels met "vs" erin (capture).
 
 ## Gedempt ivoor voor wat nog niet aan de beurt is.
-const IVOOR_ZACHT := Color(UiAssets.WARM_IVOOR, 0.72)
+const IVOOR_ZACHT := Color(UiAssets.WARM_IVOOR, 0.85)
 
 
 func vul(c: CState) -> void:
@@ -26,7 +26,7 @@ func vul(c: CState) -> void:
 	var titel := Label.new()
 	titel.theme_type_variation = "LabelKop"
 	titel.text = tr("BRACKET_TITLE")
-	titel.add_theme_font_size_override("font_size", 26)
+	titel.add_theme_font_size_override("font_size", 30)
 	titel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	titel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kop.add_child(titel)
@@ -44,7 +44,7 @@ func vul(c: CState) -> void:
 		var w := Label.new()
 		w.text = tr("BRACKET_QUEUE_ROW") % [String(c.spelers[int(paar[0])].naam),
 			String(c.spelers[int(paar[1])].naam)]
-		w.add_theme_font_size_override("font_size", 20)
+		w.add_theme_font_size_override("font_size", 22)
 		w.add_theme_color_override("font_color", IVOOR_ZACHT)
 		add_child(w)
 	var over: Array = []
@@ -53,7 +53,7 @@ func vul(c: CState) -> void:
 			over.append(String(c.spelers[id].naam))
 	var voet := Label.new()
 	voet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	voet.add_theme_font_size_override("font_size", 18)
+	voet.add_theme_font_size_override("font_size", 22)
 	voet.add_theme_color_override("font_color", IVOOR_ZACHT)
 	voet.text = tr("BRACKET_REMAINING") % ", ".join(over)
 	add_child(voet)

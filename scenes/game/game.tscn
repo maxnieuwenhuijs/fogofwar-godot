@@ -25,9 +25,9 @@ text_overrun_behavior = 3
 
 [node name="PromptLabel" type="Label" parent="UI" unique_id=1875820026]
 offset_left = 118.0
-offset_top = 66.0
+offset_top = 62.0
 offset_right = 930.0
-offset_bottom = 124.0
+offset_bottom = 122.0
 theme_type_variation = &"LabelInkt"
 theme_override_font_sizes/font_size = 22
 autowrap_mode = 3
@@ -35,12 +35,12 @@ max_lines_visible = 2
 
 [node name="CountLabel" type="RichTextLabel" parent="UI" unique_id=1983808017]
 offset_left = 118.0
-offset_top = 116.0
+offset_top = 130.0
 offset_right = 930.0
-offset_bottom = 156.0
+offset_bottom = 178.0
 mouse_filter = 2
 theme_type_variation = &"RichInkt"
-theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/normal_font_size = 26
 bbcode_enabled = true
 scroll_active = false
 

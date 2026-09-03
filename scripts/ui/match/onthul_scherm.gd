@@ -211,7 +211,7 @@ func _bouw_hand(state: GameState, speler: int, kaarten: Array, totalen: Dictiona
 	rij.alignment = BoxContainer.ALIGNMENT_CENTER
 	rij.add_theme_constant_override("separation", int(KAART_TUSSEN))
 	for i in kaarten.size():
-		var c = kaarten[i]
+		var c: Variant = kaarten[i]  # Card (live) of Dictionary (hersteld)
 		rij.add_child(_kaart_houder(int(c.hp), int(c.stamina), int(c.attack), speler, doctrine,
 			budget, i, kaarten.size(), schaal))
 	hand.add_child(rij)

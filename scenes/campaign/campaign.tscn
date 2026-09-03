@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/campaign/campaign_hub.gd" id="1_hub"]
 
 [node name="CampaignHub" type="Control"]
-texture_filter = 2
+texture_filter = 4
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -158,8 +158,17 @@ func _ready() -> void:
 			bc.fase = CState.Fase.BURGEROORLOG
 			bc.duels_deze_ronde = [{"p1": 0, "p2": 3, "klaar": false}]
 			bc.bracket = [[1, 4]]
+			# Op de veldtafel met een marge, zoals in de hub (anders Godot-grijs).
+			var bvlak := ColorRect.new()
+			bvlak.color = UiAssets.VELDTAFEL
+			bvlak.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			add_child(bvlak)
 			var bview: VBoxContainer = load("res://scripts/ui/campaign/bracket_view.gd").new()
 			add_child(bview)
+			bview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			bview.offset_left = 24.0
+			bview.offset_top = 24.0
+			bview.offset_right = -24.0
 			bview.vul(bc)
 			await get_tree().create_timer(0.5).timeout
 			if bview.get_child_count() < 4:

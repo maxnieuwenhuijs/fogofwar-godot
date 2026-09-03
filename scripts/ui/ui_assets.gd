@@ -163,8 +163,8 @@ const KAART_GEKOPPELD_X := 21.0     # het lint-met-zegel (187 breed): strook op 
 const KAART_NAAMPLAAT_Y := 22.0
 const KAART_KRANS_Y := 98.0
 const KAART_KRANS_SCHAAL := 0.94
-const KAART_SIERLIJN_Y := 362.0
-const KAART_TITEL_Y := 384.0
+const KAART_SIERLIJN_Y := 440.0
+const KAART_TITEL_Y := 366.0
 const KAART_SPECS_Y := 492.0
 const KAART_SPECS_X := [54.0, 238.0, 422.0]
 const KAART_CP_MIDDEN := Vector2(322.0, 871.0)
@@ -600,8 +600,10 @@ static func _bouw_thema() -> Theme:
 	if f_kop != null:
 		t.set_font("bold_font", "RichTextLabel", f_kop)
 		t.set_font("bold_font", "RichInkt", f_kop)
-	# Dialogen (opgeven-bevestiging, rapport-detail) op de veldtafel-lijst.
-	var dialoog := paneel_stijl("veldtafel")
+	# Dialogen (opgeven-bevestiging, rapport-detail): een donker vlak met een
+	# messing rand, want de tekst-Labels in een Window blijven ivoor (op het
+	# perkament van Frame_2 was dat onleesbaar; bevinding 3 september).
+	var dialoog := vlak_stijl(VELDTAFEL_LICHT, MESSING, 3, 8, Vector2(28, 20))
 	if dialoog != null:
 		t.set_stylebox("panel", "AcceptDialog", dialoog)
 		t.set_stylebox("panel", "ConfirmationDialog", dialoog)

@@ -71,10 +71,10 @@ LEDGER_COL_POINTS,Points,Punten
 LEDGER_YOU_SUFFIX,  (you),  (jij)
 LEDGER_STATUS_ACTIVE,active,actief
 LEDGER_STATUS_FALLEN,fallen,gevallen
-BRACKET_TITLE,CIVIL WAR — knockout for the championship,BURGEROORLOG — knock-out om het kampioenschap
+BRACKET_TITLE,CIVIL WAR: knockout for the championship,BURGEROORLOG: knock-out om het kampioenschap
 BRACKET_DONE,finished,afgerond
 BRACKET_NOW_PLAYING,NOW ON THE BOARD,NU OP HET BORD
-BRACKET_DUEL_ROW,%s  vs  %s — %s,%s  vs  %s — %s
+BRACKET_DUEL_ROW,%s  vs  %s · %s,%s  vs  %s · %s
 BRACKET_QUEUE_ROW,Waiting in line: %s  vs  %s,In de wachtrij: %s  vs  %s
 BRACKET_REMAINING,Still in the fight: %s,Nog in de strijd: %s
 CARD_DEFINE_TITLE,Define your cards,Definieer je kaarten
@@ -164,7 +164,7 @@ PHASE_PLACEMENT_MANUAL,Deploy yourself,Zelf opstellen
 PHASE_PLACEMENT_STANDARD,Default deployment,Standaard opstelling
 HUD_PLACE_TYPE_CANNONS,cannons,kanonnen
 HUD_PLACE_TYPE_HORSES,horses,paarden
-HUD_PLACE_PROMPT,Place your %s — click a square (%d left · right-click = undo),Plaats je %s — klik een vak (nog %d · rechtermuis = ongedaan)
+HUD_PLACE_PROMPT,Place your %s: tap a square (%d left),Plaats je %s: tik een vak (nog %d)
 MENU_CP_TITLE,Bet CP? (balance %d),CP inzetten? (saldo %d)
 MENU_CP_BODY,"Blind bid: the AI won't see your bet until the reveal.
 Each CP you bet gives 1 card +1 budget point this round.
@@ -193,14 +193,14 @@ Het hoogste aanval-bod krijgt het initiatief:
 die speler koppelt én handelt straks als eerste."
 PHASE_REVEAL_TITLE,%s starts linking,%s begint met koppelen
 MENU_CONTINUE,Continue,Doorgaan
-HUD_LINK_PROMPT,"Your turn — pick a card, then tap a pawn","Jouw beurt — kies een kaart, tik dan een pion"
+HUD_LINK_PROMPT,"Your turn: pick a card, then tap a pawn","Jouw beurt: kies een kaart, tik dan een pion"
 HUD_LINK_PICK_PAWN,Pick a pawn to link,Kies een pion om te koppelen
 HUD_LINK_PICK_CARD_FIRST,Pick a card below first,Kies eerst een kaart onderaan
 HUD_ROUND_DONE,Round complete,Ronde afgerond
 HUD_OPPONENT_LINKING,Opponent is linking...,Tegenstander koppelt...
 HUD_OPPONENT_TURN,Opponent is moving...,Tegenstander is aan zet...
-HUD_YOUR_TURN,Your turn — pick a pawn,Jouw beurt — kies een pion
-HUD_WOLF_STEP,Free Wolf step — click a square (right-click = skip),Gratis Wolf-stap — klik een vak (rechtermuis = overslaan)
+HUD_YOUR_TURN,Your turn: pick a pawn,Jouw beurt: kies een pion
+HUD_WOLF_STEP,Free Wolf step: tap a square (or skip),Gratis Wolf-stap: tik een vak (of sla over)
 HUD_WAIT_OPPONENT,Waiting for your opponent...,Wachten op de tegenstander...
 HUD_WAIT_WOLF,Opponent is considering a Wolf step...,Tegenstander overweegt zijn stap...
 HUD_TOGGLE_SHAKE,Screen shake: %s,Screen shake: %s
@@ -406,3 +406,5 @@ HUD_UI_DOCTRINE_UITLEG,"Locked in for the whole match. After this you pick your 
 HUD_UI_RESERVE_TEKST,"Reserve %d · CP %d","Reserve %d · CP %d"
 REVEAL_UI_BOD,bid %d%% · attack %d · speed %d,bod %d%% · aanval %d · speed %d
 REVEAL_UI_UITLEG,"The highest attack bid takes the initiative: that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief: die speler koppelt én handelt straks als eerste."
+HUB_UI_FEED_EVENT,R%d · %s,R%d · %s
+HUB_UI_SALDI_KORT,%s (team %d)%s,%s (team %d)%s

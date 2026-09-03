@@ -409,7 +409,7 @@ func _build_help_button() -> void:
 	var sfeer := Button.new()
 	sfeer.text = tr("HUD_BTN_AMBIANCE")
 	sfeer.theme_type_variation = "KnopVierkant"
-	HUD_BALK_SCRIPT.compacte_knop(sfeer, "vierkant", Vector2(88, 60))
+	HUD_BALK_SCRIPT.compacte_knop(sfeer, "vierkant", Vector2(88, 88), Vector2i(2, 4))
 	sfeer.add_theme_font_size_override("font_size", 16)
 	sfeer.focus_mode = Control.FOCUS_NONE
 	sfeer.anchors_preset = Control.PRESET_TOP_RIGHT
@@ -417,31 +417,37 @@ func _build_help_button() -> void:
 	sfeer.anchor_right = 1.0
 	sfeer.offset_left = -104.0
 	sfeer.offset_right = -16.0
-	sfeer.offset_top = 106.0
-	sfeer.offset_bottom = 166.0
-	sfeer.modulate = Color(1.0, 1.0, 1.0, 0.55)
+	sfeer.offset_top = 108.0
+	sfeer.offset_bottom = 196.0
+	sfeer.modulate = Color(1.0, 1.0, 1.0, 0.9)
 	sfeer.pressed.connect(_toggle_ambiance_panel)
 	$UI.add_child(sfeer)
 	# F0.8: opgeven-knop (RESIGN bestaat sinds F0.4c), onder de sfeer-knop.
 	var geef_op := Button.new()
-	geef_op.text = tr("HUD_BTN_RESIGN")
-	geef_op.theme_type_variation = "KnopRood"
-	HUD_BALK_SCRIPT.compacte_knop(geef_op, "rood", Vector2(88, 60))
+	# Alleen het witte-vlag-icoon: tekst van 14 px over het rode vlak was
+	# onleesbaar; de bevestigingsdialoog legt uit wat de knop doet.
+	geef_op.text = ""
+	geef_op.tooltip_text = tr("HUD_BTN_RESIGN")
+	# Dezelfde vierkante plaat als de sfeer-knop (de rode 9-patch is een breed
+	# rechthoek en verwringt op 88x88); het gevaar zit in de rode vlag.
+	geef_op.theme_type_variation = "KnopVierkant"
+	HUD_BALK_SCRIPT.compacte_knop(geef_op, "vierkant", Vector2(88, 88))
 	geef_op.icon = UiAssets.icoon("forfeit")
+	for staat in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+		geef_op.add_theme_color_override(staat, UiAssets.DIEP_ROOD)
 	geef_op.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	geef_op.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP  # icoon boven de tekst: past in 88 px
+	geef_op.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
 	geef_op.expand_icon = false
-	geef_op.add_theme_constant_override("icon_max_width", 22)
-	geef_op.add_theme_font_size_override("font_size", 14)
+	geef_op.add_theme_constant_override("icon_max_width", 44)
 	geef_op.focus_mode = Control.FOCUS_NONE
 	geef_op.anchors_preset = Control.PRESET_TOP_RIGHT
 	geef_op.anchor_left = 1.0
 	geef_op.anchor_right = 1.0
 	geef_op.offset_left = -104.0
 	geef_op.offset_right = -16.0
-	geef_op.offset_top = 172.0
-	geef_op.offset_bottom = 232.0
-	geef_op.modulate = Color(1.0, 1.0, 1.0, 0.6)
+	geef_op.offset_top = 204.0
+	geef_op.offset_bottom = 292.0
+	geef_op.modulate = Color(1.0, 1.0, 1.0, 0.9)
 	geef_op.pressed.connect(_on_resign_pressed)
 	$UI.add_child(geef_op)
 
@@ -1302,7 +1308,9 @@ func _open_define_hand(bonus: int) -> void:
 	var uitleg := tr("HUD_DEFINE_PROMPT") % [kaart_aantal, int(doctrine.budget)]
 	if bonus > 0:
 		uitleg += tr("HUD_DEFINE_CP_SUFFIX") % bonus
-	_update_hud(uitleg + tr("HUD_DEFINE_LEGEND"))
+	# De legenda (HP = leven, ...) is sinds de nieuwe kaarten dubbelop: elke
+	# stat-kolom draagt zijn icoon. Zo blijft de prompt op een regel.
+	_update_hud(uitleg)
 
 
 ## Versterkingen (v4.2): blinde aanvul-keuze; spawns landen op de achterste rij.
@@ -2895,12 +2903,20 @@ func _on_pawn_clicked(pawn_id: int) -> void:
 			session.submit_shot(_human_id, _selected_pawn_id, pawn_id)
 
 
+## Legergrootte uit de ACTIEVE facties (rules.doctrine_data, C17), niet uit
+## de kale tabel van constants.gd: die gaf 19/22 bij de start (bevinding
+## 3 september; de telregel is alleen presentatie).
+func _leger_totaal(state: GameState, pid: int) -> int:
+	var comp: Array = state.doctrine_data_of(pid).get("comp", [0, 0, 0])
+	return int(comp[0]) + int(comp[1]) + int(comp[2])
+
+
 func _update_piece_counts() -> void:
 	var state: GameState = session.state
 	var red: int = state.get_alive_pawns_for(Constants.PLAYER_1).size()
 	var blue: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
-	var total_red: int = Constants.pawn_total(state.doctrine_of(Constants.PLAYER_1))
-	var total_blue: int = Constants.pawn_total(state.doctrine_of(Constants.PLAYER_2))
+	var total_red: int = _leger_totaal(state, Constants.PLAYER_1)
+	var total_blue: int = _leger_totaal(state, Constants.PLAYER_2)
 	_count_label.text = HUD_BALK_SCRIPT.telling_bbcode(red, total_red, blue, total_blue)
 	# F2.6 (v4.2): eigen reserve + CP-saldo (D12: die van de AI blijven geheim).
 	if state.rules.campaign_actief():

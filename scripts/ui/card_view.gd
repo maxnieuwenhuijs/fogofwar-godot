@@ -12,7 +12,8 @@ extends Control
 ## in code geregistreerd zodat capture.gd en de tests ze blijven vinden.
 ##
 ## Staten (via de setters; de kaart leidt het beeld zelf af in _update_staat):
-##   EDITABLE   set_editable(true): +/- zichtbaar, geen lint, geen stempel
+##   EDITABLE   set_editable(true): een grote plus per stat (besluit Max, 3 september:
+##              geen min-knop; plussen haalt het punt bij de grootste andere stat weg)
 ##   SELECTABLE set_selectable(true) en niet gekoppeld: los lint in teamkleur
 ##   SELECTED   set_selected_visual(true): lint plus gouden rand en gloed,
 ##              de kaart 4% groter (op de binnenlaag, de hand houdt de schaal)
@@ -39,16 +40,15 @@ const CP_MAAT := Vector2(318, 339)
 const ONTHULD_MAAT := Vector2(210, 63)
 const LINT_MAAT := Vector2(72, 247)
 const GEKOPPELD_MAAT := Vector2(187, 247)
-const KNOP_MAAT := Vector2(44, 44)
-const STAT_ICOON := 72.0
+const KNOP_MAAT := Vector2(96, 96)
+const STAT_ICOON := 66.0
 # Plaatsing binnen een stat-kolom (contract par. 4).
-const KOLOM_NAAM_Y := 14.0
-const KOLOM_ICOON_Y := 66.0
-const KOLOM_LIJN_Y := 152.0
-const KOLOM_CIJFER_Y := 168.0
-const KOLOM_CIJFER_HOOGTE := 88.0
-const KOLOM_KNOP_Y := 258.0
-const KOLOM_KNOP_TUSSEN := 14.0
+const KOLOM_NAAM_Y := 10.0
+const KOLOM_ICOON_Y := 56.0
+const KOLOM_LIJN_Y := 122.0
+const KOLOM_CIJFER_Y := 130.0
+const KOLOM_CIJFER_HOOGTE := 76.0
+const KOLOM_KNOP_Y := 208.0
 # Selectie en koppeling.
 const GESELECTEERD_SCHAAL := 1.04
 const GEKOPPELD_DIM := 0.72
@@ -71,8 +71,7 @@ var _inhoud: Control
 var _gloed: Panel
 var _kaartlaag: Control
 var _title: Label
-var _titel: Label
-var _ondertitel: Label
+var _factie_label: Label
 var _embleem: TextureRect
 var _hp_value: Label
 var _sta_value: Label
@@ -159,10 +158,10 @@ func set_doctrine(doctrine: int) -> void:
 	_refresh()
 
 
-## Aantal kaarten per ronde, voor de ondertitel (0 = onbekend: alleen budget).
+## Aantal kaarten per ronde (bewaard voor wie het wil tonen; de kaart zelf
+## heeft sinds 3 september geen ondertitel meer).
 func set_kaart_aantal(aantal: int) -> void:
 	_kaart_aantal = aantal
-	_refresh()
 
 
 ## Blinde CP-inzet op deze kaart: het zegel in teamkleur met "CP" erop.
@@ -187,11 +186,7 @@ func _refresh() -> void:
 	if not _gebouwd:
 		return
 	_title.text = _tekst("CARD_TITLE", [card_index + 1]).to_upper()
-	_titel.text = Constants.doctrine_display_name(_doctrine).to_upper()
-	if _kaart_aantal > 0:
-		_ondertitel.text = _tekst("CARD_SUBTITLE", [_kaart_aantal, data.budget])
-	else:
-		_ondertitel.text = _tekst("CARD_SUBTITLE_BUDGET", [data.budget])
+	_factie_label.text = Constants.doctrine_display_name(_doctrine).to_upper()
 	_hp_value.text = str(data.hp)
 	_sta_value.text = str(data.stamina)
 	_atk_value.text = str(data.attack)
@@ -234,7 +229,7 @@ func _bouw() -> void:
 	var naamplaat := _rect("Naamplaat", UiAssets.kaart("naamplaat"),
 		Vector2((maat.x - NAAMPLAAT_MAAT.x) * 0.5, UiAssets.KAART_NAAMPLAAT_Y), NAAMPLAAT_MAAT)
 	_kaartlaag.add_child(naamplaat)
-	_title = _label("Title", "LabelKopInkt", 34, Vector2.ZERO, NAAMPLAAT_MAAT)
+	_title = _label("Title", "LabelKopInkt", 40, Vector2.ZERO, NAAMPLAAT_MAAT)
 	naamplaat.add_child(_title)
 	_uniek(_title)
 	# Lauwerkrans (zwart) met het embleem van de eigenaar in de opening.
@@ -245,14 +240,12 @@ func _bouw() -> void:
 	_embleem = _rect("Embleem", null, Vector2(krans_maat.x * 0.16, krans_maat.y * 0.03),
 		Vector2(krans_maat.x * 0.68, krans_maat.y * 0.75))
 	krans.add_child(_embleem)
-	# Sierlijn, factienaam en ondertitel.
+	# Factienaam met de sierlijn eronder (pdf: naam, dan de lijn, dan de kolommen).
+	# Geen ondertitel: op 9 px was hij onleesbaar en de HUD zegt het budget al.
 	_kaartlaag.add_child(_rect("Sierlijn", UiAssets.kaart("sierlijn"),
 		Vector2((maat.x - SIERLIJN_MAAT.x) * 0.5, UiAssets.KAART_SIERLIJN_Y), SIERLIJN_MAAT))
-	_titel = _label("Titel", "LabelKopInkt", 40, Vector2(0, UiAssets.KAART_TITEL_Y), Vector2(maat.x, 50))
-	_kaartlaag.add_child(_titel)
-	_ondertitel = _label("Ondertitel", "LabelInkt", 18,
-		Vector2(0, UiAssets.KAART_TITEL_Y + 50.0), Vector2(maat.x, 26))
-	_kaartlaag.add_child(_ondertitel)
+	_factie_label = _label("Titel", "LabelKopInkt", 48, Vector2(0, UiAssets.KAART_TITEL_Y), Vector2(maat.x, 60))
+	_kaartlaag.add_child(_factie_label)
 	# Drie stat-kolommen: HP links, SPEED midden, ATTACK rechts.
 	var hp := _bouw_kolom("Hp", "stat-hp", float(UiAssets.KAART_SPECS_X[0]))
 	var sta := _bouw_kolom("Sta", "stat-speed", float(UiAssets.KAART_SPECS_X[1]))
@@ -261,13 +254,10 @@ func _bouw() -> void:
 	_sta_value = sta.waarde
 	_atk_value = atk.waarde
 	_stat_namen = [hp.naam, sta.naam, atk.naam]
-	_buttons = [hp.min, hp.plus, sta.min, sta.plus, atk.min, atk.plus]
+	_buttons = [hp.plus, sta.plus, atk.plus]
 	(hp.plus as Button).pressed.connect(_on_hp_plus_pressed)
-	(hp.min as Button).pressed.connect(_on_hp_minus_pressed)
 	(sta.plus as Button).pressed.connect(_on_sta_plus_pressed)
-	(sta.min as Button).pressed.connect(_on_sta_minus_pressed)
 	(atk.plus as Button).pressed.connect(_on_atk_plus_pressed)
-	(atk.min as Button).pressed.connect(_on_atk_minus_pressed)
 	# CP-zegel (leeg, of in teamkleur met "CP" erop).
 	var cp_maat := CP_MAAT * UiAssets.KAART_CP_SCHAAL
 	_cp_zegel = _rect("CpZegel", UiAssets.kaart("cp_leeg"), UiAssets.KAART_CP_MIDDEN - cp_maat * 0.5, cp_maat)
@@ -309,15 +299,16 @@ func _bouw() -> void:
 	_gebouwd = true
 
 
-## Een stat-kolom: lijst, naamplaatje, icoon, sierlijn, groot cijfer, +/-.
-## Geeft {waarde, naam, min, plus} terug; de +/- staan onderaan (min links).
+## Een stat-kolom: lijst, naamplaatje, icoon, sierlijn, groot cijfer en EEN grote
+## plus onderaan (besluit Max, 3 september: geen min; de min-functies blijven
+## voor de tools). Geeft {waarde, naam, plus} terug.
 func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	var kolom := _rect(voorvoegsel + "Kolom", UiAssets.kaart("specs"), Vector2(x, UiAssets.KAART_SPECS_Y), KOLOM_MAAT)
 	_kaartlaag.add_child(kolom)
 	var naam := _rect("Naam", UiAssets.kaart("specs_naam"),
 		Vector2((KOLOM_MAAT.x - SPECS_NAAM_MAAT.x) * 0.5, KOLOM_NAAM_Y), SPECS_NAAM_MAAT)
 	kolom.add_child(naam)
-	var naam_label := _label("NaamTekst", "", 22, Vector2.ZERO, SPECS_NAAM_MAAT)  # standaard Label = ivoor
+	var naam_label := _label("NaamTekst", "", 30, Vector2.ZERO, SPECS_NAAM_MAAT)  # standaard Label = ivoor
 	naam.add_child(naam_label)
 	var icoon := UiAssets.icoon_rect(icoon_id, STAT_ICOON, UiAssets.INKT)
 	icoon.name = "Icoon"
@@ -326,19 +317,15 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	kolom.add_child(icoon)
 	kolom.add_child(_rect("Lijn", UiAssets.kaart("specs_sierlijn"),
 		Vector2((KOLOM_MAAT.x - SPECS_LIJN_MAAT.x) * 0.5, KOLOM_LIJN_Y), SPECS_LIJN_MAAT))
-	var waarde := _label(voorvoegsel + "Value", "LabelCijfer", 70,
+	var waarde := _label(voorvoegsel + "Value", "LabelCijfer", 84,
 		Vector2(0, KOLOM_CIJFER_Y), Vector2(KOLOM_MAAT.x, KOLOM_CIJFER_HOOGTE))
 	kolom.add_child(waarde)
 	_uniek(waarde)
-	var knop_x := (KOLOM_MAAT.x - KNOP_MAAT.x * 2.0 - KOLOM_KNOP_TUSSEN) * 0.5
-	var min_knop := _knop(voorvoegsel + "Minus", "KnopMin", Vector2(knop_x, KOLOM_KNOP_Y))
-	kolom.add_child(min_knop)
-	_uniek(min_knop)
 	var plus_knop := _knop(voorvoegsel + "Plus", "KnopPlus",
-		Vector2(knop_x + KNOP_MAAT.x + KOLOM_KNOP_TUSSEN, KOLOM_KNOP_Y))
+		Vector2((KOLOM_MAAT.x - KNOP_MAAT.x) * 0.5, KOLOM_KNOP_Y))
 	kolom.add_child(plus_knop)
 	_uniek(plus_knop)
-	return {"waarde": waarde, "naam": naam_label, "min": min_knop, "plus": plus_knop}
+	return {"waarde": waarde, "naam": naam_label, "plus": plus_knop}
 
 
 func _control(naam: String, pos: Vector2, maat: Vector2) -> Control:
