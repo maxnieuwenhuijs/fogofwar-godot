@@ -831,6 +831,105 @@ Beer-kuras) houden hun eigen kleur. Vervang in de prompt "dark grey Napoleonic
 uniform" door de factie-beschrijving uit 3, en laat de regel over witte banden,
 knopen, epauletten en pluim staan zoals hij is.
 
+## 3f. Factie-emblemen -- het DUO-wapen (2D, stijl van het UI-pack)
+
+**Waarom nieuw** (verzoek Max, 3 september 2026): het UI-pack in
+`fogofwar-assets/UI_assets_pack/Emblems/` heeft zes emblemen, maar elk daarvan
+toont EEN kop -- vier keer de big bro (Beer, Leeuw, Krokodil, Wolf) en twee keer
+het kleine broertje (Muis, Varken). Dat botst met de familie-regel uit par. 3:
+**een factie is altijd een duo**, het kleine broertje (infanterie) plus de big
+bro (cavalerie). Deze zes prompts tekenen dat duo, in exact de stijl van de
+bestaande zes.
+
+Gebruik: factiekeuze-kaart (UI-SPEC-EN §2.2), grootboekrij (§2.8), HUD en
+MatchReport. In UI-DESIGN-BRIEF §2.1 en §9 staat dit als "6 doctrine-emblemen",
+gedeeld met CARD-DESIGN-BRIEF §5.3.
+
+### De stijl, uit de zes bestaande png's gelezen
+
+| Onderdeel | Wat er ligt |
+|---|---|
+| Techniek | houtsnede/scratchboard: dichte pen-en-inkt arcering en stippeling, **puur zwarte inkt op wit**, geen grijstinten, geen halftoon, geen kleur |
+| Kader | bust, afgesneden op borsthoogte, driekwart naar rechts, blik vooruit, streng-waardige kop |
+| Kleding | hoge staande kraag, dubbele rij bolle knopen, epaulet met zware franje; in het pack draagt alle zes dezelfde bicorne |
+| Achtergrond | vlak wit, geen kader, geen tekst; **geen witte snijlijn om het silhouet** -- het pack heeft die sticker-rand wel, wij niet (zie hieronder) |
+| Formaat | vierkant, ~500x500 px |
+
+### De hoeden: zes generaals, zes silhouetten (Max, 3 september)
+
+De big bro is de **generaal** van zijn factie en draagt dus generaalstenue, geen
+gewone troepenhoed. En bij elke factie een andere: samen met de kop is de hoed
+het herkenpunt op 64 px, dus **geen twee facties met hetzelfde silhouet**. Het
+kleine broertje houdt de **factie-eigen hoed uit par. 3**, zodat het duo bij het
+3D-leger blijft horen.
+
+| Factie | Generaalshoed van de big bro | Hoed van het broertje |
+|---|---|---|
+| Varken | klassieke bicorne dwars op de kop (de hoed van het pack), brede gouden bies, kokarde met rozet, **eikel-kwasten aan beide punten** | gewone kleine bicorne |
+| Muis | bicorne **andersom gedragen**, punten voor en achter, met een **zeer hoge dunne rechte pluim** | shako met pluim |
+| Leeuw | maarschalks-bicorne, de hele rand **omzoomd met struisveren-franje** | hoge berenmuts |
+| Beer | hoge Russische **bonten papacha** met zwaar koord en een slap overhangende kruin | ushanka met opgebonden kleppen |
+| Wolf | **gedeukte bicorne scheef op de kop**, een punt opengescheurd, **geknakte pluim en een geknoopte lap** om de bol | veldpet met kwastje |
+| Krokodil | ouderwetse **tricorne met gouden bies**, laag over de ogen, met een **stuk camouflagenet** onder de hoedband | tricorne onder een kap |
+
+### Vast stijlblok (vul de vijf vakjes in)
+
+```
+Two characters in one emblem, vintage black and white woodcut engraving in the style of
+an antique regimental seal: a large anthropomorphic <BIG BRO> general bust in three-quarter
+view facing right, wearing <GENERAALSHOED>, and a high standing-collar double-breasted
+uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long
+fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic <KLEINE
+BROER> soldier bust, about half his height, facing the same way and wearing <HOED>.
+<FACTIE-DETAIL>. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a
+plain white background, no grey tones, no halftone dots, no colour, strong contrast with
+crisp white highlights in the fur. Both heads fully in frame, clearly separated by a thin
+white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting
+directly on a plain white background with no outline, keyline or cut-out edge around the
+silhouette, no frame, no border, no text, no lettering, no banner.
+```
+
+Negatief (voor generatoren die dat vakje hebben): `colour, grey tones,
+halftone, gradient, soft shading, photo, 3D render, background scenery, text,
+letters, numbers, watermark, frame, border, sticker outline, white keyline,
+drop shadow, cropped heads, three or more characters`.
+
+### De zes prompts
+
+| Bestand | Prompt |
+|---|---|
+| `emblem_mouse_duo.png` | Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic fat brown rat general bust with a blunt whiskered snout, beady eyes and a notched ear, in three-quarter view facing right, wearing a Napoleonic general's bicorne hat worn fore-and-aft with the points to the front and back, edged with braid, a round cockade on the front point and a single very tall thin upright feather plume, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic mouse soldier bust with oversized round ears, long twitching whiskers and a pointed snout, about half his height, facing the same way and wearing a tall Napoleonic shako with a chin scale and an upright feather plume. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the fur. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner. |
+| `emblem_pig_duo.png` | Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic wild boar general bust with enormous upward-curving tusks, a broad snout and a bristly spined mane, in three-quarter view facing right, wearing a classic Napoleonic general's bicorne hat worn athwart with a wide gold-braided edge, a round cockade with a rosette badge on the side and heavy acorn tassels hanging from both points, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic pig soldier bust with a big flat upturned snout, floppy ears and a round jowly face, about half his height, facing the same way and wearing a smaller plain Napoleonic bicorne hat. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the bristles. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner. |
+| `emblem_lion_duo.png` | Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic lion general bust with a full flowing mane and a proud raised muzzle, in three-quarter view facing right, wearing a marshal's bicorne hat with the entire brim edged in a dense fringe of ostrich feathers, gold lace and a round cockade, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic cheetah soldier bust with bold black rosette spots and long teardrop face stripes, about half his height, facing the same way and wearing a tall black bearskin grenadier cap with a chin cord. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the mane. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner. |
+| `emblem_bear_duo.png` | Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic grizzly bear general bust with a massive head, small round ears and a heavy shaggy neck, in three-quarter view facing right, wearing a tall Russian general's fur papakha cap with a heavy cord across the front and a soft cloth crown flopping over to one side, and a high standing-collar double-breasted greatcoat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic raccoon soldier bust with a dark bandit mask across the eyes and tufted ears, about half his height, facing the same way and wearing a round Russian ushanka fur hat with the ear flaps tied up. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the thick fur. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner. |
+| `emblem_wolf_duo.png` | Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic dire wolf general bust with a long scarred muzzle, ragged pointed ears and a shaggy ruff, in three-quarter view facing right, wearing a battered bicorne hat cocked crooked on his head with one point torn open, a snapped-off feather plume and a knotted rag tied around the crown, and a high standing-collar double-breasted uniform coat, frayed and battle-worn, with tarnished braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic fox soldier bust with huge pointed ears and a sharp narrow snout, about half his height, facing the same way and wearing a soft Napoleonic forage cap with a hanging tassel. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights in the fur. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner. |
+| `emblem_crocodile_duo.png` | Two characters in one emblem, vintage black and white woodcut engraving in the style of an antique regimental seal: a large anthropomorphic crocodile general bust with a long toothy snout, hooded eyes and heavy armoured scutes along the neck, in three-quarter view facing right, wearing an old-fashioned general's tricorne hat edged with gold lace worn low over his eyes, with a scrap of camouflage netting tucked under the hat band, and a high standing-collar double-breasted uniform coat heavy with braid, large round buttons and thick bullion epaulettes with long fringe on the shoulders; in front of his chest on the lower left a much smaller anthropomorphic lizard soldier bust with camouflage-patterned scales and big lidded eyes, about half his height, facing the same way and wearing a Napoleonic tricorne hat under a loose hood. Dense pen-and-ink cross-hatching and stippling, pure solid black ink on a plain white background, no grey tones, no halftone dots, no colour, strong contrast with crisp white highlights on the scales. Both heads fully in frame, clearly separated by a thin white gap so each silhouette reads on its own. Square composition, centred, the ink drawing sitting directly on a plain white background with no outline, keyline or cut-out edge around the silhouette, no frame, no border, no text, no lettering, no banner. |
+
+### Wat je aanlevert, en de enige echte test
+
+- **1024x1024 PNG op wit** (zelfde vierkant als het pack) plus een uitsnede met
+  **alpha** (`emblem_<factie>_duo_cut.png`); de UI zet ze op papierkleur, dus een
+  ingebakken wit vlak valt op.
+- **Geen witte rand om de tekening.** De zes uit het pack hebben een sticker-lijn
+  rondom; die willen we niet. De uitsnede volgt de inkt zelf, dus geen witte halo, geen
+  keyline en geen slagschaduw. Komt hij er in de generatie toch in: die rand is wit en
+  zit vast aan de achtergrond, dus een vulling vanaf de beeldrand door alles wat
+  doorzichtig OF wit is haalt hem weg zonder de witte lichtjes IN de tekening te raken.
+  Zo zijn de zes uit het pack al schoongemaakt: `UI_assets_pack/Emblems/zonder_rand/`
+  (`<Naam>_cut.png`, de originelen bleven staan).
+- Factie-id in de naam is die van de mappen en de code: `mouse`, `pig`, `lion`,
+  `bear`, `wolf`, `crocodile`. Naast de glb's van de factie hoeft niets: dit is
+  UI-werk, geen model.
+- **Verklein naar 64 px** (factiekaart) en kijk of de twee koppen nog uit elkaar
+  vallen, en of je de zes generaalshoeden nog uit elkaar houdt. Zo niet: broertje
+  kleiner, witte kier breder, hoed groter en simpeler. Leg de zes op die maat ook
+  even naast elkaar: twee facties met hetzelfde hoed-silhouet is een fout, geen
+  smaakkwestie. Slibt het bij 32 px (grootboekrij) alsnog dicht, gebruik
+  daar het **bestaande enkele-kop-embleem** uit het pack: die zes blijven dus
+  gewoon liggen als kleine maat.
+- Zelfde regel als bij de modellen: **geen kleur** in de tekening. Team-rood en
+  team-blauw komen uit de UI-laag eromheen, niet uit het embleem.
+
 ## 4. Nieuw model importeren -- stap voor stap
 
 De volledige pijplijn (bewezen op muis base + spd, 8-9 juli). Per model lever

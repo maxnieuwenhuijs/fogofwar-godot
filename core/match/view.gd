@@ -240,12 +240,23 @@ static func _card_link_covered(state: GameState, card: Card, kijker_id: int = -1
 	return true
 
 
+## F4.3e — dé kijkregel voor gedekte pionnen, op één plek: eigen, inactieve
+## en onthulde pionnen zie je altijd; een gedekte vijand ook zodra er een
+## eigen actieve pion naast staat (C13). De view (_pawn_view) en de offline
+## renderer (SessionInterface.pion_gedekt) gebruiken dezelfde functie, zodat
+## het scherm offline exact toont wat de online view zou geven.
+static func pion_gedekt_voor(state: GameState, pawn: Pawn, kijker_id: int) -> bool:
+	if pawn.owner_id == kijker_id or not pawn.is_active or pawn.card_revealed:
+		return false
+	if state != null and _van_dichtbij_gezien(state, pawn, kijker_id):
+		return false
+	return true
+
+
 static func _pawn_view(pawn: Pawn, viewer_id: int, state: GameState = null) -> Dictionary:
 	var d: Dictionary = pawn.to_dict()
-	if pawn.owner_id == viewer_id or not pawn.is_active or pawn.card_revealed:
-		return d  # eigen pionnen en onthulde/inactieve pionnen: alles zichtbaar
-	if state != null and _van_dichtbij_gezien(state, pawn, viewer_id):
-		return d  # er staat een eigen actieve pion naast: je ziet hem gewoon
+	if not pion_gedekt_voor(state, pawn, viewer_id):
+		return d  # eigen, onthulde, inactieve of van dichtbij geziene pion: alles zichtbaar
 	# Gedekte vijandelijke pion: stats worden het "?"-sentinel, de koppeling
 	# verdwijnt. Actief-zijn en type blijven zichtbaar (dat wist je al).
 	for veld in ["current_hp", "max_hp", "remaining_stamina", "max_stamina", "attack_value"]:

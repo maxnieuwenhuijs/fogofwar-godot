@@ -214,7 +214,8 @@ func _stop_phase_timer() -> void:
 
 func _on_phase_timeout() -> void:
 	var ph: int = session.state.phase
-	if Phase.is_define(ph) and session.state.cards_defined[_human_id].size() == 0:
+	if Phase.is_define(ph) and session.state.cards_defined[_human_id].size() == 0 \
+			and Validator.expected_define_count(session.state, _human_id) > 0:
 		if session.state.rules.campaign_actief() and not _card_hand.visible:
 			# CP-bod-overlay stond nog open: zonder inzet door naar de waaier.
 			_overlay.hide()
@@ -224,6 +225,8 @@ func _on_phase_timeout() -> void:
 		_overlay.hide()
 		_update_hud(tr("HUD_TIMEOUT_SPAWN"))
 		session.submit_spawn(_human_id, Validator.aanvul_spawn_actie(session.state, _human_id).spawns)
+		if _ai == null and session.state.phase == Phase.Type.CYCLE_SPAWN:
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
 	elif Phase.is_linking(ph):
 		_auto_link_human = true
 		if session.state.current_player == _human_id:
@@ -817,6 +820,8 @@ func _finish_manual_placement() -> void:
 	_placement_placed = []
 	_build_pawn_views()
 	_refresh_all()
+	if _ai == null and session.state.phase == Phase.Type.PLACEMENT:
+		_update_hud(tr("HUD_WAIT_OPPONENT"))  # F4.3e: online wacht je op de ander
 
 
 func _confirm_placement() -> void:
@@ -826,6 +831,8 @@ func _confirm_placement() -> void:
 	session.submit_default_placement(_human_id)
 	_build_pawn_views()
 	_refresh_all()
+	if _ai == null and session.state.phase == Phase.Type.PLACEMENT:
+		_update_hud(tr("HUD_WAIT_OPPONENT"))  # F4.3e: online wacht je op de ander
 
 
 # --- Setup -------------------------------------------------------------------
@@ -889,6 +896,168 @@ func _on_state_updated(_state: GameState) -> void:
 	if _ai == null:
 		_sync_new_pawn_views()
 		_update_piece_counts()
+
+
+## F4.3e -- een partij tonen vanaf een sessie die de staat al heeft (herstel
+## na een koude start, online). Geen bot: de tegenstander leeft buiten dit
+## proces. Er is bewust geen apart "vers"-pad: elke online start is een
+## herstart, en `-- herstelcheck` bewijst dat dit pad elke fase aankan.
+func _start_vanaf_sessie(sessie: SessionInterface) -> void:
+	_overlay.hide()
+	Engine.time_scale = 1.0
+	_in_hitstop = false
+	_shake_amt = 0.0
+	_dying_views.clear()
+	_advance_holds.clear()
+	_tweening_pawns.clear()
+	_clear_debris(true)
+	_clear_footprints()
+	if _ai_thread != null and _ai_thread.is_started():
+		_ai_thread.wait_to_finish()
+	_ai_thread = null
+	_ai = null
+	if sessie.get_parent() == null:
+		add_child(sessie)
+	session = sessie
+	_human_id = session.local_player_id()
+	_ai_id = Constants.opponent(_human_id)
+	_connect_session_signals()
+	_campaign_mode = true
+	Audio.play_music("music_battle")
+	_toon_fase_vanaf_staat()
+
+
+## F4.3e -- render-vanaf-snapshot: elke fase opbouwbaar uit de staat ALLEEN,
+## zonder events. Het bord was al staatgedreven (_build_pawn_views,
+## _refresh_all); dit is de fase-UI die aan de signals hing: kaartwaaier,
+## CP-bod, onthul-scherm, koppel-ringen, beurt-prompt, wolf-stap,
+## spawn-overlay, einde. Bewust dezelfde functies als de signal-handlers,
+## zodat "live" en "hersteld" hetzelfde scherm geven (-- herstelcheck).
+func _toon_fase_vanaf_staat() -> void:
+	var st: GameState = session.state
+	var me: int = _human_id
+	_human_doctrine = st.doctrine_of(me)
+	_ai_doctrine = st.doctrine_of(_ai_id)
+	_card_hand.visible = false
+	_overlay.hide()
+	_end_wolf_step_mode()
+	_selected_pawn_id = -1
+	_auto_link_human = false
+	_build_pawn_views()
+	_refresh_all()
+	_update_hud()
+	if st.phase == Phase.Type.PRE_GAME:
+		if st.doctrine_commits.has(me):
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		else:
+			_show_doctrine_menu()
+	elif st.phase == Phase.Type.PLACEMENT:
+		if bool(st.placements_done.get(me, false)):
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		else:
+			_show_placement_overlay()
+	elif Phase.is_define(st.phase):
+		if st.cards_defined.get(me, []).size() == 0 and Validator.expected_define_count(st, me) > 0:
+			_open_define_fase()
+		else:
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+	elif Phase.is_reveal(st.phase):
+		if bool(st.reveal_acks.get(me, false)):
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		else:
+			var init: Dictionary = Rules.compute_initiative(st)
+			_toon_reveal(init.totals_p1, init.totals_p2, int(init.winner))
+	elif Phase.is_linking(st.phase):
+		_toon_linking_hand()
+		_highlight_own_unlinked_pawns()
+		_on_turn_changed(st.current_player)
+	elif st.phase == Phase.Type.ACTION:
+		_on_turn_changed(st.current_player)
+		if st.pending_wolf_step_pawn != -1:
+			_on_wolf_step_pending(st.pending_wolf_step_pawn)
+	elif st.phase == Phase.Type.CYCLE_SPAWN:
+		_open_spawn_fase()
+	elif st.phase == Phase.Type.GAME_OVER:
+		_on_game_over(st.winner)
+	else:
+		push_error("_toon_fase_vanaf_staat: %s is nooit een ruststaat" % Phase.to_string_phase(st.phase))
+
+
+## F4.3e -- staat het scherm stil? Geen loop-tweens, ragdolls, opruk-holds,
+## hitstop of een lopende poef-reveal. De herstelcheck vergelijkt pas dan.
+func is_rustig() -> bool:
+	return _tweening_pawns.is_empty() and _dying_views.is_empty() \
+		and _advance_holds.is_empty() and not _in_hitstop \
+		and not _fase_overgang_bezig and not _define_open_bezig \
+		and Time.get_ticks_msec() >= _spawn_reveal_tot_ms + 250
+
+
+## F4.3e -- waar tijdens de 0,9 s "ronde klaar"-pauze (koppelen -> define),
+## en zolang de kaartwaaier op de poef-reveal van verse spawns wacht.
+var _fase_overgang_bezig: bool = false
+var _define_open_bezig: bool = false
+
+
+## F4.3e -- deterministische samenvatting van wat er op het scherm staat, om
+## "live" en "hersteld vanaf een view" te vergelijken. Bewust NIET erin:
+## figurant-rollen (geschiedenis-afhankelijk, cosmetisch), lijken en
+## brokstukken (het view-dieet laat gesneuvelde pionnen weg), de prompt
+## zolang een overlay het scherm domineert (daaronder staat vaak een oude
+## tekst), en de waaier-modus als de waaier onzichtbaar is.
+func render_digest() -> Dictionary:
+	var pawns: Dictionary = {}
+	var ids: Array = _pawn_views.keys()
+	ids.sort()
+	for pid in ids:
+		var pv: PawnView = _pawn_views[pid]
+		if not pv.visible:
+			continue
+		var blokjes := ""
+		var vraagteken := false
+		var bar = _hp_bars.get(pid, null)
+		if bar != null and bar.holder.visible:
+			for b in bar.blocks:
+				blokjes += "1" if (b as ColorRect).color != HP_COLOR_EMPTY else "0"
+			vraagteken = bar.has("qlabel") and bar.qlabel.visible
+		pawns[str(pid)] = {
+			# Halve tegels: een stagger (terugslag-animatie) mag nog uitlopen,
+			# een verkeerde tegel valt er nog steeds uit.
+			"pos": [snappedf(pv.position.x, 0.5), snappedf(pv.position.z, 0.5)],
+			"ring": pv._ring_active,
+			"ring_link": pv._ring_link_state,
+			"gedimd": pv._dimmed,
+			"geselecteerd": pv._selected,
+			"blokjes": blokjes,
+			"vraagteken": vraagteken,
+		}
+	var highlights: Array = []
+	for h in _highlights:
+		highlights.append("%.2f,%.2f" % [h.position.x, h.position.z])
+	highlights.sort()
+	var tegels: Array = []
+	for t in _wolf_step_tiles:
+		tegels.append([t.x, t.y])
+	var overlay_zichtbaar: bool = _overlay != null and _overlay.visible
+	return {
+		"fase": Phase.to_string_phase(session.state.phase),
+		"pawns": pawns,
+		"kaarthand": {
+			"zichtbaar": _card_hand.visible,
+			"modus": _card_hand.phase if _card_hand.visible else -1,
+			"aantal": _card_hand.get_card_views().size() if _card_hand.visible else 0,
+		},
+		"overlay": {
+			"zichtbaar": overlay_zichtbaar,
+			"titel": String(_overlay._title.text) if overlay_zichtbaar else "",
+			"knoppen": _overlay._buttons.get_child_count() if overlay_zichtbaar else 0,
+		},
+		"prompt": "" if overlay_zichtbaar else _prompt_label.text,
+		"topbalk": _top_label.text,
+		"wolf": {"modus": _wolf_step_mode, "tegels": tegels},
+		"highlights": highlights,
+		"timer": _timer_active,
+		"selectie": _selected_pawn_id,
+	}
 
 
 ## Hoornstoot bij een nieuwe cyclus (niet de allereerste — daar loopt de setup al).
@@ -1251,10 +1420,13 @@ func _refresh_all() -> void:
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		pv.set_team_ring_active(pawn.is_active)
 		if Phase.is_linking(state.phase):
-			# Koppel-fase: donkere ring om alles wat nog geen kaart heeft,
-			# felle ring op de gehoverde eigen pion.
-			var lstate: int = 1 if pawn.linked_card_id == -1 else 0
-			if lstate == 1 and pid == _hovered_pawn_id and pawn.owner_id == _human_id:
+			# Koppel-fase: donkere ring om EIGEN pionnen die nog geen kaart
+			# hebben, felle ring op de gehoverde. F4.3e: geen ring op vijandelijke
+			# pionnen, want hun koppelstaat is fog (gedekte Krokodil-pionnen
+			# tonen in de view geen koppeling) en het scherm mag offline niets
+			# laten zien dat online niet bestaat.
+			var lstate: int = 1 if pawn.linked_card_id == -1 and pawn.owner_id == _human_id else 0
+			if lstate == 1 and pid == _hovered_pawn_id:
 				lstate = 2
 			pv.set_ring_link_state(lstate)
 		else:
@@ -1296,7 +1468,9 @@ func _open_define_hand(bonus: int) -> void:
 	# (besluit Max, 27 juli: spawns zien landen vóór de define-fase).
 	var nu: int = Time.get_ticks_msec()
 	if nu < _spawn_reveal_tot_ms:
+		_define_open_bezig = true
 		await get_tree().create_timer(float(_spawn_reveal_tot_ms - nu) / 1000.0 + 0.1).timeout
+		_define_open_bezig = false
 		if session.state == null or not Phase.is_define(session.state.phase):
 			return
 	var doctrine: Dictionary = session.state.doctrine_data_of(_human_id)
@@ -1383,6 +1557,8 @@ func _on_spawn_choice(index: int) -> void:
 		inzet.append({"type": int(_spawn_keuze[i]), "pos": vrij[i]})
 	_spawn_keuze = []
 	session.submit_spawn(_human_id, inzet)
+	if _ai == null and session.state.phase == Phase.Type.CYCLE_SPAWN:
+		_update_hud(tr("HUD_WAIT_OPPONENT"))  # F4.3e: online wacht je op de ander
 
 
 ## F2.4/B3: onder campaign spreekt artillerie CANNON_ACT (roll/shoot).
@@ -1400,7 +1576,20 @@ func _on_define_confirmed(_cards: Array) -> void:
 	_card_hand.visible = false
 	session.submit_define_cards(_human_id, dicts)
 	if _ai == null:
-		return  # F4.3c: online definieert de tegenstander zelf; wij wachten
+		# F4.3c: online definieert de tegenstander zelf; wij wachten (tenzij
+		# de gate al dichtklapte en de fase doorschoof).
+		if Phase.is_define(session.state.phase):
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		return
+	_ai_define_beurt()
+
+
+## De bot definieert (met zijn CP-inzet) zodra de mens klaar is, of meteen als
+## de mens deze ronde niets te definiëren heeft (F4.3e: dan opent er geen lege
+## waaier meer, maar de bot moet wel aan de beurt komen).
+func _ai_define_beurt() -> void:
+	if _ai == null or not Phase.is_define(session.state.phase):
+		return
 	# F2.6 (v4.2): AI-bet op de ronde-3-kaarten (zelfde heuristiek als de arena).
 	var st_ai: GameState = session.state
 	var ai_bet: int = _ai.choose_cp_bet(st_ai)
@@ -1418,6 +1607,13 @@ func _on_define_confirmed(_cards: Array) -> void:
 # --- Reveal (initiatief-bod, v4.1 §4.3-B) -------------------------------------
 
 func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
+	_toon_reveal(t1, t2, initiative_winner)
+
+
+## F4.3e -- het onthul-scherm vanuit de totalen (uit het event, of uit
+## Rules.compute_initiative op een herbouwde staat: dezelfde getallen).
+## UI-assetpack: het scherm toont beide handen als echte kaarten (OnthulScherm).
+func _toon_reveal(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
 	_update_hud(tr("PHASE_REVEAL"))
 	# Trommelroffel bij de onthulling. (initiative-bugel staat nu uit.)
 	Audio.play("reveal")
@@ -1438,6 +1634,8 @@ func _continue_after_reveal() -> void:
 		session.acknowledge_reveal()  # offline: de shim ackt voor beide kanten
 	else:
 		session.submit_ack_reveal(_human_id)  # F4.3c: online alleen de eigen ack
+		if Phase.is_reveal(session.state.phase):
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
 
 
 # --- Linking (mens interactief, AI automatisch) -----------------------------
@@ -1445,11 +1643,38 @@ func _continue_after_reveal() -> void:
 func _begin_human_linking() -> void:
 	_selected_link_card_id = -1
 	_clear_highlights()
+	_toon_linking_hand()
+	_set_turn_prompt(tr("HUD_LINK_PROMPT"), _human_id)
+
+
+## F4.3e -- de koppel-waaier vanuit de STAAT: de onthulde kaarten van deze
+## ronde met hun stats en koppel-vlaggen. Live en hersteld dezelfde bron; de
+## waaier van de define-fase is na een koude start immers weg, en de
+## standaard-drie tonen zou de speler zijn eigen kaarten verkeerd laten zien.
+func _toon_linking_hand() -> void:
+	var st: GameState = session.state
+	var kaarten: Array = st.cards_revealed.get(_human_id, [])
+	if kaarten.is_empty():
+		_card_hand.visible = false
+		return
+	var doctrine: Dictionary = st.doctrine_data_of(_human_id)
+	# UI-assetpack: de kaart draagt embleem en teamkleur; het CP-zegel volgt
+	# uit de stats zelf (som boven het budget = de blinde inzet van die ronde).
+	_card_hand.configure(kaarten.size(), int(doctrine.budget), int(doctrine.speed_max), 0,
+		_human_id, _human_doctrine)
+	var views: Array = _card_hand.get_card_views()
 	var flags: Array = []
-	for card in session.state.cards_revealed[_human_id]:
+	for i in kaarten.size():
+		var card: Card = kaarten[i]
+		if i < views.size():
+			var cv: CardView = views[i]
+			cv.data.hp = card.hp
+			cv.data.stamina = card.stamina
+			cv.data.attack = card.attack
+			cv.set_cp_inzet(card.hp + card.stamina + card.attack > int(doctrine.budget))
+			cv._refresh()
 		flags.append(card.is_linked())
 	_card_hand.open_for_linking(flags)
-	_set_turn_prompt(tr("HUD_LINK_PROMPT"), _human_id)
 
 
 func _on_link_card_picked(index: int) -> void:
@@ -1482,16 +1707,21 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 	_clear_highlights()
 
 
-## Koppel-fase: donkere ring om ALLE nog niet gekoppelde pionnen (beide
-## teams); gekoppelde pionnen tonen hun actieve gloeiende team-ring en
-## hover maakt de ring fel en iets groter (zie _update_hover).
+## Koppel-fase: donkere ring om de EIGEN nog niet gekoppelde pionnen (F4.3e:
+## niet meer om die van de tegenstander, dat is fog); gekoppelde pionnen
+## tonen hun actieve gloeiende team-ring en hover maakt de ring fel en iets
+## groter (zie _update_hover).
 func _highlight_own_unlinked_pawns() -> void:
 	_clear_highlights()
 	for pid in _pawn_views:
 		var pawn: Pawn = session.state.pawns.get(pid)
 		if pawn == null or pawn.is_eliminated:
 			continue
-		(_pawn_views[pid] as PawnView).set_ring_link_state(1 if pawn.linked_card_id == -1 else 0)
+		# F4.3e: alleen EIGEN koppelbare pionnen krijgen de ring. De koppelstaat
+		# van een gedekte vijand is fog (de view wist hem), dus een ring daar
+		# zou offline iets tonen dat online niet bestaat.
+		var koppelbaar: bool = pawn.owner_id == _human_id and pawn.linked_card_id == -1
+		(_pawn_views[pid] as PawnView).set_ring_link_state(1 if koppelbaar else 0)
 
 
 func _auto_link(player_id: int) -> void:
@@ -1528,7 +1758,10 @@ func _animate_link(pawn_id: int) -> void:
 	# Onder de pof: naar het archetype-model wisselen + daar de ready-flourish.
 	var link_pawn: Pawn = session.state.pawns.get(pawn_id)
 	var link_card: Card = null
-	if link_pawn != null and link_pawn.linked_card_id >= 0:
+	# F4.3e: dezelfde gate als _refresh_all. Een gedekte Krokodil-koppeling
+	# van de tegenstander wisselt NIET naar het archetype-model: dat verraadt
+	# de kaart, en de view geeft hem niet.
+	if link_pawn != null and link_pawn.linked_card_id >= 0 and not session.pion_gedekt(pawn_id):
 		link_card = session.state.all_cards.get(link_pawn.linked_card_id)
 	get_tree().create_timer(0.14).timeout.connect(func() -> void:
 		if not is_instance_valid(pv):
@@ -1609,38 +1842,71 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 			# Laat de zojuist gekoppelde pion(nen) even zien vóór de nieuwe ronde.
 			_refresh_all()
 			_update_hud(tr("HUD_ROUND_DONE"))
+			_fase_overgang_bezig = true
 			await get_tree().create_timer(0.9).timeout
+			_fase_overgang_bezig = false
 		if session.state.round_number <= 1:
 			_clear_footprints()  # nieuwe cyclus: vers slagveld
 			_uncouple_cascade()  # gekoppelde stukken poffen snel terug naar base
 		Audio.play("phase_change")  # zachte overgang naar een nieuwe definitie-ronde
-		# F2.6 (v4.2): eerst de blinde CP-inzet (D1), dan de kaartwaaier.
-		var st_def: GameState = session.state
-		if st_def.rules.campaign_actief() and not st_def.cp_bet_done.get(_human_id, false) \
-				and int(st_def.cp.get(_human_id, 0)) > 0 \
-				and Validator.expected_define_count(st_def, _human_id) > 0:
-			_show_cp_overlay()
-		else:
-			_open_define_hand(int(st_def.cp_bets.get(_human_id, 0)))
-		_start_phase_timer(PHASE_TIME_LIMIT)
+		_open_define_fase()
 	elif Phase.is_linking(new_phase):
 		_auto_link_human = false
+		_toon_linking_hand()  # F4.3e: je kaarten staan de hele koppel-fase in beeld
 		_highlight_own_unlinked_pawns()  # ringen meteen aan, niet pas na kaart-klik
 		_start_phase_timer(PHASE_TIME_LIMIT)
 	elif new_phase == Phase.Type.CYCLE_SPAWN:
-		# F2.6 (v4.2): versterkingen - AI dient blind zijn aanvul-inzet in,
-		# de mens kiest via de overlay. Beide binnen -> gelijktijdige reveal.
-		_card_hand.visible = false
-		_refresh_all()
-		_update_hud(tr("PHASE_SPAWN_TITLE"))
-		if _ai != null and not session.state.spawn_done.get(_ai_id, false):
-			session.submit_spawn(_ai_id, _ai.choose_spawn(session.state))
-		if session.state.phase == Phase.Type.CYCLE_SPAWN \
-				and not session.state.spawn_done.get(_human_id, false):
-			_show_spawn_overlay()
-			_start_phase_timer(PHASE_TIME_LIMIT)
+		_open_spawn_fase()
 	else:
 		_card_hand.visible = false
+
+
+## F4.3e -- de define-fase openen vanuit de staat alleen (ook bij herstel).
+## F2.6 (v4.2): eerst de blinde CP-inzet (D1), dan de kaartwaaier.
+func _open_define_fase() -> void:
+	var st_def: GameState = session.state
+	_update_hud()  # topbalk op de nieuwe fase, ook als eerst het CP-bod opent
+	if st_def.cards_defined.get(_human_id, []).size() > 0:
+		# Al gedefinieerd (herstel, of een late fase-overgang): alleen wachten.
+		_card_hand.visible = false
+		if _ai == null:
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		return
+	if Validator.expected_define_count(st_def, _human_id) == 0:
+		# Geen vrije pionnen: deze ronde sla je over (4.1.10-hr). Geen lege
+		# waaier met een bevestigknop die een ongeldige define zou sturen; de
+		# bot komt meteen aan de beurt, online wacht je op de ander.
+		_card_hand.visible = false
+		if _ai != null:
+			_ai_define_beurt()
+		else:
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		return
+	if st_def.rules.campaign_actief() and not st_def.cp_bet_done.get(_human_id, false) \
+			and int(st_def.cp.get(_human_id, 0)) > 0 \
+			and Validator.expected_define_count(st_def, _human_id) > 0:
+		_card_hand.visible = false  # de koppel-waaier van de vorige ronde weg
+		_show_cp_overlay()
+	else:
+		_open_define_hand(int(st_def.cp_bets.get(_human_id, 0)))
+	_start_phase_timer(PHASE_TIME_LIMIT)
+
+
+## F4.3e -- de spawn-fase openen vanuit de staat alleen (ook bij herstel).
+## F2.6 (v4.2): versterkingen - de bot dient blind zijn aanvul-inzet in, de
+## mens kiest via de overlay. Beide binnen -> gelijktijdige reveal.
+func _open_spawn_fase() -> void:
+	_card_hand.visible = false
+	_refresh_all()
+	_update_hud(tr("PHASE_SPAWN_TITLE"))
+	if _ai != null and not session.state.spawn_done.get(_ai_id, false):
+		session.submit_spawn(_ai_id, _ai.choose_spawn(session.state))
+	if session.state.phase == Phase.Type.CYCLE_SPAWN \
+			and not session.state.spawn_done.get(_human_id, false):
+		_show_spawn_overlay()
+		_start_phase_timer(PHASE_TIME_LIMIT)
+	elif _ai == null and session.state.phase == Phase.Type.CYCLE_SPAWN:
+		_update_hud(tr("HUD_WAIT_OPPONENT"))  # eigen inzet staat al: wachten
 
 
 func _on_turn_changed(player_id: int) -> void:
@@ -3215,6 +3481,8 @@ func _phase_label(phase: int) -> String:
 		return tr("PHASE_ACTION")
 	if phase == Phase.Type.GAME_OVER:
 		return tr("PHASE_GAME_OVER")
+	if phase == Phase.Type.CYCLE_SPAWN:
+		return tr("PHASE_SPAWN_TITLE")  # F4.3e: de topbalk kende deze fase niet
 	return ""
 
 

@@ -54,8 +54,8 @@ func submit_placement(player_id: int, placements: Array) -> bool:
 func submit_default_placement(player_id: int) -> bool:
 	return submit_placement(player_id, state.default_placement(player_id))
 
-func submit_define_cards(player_id: int, cards_data: Array) -> bool:
-	return _apply_action(player_id, Actions.make_define_cards(cards_data))
+func submit_define_cards(player_id: int, cards_data: Array, cp_bet: int = 0) -> bool:
+	return _apply_action(player_id, Actions.make_define_cards(cards_data, cp_bet))
 
 ## Per-speler reveal-bevestiging (F0.4b): de fase gaat pas door als beide
 ## spelers geackt hebben. Stil bij weigering (het oude ack-pad was ook stil).

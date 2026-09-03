@@ -1,5 +1,133 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september (later) -- F4.3f: RemoteSession, Transport, LoopbackTransport
+
+De online sessie, headless bewezen tegen een server-in-het-klein die alleen
+JSON-tekst en geredigeerde rijen levert. game.gd is niet aangeraakt.
+
+- `net/transport.gd` (`Transport`): het contract, callback-stijl (geen
+  coroutines: de loopback antwoordt in dezelfde aanroep, de HttpTransport
+  van stap h later, de sessie merkt het verschil niet): `status`, `view`,
+  `acties(seq_expected, action, idem_key)`, `events(after)` en de push
+  `rijen_binnen`. Eén instantie = één identiteit op één match.
+- `net/loopback_transport.gd` (`LoopbackTransport`): één volle GameState
+  in PRE_GAME, het actieprotocol van protocol.md (idem-tabel, seq-check met
+  409 en inhaal, `Validator.is_legal` als 422, `Reducer.apply`), een
+  server-only log in MatchLog-formaat en client-rijen door
+  `View.client_events` én door `JSON.stringify/parse_string` (floats,
+  gesorteerde sleutels: precies wat de echte server geeft). Per stoel een
+  `Eindpunt` (Transport) met een `stil`-vlag om een verbindingsverlies te
+  spelen. Optioneel een bot op de andere stoel (`zet_bot`), die na elke rij
+  zijn legale zetten doet zoals een tegenstander achter de server.
+  `snapshot()/herstel()` voor de resumecheck van stap g.
+- `net/remote_session.gd` (`RemoteSession extends SessionInterface`): één
+  poort `_ontvang` voor alle rijen (push, 200, 409-inhaal, `events`), dedupe
+  op seq, strikt op volgorde; vóór elke rij de view verversen (staat
+  vervangen via `ClientState.uit_view`, `state_updated`), dan de events door
+  `EventCodec` naar de signals. Submits: lokale `Validator`-voorcheck,
+  `Actions.to_dict`, `acties` met een verse idem-key; 409 → inhalen en één
+  herindiening als de actie nog kan; 409 "afgelopen" → status → `game_over`;
+  422 → `error_occurred`. `submit_bet_cp` weigert bewust (F4.2b: online
+  reist de inzet in de define mee, `submit_define_cards(..., cp_bet)`, dat
+  veld zit nu ook in SessionInterface en GameSession met default 0). Hier
+  draait NOOIT `Reducer.apply`.
+- `tests/RemoteSessionTests.gd` (8 tests, in TestRunner en tests.ps1): het
+  contract (dezelfde gescripte partij via GameSession en via twee
+  RemoteSessions op de loopback geeft dezelfde signal-reeks mét argumenten
+  en dezelfde staat op de gesloten fog-lijst; de loopback-server heeft
+  exact de offline staat), de lek-canary op de client-staat (geen
+  vijandelijke pionnen in PLACEMENT, geen vijandelijke kaarten vóór de
+  reveal, nooit vijandelijke saldi), 409-rebase van een verouderde client
+  (één rij, geen fout), idem-herhaling (één rij, `herhaald`), 422 plus de
+  lokale voorcheck en de stoel-check, typed signals na JSON (nergens een
+  float), de einde-route via de status, en de bot op de andere stoel.
+  Alle acht slaagden bij de eerste run.
+
+**Zelf nagelopen, omdat de review-agents uitvielen (maandlimiet van het
+abonnement, drie van drie lezers):** de pomp was met een SYNCHROON transport
+goed, maar met een echt asynchroon transport (stap h: het view-antwoord
+komt later dan de push) speelde `_pomp` een rij af vóórdat de bijbehorende
+view er was, dus op een oude staat. Nu wacht een rij op zijn view
+(`_view_onderweg`) en een gat op zijn inhaal-rijen (`_inhaal_onderweg`); de
+callbacks zetten de pomp weer aan, en met de loopback (antwoord in dezelfde
+aanroep) loopt de lus gewoon door. `_neem_view` schuift `seq` alleen bij de
+koude start vooruit; daarna blijft `seq` de laatst afgespeelde rij, zodat
+elke rij zijn signals krijgt. Twee tests erbij met een `VertraagdTransport`
+(houdt antwoorden vast tot `lever()`): rij wacht op view en het 200-antwoord
+na de push wordt niet dubbel afgespeeld; en een gemiste rij wordt via
+`events(after)` ingehaald en op volgorde afgespeeld. 10 tests, 134 asserts.
+
+Checks: RemoteSessionTests 134 asserts groen, uispel 777 zobrist gelijk,
+opname gelijk, simcheck 0, naadcheck/vosview PASS, herstelcheck 777 PASS,
+volledige suite 1983 asserts groen (0 fouten, 334 s).
+
+
+## 4 september -- F4.3e: render-vanaf-snapshot, offline bewezen
+
+De grootste post van F4.3: elke fase van game.gd opbouwbaar uit de staat
+ALLEEN, zonder events, als het normale startpad van een online partij. En
+bewezen zonder een byte netwerk.
+
+**game.gd.** Drie refactors zonder gedragswijziging (`_open_define_fase`,
+`_toon_reveal`, `_open_spawn_fase`: de fase-UI die aan de signals hing is nu
+aanroepbaar vanuit de staat). Nieuw `_start_vanaf_sessie(sessie)`: geen bot,
+sessie erin, signals overkoppelen, `_toon_fase_vanaf_staat()`. Die laatste
+bouwt per fase het scherm: doctrine-menu of wachten, opstel-overlay of
+wachten, CP-bod/waaier of wachten, onthul-scherm (uit
+`Rules.compute_initiative`, dezelfde getallen als het event) of wachten,
+koppel-waaier + ringen + beurt, actiefase + open wolf-stap, spawn-overlay,
+einde. Plus `render_digest()` (deterministische samenvatting van het scherm)
+en `is_rustig()`.
+
+**`-- herstelcheck [seed] [factie]`** (capture): de live scene speelt zonder
+bot, de mens via het timeout-pad, de tegenstander (L1) buiten game.gd om via
+GameSession, zoals een server. Op elk nieuw moment (fasewissel, beurtwissel,
+eigen commit, open wolf-stap) start een VERSE game.tscn op alleen de
+fog-view van speler 1, door JSON-tekst, en wordt de digest vergeleken.
+Canary: geen hp-blokje met een getal voor een pion die in de view '?' droeg.
+
+**Wat de check aan het licht bracht (en gefixt is):** de koppel-waaier
+kwam uit de define-configuratie (na een koude start toonde hij de standaard
+drie kaarten): nu `_toon_linking_hand()` uit `cards_revealed`, en de waaier
+staat de hele koppel-fase in beeld. De koppel-ringen stonden ook op
+VIJANDELIJKE ongekoppelde pionnen (`_refresh_all` en
+`_highlight_own_unlinked_pawns`): dat verried offline de koppelstaat van
+gedekte Krokodil-pionnen, iets wat de view niet geeft. Nu alleen eigen
+pionnen. De hp-blokjes volgden een andere dekkingsregel dan de view (C13
+"van dichtbij zie je hem" ontbrak offline): `View.pion_gedekt_voor` is nu
+dé regel, voor view én renderer (vosview aangepast). De topbalk kende de
+spawn-fase niet en werd bij het CP-bod niet ververst. Na een eigen commit
+zegt de prompt online nu "Wachten op de tegenstander". Verder twee
+harnas-vlaggen (`_fase_overgang_bezig`, `_define_open_bezig`) zodat
+"rustig" ook de 0,9 s ronde-pauze en de poef-reveal dekt, en posities op
+halve tegels (een stagger mag uitlopen, een verkeerde tegel valt er nog uit).
+
+Uitslag: seed 777 (Krokodil-tegenstander) 131 momenten, seed 4242 (Wolf)
+139 momenten, 0 verschillen, 0 canary, alle fasen van SETUP_1_DEFINE tot
+CYCLE_SPAWN. Niet gedekt door de check: PRE_GAME (offline begint game.gd na
+de keuze; stap g) en het GAME_OVER-scherm (naadcheck dekt het pad, de
+digest niet).
+
+**Uit de review erachteraan (46 agents):** twee bewuste gedragswijzigingen
+in het vs-AI-pad die de uispel/record-meting niet ziet, hier vastgelegd:
+(1) laat de mens in ronde 2/3 het CP-bod verlopen, dan dient de timeout nu
+altijd de standaardverdeling in; voorheen stond de koppel-waaier van de
+vorige ronde nog onder het CP-bod en diende de timeout stilletjes de
+kaarten van de VORIGE ronde opnieuw in (of liep vast als daar een CP-kaart
+tussen zat). (2) heeft de mens deze ronde geen vrije pionnen
+(`expected_define_count` 0, laat in de partij), dan opent er geen lege
+waaier meer met een bevestigknop die een ongeldige define stuurt; de bot
+komt meteen aan de beurt (`_ai_define_beurt`), online wacht je. Verder:
+`_animate_link` zette bij een koppeling van de tegenstander het
+karaktermodel uit de ECHTE kaart, ook voor een gedekte Krokodil-pion (het
+archetype verried de kaart, een offline fog-lek van voor F4): nu door
+dezelfde gate. Na een eigen opstelling online: "wachten". De
+eindvergelijking van de herstelcheck wacht nu ook op een stil scherm.
+
+Checks: herstelcheck 777 en 4242 wolf 0 verschillen, uispel 777 zobrist
+gelijk, opname gelijk, naadcheck/vosview/play/meleecheck PASS, simcheck 0
+afwijkingen, fuzz 30/0, volledige suite 1849 asserts groen (0 fouten).
+
 ## 3 september (middag) -- UI-assetpack ingebouwd (branch ui-assets-pack)
 
 De ontwerper leverde `fogofwar-assets/UI_assets_pack` (91 png's: 7 knoppen

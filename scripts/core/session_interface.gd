@@ -59,7 +59,10 @@ func submit_placement(_player_id: int, _placements: Array) -> bool:
 func submit_default_placement(_player_id: int) -> bool:
 	return _niet_ondersteund("submit_default_placement")
 
-func submit_define_cards(_player_id: int, _cards_data: Array) -> bool:
+## cp_bet (F4.2b/F4.3f): online reist de blinde CP-inzet in de define mee
+## (één rij); offline blijft game.gd een losse submit_bet_cp doen en laat dit
+## op 0, dus het vs-AI-pad verandert niet.
+func submit_define_cards(_player_id: int, _cards_data: Array, _cp_bet: int = 0) -> bool:
 	return _niet_ondersteund("submit_define_cards")
 
 func submit_ack_reveal(_player_id: int) -> bool:
@@ -131,15 +134,16 @@ func naam_van(_player_id: int) -> String:
 	return ""
 
 ## F0.6/F4.3: staat een pion voor MIJ gedekt (Krokodil-schutkleur)? Offline
-## exact de expressie die de hp-blokjes altijd al gebruikten; online komt het
-## '?'-sentinel uit de view.
+## dezelfde kijkregel als de view (View.pion_gedekt_voor, incl. C13: van
+## dichtbij zie je hem); online komt het '?'-sentinel uit de view. Zo toont
+## het scherm offline exact wat de online view zou geven (F4.3e).
 func pion_gedekt(pawn_id: int) -> bool:
 	if state == null:
 		return false
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null:
 		return false
-	return pawn.owner_id != local_player_id() and not pawn.card_revealed
+	return View.pion_gedekt_voor(state, pawn, local_player_id())
 
 ## Online: {enemy_has_chosen, enemy_has_defined, enemy_has_spawned} uit de
 ## view, voor de wachtteksten. Offline leeg: de AI dient altijd meteen in.

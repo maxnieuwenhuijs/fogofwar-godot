@@ -144,8 +144,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
   entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Sinds
   F4.3c ook `-- naadcheck` (game.gd zonder bot: dient nooit iets namens
-  speler 2 in, wacht in elke commit-fase, geen lokale timer zonder klok).
-  Het bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
+  speler 2 in, wacht in elke commit-fase, geen lokale timer zonder klok) en
+  sinds F4.3e `-- herstelcheck [seed] [factie]` (elk moment van een partij
+  een verse scene op alleen de fog-view starten en het scherm vergelijken;
+  777 en `4242 wolf` moeten 0 verschillen geven). Het bouwplan met de vaste
+  regressieset staat in `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
@@ -248,7 +251,31 @@ met `FOW_TEST_DB_URL=mysql://root@127.0.0.1:3316/fogofwar_test` (Godot-pad
 via `GODOT_PAD`). **F4.2b (3 september):** de client-stream is sluitend
 geredigeerd (geen `hash`, geen `cp_bet`; lijst in `View.SERVER_ONLY_EVENTS`,
 Node weigert te starten bij verschil), WS en `/events` alleen met een seat,
-`GET /matches/:id` voor de lobby. Volgende stap: F4.3 (client:
-SessionInterface/LocalSession, RemoteSession + lobby, render-vanaf-snapshot
-op `Agent.reconstruct_state`, camera-flip). De bots zijn na C19/C20 getraind tot een
+`GET /matches/:id` voor de lobby; de CP-inzet reist online als veld `cp_bet`
+op `define_cards` mee (een losse `bet_cp` is een verklappende rij).
+
+**F4.3 (client) is halverwege, 3-4 september; bouwplan in
+`docs/F4.3-bouwplan.md`, stappen a t/m f af, elk een eigen commit:**
+(a) nulmeting `-- uispel`; (b) `SessionInterface` (scripts/core/
+session_interface.gd), GameSession IS de LocalSession, game.gd praat via
+`session`; (c) de bot-naad: alles wat game.gd namens speler 2 deed zit
+achter `_ai != null`, `-- naadcheck`; (d) view +4 publieke sleutels,
+`net/client_state.gd` (`ClientState.uit_view` op `Agent.reconstruct_state`,
+herstelt de id-volgorde want JSON sorteert sleutels), `net/event_codec.gd`,
+`ClientStateTests`; (e) render-vanaf-snapshot: `_toon_fase_vanaf_staat`,
+`_start_vanaf_sessie`, `render_digest`, `-- herstelcheck` (elk moment een
+verse scene op alleen de fog-view, 0 verschillen op 777 en 4242 wolf); (f)
+`net/transport.gd` (callback-contract), `net/loopback_transport.gd` (het
+protocol in-proces, alles door JSON, bot op de andere stoel),
+`net/remote_session.gd` (`RemoteSession`), `RemoteSessionTests` (10 tests,
+incl. asynchroon transport en gat-inhaal). **Volgende stap: g** (game.gd
+speelt via `_start_vanaf_sessie(RemoteSession op loopback)`, seat 2 met
+camera-flip om het bordcentrum, i18n van "Rood (jij)", MULTIPLAYER-knop →
+"Oefenen via de online-weg", `-- resumecheck`); daarna h (HttpTransport,
+identiteit, core-hash-check, `-- nettest`), i (lobby: twee mensen tegen de
+dev-server), j (WS-push, reconnect, OfflineQueue), k (botclient, M3).
+Open besluiten voor Max staan onderaan het bouwplan; tot nu toe zijn de
+defaults genomen (alleen `core_hash` als versiecheck, match-id als
+roomcode, automatische gastnaam). Elke stap eindigt met de vaste
+regressieset uit het bouwplan. De bots zijn na C19/C20 getraind tot een
 plateau; het asset-spoor loopt los van alles en blokkeert niets.

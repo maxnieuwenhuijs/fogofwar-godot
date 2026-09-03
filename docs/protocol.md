@@ -158,6 +158,23 @@ door JSON-tekst heen: dezelfde legale acties als de volle staat in elke
 rustfase van echte partijen, een gesloten lijst van toegestane afwijkingen,
 en een codec-canary over alle client-events van een partij.
 
+## De client (F4.3f)
+
+`net/remote_session.gd` is de online sessie achter `SessionInterface`; zij
+praat via een `Transport` (`net/transport.gd`, callback-stijl: `status`,
+`view`, `acties`, `events`, push `rijen_binnen`). Boekhouding: `seq` is de
+laatst verwerkte client-rij; elke rij (push, 200-antwoord, 409-inhaal,
+`events`) gaat door één poort met dedupe op seq en strikte volgorde; vóór
+het afspelen van een rij wordt de view ververst (staat vervangen), daarna
+gaan de events door `EventCodec` naar de signals. Submits: lokale
+`Validator`-voorcheck, verse `idem_key` per actie, 409 → inhalen en één
+herindiening als de actie nog kan, 409 "De match is afgelopen" → status →
+`game_over`, 422 → `error_occurred`. De client stuurt nooit een losse
+`bet_cp`. `net/loopback_transport.gd` is dezelfde server in-proces (het
+protocol op één GameState, alles door JSON-tekst) voor tests en de
+oefenmodus; `RemoteSessionTests` bewijst dat een partij via de loopback
+signal-voor-signal gelijk is aan een offline partij.
+
 ## Versies
 
 Besluit F4.3d (default, 3 september; omkeerbaar): de client vergelijkt bij
