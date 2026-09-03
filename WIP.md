@@ -1,5 +1,67 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september (later) -- F4.3f: RemoteSession, Transport, LoopbackTransport
+
+De online sessie, headless bewezen tegen een server-in-het-klein die alleen
+JSON-tekst en geredigeerde rijen levert. game.gd is niet aangeraakt.
+
+- `net/transport.gd` (`Transport`): het contract, callback-stijl (geen
+  coroutines: de loopback antwoordt in dezelfde aanroep, de HttpTransport
+  van stap h later, de sessie merkt het verschil niet): `status`, `view`,
+  `acties(seq_expected, action, idem_key)`, `events(after)` en de push
+  `rijen_binnen`. Eén instantie = één identiteit op één match.
+- `net/loopback_transport.gd` (`LoopbackTransport`): één volle GameState
+  in PRE_GAME, het actieprotocol van protocol.md (idem-tabel, seq-check met
+  409 en inhaal, `Validator.is_legal` als 422, `Reducer.apply`), een
+  server-only log in MatchLog-formaat en client-rijen door
+  `View.client_events` én door `JSON.stringify/parse_string` (floats,
+  gesorteerde sleutels: precies wat de echte server geeft). Per stoel een
+  `Eindpunt` (Transport) met een `stil`-vlag om een verbindingsverlies te
+  spelen. Optioneel een bot op de andere stoel (`zet_bot`), die na elke rij
+  zijn legale zetten doet zoals een tegenstander achter de server.
+  `snapshot()/herstel()` voor de resumecheck van stap g.
+- `net/remote_session.gd` (`RemoteSession extends SessionInterface`): één
+  poort `_ontvang` voor alle rijen (push, 200, 409-inhaal, `events`), dedupe
+  op seq, strikt op volgorde; vóór elke rij de view verversen (staat
+  vervangen via `ClientState.uit_view`, `state_updated`), dan de events door
+  `EventCodec` naar de signals. Submits: lokale `Validator`-voorcheck,
+  `Actions.to_dict`, `acties` met een verse idem-key; 409 → inhalen en één
+  herindiening als de actie nog kan; 409 "afgelopen" → status → `game_over`;
+  422 → `error_occurred`. `submit_bet_cp` weigert bewust (F4.2b: online
+  reist de inzet in de define mee, `submit_define_cards(..., cp_bet)`, dat
+  veld zit nu ook in SessionInterface en GameSession met default 0). Hier
+  draait NOOIT `Reducer.apply`.
+- `tests/RemoteSessionTests.gd` (8 tests, in TestRunner en tests.ps1): het
+  contract (dezelfde gescripte partij via GameSession en via twee
+  RemoteSessions op de loopback geeft dezelfde signal-reeks mét argumenten
+  en dezelfde staat op de gesloten fog-lijst; de loopback-server heeft
+  exact de offline staat), de lek-canary op de client-staat (geen
+  vijandelijke pionnen in PLACEMENT, geen vijandelijke kaarten vóór de
+  reveal, nooit vijandelijke saldi), 409-rebase van een verouderde client
+  (één rij, geen fout), idem-herhaling (één rij, `herhaald`), 422 plus de
+  lokale voorcheck en de stoel-check, typed signals na JSON (nergens een
+  float), de einde-route via de status, en de bot op de andere stoel.
+  Alle acht slaagden bij de eerste run.
+
+**Zelf nagelopen, omdat de review-agents uitvielen (maandlimiet van het
+abonnement, drie van drie lezers):** de pomp was met een SYNCHROON transport
+goed, maar met een echt asynchroon transport (stap h: het view-antwoord
+komt later dan de push) speelde `_pomp` een rij af vóórdat de bijbehorende
+view er was, dus op een oude staat. Nu wacht een rij op zijn view
+(`_view_onderweg`) en een gat op zijn inhaal-rijen (`_inhaal_onderweg`); de
+callbacks zetten de pomp weer aan, en met de loopback (antwoord in dezelfde
+aanroep) loopt de lus gewoon door. `_neem_view` schuift `seq` alleen bij de
+koude start vooruit; daarna blijft `seq` de laatst afgespeelde rij, zodat
+elke rij zijn signals krijgt. Twee tests erbij met een `VertraagdTransport`
+(houdt antwoorden vast tot `lever()`): rij wacht op view en het 200-antwoord
+na de push wordt niet dubbel afgespeeld; en een gemiste rij wordt via
+`events(after)` ingehaald en op volgorde afgespeeld. 10 tests, 134 asserts.
+
+Checks: RemoteSessionTests 134 asserts groen, uispel 777 zobrist gelijk,
+opname gelijk, simcheck 0, naadcheck/vosview PASS, herstelcheck 777 PASS,
+volledige suite 1983 asserts groen (0 fouten, 334 s).
+
+
 ## 4 september -- F4.3e: render-vanaf-snapshot, offline bewezen
 
 De grootste post van F4.3: elke fase van game.gd opbouwbaar uit de staat

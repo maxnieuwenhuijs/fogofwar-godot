@@ -59,7 +59,10 @@ func submit_placement(_player_id: int, _placements: Array) -> bool:
 func submit_default_placement(_player_id: int) -> bool:
 	return _niet_ondersteund("submit_default_placement")
 
-func submit_define_cards(_player_id: int, _cards_data: Array) -> bool:
+## cp_bet (F4.2b/F4.3f): online reist de blinde CP-inzet in de define mee
+## (één rij); offline blijft game.gd een losse submit_bet_cp doen en laat dit
+## op 0, dus het vs-AI-pad verandert niet.
+func submit_define_cards(_player_id: int, _cards_data: Array, _cp_bet: int = 0) -> bool:
 	return _niet_ondersteund("submit_define_cards")
 
 func submit_ack_reveal(_player_id: int) -> bool:
