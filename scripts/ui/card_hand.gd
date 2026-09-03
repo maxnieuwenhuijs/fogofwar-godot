@@ -5,17 +5,21 @@ signal define_confirmed(cards: Array[CardData])
 signal card_picked(index: int)
 
 const CARD_VIEW_SCENE := preload("res://scenes/ui/card_view.tscn")
-const CARD_SIZE := Vector2(300, 430)
+## De maat waarin de hand rekent (posities, tussenruimte, overlap): de halve
+## kaart. De kaart zelf tekent op UiAssets.KAART_MAAT (645x989) en wordt met
+## KAART_SCHAAL maal de schaalfactor van de layout getoond.
+const CARD_SIZE := Vector2(322, 494)
+const KAART_SCHAAL := 0.5
 
 ## Definieer-layout: plat naast elkaar (geen waaier, geen overlap)
 @export var fan_rotation_deg: float = 0.0
 @export var fan_x_spacing: float = 340.0
-@export var fan_base_y_factor: float = 0.80
+@export var fan_base_y_factor: float = 0.78
 @export var fan_y_arc: float = 0.0
 ## Koppel-layout (compacte rij onderaan)
 @export var link_y_factor: float = 0.88
 @export var link_spacing: float = 250.0
-@export var link_scale: float = 0.6
+@export var link_scale: float = 0.72
 
 var phase: int = Constants.UiPhase.DEFINE
 var _cards: Array[CardView] = []
@@ -25,6 +29,9 @@ var _selected_index: int = -1
 var _card_count: int = Constants.CARDS_PER_ROUND
 var _budget: int = Constants.STAT_TOTAL
 var _speed_max: int = 0
+# Eigenaar van de hand (teamkleur en embleem op de kaarten); -1 = onbekend.
+var _speler_id: int = -1
+var _doctrine: int = -1
 
 @onready var _cards_root: Control = %Cards
 @onready var _phase_label: Label = %PhaseLabel
@@ -33,6 +40,10 @@ var _speed_max: int = 0
 
 
 func _ready() -> void:
+	# De hand hangt onder de CanvasLayer van het bord; daar komt het
+	# venster-thema van UiThema niet doorheen (alleen via Control/Window-ouders).
+	if theme == null:
+		theme = UiAssets.thema()
 	_build_cards()
 	_confirm_button.pressed.connect(_on_confirm_pressed)
 	# De HUD bovenaan (game.gd) toont fase + prompt; deze balk is dubbelop.
@@ -44,10 +55,16 @@ func _ready() -> void:
 
 ## Stel de hand in op de doctrine van de speler (aantal × budget, Speed-limiet).
 ## F2.6 (v4.2): bonus_kaarten = aantal kaarten met budget+1 (de blinde CP-inzet,
-## D1) - de eerste kaarten in de waaier dragen het extra punt.
-func configure(card_count: int, budget: int, speed_max: int = 0, bonus_kaarten: int = 0) -> void:
+## D1) - de eerste kaarten in de waaier dragen het extra punt en het CP-zegel.
+## speler_id/doctrine: eigenaar voor teamkleur en embleem (-1 = laat staan).
+func configure(card_count: int, budget: int, speed_max: int = 0, bonus_kaarten: int = 0,
+		speler_id: int = -1, doctrine: int = -1) -> void:
 	_budget = budget
 	_speed_max = speed_max
+	if speler_id != -1:
+		_speler_id = speler_id
+	if doctrine != -1:
+		_doctrine = doctrine
 	if card_count != _card_count:
 		_card_count = card_count
 		for card in _cards:
@@ -57,19 +74,29 @@ func configure(card_count: int, budget: int, speed_max: int = 0, bonus_kaarten: 
 	for i in _cards.size():
 		_cards[i].data.budget = _budget + (1 if i < bonus_kaarten else 0)
 		_cards[i].data.speed_max = _speed_max
+		if _speler_id != -1:
+			_cards[i].set_speler(_speler_id)
+		if _doctrine != -1:
+			_cards[i].set_doctrine(_doctrine)
+		_cards[i].set_cp_inzet(i < bonus_kaarten)
+		_cards[i].set_kaart_aantal(card_count)
 
 
 func _build_cards() -> void:
 	for i in _card_count:
 		var card_view: CardView = CARD_VIEW_SCENE.instantiate()
 		card_view.card_index = i
-		card_view.custom_minimum_size = CARD_SIZE
-		card_view.size = CARD_SIZE
-		card_view.pivot_offset = CARD_SIZE * 0.5
+		card_view.custom_minimum_size = UiAssets.KAART_MAAT
+		card_view.size = UiAssets.KAART_MAAT
+		card_view.pivot_offset = UiAssets.KAART_MAAT * 0.5
 		card_view.stats_changed.connect(_on_card_stats_changed)
 		card_view.tapped.connect(_on_card_tapped)
 		card_view.data.budget = _budget
 		card_view.data.speed_max = _speed_max
+		if _speler_id != -1:
+			card_view.set_speler(_speler_id)
+		if _doctrine != -1:
+			card_view.set_doctrine(_doctrine)
 		_cards_root.add_child(card_view)
 		_cards.append(card_view)
 
@@ -85,8 +112,8 @@ func _layout_fan(animate: bool = true) -> void:
 	var count := _cards.size()
 	var cx := screen.x * 0.5
 	var base_y := screen.y * fan_base_y_factor
-	# Dynamisch: bij meer dan 3 kaarten (Muis: 4) kleiner schalen en dichter op
-	# elkaar — maar NOOIT overlappen, anders vangt de buurkaart de +/−-klikken.
+	# Dynamisch: bij meer dan 3 kaarten (Muis: 5) kleiner schalen en dichter op
+	# elkaar, maar NOOIT overlappen, anders vangt de buurkaart de +/- klikken.
 	var scl: float = minf(1.0, (screen.x - 40.0) / (float(count) * (CARD_SIZE.x + 10.0)))
 	var spacing: float = minf(fan_x_spacing, (screen.x - 20.0 - CARD_SIZE.x * scl) / maxf(1.0, float(count - 1)))
 	for i in count:
@@ -99,16 +126,22 @@ func _layout_fan(animate: bool = true) -> void:
 func _layout_linking(animate: bool = true) -> void:
 	var screen := _screen()
 	var count := _cards.size()
+	# Zelfde rem als de waaier: vijf kaarten passen alleen zonder overlap als
+	# schaal en tussenruimte meebuigen (de geselecteerde kaart wordt 4% groter).
+	var scl: float = minf(link_scale, (screen.x - 40.0) / (float(count) * (CARD_SIZE.x * 1.04 + 10.0)))
+	var spacing: float = minf(link_spacing, (screen.x - 20.0 - CARD_SIZE.x * scl) / maxf(1.0, float(count - 1)))
 	for i in count:
 		var t := i - (count - 1) / 2.0
-		var center := Vector2(screen.x * 0.5 + t * link_spacing, screen.y * link_y_factor)
-		_place(_cards[i], center, 0.0, link_scale, animate)
+		var center := Vector2(screen.x * 0.5 + t * spacing, screen.y * link_y_factor)
+		_place(_cards[i], center, 0.0, scl, animate)
 
 
 func _place(card: CardView, center: Vector2, rot: float, scl: float, animate: bool) -> void:
-	card.pivot_offset = CARD_SIZE * 0.5
-	var target_pos := center - CARD_SIZE * 0.5
-	var target_scale := Vector2(scl, scl)
+	# De kaart is 645x989 met de spil in het midden; de hand toont hem op de
+	# halve maat (CARD_SIZE) maal de schaalfactor van de layout.
+	card.pivot_offset = UiAssets.KAART_MAAT * 0.5
+	var target_pos := center - UiAssets.KAART_MAAT * 0.5
+	var target_scale := Vector2.ONE * (scl * KAART_SCHAAL)
 	if animate:
 		var tween := create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_property(card, "position", target_pos, 0.4)
@@ -145,6 +178,8 @@ func _set_phase(new_phase: int) -> void:
 			card.set_selectable(false)
 			card.set_selected_visual(false)
 			card.set_linked(false)
+			card.set_onthuld(false)
+			card.set_verborgen(false)
 	_update_confirm_button()
 
 
@@ -189,6 +224,7 @@ func _on_confirm_pressed() -> void:
 # --- Linking -----------------------------------------------------------------
 
 ## linked_flags: bool per kaart (index-uitgelijnd met de onthulde kaarten).
+## Vrij = SELECTABLE (los lint), gekoppeld = LINKED (kettingzegel, gedimd).
 func open_for_linking(linked_flags: Array) -> void:
 	visible = true
 	phase = Constants.UiPhase.LINKING

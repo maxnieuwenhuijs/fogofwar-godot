@@ -1,5 +1,66 @@
 # Fog of War — Work In Progress & Context
 
+## 3 september (middag) -- UI-assetpack ingebouwd (branch ui-assets-pack)
+
+De ontwerper leverde `fogofwar-assets/UI_assets_pack` (91 png's: 7 knoppen
+met pressed/blocked, kaartkit, 6 emblemen, 30 iconen, 3 panelen, perkament)
+plus de pdf "Fog of war UI direction" (kaartstaten, palet, fonts Roboto Slab
+SemiBold + Rye). Alles zit nu in het spel. Gebouwd in een eigen worktree op
+de branch **`ui-assets-pack`** (basis 8d84e7a = F4.3d), omdat er tegelijk een
+andere sessie aan F4.3e in de hoofdmap werkte; game.gd is daarom bewust
+klein en additief geraakt (preload-constanten, knop-eigenschappen, de body
+van twee menu-functies, extra argumenten aan show_choice, een regel in
+_open_define_hand en _on_cards_revealed). Mergen zodra F4.3e gecommit is.
+
+**Fundament.** `assets/ui/` met de ORIGINELE bestandsnamen (typo's
+`button_2_bloccked`/`Croccodile` worden in code herkend, zodat een nieuwe
+drop gewoon werkt; zie `assets/ui/LEESMIJ.md`). `scripts/ui/ui_assets.gd`
+(`UiAssets`) is de enige plek die bestandsnamen kent: iconen op hun spec-id
+(`icoon("stat-hp")`), emblemen, kaartdelen, 9-patch-knop- en paneelstijlen,
+palet, fonts, en het thema. Autoload `UiThema` legt dat thema over het hele
+spel; schermen kiezen vormen met `theme_type_variation` (KnopGroot/Breed/
+Rood/Rond/Vierkant/Plus/Min, PaneelBalk/Veldtafel/Papier/..., LabelInkt/
+Kop/Cijfer, RichInkt). Widgets: `UiPortret` (embleem in krans in teamkleur),
+`UiIcoonTekst`, `UiFactieKaart` (regimentskaart als knop). Statusbord:
+`-- uicheck`. Suite `UiAssetsTests` (16 tests).
+
+**Bevinding thema-overerving.** Een Godot-thema erft alleen door een keten
+van Control/Window-ouders: het venster-thema kwam NIET aan onder de
+CanvasLayer `$UI` van game.tscn en niet onder de kale Node van capture.tscn
+(alle drie de bouwers liepen er tegenaan). `UiThema` hangt het thema nu ook
+aan elke Control/Window die onder een niet-Control de boom in komt
+(`node_added`); test `test_thema_bereikt_controls_onder_canvaslayer_en_node`.
+
+**Schermen.** Kaarten (`card_view` herbouwd op het 645x989-frame met
+naamplaat, krans+embleem, drie stat-kolommen, +/- knopjes, CP-zegel, en de
+staten EDITABLE/SELECTABLE/SELECTED/LINKED/REVEALED/rug; `_adjust_stat`
+letterlijk behouden, `-- carddist` exact gelijk); bord-HUD (`HudBalk` op
+Frame_1 met fase-icoon en unit/pool/CP-iconen, ronde ?-knop, rode
+opgeef-knop, contextknop); `Overlay` op Frame_2 met brede perkamentknoppen en
+optionele iconen per optie; `FactieKeuzeScherm` (zes regimentskaarten, ook
+voor de tegenstanderkeuze); `EindeScherm`; campagne-hub (veldtafel,
+kopbalk, portretten met teamkrans, feed-kaartjes met teamrand en icoon,
+fasepaneel op Frame_3), grootboek (blad met icoon-kolomkoppen en portretjes),
+bracket, en het helpscherm (Frame_3, tabbladknoppen, inkt-tekst met iconen
+en emblemen via `[img color]`). Onthulscherm: beide handen als echte kaarten
+met REVEALED-stempel (zie hieronder).
+
+**Niet in het pack.** Acht spec-iconen (vote, nomination, donation,
+testament, report, chat, clock, pin): schermen vallen terug op tekst. De
+fonts: Rye en Roboto Slab SemiBold ontbreken; `assets/ui/fonts/` draagt
+Roboto Slab Regular/Bold van deze machine als terugval, het thema pakt de
+bedoelde bestanden vanzelf op zodra ze er staan.
+
+**Checks (in de worktree, na de centrale `--import`):** suites
+UiAssets/Card/GameSession/Campaign/View 733 asserts groen, SoloTests groen
+(bouwer), `-- uicheck` PASS, `-- carddist` exact, `-- uispel 777` zobrist
+`890b6cb4...b97d` met 270 acties (gelijk aan F4.3a), `-- naadcheck` PASS,
+`-- simcheck` 0 afwijkingen, `-- vosview` PASS, `-- shot campaign_hub/ledger/
+bracket` 0 fouten. Schermafbeeldingen van define (3 en 5 kaarten), link,
+reveal, play, tegenstander, placetest, uitleg, hub, grootboek en bracket
+zijn bekeken tegen de pdf. `-- define` klikt nu zelf het CP-bod weg zodat
+de waaier in beeld komt.
+
 ## 3 september (nacht) -- F4.3d: view compleet, ClientState, EventCodec
 
 De engine-kant van de client, zonder een byte netwerk: alles wat nodig is om

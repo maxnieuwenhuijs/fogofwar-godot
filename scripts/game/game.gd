@@ -5,6 +5,13 @@ const BOARD_SCENE := preload("res://Board.tscn")
 const OVERLAY_SCENE := preload("res://scenes/ui/overlay.tscn")
 const INSTRUCTIONS_SCRIPT := preload("res://scripts/ui/instructions.gd")
 const AUTO_AI_SCRIPT := preload("res://scripts/ai/AIMedium.gd")  # timeout-zet voor de mens
+## UI-assetpack (3 september): via preload, zodat game.gd ook parst voordat de
+## klassencache (--import) de class_names HudBalk / FactieKeuzeScherm /
+## EindeScherm kent.
+const HUD_BALK_SCRIPT := preload("res://scripts/ui/match/hud_balk.gd")
+const FACTIE_KEUZE_SCRIPT := preload("res://scripts/ui/match/factie_keuze_scherm.gd")
+const EINDE_SCHERM_SCRIPT := preload("res://scripts/ui/match/einde_scherm.gd")
+const ONTHUL_SCHERM_SCRIPT := preload("res://scripts/ui/match/onthul_scherm.gd")
 const PAWN_Y := 0.05
 
 ## AI difficulty: 0 = Easy, 1 = Medium, 2 = Hard
@@ -91,6 +98,15 @@ var _ai_id: int = Constants.PLAYER_2
 var session: SessionInterface = null
 var _verbonden_sessie: Object = null
 
+## UI-assetpack (3 september): de perkamenten HUD-balk achter de drie labels
+## (scripts/ui/match/hud_balk.gd) en het factie-keuzescherm (regimentskaarten,
+## scripts/ui/match/factie_keuze_scherm.gd), in _ready direct boven de overlay.
+var _hud_balk: HUD_BALK_SCRIPT = null
+var _factie_keuze: FACTIE_KEUZE_SCRIPT = null
+## Het onthulscherm (beide handen als echte kaarten, scripts/ui/match/
+## onthul_scherm.gd): lazy in _on_cards_revealed, direct boven de overlay.
+var _onthul_scherm: ONTHUL_SCHERM_SCRIPT = null
+
 
 func _ready() -> void:
 	session = GameSession
@@ -110,10 +126,14 @@ func _ready() -> void:
 	_overlay = OVERLAY_SCENE.instantiate()
 	$UI.add_child(_overlay)
 	_overlay.hide()
+	_factie_keuze = FACTIE_KEUZE_SCRIPT.new()  # direct boven de overlay, onder uitleg en knoppen
+	$UI.add_child(_factie_keuze)
 	_instructions = INSTRUCTIONS_SCRIPT.new()
 	$UI.add_child(_instructions)
 	_build_help_button()
 	_bouw_context_knop()
+	_hud_balk = HUD_BALK_SCRIPT.new()
+	_hud_balk.bouw_in($UI, _top_label, _prompt_label, _count_label)
 	_hp_layer = Control.new()
 	_hp_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hp_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -140,6 +160,7 @@ func _process(delta: float) -> void:
 			var st: GameState = session.state
 			_top_label.text = tr("HUD_TOPBAR_TIMER") % [
 				st.cycle, st.round_number, _phase_label(st.phase), int(ceil(_timer_left))]
+			if _hud_balk != null: _hud_balk.zet_timer(_timer_left)
 			# Aftel-tik in de laatste 5 sec; de laatste 3 sec tikt dezelfde klok
 			# op dubbel tempo en iets hoger — versnelling i.p.v. een apart geluid.
 			var sec_left: int = int(ceil(_timer_left))
@@ -285,6 +306,7 @@ func _show_difficulty_menu() -> void:
 		tr("MENU_MAIN_BODY"),
 		[tr("MENU_SOLO"), tr("MENU_MULTI"), tr("MENU_RULES_OPTION"), tr("MENU_SETTINGS")],
 		_on_hoofdmenu_choice,
+		Color.WHITE, false, ["act-melee", "", "hidden", ""],
 	)
 
 
@@ -309,7 +331,8 @@ func _show_solo_menu() -> void:
 			elif i == 1:
 				_show_campagne_difficulty()
 			else:
-				_show_difficulty_menu())
+				_show_difficulty_menu(),
+		Color.WHITE, false, ["act-melee", "score", ""])
 
 
 func _show_1v1_difficulty() -> void:
@@ -366,47 +389,59 @@ func _show_rules_overlay(back: Callable) -> void:
 ## "?"-knop rechtsboven: uitleg altijd beschikbaar, ook midden in een potje.
 ## Pauzeert de fase-timer zolang het scherm open staat.
 func _build_help_button() -> void:
+	# UI-assetpack: de knoppenkolom staat NAAST de HUD-balk (x 976..1064).
 	var help := Button.new()
 	help.text = tr("HUD_BTN_HELP")
-	help.custom_minimum_size = Vector2(64, 64)
-	help.add_theme_font_size_override("font_size", 34)
+	help.theme_type_variation = "KnopRond"
+	help.custom_minimum_size = Vector2(88, 88)
+	help.add_theme_font_size_override("font_size", 40)
+	help.focus_mode = Control.FOCUS_NONE
 	help.anchors_preset = Control.PRESET_TOP_RIGHT
 	help.anchor_left = 1.0
 	help.anchor_right = 1.0
-	help.offset_left = -84.0
-	help.offset_right = -20.0
-	help.offset_top = 20.0
-	help.offset_bottom = 84.0
+	help.offset_left = -104.0
+	help.offset_right = -16.0
+	help.offset_top = 12.0
+	help.offset_bottom = 100.0
 	help.pressed.connect(_on_help_pressed)
 	$UI.add_child(help)
 	# "sfeer"-knopje eronder: opent het sfeer-paneel (zelfde als toets L).
 	var sfeer := Button.new()
 	sfeer.text = tr("HUD_BTN_AMBIANCE")
-	sfeer.custom_minimum_size = Vector2(64, 40)
+	sfeer.theme_type_variation = "KnopVierkant"
+	HUD_BALK_SCRIPT.compacte_knop(sfeer, "vierkant", Vector2(88, 60))
 	sfeer.add_theme_font_size_override("font_size", 16)
+	sfeer.focus_mode = Control.FOCUS_NONE
 	sfeer.anchors_preset = Control.PRESET_TOP_RIGHT
 	sfeer.anchor_left = 1.0
 	sfeer.anchor_right = 1.0
-	sfeer.offset_left = -84.0
-	sfeer.offset_right = -20.0
-	sfeer.offset_top = 92.0
-	sfeer.offset_bottom = 132.0
+	sfeer.offset_left = -104.0
+	sfeer.offset_right = -16.0
+	sfeer.offset_top = 106.0
+	sfeer.offset_bottom = 166.0
 	sfeer.modulate = Color(1.0, 1.0, 1.0, 0.55)
 	sfeer.pressed.connect(_toggle_ambiance_panel)
 	$UI.add_child(sfeer)
 	# F0.8: opgeven-knop (RESIGN bestaat sinds F0.4c), onder de sfeer-knop.
 	var geef_op := Button.new()
 	geef_op.text = tr("HUD_BTN_RESIGN")
-	geef_op.custom_minimum_size = Vector2(64, 40)
+	geef_op.theme_type_variation = "KnopRood"
+	HUD_BALK_SCRIPT.compacte_knop(geef_op, "rood", Vector2(88, 60))
+	geef_op.icon = UiAssets.icoon("forfeit")
+	geef_op.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	geef_op.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP  # icoon boven de tekst: past in 88 px
+	geef_op.expand_icon = false
+	geef_op.add_theme_constant_override("icon_max_width", 22)
 	geef_op.add_theme_font_size_override("font_size", 14)
+	geef_op.focus_mode = Control.FOCUS_NONE
 	geef_op.anchors_preset = Control.PRESET_TOP_RIGHT
 	geef_op.anchor_left = 1.0
 	geef_op.anchor_right = 1.0
-	geef_op.offset_left = -84.0
-	geef_op.offset_right = -20.0
-	geef_op.offset_top = 140.0
-	geef_op.offset_bottom = 180.0
-	geef_op.modulate = Color(1.0, 0.85, 0.85, 0.55)
+	geef_op.offset_left = -104.0
+	geef_op.offset_right = -16.0
+	geef_op.offset_top = 172.0
+	geef_op.offset_bottom = 232.0
+	geef_op.modulate = Color(1.0, 1.0, 1.0, 0.6)
 	geef_op.pressed.connect(_on_resign_pressed)
 	$UI.add_child(geef_op)
 
@@ -423,15 +458,17 @@ func _bouw_context_knop() -> void:
 	_context_knop = Button.new()
 	_context_knop.name = "ContextKnop"
 	_context_knop.visible = false
-	_context_knop.custom_minimum_size = Vector2(180, 64)
-	_context_knop.add_theme_font_size_override("font_size", 20)
+	_context_knop.theme_type_variation = "KnopKleinBreed"
+	_context_knop.custom_minimum_size = Vector2(240, 84)
+	_context_knop.add_theme_font_size_override("font_size", 22)
+	_context_knop.focus_mode = Control.FOCUS_NONE
 	_context_knop.anchors_preset = Control.PRESET_BOTTOM_LEFT
 	_context_knop.anchor_top = 1.0
 	_context_knop.anchor_bottom = 1.0
 	_context_knop.offset_left = 20.0
-	_context_knop.offset_top = -84.0
-	_context_knop.offset_right = 200.0
-	_context_knop.offset_bottom = -20.0
+	_context_knop.offset_top = -108.0
+	_context_knop.offset_right = 260.0
+	_context_knop.offset_bottom = -24.0
 	_context_knop.pressed.connect(_on_context_knop)
 	$UI.add_child(_context_knop)
 
@@ -482,26 +519,11 @@ func _after_help_closed() -> void:
 
 
 func _show_doctrine_menu() -> void:
-	var names: Array = []
-	var lines: Array = []
-	# C17: dezelfde facties als de campagne, de trainer en de arena. Lees je
-	# hier de kale tabel uit Constants, dan kiest de speler een leger dat het
-	# potje daarna niet opstelt.
-	var tabel := CRules.actieve_tabel()
-	for doctrine in Constants.DOCTRINE_DATA.keys():
-		var data: Dictionary = tabel.doctrine_data(doctrine)
-		names.append(tr("MENU_DOCTRINE_OPTION") % [
-			Constants.doctrine_display_name(doctrine), int(data.cards), int(data.budget),
-			data.comp[0], data.comp[1], data.comp[2]])
-		lines.append(tr("MENU_DOCTRINE_LINE") % [Constants.doctrine_display_name(doctrine),
-			Constants.doctrine_pro(doctrine), Constants.doctrine_con(doctrine)])
-	_overlay.show_choice(
-		tr("MENU_DOCTRINE_TITLE"),
-		tr("MENU_DOCTRINE_BODY") + "\n\n" + "\n".join(lines),
-		names,
-		_on_doctrine_choice,
-		Color.WHITE, true,
-	)
+	# C17: het keuzescherm leest dezelfde facties als de campagne, de trainer
+	# en de arena (CRules.actieve_tabel()). Index = positie in
+	# Constants.DOCTRINE_DATA.keys(), zoals het oude overlay-menu.
+	_overlay.hide()
+	_factie_keuze.open(tr("MENU_DOCTRINE_TITLE"), tr("HUD_UI_DOCTRINE_UITLEG"), false, _on_doctrine_choice)
 
 
 func _on_doctrine_choice(index: int) -> void:
@@ -513,18 +535,9 @@ func _on_doctrine_choice(index: int) -> void:
 ## regel (v4.1 §4.1: blinde, gelijktijdige keuze); een vaste factie is
 ## handig om te oefenen tegen een specifieke matchup.
 func _show_opponent_menu() -> void:
-	var names: Array = [tr("MENU_OPP_SURPRISE")]
-	var tabel := CRules.actieve_tabel()
-	for key in Constants.DOCTRINE_DATA.keys():
-		var data: Dictionary = tabel.doctrine_data(key)
-		names.append(tr("MENU_OPP_OPTION") % [Constants.doctrine_display_name(key), data.comp[0], data.comp[1], data.comp[2]])
-	_overlay.show_choice(
-		tr("MENU_OPP_TITLE"),
-		tr("MENU_OPP_BODY"),
-		names,
-		_on_opponent_choice,
-		Color.WHITE, true,
-	)
+	# 0 = verrassing, 1.. = positie in Constants.DOCTRINE_DATA.keys() + 1.
+	_overlay.hide()
+	_factie_keuze.open(tr("MENU_OPP_TITLE"), tr("MENU_OPP_BODY"), true, _on_opponent_choice)
 
 
 func _on_opponent_choice(index: int) -> void:
@@ -593,7 +606,7 @@ func _show_placement_overlay() -> void:
 	])
 	_update_hud(tr("PHASE_PLACEMENT"))
 	_overlay.show_choice(tr("PHASE_PLACEMENT"), body, [tr("PHASE_PLACEMENT_MANUAL"), tr("PHASE_PLACEMENT_STANDARD"), tr("MENU_RULES_OPTION")],
-		_on_placement_menu_choice, Color.WHITE, true)
+		_on_placement_menu_choice, Color.WHITE, true, ["phase-setup", "check", "hidden"], "phase-setup")
 
 
 func _on_placement_menu_choice(index: int) -> void:
@@ -1151,10 +1164,10 @@ func _build_health_bars() -> void:
 		qlabel.text = "?"
 		qlabel.visible = false
 		qlabel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		qlabel.add_theme_font_size_override("font_size", 18)
-		qlabel.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
-		qlabel.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-		qlabel.add_theme_constant_override("outline_size", 4)
+		qlabel.add_theme_font_size_override("font_size", 20)
+		qlabel.add_theme_color_override("font_color", UiAssets.WARM_IVOOR)
+		qlabel.add_theme_color_override("font_outline_color", Color(UiAssets.INKT, 0.9))
+		qlabel.add_theme_constant_override("outline_size", 5)
 		qlabel.position = Vector2(HP_COLS * (HP_BLOCK_SIZE + HP_BLOCK_GAP) * 0.5 - 6.0, -4.0)
 		holder.add_child(qlabel)
 		_hp_layer.add_child(holder)
@@ -1254,12 +1267,14 @@ func _show_cp_overlay() -> void:
 	var saldo: int = int(st.cp.get(_human_id, 0))
 	var maximaal: int = mini(saldo, Validator.expected_define_count(st, _human_id))
 	var opties: Array = []
+	var iconen: Array = []
 	for n in maximaal + 1:
 		opties.append(tr("MENU_CP_NONE") if n == 0 else tr("MENU_CP_OPTION") % [n, n])
+		iconen.append("" if n == 0 else "cp")
 	_overlay.show_choice(
 		tr("MENU_CP_TITLE") % saldo,
 		tr("MENU_CP_BODY"),
-		opties, _on_cp_choice, Color.WHITE, true)
+		opties, _on_cp_choice, Color.WHITE, true, iconen, "cp")
 
 
 func _on_cp_choice(index: int) -> void:
@@ -1282,7 +1297,7 @@ func _open_define_hand(bonus: int) -> void:
 	# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
 	# engine deze ronde zelf over en schuift de fase vanzelf door).
 	var kaart_aantal: int = Validator.expected_define_count(session.state, _human_id)
-	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus)
+	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus, _human_id, _human_doctrine)
 	_card_hand.open_for_define()
 	var uitleg := tr("HUD_DEFINE_PROMPT") % [kaart_aantal, int(doctrine.budget)]
 	if bonus > 0:
@@ -1330,7 +1345,8 @@ func _show_spawn_overlay() -> void:
 		opties.append(tr("PHASE_SPAWN_RESET"))
 		acties.append("reset")
 	_spawn_acties = acties
-	_overlay.show_choice(tr("PHASE_SPAWN_TITLE"), body, opties, _on_spawn_choice, Color.WHITE, true)
+	_overlay.show_choice(tr("PHASE_SPAWN_TITLE"), body, opties, _on_spawn_choice, Color.WHITE, true,
+		acties.map(Callable(HUD_BALK_SCRIPT, "spawn_icoon")), "spawn")
 
 
 var _spawn_acties: Array = []
@@ -1394,17 +1410,18 @@ func _on_define_confirmed(_cards: Array) -> void:
 # --- Reveal (initiatief-bod, v4.1 §4.3-B) -------------------------------------
 
 func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
-	var body := tr("PHASE_REVEAL_BODY") % [
-		int(round(float(t1.get("bid", 0.0)) * 100.0)), int(t1.attack), int(t1.stamina),
-		int(round(float(t2.get("bid", 0.0)) * 100.0)), int(t2.attack), int(t2.stamina),
-	]
-	var title := tr("PHASE_REVEAL_TITLE") % _player_name(initiative_winner)
-	var accent := _player_color(initiative_winner)
 	_update_hud(tr("PHASE_REVEAL"))
 	# Trommelroffel bij de onthulling. (initiative-bugel staat nu uit.)
 	Audio.play("reveal")
 	# Audio.play("initiative", 0.6)
-	_overlay.show_choice(title, body, [tr("MENU_CONTINUE")], func(_i: int) -> void: _continue_after_reveal(), accent)
+	# UI-assetpack (3 september): beide handen als echte kaarten op de veldtafel
+	# in plaats van de tekst-overlay; het scherm hangt direct boven de overlay.
+	if _onthul_scherm == null:
+		_onthul_scherm = ONTHUL_SCHERM_SCRIPT.new()
+		$UI.add_child(_onthul_scherm)
+		$UI.move_child(_onthul_scherm, _overlay.get_index() + 1)
+	_onthul_scherm.open(session.state, t1, t2, initiative_winner, _human_id, _player_name,
+		func(_i: int) -> void: _continue_after_reveal(), session)
 
 
 func _continue_after_reveal() -> void:
@@ -2761,13 +2778,15 @@ func _on_game_over(winner_id: int) -> void:
 			[tr("END_BACK_TO_CAMPAIGN")],
 			func(_i: int) -> void:
 				CampaignBridge.rond_af(session.state, winner_id)
-				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
+				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"),
+			UiAssets.team_kleur(winner_id), false, [], EINDE_SCHERM_SCRIPT.win_icoon(session.state, winner_id))
 		return
 	_overlay.show_choice(
 		tr("END_WINNER") % _player_name(winner_id),
 		tr("END_BODY"),
 		[tr("END_NEW_GAME")],
 		func(_i: int) -> void: _show_difficulty_menu(),
+		UiAssets.team_kleur(winner_id), false, [], EINDE_SCHERM_SCRIPT.win_icoon(session.state, winner_id),
 	)
 
 
@@ -2882,12 +2901,11 @@ func _update_piece_counts() -> void:
 	var blue: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
 	var total_red: int = Constants.pawn_total(state.doctrine_of(Constants.PLAYER_1))
 	var total_blue: int = Constants.pawn_total(state.doctrine_of(Constants.PLAYER_2))
-	_count_label.text = "[color=#f07068]● %d/%d[/color]    [color=#5a9cff]● %d/%d[/color]" % [
-		red, total_red, blue, total_blue]
+	_count_label.text = HUD_BALK_SCRIPT.telling_bbcode(red, total_red, blue, total_blue)
 	# F2.6 (v4.2): eigen reserve + CP-saldo (D12: die van de AI blijven geheim).
 	if state.rules.campaign_actief():
-		_count_label.text += tr("HUD_COUNT_RESERVE") % [
-			state.pool_total(_human_id), int(state.cp.get(_human_id, 0))]
+		_count_label.text += HUD_BALK_SCRIPT.reserve_bbcode(
+			state.pool_total(_human_id), int(state.cp.get(_human_id, 0)))
 
 
 func _deselect() -> void:
@@ -3165,6 +3183,7 @@ func _update_hud(prompt: String = "") -> void:
 	if prompt != "":
 		_prompt_label.text = prompt
 		_prompt_label.add_theme_color_override("font_color", Color(0.8, 0.84, 0.92))
+	if _hud_balk != null: _hud_balk.ververs(state.phase, prompt != "")
 
 
 func _phase_label(phase: int) -> String:
@@ -3201,3 +3220,4 @@ func _set_turn_prompt(text: String, player_id: int) -> void:
 	_update_hud()
 	_prompt_label.text = text
 	_prompt_label.add_theme_color_override("font_color", _player_color(player_id))
+	if _hud_balk != null: _hud_balk.zet_beurt(player_id)

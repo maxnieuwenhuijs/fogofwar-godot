@@ -337,7 +337,7 @@ func _ready() -> void:
 		for idx in hand.get_card_views().size():
 			var card: CardView = hand.get_card_views()[idx]
 			var before: int = card.data.hp
-			var plus: Button = card.get_node("Margin/VBox/StatRows/HpRow/HpPlus")
+			var plus: Button = card.get_node("%HpPlus")
 			var center: Vector2 = plus.get_global_transform() * (plus.size * 0.5)
 			_click_at(center)
 			await get_tree().create_timer(0.2).timeout
@@ -1141,6 +1141,13 @@ func _ready() -> void:
 		await get_tree().create_timer(0.2).timeout
 		game._confirm_placement()
 		await get_tree().create_timer(0.6).timeout
+		# v4.2: eerst het CP-bod; klik "geen CP" weg zodat de waaier zelf in
+		# beeld komt (UI-assetpack, 3 september: de kaarten zijn nu het scherm).
+		if Phase.is_define(GameSession.state.phase) and not game._card_hand.visible:
+			game._on_cp_choice(0)
+			await get_tree().create_timer(0.9).timeout
+		print("[DEFINE] fase=%s waaier=%s kaarten=%d" % [Phase.to_string_phase(GameSession.state.phase),
+			str(game._card_hand.visible), game._card_hand.get_card_views().size()])
 		out = "res://_shot_define.png"
 	elif "reveal" in args:
 		var hand: CardHand = game.get_node("UI/CardHand")

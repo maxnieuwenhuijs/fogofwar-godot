@@ -396,3 +396,13 @@ HUB_RESUME_INFO,"You have a campaign in round %d (playing as %s). Continue, or s
 HUB_RESUME_CONTINUE,"Continue campaign","Doorgaan met deze campagne"
 HUB_RESUME_NEW,"Start a new campaign (choose faction)","Nieuwe campagne (kies je factie)"
 UI_FACTION_CARDS,%d cards × budget %d,%d kaarten × budget %d
+CARD_STAT_HP,HP,HP
+CARD_STAT_SPEED,SPEED,SPEED
+CARD_STAT_ATTACK,ATTACK,AANVAL
+CARD_SUBTITLE,"%d cards per round, budget %d","%d kaarten per ronde, budget %d"
+CARD_SUBTITLE_BUDGET,Budget %d,Budget %d
+CARD_CP_SEAL,CP,CP
+HUD_UI_DOCTRINE_UITLEG,"Locked in for the whole match. After this you pick your opponent.","Vast voor de hele partij. Hierna kies je de tegenstander."
+HUD_UI_RESERVE_TEKST,"Reserve %d · CP %d","Reserve %d · CP %d"
+REVEAL_UI_BOD,bid %d%% · attack %d · speed %d,bod %d%% · aanval %d · speed %d
+REVEAL_UI_UITLEG,"The highest attack bid takes the initiative: that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief: die speler koppelt én handelt straks als eerste."

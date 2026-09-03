@@ -1,13 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://c8cardhand001"]
+[gd_scene load_steps=2 format=3 uid="uid://c8cardhand001"]
 
 [ext_resource type="Script" path="res://scripts/ui/card_hand.gd" id="1_script"]
-
-[sub_resource type="StyleBoxFlat" id="confirm"]
-bg_color = Color(0.22, 0.55, 0.32, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
 
 [node name="CardHand" type="Control"]
 layout_mode = 3
@@ -40,6 +33,7 @@ grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="PhaseLabel" type="Label" parent="BottomBar"]
 unique_name_in_owner = true
@@ -51,7 +45,6 @@ horizontal_alignment = 1
 [node name="HintLabel" type="Label" parent="BottomBar"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.81, 0.88, 1)
 theme_override_font_sizes/font_size = 20
 text = "Verdeel 7 punten (min. 1 per stat)."
 horizontal_alignment = 1
@@ -59,9 +52,9 @@ autowrap_mode = 2
 
 [node name="ConfirmButton" type="Button" parent="BottomBar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 64)
+custom_minimum_size = Vector2(460, 100)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("confirm")
+theme_type_variation = &"KnopBreed"
+theme_override_font_sizes/font_size = 30
 text = "Bevestigen"

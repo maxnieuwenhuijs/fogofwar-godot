@@ -168,3 +168,28 @@ func test_icoon_rect_is_getint_en_houdt_aspect() -> void:
 	var leeg := UiAssets.icoon_rect("clock", 32)
 	assert_false(leeg.visible, "ontbrekend icoon: rect onzichtbaar")
 	leeg.free()
+
+
+func test_thema_bereikt_controls_onder_canvaslayer_en_node() -> void:
+	# Bevinding 3 september: een thema erft alleen door Control/Window-ouders.
+	# UiThema hangt het daarom aan elke Control die onder een CanvasLayer of
+	# kale Node de boom in komt (zoals $UI in game.tscn en capture.tscn).
+	var verwacht: StyleBox = UiAssets.thema().get_stylebox("normal", "Button")
+	var laag := CanvasLayer.new()
+	var knop := Button.new()
+	laag.add_child(knop)
+	_runner.add_child(laag)
+	assert_true(knop.get_theme_stylebox("normal") == verwacht, "knop onder CanvasLayer krijgt de perkamentstijl")
+	var kaal := Node.new()
+	var paneel := PanelContainer.new()
+	var label := Label.new()
+	paneel.add_child(label)
+	kaal.add_child(paneel)
+	_runner.add_child(kaal)
+	assert_true(paneel.get_theme_stylebox("panel") == UiAssets.thema().get_stylebox("panel", "PanelContainer"),
+		"paneel onder kale Node krijgt het kaartje")
+	assert_eq(label.get_theme_color("font_color"), UiAssets.WARM_IVOOR, "label erft via het paneel")
+	assert_true(UiThema.is_thema_wortel(knop), "knop onder CanvasLayer is een thema-wortel")
+	assert_false(UiThema.is_thema_wortel(label), "label onder een Control is dat niet")
+	laag.queue_free()
+	kaal.queue_free()
