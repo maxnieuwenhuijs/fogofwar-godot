@@ -332,3 +332,47 @@ The 6 faction emblems and the ~12 quick-chat chips are separate deliverables
 Rules that stay in force: monochrome first (colour variant allowed), every
 state differs by shape as well as colour, hidden information is always the
 `hidden` seal and never an empty value.
+
+---
+
+## Delivered (3 September 2026) -- the first asset pack, wired in
+
+The designer's `UI_assets_pack` (+ the "Fog of war UI direction" pdf) lives
+under `assets/ui/` with the original file names. Code never touches paths:
+`scripts/ui/ui_assets.gd` (`UiAssets`) maps every concept to its file, the
+autoload `UiThema` applies the theme game-wide, and `-- uicheck` prints the
+status board.
+
+| spec id | file | | spec id | file |
+|---|---|---|---|---|
+| stat-hp | hp.png | | act-melee | melee.png |
+| stat-speed | speed.png | | act-shot | shot.png |
+| stat-attack | attack.png | | act-move | move.png |
+| pool | reinforcement_pool.png | | act-charge | charge.png |
+| cp | command_points.png | | act-wolfstep | wolf_step.png |
+| score | campaign_points.png | | act-roll | cannon_roll.png |
+| alive | alive.png | | act-fire | cannon_fire.png |
+| dead | dead.png | | act-retreat | cannon_retreat.png |
+| initiative | initiative.png | | unit-infantry | infantry.png |
+| hidden | hidden.png | | unit-cavalry | cavalry.png |
+| phase-setup | setup.png | | unit-artillery | artillery.png |
+| phase-define | define.png | | spawn | spawn.png |
+| phase-reveal | reveal.png | | win-harbor | Victory.png |
+| phase-link | link.png | | draw | draw.png |
+| (extra) check | Check_icon.png | | forfeit | forfeit.png |
+
+**Not delivered yet (8 of 37):** vote, nomination, donation, testament,
+report, chat, clock, pin. Screens fall back to text there; drop the png in
+`assets/ui/icons/`, add the name to `UiAssets.ICONEN` and remove the id from
+`UiAssets.NOG_NIET_GELEVERD`.
+
+**Also delivered:** 6 emblems (Pig, Mouse, Lion, Bear, Wolf, Croccodile),
+the card kit (frame, two backs, red/blue ribbons, linked ribbons, REVEALED
+stamps, CP seals, laurel wreaths in black/red/blue, name plate, spec
+columns, +/- buttons), 7 button styles with pressed/blocked states, the wax
+check toggle, 3 panel frames and a parchment texture.
+
+**Fonts:** the pdf specifies Roboto Slab SemiBold (text) and Rye Regular
+(numbers). Neither is in the pack; `assets/ui/fonts/` carries Roboto Slab
+Regular + Bold as a fallback. Drop the two intended files in and the theme
+picks them up.

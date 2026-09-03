@@ -57,7 +57,7 @@ Per bouwplan-onderdeel: wat er al staat, wat er mist. Status: ✅ = staat er, �
 | **Meta (§9)** | ❌ | — | Glicko/seizoenen/leagues/leaderboards/matchmaking: alles nog papier |
 | **Tests (§11)** | 🟡 | Eigen headless runner met exit-codes (CI-klaar); 111 tests / ~310 asserts (waarvan 67 Rules-tests); alle regels van v4.1-hr gedekt | Geen serialisatie-, replay-, determinisme-, view-lek- of campagne-tests; geen CI-pipeline; tests gebruiken privé-API's (`_spawn_pawn`) |
 | **Client/UI (§4)** | 🟡 | Volledige 3D mens-vs-AI-loop met opstelling/kaarten/koppelen/combat-feel/SFX/muziek; mobile-portrait viewport | game.gd = 2381-regel monoliet die beide kanten speelt; hardcoded P1-perspectief; geen touch-knoppen voor rechtermuis-acties; geen render-vanaf-snapshot; campagneschermen bestaan niet |
-| **Assets** | 🟡 | Model-pipeline bewezen end-to-end (Muis-infanterie 100% af incl. gibs/gore/team-textures); geluid vrijwel compleet | Overige facties/archetypes door de pipeline (loopt parallel, blokkeert dit plan niet) |
+| **Assets** | 🟡 | Model-pipeline bewezen end-to-end (Muis-infanterie 100% af incl. gibs/gore/team-textures); geluid vrijwel compleet; **UI-assetpack ingebouwd (3 september): `assets/ui/` + `UiAssets` + thema-autoload, kaarten/HUD/menu's/hub/grootboek/uitleg in de stijl van de ontwerper** | Overige facties/archetypes door de pipeline (loopt parallel, blokkeert dit plan niet); 8 campagne-iconen en de fonts Rye/Roboto Slab SemiBold nog te leveren |
 
 ### 1b. Vijf bevindingen die het plan sturen
 

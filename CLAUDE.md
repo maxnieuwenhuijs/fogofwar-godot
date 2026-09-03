@@ -160,6 +160,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   zie je wat er ligt, wat mist, en de ElevenLabs-prompt om te kopieren. Een
   factie telt als gedekt zodra alle vijf de archetype-varianten er zijn (dan
   wordt de factie-categorie nooit bereikt).
+- **UI-assetpack nakijken: `-- uicheck`** (statusbord van de UI-assets onder
+  `assets/ui/`: elk icoon-id uit `docs/design/UI-SPEC-EN.md` met zijn bestand,
+  de zes emblemen, de kaartdelen, elke knop- en paneelstijl met 9-patch-marge,
+  de fonts per rol (bedoeld of terugval), en of het thema en de widgets
+  bouwen; exit 1 als er iets ontbreekt). Alles wat een scherm nodig heeft komt
+  uit `scripts/ui/ui_assets.gd` (`UiAssets`); de autoload `UiThema` legt het
+  thema over het hele spel en schermen kiezen vormen met
+  `theme_type_variation` (lijst bij THEMA-VARIANTEN in dat bestand). Nieuwe
+  png's onder `assets/ui/` eerst `--import`-en. Zie `assets/ui/LEESMIJ.md`.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek
@@ -180,7 +189,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
 ## Mappen (30 juli)
 
-`assets/models/<factie>/{infantry,weapons,source-textures}/` en
+`assets/ui/{buttons,cards,emblems,icons,fonts,texture}/` (de UI-assetpack, zie
+`assets/ui/LEESMIJ.md`), `assets/models/<factie>/{infantry,weapons,source-textures}/` en
 `sounds/{firing,impact,death,falling,movement,selection,cards,game,ui,factions/<factie>}/`.
 Het spel zoekt assets op **bestandsnaam** via `scripts/core/bestandsindex.gd`,
 niet op pad: submappen bijmaken of dingen verschuiven mag. Teamkleur-png's
