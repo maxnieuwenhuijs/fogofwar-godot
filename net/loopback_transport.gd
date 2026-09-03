@@ -30,6 +30,7 @@ var _idem: Dictionary = {}
 var _eindpunten: Dictionary = {}
 var _bot: Agent = null
 var _bot_seat: int = 0
+var _bot_doctrine: int = -1
 var _bot_bezig: bool = false
 
 
@@ -49,9 +50,10 @@ func voor_seat(seat: int) -> Transport:
 ## Een bot op een stoel: hij handelt na elke rij zolang hij legale zetten
 ## heeft (commit-fasen én zijn eigen beurten), net als een tegenstander die
 ## achter de server meespeelt. `start()` laat hem meteen beginnen.
-func zet_bot(seat: int, agent: Agent, seed_val: int = 0) -> void:
+func zet_bot(seat: int, agent: Agent, seed_val: int = 0, doctrine: int = -1) -> void:
 	_bot = agent
 	_bot_seat = seat
+	_bot_doctrine = doctrine  # -1 = de bot kiest zelf (willekeurig, geseed)
 	agent.player_id = seat
 	agent.rng = SeededRng.new(seed_val).fork("loopback_bot")
 
@@ -164,6 +166,8 @@ func _bot_zetten() -> void:
 		if legal.is_empty():
 			break
 		var actie: Dictionary = _bot.decide(View.for_player(state, _bot_seat), legal, _bot.rng)
+		if state.phase == Phase.Type.PRE_GAME and _bot_doctrine >= 0:
+			actie = Actions.make_choose_doctrine(_bot_doctrine)
 		if actie.is_empty():
 			actie = legal[0]
 		var uit: Dictionary = post_actie(_bot_seat, seq, Actions.to_dict(actie), _uuid())

@@ -147,8 +147,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   speler 2 in, wacht in elke commit-fase, geen lokale timer zonder klok) en
   sinds F4.3e `-- herstelcheck [seed] [factie]` (elk moment van een partij
   een verse scene op alleen de fog-view starten en het scherm vergelijken;
-  777 en `4242 wolf` moeten 0 verschillen geven). Het bouwplan met de vaste
-  regressieset staat in `docs/F4.3-bouwplan.md`.
+  777 en `4242 wolf` moeten 0 verschillen geven), en sinds F4.3g
+  `-- play online [2]`, `-- vosview online [2]` en `-- resumecheck [seed]
+  [seat]` (dezelfde koude herstart, maar op de online-weg: RemoteSession op
+  een loopback met bot; `777 1` en `4242 2` moeten 0 verschillen geven over
+  alle veertien fasen). Het bouwplan met de vaste regressieset staat in
+  `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
@@ -258,12 +262,14 @@ verse scene op alleen de fog-view, 0 verschillen op 777 en 4242 wolf); (f)
 `net/transport.gd` (callback-contract), `net/loopback_transport.gd` (het
 protocol in-proces, alles door JSON, bot op de andere stoel),
 `net/remote_session.gd` (`RemoteSession`), `RemoteSessionTests` (10 tests,
-incl. asynchroon transport en gat-inhaal). **Volgende stap: g** (game.gd
-speelt via `_start_vanaf_sessie(RemoteSession op loopback)`, seat 2 met
-camera-flip om het bordcentrum, i18n van "Rood (jij)", MULTIPLAYER-knop →
-"Oefenen via de online-weg", `-- resumecheck`); daarna h (HttpTransport,
-identiteit, core-hash-check, `-- nettest`), i (lobby: twee mensen tegen de
-dev-server), j (WS-push, reconnect, OfflineQueue), k (botclient, M3).
+incl. asynchroon transport en gat-inhaal); (g) game.gd speelt via de
+online-weg: MULTIPLAYER → "Oefenen via de online-weg (als rood / als
+blauw)" op een loopback met L1-bot, `_start_online`, camera-flip voor
+seat 2, namen per seat, CP-inzet in de define, `-- resumecheck` groen op
+beide stoelen over alle fasen. **Volgende stap: h** (HttpTransport,
+identiteit in `user://identity.cfg`, core-hash-check, polling,
+`-- nettest`), dan i (lobby: twee mensen tegen de dev-server), j (WS-push,
+reconnect, OfflineQueue), k (botclient, M3).
 Open besluiten voor Max staan onderaan het bouwplan; tot nu toe zijn de
 defaults genomen (alleen `core_hash` als versiecheck, match-id als
 roomcode, automatische gastnaam). Elke stap eindigt met de vaste

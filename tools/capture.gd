@@ -1150,6 +1150,67 @@ func _ready() -> void:
 			await get_tree().create_timer(0.4).timeout
 		print("[LINK] fase=%s beurt=%d" % [Phase.to_string_phase(GameSession.state.phase), GameSession.state.current_player])
 		out = "res://_shot_link.png"
+	elif "online" in args and ("play" in args or "vosview" in args):
+		# F4.3g — `-- play online [2]` / `-- vosview online [2]`: het spel via de
+		# online-weg (RemoteSession op een loopback met een L1-bot), als seat 1 of
+		# seat 2 (bord gedraaid). Speelt tot de actiefase; vosview eist bovendien
+		# dat gedekte pionnen '?' tonen (bot = Krokodil).
+		var o_seat: int = 2 if "2" in args else 1
+		var vos: bool = "vosview" in args
+		var o_lb := LoopbackTransport.new(game._potje_regels())
+		o_lb.zet_bot(Constants.opponent(o_seat), AgentL1.new(), 4242, Constants.Doctrine.VOS if vos else -1)
+		o_lb.start()
+		var o_sessie := RemoteSession.new(o_lb.voor_seat(o_seat), o_seat)
+		game._start_online(o_sessie)
+		await get_tree().create_timer(0.3).timeout
+		var o_stappen := 0
+		while o_lb.state.phase != Phase.Type.ACTION and o_lb.state.phase != Phase.Type.GAME_OVER and o_stappen < 400:
+			o_stappen += 1
+			_online_drijf_mens(game, o_lb, o_seat)
+			await get_tree().create_timer(0.05).timeout
+		await get_tree().create_timer(0.5).timeout
+		await get_tree().process_frame
+		var o_fouten := 0
+		var levend := 0
+		for pawn in o_lb.state.pawns.values():
+			if not pawn.is_eliminated:
+				levend += 1
+		if o_lb.state.phase != Phase.Type.ACTION:
+			o_fouten += 1
+			print("[ONLINE] FOUT: geen actiefase bereikt (%s)" % Phase.to_string_phase(o_lb.state.phase))
+		if game._pawn_views.size() != levend:
+			o_fouten += 1
+			print("[ONLINE] FOUT: %d pionnen op het bord, %d in de partij" % [game._pawn_views.size(), levend])
+		if game._human_id != o_seat or game._ai != null:
+			o_fouten += 1
+			print("[ONLINE] FOUT: mens is %d (verwacht %d), bot in game.gd: %s" % [game._human_id, o_seat, str(game._ai != null)])
+		if vos:
+			var gedekt := 0
+			game._update_health_bars()
+			for pawn in game.session.state.pawns.values():
+				var entry = game._hp_bars.get(pawn.id, null)
+				if entry == null or not entry.has("qlabel"):
+					continue
+				var hoort: bool = game.session.pion_gedekt(pawn.id)
+				if hoort:
+					gedekt += 1
+					if not entry.qlabel.visible:
+						o_fouten += 1
+						print("[ONLINE] FOUT: gedekte pion %d toont geen '?'" % pawn.id)
+				elif entry.qlabel.visible and pawn.owner_id == o_seat:
+					o_fouten += 1
+					print("[ONLINE] FOUT: eigen pion %d toont '?'" % pawn.id)
+			if gedekt == 0:
+				o_fouten += 1
+				print("[ONLINE] FOUT: geen enkele gedekte pion om te controleren")
+			print("[ONLINE] vosview: gedekte pionnen gecheckt=%d" % gedekt)
+		print("[ONLINE] %s seat=%d fase=%s stappen=%d camera=%s" % ["PASS" if o_fouten == 0 else "FAIL", o_seat,
+			Phase.to_string_phase(o_lb.state.phase), o_stappen, str(game._camera.position)])
+		var otex := get_viewport().get_texture()
+		if otex != null and otex.get_image() != null:
+			otex.get_image().save_png("res://_shot_play_online.png")
+		get_tree().quit(0 if o_fouten == 0 else 1)
+		return
 	elif "vosview" in args:
 		# F0.6-check: speel tot de actiefase tegen een Krokodil-AI en assert dat
 		# de HP-blokjes van gedekte vijandelijke pionnen het "?"-sentinel tonen
@@ -1276,6 +1337,75 @@ func _ready() -> void:
 		mc_alles_ok = mc_alles_ok and mc_charge_ok
 		print("[MELEE] " + ("PASS" if mc_alles_ok else "FAIL"))
 		get_tree().quit(0 if mc_alles_ok else 1)
+		return
+	elif "resumecheck" in args:
+		# F4.3g — de koude herstart op de ONLINE-weg (masterplan-M3 zonder
+		# netwerk): game.gd speelt via een RemoteSession op een loopback met een
+		# L1-bot; op elk nieuw moment start een verse game.tscn met een verse
+		# RemoteSession op dezelfde loopback (alleen de view) en wordt het scherm
+		# vergeleken. Gebruik: -- resumecheck [seed] [seat]
+		var ri2 := args.find("resumecheck")
+		var r_seed: int = int(args[ri2 + 1]) if args.size() > ri2 + 1 else 777
+		var r_seat: int = int(args[ri2 + 2]) if args.size() > ri2 + 2 else 1
+		seed(r_seed)
+		var r_lb := LoopbackTransport.new(game._potje_regels())
+		r_lb.zet_bot(Constants.opponent(r_seat), AgentL1.new(), r_seed)
+		r_lb.start()
+		game._start_online(RemoteSession.new(r_lb.voor_seat(r_seat), r_seat))
+		await get_tree().create_timer(0.3).timeout
+		var r_momenten := 0
+		var r_verschillen := 0
+		var r_canary := 0
+		var r_sleutel := ""
+		var r_acties := 0
+		var r_t0 := Time.get_ticks_msec()
+		var r_fasen: Dictionary = {}
+		while r_lb.state.phase != Phase.Type.GAME_OVER and r_acties < 240 \
+				and Time.get_ticks_msec() - r_t0 < 15 * 60 * 1000:
+			var rw := 0
+			while not game.is_rustig() and rw < 600:
+				rw += 1
+				await get_tree().create_timer(0.05).timeout
+			await get_tree().create_timer(0.35).timeout
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var rs: GameState = r_lb.state
+			var sleutel := "%s|%d|%d|%d|%d|%s|%s|%s|%s|%s" % [Phase.to_string_phase(rs.phase), rs.cycle,
+				rs.round_number, rs.current_player, rs.pending_wolf_step_pawn,
+				str(rs.doctrine_commits.has(r_seat)), str(rs.placements_done.get(r_seat, false)),
+				str(rs.cards_defined.get(r_seat, []).size() > 0), str(rs.reveal_acks.get(r_seat, false)),
+				str(rs.spawn_done.get(r_seat, false))]
+			if sleutel != r_sleutel:
+				r_sleutel = sleutel
+				r_momenten += 1
+				r_fasen[rs.phase] = true
+				var ru: Dictionary = await _resume_vergelijk(game, r_lb, r_seat, r_momenten)
+				r_verschillen += int(ru.verschillen)
+				r_canary += int(ru.canary)
+			if r_lb.state.phase == Phase.Type.GAME_OVER:
+				break
+			if _online_drijf_mens(game, r_lb, r_seat):
+				r_acties += 1
+			else:
+				await get_tree().create_timer(0.1).timeout
+		var rwe := 0
+		while not game.is_rustig() and rwe < 600:
+			rwe += 1
+			await get_tree().create_timer(0.05).timeout
+		await get_tree().create_timer(0.5).timeout
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var r_eind: Dictionary = await _resume_vergelijk(game, r_lb, r_seat, r_momenten + 1)
+		r_verschillen += int(r_eind.verschillen)
+		r_canary += int(r_eind.canary)
+		r_fasen[r_lb.state.phase] = true
+		var r_lijst: Array = []
+		for f in r_fasen:
+			r_lijst.append(Phase.to_string_phase(f))
+		var r_ok: bool = r_verschillen == 0 and r_canary == 0 and r_momenten >= 8
+		print("[RESUME] %s: seed=%d seat=%d momenten=%d verschillen=%d canary=%d acties=%d fasen=%s" % [
+			"PASS" if r_ok else "FAIL", r_seed, r_seat, r_momenten + 1, r_verschillen, r_canary, r_acties, ", ".join(r_lijst)])
+		get_tree().quit(0 if r_ok else 1)
 		return
 	elif "herstelcheck" in args:
 		# F4.3e — render-vanaf-snapshot, offline bewezen (masterplan-M3 zonder
@@ -2872,3 +3002,65 @@ func _herstel_zet(game: Node, bot: Agent) -> bool:
 	if actie.is_empty():
 		actie = legal[0]
 	return GameSession._apply_action(2, actie)
+
+
+## F4.3g -- één stap van de mens op de online-weg, via dezelfde UI-paden als
+## een echte speler (keuze-menu, opstel-knop, onthul-knop, timeout-pad). De
+## bot in de loopback handelt zelf. Geeft true als er iets is ingediend.
+func _online_drijf_mens(game: Node, lb: LoopbackTransport, seat: int) -> bool:
+	var st: GameState = lb.state
+	if st.phase == Phase.Type.PRE_GAME:
+		if not st.doctrine_commits.has(seat):
+			var keuze: int = Constants.DOCTRINE_DATA.keys().find(Constants.Doctrine.MUIS)
+			game._on_doctrine_choice(maxi(keuze, 0))
+			return true
+	elif st.phase == Phase.Type.PLACEMENT:
+		if not bool(st.placements_done.get(seat, false)):
+			game._confirm_placement()
+			return true
+	elif Phase.is_define(st.phase):
+		if st.cards_defined.get(seat, []).size() == 0 and Validator.expected_define_count(st, seat) > 0:
+			game._on_phase_timeout()
+			return true
+	elif Phase.is_reveal(st.phase):
+		if not bool(st.reveal_acks.get(seat, false)):
+			game._continue_after_reveal()
+			return true
+	elif Phase.is_linking(st.phase) or st.phase == Phase.Type.ACTION:
+		if st.current_player == seat:
+			game._on_phase_timeout()
+			return true
+	elif st.phase == Phase.Type.CYCLE_SPAWN:
+		if not bool(st.spawn_done.get(seat, false)):
+			game._on_phase_timeout()
+			return true
+	return false
+
+
+## F4.3g -- één moment op de online-weg vergelijken: het live scherm tegen
+## een verse scene met een verse RemoteSession op dezelfde loopback (alleen
+## de view, door JSON).
+func _resume_vergelijk(game: Node, lb: LoopbackTransport, seat: int, moment: int) -> Dictionary:
+	var live: Dictionary = game.render_digest()
+	var vers: Node = load("res://scenes/game/game.tscn").instantiate()
+	add_child(vers)
+	await get_tree().process_frame
+	vers._start_online(RemoteSession.new(lb.voor_seat(seat), seat))
+	await get_tree().create_timer(0.3).timeout
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var hersteld: Dictionary = vers.render_digest()
+	var fouten: Array = _digest_verschillen(live, hersteld)
+	var canary := 0
+	var view: Dictionary = (vers.session as RemoteSession).view
+	for key in view.get("pawns", {}):
+		if (view.pawns[key] as Dictionary).get("current_hp", 0) is String:
+			var p = (hersteld.pawns as Dictionary).get(String(key), null)
+			if p != null and (not bool(p.vraagteken) or String(p.blokjes).contains("1")):
+				canary += 1
+	print("[RESUME] moment %2d %-16s %s%s" % [moment, String(live.fase),
+		"OK" if fouten.is_empty() and canary == 0 else "VERSCHIL: " + ", ".join(fouten),
+		"" if canary == 0 else " (canary: %d gedekte pionnen tonen stats)" % canary])
+	vers.queue_free()
+	await get_tree().process_frame
+	return {"verschillen": fouten.size(), "canary": canary}

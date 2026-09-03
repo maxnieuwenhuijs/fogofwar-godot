@@ -90,6 +90,9 @@ var _ai_id: int = Constants.PLAYER_2
 ## noemt is de toewijzing in _ready.
 var session: SessionInterface = null
 var _verbonden_sessie: Object = null
+var _loopback: LoopbackTransport = null   # F4.3g: houdt de oefen-server in leven
+var _cam_transform_p1: Transform3D = Transform3D.IDENTITY
+var _cp_bet_keuze: int = 0                 # F4.3g: online reist de inzet in de define mee
 
 
 func _ready() -> void:
@@ -102,6 +105,7 @@ func _ready() -> void:
 	_setup_board_model()
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
+	_cam_transform_p1 = _camera.transform  # F4.3g: de stand voor speler 1 (Board.tscn)
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
 	_index_tiles()
 	_connect_session_signals()
@@ -295,12 +299,28 @@ func _on_hoofdmenu_choice(index: int) -> void:
 	if index == 0:
 		_show_solo_menu()
 	elif index == 1:
-		_update_hud(tr("MENU_MULTI_SOON"))
-		_show_difficulty_menu()
+		_show_multi_menu()
 	elif index == 2:
 		_show_rules_overlay(func() -> void: _show_difficulty_menu())
 	else:
 		_show_settings_menu()
+
+
+## F4.3g -- multiplayer-menu: oefenen via de online-weg (RemoteSession op een
+## loopback met een bot), als rood of als blauw; "Online" komt met stap i.
+func _show_multi_menu() -> void:
+	_overlay.show_choice(tr("MENU_MULTI"), tr("MENU_MULTI_BODY"),
+		[tr("MENU_MULTI_PRACTICE_RED"), tr("MENU_MULTI_PRACTICE_BLUE"), tr("MENU_MULTI_ONLINE"), tr("MENU_BACK")],
+		func(i: int) -> void:
+			if i == 0:
+				_start_oefenpotje(Constants.PLAYER_1)
+			elif i == 1:
+				_start_oefenpotje(Constants.PLAYER_2)
+			elif i == 2:
+				_update_hud(tr("MENU_MULTI_SOON"))
+				_show_multi_menu()
+			else:
+				_show_difficulty_menu())
 
 
 func _show_solo_menu() -> void:
@@ -509,6 +529,14 @@ func _show_doctrine_menu() -> void:
 
 func _on_doctrine_choice(index: int) -> void:
 	_human_doctrine = Constants.DOCTRINE_DATA.keys()[index]
+	if session.is_online():
+		# F4.3g: online is de keuze een blinde actie in de engine (F4.0); de
+		# ander kiest zelf, de server loot niets.
+		_overlay.hide()
+		session.submit_choose_doctrine(_human_id, _human_doctrine)
+		if session.state.phase == Phase.Type.PRE_GAME:
+			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		return
 	_show_opponent_menu()
 
 
@@ -567,19 +595,69 @@ func _start_match(difficulty: int) -> void:
 	if CampaignBridge.duel_actief:
 		regels = CampaignBridge.duel_rules()  # F3.4b: bezit/CP uit de campagne
 	else:
-		# Elk potje speelt v4.2: CP, versterkingen en de spawn-fase. De
-		# 1v1-instelling staat in v42_default.json (cp_start, poolfactor,
-		# spawn_totaal_max), zodat een los duel en een campagne-duel dezelfde
-		# economie kennen.
-		regels = RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
-		# C17: de facties komen uit hetzelfde bestand als de campagne, de
-		# trainer en de arena. Anders speelt een los potje andere dieren dan de
-		# campagne zodra er een voorstel van de factiezoeker is aangenomen.
-		var facties := CRules.facties_uit_bestand()
-		if not facties.is_empty():
-			regels.doctrines = facties
+		regels = _potje_regels()
 	session.start_new_game(_human_doctrine, _ai_doctrine, regels)
 	_show_placement_overlay()
+
+
+## De regels van een los potje (F4.3g: ook de online-weg gebruikt deze).
+## Elk potje speelt v4.2: CP, versterkingen en de spawn-fase. De
+## 1v1-instelling staat in v42_default.json (cp_start, poolfactor,
+## spawn_totaal_max), zodat een los duel en een campagne-duel dezelfde
+## economie kennen. C17: de facties komen uit hetzelfde bestand als de
+## campagne, de trainer en de arena; anders speelt een los potje andere
+## dieren dan de campagne zodra er een voorstel van de factiezoeker is
+## aangenomen.
+func _potje_regels() -> RulesConfig:
+	var regels := RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
+	var facties := CRules.facties_uit_bestand()
+	if not facties.is_empty():
+		regels.doctrines = facties
+	return regels
+
+
+## F4.3g -- oefenen via de online-weg: een RemoteSession op een loopback met
+## een bot op de andere stoel. Zelfde pad als straks tegen de server (alleen
+## de eigen view, wachtteksten, seat 2 met gedraaid bord), zonder netwerk.
+func _start_oefenpotje(seat: int) -> void:
+	_overlay.hide()
+	_loopback = LoopbackTransport.new(_potje_regels())
+	_loopback.namen[seat] = tr("MENU_MULTI_YOU")
+	_loopback.namen[Constants.opponent(seat)] = tr("MENU_MULTI_PRACTICE_BOT")
+	_loopback.zet_bot(Constants.opponent(seat), AgentL1.new(), randi())
+	_loopback.start()
+	_start_online(RemoteSession.new(_loopback.voor_seat(seat), seat))
+
+
+## F4.3g -- een online partij starten: eerst de sessie verbinden (status +
+## eerste view), dan het scherm opbouwen vanaf de staat. Elke online start is
+## per definitie een herstart.
+func _start_online(sessie: RemoteSession) -> void:
+	if sessie.get_parent() == null:
+		add_child(sessie)
+	sessie.start(func(ok: bool) -> void:
+		if ok:
+			_start_vanaf_sessie(sessie)
+		else:
+			_update_hud(tr("MENU_MULTI_NO_CONNECTION"))
+			_show_difficulty_menu()
+	)
+
+
+## F4.3g -- het bord gedraaid voor speler 2: de camera 180 graden om het
+## bordcentrum (board-lokaal), zodat je eigen haven onderaan staat. GEEN
+## coördinaat-spiegeling: picking (unproject), hp-blokjes en highlights
+## volgen de camera vanzelf. Lichten draaien niet mee (aanvaard).
+func _orient_camera_for(player_id: int) -> void:
+	var t: Transform3D = _cam_transform_p1
+	if player_id == Constants.PLAYER_2:
+		var c: Vector3 = tile_position(5, 5)
+		c.y = 0.0
+		var r := Basis(Vector3.UP, PI)
+		t = Transform3D(r, c - r * c) * _cam_transform_p1
+	_camera.transform = t
+	_cam_base = _camera.position
+	_shake_amt = 0.0
 
 
 ## Vrije opstelling (v4.1 §2.2). Nu: standaard-opstelling bevestigen;
@@ -866,7 +944,10 @@ func _connect_session_signals() -> void:
 
 ## F4.3b -- haken voor de online-sessie; offline gebeurt hier (nog) niets.
 func _on_doctrines_revealed(_doctrines: Dictionary) -> void:
-	pass
+	# F4.3g: beide keuzes binnen; de facties komen uit de staat (online is
+	# dat de enige bron). De opstel-overlay volgt uit de fasewissel.
+	_human_doctrine = session.state.doctrine_of(_human_id)
+	_ai_doctrine = session.state.doctrine_of(_ai_id)
 
 
 func _on_state_updated(_state: GameState) -> void:
@@ -902,8 +983,12 @@ func _start_vanaf_sessie(sessie: SessionInterface) -> void:
 	session = sessie
 	_human_id = session.local_player_id()
 	_ai_id = Constants.opponent(_human_id)
+	assert(not (CampaignBridge.duel_actief and session.is_online()),
+		"een online partij is geen campagne-duel (F5.1 boekt dat in de worker)")
 	_connect_session_signals()
 	_campaign_mode = true
+	_cp_bet_keuze = 0
+	_orient_camera_for(_human_id)
 	Audio.play_music("music_battle")
 	_toon_fase_vanaf_staat()
 
@@ -1436,7 +1521,11 @@ func _show_cp_overlay() -> void:
 
 func _on_cp_choice(index: int) -> void:
 	_overlay.hide()
-	if index > 0:
+	if _ai == null:
+		# F4.3g/F4.2b: online reist de inzet in de define mee (één rij, geen
+		# verklappende losse inzet); onthouden tot de waaier bevestigd is.
+		_cp_bet_keuze = index
+	elif index > 0:
 		session.submit_bet_cp(_human_id, index)
 	_open_define_hand(index)
 
@@ -1550,7 +1639,9 @@ func _kanon_v42(pawn_id: int) -> bool:
 func _on_define_confirmed(_cards: Array) -> void:
 	var dicts: Array = _card_hand.get_defined_dicts()
 	_card_hand.visible = false
-	session.submit_define_cards(_human_id, dicts)
+	var inzet: int = _cp_bet_keuze if _ai == null else 0
+	_cp_bet_keuze = 0
+	session.submit_define_cards(_human_id, dicts, inzet)
 	if _ai == null:
 		# F4.3c: online definieert de tegenstander zelf; wij wachten (tenzij
 		# de gate al dichtklapte en de fase doorschoof).
@@ -1589,10 +1680,16 @@ func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) 
 ## F4.3e -- het onthul-scherm vanuit de totalen (uit het event, of uit
 ## Rules.compute_initiative op een herbouwde staat: dezelfde getallen).
 func _toon_reveal(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
-	var body := tr("PHASE_REVEAL_BODY") % [
-		int(round(float(t1.get("bid", 0.0)) * 100.0)), int(t1.attack), int(t1.stamina),
-		int(round(float(t2.get("bid", 0.0)) * 100.0)), int(t2.attack), int(t2.stamina),
-	]
+	# F4.3g: per seat een regel met de naam van die kant (jij / AI / de
+	# tegenstander online), in seat-volgorde; offline leest dat als vanouds.
+	var body := "\n".join([
+		tr("PHASE_REVEAL_LINE") % [_player_name(Constants.PLAYER_1),
+			int(round(float(t1.get("bid", 0.0)) * 100.0)), int(t1.attack), int(t1.stamina)],
+		tr("PHASE_REVEAL_LINE") % [_player_name(Constants.PLAYER_2),
+			int(round(float(t2.get("bid", 0.0)) * 100.0)), int(t2.attack), int(t2.stamina)],
+		"",
+		tr("PHASE_REVEAL_FOOT"),
+	])
 	var title := tr("PHASE_REVEAL_TITLE") % _player_name(initiative_winner)
 	var accent := _player_color(initiative_winner)
 	_update_hud(tr("PHASE_REVEAL"))
@@ -1827,6 +1924,10 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		_start_phase_timer(PHASE_TIME_LIMIT)
 	elif new_phase == Phase.Type.CYCLE_SPAWN:
 		_open_spawn_fase()
+	elif new_phase == Phase.Type.PLACEMENT and _ai == null:
+		# F4.3g: online opent de opstelfase pas als beide facties bekend zijn.
+		_card_hand.visible = false
+		_show_placement_overlay()
 	else:
 		_card_hand.visible = false
 
@@ -3024,12 +3125,38 @@ func _on_game_over(winner_id: int) -> void:
 				CampaignBridge.rond_af(session.state, winner_id)
 				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
 		return
+	if session.is_online():
+		# F4.3g: online alleen winnaar + reden en terug naar het menu; de
+		# uitslag staat op de server (battlereport: F4.4).
+		var reden: String = String(session.state.eind_reden)
+		_overlay.show_choice(
+			tr("END_WINNER") % _player_name(winner_id),
+			tr("END_BODY") + ("" if reden == "" else "\n" + tr("END_REASON") % reden),
+			[tr("END_BACK_TO_MENU")],
+			func(_i: int) -> void: _verlaat_online(),
+		)
+		return
 	_overlay.show_choice(
 		tr("END_WINNER") % _player_name(winner_id),
 		tr("END_BODY"),
 		[tr("END_NEW_GAME")],
 		func(_i: int) -> void: _show_difficulty_menu(),
 	)
+
+
+## F4.3g -- terug naar het menu na een online partij: sessie los, camera
+## terug naar de stand van speler 1, de loopback (als die er was) weg.
+func _verlaat_online() -> void:
+	if session != null and session.is_online() and session != GameSession:
+		var oude := session
+		session = GameSession
+		_connect_session_signals()
+		oude.queue_free()
+	_loopback = null
+	_human_id = Constants.PLAYER_1
+	_ai_id = Constants.PLAYER_2
+	_orient_camera_for(_human_id)
+	_show_difficulty_menu()
 
 
 # --- Human input (actiefase) -------------------------------------------------
@@ -3446,10 +3573,18 @@ func _phase_label(phase: int) -> String:
 	return ""
 
 
+## F4.3g: de naam volgt de SEAT (rood = 1, blauw = 2) plus wie erop zit: jij,
+## de AI, of online de naam die de sessie kent (terugval: de kleur).
 func _player_name(player_id: int) -> String:
 	if player_id != _human_id and CampaignBridge.duel_actief:
 		return tr("HUD_PLAYER_CAMPAIGN_AI") % CampaignBridge.naam_vijand()  # F3.4b: de campagne-vijand
-	return tr("HUD_PLAYER_YOU") if player_id == _human_id else tr("HUD_PLAYER_AI")
+	var kleur: String = tr("HUD_COLOR_RED") if player_id == Constants.PLAYER_1 else tr("HUD_COLOR_BLUE")
+	if player_id == _human_id:
+		return tr("HUD_PLAYER_YOU") % kleur
+	if session.is_online():
+		var naam: String = session.naam_van(player_id)
+		return tr("HUD_PLAYER_OPP") % (naam if naam != "" else kleur)
+	return tr("HUD_PLAYER_AI") % kleur
 
 
 ## F4.3c: de kleur hangt aan de SEAT (rood = speler 1, blauw = speler 2), net
