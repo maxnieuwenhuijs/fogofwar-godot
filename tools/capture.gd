@@ -1276,6 +1276,160 @@ func _ready() -> void:
 		print("[MELEE] " + ("PASS" if mc_alles_ok else "FAIL"))
 		get_tree().quit(0 if mc_alles_ok else 1)
 		return
+	elif "naadcheck" in args:
+		# F4.3c — de bot-naad. Na de opstelling gaat de AI op null: vanaf dan
+		# is game.gd een client zonder tegenstander in huis, precies de online-
+		# situatie. De "tegenstander" dient buiten game.gd om in (zoals een
+		# server dat doet), de mens speelt via het timeout-pad. Eisen: niets
+		# crasht, game.gd dient NOOIT iets namens speler 2 in, elke commit-fase
+		# wacht op de ander, en zonder klok start er geen lokale timer.
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.WOLF
+		game._start_match(1)
+		await get_tree().create_timer(0.2).timeout
+		game._confirm_placement()  # beide opstellingen: de bot is er nog
+		await get_tree().create_timer(0.3).timeout
+		var nfouten := 0
+		var teller := [0]
+		GameSession.action_performed.connect(func(_a: Dictionary, _r: Dictionary) -> void: teller[0] += 1)
+		game._ai = null  # vanaf hier: geen bot meer in game.gd
+		var st: GameState = GameSession.state
+		if not Phase.is_define(st.phase):
+			nfouten += 1
+			print("[NAAD] FOUT: na de opstelling geen define-fase maar %s" % Phase.to_string_phase(st.phase))
+		# 1. De define-timer liep al (gestart met bot). Timeout-pad: de mens
+		#    definieert automatisch, de tegenstander NIET (geen bot).
+		game._timer_left = 0.0
+		await get_tree().create_timer(0.4).timeout
+		st = GameSession.state
+		if st.cards_defined[1].size() == 0:
+			nfouten += 1
+			print("[NAAD] FOUT: de mens heeft niet gedefinieerd via het timeout-pad")
+		if st.cards_defined[2].size() != 0:
+			nfouten += 1
+			print("[NAAD] FOUT: game.gd definieerde namens de tegenstander")
+		if not Phase.is_define(st.phase):
+			nfouten += 1
+			print("[NAAD] FOUT: de define-fase wachtte niet op de tegenstander")
+		# 2. Zonder klok en zonder bot start er geen lokale timer.
+		game._start_phase_timer(5.0)
+		if game._timer_active:
+			nfouten += 1
+			print("[NAAD] FOUT: lokale timer actief zonder klok en zonder bot")
+		# 3. De tegenstander definieert (buiten game.gd om): reveal opent.
+		var bud2: int = int(st.doctrine_data_of(2).budget)
+		var kaarten2: Array = []
+		for i in Validator.expected_define_count(st, 2):
+			kaarten2.append({"hp": bud2 - 2, "stamina": 1, "attack": 1})
+		if not GameSession.submit_define_cards(2, kaarten2):
+			nfouten += 1
+			print("[NAAD] FOUT: define van de tegenstander geweigerd")
+		await get_tree().create_timer(0.3).timeout
+		st = GameSession.state
+		if not Phase.is_reveal(st.phase):
+			nfouten += 1
+			print("[NAAD] FOUT: geen reveal na beide defines maar %s" % Phase.to_string_phase(st.phase))
+		# 4. De mens bevestigt de reveal: alleen de EIGEN ack, de fase wacht.
+		game._continue_after_reveal()
+		await get_tree().create_timer(0.2).timeout
+		st = GameSession.state
+		if not bool(st.reveal_acks.get(1, false)) or bool(st.reveal_acks.get(2, false)):
+			nfouten += 1
+			print("[NAAD] FOUT: reveal-ack niet alleen voor de mens (%s)" % str(st.reveal_acks))
+		if not Phase.is_reveal(st.phase):
+			nfouten += 1
+			print("[NAAD] FOUT: de reveal wachtte niet op de ack van de tegenstander")
+		GameSession.submit_ack_reveal(2)
+		await get_tree().create_timer(0.3).timeout
+		# 5. De drie setup-rondes uitspelen: de mens via het timeout-pad (zonder
+		#    bot en zonder klok loopt er geen timer meer, dus _on_phase_timeout
+		#    rechtstreeks), de tegenstander buiten game.gd om. Na elke zet van de
+		#    mens moet de fase op de ander WACHTEN; game.gd mag nooit namens
+		#    speler 2 definiëren, acken of koppelen.
+		var rondjes := 0
+		var links_p2 := 0
+		while GameSession.state.phase != Phase.Type.ACTION and rondjes < 300:
+			rondjes += 1
+			st = GameSession.state
+			if Phase.is_define(st.phase):
+				if st.cards_defined[1].size() == 0:
+					game._on_phase_timeout()
+					await get_tree().create_timer(0.2).timeout
+					if GameSession.state.cards_defined[2].size() != 0:
+						nfouten += 1
+						print("[NAAD] FOUT: game.gd definieerde namens de tegenstander (ronde %d)" % st.round_number)
+				elif st.cards_defined[2].size() == 0:
+					var b2: int = int(st.doctrine_data_of(2).budget)
+					var k2: Array = []
+					for i in Validator.expected_define_count(st, 2):
+						k2.append({"hp": b2 - 2, "stamina": 1, "attack": 1})
+					GameSession.submit_define_cards(2, k2)
+			elif Phase.is_reveal(st.phase):
+				if not bool(st.reveal_acks.get(1, false)):
+					game._continue_after_reveal()
+					await get_tree().create_timer(0.2).timeout
+					if bool(GameSession.state.reveal_acks.get(2, false)):
+						nfouten += 1
+						print("[NAAD] FOUT: game.gd ackte namens de tegenstander (ronde %d)" % st.round_number)
+				elif not bool(st.reveal_acks.get(2, false)):
+					GameSession.submit_ack_reveal(2)
+			elif Phase.is_linking(st.phase):
+				if st.current_player == 1:
+					game._on_phase_timeout()
+				else:
+					var gelinkt_voor: int = 0
+					for c in st.cards_revealed[2]:
+						if c.is_linked():
+							gelinkt_voor += 1
+					await get_tree().create_timer(1.0).timeout  # ruim boven de ai_link_denktijd
+					st = GameSession.state
+					if not Phase.is_linking(st.phase) or st.current_player != 2:
+						continue
+					var gelinkt_na: int = 0
+					for c in st.cards_revealed[2]:
+						if c.is_linked():
+							gelinkt_na += 1
+					if gelinkt_na != gelinkt_voor:
+						nfouten += 1
+						print("[NAAD] FOUT: game.gd koppelde namens de tegenstander (ronde %d)" % st.round_number)
+					var kaart = null
+					for c in st.cards_revealed[2]:
+						if not c.is_linked():
+							kaart = c
+							break
+					var pion = null
+					for p in st.pawns.values():
+						if p.owner_id == 2 and not p.is_eliminated and p.linked_card_id == -1:
+							pion = p
+							break
+					if kaart != null and pion != null and GameSession.submit_link(2, kaart.id, pion.id):
+						links_p2 += 1
+			await get_tree().create_timer(0.1).timeout
+		st = GameSession.state
+		if st.phase != Phase.Type.ACTION:
+			nfouten += 1
+			print("[NAAD] FOUT: geen actiefase na de setup-rondes maar %s (rondjes %d)" % [Phase.to_string_phase(st.phase), rondjes])
+		if links_p2 == 0:
+			nfouten += 1
+			print("[NAAD] FOUT: de tegenstander kwam nooit aan koppelen toe")
+		# 6. Actiefase: is de tegenstander aan zet, dan doet game.gd NIETS.
+		var voor_acties: int = teller[0]
+		await get_tree().create_timer(1.2).timeout
+		if GameSession.state.current_player == 2 and teller[0] != voor_acties:
+			nfouten += 1
+			print("[NAAD] FOUT: game.gd deed een actie namens de tegenstander")
+		if GameSession.state.current_player == 2 and game._timer_active:
+			nfouten += 1
+			print("[NAAD] FOUT: timer actief in de beurt van de tegenstander")
+		# 7. Einde via de "server": opgeven door de tegenstander, game_over-pad.
+		GameSession.submit_resign(2)
+		await get_tree().create_timer(0.3).timeout
+		if GameSession.state.phase != Phase.Type.GAME_OVER or GameSession.state.winner != 1:
+			nfouten += 1
+			print("[NAAD] FOUT: geen game_over met winnaar 1 na de resign van de tegenstander")
+		print("[NAAD] %s: %d fouten, %d acties, koppelrondjes %d" % ["PASS" if nfouten == 0 else "FAIL", nfouten, teller[0], rondjes])
+		get_tree().quit(0 if nfouten == 0 else 1)
+		return
 	elif "uispel" in args:
 		# F4.3a — nulmeting op game.gd-niveau: een volledige partij vs-AI waarin
 		# de MENS uitsluitend via het bestaande timeout-pad speelt (auto-define,

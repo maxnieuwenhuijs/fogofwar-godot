@@ -142,8 +142,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   WIP 3 september). Elke F4.3-stap: uispel gelijk, én `-- record
   user://ref_na.json easy easy muis wolf 777` gevolgd door `python
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
-  entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Het
-  bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
+  entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Sinds
+  F4.3c ook `-- naadcheck` (game.gd zonder bot: dient nooit iets namens
+  speler 2 in, wacht in elke commit-fase, geen lokale timer zonder klok).
+  Het bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).

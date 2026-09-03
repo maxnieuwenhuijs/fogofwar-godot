@@ -159,8 +159,15 @@ func _start_phase_timer(seconds: float) -> void:
 	_timer_active = true
 	# F0.8: staan er klokken in de match-config (state.turn_deadline gezet),
 	# dan is de engine-deadline leidend; anders het vaste offline-limiet.
-	if session.state != null and session.state.turn_deadline > 0:
-		_timer_left = maxf(0.1, float(session.state.turn_deadline - Time.get_ticks_msec()) / 1000.0)
+	# F4.3c: de klok komt via de sessie (paar deadline/servertijd; F4.4 zet
+	# de server-offset). Zonder klok en zonder bot (online) loopt er GEEN
+	# lokale timer: dan zou game.gd zelf zetten kiezen namens de mens.
+	var k: Dictionary = session.klok()
+	if int(k.deadline_ms) > 0:
+		_timer_left = maxf(0.1, float(int(k.deadline_ms) - Time.get_ticks_msec()) / 1000.0)
+	elif _ai == null:
+		_timer_active = false
+		return
 	else:
 		_timer_left = seconds
 	_last_tick_second = -1  # aftel-tikken opnieuw laten beginnen
@@ -548,6 +555,10 @@ func _start_match(difficulty: int) -> void:
 	_clear_footprints()
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
 	ai_difficulty = difficulty
+	# F4.3c: de kant van de mens komt uit de sessie (offline altijd 1), de
+	# tegenstander is de andere kant. Voor vs-AI is dat 1/2, zoals altijd.
+	_human_id = session.local_player_id()
+	_ai_id = Constants.opponent(_human_id)
 	_setup_ai()
 	var regels: RulesConfig = null
 	if CampaignBridge.duel_actief:
@@ -781,7 +792,8 @@ func _finish_manual_placement() -> void:
 	for pv in _placement_previews.values():
 		pv.queue_free()
 	_placement_previews = {}
-	session.submit_placement(_ai_id, _ai.choose_placement(session.state))
+	if _ai != null:  # F4.3c: online stelt de tegenstander zichzelf op
+		session.submit_placement(_ai_id, _ai.choose_placement(session.state))
 	session.submit_placement(_human_id, _placement_placed)
 	_placement_placed = []
 	_build_pawn_views()
@@ -790,7 +802,8 @@ func _finish_manual_placement() -> void:
 
 func _confirm_placement() -> void:
 	_overlay.hide()
-	session.submit_placement(_ai_id, _ai.choose_placement(session.state))
+	if _ai != null:  # F4.3c: online stelt de tegenstander zichzelf op
+		session.submit_placement(_ai_id, _ai.choose_placement(session.state))
 	session.submit_default_placement(_human_id)
 	_build_pawn_views()
 	_refresh_all()
@@ -850,7 +863,13 @@ func _on_doctrines_revealed(_doctrines: Dictionary) -> void:
 
 
 func _on_state_updated(_state: GameState) -> void:
-	pass
+	# F4.3c: online vervangt de sessie de staat per batch; verse pionnen (het
+	# vijandelijke leger na de opstelling, de spawns) moeten dan op het bord
+	# komen zonder op _refresh_all te wachten. Met een bot is dit een no-op:
+	# offline verandert er niets aan de flow.
+	if _ai == null:
+		_sync_new_pawn_views()
+		_update_piece_counts()
 
 
 ## Hoornstoot bij een nieuwe cyclus (niet de allereerste — daar loopt de setup al).
@@ -1162,7 +1181,9 @@ func _update_health_bars() -> void:
 		entry.holder.position = screen - Vector2(total_w * 0.5, 0.0) + Vector2(0.0, 3.0)
 		var blocks: Array = entry.blocks
 		# F0.6: gedekte vijandelijke pion (Krokodil) → "?"-staat, geen echte stats.
-		var covered: bool = pawn.owner_id != _human_id and not pawn.card_revealed
+		# F4.3c: één gate voor alle vijandelijke stat-uitlezingen; online komt
+		# het antwoord uit het '?'-sentinel van de view.
+		var covered: bool = session.pion_gedekt(pawn.id)
 		if entry.has("qlabel"):
 			entry.qlabel.visible = covered
 		if covered:
@@ -1200,7 +1221,7 @@ func _refresh_all() -> void:
 		# blijven neutraal voor de tegenstander (het archetype zou de kaart verraden);
 		# je eigen pionnen tonen hun karakter altijd.
 		var card: Card = null
-		if pawn.linked_card_id >= 0 and (pawn.card_revealed or pawn.owner_id == _human_id):
+		if pawn.linked_card_id >= 0 and not session.pion_gedekt(pawn.id):
 			card = state.all_cards.get(pawn.linked_card_id)
 		# Rol kan verhuizen (drager sneuvelt of koppelt): set_character weegt
 		# hem opnieuw, want _rol zit in de karakter-sleutel.
@@ -1354,6 +1375,8 @@ func _on_define_confirmed(_cards: Array) -> void:
 	var dicts: Array = _card_hand.get_defined_dicts()
 	_card_hand.visible = false
 	session.submit_define_cards(_human_id, dicts)
+	if _ai == null:
+		return  # F4.3c: online definieert de tegenstander zelf; wij wachten
 	# F2.6 (v4.2): AI-bet op de ronde-3-kaarten (zelfde heuristiek als de arena).
 	var st_ai: GameState = session.state
 	var ai_bet: int = _ai.choose_cp_bet(st_ai)
@@ -1386,7 +1409,10 @@ func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) 
 
 func _continue_after_reveal() -> void:
 	_overlay.hide()
-	session.acknowledge_reveal()
+	if _ai != null:
+		session.acknowledge_reveal()  # offline: de shim ackt voor beide kanten
+	else:
+		session.submit_ack_reveal(_human_id)  # F4.3c: online alleen de eigen ack
 
 
 # --- Linking (mens interactief, AI automatisch) -----------------------------
@@ -1582,7 +1608,7 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 		_card_hand.visible = false
 		_refresh_all()
 		_update_hud(tr("PHASE_SPAWN_TITLE"))
-		if not session.state.spawn_done.get(_ai_id, false):
+		if _ai != null and not session.state.spawn_done.get(_ai_id, false):
 			session.submit_spawn(_ai_id, _ai.choose_spawn(session.state))
 		if session.state.phase == Phase.Type.CYCLE_SPAWN \
 				and not session.state.spawn_done.get(_human_id, false):
@@ -1603,6 +1629,8 @@ func _on_turn_changed(player_id: int) -> void:
 				_begin_human_linking()
 		else:
 			_set_turn_prompt(tr("HUD_OPPONENT_LINKING"), player_id)
+			if _ai == null:
+				return  # F4.3c: online koppelt de tegenstander zelf; wij wachten
 			# ADEMRUIMTE (Max, 30 juli: "als ik mijn character koppel dan freezed
 			# ie en is de ai meteen ook gekoppeld"). De tegenstander koppelde in
 			# dezelfde tel als jij, inclusief zijn model-wissel: dat leest als
@@ -1623,7 +1651,8 @@ func _on_turn_changed(player_id: int) -> void:
 		if player_id == _ai_id:
 			_stop_phase_timer()
 			_set_turn_prompt(tr("HUD_OPPONENT_TURN"), player_id)
-			_ai_action_turn()
+			if _ai != null:  # F4.3c: online zet de tegenstander zelf
+				_ai_action_turn()
 		else:
 			# Beurt-timer voor de mens: tijd om → het spel kiest een zet.
 			_start_phase_timer(PHASE_TIME_LIMIT)
@@ -1673,6 +1702,9 @@ func _ai_action_turn() -> void:
 func _on_wolf_step_pending(pawn_id: int) -> void:
 	var state: GameState = session.state
 	if state.current_player == _ai_id:
+		if _ai == null:
+			_update_hud(tr("HUD_WAIT_WOLF"))  # F4.3c: online kiest de tegenstander zelf
+			return
 		await get_tree().create_timer(0.35).timeout
 		if session.state.pending_wolf_step_pawn != pawn_id:
 			return
@@ -3157,11 +3189,14 @@ func _player_name(player_id: int) -> String:
 	return tr("HUD_PLAYER_YOU") if player_id == _human_id else tr("HUD_PLAYER_AI")
 
 
+## F4.3c: de kleur hangt aan de SEAT (rood = speler 1, blauw = speler 2), net
+## als de teamringen op het bord. Voor de mens als speler 1 is dat wat het
+## altijd was; online als seat 2 ben je blauw, en dat klopt met je pionnen.
 func _player_color(player_id: int) -> Color:
-	return Color(0.95, 0.45, 0.45) if player_id == _human_id else Color(0.45, 0.62, 1.0)
+	return Color(0.95, 0.45, 0.45) if player_id == Constants.PLAYER_1 else Color(0.45, 0.62, 1.0)
 
 
-## Prompt met de kleur van wie aan zet is (rood = jij, blauw = AI).
+## Prompt met de kleur van wie aan zet is (rood = speler 1, blauw = speler 2).
 func _set_turn_prompt(text: String, player_id: int) -> void:
 	_update_hud()
 	_prompt_label.text = text

@@ -1,5 +1,49 @@
 # Fog of War — Work In Progress & Context
 
+## 3 september (avond, later) -- F4.3c: de bot-naad dicht
+
+Alles wat game.gd namens speler 2 of "namens de klok" deed is nu dood pad
+zodra `_ai == null`, en dat is precies de online-situatie: de tegenstander
+is een andere client. Elke gewijzigde regel zit achter `_ai != null`, raakt
+alleen de `_ai == null`-tak, of is de aanroep van een sessie-haak; vs-AI is
+byte-identiek gebleven (zie checks).
+
+- `_human_id`/`_ai_id` komen in `_start_match` uit `session.local_player_id()`
+  en `Constants.opponent()`; voor vs-AI 1/2 zoals altijd.
+- Guards om de AI-opstelling (`_finish_manual_placement`,
+  `_confirm_placement`), de AI-bet en -define (`_on_define_confirmed`), de
+  AI-spawn (CYCLE_SPAWN-tak; dit ruimde meteen de simcheck-scriptfout van
+  juli op, `_ai` was Nil op die regel), de AI-koppeling (LINKING-tak van
+  `_on_turn_changed`: zonder bot alleen de prompt), de AI-zet (ACTION-tak)
+  en de AI-wolfstap (`HUD_WAIT_WOLF`).
+- `_continue_after_reveal`: met bot de dubbel-ack-shim, zonder bot alleen
+  `submit_ack_reveal(_human_id)`. De shim is online structureel onbereikbaar.
+- `_start_phase_timer` leest `session.klok()`; zonder klok en zonder bot
+  start er geen lokale timer, dus online kiest game.gd nooit zelf zetten,
+  spawns of koppelingen namens de mens.
+- Eén gate voor gedekte pionnen: de hp-blokjes en het karaktermodel vragen
+  `session.pion_gedekt(id)`; offline exact de oude expressie, online straks
+  het '?'-sentinel uit de view.
+- `_player_color` hangt aan de seat (rood = 1, blauw = 2), net als de ringen.
+- `_on_state_updated`: zonder bot `_sync_new_pawn_views` +
+  `_update_piece_counts` (online komt het vijandelijke leger zo op het bord).
+- i18n: `HUD_WAIT_OPPONENT`, `HUD_WAIT_WOLF` (beide `.translation` mee).
+
+**Nieuwe check `-- naadcheck`** (capture): na de opstelling gaat `_ai` op
+null; de mens speelt via het timeout-pad, de tegenstander dient buiten
+game.gd om in (zoals een server). Eisen: niets crasht, game.gd dient nooit
+iets namens speler 2 in, elke commit-fase wacht op de ander, zonder klok
+geen lokale timer, de drie setup-rondes lopen uit tot de actiefase, in de
+beurt van de ander gebeurt niets, en de resign van de ander eindigt netjes
+in game_over. Uitslag: PASS, 0 fouten, 0 acties door game.gd, 20 rondjes.
+(Eerste versie van het harnas ging ervan uit dat na één koppelronde de
+actiefase komt; het zijn er drie.)
+
+Checks: uispel 777 zobrist gelijk, opname gelijk, play/vosview/meleecheck
+PASS, simcheck 0 afwijkingen ZONDER de oude game.gd-scriptfout, naadcheck
+PASS, volledige suite 1808 asserts groen (0 fouten, 364 s).
+
+
 ## 3 september (avond) -- F4.3b: SessionInterface, game.gd praat via `session`
 
 Eén naad tussen game.gd en "wie het spel bijhoudt". Nieuw
