@@ -51,6 +51,38 @@ fonts: Rye en Roboto Slab SemiBold ontbreken; `assets/ui/fonts/` draagt
 Roboto Slab Regular/Bold van deze machine als terugval, het thema pakt de
 bedoelde bestanden vanzelf op zodra ze er staan.
 
+**Besluit Max (3 september, middag):** kaart definiëren met ALLEEN een grote
+plus-knop per stat, geen min: plussen haalt het punt weg bij de grootste
+andere stat (de bestaande `_adjust_stat`). De min-functies blijven voor de
+tools (`-- carddist`), alleen de knop verdwijnt. De pdf toont nog "+ -".
+
+**Controle-ronde (3 september, 14:40).** Een review-workflow (11 visuele
+reviewers per scherm + 4 code-lenzen, daarna tegensprekers en herstellers)
+leverde 66 ruwe bevindingen op, maar liep op de uitgavenlimiet van de
+subagents vast (147 van 158 agents); de triage en het herstel doet de
+hoofdsessie zelf. Aangenomen: kaart plus-only en groter, kaarttekst groter
+(statnaam 22->30, titel 40->48, naamplaat 34->40, cijfer 70->84), ondertitel
+(9 px op het scherm) weg en de sierlijn onder de titel; HUD-balk hoger
+(170->190) zodat een prompt van twee regels niet over de telregel valt, de
+define-legenda uit de prompt (de kaart draagt nu zelf de stat-iconen),
+zijknoppen sfeer/opgeven 88x88 (de 88x60-compactie gaf een 9-patch-naad en
+onleesbare tekst), het legertotaal in de telregel uit
+`state.doctrine_data_of().comp` (toonde 19/22 bij de start: kale tabel),
+dialoogtekst leesbaar (AcceptDialog op een donker vlak), hub `_wis_paneel`
+met remove_child (naamconflict), dode tooltip weg, grootboek-uitleg in inkt,
+bracket-tekst 22 px, em-dashes uit de HUD/bracket-sleutels. Afgewezen of
+buiten scope (3D-bord, later): zwevende musket-props na het plaatsen,
+haven/ring-kleuren en cyaan vakken buiten het palet, camera-framing,
+hp-chips van 5,5 px, koppelring onzichtbaar, `?`-knop boven het dim-vlak
+(bewust: uitleg altijd bereikbaar).
+
+**Merge met F4.3e (proefmerge gedaan):** twee conflictblokken: WIP.md (beide
+koppen houden) en game.gd (`_toon_reveal` van F4.3e houden en daarin de
+OnthulScherm-aanroep zetten); daarna in F4.3e's `_toon_linking_hand` de
+`configure(...)` van de hand `_human_id, _human_doctrine` meegeven en per
+kaart `set_cp_inzet(hp+stamina+attack > budget)`. Pas fast-forwarden naar
+main als de hoofdmap schoon is.
+
 **Checks (in de worktree, na de centrale `--import`):** suites
 UiAssets/Card/GameSession/Campaign/View 733 asserts groen, SoloTests groen
 (bouwer), `-- uicheck` PASS, `-- carddist` exact, `-- uispel 777` zobrist
