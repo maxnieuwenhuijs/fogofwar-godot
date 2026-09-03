@@ -107,6 +107,10 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	for pid in [player_id, enemy]:
 		for c in state.cards_revealed.get(pid, []):
 			revealed_ids[str(pid)].append(c.id)
+	# F4.3d — klokstanden zijn publiek (beide banken), net als de deadline.
+	var clocks_d: Dictionary = {}
+	for pid in state.clocks:
+		clocks_d[str(pid)] = {"bank_ms": int((state.clocks[pid] as Dictionary).get("bank_ms", 0))}
 	return {
 		"viewer": player_id,
 		"phase": state.phase,
@@ -114,6 +118,14 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"round_number": state.round_number,
 		"current_player": state.current_player,
 		"initiative_player": state.initiative_player,
+		# F4.3d — vier publieke sleutels die een client nodig heeft om uit de
+		# view alleen een speelbare staat te bouwen (ClientState.uit_view):
+		# de tiebreak bij een gelijk bod (Rules.compute_initiative valt erop
+		# terug), de eindreden, en de klok (deadline + beide banken).
+		"last_initiative_winner": state.last_initiative_winner,
+		"eind_reden": state.eind_reden,
+		"turn_deadline": state.turn_deadline,
+		"clocks": clocks_d,
 		"winner": state.winner,
 		"pending_wolf_step_pawn": state.pending_wolf_step_pawn,
 		"rules": rules_d,

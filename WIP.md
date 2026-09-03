@@ -1,5 +1,51 @@
 # Fog of War — Work In Progress & Context
 
+## 3 september (nacht) -- F4.3d: view compleet, ClientState, EventCodec
+
+De engine-kant van de client, zonder een byte netwerk: alles wat nodig is om
+uit JSON-tekst een speelbare, renderbare staat te bouwen, bewezen op
+engine-niveau.
+
+- `View.for_player` draagt vier publieke sleutels extra:
+  `last_initiative_winner` (Rules.compute_initiative valt er bij een gelijk
+  bod op terug), `eind_reden`, `turn_deadline` en `clocks` (beide banken;
+  een klokstand is geen geheim). De core-hash verandert mee, protocol.md in
+  dezelfde commit.
+- `net/client_state.gd` (`ClientState.uit_view`): wrapper om
+  `Agent.reconstruct_state` (onaangeraakt, dus het 4672/4672-bewijs en de
+  trainingspaden staan), vult aan wat een CLIENT nog mist: de eigen blinde
+  commits (doctrine, spawn; anders biedt de validator ze opnieuw aan en
+  antwoordt de server 422), de vier sleutels, en herstelt de id-volgorde
+  van pionnen en kaarten. Dat laatste was de vondst van deze stap: JSON
+  sorteert object-sleutels ("10" vóór "2" in Godot, numeriek in Node) en
+  daarmee week `legal_actions` op de herbouwde staat in volgorde af van de
+  volle staat. Semantisch onschuldig, maar de client hoort niet in iets te
+  verschillen dat op de server niet verschilt.
+- `net/event_codec.gd` (`EventCodec.van_json`): int-coercie (een signal met
+  een int-parameter weigert een float, `_pawn_views.get(3.0)` is een miss),
+  gesloten lijst Vector2i-sleutels, `bid` blijft float.
+- `tests/ClientStateTests.gd` (in TestRunner en tests.ps1): twee echte
+  L1-partijen op de campagne-regels (een met Krokodil), elke rustfase, beide
+  kijkers, DOOR JSON-tekst: dezelfde legale acties, hetzelfde initiatief bij
+  elke reveal, een gesloten lijst van toegestane afwijkingen in
+  `state_to_dict` (pawns, all_cards, cards_defined, pools/cp/cp_bets/
+  cp_bet_done/spawn_totaal, spawn_commits, doctrine_commits, rules,
+  next_*_id; al het andere moet gelijk zijn), pionposities/eigenaar/type/
+  actief gelijk, regels overleven de '?'-redactie. Plus PRE_GAME (eigen
+  keuze niet opnieuw aangeboden, die van de ander blind), de vier sleutels
+  heen en terug, en de codec-canary over alle client-events van een partij
+  (inhoud én typen gelijk; faalt zodra de reducer een Vector2i-sleutel
+  krijgt die de codec niet kent).
+- Besluit (default, omkeerbaar): alleen `core_hash` als versiecheck; de
+  server dicteert de regels per match. protocol.md herschreven.
+
+Checks: ClientStateTests + ViewTests + AgentTests 253 asserts groen,
+servertests 20/20 (worker-handshake met de nieuwe core-hash), tsc schoon,
+uispel 777 zobrist gelijk, opname gelijk, play/vosview/meleecheck/naadcheck
+PASS, simcheck 0 afwijkingen, fuzz 60 partijen 0 schendingen, volledige
+suite 1848 asserts groen (0 fouten, 330 s).
+
+
 ## 3 september (avond, later) -- F4.3c: de bot-naad dicht
 
 Alles wat game.gd namens speler 2 of "namens de klok" deed is nu dood pad

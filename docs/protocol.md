@@ -137,13 +137,36 @@ geworden — zelfde stateloosheid en schaalbaarheid (N workers), één bewegend
 deel minder. Redis komt terug zodra er echt een wachtrij nodig is
 (matchmaking-queues, F4.4+).
 
+## De view (F4.3d)
+
+`GET /matches/:id/view` levert `View.for_player` van jouw kant; de client
+bouwt daar met `ClientState.uit_view` (net/client_state.gd, een wrapper om
+`Agent.reconstruct_state`) een speelbare staat uit, alleen voor de renderer
+en de lokale `Validator` (highlights). De client past NOOIT zelf
+`Reducer.apply` toe: kaart-ids zijn server-toegewezen. Vier publieke sleutels
+zijn er sinds F4.3d bijgekomen omdat een client ze nodig heeft en ze geen
+geheim dragen: `last_initiative_winner` (tiebreak bij een gelijk bod),
+`eind_reden`, `turn_deadline` en `clocks` (beide banken). Views komen als
+JSON-tekst binnen: elk getal kan een float zijn en object-sleutels zijn
+gesorteerd (Godot alfabetisch, Node numeriek), dus `uit_view` cast alles en
+zet pionnen en kaarten weer op id-volgorde. Events gaan door
+`EventCodec.van_json` (net/event_codec.gd): ints terug naar int, de
+gesloten lijst Vector2i-sleutels (`from`, `target`, `move_target`,
+`position`, `defender_pos`, `attacker_from_pos`, `charge_from`) terug naar
+Vector2i, het bod (`bid`) blijft een float. `ClientStateTests` bewijst dit
+door JSON-tekst heen: dezelfde legale acties als de volle staat in elke
+rustfase van echte partijen, een gesloten lijst van toegestane afwijkingen,
+en een codec-canary over alle client-events van een partij.
+
 ## Versies
 
-De client meldt bij het verbinden `protocol_version` én `rules_hash` (hash
-van de actieve regels-json). De server weigert een mismatch met een duidelijke
-melding: juist dit spel verzet regel-knoppen tijdens playtests, en stille
-regel-drift ("bij mij doet die knop niks") is verraderlijker dan
-protocol-drift.
+Besluit F4.3d (default, 3 september; omkeerbaar): de client vergelijkt bij
+het verbinden alleen de **`core_hash`** (`GET /versie`) met de zijne en
+weigert bij verschil. Een aparte `rules_hash` is overbodig: de server
+dicteert `rules_config` per match en de view brengt de regels mee, dus
+regel-drift tussen client en server kan alleen ontstaan als de engine
+verschilt, en dat vangt de core-hash. Een `protocol_version` komt erbij
+zodra het protocol een tweede versie krijgt.
 
 ## Nog open (F4.4+)
 

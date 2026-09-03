@@ -18,7 +18,7 @@ $groepen = @(
     "FuzzTests",
     "AgentTests,V42AgentTests,AITests",
     "GoldenReplayTests,DeterminismTests,SerializerTests",
-    "RulesTests,ValidatorTests,ReducerTests,ViewTests",
+    "RulesTests,ValidatorTests,ReducerTests,ViewTests,ClientStateTests",
     "SpawnTests,CpTests,CannonTests,ClockTests,CardTests,GameSessionTests,RulesConfigTests"
 )
 $start = Get-Date
