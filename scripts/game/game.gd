@@ -98,7 +98,7 @@ var _ai_id: int = Constants.PLAYER_2
 var session: SessionInterface = null
 var _verbonden_sessie: Object = null
 var _loopback: LoopbackTransport = null   # F4.3g: houdt de oefen-server in leven
-var _cam_transform_p1: Transform3D = Transform3D.IDENTITY
+var _kijk_pivot: Node3D = null            # F4.3g: camera + lichten; draait voor speler 2
 var _cp_bet_keuze: int = 0                 # F4.3g: online reist de inzet in de define mee
 
 ## UI-assetpack (3 september): de perkamenten HUD-balk achter de drie labels
@@ -121,7 +121,16 @@ func _ready() -> void:
 	_setup_board_model()
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
-	_cam_transform_p1 = _camera.transform  # F4.3g: de stand voor speler 1 (Board.tscn)
+	# F4.3g: camera EN lichten onder één kijk-pivot, zodat voor speler 2 het
+	# hele gezichtspunt (inclusief zon, spot en rim) 180 graden om het
+	# bordcentrum draait. De pivot staat op identiteit, dus de kinderen
+	# houden hun bord-coördinaten en het sfeer-paneel blijft gewoon werken.
+	_kijk_pivot = Node3D.new()
+	_kijk_pivot.name = "Kijkrichting"
+	_board.add_child(_kijk_pivot)
+	for node in [_camera, _sun_light, _spot_light, _rim_light]:
+		if node != null:
+			(node as Node3D).reparent(_kijk_pivot, true)
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
 	_index_tiles()
 	_connect_session_signals()
@@ -673,18 +682,21 @@ func _start_online(sessie: RemoteSession) -> void:
 	)
 
 
-## F4.3g -- het bord gedraaid voor speler 2: de camera 180 graden om het
-## bordcentrum (board-lokaal), zodat je eigen haven onderaan staat. GEEN
-## coördinaat-spiegeling: picking (unproject), hp-blokjes en highlights
-## volgen de camera vanzelf. Lichten draaien niet mee (aanvaard).
+## F4.3g -- het bord gedraaid voor speler 2: het kijk-pivot (camera, zon,
+## spot en rim) 180 graden om het bordcentrum (board-lokaal), zodat je eigen
+## haven onderaan staat en het licht van dezelfde kant komt als voor rood
+## (Max, 4 september: "het licht is nu te eenzijdig"). GEEN coördinaat-
+## spiegeling: picking (unproject), hp-blokjes en highlights volgen de
+## camera vanzelf; de camera zelf houdt zijn lokale stand, dus de screen
+## shake (`_cam_base`) verandert niet.
 func _orient_camera_for(player_id: int) -> void:
-	var t: Transform3D = _cam_transform_p1
+	var t := Transform3D.IDENTITY
 	if player_id == Constants.PLAYER_2:
 		var c: Vector3 = tile_position(5, 5)
 		c.y = 0.0
 		var r := Basis(Vector3.UP, PI)
-		t = Transform3D(r, c - r * c) * _cam_transform_p1
-	_camera.transform = t
+		t = Transform3D(r, c - r * c)
+	_kijk_pivot.transform = t
 	_cam_base = _camera.position
 	_shake_amt = 0.0
 

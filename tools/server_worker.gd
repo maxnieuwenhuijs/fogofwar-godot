@@ -186,36 +186,8 @@ func _clocks_actief(s: GameState) -> bool:
 	return int(s.rules.clock.get("bank_sec", 0)) > 0
 
 
-## De hash van alles wat de spelregels IS: core/ (recursief) plus de pure
-## kern onder scripts/core. Client-build en worker vergelijken deze hash
-## (bouwplan §11.5): verschillen ze, dan spelen ze een ander spel en weigert
-## de server de verbinding.
+## De hash van alles wat de spelregels IS (bouwplan §11.5). F4.3h: de
+## berekening staat in scripts/core/core_hash.gd, zodat client en worker
+## letterlijk dezelfde functie draaien.
 func _core_hash() -> String:
-	var paden: Array = []
-	_verzamel_gd("res://core", paden)
-	for naam in ["constants.gd", "GameState.gd", "Rules.gd", "Card.gd", "Pawn.gd", "Phase.gd"]:
-		paden.append("res://scripts/core/" + naam)
-	paden.sort()
-	var ctx := HashingContext.new()
-	ctx.start(HashingContext.HASH_SHA256)
-	for pad in paden:
-		ctx.update((String(pad) + "\n").to_utf8_buffer())
-		ctx.update(FileAccess.get_file_as_bytes(pad))
-	return ctx.finish().hex_encode()
-
-
-func _verzamel_gd(map: String, uit: Array) -> void:
-	var dir := DirAccess.open(map)
-	if dir == null:
-		return
-	dir.list_dir_begin()
-	var naam := dir.get_next()
-	while naam != "":
-		var pad := map + "/" + naam
-		if dir.current_is_dir():
-			if not naam.begins_with("."):
-				_verzamel_gd(pad, uit)
-		elif naam.ends_with(".gd"):
-			uit.append(pad)
-		naam = dir.get_next()
-	dir.list_dir_end()
+	return CoreHash.bereken()

@@ -29,6 +29,25 @@ var _pomp_bezig: bool = false
 var _view_onderweg: bool = false
 var _inhaal_onderweg: bool = false
 var _gestart: bool = false
+## F4.3h — polling als het transport geen push heeft (HTTP zonder WS).
+var poll_interval: float = 0.5
+var _poll_accum: float = 0.0
+var _poll_onderweg: bool = false
+
+
+func _process(delta: float) -> void:
+	if not _gestart or transport == null or not transport.pollen():
+		return
+	_poll_accum += delta
+	if _poll_accum < poll_interval or _poll_onderweg:
+		return
+	_poll_accum = 0.0
+	_poll_onderweg = true
+	transport.events(seq, func(a: Dictionary) -> void:
+		_poll_onderweg = false
+		if bool(a.get("ok", false)):
+			_ontvang(a.get("events", []))
+	)
 
 
 func _init(t: Transport, s: int) -> void:

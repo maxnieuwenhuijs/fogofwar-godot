@@ -35,6 +35,11 @@ func events(_after: int, klaar: Callable) -> void:
 	_niet_ondersteund("events", klaar)
 
 
+## Moet de sessie zelf om rijen vragen (polling), of komt er push?
+func pollen() -> bool:
+	return false
+
+
 func _niet_ondersteund(op: String, klaar: Callable) -> void:
 	push_error("Transport: %s wordt niet ondersteund door %s" % [op, get_class()])
 	if klaar.is_valid():

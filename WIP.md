@@ -1,5 +1,60 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september (nacht, later) -- nazorg g: het licht draait mee voor blauw
+
+Max speelde de oefenmodus als blauw: "lijkt te werken, alleen het licht is
+nu te eenzijdig, dus alleen goed voor rood." Klopt: de camera draaide, de
+zon, spot en rim niet (bouwplan: "lichten draaien niet mee, aanvaard";
+niet aanvaard dus). Oplossing: in `_ready` komen camera, zon, spot en rim
+onder één kijk-pivot (`Kijkrichting`, kind van het bord, op identiteit,
+dus alle kinderen houden hun bord-coördinaten en het sfeer-paneel werkt
+gewoon door). `_orient_camera_for` draait nu het PIVOT 180 graden om het
+bordcentrum; de camera zelf houdt zijn lokale stand (`_cam_base` en de
+screen shake ongemoeid). Gemeten wereldpositie van de camera: (-1,8, 5,
+4,8) voor rood, (1,8, 5, -4,8) voor blauw. play online 1 en 2, offline
+play/vosview/meleecheck en resumecheck 4242 seat 2 allemaal PASS.
+
+
+## 4 september (nacht) -- F4.3h: HttpTransport, identiteit, core-hash, nettest
+
+De echte server erachter. Polling is de eerste (en blijvende) terugval
+voor de push: `npm run dev` herstart bij elke bronwijziging en gooit alle
+WebSockets dicht, dus tijdens het bouwen is dit het normale pad.
+
+- `scripts/core/core_hash.gd` (`CoreHash.bereken()`): de hash-berekening
+  uit de worker, nu ook aan de clientkant; de worker roept dezelfde functie
+  aan. Het bestand zit niet in de gehashte lijst, dus de hash is
+  onveranderd (`db502910…`, zelfde aan beide kanten in de nettest).
+- `net/identiteit.gd` (`Identiteit`): `user://identity.cfg` met
+  device-token (UUID), naam, server-url (default `http://127.0.0.1:8787`),
+  laatste match; `-- identiteit=<naam>` kiest `identity_<naam>.cfg` (twee
+  clients op één machine delen user://), `-- server=<url>` overschrijft.
+- `net/http_transport.gd` (`HttpTransport`): per verzoek een verse
+  HTTPRequest als kind van een host-node (view-ophaal, actie-POST en poll
+  lopen door elkaar), Bearer-token, antwoorden in dezelfde vorm als de
+  loopback. Extra: `login` (POST /auth/gast), `versiecheck` (GET /versie
+  tegen `CoreHash.bereken()`), `maak_match`, `join`. `pollen()` = true.
+- `RemoteSession._process`: polling elke 0,5 s (`events?after=seq`) zolang
+  het transport erom vraagt; dedupe zit al in `_ontvang`.
+- Server, twee regels (matches.ts): `GET /view` leest de hoogste seq VÓÓR
+  de fold. Zo is de gemelde seq hoogstens te laag (de client haalt de rij
+  gewoon in), nooit te hoog (rij afspelen op een verouderde staat).
+- `-- nettest [url]` (capture): twee gast-accounts, versiecheck, match
+  maken en joinen, twee RemoteSessions op HttpTransport, beide blinde
+  keuzes, reveal via de server, opstelling van A die B ziet maar niet
+  inhoudelijk (fog), `GET /matches/:id`. Uitslag: **13 van 13 PASS**, B
+  ziet de keuze van A na 606 ms polling.
+
+Twee valkuilen voor wie dit herhaalt: de dev-database `fogofwar` bestaat
+niet vanzelf (alleen `fogofwar_test`, door de tests): README heeft nu het
+`CREATE DATABASE`-regeltje; en de lokale MySQL bleek na de pauze van het
+abonnement weer gestopt (`server/db-lokaal.ps1` start hem, idempotent).
+
+Checks: servertests 20/20, tsc schoon, RemoteSessionTests +
+GameSessionTests 235, play online PASS, resumecheck 777 seat 1 PASS,
+simcheck 0 afwijkingen, volledige suite 1983 asserts groen (0 fouten).
+
+
 ## 4 september (avond) -- F4.3g: game.gd speelt via de online-weg, ook als seat 2
 
 De speelbare tussenstand zonder server, en het eerste dat Max zelf kan zien.
@@ -251,6 +306,11 @@ buiten scope (3D-bord, later): zwevende musket-props na het plaatsen,
 haven/ring-kleuren en cyaan vakken buiten het palet, camera-framing,
 hp-chips van 5,5 px, koppelring onzichtbaar, `?`-knop boven het dim-vlak
 (bewust: uitleg altijd bereikbaar).
+
+**Merge met F4.3h + nazorg (e7b6525, 3 september 20:35):** zonder
+conflicten. Daarna is main gefast-forward naar de branch (besluit Max: "gooi
+de UI er maar in") en in de hoofdmap een `--import` gedraaid voor de nieuwe
+textures en fonts.
 
 **Merge met F4.3g (983fffc, 3 september 19:20):** conflicten in de csv
 (beide blokken nieuwe sleutels) en opnieuw `_toon_reveal` (F4.3g's

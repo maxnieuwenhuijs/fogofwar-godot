@@ -21,8 +21,15 @@ Daarna:
 cd server
 npm install
 $env:FOW_TEST_DB_URL = "mysql://root@127.0.0.1:3316/fogofwar_test"; npm test
+# De dev-database bestaat niet vanzelf (de tests maken alleen fogofwar_test):
+node -e "require('mysql2/promise').createConnection('mysql://root@127.0.0.1:3316/').then(async c=>{await c.query('CREATE DATABASE IF NOT EXISTS fogofwar');await c.end()})"
 $env:DB_URL = "mysql://root@127.0.0.1:3316/fogofwar"; npm run dev
 ```
+
+Client-kant testen tegen die server (F4.3h): in de projectmap
+`<godot> --headless --path . res://tools/capture.tscn -- nettest http://127.0.0.1:8787`
+(twee gast-accounts, versiecheck, match maken en joinen, beide blinde
+factiekeuzes via polling, tot beide clients in PLACEMENT staan).
 
 - **`FOW_TEST_DB_URL` gezet** → de tests gebruiken die server en WISSEN de
   database uit de URL per run (dus nooit een database met echte data invullen).

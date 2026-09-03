@@ -151,8 +151,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `-- play online [2]`, `-- vosview online [2]` en `-- resumecheck [seed]
   [seat]` (dezelfde koude herstart, maar op de online-weg: RemoteSession op
   een loopback met bot; `777 1` en `4242 2` moeten 0 verschillen geven over
-  alle veertien fasen). Het bouwplan met de vaste regressieset staat in
-  `docs/F4.3-bouwplan.md`.
+  alle veertien fasen), en sinds F4.3h `-- nettest [url]` (tegen een
+  draaiende dev-server: 13 stappen PASS). Het bouwplan met de vaste
+  regressieset staat in `docs/F4.3-bouwplan.md`.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
@@ -276,10 +277,16 @@ incl. asynchroon transport en gat-inhaal); (g) game.gd speelt via de
 online-weg: MULTIPLAYER → "Oefenen via de online-weg (als rood / als
 blauw)" op een loopback met L1-bot, `_start_online`, camera-flip voor
 seat 2, namen per seat, CP-inzet in de define, `-- resumecheck` groen op
-beide stoelen over alle fasen. **Volgende stap: h** (HttpTransport,
-identiteit in `user://identity.cfg`, core-hash-check, polling,
-`-- nettest`), dan i (lobby: twee mensen tegen de dev-server), j (WS-push,
-reconnect, OfflineQueue), k (botclient, M3).
+beide stoelen over alle fasen; (h) `net/http_transport.gd`,
+`net/identiteit.gd` (`user://identity.cfg`, `-- identiteit=<naam>`,
+`-- server=<url>`), `scripts/core/core_hash.gd` (client en worker dezelfde
+functie), polling in `RemoteSession._process`, `GET /view` meldt de seq
+van vóór de fold, `-- nettest [url]` 13/13 tegen de dev-server. **Volgende
+stap: i** (lobby: `OnlineBridge`, match maken/meedoen/hervatten op
+match-id, twee Godot-instanties `-- identiteit=A/B` tegen `npm run dev`),
+dan j (WS-push, reconnect, OfflineQueue), k (botclient, M3). Dev-server:
+`server/db-lokaal.ps1`, database `fogofwar` aanmaken (README), dan
+`npm run dev` in `server/`.
 Open besluiten voor Max staan onderaan het bouwplan; tot nu toe zijn de
 defaults genomen (alleen `core_hash` als versiecheck, match-id als
 roomcode, automatische gastnaam). Elke stap eindigt met de vaste
