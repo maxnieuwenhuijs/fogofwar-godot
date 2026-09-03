@@ -1,5 +1,20 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september (nacht, later) -- nazorg g: het licht draait mee voor blauw
+
+Max speelde de oefenmodus als blauw: "lijkt te werken, alleen het licht is
+nu te eenzijdig, dus alleen goed voor rood." Klopt: de camera draaide, de
+zon, spot en rim niet (bouwplan: "lichten draaien niet mee, aanvaard";
+niet aanvaard dus). Oplossing: in `_ready` komen camera, zon, spot en rim
+onder één kijk-pivot (`Kijkrichting`, kind van het bord, op identiteit,
+dus alle kinderen houden hun bord-coördinaten en het sfeer-paneel werkt
+gewoon door). `_orient_camera_for` draait nu het PIVOT 180 graden om het
+bordcentrum; de camera zelf houdt zijn lokale stand (`_cam_base` en de
+screen shake ongemoeid). Gemeten wereldpositie van de camera: (-1,8, 5,
+4,8) voor rood, (1,8, 5, -4,8) voor blauw. play online 1 en 2, offline
+play/vosview/meleecheck en resumecheck 4242 seat 2 allemaal PASS.
+
+
 ## 4 september (nacht) -- F4.3h: HttpTransport, identiteit, core-hash, nettest
 
 De echte server erachter. Polling is de eerste (en blijvende) terugval

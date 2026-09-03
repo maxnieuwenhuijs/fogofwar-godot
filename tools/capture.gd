@@ -1215,7 +1215,7 @@ func _ready() -> void:
 				print("[ONLINE] FOUT: geen enkele gedekte pion om te controleren")
 			print("[ONLINE] vosview: gedekte pionnen gecheckt=%d" % gedekt)
 		print("[ONLINE] %s seat=%d fase=%s stappen=%d camera=%s" % ["PASS" if o_fouten == 0 else "FAIL", o_seat,
-			Phase.to_string_phase(o_lb.state.phase), o_stappen, str(game._camera.position)])
+			Phase.to_string_phase(o_lb.state.phase), o_stappen, str(game._camera.global_position)])
 		var otex := get_viewport().get_texture()
 		if otex != null and otex.get_image() != null:
 			otex.get_image().save_png("res://_shot_play_online.png")
