@@ -1150,6 +1150,16 @@ func _ready() -> void:
 			await get_tree().create_timer(0.4).timeout
 		print("[LINK] fase=%s beurt=%d" % [Phase.to_string_phase(GameSession.state.phase), GameSession.state.current_player])
 		out = "res://_shot_link.png"
+	elif "nettest" in args:
+		# F4.3h — twee gast-accounts tegen de ECHTE backend: login, versiecheck,
+		# match maken en joinen, beide blinde factiekeuzes via RemoteSession +
+		# HttpTransport (polling), tot beide clients in PLACEMENT staan.
+		# Gebruik: -- nettest [http://127.0.0.1:8787]   (server: npm run dev)
+		var ni := args.find("nettest")
+		var n_url: String = String(args[ni + 1]) if args.size() > ni + 1 else "http://127.0.0.1:8787"
+		var n_ok: bool = await _nettest(game, n_url)
+		get_tree().quit(0 if n_ok else 1)
+		return
 	elif "online" in args and ("play" in args or "vosview" in args):
 		# F4.3g — `-- play online [2]` / `-- vosview online [2]`: het spel via de
 		# online-weg (RemoteSession op een loopback met een L1-bot), als seat 1 of
@@ -3064,3 +3074,102 @@ func _resume_vergelijk(game: Node, lb: LoopbackTransport, seat: int, moment: int
 	vers.queue_free()
 	await get_tree().process_frame
 	return {"verschillen": fouten.size(), "canary": canary}
+
+
+## F4.3h -- wachten op een callback-antwoord (max `sec` seconden).
+func _wacht_op(bak: Array, sec: float = 10.0) -> Dictionary:
+	var t0 := Time.get_ticks_msec()
+	while bak.is_empty() and Time.get_ticks_msec() - t0 < int(sec * 1000):
+		await get_tree().process_frame
+	return bak[0] if not bak.is_empty() else {"ok": false, "fout": "geen antwoord binnen %.0f s" % sec}
+
+
+func _nettest(game: Node, url: String) -> bool:
+	# Tellers in een Array: een lambda vangt losse variabelen op waarde.
+	var teller: Array = [0, 0]  # [stappen, fouten]
+	var meld := func(naam: String, ok: bool, extra: String = "") -> void:
+		teller[0] += 1
+		if not ok:
+			teller[1] += 1
+		print("[NETTEST] %2d %-34s %s %s" % [teller[0], naam, "PASS" if ok else "FAIL", extra])
+	var idA := Identiteit.laad("nettest_A")
+	var idB := Identiteit.laad("nettest_B")
+	var tA := HttpTransport.new(self, url)
+	var tB := HttpTransport.new(self, url)
+	var bak: Array = []
+	tA.login(idA.device_token, "NettestA", func(a): bak.append(a))
+	var a: Dictionary = await _wacht_op(bak)
+	meld.call("login A (gast, device-token)", bool(a.ok), String(a.get("fout", "")))
+	if not bool(a.ok):
+		return false
+	bak.clear()
+	tB.login(idB.device_token, "NettestB", func(b): bak.append(b))
+	a = await _wacht_op(bak)
+	meld.call("login B", bool(a.ok), String(a.get("fout", "")))
+	bak.clear()
+	tA.versiecheck(func(v): bak.append(v))
+	a = await _wacht_op(bak)
+	meld.call("versiecheck core-hash", bool(a.ok), "%s / %s" % [String(a.get("server", "")).substr(0, 12), String(a.get("client", "")).substr(0, 12)])
+	if not bool(a.ok):
+		return false
+	bak.clear()
+	var regels: RulesConfig = game._potje_regels()
+	tA.maak_match(regels.rules_version, regels.to_dict(), func(m): bak.append(m))
+	a = await _wacht_op(bak)
+	meld.call("match maken (seat 1)", bool(a.ok) and int(a.get("seat", 0)) == 1, String(a.get("match_id", a.get("fout", ""))))
+	if not bool(a.ok):
+		return false
+	var match_id: String = String(a.match_id)
+	bak.clear()
+	tB.join(match_id, func(j): bak.append(j))
+	a = await _wacht_op(bak)
+	meld.call("joinen (seat 2)", bool(a.ok) and int(a.get("seat", 0)) == 2, String(a.get("fout", "")))
+	var sA := RemoteSession.new(tA, 1)
+	var sB := RemoteSession.new(tB, 2)
+	add_child(sA)
+	add_child(sB)
+	bak.clear()
+	sA.start(func(ok): bak.append({"ok": ok}))
+	a = await _wacht_op(bak)
+	meld.call("sessie A verbonden (status + view)", bool(a.ok) and sA.state != null and sA.state.phase == Phase.Type.PRE_GAME,
+		"seq=%d" % sA.seq)
+	bak.clear()
+	sB.start(func(ok): bak.append({"ok": ok}))
+	a = await _wacht_op(bak)
+	meld.call("sessie B verbonden", bool(a.ok) and sB.state != null, "naam van 1 volgens B: %s" % sB.naam_van(1))
+	var foutenA: Array = []
+	sA.error_occurred.connect(func(_p, m): foutenA.append(m))
+	sA.submit_choose_doctrine(1, Constants.Doctrine.MUIS)
+	# B ziet via polling dat A koos.
+	var t0 := Time.get_ticks_msec()
+	while not bool(sB.tegenstander_status().get("enemy_has_chosen", false)) and Time.get_ticks_msec() - t0 < 10000:
+		await get_tree().create_timer(0.1).timeout
+	meld.call("A koos; B ziet dat via polling", bool(sB.tegenstander_status().get("enemy_has_chosen", false)),
+		"na %d ms, seqB=%d" % [Time.get_ticks_msec() - t0, sB.seq])
+	sB.submit_choose_doctrine(2, Constants.Doctrine.WOLF)
+	t0 = Time.get_ticks_msec()
+	while (sA.state.phase != Phase.Type.PLACEMENT or sB.state.phase != Phase.Type.PLACEMENT) \
+			and Time.get_ticks_msec() - t0 < 10000:
+		await get_tree().create_timer(0.1).timeout
+	meld.call("beide in PLACEMENT (reveal via de server)", sA.state.phase == Phase.Type.PLACEMENT and sB.state.phase == Phase.Type.PLACEMENT,
+		"seqA=%d seqB=%d" % [sA.seq, sB.seq])
+	meld.call("facties uit de staat", sA.state.doctrine_of(2) == Constants.Doctrine.WOLF and sB.state.doctrine_of(1) == Constants.Doctrine.MUIS)
+	# Een opstelling van A; B ziet in PLACEMENT nog geen pionnen van A (fog).
+	sA.submit_default_placement(1)
+	t0 = Time.get_ticks_msec()
+	while not bool(sB.state.placements_done.get(1, false)) and Time.get_ticks_msec() - t0 < 10000:
+		await get_tree().create_timer(0.1).timeout
+	var vreemd := 0
+	for pawn in sB.state.pawns.values():
+		if pawn.owner_id == 1:
+			vreemd += 1
+	meld.call("B ziet dat A opstelde, maar niet wat", bool(sB.state.placements_done.get(1, false)) and vreemd == 0,
+		"vijandelijke pionnen zichtbaar: %d" % vreemd)
+	meld.call("geen foutmeldingen bij A", foutenA.is_empty(), str(foutenA))
+	bak.clear()
+	tA.status(func(s): bak.append(s))
+	a = await _wacht_op(bak)
+	meld.call("GET /matches/:id", bool(a.ok) and String(a.get("status", "")) == "bezig" and int(a.get("seq", 0)) == 3,
+		"status=%s seq=%s" % [String(a.get("status", "")), str(a.get("seq", "?"))])
+	print("[NETTEST] %s: %d stappen, %d fouten, match %s" % ["PASS" if teller[1] == 0 else "FAIL", teller[0], teller[1], match_id])
+	return teller[1] == 0

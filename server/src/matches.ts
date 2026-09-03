@@ -336,14 +336,18 @@ export function registreerMatchRoutes(app: FastifyInstance, db: Db): void {
     const [seatRows] = await db.query<RowDataPacket[]>(
       "SELECT seat FROM match_seats WHERE match_id = ? AND user_id = ?", [matchId, ik.userId]);
     if (!seatRows[0]) return reply.code(403).send({ fout: "Je zit niet in deze match" });
+    // F4.3h: de seq VOOR de fold lezen. Komt er een actie tussen dit punt en
+    // de fold, dan is de gemelde seq hoogstens te LAAG en haalt de client de
+    // rij gewoon in; andersom (seq na de fold) kon hij te hoog zijn en zou de
+    // client een rij afspelen op een verouderde staat.
+    const [top] = await db.query<RowDataPacket[]>(
+      "SELECT COALESCE(MAX(seq), 0) AS hoogste FROM match_events WHERE match_id = ?", [matchId]);
     const basis = await laadBasis(db, matchId);
     if (!basis) return reply.code(409).send({ fout: "De match is nog niet begonnen" });
     const antwoord = await worker().vraag({
       op: "view", state: basis.state, tail: basis.tail, player_id: Number(seatRows[0].seat),
     });
     if (!antwoord.ok) return reply.code(500).send({ fout: String(antwoord.fout ?? "?") });
-    const [top] = await db.query<RowDataPacket[]>(
-      "SELECT COALESCE(MAX(seq), 0) AS hoogste FROM match_events WHERE match_id = ?", [matchId]);
     return { seq: Number(top[0]?.hoogste ?? 0), view: antwoord.view };
   });
 

@@ -175,6 +175,19 @@ protocol op één GameState, alles door JSON-tekst) voor tests en de
 oefenmodus; `RemoteSessionTests` bewijst dat een partij via de loopback
 signal-voor-signal gelijk is aan een offline partij.
 
+**HTTP (F4.3h).** `net/http_transport.gd` spreekt de routes hierboven: per
+verzoek een verse HTTPRequest, `Authorization: Bearer`, plus `login`
+(`POST /auth/gast`), `versiecheck` (`GET /versie` tegen `CoreHash.bereken()`
+uit `scripts/core/core_hash.gd`, dezelfde functie als de worker),
+`maak_match` en `join`. Zonder WebSocket (F4.3j) pollt de sessie elke
+0,5 s `GET /events?after=seq`. De identiteit (device-token, naam,
+server-url, laatste match) staat in `user://identity.cfg`
+(`net/identiteit.gd`); `-- identiteit=<naam>` geeft een tweede client op
+dezelfde machine een eigen bestand, `-- server=<url>` wijst een andere
+server aan. `GET /view` meldt de seq van VÓÓR de fold: hoogstens te laag,
+nooit te hoog. Rooktest: `-- nettest [url]` (capture) speelt met twee
+gast-accounts tot beide clients in PLACEMENT staan.
+
 ## Versies
 
 Besluit F4.3d (default, 3 september; omkeerbaar): de client vergelijkt bij
