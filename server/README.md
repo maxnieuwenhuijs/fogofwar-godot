@@ -89,6 +89,28 @@ nette fout op het verzoek, geen crash). Op een **verse checkout** eerst
 niet: OAuth-login (e-mail dekt cross-device al) en Redis (komt met de
 matchmaking-wachtrij, F4.4+).
 
+## Op een droplet (F4.4a, 4 september)
+
+De hele uitrol staat in **`tools/deploy/README.md`**: eenmalig
+`droplet-setup.sh` op een verse Ubuntu 24.04 (nginx + Let's Encrypt, MySQL,
+Node 22, de Godot-binary, systemd, firewall), daarna elke keer
+`tools\deploy\deploy-server.ps1 -Droplet <domein> -Nettest`. Wat daarvoor
+in de server is veranderd:
+
+- `npm run build` (tsc naar `dist/`, `tsconfig.build.json`) en
+  `npm start` = `node dist/index.js`; `npm run dev` blijft tsx.
+- `.env.voorbeeld` beschrijft alle env-variabelen; `.env` staat in
+  `.gitignore` (systemd leest hem via `EnvironmentFile`).
+- `FOW_PROJECT_PAD`: waar de engine staat als dat niet de repo is. Op de
+  droplet is dat het **server-pakket** (`tools/deploy/bouw_serverpakket.ps1`):
+  alleen `core/`, `scripts/`, `agents/`, `net/`, `arena/`, `i18n/`, `data/`
+  en de worker, 0,3 MB, import in seconden, dezelfde core-hash als het volle
+  project (`-Proef` bewijst dat; het volle project importeren piekt op
+  7,5 GB werkgeheugen en past op geen kleine droplet).
+- De worker krijgt `FOW_WORKER=1` mee: de autoloads `Audio` en `UiThema`
+  slaan dan het laden van geluid en thema over (die assets staan niet in het
+  pakket; scheelde 1180 regels ontbrekend-bestand-fouten per start).
+
 ## F4.2b (3 september): redactie en toegang
 
 Een client-rij is alleen nog `{seq, player_seat, type, payload: {events}}`:

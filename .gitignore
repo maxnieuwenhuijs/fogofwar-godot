@@ -12,6 +12,8 @@ __pycache__/
 # F4 Node-backend
 server/node_modules/
 server/dist/
+# F4.4a: geheimen van een draaiende server (droplet); voorbeeld staat in .env.voorbeeld
+server/.env
 
 # F4.2-testcache (referentiepartij, regenereert vanzelf)
 server/test/.cache/

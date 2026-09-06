@@ -1,0 +1,27 @@
+# F4.4a — systemd-unit voor de Fog of War backend op de droplet.
+# Geïnstalleerd door droplet-setup.sh in /etc/systemd/system/fogofwar.service.
+# Logboek: journalctl -u fogofwar -f
+[Unit]
+Description=Fog of War online backend (Node + Godot-scheidsrechter)
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=fogofwar
+Group=fogofwar
+WorkingDirectory=/opt/fogofwar/server
+EnvironmentFile=/opt/fogofwar/server/.env
+# user:// van de Godot-worker (settings.cfg, logs) en de npm-cache.
+Environment=HOME=/opt/fogofwar/home
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /opt/fogofwar/server/dist/index.js
+Restart=always
+RestartSec=3
+# Geen sudo-escalatie, eigen /tmp, /usr en /etc alleen-lezen.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

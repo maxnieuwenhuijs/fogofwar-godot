@@ -1,6 +1,6 @@
 {
   "name": "fogofwar-server",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "description": "Fog of War online backend (F4.1): accounts, matches, event-log. Node 22 + Fastify; MySQL + Redis.",
@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

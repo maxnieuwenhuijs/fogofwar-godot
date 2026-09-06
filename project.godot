@@ -32,6 +32,10 @@ window/size/viewport_height=1920
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[fogofwar]
+
+server_url="http://127.0.0.1:8787"
+
 [internationalization]
 
 locale/translations=PackedStringArray("res://i18n/strings.en.translation", "res://i18n/strings.nl.translation")
@@ -43,5 +47,4 @@ locale/translations=PackedStringArray("res://i18n/strings.en.translation", "res:
 [rendering]
 
 textures/canvas_textures/default_texture_filter=2
-
 rendering_device/driver.windows="d3d12"

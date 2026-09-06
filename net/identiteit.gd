@@ -11,7 +11,11 @@ extends RefCounted
 var pad: String = "user://identity.cfg"
 var device_token: String = ""
 var naam: String = ""
-var server_url: String = "http://127.0.0.1:8787"  # de POORT-default van server/src/index.ts
+## De server voor een uitgeleverde build komt uit de projectinstelling
+## `fogofwar/server_url` (F4.4a; zet hem in de editor vóór een export op de
+## https-url van de droplet). `identity.cfg` en `-- server=` gaan daar bovenop.
+const STANDAARD_SERVER_URL := "http://127.0.0.1:8787"  # de POORT-default van server/src/index.ts
+var server_url: String = String(ProjectSettings.get_setting("fogofwar/server_url", STANDAARD_SERVER_URL))
 var laatste_match_id: String = ""
 
 

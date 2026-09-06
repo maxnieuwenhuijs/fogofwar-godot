@@ -3361,7 +3361,10 @@ func _lobbycheck(game: Node, url: String) -> bool:
 	a = await _wacht_op(bak)
 	meld.call("sessie B verbonden", bool(a.ok))
 	# A's wachtscherm pollt elke 2 s en start dan de partij: het keuze-menu.
-	ok = await _wacht_tot(func() -> bool: return game.session != null and game.session.is_online() and overlay.visible and String(overlay._title.text) == game.tr("MENU_DOCTRINE_TITLE"), 20.0)
+	# Sinds de UI-assetpack (merge 5d4a18e) is dat het factie-keuzescherm
+	# (game._factie_keuze), niet meer het overlay-menu.
+	var keuzescherm = game._factie_keuze
+	ok = await _wacht_tot(func() -> bool: return game.session != null and game.session.is_online() and keuzescherm.visible and String(keuzescherm._titel.text) == game.tr("MENU_DOCTRINE_TITLE"), 20.0)
 	meld.call("A ziet dat B meedoet en krijgt het factie-menu", ok, "mens=%d" % game._human_id)
 	if not ok:
 		return false

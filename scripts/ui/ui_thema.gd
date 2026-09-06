@@ -21,6 +21,8 @@ extends Node
 
 
 func _ready() -> void:
+	if OS.has_environment("FOW_WORKER"):
+		return  # server-worker (F4.4a): geen schermen, en assets/ui staat niet op de droplet
 	var venster := get_window()
 	if venster != null:
 		venster.theme = UiAssets.thema()

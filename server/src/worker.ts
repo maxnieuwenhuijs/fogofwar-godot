@@ -99,7 +99,9 @@ export class GodotWorker {
     const proc = spawn(
       this.opties.godotPad,
       ["--headless", "--path", this.opties.projectPad, "res://tools/server_worker.tscn", "--", `poort=${poort}`],
-      { stdio: ["ignore", "ignore", "ignore"], cwd: this.opties.projectPad },
+      // FOW_WORKER (F4.4a): de autoloads slaan geluid en UI-thema over; de
+      // droplet heeft die assets niet en de scheidsrechter heeft ze niet nodig.
+      { stdio: ["ignore", "ignore", "ignore"], cwd: this.opties.projectPad, env: { ...process.env, FOW_WORKER: "1" } },
     );
     this.proc = proc;
     // Een binary die niet bestaat (of geen rechten) komt als 'error'-event

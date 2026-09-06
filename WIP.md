@@ -1,5 +1,75 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september -- F4.4a: online hosten op een droplet (deploy-pakket)
+
+Max: "hoe kan ik dit online gaan hosten op digital ocean" en "bouw maar".
+Eerst gemeten wat er echt op een droplet moet: de Node-backend (72 MB), de
+scheidsrechter (headless Godot, 136 MB) en MySQL (~400 MB). Het volle project
+(4,7 GB) hoort er NIET bij: de import ervan piekt op 7,5 GB werkgeheugen en de
+worker gebruikt er niets van. Proef in de scratchpad: een kopie met alleen
+`core/`, `scripts/`, `agents/`, `net/`, `arena/`, `i18n/`, `data/` en de worker
+importeert in 7 s (56 KB cache) en geeft dezelfde core-hash `db5029…`.
+Advies aan Max: eigen droplet van 2 GB (~12 dollar), niet de
+ReisLastMinute-machine (elf PM2-apps + productie-MySQL op 8 GB).
+
+Gebouwd, in `tools/deploy/` (README voor Max met de stappen die hij zelf
+doet: droplet + SSH-sleutel, A-record, e-mail voor Let's Encrypt):
+
+- `bouw_serverpakket.ps1 [-Proef]`: het server-pakket naar
+  `results/serverpakket(.tgz)` (0,3 MB, 233 bestanden; zonder
+  `scripts/game/game.gd` (preloadt Board.tscn) en zonder `scenes/`). `-Proef`
+  importeert het pakket, start er een worker uit en vergelijkt core-hash én
+  init-hash met een worker uit het volle project (`worker_proef.mjs`:
+  NDJSON over TCP; les: de worker neemt precies één verbinding aan en stopt
+  als die dichtgaat, dus nooit "peilen" met een losse verbinding).
+- `deploy-server.ps1 -Droplet <domein> [-Nettest]`: pakket + proef, server-bron
+  (src, db, package*.json, tsconfig*) inpakken, scp, ssh
+  `op-droplet-uitrollen.sh` (import als service-gebruiker, `npm ci`,
+  `npm run build`, engine wisselen, herstart, wachten op `/gezond`), dan
+  `GET /versie` via https en desgewenst `-- nettest` tegen de droplet.
+- `droplet-setup.sh` (eenmalig, Ubuntu 24.04): nginx + certbot, MySQL 8 met
+  database en gebruiker (gegenereerd wachtwoord in `.env`, 600), Node 22
+  (NodeSource), Godot 4.7 Linux-binary (download gecontroleerd), gebruiker
+  `fogofwar`, `fogofwar.service` (Restart=always, ProtectSystem=full,
+  EnvironmentFile), nginx-site (poort 80, certbot voegt 443 toe) plus
+  http-context (`limit_req` 10 r/s burst 30, `limit_conn`, WebSocket-map),
+  ufw 22/80/443. Idempotent.
+- Server: `npm run build` (`tsconfig.build.json` → `dist/`), `npm start` =
+  `node dist/index.js`, `FOW_PROJECT_PAD` (engine los van de code),
+  `.env.voorbeeld`, `server/.env` in `.gitignore`; de worker krijgt
+  `FOW_WORKER=1` mee.
+- Engine: `Audio._ready` slaat onder `FOW_WORKER` het laden van de banken
+  over (`_laad_banken()`), `UiThema._ready` keert dan meteen terug. Op het
+  pakket scheelde dat 1180 regels ontbrekend-bestand-fouten per start; de
+  core-hash raakt het niet (beide scripts zitten niet in `core/` of de zes
+  kernscripts).
+- Client: `Identiteit.server_url` leest de projectinstelling
+  `fogofwar/server_url` (voor een uitgeleverde build; `identity.cfg` en
+  `-- server=` gaan erbovenop). `project.godot` kreeg de sectie `[fogofwar]`.
+
+**Nazorg onderweg.** (1) De lobbycheck faalde op stap 6: niet door dit werk
+maar door de UI-assetpack-merge (5d4a18e) waarin het factie-menu een eigen
+scherm werd (`game._factie_keuze`); de check keek nog naar het overlay-menu.
+Aangepast in `capture.gd`. (2) De lokale MySQL op 3316 was twee keer gestopt
+(db-lokaal.ps1). (3) Eigen review van de Linux-scripts (de review-agents
+liepen op de maandlimiet): een apostrof in `${EMAIL:?...}` was voor bash een
+open quote, `ufw status | head` kon met `pipefail` een SIGPIPE-exit geven, een
+`[ ] && mv` onder `set -e` is een expliciete `if` geworden, en de
+nettest-argumenten in PowerShell gaan als array zodat het losse `--` letterlijk
+aankomt. `bash -n` op beide scripts en de PowerShell-parser op beide ps1's zijn
+schoon; de Linux-kant zelf draait pas op Max' droplet (geen WSL-Ubuntu hier).
+
+**Checks:** pakket-proef PASS (core-hash en init-hash gelijk, import schoon);
+`npm run typecheck` + `build` ok; `npm test` 20/20; de GEBOUWDE server
+(`node dist/index.js`, `FOW_PROJECT_PAD` = pakket): `-- nettest` 13/13 en
+`-- lobbycheck` 10/10; testsuite 2282 asserts, 0 fouten; `-- uispel 777`
+zobrist `890b6cb4…`, 270 acties, cyclus 6 (ongewijzigd). Docs: CLAUDE.md,
+MASTERBOUWPLAN (F4.4a onder F4.4), server/README.md, tools/deploy/README.md.
+
+**Volgende:** Max maakt de droplet en het A-record; dan `droplet-setup.sh`,
+`deploy-server.ps1 -Nettest`, en de projectinstelling `fogofwar/server_url`
+op de https-url zetten vóór de eerste client-export. Daarna F4.3j.
+
 ## 4 september (ochtend) -- zwevende wapens: de bot-kind-bug van Blender 5.1
 
 Max: "alle wapens zweven overal en zwaarden etc., terwijl de blends geanimeerd

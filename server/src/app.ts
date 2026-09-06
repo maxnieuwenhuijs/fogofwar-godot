@@ -57,8 +57,10 @@ export async function bouwApp(opties: AppOpties): Promise<{ app: FastifyInstance
   // Start meteen (F4.2b): een ontbrekende binary of een redactielijst die
   // afwijkt van de engine is een OPSTARTFOUT, geen 500 per verzoek. Herstart
   // zichzelf na een crash.
+  // FOW_PROJECT_PAD (F4.4a): op de droplet staat het uitgeklede engine-pakket
+  // (tools/deploy/bouw_serverpakket.ps1) los van de server-code.
   const projectPad =
-    opties.projectPad ?? resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+    opties.projectPad ?? process.env.FOW_PROJECT_PAD ?? resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
   const godotPad = opties.godotPad ?? process.env.GODOT_PAD ?? process.env.GODOT_PATH ?? STANDAARD_GODOT;
   app.decorate("worker", new GodotWorker({ godotPad, projectPad, verwachtServerOnly: SERVER_ONLY_EVENTS }));
   try {

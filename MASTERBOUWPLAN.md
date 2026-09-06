@@ -921,6 +921,20 @@ JavaScriptBridge) zodat "spelen via een link" kan voor playtests.
 (MAX + 1 tester); leak-canary draait in CI tegen een echte server (verbindt als P2, asserteert dat geen
 serverbericht verboden velden bevat); klok-forfeit aantoonbaar in een integratietest.
 
+**☑ F4.4a — deploy-pakket (4 september 2026).** Vóór klokken en ranked eerst een server die
+buiten het LAN staat: `tools/deploy/` (README voor Max) met het server-pakket
+(`bouw_serverpakket.ps1 -Proef`: 0,3 MB engine-subset, zelfde core-hash als het volle project,
+bewezen per uitrol), `deploy-server.ps1` (scp + ssh + import + build + herstart + `/versie` +
+`-- nettest` tegen de droplet), `droplet-setup.sh` (Ubuntu 24.04: nginx + Let's Encrypt, MySQL 8
+met gegenereerd wachtwoord, Node 22, Godot 4.7 Linux, systemd-unit `fogofwar`, ufw) en de
+nginx-config met rate-limiting en WebSocket-upgrade. Server: `npm run build` → `dist/`,
+`FOW_PROJECT_PAD`, `.env.voorbeeld`; engine: `FOW_WORKER` laat `Audio`/`UiThema` de assets
+overslaan; client: projectinstelling `fogofwar/server_url` als standaard-server voor een
+uitgeleverde build. Advies: eigen droplet (2 GB), niet de ReisLastMinute-machine.
+**CHECK:** pakket-proef PASS (core-hash + init-hash gelijk), `npm test` 20/20, dist-server met
+het pakket als engine: `-- nettest` 13/13 en `-- lobbycheck` 10/10. De Linux-kant draait pas op
+de droplet zelf (Max maakt hem aan; zie de README).
+
 ### ☐ F4.5 — Solo-sync: her-validatie van offline campagnes
 
 **Werk:** `POST /solo/sync` (B6): client uploadt het solo-campagne-log (+ match-logs); een worker

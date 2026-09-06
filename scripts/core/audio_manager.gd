@@ -180,7 +180,8 @@ var _music_cat: String = ""
 var _ambient_cat: String = ""
 
 
-func _ready() -> void:
+## Laadt alle geluidsbanken: BANK plus de losse bestanden op categorienaam.
+func _laad_banken() -> void:
 	for category in BANK:
 		var loaded: Array = []
 		for filename in BANK[category]:
@@ -206,6 +207,14 @@ func _ready() -> void:
 				lijst.append(st)
 		if not lijst.is_empty():
 			_streams[cat] = lijst
+
+
+func _ready() -> void:
+	# Server-worker (F4.4a): geen geluid nodig, en op de droplet staat de
+	# sounds/-map niet; overslaan scheelt honderden ontbrekend-bestand-fouten
+	# per start. De spelers-pool blijft bestaan, dus play() blijft veilig.
+	if not OS.has_environment("FOW_WORKER"):
+		_laad_banken()
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
 		player.bus = "Master"
