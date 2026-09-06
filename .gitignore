@@ -21,3 +21,7 @@ server/test/.cache/
 # Inbox voor verse modeluploads (blend-bronnen, honderden MB's; de verwerkte
 # glb's landen in assets/models/ en gaan WEL mee)
 assets/new 3d models/
+
+# Inbox voor verse texturen (Tripo-bakes, 2K PNG's; de gekozen jassen landen als
+# <model>_red.png / <model>_blue.png naast hun glb en gaan WEL mee)
+assets/new textures/

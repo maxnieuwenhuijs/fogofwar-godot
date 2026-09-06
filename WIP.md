@@ -1,5 +1,41 @@
 # Fog of War — Work In Progress & Context
 
+## 6 september -- nieuwe teamtexturen voor de muis
+
+Max leverde `assets/new textures/mouse/{red,blue}/<archetype>/` aan: 20 verse
+Tripo-bakes (2048x2048 PNG, color + normal). Geïnstalleerd als teamjas naast de
+glb: `<archetype>_<team>.png` in `assets/models/mouse/{infantry,cavalry}/`.
+
+- **19 van de 20 erin.** 11 bestaande jassen vervangen, 8 nieuwe erbij: de
+  cavalerie had alleen `cavalry_base`, nu hebben alle vijf archetypen rood
+  én blauw. Elke uuid in de bestandsnaam is gecontroleerd tegen de bake die
+  al naast het model ligt.
+- **`red/infantry_base` overgeslagen**: dat bestand is byte-identiek aan
+  `red/infantry_mix` (bake `68fa9394…` = de mix-node, een dubbele download).
+  Geïnstalleerd zou het de base-muis de jas van de mix-muis geven. De oude
+  `infantry_base_red.png` staat er dus nog; rood/blauw lopen daar nu uit de pas.
+- **Normal-maps niet geïnstalleerd.** Rood en blauw zijn per archetype
+  byte-identiek (ze dragen geen teaminformatie) en de engine zet alleen een
+  albedo-override (`PawnView.apply_albedo_to`); de normal zit al als
+  `<model>_NormalGL_<uuid>.jpg` in de glb. Ze staan nog in de inbox.
+- **Gore-varianten zijn niet meegegaan.** `infantry_{atk,base,mix,spd}_*_gore.png`
+  zijn de óúde jas met bloed erop (ze verschillen op 30-70% van de atlas: geen
+  losse splatter maar een hele hertekening, dus niet automatisch over te zetten).
+  Gibs pakken die gore-variant met voorrang, dus brokstukken dragen daar nog het
+  oude uniform. `infantry_mix_gibs_red.png` is dood gewicht: gibs kijken naar het
+  MODEL-pad, niet naar het gibs-pad.
+- **De nieuwe blauwe jas is veel donkerder** dan de oude (bijna zwart in plaats
+  van marineblauw); rood is gedempter baksteenrood. Leesbaarheid rood/blauw op
+  het bord leunt daardoor zwaarder op het voetringetje. Contactvel oud/nieuw:
+  `results/muis_texturen_oud_nieuw.png` (regenereert niet vanzelf, results/ is
+  gitignored).
+- Import volgens MODEL-PIPELINE-CHECKLIST E: `process/size_limit=1024` +
+  `mipmaps/generate=true` in elke `.import`. `-- tunercheck`: 30 modellen, gibs
+  compleet, 0 fouten.
+- Inbox `assets/new textures/` krijgt dezelfde behandeling als
+  `assets/new 3d models/`: `.gdignore` erin (anders importeert Godot 39 PNG's
+  van 4 MB mee) en een regel in `.gitignore`.
+
 ## 4 september -- F4.4a: online hosten op een droplet (deploy-pakket)
 
 Max: "hoe kan ik dit online gaan hosten op digital ocean" en "bouw maar".
