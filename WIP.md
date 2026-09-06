@@ -6,14 +6,21 @@ Max leverde `assets/new textures/mouse/{red,blue}/<archetype>/` aan: 20 verse
 Tripo-bakes (2048x2048 PNG, color + normal). Geïnstalleerd als teamjas naast de
 glb: `<archetype>_<team>.png` in `assets/models/mouse/{infantry,cavalry}/`.
 
-- **19 van de 20 erin.** 11 bestaande jassen vervangen, 8 nieuwe erbij: de
-  cavalerie had alleen `cavalry_base`, nu hebben alle vijf archetypen rood
-  én blauw. Elke uuid in de bestandsnaam is gecontroleerd tegen de bake die
-  al naast het model ligt.
-- **`red/infantry_base` overgeslagen**: dat bestand is byte-identiek aan
-  `red/infantry_mix` (bake `68fa9394…` = de mix-node, een dubbele download).
-  Geïnstalleerd zou het de base-muis de jas van de mix-muis geven. De oude
-  `infantry_base_red.png` staat er dus nog; rood/blauw lopen daar nu uit de pas.
+- **Alle 20 erin.** 12 bestaande jassen vervangen, 8 nieuwe erbij: de cavalerie
+  had alleen `cavalry_base`, nu hebben alle vijf archetypen rood én blauw.
+- Eerste ronde ging `red/infantry_base` niet mee: dat bestand was toen bake
+  `68fa9394…` (de mix-node) en byte-identiek aan `red/infantry_mix`, een dubbele
+  download. Max leverde de juiste na; die draagt `d8188b58…`, de eigen bake van
+  het base-model, en is alsnog geïnstalleerd.
+- **Twee controles op de jas-bij-de-juiste-mesh-vraag.** (1) De uuid in de
+  bestandsnaam is de Tripo-node waarop gebakken is: die moet horen bij de
+  `<model>_Color_<uuid>.jpg` die al naast dat model ligt. (2) De UV-BEZETTING
+  (welke texels beschilderd zijn, uit de alfa) hoort bij de mesh, dus rood en
+  blauw van hetzelfde archetype moeten elkaars beste match zijn: 89-99% voor de
+  juiste paren tegen ~52% voor de eerstvolgende. Alle tien groen. LET OP: die
+  meting werkt alleen tussen de PNG's; de gebakken `_Color_*.jpg` naast het
+  model heeft geen alfa en een gevulde achtergrond, en levert voor elk paar
+  ~62% op — waardeloos als referentie.
 - **Normal-maps niet geïnstalleerd.** Rood en blauw zijn per archetype
   byte-identiek (ze dragen geen teaminformatie) en de engine zet alleen een
   albedo-override (`PawnView.apply_albedo_to`); de normal zit al als
