@@ -25,6 +25,26 @@ import sys
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 uit = None
+# --- Parent-inverse inbakken (3 september 2026) ---------------------------------
+# Bevinding: in de blends zit het wapen (tripo_node) netjes aan het RightHand-bot,
+# maar met een niet-identieke matrix_parent_inverse. De glTF-exporter van
+# Blender 5.1 laat die inverse bij BOT-geparente objecten weg, waardoor het
+# wapen in de glb meters van de hand af komt te staan (alle cavalerie en de
+# beer/krokodil/wolf-infanterie zweefden over het bord). Wereldpositie
+# bewaren, inverse op identiteit zetten en Blender de basis laten herrekenen:
+# dan exporteert het wapen precies waar het in Blender zit.
+def bak_parent_inverse_in(objecten):
+    n = 0
+    for o in objecten:
+        if o.parent is None or o.parent_type != "BONE":
+            continue
+        mw = o.matrix_world.copy()
+        o.matrix_parent_inverse.identity()
+        o.matrix_world = mw
+        n += 1
+        print("  parent-inverse ingebakken: %s (bot %s)" % (o.name, o.parent_bone))
+    return n
+
 zonder_wapen = False
 for i, a in enumerate(argv):
     if a == "--uit" and i + 1 < len(argv):
@@ -71,7 +91,9 @@ for img in bpy.data.images:
         img.scale(min(img.size[0], 1024), min(img.size[1], 1024))
         print("  texture verkleind: %s -> %dx%d" % (img.name, img.size[0], img.size[1]))
 
-# 3. Alles selecteren en exporteren.
+# 3. Parent-inverse van bot-geparente wapens inbakken, alles selecteren en exporteren.
+bak_parent_inverse_in([o for o in bpy.data.objects if o.type == "MESH"])
+bpy.context.view_layer.update()
 bpy.ops.object.select_all(action="SELECT")
 os.makedirs(os.path.dirname(os.path.abspath(uit)), exist_ok=True)
 bpy.ops.export_scene.gltf(
@@ -81,6 +103,14 @@ bpy.ops.export_scene.gltf(
     export_image_format="JPEG",
     export_jpeg_quality=85,
 )
+# 4. Bot-kind-fix: de exporter zet bot-geparente wapens meters naast de hand
+#    (zie tools/blender_botkind_fix.py); de node in de glb krijgt de matrix
+#    die Blender zelf ziet.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import blender_botkind_fix
+_arm = next((o for o in bpy.data.objects if o.type == "ARMATURE"), None)
+if _arm is not None:
+    blender_botkind_fix.fix_glb(os.path.abspath(uit), [o for o in bpy.data.objects if o.type == "MESH"], _arm)
 mesh_n = len([o for o in bpy.data.objects if o.type == "MESH"])
 act_n = len(bpy.data.actions)
 print("EXPORT KLAAR: %s (%d mesh-delen, %d acties)" % (uit, mesh_n, act_n))

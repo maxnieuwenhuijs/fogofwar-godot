@@ -25,6 +25,27 @@ CLIPS = []  # (naam, pad)
 FORCE_YAW = {}  # clipnaam -> graden die de clip gedraaid staat (handmatige override)
 DONOR = ""  # pad naar master-model: alle clips daarvan worden overgenomen
 MAKE_GIBS = False  # --gibs: genereer <model>_gibs.glb uit de losse mesh-delen
+
+
+# --- Parent-inverse inbakken (3 september 2026) ---------------------------------
+# Bevinding: in de blends zit het wapen (tripo_node) netjes aan het RightHand-bot,
+# maar met een niet-identieke matrix_parent_inverse. De glTF-exporter van
+# Blender 5.1 laat die inverse bij BOT-geparente objecten weg, waardoor het
+# wapen in de glb meters van de hand af komt te staan (alle cavalerie en de
+# beer/krokodil/wolf-infanterie zweefden over het bord). Wereldpositie
+# bewaren, inverse op identiteit zetten en Blender de basis laten herrekenen:
+# dan exporteert het wapen precies waar het in Blender zit.
+def bak_parent_inverse_in(objecten):
+    n = 0
+    for o in objecten:
+        if o.parent is None or o.parent_type != "BONE":
+            continue
+        mw = o.matrix_world.copy()
+        o.matrix_parent_inverse.identity()
+        o.matrix_world = mw
+        n += 1
+        print("  parent-inverse ingebakken: %s (bot %s)" % (o.name, o.parent_bone))
+    return n
 i = 0
 while i < len(argv):
     a = argv[i]
@@ -218,6 +239,12 @@ def add_track(arm, act, name):
         print("slot-koppeling:", name, e)
 
 
+# Bot-kind-fix (3 september): de importer zet bot-geparente wapens meters naast
+# de hand; bewaar hun (correcte) transform uit de basis-glb en zet die na de
+# export terug (zie tools/blender_botkind_fix.py).
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import blender_botkind_fix
+_botkinderen = blender_botkind_fix.bewaar_botkinderen(os.path.abspath(BASE))
 bpy.ops.import_scene.gltf(filepath=os.path.abspath(BASE))
 base = scene_armatures()[0]
 print("BASIS:", base.name)
@@ -335,9 +362,13 @@ for img in bpy.data.images:
     if img.size[0] > 1024 or img.size[1] > 1024:
         img.scale(min(img.size[0], 1024), min(img.size[1], 1024))
         print('  texture verkleind: %s -> %dx%d' % (img.name, img.size[0], img.size[1]))
+bak_parent_inverse_in([o for o in bpy.data.objects if o.type == "MESH"])
+bpy.context.view_layer.update()
 bpy.ops.export_scene.gltf(filepath=os.path.abspath(OUT), export_format='GLB',
                           export_animation_mode='NLA_TRACKS',
                           export_image_format='JPEG', export_jpeg_quality=85)
+# Bot-kind-fix: de bewaarde transforms uit de basis-glb terugzetten.
+blender_botkind_fix.herstel_botkinderen(os.path.abspath(OUT), _botkinderen)
 
 
 def make_gibs(model_out):

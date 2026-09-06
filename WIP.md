@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 4 september (ochtend) -- zwevende wapens: de bot-kind-bug van Blender 5.1
+
+Max: "alle wapens zweven overal en zwaarden etc., terwijl de blends geanimeerd
+en wel zijn." Klopte: in alle cavalerie-glb's en de beer/krokodil/wolf-
+infanterie stond het ingebakken wapen (de `tripo_node` aan
+`mixamorig:RightHand`) 4 tot 9 wereld-eenheden van de hand, en omdat de
+handrotatie per animatieframe verschilt, lagen sabels en musketten overal
+naast en onder het bord. `tools/_wapencheck.gd` zag niets: die kijkt alleen
+naar de hierarchie (bot-geparent = goed), niet naar de afstand.
+
+**Oorzaak.** In de blends zit het wapen wél netjes op de hand (8-20 cm van het
+bot, gemeten in Blender). De glTF-exporter van Blender 5.1 schrijft voor een
+bot-geparent object onder een armature met schaal 0,009 de X en Z goed, maar
+telt bij Y de botlengte GEDEELD DOOR de armature-schaal op (4,4 / 0,009 = 490
+in plaats van 4,4) en negeert een niet-identieke `matrix_parent_inverse`. De
+importer doet hetzelfde de andere kant op, dus de merge-stap (glb importeren,
+kwartslag-fix, gibs, opnieuw exporteren) maakte het opnieuw stuk. De oude
+pig/muis/leeuw-infanterie (exports van voor 15 augustus) had het niet.
+
+**Fix in de pijplijn** (`tools/blender_botkind_fix.py`): stap 2
+(`blender_export_blend.py`) bakt de parent-inverse in en overschrijft na de
+export de wapen-node in de glb met de bot-relatieve matrix die Blender zelf
+ziet; stap 3 (`blender_merge_character.py`) bewaart de bot-kind-transforms
+uit de basis-glb voor de import en zet ze na de export terug. Alle 30
+getroffen modellen zijn opnieuw door stap 2 en 3 gehaald vanuit de blends in
+`assets/new 3d models/` (de Pig/Lion-blends zijn de cavalerie; per model op
+tripo-id geverifieerd). Nieuwe controle: `-- zweefcheck [factie]` (elke
+zichtbare mesh die meer dan 2 eenheden van zijn pion staat; de vaandels op
+1,3 vallen erbinnen).
+
+**Checks na de her-export en import:** `-- zweefcheck` PASS voor alle zes
+facties (0 meshes verder dan 2 van hun pion), `_wapencheck.gd` PASS (42
+ingebakken, 3 prop-route, 0 fouten), `-- tunercheck` 0 fouten,
+`-- meleecheck` PASS, suites groen, `-- uispel 777` zelfde zobrist (modellen
+raken de logica niet). Schermafbeeldingen per factie (`-- play <factie>`)
+bekeken: musketten en sabels in de hand, niets meer naast het bord.
+
 ## 5 september -- F4.3i: de lobby, twee mensen tegen de dev-server
 
 Max: "dus morgen kunnen we gaan testen, is het heus?" Ja, op het eigen

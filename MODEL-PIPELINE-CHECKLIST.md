@@ -65,6 +65,19 @@ Sinds 16 augustus (besluit Max) gebruikt het spel dat ingebakken musket ZELF:
 Twijfel je wat een mesh is: RENDER hem even, een naam-scan is geen
 inhouds-controle.
 
+**Bot-kind-fix (3 september 2026).** De glTF-exporter én -importer van
+Blender 5.1 zetten een bot-geparent wapen onder een geschaalde armature
+(Mixamo-rig op 0,009) meters naast de hand: bij Y wordt de botlengte gedeeld
+door de schaal opgeteld (4,4 / 0,009 = 490), en een niet-identieke
+`matrix_parent_inverse` wordt genegeerd. Daardoor zweefden alle cavalerie-
+wapens en de beer/krokodil/wolf-musketten over het bord. Stap 2 bakt nu de
+parent-inverse in en overschrijft na de export de wapen-node met de matrix die
+Blender zelf ziet; stap 3 bewaart de bot-kind-transforms uit de basis-glb vóór
+de import en zet ze na de export terug (`tools/blender_botkind_fix.py`).
+Controle na import: `<godot> --path . res://tools/capture.tscn -- zweefcheck
+[factie]` (elke mesh die meer dan 2 eenheden van zijn pion staat: PASS/FAIL),
+naast `--script tools/_wapencheck.gd`.
+
 ## C-oud. Twee exports uit hetzelfde .blend (handmatig)
 - [ ] **Export 1** het model **+ Armature** · **Skinning AAN · Animation AAN**
 - [ ] **Export 2** de gibs — dezelfde delen, **Animation UIT**

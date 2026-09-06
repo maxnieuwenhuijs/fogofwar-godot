@@ -155,6 +155,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   dev-server: 13 stappen PASS) en sinds F4.3i `-- lobbycheck [url]` (de
   echte lobby-code van game.gd tegen de dev-server: 10 stappen PASS). Het
   bouwplan met de vaste regressieset staat in `docs/F4.3-bouwplan.md`.
+- **Online hosten (F4.4a):** `tools/deploy/README.md`. Pakket + bewijs:
+  `.\tools\deploy\bouw_serverpakket.ps1 -Proef` (0,3 MB engine-subset,
+  zelfde core-hash als het volle project); uitrol:
+  `.\tools\deploy\deploy-server.ps1 -Droplet <domein> -Nettest`. De
+  server bouwt met `npm run build` naar `dist/`; env in `server/.env.voorbeeld`.
+  Engine gewijzigd = server uitrollen én een nieuwe client-build.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).
@@ -178,6 +184,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   thema over het hele spel en schermen kiezen vormen met
   `theme_type_variation` (lijst bij THEMA-VARIANTEN in dat bestand). Nieuwe
   png's onder `assets/ui/` eerst `--import`-en. Zie `assets/ui/LEESMIJ.md`.
+- **Zwevende wapens/props: `-- zweefcheck [factie]`** (capture.tscn, na de
+  opstelling: elke zichtbare mesh die meer dan 2 eenheden van zijn eigen pion
+  staat, met naam en ouderketen; PASS/FAIL). Bot-geparente wapens uit Blender
+  5.1 zweefden meters naast de hand door een export- en importbug; de
+  pijplijn corrigeert dat (`tools/blender_botkind_fix.py`, zie
+  MODEL-PIPELINE-CHECKLIST sectie C). Draai dit na elke her-export.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek
@@ -293,6 +305,11 @@ playtest met twee mensen: `server/README.md` "Twee mensen tegen elkaar".
 schijf, stiltetest), dan k (botclient, M3). Dev-server:
 `server/db-lokaal.ps1`, database `fogofwar` aanmaken (README), dan
 `npm run dev` in `server/`.
+**F4.4a (4 september): de deploy staat klaar** in `tools/deploy/` (README
+voor Max: droplet aanmaken, DNS, `droplet-setup.sh`, dan
+`deploy-server.ps1`). Bewezen zonder droplet: pakket-proef, `npm test`
+20/20, gebouwde server met het pakket als engine: nettest 13/13,
+lobbycheck 10/10. Wacht op Max' droplet; daarna j.
 Open besluiten voor Max staan onderaan het bouwplan; tot nu toe zijn de
 defaults genomen (alleen `core_hash` als versiecheck, match-id als
 roomcode, automatische gastnaam). Elke stap eindigt met de vaste

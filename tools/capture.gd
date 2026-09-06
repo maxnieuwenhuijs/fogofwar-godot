@@ -519,6 +519,49 @@ func _ready() -> void:
 		game._show_rules_overlay(func() -> void: pass)
 		await get_tree().create_timer(0.4).timeout
 		out = "res://_shot_uitleg.png"
+	elif "zweefcheck" in args:
+		# Diagnose (3 september): welke mesh-nodes liggen BUITEN het bord na de
+		# opstelling (zwevende wapens/props)? Print naam, ouderketen en positie.
+		# Gebruik: -- zweefcheck [factie] (beide kanten dezelfde factie).
+		var zf := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
+			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		for zn in zf:
+			if zn in args:
+				game._human_doctrine = zf[zn]
+				game._ai_doctrine = zf[zn]
+		game._start_match(1)
+		await get_tree().create_timer(0.3).timeout
+		game._confirm_placement()
+		await get_tree().create_timer(1.5).timeout
+		var buiten := 0
+		var totaal := 0
+		for mi in game._world.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if not m.is_visible_in_tree():
+				continue
+			totaal += 1
+			var gp: Vector3 = m.global_position
+			# Afstand tot de eigen pion (het kind van Pawns): een wapen hoort binnen
+			# ~2 eenheden van zijn pion te blijven (een vaandel steekt 1,3 omhoog);
+			# de bordgrenzen zijn lokaal en misleiden hier.
+			var pion: Node3D = m
+			while pion != null and pion.get_parent() != game._pawns_root:
+				pion = pion.get_parent() as Node3D
+			var centrum: Vector3 = m.global_transform * m.get_aabb().get_center()
+			var ver: bool = pion != null and centrum.distance_to(pion.global_position) > 2.0
+			if ver:
+				buiten += 1
+				var keten: Array = []
+				var n: Node = m
+				while n != null and n != game._world:
+					keten.append(n.name + ("(" + n.get_class() + ")" if not (n is MeshInstance3D) else ""))
+					n = n.get_parent()
+				var midden: Vector3 = m.global_transform * m.get_aabb().get_center()
+				print("[ZWEEF] %s node=(%.2f, %.2f, %.2f) meshmidden=(%.2f, %.2f, %.2f) keten=%s" % [m.name, gp.x, gp.y, gp.z,
+					midden.x, midden.y, midden.z, " < ".join(keten)])
+		print("[ZWEEF] meshes zichtbaar=%d, meer dan 2 van hun pion: %d (%s)" % [totaal, buiten, "PASS" if buiten == 0 else "FAIL"])
+		get_tree().quit(0)
+		return
 	elif "placetest" in args:
 		# Zelf opstellen: kanonnen + paarden plaatsen, infanterie vult aan.
 		game._start_match(1)
