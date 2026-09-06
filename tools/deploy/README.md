@@ -1,5 +1,8 @@
 # Fog of War online hosten op een DigitalOcean-droplet (F4.4a)
 
+**Stap voor stap, met afvinkhokjes: `ONLINE-HOSTEN-STAPPENPLAN.md` in de
+projectmap.** Dit bestand is de achtergrond en het beheer.
+
 Dit is de handleiding voor Max. Alles wat hier staat is op 4 september 2026
 gebouwd en lokaal bewezen (pakket-proef, `npm run build`, nettest en
 lobbycheck tegen de gebouwde server met het pakket als engine); de
