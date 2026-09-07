@@ -112,6 +112,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (rommelige) bestandsnamen. Draai altijd eerst de droogloop. Wat hij niet
   zeker kan plaatsen bouwt hij NIET. Logs per aanroep in
   `results/modelbouw_<tijd>/`.
+- **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
+  <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
+  hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
+  jas van een ander model rond de 70%. Per materiaal, want lijf en ingebakken
+  wapen hebben elk hun eigen atlas. Een nieuwe jas laten maken:
+  `blender --background <model>.blend --python tools/blender_export_retexture.py
+  -- --uit results/retexture/<naam>.glb` (kaal lijf in rusthouding, geen skelet
+  of wapen) en de dienst vragen de UV's te laten staan.
 - **Factiezoeker** (1 augustus): `python tools/balans/factiezoeker.py --minuten
   120 --potjes 2 [--facties 2,3]`, of de paneelknop "Facties uitproberen
   (balans)". Zoekt aan kaartbudget, kaarten per ronde, legersamenstelling en de

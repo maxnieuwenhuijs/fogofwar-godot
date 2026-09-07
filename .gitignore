@@ -25,3 +25,6 @@ assets/new 3d models/
 # Inbox voor verse texturen (Tripo-bakes, 2K PNG's; de gekozen jassen landen als
 # <model>_red.png / <model>_blue.png naast hun glb en gaan WEL mee)
 assets/new textures/
+
+# Inbox voor een complete levering (blend + bijbehorende texturen bij elkaar)
+assets/new upload folder/

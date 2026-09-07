@@ -1,5 +1,58 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- eerste model van de nieuwe lichting + twee nieuwe controles
+
+Max zette een complete levering neer in `assets/new upload folder/mouse/red/
+infantry_mix/`: een .blend plus de rode mix-jas. Vraag: hoe testen we of het
+werkt, en hoe vis ik zo'n model uit Blender om er een retexture op te laten
+maken?
+
+**De keten draait, van .blend tot in het spel.**
+`python tools/bouw_modellen.py --inbox "assets/new upload folder"` bouwde
+mouse/infantry_mix in 18 s (glb + gibs + musket). Daarna: `_wapencheck.gd`
+"beweegt-mee=true texture=true", `-- zweefcheck mouse` PASS (65 meshes, 0 los),
+`-- tunercheck` vindt hem, gibs compleet, 0 fouten. Rode jas erop als
+`infantry_mix_red.png` met size_limit 1024. Nieuwe inbox heeft `.gdignore` en
+staat in `.gitignore`, net als de andere twee.
+
+**Nieuw: `tools/uv_check.py` -- past deze teamjas op dit model?** Dit ontbrak
+en het is de enige harde meting. Hij pakt de glb zelf uit (alleen numpy en
+Pillow), leest TEXCOORD_0 en de indices, tekent elke UV-driehoek barycentrisch
+in een 512-masker, en meet hoeveel van dat gebied in de png beschilderd is.
+Gemeten op infantry_mix: de juiste jassen 98,8%, jassen van een ander model
+70-75%. Een gat waar je niet naast kunt kijken.
+
+Twee dingen die eerst FOUT gingen en waarom het nu klopt:
+- **Per materiaal meten, niet in totaal.** Een spel-glb draagt twee atlassen:
+  het lijf (`tripo_material_<uuid>`) en het ingebakken wapen. Die UV-vlakken
+  liggen over elkaar, samen 84,6% van de atlas -- dan meet je niets meer en
+  scoorde alles 63-73%. Apart: lijf 62,4%, wapen 59,4%.
+- **"Beschilderd" is alfa, geen kleur.** De eerste versie noemde bijna-zwarte
+  texels onbeschilderd, en juist de nieuwe blauwe jassen zijn bijna zwart:
+  `infantry_mix_blue` zakte daardoor naar 86,8% terwijl hij perfect past. Nu
+  telt alfa, met kleur als terugval voor oude platte PNG's zonder alfakanaal
+  (die hebben overal alfa 255).
+
+Er zit ook een `Material.001` in deze modellen: 228 driehoeken, GEEN texture,
+alleen een vlakke donkerrode kleur -- de opengesneden binnenkanten van de losse
+lichaamsdelen. Het spel legt de teamjas daar wel overheen (`apply_albedo_to`
+pakt elke MeshInstance3D behalve de ingebakken wapens). Zichtbaar alleen als er
+een ledemaat af vliegt. Bestaand gedrag, niets aan gedaan.
+
+**Nieuw: `tools/blender_export_retexture.py`** -- het kale lijf uit een .blend
+vissen om te uploaden voor een retexture. Rusthouding (armature op REST vóór
+de modifiers eraf, anders exporteer je frame 1 van een dood-animatie), geen
+skelet, geen animaties, geen ingebakken wapen (dat heeft een eigen atlas en
+het spel laat die met rust), lichaamsdelen aaneengeplakt tot een object
+(`--los` / `--met-wapen` als vlaggen). Op infantry_mix: 1 object, 1235
+driehoeken, 237 KB.
+
+Bewezen dat de export de UV's ONAANGETAST laat: `uv_check.py` op het
+exportbestand geeft exact dezelfde cijfers als op het spel-model (98,8% voor de
+juiste jassen, 70-75% voor de verkeerde). Wat er terugkomt past dus, mits de
+dienst niet opnieuw uitvouwt -- daar moet Max expliciet om vragen, en
+`uv_check.py` controleert het antwoord.
+
 ## 7 september -- schone lei voor de modellen + een runner voor de blend-inbox
 
 Max: "kunnen we alle models allemaal verwijderen echt alles wat we hebben, want

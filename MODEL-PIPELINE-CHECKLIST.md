@@ -112,6 +112,21 @@ naast `--script tools/_wapencheck.gd`.
 
 ## E. Textures
 - [ ] `<model>_red.png` + `<model>_blue.png` (team-uniformen, **zelfde UV-atlas**)
+- [ ] **Past hij ook echt?** `python tools/uv_check.py <model>.glb <de png's>`
+      leest de UV's uit de glb, tekent ze als driehoeken en meet hoeveel van dat
+      gebied in de png beschilderd is. Een passende jas zit boven de 95%, een jas
+      van een ander model rond de 70%. Per MATERIAAL gemeten, want een spel-glb
+      draagt twee atlassen (lijf en ingebakken wapen) die over elkaar heen
+      liggen; samengevoegd meet je niets. Doe dit voor elke jas: de uuid in de
+      bestandsnaam is maar een naam.
+- [ ] **Een nieuwe jas laten maken** (Tripo/Meshy retexture):
+      `blender --background model.blend --python tools/blender_export_retexture.py
+      -- --uit results/retexture/<factie>_<model>.glb`. Dat levert het kale lijf
+      in RUSTHOUDING: geen skelet, geen animaties, geen ingebakken wapen, delen
+      aan elkaar geplakt (`--los` laat ze los, `--met-wapen` stuurt het wapen
+      mee). Een gerigd model komt bij die diensten vaak opnieuw uitgevouwen
+      terug, en dan past de jas niet meer. **Vraag expliciet om de UV's te laten
+      staan (geen nieuwe unwrap)**, en meet het antwoord met `uv_check.py`.
 - [ ] *(optioneel)* `<model>_red_gore.png` + `<model>_blue_gore.png` (bloederige gibs)
 - [ ] *(optioneel)* `<model>_musket.glb` (eigen musket; anders factie-musket)
 - [ ] Import van **elke grote PNG**: `process/size_limit=1024` + `mipmaps/generate=true`
