@@ -44,6 +44,22 @@ blender --background model.blend --python tools/blender_export_blend.py  -- --ui
 blender --background --python tools/blender_merge_character.py -- --base <map>/infantry_<arch>.glb --gibs
 ```
 
+**Alles in één keer (7 september 2026):** `python tools/bouw_modellen.py`
+draait die drie stappen voor elke .blend in `assets/new 3d models/`. Hij knipt
+pad + bestandsnaam in woorden en herkent daaruit factie, type en archetype, dus
+`lion Base.blend`, `pig atk.blend`, `mouse_cavalry_atk.blend` en
+`bear_infantry_atk/bear_infantry_atk.blend` landen allemaal goed. Wat hij niet
+zeker kan plaatsen bouwt hij NIET, hij noemt het bestand.
+
+- `--droogloop` toont eerst alleen de indeling: draai dat altijd voordat je
+  een verse lichting bouwt.
+- `--factie mouse`, `--model cavalry_atk` om te beperken; `--parallel N`
+  (standaard 4; ~27 s per model, dus dertig stuks in ~3,5 min).
+- Elke Blender-aanroep krijgt een eigen log in `results/modelbouw_<tijd>/`.
+  Exitcode 1 als er iets misging of niet te plaatsen was.
+- Cavalerie krijgt vanzelf `_melee.glb` in plaats van `_musket.glb`;
+  artillerie slaat de wapenstap over.
+
 LET OP: de `tripo_node_<uuid>`-mesh in zo'n blend is het INGEBAKKEN MUSKET
 (niet een duplicaat -- die vergissing is op 15 augustus gemaakt en gefikst).
 De generator hangt hem bot-geparent aan `mixamorig:RightHand`, dus hij

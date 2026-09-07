@@ -1,5 +1,56 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- schone lei voor de modellen + een runner voor de blend-inbox
+
+Max: "kunnen we alle models allemaal verwijderen echt alles wat we hebben, want
+ik krijg blender files volledig geanimeerd die met wapen mooi zijn." Gekozen:
+nu alles weg, en een batch-runner bouwen voor de nieuwe lichting.
+
+**Weg** (commit `72023bd`): `assets/models/{mouse,pig,lion,bear,wolf,crocodile}/`,
+1252 bestanden, 642 MB terug naar 39 MB, 134 glb terug naar 7. Het spel blijft
+speelbaar: `pawn_view` valt terug op het placeholder-blokje met
+archetype-silhouet. `-- tunercheck` na de opruiming: 0 modellen gevonden, 30 nog
+niet geleverd, tuner-scene bouwt op, 0 fouten.
+
+**Blijft staan omdat het NIET uit een .blend komt:** `board/`, `props/`
+(prop_drum, prop_pole, prop_horn, prop_axe, prop_mace, prop_barrel voor de
+regimentsrollen), `model_tuning.json`, `effects_tuning.json`.
+
+**Weg maar terug te halen uit `d5c87d7`:** de teamjassen `<model>_red.png` /
+`_blue.png` (incl. de twintig verse muis-jassen van 6 september), de
+gore-varianten en de per-factie `musket.glb`. Passen ze nog op de nieuwe
+meshes, dan is `git checkout d5c87d7 -- <pad>` genoeg; is de UV-atlas anders
+(nieuwe mesh = nieuwe UV's), dan moeten ze opnieuw door Tripo. Reken op het
+laatste. De 15 sleutels in `model_tuning.json` zijn nu grotendeels verweesd
+(`mouse/*`, `lion/*`): die tuning hoort bij de oude meshes.
+
+**Nieuw: `tools/bouw_modellen.py`.** De gescripte checklist-C voor een hele
+inbox: per .blend de drie Blender-stappen (wapen-prop, karakter mét ingebakken
+wapen, gibs + kwartslag + bot-kind-fix). De namen in de inbox zijn rommelig,
+dus pad + bestandsnaam worden in woorden geknipt en daaruit komen factie, type
+en archetype; wat niet zeker te plaatsen is wordt NIET gebouwd maar benoemd.
+`--droogloop` toont eerst alleen de indeling, `--factie` / `--model` beperken,
+`--parallel` (standaard 4). De Blender-stapscripts gebruiken geen tijdelijke
+bestanden en schrijven alleen naar hun eigen `--uit`, dus parallel draaien is
+veilig. Elke aanroep krijgt een log in `results/modelbouw_<tijd>/`.
+
+Droogloop op de dertig .blends die er nu liggen: alle dertig goed geplaatst,
+inclusief `lion Base.blend`, `pig atk.blend`, `mouse_cavalry_atk.blend` en
+`bear_infantry_atk/bear_infantry_atk.blend`.
+
+**Runner bewezen op een echt model** (wolf/infantry_base, 27 s): drie glb's
+geschreven, 12 mesh-delen en 17 acties. Daarna `--import` en de vaste checks:
+`_wapencheck.gd` meldt `beweegt-mee=true texture=true`, `-- zweefcheck wolf`
+PASS (333 meshes zichtbaar, 0 los van hun pion), `-- cliplengtes` vertaalt alle
+17 Mixamo-namen goed (Bayonet Attack -> melee1, Death 1-6 -> die1-6, Rifle idle
+1-3 -> idle1-3, ...), `-- tunercheck` 0 fouten. Dat testmodel is daarna weer
+verwijderd: het kwam uit de OUDE lichting en de lei moet schoon blijven.
+
+**Volgorde voor de nieuwe lichting:** blends in `assets/new 3d models/`,
+`python tools/bouw_modellen.py --droogloop`, dan zonder vlag, dan `--import`,
+`_wapencheck.gd`, `-- zweefcheck <factie>`, `-- cliplengtes`, `-- tunercheck`.
+Daarna pas de teamjassen en de Model-tuner: die twee zijn handwerk.
+
 ## 6 september -- nieuwe teamtexturen voor de muis
 
 Max leverde `assets/new textures/mouse/{red,blue}/<archetype>/` aan: 20 verse
