@@ -1926,7 +1926,18 @@ var rol_override: String = ""
 
 ## Rol die game.gd ruimtelijk heeft toegewezen ("flag"/"drum"/""). Staat los van
 ## rol_override (tuner) en van de dichtheidsregel voor de extra props.
+## COSMETISCH: verhuist als een drager sneuvelt of koppelt, en verschijnt alleen
+## op ongekoppelde pionnen.
 @export var rol_vast: String = ""
+
+## De ECHTE rol uit Pawn.rol ("flag"/"drum"/""), toegewezen in de opstelfase.
+## Verhuist nooit en levert buit op als de pion sneuvelt (C15 / 4.3.2).
+##
+## Anders dan rol_vast is dit geen aankleding maar een eigenschap van de pion.
+## Het PROP in de hand verdwijnt wel zodra hij koppelt -- dan vecht hij en hoort
+## zijn musket erin -- maar het rol-icoon onder de HP-blokjes blijft staan, zodat
+## je ziet dat hier nog steeds buit te halen valt.
+@export var rol_echt: String = ""
 
 
 ## Volgnummer van deze pion binnen het EIGEN leger (0 = eerste infanterist).
@@ -1983,12 +1994,22 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	var arch: String = "base"
 	if card != null:
 		arch = Constants.card_archetype(card.hp, card.stamina, card.attack)
-	# Figurant-rol (alleen ongekoppelde infanterie): het KARAKTER blijft
-	# gewoon base; alleen de prop in de hand wordt een trommel/vaandel.
+	# Figurant-rol: het KARAKTER blijft gewoon base; alleen de prop in de hand
+	# wordt een trommel/vaandel.
 	if rol_override != "":
 		_rol = rol_override  # tuner: vaste rol, ook mét kaart
+	elif unit_type == Constants.UnitType.INFANTRY and card == null:
+		# Ongekoppeld: de ECHTE drager toont zijn vaandel of trom; heeft hij geen
+		# echte rol, dan de cosmetische aankleding (hoorn, bijl, vat, staf).
+		_rol = rol_echt if rol_echt != "" else _rol_voor_pion()
 	else:
-		_rol = _rol_voor_pion() if unit_type == Constants.UnitType.INFANTRY and card == null else ""
+		# GEKOPPELD (besluit Max, 7 september): het prop gaat weg en je ziet het
+		# vecht-karakter dat bij die kaart hoort, met zijn musket in de handen.
+		# Dat hij drager is blijft zichtbaar aan het rol-icoon onder de
+		# HP-blokjes -- dat staat er altijd, gekoppeld of niet. Zo klopt het
+		# beeld ("deze man vecht nu") met de regel ("en is nog steeds 2 punten
+		# waard"), zonder dat er een trom in zijn hand hangt tijdens een melee.
+		_rol = ""
 	var key := "%d:%d:%s:%s" % [doctrine, unit_type, arch, _rol]
 	if key == _char_key:
 		return

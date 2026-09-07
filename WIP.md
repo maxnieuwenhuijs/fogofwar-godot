@@ -1,5 +1,56 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- rol-icoon, en twee valkuilen in het testen zelf
+
+Max: "ik koppel, maar dan zie ik wel nog het icoon dat het een drummer is, en de
+tegenstander ook toch." Ja. Drie stukken:
+
+- **Het prop verdwijnt bij koppelen** (zoals het was), want een gekoppelde pion
+  vecht en hoort zijn musket vast te hebben, geen trom. Mijn eerste poging liet
+  het vaandel juist staan; Max corrigeerde dat meteen.
+- **`rol_echt` los van `rol_vast`.** Die liepen door hetzelfde veld: `rol_vast`
+  pakte eerst `Pawn.rol` en viel anders terug op de cosmetische toewijzing.
+  Daardoor was niet te zien welk systeem wat deed. Nu is `rol_echt` de echte rol
+  (opstelfase, verhuist nooit, betaalt buit) en `rol_vast` de aankleding (hoorn,
+  bijl, vat -- alleen op ongekoppelde pionnen, mag verhuizen).
+- **Het icoon** onder de HP-blokjes: vaandel-teken in goud, noot in lichtblauw.
+  Tekens en geen texture, want het UI-pack heeft er nog geen; zodra die er zijn
+  is het een TextureRect.
+
+**De vijand zien kostte niets.** `rol` zit al in `Pawn.to_dict()` en
+`View._pawn_view` redigeert hem niet: alleen hp/stamina/attack worden `"?"` en
+de koppeling verdwijnt. Wel fragiel, want niemand had opgeschreven dat dat expres
+was -- daar staat nu een test op.
+
+**Twee dingen die ik over het testen zelf leerde, allebei duur betaald:**
+
+1. **`-- suites=ViewTests` bestaat al sinds 30 juli** (Max vroeg er destijds
+   zelf om). Ik heb vandaag zes keer de volle batterij van tien minuten gedraaid
+   waar zes seconden genoeg was. Gebruik de filter.
+2. **Een kapotte test ziet er groen uit.** `assert_eq(2, "?")` vergelijkt int met
+   String; GDScript geeft daar geen `false` op maar een RUNTIME-FOUT die de
+   testmethode afbreekt, en de runner telt dan niets -- niet geslaagd, niet
+   gefaald. Mijn view-test stond zo een tijdje "groen" terwijl hij niets deed.
+   Vandaar `str()` om beide kanten. Idee voor later: de runner laten klagen als
+   een testmethode nul asserts deed.
+
+De test faalde overigens terecht op een derde punt, maar niet om de reden die ik
+dacht: `card_revealed` staat standaard op TRUE (alleen de Krokodil begint
+gedekt), dus mijn pion was helemaal niet gedekt en kreeg gewoon de volle
+dictionary. Geen fog-lek dus -- een testfout.
+
+**Uispel-contract verschoven.** Seed 777 gaf `890b6cb4...` (270 acties, cyclus 6)
+onder 4.3.1 en geeft nu `8d6aafaa...` (231 acties, cyclus 5). Twee keer
+gereproduceerd. Onderweg zag ik ook `7f54db25...`: dat was de tussenversie waarin
+een gekoppelde drager zijn vaandel HIELD -- een vaandeldrager heeft een andere
+idle-clip, en `-- uispel` stuurt de mens via het timeout-pad, dus andere
+cliplengtes geven andere beslismomenten. Presentatie kan hier dus wel degelijk
+de uitkomst sturen; goed om te weten.
+
+Controles: ViewTests + GameSessionTests + ClientStateTests 252 groen,
+`-- naadcheck` PASS, `-- herstelcheck 777` 132 momenten 0 verschillen,
+`4242 wolf` 139 momenten 0 verschillen.
+
 ## 7 september -- 4.3.2: C15-buit ook op een GEKOPPELDE drager
 
 Max: "als ie gekoppeld is wel of niet maakt niet uit, als je die slaat krijg je

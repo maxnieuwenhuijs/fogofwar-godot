@@ -1543,9 +1543,10 @@ func _zet_figurant_info(pv: PawnView, pawn: Pawn) -> void:
 	if pawn.unit_type != Constants.UnitType.INFANTRY:
 		pv.figurant_index = -1
 		pv.rol_vast = ""
+		pv.rol_echt = ""
 		return
-	pv.rol_vast = String(pawn.rol) if String(pawn.rol) != "" \
-			else String(_figurant_rollen.get(pawn.id, ""))
+	pv.rol_echt = String(pawn.rol)
+	pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
 	var ids: Array = []
 	for p in session.state.pawns.values():
 		if p.owner_id == pawn.owner_id and p.unit_type == Constants.UnitType.INFANTRY:
@@ -1600,6 +1601,40 @@ const HP_COLOR_HEALTH := Color(0.28, 0.85, 0.38)
 const HP_COLOR_STAMINA := Color(0.45, 0.74, 1.0)
 const HP_COLOR_ATTACK := Color(0.98, 0.56, 0.3)
 
+## Het rol-icoon onder de HP-blokjes: vaandeldrager of tamboer.
+##
+## Staat op EIGEN en op VIJANDELIJKE pionnen. Sinds 4.3.2 levert elke drager
+## buit op -- gekoppeld of niet -- dus je moet kunnen zien waar hij staat. De rol
+## reist al mee in de fog-view: `rol` zit in Pawn.to_dict() en View._pawn_view
+## redigeert hem niet (alleen hp/stamina/attack worden "?" en de koppeling
+## verdwijnt). ViewTests legt dat vast, zodat een latere redactie-uitbreiding het
+## niet stilletjes wegneemt.
+##
+## Tekens in plaats van een texture: het UI-pack heeft nog geen vaandel- of
+## trom-icoon, en een letter met een dikke rand leest op deze maat prima. Zodra
+## de assets er zijn is dit een TextureRect.
+const ROL_TEKEN := {"flag": "\u2691", "drum": "\u266A"}
+const ROL_KLEUR := {"flag": Color(0.95, 0.82, 0.35), "drum": Color(0.62, 0.80, 1.0)}
+
+
+func _werk_rol_iconen_bij(state: GameState, total_w: float, total_h: float) -> void:
+	for pid in _hp_bars:
+		var bar: Dictionary = _hp_bars[pid]
+		var lbl: Label = bar.get("rol", null)
+		if lbl == null:
+			continue
+		var pawn: Pawn = state.pawns.get(pid, null)
+		var rol: String = "" if pawn == null else String(pawn.rol)
+		if pawn == null or pawn.is_eliminated or not ROL_TEKEN.has(rol):
+			lbl.visible = false
+			continue
+		lbl.text = String(ROL_TEKEN[rol])
+		lbl.add_theme_color_override("font_color", ROL_KLEUR[rol])
+		lbl.visible = true
+		# Onder de blokjes, gecentreerd op de kolom-breedte.
+		lbl.position = Vector2(total_w * 0.5 - 5.0, total_h + 1.0)
+
+
 func _build_health_bars() -> void:
 	if _hp_layer == null:
 		return
@@ -1633,8 +1668,21 @@ func _build_health_bars() -> void:
 		qlabel.add_theme_constant_override("outline_size", 5)
 		qlabel.position = Vector2(HP_COLS * (HP_BLOCK_SIZE + HP_BLOCK_GAP) * 0.5 - 6.0, -4.0)
 		holder.add_child(qlabel)
+		# Rol-icoon (C15 / 4.3.2): vaandeldrager of tamboer, net onder de
+		# HP-blokjes. Ook op VIJANDELIJKE pionnen -- sinds 4.3.2 levert elke
+		# drager buit op, dus je moet er gericht op kunnen jagen. De rol zit al
+		# in de fog-view (View._pawn_view redigeert hem niet), dus dit kost geen
+		# engine-wijziging.
+		var rol_lbl := Label.new()
+		rol_lbl.visible = false
+		rol_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rol_lbl.add_theme_font_size_override("font_size", 13)
+		rol_lbl.add_theme_color_override("font_outline_color", Color(UiAssets.INKT, 0.95))
+		rol_lbl.add_theme_constant_override("outline_size", 4)
+		holder.add_child(rol_lbl)
 		_hp_layer.add_child(holder)
-		_hp_bars[pawn.id] = {"holder": holder, "blocks": blocks, "qlabel": qlabel}
+		_hp_bars[pawn.id] = {"holder": holder, "blocks": blocks, "qlabel": qlabel,
+			"rol": rol_lbl}
 
 
 func _update_health_bars() -> void:
@@ -1643,6 +1691,7 @@ func _update_health_bars() -> void:
 	var state: GameState = session.state
 	var total_w := HP_COLS * HP_BLOCK_SIZE + (HP_COLS - 1) * HP_BLOCK_GAP
 	var total_h := HP_ROWS * HP_BLOCK_SIZE + (HP_ROWS - 1) * HP_BLOCK_GAP
+	_werk_rol_iconen_bij(state, total_w, total_h)
 	for pid in _hp_bars:
 		var entry: Dictionary = _hp_bars[pid]
 		var pawn: Pawn = state.pawns.get(pid)
@@ -1702,8 +1751,8 @@ func _refresh_all() -> void:
 		# Rol kan verhuizen (drager sneuvelt of koppelt): set_character weegt
 		# hem opnieuw, want _rol zit in de karakter-sleutel.
 		if pawn.unit_type == Constants.UnitType.INFANTRY:
-			pv.rol_vast = String(pawn.rol) if String(pawn.rol) != "" \
-					else String(_figurant_rollen.get(pawn.id, ""))
+			pv.rol_echt = String(pawn.rol)
+			pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
 		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
 		pv.set_team_ring_active(pawn.is_active)

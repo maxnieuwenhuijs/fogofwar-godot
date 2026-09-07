@@ -190,8 +190,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `890b6cb4…` geven (270 acties, cyclus 6, zie
-  WIP 3 september). Elke F4.3-stap: uispel gelijk, én `-- record
+  eind-zobrist; seed 777 moet `8d6aafaa…` geven (231 acties, cyclus 5). Was
+  `890b6cb4…` met 270 acties en cyclus 6 tot regelversie 4.3.1; 4.3.2
+  (buit ook op een gekoppelde drager) rekent anders, en dat werkt door in
+  het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
   user://ref_na.json easy easy muis wolf 777` gevolgd door `python
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
   entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Sinds

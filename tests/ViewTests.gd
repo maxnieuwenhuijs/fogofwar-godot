@@ -191,6 +191,32 @@ func test_dekking_vervalt_bij_cyclus_reset() -> void:
 	assert_true(bool(pv.card_revealed))
 
 
+func test_rol_van_vijandelijke_pion_blijft_zichtbaar() -> void:
+	# 4.3.2: elke drager levert buit op, gekoppeld of niet. Dan moet je ook
+	# kunnen ZIEN waar de drager van de tegenstander staat, anders is buit
+	# toeval in plaats van een doelwit. `rol` hoort dus NIET in de redactie.
+	# Deze test staat er zodat een latere uitbreiding van _pawn_view hem niet
+	# stilzwijgend meeneemt.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.doctrines[1] = Constants.Doctrine.MENS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	var vijand := s._spawn_pawn(2, Vector2i(5, 5), Constants.UnitType.INFANTRY)
+	vijand.rol = "drum"
+	vijand.link_card(Card.new(0, 2, 0, 2, 2, 1))
+	# card_revealed staat standaard op TRUE (alleen de Krokodil begint gedekt).
+	# Zonder deze regel is de pion gewoon zichtbaar en meet de test niets --
+	# dat kostte me een ronde.
+	vijand.card_revealed = false
+	assert_true(View.pion_gedekt_voor(s, vijand, 1), "opzet: de pion is gedekt")
+	var v: Dictionary = View.for_player(s, 1)
+	var pd: Dictionary = v.pawns[str(vijand.id)]
+	assert_eq(String(pd.get("rol", "")), "drum", "de rol van de vijand is zichtbaar")
+	# str() eromheen: assert_eq doet een kale ==, en int == String is in GDScript
+	# geen false maar een RUNTIME-FOUT die de test afbreekt zonder hem te tellen.
+	assert_eq(str(pd.get("current_hp")), str(View.HIDDEN), "zijn stats blijven gedekt")
+	assert_false(pd.has("linked_card_id"), "en zijn koppeling verdwijnt")
+
 func test_c13_schutkleur_valt_weg_van_dichtbij() -> void:
 	# C13 (besluit Max, 29 juli): de Krokodil is gedekt op afstand, maar zodra
 	# er een ACTIEVE vijand naast staat zie je gewoon wat hij is.
