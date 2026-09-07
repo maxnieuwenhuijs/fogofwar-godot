@@ -248,13 +248,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   overleeft). Draai dit na elke map- of modelwijziging; het is meteen het
   statusbord van "wat is er al geleverd". Sinds 7 september controleert hij ook
   de UI: paneelhoogte en sleepgreep, of elke tab kan scrollen, en hij DRUKT de
-  knoppen in -- "alle modellen" moet 30 pionnen zetten (6 facties x 5
-  archetypen), "alles rood" moet ze alle 30 rood maken, en "bord" moet
+  knoppen in -- "alle modellen" moet 90 pionnen zetten (6 facties x 3 types x
+  5 archetypen), "alles rood" moet ze alle 90 rood maken, en "bord" moet
   Board.tscn laden met zijn eigen camera UIT.
 - **Model-tuner, wat je ermee kunt** (hoofdmenu): losse model + referentiestuk,
-  `formatie` (twee facties tegenover elkaar), `alle modellen` (alle zes de
-  facties naast elkaar -- rijen facties, kolommen archetypen; hiermee beoordeel
-  je de SCHAAL tussen facties), `Team` (rood vs blauw, alles rood, alles blauw)
+  `formatie` (twee facties tegenover elkaar), `alle modellen` (negentig pionnen:
+  rijen zijn de zes facties, kolommen zijn infanterie, cavalerie en artillerie
+  met elk base/spd/hp/atk/mix, met een gaatje tussen de type-groepen; hiermee
+  beoordeel je de SCHAAL tussen facties en tussen types), `Team` (rood vs blauw, alles rood, alles blauw)
   en `bord` (het echte Board.tscn eronder met zijn textures en licht, zodat je
   ziet wat de speler ziet). Het onderste paneel is sleepbaar aan de greep
   bovenin; de hoogte wordt onthouden in `user://tuner_ui.cfg`.

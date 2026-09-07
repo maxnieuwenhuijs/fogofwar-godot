@@ -308,14 +308,14 @@ func _apply_camera() -> void:
 	var alles := _alles_modus
 	match view:
 		1:  # close-up: zelfde spel-hoek, strak op het model
-			_cam.size = (13.0 if alles else 8.5) if big else 1.5
+			_cam.size = (19.0 if alles else 8.5) if big else 1.5
 			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.55, 0.0) + CAM_BASIS.z * 8.0)
 		2:  # voorkant: recht van voren, licht van boven (linies vallen vrij)
-			_cam.size = (14.0 if alles else 9.0) if big else 1.7
+			_cam.size = (20.0 if alles else 9.0) if big else 1.7
 			_cam.transform = Transform3D(Basis(), Vector3(0.0, 1.2, 3.6))
 			_cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
 		_:  # spel-camera (bordhoek)
-			_cam.size = (17.0 if alles else 12.5) if big else 2.9
+			_cam.size = (23.0 if alles else 12.5) if big else 2.9
 			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.6, 0.0) + CAM_BASIS.z * 8.0)
 
 
@@ -728,9 +728,18 @@ func _on_alles_toggled(aan: bool) -> void:
 		_reload_pawns()
 
 
-## Alle zes de facties naast elkaar, van het gekozen type: facties in RIJEN
-## (naar achteren), archetypen in KOLOMMEN. Zo staat de muis-base naast de
-## beer-base en zie je meteen of de schaalverhouding klopt.
+## ALLES tegelijk: zes facties in RIJEN (naar achteren), en per rij vijftien
+## kolommen -- infanterie base/spd/hp/atk/mix, dan cavalerie, dan artillerie.
+## Negentig pionnen. Zo staat de muis-base naast de beer-base EN naast zijn eigen
+## kanon, en zie je in een blik of de schaalverhoudingen kloppen.
+##
+## Waarom niet het type uit de dropdown (eerste versie, 7 september): dan zie je
+## zes facties van EEN type, en zolang de meeste modellen nog niet geleverd zijn
+## vallen die allemaal terug op hetzelfde placeholder-blokje. Dan lijkt het of je
+## steeds hetzelfde model ziet -- precies wat Max meldde.
+##
+## Tussen de drie type-groepen zit een gaatje, anders is het een muur van vijftien
+## en zie je niet waar de cavalerie begint.
 ##
 ## Bij "rood vs blauw" krijgt elke tweede factie-rij de andere jas; kies je
 ## "alles rood" of "alles blauw", dan draagt de hele opstelling die ene.
@@ -743,28 +752,44 @@ func _bouw_alle_modellen() -> void:
 		_ref.queue_free()
 		_ref = null
 	_alles_modus = true
-	var tp: int = _type_btn.get_selected_id()
 	var facties: Array = Constants.DOCTRINE_DATA.keys()
-	var kol := 1.6
-	var rij := 1.6
+	var kol := 1.15
+	var gat := 0.7   # extra ruimte tussen infanterie | cavalerie | artillerie
+	var rij := 1.7
+	# Eerst de kolom-x'en uitrekenen, dan pas plaatsen: zo staat de hele rij
+	# netjes gecentreerd, ook met de gaten ertussen.
+	var kolom_x: Array = []
+	var x := 0.0
+	for tp in [0, 1, 2]:
+		if tp > 0:
+			x += gat
+		for _ai in ARCHS.size():
+			kolom_x.append(x)
+			x += kol
+	var breed: float = kolom_x[kolom_x.size() - 1]
+	for i in kolom_x.size():
+		kolom_x[i] = float(kolom_x[i]) - breed * 0.5
 	for fi in facties.size():
-		for ai in ARCHS.size():
-			var arch: String = ARCHS[ai]
-			var card = null
-			if ARCH_CARDS.has(arch):
-				var st: Array = ARCH_CARDS[arch]
-				card = Card.new(0, 0, 0, int(st[0]), int(st[1]), int(st[2]))
-			var pv: PawnView = PAWN_SCENE.instantiate()
-			pv.team = _team_voor(fi % 2)
-			pv.position = Vector3((float(ai) - 2.0) * kol, 0.05,
-				(float(fi) - (facties.size() - 1) * 0.5) * rij)
-			add_child(pv)
-			pv.face_dir(Vector2i(0, 1))  # allemaal naar de camera
-			pv.set_unit_type(tp)
-			pv.set_character(int(facties[fi]), tp, card)
-			_formation_pawns.append({"pv": pv, "fac": int(facties[fi]), "tp": tp, "arch": arch})
-	_info.text = "Alle facties, %s. Rijen = %s (voor naar achter), kolommen = base/spd/hp/atk/mix. Sliders tunen het model uit de dropdowns." % [
-		Constants.unit_type_name(tp),
+		var k := 0
+		for tp in [0, 1, 2]:
+			for ai in ARCHS.size():
+				var arch: String = ARCHS[ai]
+				var card = null
+				if ARCH_CARDS.has(arch):
+					var st: Array = ARCH_CARDS[arch]
+					card = Card.new(0, 0, 0, int(st[0]), int(st[1]), int(st[2]))
+				var pv: PawnView = PAWN_SCENE.instantiate()
+				pv.team = _team_voor(fi % 2)
+				pv.position = Vector3(float(kolom_x[k]), 0.05,
+					(float(fi) - (facties.size() - 1) * 0.5) * rij)
+				add_child(pv)
+				pv.face_dir(Vector2i(0, 1))  # allemaal naar de camera
+				pv.set_unit_type(tp)
+				pv.set_character(int(facties[fi]), tp, card)
+				_formation_pawns.append({"pv": pv, "fac": int(facties[fi]), "tp": tp, "arch": arch})
+				k += 1
+	_info.text = "Alle modellen: %d pionnen. Rijen = %s (voor naar achter), kolommen = infanterie, cavalerie, artillerie, elk base/spd/hp/atk/mix. Een placeholder-blokje betekent dat dat model nog niet geleverd is." % [
+		_formation_pawns.size(),
 		", ".join(facties.map(func(d): return Constants.doctrine_name(int(d))))]
 	_sync_sliders_from_tuning()
 	_apply_camera()

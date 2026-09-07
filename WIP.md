@@ -10,10 +10,15 @@ modellen op een rij naast elkaar op het bord om zo de schaal te bepalen", en
   kon je alleen rood TEGENOVER blauw zien, en dan staat de ene jas altijd van je
   af. De keuze werkt door op het losse model, de formatie en de nieuwe
   alle-modellen-opstelling.
-- **`alle modellen`**: zes facties in rijen, vijf archetypen in kolommen, 30
-  pionnen. De bestaande formatie-knop toont er maar twee, en de schaalvraag
-  ("is de beer te groot naast de muis?") gaat juist over alle zes tegelijk. Bij
-  `rood vs blauw` krijgt elke tweede factie-rij de andere jas.
+- **`alle modellen`**: zes facties in rijen, en per rij VIJFTIEN kolommen --
+  infanterie base/spd/hp/atk/mix, dan cavalerie, dan artillerie. Negentig
+  pionnen, met een gaatje tussen de type-groepen. Bij `rood vs blauw` krijgt
+  elke tweede factie-rij de andere jas.
+  **Eerste versie was fout** en Max zag het meteen: die nam het type uit de
+  dropdown, dus je kreeg zes facties van EEN type -- en omdat er pas twee
+  modellen geleverd zijn viel de rest terug op hetzelfde placeholder-blokje.
+  "Zie dan alleen maar dezelfde modellen", en dat klopte. De info-regel zegt nu
+  ook expliciet dat een blokje betekent dat dat model nog niet geleverd is.
 - **`bord`**: `Board.tscn` eronder, met zijn textures en zijn eigen licht. Twee
   dingen moesten daarbij: de camera van het bord UIT (anders neemt die het beeld
   over van de tuner-camera) en het tuner-licht omlaag naar 0,55 (niet uit, want

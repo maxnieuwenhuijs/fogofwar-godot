@@ -849,8 +849,8 @@ func _ready() -> void:
 					var pionnen: Array = t.find_children("*", "Node3D", true, false).filter(
 						func(n): return n is PawnView)
 					print("[TUNER] alle modellen: %d pionnen op het veld" % pionnen.size())
-					if pionnen.size() != 30:
-						print("[TUNER] FOUT: verwacht 30 (6 facties x 5 archetypen)")
+					if pionnen.size() != 90:
+						print("[TUNER] FOUT: verwacht 90 (6 facties x 3 types x 5 archetypen)")
 						tuner_fouten += 1
 					# Team-keuze: alles rood moet ELKE pion rood maken.
 					if keuze != null:
