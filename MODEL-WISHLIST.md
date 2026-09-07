@@ -181,11 +181,12 @@ verschillende legers:
 
 | | Rood | Blauw |
 |---|---|---|
-| **Toon** | veldleger, al maanden onderweg | paradeleger, net uit het depot |
-| **Stof** | verbleekt, stofvlekken, gerafelde randen | strak, diep van kleur, smetteloos |
-| **Metaal** | dof, aangeslagen, donker ijzer | spiegelend zilver EN goud, gepoetst |
-| **Leer** | geschuurd, verkleurd, krassen | gaaf, wit, glanzend |
-| **Hout** | bleek en versleten | donker gebeitst en gelakt |
+| **Toon** | afgedankte veteranen: oorlog overleefd, jaren geleden aan de kant gezet | paradeleger, net uit het depot |
+| **Stof** | versleten tot boerenkleding: echte gaten bij ellebogen, knieen en zoom, grove lappen erop genaaid, draadstof grijsbruin van de jaren | strak, diep van kleur, smetteloos |
+| **Sluiting** | knopen weg, vervangen door houten pinnen; touw waar de leren riem het begaf | vergulde knopen en epauletten, smetteloos wit bandelier |
+| **Metaal** | dof, aangeslagen, roestputjes | spiegelend zilver EN goud, gepoetst |
+| **Schoeisel** | gebarsten, met lappen omwikkeld | glanzend, geolied |
+| **Hout** (wapen) | bleek en versleten | donker gebeitst en gelakt |
 
 Dat is meer dan kleur: het is een verhaal dat je in een oogopslag leest. En het
 werkt beter dan rood-tegen-blauw verf, want de modellen dragen al donkergrijze
@@ -196,7 +197,7 @@ glimmend wel.
 
 | Team | Toevoeging aan de prompt |
 |---|---|
-| rood | `heavily weathered and field-worn: sun-bleached faded cloth, dust and mud staining, frayed edges, scuffed and discoloured leather, dull tarnished dark metal buttons and fittings` |
+| rood | `discarded veterans whose uniform has decayed into peasant clothing: cloth worn through into ragged holes at elbows, knees and hem, crude mismatched patches, buttons replaced with wooden toggles, a frayed rope belt, threadbare grey-brown fabric, rust-pitted metal, cracked shoes bound with rag` |
 | blauw | `immaculate parade condition: crisp deep-toned cloth, mirror-polished silver and gleaming gold braid, gilded buttons and epaulettes, spotless white leather, everything buffed and shining` |
 
 **Template:** `Retexture this character, keep the existing UV layout and geometry
