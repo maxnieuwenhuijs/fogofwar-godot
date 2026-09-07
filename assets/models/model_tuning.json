@@ -1,4 +1,16 @@
 {
+	"lion/cavalry_base": {
+		"scale": 1.29,
+		"x": 0.0,
+		"y": 0.0,
+		"z": 0.0
+	},
+	"lion/infantry_base": {
+		"scale": 1.28,
+		"x": 0.0,
+		"y": 0.0,
+		"z": 0.0
+	},
 	"mouse/infantry_atk": {
 		"muzzle": [
 			0.3,
@@ -64,9 +76,9 @@
 			0.81,
 			0.45
 		],
-		"scale": 1.11,
+		"scale": 1.2,
 		"x": 0.0,
-		"y": 0.0,
+		"y": 0.01,
 		"z": 0.0
 	},
 	"mouse/infantry_mix_musket": {
