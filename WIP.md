@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- teamstijl doorgevoerd in ALLE teamjas-prompts
+
+Max: "dit moet dan voor alle prompts team jas textures, de modellen blijven
+hetzelfde maar de stijlen zijn duidelijk anders."
+
+Dat viel mee qua werk, want de prompts staan niet per model: `model-tracker.html`
+draagt EEN paar teamkleur-prompts (`const TEXTURES`) dat voor elk model geldt.
+Daar omgezet, dus alle facties en archetypen tegelijk.
+
+- **Blauw** -- immaculate parade condition, freshly issued from the depot:
+  strakke marineblauwe stof met scherpe vouwen, smetteloos wit bandelier,
+  spiegelend zilveren knopen MET vergulde gouden epauletten en tressen, nette
+  rechte pluim, glanzend geolied leer. "Not a scuff or a stain anywhere."
+- **Rood** -- heavily weathered and field-worn after months on campaign:
+  verbleekte brikrode jas met stof- en modderplekken, gerafelde manchetten,
+  bandelier grijs geworden van het dragen, dof aangeslagen donker messing, een
+  slappe gerafelde pluim, gekrast en verkleurd leer. "Nothing polished."
+- Twee regels erbij voor de **wapenjas** (`<wapen>_red.png` / `_blue.png`), die
+  de engine sinds vandaag ondersteunt.
+- In alle vier staat nu expliciet "keep the existing UV layout and geometry
+  unchanged", want dat is de enige manier waarop het misgaat.
+
+Wat er veranderde ten opzichte van 30 juli: toen zat het verschil ALLEEN in de
+kleur (brikrood met goud tegen marineblauw met zilver) en stond bij allebei
+"muted, nothing bright or saturated". Twee gedempte donkere jassen op een klein
+bordstuk houd je niet uit elkaar. Nu draagt ook de STAAT van het uniform het
+verschil, en verhuist het goud naar blauw: die krijgt zilver en goud, rood
+houdt dof messing.
+
+`MODEL-WISHLIST` par. 3-team beschrijft de regel en verwijst voor de tekst naar
+de tracker, zodat er niet twee versies gaan rondzwerven. JavaScript van de
+tracker gecontroleerd met `node --check`: geldig. `tools/bouw_hoedenlijst.py`
+opnieuw gedraaid (2 modellen, beide met hoed).
+
+Terzijde: Max bouwde tijdens dit werk `mouse/infantry_base`, en die is in commit
+`f07ed4b` meegegaan zonder dat de commit-tekst hem noemt.
+
 ## 7 september -- teamstijl vastgelegd: rood verweerd, blauw gepoetst
 
 Max: "wat ik sowieso wil is dat team rood meer verweerd is in hun uniformen en
