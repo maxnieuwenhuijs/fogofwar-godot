@@ -1,5 +1,65 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- teamstijl vastgelegd: rood verweerd, blauw gepoetst
+
+Max: "wat ik sowieso wil is dat team rood meer verweerd is in hun uniformen en
+stijl, en team blauw is echt ultiem shiny en gold en silver en netjes gepoetst."
+
+Vastgelegd als `MODEL-WISHLIST.md` par. **3-team**, want het geldt voor het lijf
+EN het wapen, niet alleen voor de musketten waar het gesprek begon. Rood is een
+veldleger dat maanden onderweg is (verbleekte stof, stofvlekken, gerafelde
+randen, dof aangeslagen donker ijzer, geschuurd leer, bleek versleten hout);
+blauw komt net uit het depot (strakke diepe kleuren, spiegelend zilver en goud,
+vergulde knopen en epauletten, smetteloos wit leer, donker gelakt hout).
+
+Waarom dit beter werkt dan rood-tegen-blauw verf: de modellen dragen al
+donkergrijze uniformen, en twee tinten grijs uit elkaar houden op een klein
+bordstuk lukt niet. Versleten tegen glimmend leest wel, ook in een oogopslag.
+
+Met retexture-toevoegingen per team voor het lijf en voor het wapen, plus de
+waarschuwing die me eerder opviel: laat de materiaal-zin uit de oorspronkelijke
+model-prompt WEG in een retexture-prompt, anders vraag je dof donker ijzer en
+gepolijst zilver tegelijk en kiest de dienst er zelf een.
+
+## 7 september -- teamjas voor het WAPEN (weapon/red en weapon/blue)
+
+Max: "ik heb nu ook de folder weapon met daarin ook weer red en blue, dus iedere
+factie heeft een iets ander stijl wapen texture. kan je die bij de model upload
+ook meenemen met het paneel."
+
+Dat kon de engine nog niet. Het lijf kreeg de team-png als albedo-override en
+bij het wapen werd die override er JUIST afgehaald -- de team-png van het lijf
+over een musket-atlas is een bonte vlek. Nu:
+
+- `PawnView.weapon_team_texture(<wapen-glb>, team)` zoekt
+  `<wapen>_red.png` / `_blue.png` naast de wapen-glb.
+- `_zet_wapenjas()` legt hem op elk ingebakken wapen; is er geen, dan gaat de
+  override eraf en houdt het wapen zijn glb-atlas (oud gedrag, niets breekt).
+- `apply_albedo_to_mesh()` erbij, want `find_children()` slaat de root zelf over
+  en je kunt dus geen texture op een losse mesh zetten met `apply_albedo_to`.
+- Het weggeslingerde wapen bij de dood hoeft niets: `_los_wapen_voor_worp`
+  koppelt de ECHTE wapen-node los, met de override die er dan al op zit.
+
+**Valkuil die me een ronde kostte:** `_apply_team_texture()` draait aan het eind
+van `_swap_piece()`, en `_attach_weapon()` komt pas DAARNA -- daar wordt
+`_baked_prop_pad` gezet. Bij het opbouwen was het wapenpad dus nog leeg, vond hij
+geen jas, en haalde hij de override eraf. `-- wapenroute` liet dat zien
+("staat op 0/1 wapen-mesh(es) !! NIET TOEGEPAST"); `_attach_weapon` roept
+`_zet_wapenjas()` nu nog een keer aan zodra het pad bekend is. Daarna 1/1.
+
+De leveringsknop pakt de map op: `weapon`/`wapen` in het pad betekent wapenjas.
+Die wordt tegen de WAPEN-glb gemeten en niet tegen het model, want de wapen-glb
+draagt maar een atlas -- meten tegen het model zou de wapen-atlas als "beste
+materiaal" opleveren en dus alsnog slagen. Uitslag op de muis:
+
+    OK   mouse/infantry_mix: jas blue erin (98.8% dekking)
+    OK   mouse/infantry_mix: jas red erin (98.7% dekking)
+    OK   mouse/infantry_mix: wapenjas blue erin (100.0% dekking)
+    OK   mouse/infantry_mix: wapenjas red erin (100.0% dekking)
+
+Nog niet gedaan: de PROP-route (modellen zonder meebewegend wapen) krijgt geen
+wapenjas. Dat is de terugval en raakt nu geen enkel model.
+
 ## 7 september -- tunerpaneel sleepbaar; een vast schermaandeel was ook fout
 
 Max stuurde een schermafdruk van zijn venster: **1080x1920, staand.** Mijn

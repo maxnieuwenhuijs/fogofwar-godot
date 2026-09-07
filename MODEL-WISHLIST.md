@@ -172,6 +172,41 @@ een model in beeld komt en welke props je dus niet hoeft te maken:
   de beste zijn.
 - **Beer is met 19 het meest infanterie-zwaar**, Varken en Wolf met 11 het minst.
 
+## 3-team. Teamstijl: rood is verweerd, blauw is gepoetst
+
+**Besluit Max, 7 september.** Het model is voor beide teams DEZELFDE mesh; het
+verschil zit in de teamjas (`<model>_red.png` / `_blue.png`, en sinds vandaag
+ook `<wapen>_red.png` / `_blue.png`). Die twee jassen vertellen twee
+verschillende legers:
+
+| | Rood | Blauw |
+|---|---|---|
+| **Toon** | veldleger, al maanden onderweg | paradeleger, net uit het depot |
+| **Stof** | verbleekt, stofvlekken, gerafelde randen | strak, diep van kleur, smetteloos |
+| **Metaal** | dof, aangeslagen, donker ijzer | spiegelend zilver EN goud, gepoetst |
+| **Leer** | geschuurd, verkleurd, krassen | gaaf, wit, glanzend |
+| **Hout** | bleek en versleten | donker gebeitst en gelakt |
+
+Dat is meer dan kleur: het is een verhaal dat je in een oogopslag leest. En het
+werkt beter dan rood-tegen-blauw verf, want de modellen dragen al donkergrijze
+uniformen -- twee tinten grijs uit elkaar houden lukt niet, versleten tegen
+glimmend wel.
+
+**Retexture-toevoeging voor het LIJF:**
+
+| Team | Toevoeging aan de prompt |
+|---|---|
+| rood | `heavily weathered and field-worn: sun-bleached faded cloth, dust and mud staining, frayed edges, scuffed and discoloured leather, dull tarnished dark metal buttons and fittings` |
+| blauw | `immaculate parade condition: crisp deep-toned cloth, mirror-polished silver and gleaming gold braid, gilded buttons and epaulettes, spotless white leather, everything buffed and shining` |
+
+**Template:** `Retexture this character, keep the existing UV layout and geometry
+unchanged. <team-toevoeging>. Gritty realistic AAA-game concept art, highly
+detailed, no text.`
+
+Zelfde regel geldt voor de wapens, zie 3c. En dezelfde waarschuwing als daar:
+laat de materiaal-zin uit de oorspronkelijke model-prompt WEG, anders vraag je
+twee dingen tegelijk.
+
 **Prompt-opbouw infanterie**: `Single character, <bouw>
 anthropomorphic <dier> <kenmerken>, exaggerated stylized caricature proportions, A-pose. Gritty realistic AAA-game concept art, highly detailed. Wearing a weathered, strictly dark grey
 Napoleonic military uniform and <hoofddeksel>, unarmed with empty hands, carrying no weapons of any kind. Clean neutral studio background, single figure only, no text.`
@@ -421,6 +456,67 @@ omwikkeld met donkergrijze camouflagedoek.
 **Prompt-template:** `Single prop, <silhouet>, <factie-twist>. Gritty realistic
 AAA-game concept art, highly detailed. Side profile view, clean
 neutral studio background, the weapon only, no hands, no text.`
+
+### Team-varianten van het musket (retexture, 7 september)
+
+Sinds 7 september draagt het wapen een **eigen teamjas**: `<wapen>_red.png` en
+`<wapen>_blue.png` naast de wapen-glb (`_melee_*` voor cavalerie). Ontbreekt zo'n
+bestand, dan houdt het wapen gewoon de atlas uit zijn glb -- niets gaat stuk.
+
+Dit zijn RETEXTURE-prompts, geen model-prompts: dezelfde mesh wordt twee keer
+opnieuw beschilderd, dus **de UV-indeling moet blijven staan**. Vraag daar
+expliciet om; `tools/uv_check.py` meet het antwoord (boven de 95% past hij).
+Het uploadklare wapenbestand komt uit de paneelknop "Model klaarmaken voor
+retexture" (`<naam>_wapen.glb`).
+
+**Rood = bleek en versleten met dof donker ijzer. Blauw = zilver en goud met
+donker gelakt hout.** Dit is de wapen-kant van de teamstijl uit 3-team. Het
+teamverschil zit in het MATERIAAL, niet in verf: geen rode of blauwe banden op
+de kolf. Dat leest rustiger en houdt het wapen binnen de
+periode -- twee regimenten met ander materieel, niet twee geverfde speelgoed-
+geweren. De factie-twist bepaalt nog steeds vorm en beslag; de teamjas ligt er
+alleen overheen.
+
+| Team | Toevoeging aan de prompt |
+|---|---|
+| rood | `pale bleached worn wood stock, dull tarnished dark iron fittings, scuffed, chipped and battle-worn` |
+| blauw | `mirror-polished silver steel with gleaming gilded brass fittings, dark stained lacquered wood stock, immaculate parade condition` |
+
+**Retexture-prompt-template:** `Retexture this weapon, keep the existing UV
+layout and geometry unchanged. <factie-twist>, <team-toevoeging>. Gritty
+realistic AAA-game concept art, highly detailed, no text.`
+
+Voorbeeld voor `mouse/infantry_mix_musket`:
+
+- **rood** -- `Retexture this weapon, keep the existing UV layout and geometry
+  unchanged. A compact plain short-barrelled carbine with a fixed bayonet, pale
+  bleached worn wood stock, dull tarnished dark iron fittings, scuffed, chipped
+  and battle-worn. Gritty realistic AAA-game concept art, highly detailed, no
+  text.`
+- **blauw** -- `Retexture this weapon, keep the existing UV layout and geometry
+  unchanged. A compact plain short-barrelled carbine with a fixed bayonet,
+  mirror-polished silver steel with gleaming gilded brass fittings, dark stained
+  lacquered wood stock, immaculate parade condition. Gritty realistic AAA-game
+  concept art, highly detailed, no text.`
+
+Let op: de materiaal-zin uit de factie-twist (bij de muis "plain dark iron and
+worn pale wood") LAAT JE WEG in de retexture-prompt. Anders vraag je twee dingen
+tegelijk -- dof donker ijzer en gepolijst zilver -- en kiest de dienst er zelf
+een. De vorm zit al in de mesh; alleen de kleur hoeft nog.
+
+Bij de **muis** ligt de rode variant dicht bij het huidige model (zijn twist is
+al "worn pale wood"), en is de blauwe het echte verschil. Bij facties die al
+donker hout hebben (Varken, Leeuw) is het net andersom: daar valt de rode
+variant het meest op.
+
+Waar de bestanden heen gaan in je leveringsmap:
+
+    <factie>/<model>/weapon/red/   de png voor het rode team
+    <factie>/<model>/weapon/blue/  idem blauw
+
+De knop "Map in het spel zetten" herkent `weapon` in het pad, meet de jas tegen
+de WAPEN-glb (die draagt maar een atlas, dus een verkeerde jas valt meteen door
+de mand) en zet hem als `<wapen>_<team>.png` naast de glb.
 
 ### Muis-musketten
 
@@ -772,10 +868,14 @@ zetten ze niet in dezelfde volgorde: bij atk zwaait "Idle 1" 70 graden, bij spd
 maar 1). Wil je het zelf vastzetten: `vlag_idle` in effects_tuning.json,
 index in de variantenlijst, -1 = automatisch.
 
-## 3e. Teamkleur-texturen -- witte banden, zilver of goud (Max, 30 juli)
+## 3e. Teamkleur-texturen -- rood of blauw uniform, witte banden, zilver of goud
 
-Het model zelf blijft **strikt donkergrijs**; de teamkleur zit in de texture die
-ernaast ligt. Bestandsnamen (het spel pakt ze op modelnaam):
+*(Max, 30 juli; op 3 september is het uniform zelf de teamkleur geworden.)*
+
+Het **model** dat je genereert blijft strikt donkergrijs -- dat is de neutrale
+ondergrond waar beide teams overheen gaan. De **teamkleur zit in de texture** die
+naast de glb ligt, en die verft het uniform zelf: blauw leger = donkerblauwe jas,
+rood leger = donkerrode jas. Bestandsnamen (het spel pakt ze op modelnaam):
 
 | Bestand | Waarvoor |
 |---|---|
@@ -784,52 +884,153 @@ ernaast ligt. Bestandsnamen (het spel pakt ze op modelnaam):
 | `<model>_blue_gore.png` / `<model>_red_gore.png` | bloederige recolor voor de gibs (optioneel) |
 
 **Dezelfde UV-atlas als het model.** Makkelijkste route: een team klaarmaken en
-daarna alleen de metaaldelen en de pluim omkleuren.
+daarna alleen de jas, het metaal en de pluim omkleuren.
 
 ### Wat per team verschilt
 
 | Onderdeel | Blauw | Rood |
 |---|---|---|
+| **Uniform (jas, broek)** | **donker marineblauw** | **donker brikrood** |
 | Kruisbanden / bandelier | wit | wit |
 | Knopen | zilver | goud |
 | Schouderstukken (epauletten) | zilver | goud |
-| Pluim op de shako | blauw | rood |
-| Uniform | donkergrijs (gelijk) | donkergrijs (gelijk) |
+| Pluim op de shako | lichtblauw (lichter dan de jas) | lichtrood (lichter dan de jas) |
 | Leer (schoenen, patroontas, riem) | donkerbruin (gelijk) | donkerbruin (gelijk) |
+
+De pluim is bewust **een tint lichter dan de jas**: in dezelfde kleur als het
+uniform valt hij weg en dan is het silhouet op het bord een vlek. Witte banden en
+de pluim doen samen het contrastwerk.
+
+### Vaste kleuren -- altijd deze, nooit "gewoon rood"
+
+"Blauw" en "rood" in een prompt levert elke keer een andere kleur op, en dan
+staan er straks vijf verschillende blauwen op het bord. Daarom staan de kleuren
+hieronder vast. De teamkleuren zijn dezelfde constanten als in
+`scripts/ui/ui_assets.gd` (`TEAM_ROOD` / `TEAM_BLAUW`, plus de `_LICHT`-varianten
+voor de pluim), zodat het lint op de kaart, het zegel in de UI en de pion op het
+bord één kleur zijn. Wijzig je er een, wijzig je ze allebei.
+
+| Wat | Woorden voor de prompt | Hex (naslag, niet in de prompt) | Vandaan |
+|---|---|---|---|
+| Uniform blauw team | `deep desaturated dark navy blue` | #2B3A78 | `UiAssets.TEAM_BLAUW` |
+| Uniform rood team | `deep desaturated dark brick red` | #7E2C24 | `UiAssets.TEAM_ROOD` |
+| Pluim blauw team | `lighter steel blue` | #8A9FE8 | `UiAssets.TEAM_BLAUW_LICHT` |
+| Pluim rood team | `lighter coral red` | #E0705F | `UiAssets.TEAM_ROOD_LICHT` |
+| Kruisbanden, riem | `crisp off-white` | #EDE9DE | -- |
+| Metaal blauw team | `dull silver` | #B8BCC4 | -- |
+| Metaal rood team | `antique brass gold` | #B38A47 | `UiAssets.MESSING` |
+| Leer (schoenen, patroontas) | `dark brown` | #4A2F21 | `UiAssets.DONKER_LEER` |
+| Bloed (gore-variant) | `dark dried blood red` | #5A1512 | **niet** de teamkleur |
+
+**Hex-codes horen NIET in de prompt** (Max, 3 september): Nano Banana pikt ze
+niet goed op en gaat er soms juist door zwabberen. In de prompt staan de
+**woorden** uit de tweede kolom; de hex is voor naderhand -- controleren met de
+pipet, of de kleur in Photoshop/Substance overzetten.
+
+`Muted colours, nothing bright or saturated.` staat aan het eind van elke
+textuur-prompt: dat doet het werk dat de hex niet doet, want zonder die rem komt
+er een felle vlag-rood of kobaltblauw uit.
+
+**Houd de prompt kort en noem alleen de kleuren.** Twee dingen die eruit blijven:
+
+- **Het donkergrijs.** Dat hoort bij het model (par. 3), niet bij de texture:
+  hier wordt de jas juist rood of blauw. Noem je het grijs alsnog, dan gaat de
+  generator daarover en komen de teamkleuren er niet meer uit.
+- **Het UV-verhaal.** "Texture repaint, identical UV layout, only colours change"
+  zegt de generator niks; dat is een eis aan het bestand, geen beschrijving van
+  een plaatje. Blijft gelden voor jou (zie de UV-atlas hierboven), maar het hoort
+  niet in de prompt.
 
 ### Prompt -- blauw team (`<model>_blue.png`)
 
 ```
-Texture repaint of the same character, identical UV layout, only colours change.
-Weathered dark grey Napoleonic uniform, crisp white crossbelts and white waist belt,
-silver metal buttons in two rows, silver bullion epaulettes on both shoulders,
-a blue upright feather plume on the shako, dark brown leather shoes and cartridge pouch.
-Gritty realistic AAA-game texture, subtle dirt and wear, no text, no logo.
+Same character in blue team colours: deep desaturated dark navy blue uniform coat, crisp
+off-white crossbelts and waist belt, dull silver buttons and epaulettes, a lighter steel blue
+feather plume, dark brown leather shoes and cartridge pouch. Muted colours, nothing bright or
+saturated.
 ```
 
 ### Prompt -- rood team (`<model>_red.png`)
 
 ```
-Texture repaint of the same character, identical UV layout, only colours change.
-Weathered dark grey Napoleonic uniform, crisp white crossbelts and white waist belt,
-gold metal buttons in two rows, gold bullion epaulettes on both shoulders,
-a red upright feather plume on the shako, dark brown leather shoes and cartridge pouch.
-Gritty realistic AAA-game texture, subtle dirt and wear, no text, no logo.
+Same character in red team colours: deep desaturated dark brick red uniform coat, crisp
+off-white crossbelts and waist belt, antique brass gold buttons and epaulettes, a lighter
+coral red feather plume, dark brown leather shoes and cartridge pouch. Muted colours, nothing
+bright or saturated.
 ```
 
 ### Prompt -- gore-variant (`<model>_<team>_gore.png`)
 
 ```
-Same texture, identical UV layout, battle damage version: dark blood soaked into the
-grey wool, red splatter across the white belts, torn fabric edges, dulled and scratched
-metal. Gritty realistic AAA-game texture, no text, no logo.
+Same character with battle damage: dark dried blood red soaked into the uniform cloth and
+splattered across the off-white belts, torn fabric, dulled and scratched metal. Team colours
+unchanged. Muted colours, nothing bright or saturated.
 ```
 
-**Voor de andere facties**: alleen de pluim en het metaal volgen het team; de
-factie-eigen dingen (Krokodil-camouflagedoek, Wolf-lappen en vacht,
-Beer-kuras) houden hun eigen kleur. Vervang in de prompt "dark grey Napoleonic
-uniform" door de factie-beschrijving uit 3, en laat de regel over witte banden,
-knopen, epauletten en pluim staan zoals hij is.
+### Meteen in kleur genereren (Modif e.d.) -- Max, 3 september
+
+Er zijn twee wegen naar een gekleurde pion, en je hebt ze allebei nodig:
+
+1. **Neutraal grijs model + losse teamtexture** (hierboven). Dit blijft de weg
+   naar de glb: één model draagt beide teams, dus het model zelf mag geen kleur
+   hebben.
+2. **Direct in kleur**, als je gewoon een plaatje wilt zien. Dan neem je de
+   model-prompt uit par. 3 en zet je de kleur er meteen in.
+
+Voor weg 2 hoef je niks te knutselen: **de model-tracker toont per factie en
+per unit naast de grijze prompt ook een ROOD- en een BLAUW-variant** met een
+eigen kopieerknop (rood en blauw randje). Hij maakt ze uit dezelfde tekst, met
+deze regels -- zelfde beest, zelfde attributen, nog steeds geen wapen:
+
+| In de grijze prompt | Wordt in de team-variant |
+|---|---|
+| `strictly dark grey` | `deep desaturated dark brick red` (rood) / `deep desaturated dark navy blue` (blauw) |
+| `dark grey epaulettes` | `antique brass gold epaulettes` / `dull silver epaulettes` |
+
+Daarna komt er vóór `Clean neutral studio background` één zin bij, en die noemt
+**alleen wat dit model echt draagt** -- anders krijgt een big bro epauletten die
+hij niet heeft:
+
+| Staat er in de prompt | Dan komt erbij |
+|---|---|
+| `uniform` / `greatcoat` / `military jacket` (infanterie) | `crisp off-white crossbelts and waist belt, <metaal> buttons and epaulettes` |
+| `harness` (de big bro: blote borst, leren riemen) | `<metaal> buckles and metal fittings on the harness` |
+| een `plume` (meestal alleen de spd) | `the feather plume in <pluim>` |
+| wél een hoed maar géén pluim | `the hat band and cockade in <pluim>` |
+| `Single prop` (kanon) | `The gunner wears a <jas> uniform with crisp off-white belts and <metaal> buttons.` |
+
+En altijd als slot: `Muted colours, nothing bright or saturated.`
+
+De **hoed zelf blijft donkergrijs** vilt; alleen de band, de kokarde of de pluim
+krijgen de teamkleur. De wapens blijven eruit: `unarmed with empty hands,
+carrying no weapons of any kind` staat er nog steeds in, want musketten en
+melee-wapens zijn losse props uit par. 3c.
+
+**De hoed volgt de glb, niet het doc** (Max, 3 september). De team-prompt kleurt
+een model dat er al ís, dus hij moet beschrijven wat er in dat bestand zit. De
+cavalerie van Muis, Varken en Leeuw is gemaakt vóór de big bro een factie-hoed
+kreeg: die **vijftien modellen hebben geen `Hat`-deel**, en dan haalt de tracker
+de hoed uit de kleur-prompt (bij de spd gaat de pluim mee, want die zit aan die
+hoed) en noemt hij ook geen kokarde of sjerp -- niets verzinnen wat er niet op
+zit, want de generator tekent het er anders bij. De teamkleur zit dan in het
+harnas en het metaal. Bij een model dat nog niet bestaat beslist de prompt-tekst,
+dus die krijgt zijn hoed gewoon.
+
+Die lijst leest `python tools/bouw_hoedenlijst.py` uit de glb's zelf (`MODEL_HOED`
+in de tracker). **Draai hem na elke nieuwe of vervangen glb**, dan klopt de
+kleur-prompt weer met wat er op schijf staat. Stand nu: 45 modellen, 30 met hoed
+(alle infanterie), 15 zonder (alle cavalerie).
+
+*(3 september: de tracker droeg nog de prompts van 28 juli -- daar had de
+cavalerie geen hoed en geen archetype-uitrusting, dus de team-variant beschreef
+een ander beest dan het model. Alle 90 prompts zijn opnieuw uit dit doc
+gegenereerd; par. 3 is de bron, de tracker is de kopie.)*
+
+**Voor de andere facties**: de jas, het metaal en de pluim volgen het team; de
+factie-eigen dingen (Krokodil-camouflagedoek, Wolf-lappen en vacht, Beer-kuras)
+houden hun eigen kleur. Voeg die er zo nodig achteraan bij, en laat de rij
+kleurwoorden **woord voor woord** staan zoals hij is: dat is nou juist het stuk
+dat overal gelijk moet zijn.
 
 ## 3f. Factie-emblemen -- het DUO-wapen (2D, stijl van het UI-pack)
 

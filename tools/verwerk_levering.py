@@ -6,9 +6,15 @@
 # Een levering is een map met per model een submap die de .blend EN de nieuwe
 # texturen bevat, bijvoorbeeld:
 #
-#   mouse/red/infantry_mix/  infantry_mix_mouse.blend
-#                            tripo_node_<uuid>-color.png
-#                            tripo_node_<uuid>-normal.png
+#   mouse/infantry_mix/          infantry_mix_mouse.blend
+#   mouse/infantry_mix/red/      de jas voor het LIJF, rood
+#   mouse/infantry_mix/blue/     idem blauw
+#   mouse/infantry_mix/weapon/red/   de jas voor het WAPEN, rood
+#   mouse/infantry_mix/weapon/blue/  idem blauw
+#
+# Een map met "weapon" of "wapen" in het pad levert de jas voor het WAPEN: die
+# heeft een eigen UV-atlas en gaat als <wapen>_<team>.png naast de wapen-glb,
+# zodat elke factie zijn eigen musket-stijl kan dragen.
 #
 # Factie, type en archetype komen uit de mapnamen (net als bouw_modellen.py),
 # het TEAM komt uit het woord red/rood of blue/blauw in het pad. Een map met
@@ -52,6 +58,7 @@ from bouw_modellen import (BLENDER_STANDAARD, plaats_uit_woorden,  # noqa: E402
 from uv_check import geverfd, uv_maskers  # noqa: E402
 
 TEAMWOORDEN = {"red": "red", "rood": "red", "blue": "blue", "blauw": "blue"}
+WAPENWOORDEN = {"weapon", "wapen", "musket", "melee"}
 
 IMPORT_SJABLOON = '''[remap]
 
@@ -126,6 +133,16 @@ def team_uit(pad):
     return next((TEAMWOORDEN[x] for x in w if x in TEAMWOORDEN), None)
 
 
+def is_wapenmap(pad, wortel):
+    """Hoort deze map bij het WAPEN in plaats van bij het lijf?
+
+    Alleen kijken naar het stuk ONDER de gekozen map: anders zou een pad als
+    C:/.../weapons/... op een heel ander niveau al meetellen.
+    """
+    rel = os.path.relpath(os.path.abspath(pad), os.path.abspath(wortel))
+    return any(x in WAPENWOORDEN for x in woorden(rel.split(os.sep)))
+
+
 def verzamel(wortel):
     """Per submap: wat er te doen valt. (factie, soort, arch, team, blend, kleuren)"""
     posten = []
@@ -140,11 +157,12 @@ def verzamel(wortel):
             w = w + woorden([os.path.splitext(os.path.basename(blends[0]))[0]])
         pl = plaats_uit_woorden(w)
         if pl is None:
-            posten.append((None, None, None, None, blends[0] if blends else None, kleuren, r))
+            posten.append((None, None, None, None, blends[0] if blends else None, kleuren, r, False))
             continue
         factie, soort, arch = pl
         posten.append((factie, soort, arch, team_uit(r),
-                       blends[0] if blends else None, kleuren, r))
+                       blends[0] if blends else None, kleuren, r,
+                       is_wapenmap(r, wortel)))
     return posten
 
 
@@ -272,12 +290,13 @@ def main():
     print()
     onbekend = [x for x in posten if x[0] is None]
     goed = [x for x in posten if x[0] is not None]
-    for factie, soort, arch, team, blend, kleuren, r in goed:
+    for factie, soort, arch, team, blend, kleuren, r, wapen in goed:
         wat = []
         if blend:
             wat.append("model uit .blend")
         if kleuren:
-            wat.append(f"{len(kleuren)} jas" + ("" if team is None else f" ({team})"))
+            waarvoor = "wapenjas" if wapen else "jas"
+            wat.append(f"{len(kleuren)} {waarvoor}" + ("" if team is None else f" ({team})"))
         merk = "" if (team or not kleuren) else "   LET OP: team onbekend, jas blijft liggen"
         print(f"  {os.path.relpath(r, a.map):48} -> {factie}/{soort}_{arch}: {', '.join(wat)}{merk}")
     for x in onbekend:
@@ -291,7 +310,7 @@ def main():
         return 1
 
     gebouwd, jassen, geweigerd, fout = [], [], [], []
-    for factie, soort, arch, team, blend, kleuren, r in goed:
+    for factie, soort, arch, team, blend, kleuren, r, wapen in goed:
         naam = f"{factie}/{soort}_{arch}"
         doel, basis, plan = stappen(blend or "", factie, soort, arch, a.uit)
         os.makedirs(doel, exist_ok=True)
@@ -319,19 +338,31 @@ def main():
                 print(f"  FOUT {naam}: geen model om de jas op te leggen ({os.path.basename(basis)})")
                 fout.append(naam)
             continue
+        # Een wapenjas hoort bij de WAPEN-glb en wordt daar ook tegen gemeten:
+        # die draagt maar een atlas, dus een verkeerde jas valt meteen door de
+        # mand. Meten tegen het lijf-model zou de wapen-atlas als "beste
+        # materiaal" opleveren en dus alsnog slagen.
+        wapen_glb = os.path.splitext(basis)[0] + ("_melee" if soort == "cavalry" else "_musket") + ".glb"
+        tegen = wapen_glb if wapen else basis
+        stam = os.path.splitext(os.path.basename(tegen))[0]
+        wat = "wapenjas" if wapen else "jas"
         for png in kleuren:
             if team is None:
                 geweigerd.append((naam, os.path.basename(png), "team onbekend (geen red/blue in het pad)"))
                 continue
-            dekking, materiaal = past(basis, png, a.drempel)
-            jas = os.path.join(doel, f"{soort}_{arch}_{team}.png")
+            if not os.path.exists(tegen):
+                geweigerd.append((naam, os.path.basename(png),
+                                  f"geen {os.path.basename(tegen)} om de {wat} op te leggen"))
+                continue
+            dekking, materiaal = past(tegen, png, a.drempel)
+            jas = os.path.join(doel, f"{stam}_{team}.png")
             if dekking < a.drempel:
                 geweigerd.append((naam, os.path.basename(png),
                                   f"dekt maar {dekking:.1f}% van de UV's (op '{materiaal}')"))
                 continue
             shutil.copyfile(png, jas)
             schrijf_import(jas)
-            print(f"  OK   {naam}: jas {team} erin ({dekking:.1f}% dekking)")
+            print(f"  OK   {naam}: {wat} {team} erin ({dekking:.1f}% dekking)")
             jassen.append(os.path.relpath(jas, PROJ))
 
     print()

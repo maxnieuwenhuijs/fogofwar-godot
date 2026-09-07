@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dj203c2h6u37o"
-path="res://.godot/imported/infantry_mix_blue.png-be7338eba67b09f109d65ed4512e5183.ctex"
+uid="uid://cut4dkmkwsksh"
+path="res://.godot/imported/infantry_mix_musket_red.png-88d0422d3f9dee0c33e35445cfe9f8c4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/models/mouse/infantry/infantry_mix_blue.png"
-dest_files=["res://.godot/imported/infantry_mix_blue.png-be7338eba67b09f109d65ed4512e5183.ctex"]
+source_file="res://assets/models/mouse/infantry/infantry_mix_musket_red.png"
+dest_files=["res://.godot/imported/infantry_mix_musket_red.png-88d0422d3f9dee0c33e35445cfe9f8c4.ctex"]
 
 [params]
 

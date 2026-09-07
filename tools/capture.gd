@@ -621,8 +621,25 @@ func _ready() -> void:
 					wr_tekst = "pos=%s rot=%s scale=%s %s" % [str(wr_tune.get("pos", [])),
 						str(wr_tune.get("rot", [])), str(wr_tune.get("scale", 1.0)),
 						"(NIET gebruikt op deze route)" if not wr_baked.is_empty() else "(WORDT TOEGEPAST)"]
+				# Draagt het wapen een eigen teamjas, en staat die er ook echt op?
+				var wr_jas: String = "wapenjas: geen (houdt zijn glb-atlas)"
+				var wr_pad: String = String(wr_pv._baked_prop_pad)
+				var wr_tex: Texture2D = PawnView.weapon_team_texture(wr_pad, Constants.Team.RED)
+				if wr_tex != null:
+					var wr_op := 0
+					var wr_tot := 0
+					for wr_mi in wr_pv._baked_wapens:
+						wr_tot += 1
+						var wr_mat: Material = (wr_mi as MeshInstance3D).material_override
+						if wr_mat is BaseMaterial3D and (wr_mat as BaseMaterial3D).albedo_texture == wr_tex:
+							wr_op += 1
+					wr_jas = "wapenjas: %s, staat op %d/%d wapen-mesh(es)" % [
+						wr_pad.get_file().get_basename() + "_red.png", wr_op, wr_tot]
+					if wr_op < wr_tot:
+						wr_jas += " !! NIET TOEGEPAST"
 				print("[WAPEN] %-9s %-5s %-11s sleutel=%-26s %s" % [wr_soort, wr_arch,
 					wr_route, wr_sleutel, wr_tekst])
+				print("[WAPEN]                            %s" % wr_jas)
 				wr_pv.queue_free()
 		print("[WAPEN] %d model(len) bekeken, %d op de prop-route" % [wr_totaal, wr_prop])
 		get_tree().quit(0)

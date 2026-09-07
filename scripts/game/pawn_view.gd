@@ -2193,6 +2193,9 @@ func _attach_weapon(fac: String) -> void:
 			# Warm laden (zelfde patroon als _preload_gib_assets): de doodsworp
 			# pakt hem straks zonder frame-hapering uit de cache.
 			ResourceLoader.load_threaded_request(_baked_prop_pad)
+			# NU pas kan de wapenjas erop: _apply_team_texture draaide in
+			# _swap_piece, toen _baked_prop_pad nog leeg was.
+			_zet_wapenjas()
 			return
 	_verberg_ingebakken_wapen()
 	var wp := weapon_for(_model_path, fac, soort)
@@ -2491,11 +2494,35 @@ static func apply_albedo_to(root: Node, tex: Texture2D) -> void:
 	if tex == null or root == null:
 		return
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		var m := (mi as MeshInstance3D).get_active_material(0)
-		if m is BaseMaterial3D:
-			var dup := (m as BaseMaterial3D).duplicate()
-			(dup as BaseMaterial3D).albedo_texture = tex
-			(mi as MeshInstance3D).material_override = dup
+		apply_albedo_to_mesh(mi as MeshInstance3D, tex)
+
+
+## Idem, maar op EEN mesh. find_children() slaat de root zelf over, dus zonder
+## deze variant kun je geen texture op een losse wapen-mesh zetten.
+static func apply_albedo_to_mesh(mi: MeshInstance3D, tex: Texture2D) -> void:
+	if tex == null or mi == null:
+		return
+	var m := mi.get_active_material(0)
+	if m is BaseMaterial3D:
+		var dup := (m as BaseMaterial3D).duplicate()
+		(dup as BaseMaterial3D).albedo_texture = tex
+		mi.material_override = dup
+
+
+## Teamjas voor het WAPEN: <wapen-glb zonder extensie>_red.png / _blue.png,
+## bijvoorbeeld infantry_mix_musket_red.png naast infantry_mix_musket.glb.
+## Elke factie draagt een iets andere musket-stijl (Max, 7 september); zonder
+## zo'n bestand houdt het wapen gewoon de atlas uit zijn glb.
+static var _wapen_tex_cache: Dictionary = {}
+
+
+static func weapon_team_texture(wapen_pad: String, team_v: int) -> Texture2D:
+	if wapen_pad == "":
+		return null
+	var pad := wapen_pad.get_basename() + ("_red" if team_v == Constants.Team.RED else "_blue") + ".png"
+	if not _wapen_tex_cache.has(pad):
+		_wapen_tex_cache[pad] = load(pad) if ResourceLoader.exists(pad) else null
+	return _wapen_tex_cache[pad]
 
 
 func _apply_team_texture() -> void:
@@ -2503,10 +2530,29 @@ func _apply_team_texture() -> void:
 		return
 	apply_albedo_to(_piece, team_texture(_model_path, team, false))
 	# Het team-uniform hoort alleen op het LIJF. Het ingebakken musket heeft
-	# zijn eigen texture-atlas: met de team-png erover wordt het een bonte
-	# vlek. Override eraf = het houdt gewoon zijn eigen glb-materiaal.
+	# zijn eigen texture-atlas: met de team-png van het lijf erover wordt het
+	# een bonte vlek.
+	#
+	# Ligt er WEL een eigen wapen-jas naast de wapen-glb
+	# (<wapen>_red.png / _blue.png), dan krijgt het wapen die -- zo draagt elke
+	# factie zijn eigen musket-stijl. Anders gaat de override eraf en houdt het
+	# wapen zijn glb-materiaal, precies zoals voorheen.
+	_zet_wapenjas()
+
+
+## De teamjas op het INGEBAKKEN wapen, of de override eraf als die er niet is.
+##
+## Apart van _apply_team_texture, en om een vervelende reden: die draait aan het
+## eind van _swap_piece(), en _attach_weapon() komt pas DAARNA -- daar wordt
+## _baked_prop_pad gezet. Bij het opbouwen is het wapenpad dus nog leeg. Daarom
+## roept _attach_weapon dit nog een keer aan zodra het pad bekend is.
+func _zet_wapenjas() -> void:
+	var jas: Texture2D = weapon_team_texture(_baked_prop_pad, team)
 	for mi in _vind_ingebakken_wapens():
-		(mi as MeshInstance3D).material_override = null
+		if jas != null:
+			apply_albedo_to_mesh(mi as MeshInstance3D, jas)
+		else:
+			(mi as MeshInstance3D).material_override = null
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):

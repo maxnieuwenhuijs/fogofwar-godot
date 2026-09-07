@@ -2,20 +2,24 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dj203c2h6u37o"
-path="res://.godot/imported/infantry_mix_blue.png-be7338eba67b09f109d65ed4512e5183.ctex"
+uid="uid://c8twa83jl0j2s"
+path.s3tc="res://.godot/imported/infantry_base_gibs_Color_8f53917f-6957-4eb8-adb3-7c9b1b7e04f2.jpg-099d256b4d91b7fa0d8ce303d578aae2.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "3b1420cd249828175efc1e4334920943"
 }
 
 [deps]
 
-source_file="res://assets/models/mouse/infantry/infantry_mix_blue.png"
-dest_files=["res://.godot/imported/infantry_mix_blue.png-be7338eba67b09f109d65ed4512e5183.ctex"]
+source_file="res://assets/models/mouse/infantry/infantry_base_gibs_Color_8f53917f-6957-4eb8-adb3-7c9b1b7e04f2.jpg"
+dest_files=["res://.godot/imported/infantry_base_gibs_Color_8f53917f-6957-4eb8-adb3-7c9b1b7e04f2.jpg-099d256b4d91b7fa0d8ce303d578aae2.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -36,5 +40,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=1024
-detect_3d/compress_to=1
+process/size_limit=0
+detect_3d/compress_to=0

@@ -110,7 +110,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   spel zetten" (vraagt om een map, toont eerst de droogloop). Voor een map met
   per model een submap die de .blend EN de nieuwe texturen draagt; factie/type/
   archetype komen uit de mapnamen, het TEAM uit het woord red/rood of
-  blue/blauw in het pad. Bouwt het model en meet de jas met `uv_check` tegen de
+  blue/blauw in het pad. Een map met `weapon`/`wapen` in het pad levert de jas
+  voor het WAPEN: die gaat als `<wapen-glb>_<team>.png` naast de wapen-glb en
+  wordt tegen DIE glb gemeten (die draagt maar een atlas, dus een verkeerde jas
+  valt meteen door de mand). Bouwt het model en meet de jas met `uv_check` tegen de
   GEBOUWDE glb: onder de 90% dekking gaat hij er NIET in en zegt het script
   waarom. Een map met alleen texturen mag ook (dan alleen de jas wisselen).
   Normal-maps gaan er nooit in: de engine zet alleen een albedo-override.
@@ -138,7 +141,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
   jas van een ander model rond de 70%. Per materiaal, want lijf en ingebakken
-  wapen hebben elk hun eigen atlas. Een nieuwe jas laten maken:
+  wapen hebben elk hun eigen atlas -- en sinds 7 september draagt het wapen ook
+  een eigen teamjas (`<wapen>_red.png` / `_blue.png` naast de wapen-glb), zodat
+  elke factie zijn eigen musket-stijl heeft; ontbreekt die, dan houdt het wapen
+  de atlas uit zijn glb. Een nieuwe jas laten maken:
   `python tools/maak_retexture.py <map>`, of de paneelknop "Model klaarmaken
   voor retexture" (die vraagt om een map). Levert per .blend TWEE bestanden
   NAAST die .blend: `<naam>.glb` (het kale lijf in rusthouding, geen skelet,

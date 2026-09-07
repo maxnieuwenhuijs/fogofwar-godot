@@ -131,6 +131,10 @@ naast `--script tools/_wapencheck.gd`.
       terug, en dan past de jas niet meer. **Vraag expliciet om de UV's te laten
       staan (geen nieuwe unwrap)**, en meet het antwoord met `uv_check.py`.
 - [ ] *(optioneel)* `<model>_red_gore.png` + `<model>_blue_gore.png` (bloederige gibs)
+- [ ] *(optioneel)* `<model>_musket_red.png` + `_blue.png` naast de wapen-glb
+      (`_melee_*` voor cavalerie): een eigen musket-stijl per factie. Het wapen
+      heeft zijn EIGEN UV-atlas, dus meet die jas tegen de wapen-glb en niet
+      tegen het model. Ontbreekt hij, dan houdt het wapen zijn glb-atlas.
 - [ ] *(optioneel)* `<model>_musket.glb` (eigen musket; anders factie-musket)
 - [ ] Import van **elke grote PNG**: `process/size_limit=1024` + `mipmaps/generate=true`
       (anders hapert de gib bij het eerste gebruik)
