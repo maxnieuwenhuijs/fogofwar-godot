@@ -28,8 +28,14 @@
 #
 # Normal-maps worden NIET geinstalleerd: de engine zet alleen een albedo-
 # override (PawnView.apply_albedo_to) en de normal zit al in de glb gebakken.
+#
+# Bij een HERBOUW waarschuwt hij over achtergebleven afstelling. De schaal en
+# hoogte in model_tuning.json horen bij de mesh waarop ze gezet zijn; komt er
+# een nieuwe mesh onder dezelfde naam, dan werkt die afstelling stilletijg door
+# en staat het model te groot of zwevend. Dat kost je een half uur zoeken.
 import argparse
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -164,6 +170,26 @@ def past(glb, png, drempel):
     return max(scores) if scores else (0.0, "-")
 
 
+def oude_afstelling(factie, soort, arch):
+    """Tuning-sleutels die al bestaan voor een model dat we net opnieuw bouwen.
+
+    model_tuning.json is map-onafhankelijk (`<factie>/<bestandsnaam>`), dus een
+    nieuwe mesh erft de schaal, hoogte en wapenstand van zijn voorganger zonder
+    dat iemand daarom vraagt. Alleen melden, niet weggooien: het is Max' werk.
+    """
+    pad = os.path.join(PROJ, "assets", "models", "model_tuning.json")
+    if not os.path.exists(pad):
+        return []
+    try:
+        with open(pad, encoding="utf-8") as f:
+            tuning = json.load(f)
+    except (OSError, ValueError):
+        return []
+    wapen = "melee" if soort == "cavalry" else "musket"
+    kandidaten = [f"{factie}/{soort}_{arch}", f"{factie}/{soort}_{arch}_{wapen}"]
+    return [k for k in kandidaten if tuning.get(k)]
+
+
 def _godot(godot, args):
     r = subprocess.run([godot, "--headless", "--path", "."] + args,
                        capture_output=True, text=True, errors="replace", cwd=PROJ)
@@ -285,6 +311,9 @@ def main():
                 continue
             print(f"  OK   {naam}: model gebouwd")
             gebouwd.append(naam)
+            for sleutel in oude_afstelling(factie, soort, arch):
+                print(f"  LET OP {naam}: er ligt nog afstelling onder '{sleutel}' van het "
+                      f"VORIGE model. Zet hem opnieuw in de Model-tuner.")
         if not os.path.exists(basis):
             if kleuren:
                 print(f"  FOUT {naam}: geen model om de jas op te leggen ({os.path.basename(basis)})")

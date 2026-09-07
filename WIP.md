@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- model_tuning.json leeggemaakt, met een vangrail erbij
+
+Max: "doe dan ook alle opties voor model tuning opnieuw, want dat zit nu in de
+weg." Klopte. `model_tuning.json` droeg nog twaalf sleutels van de oude
+lichting, en die werken WEL door: `_auto_fit_model` doet `root.scale *= extra`,
+dus de verse mix-muis liep op schaal 1,11 (later 1,2) met een `muzzle` van een
+mesh die niet meer bestaat.
+
+- **Verwijderd (12):** alle `lion/*` en `mouse/*`, inclusief de
+  `_musket`-sleutels en `mouse/musket`.
+- **Gehouden (3):** `props/prop_drum`, `props/prop_horn`, `props/prop_pole` --
+  die modellen zijn niet vervangen en hun afstelling klopt nog.
+- Max' niet-gecommitte afstelwerk (lion 1,29 en 1,28, mouse/infantry_mix naar
+  1,2 met y 0,01) is EERST apart vastgelegd in `5ef1432`, zodat de reset niets
+  weggooit dat niet terug te halen is.
+
+Na de reset meldt `-- wapenroute` netjes "geen afstelling" en `-- tunercheck`
+doet 3 sleutels byte-identiek heen en terug.
+
+**Vangrail tegen herhaling.** `verwerk_levering.py` waarschuwt nu bij een
+HERBOUW als er al afstelling onder die naam ligt:
+
+    LET OP mouse/infantry_mix: er ligt nog afstelling onder
+    'mouse/infantry_mix' van het VORIGE model. Zet hem opnieuw in de Model-tuner.
+
+Alleen melden, niet weggooien -- het is Max' werk, en soms is de mesh wel
+degelijk dezelfde. `oude_afstelling()` kijkt naar de modelsleutel en de
+wapensleutel (`_musket` voor infanterie, `_melee` voor cavalerie); los getest op
+een schone en een vervuilde tuning.
+
 ## 7 september -- retexture-exports naast de .blend in plaats van in results/
 
 Max: "doe dan niet de map results als folder maar upload de glbs gewoon in de
