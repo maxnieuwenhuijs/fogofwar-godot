@@ -38,7 +38,8 @@ import sys
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(PROJ, "tools"))
-from bouw_modellen import BLENDER_STANDAARD, plaats, stappen, woorden  # noqa: E402
+from bouw_modellen import (BLENDER_STANDAARD, plaats_uit_woorden,  # noqa: E402
+                           stappen, woorden)
 from uv_check import geverfd, uv_maskers  # noqa: E402
 
 TEAMWOORDEN = {"red": "red", "rood": "red", "blue": "blue", "blauw": "blue"}
@@ -90,8 +91,29 @@ def is_kleur(bestandsnaam):
     return n.endswith(".png") and "normal" not in n and "roughness" not in n and "metallic" not in n
 
 
-def team_uit(pad, wortel):
-    w = woorden(os.path.relpath(pad, wortel).split(os.sep))
+# Hoeveel mapniveaus boven een bestand we meelezen. Genoeg om
+# ... mouse/red/infantry_mix te dekken ook als Max die laatste map zelf
+# aanwijst, en niet zo veel dat de projectmap zelf gaat meepraten.
+NIVEAUS = 6
+
+
+def padwoorden(pad):
+    """De laatste mapnamen + de bestandsnaam, als losse kleine woorden.
+
+    Bewust op het VOLLEDIGE pad en niet op het stuk onder de gekozen map: Max
+    wijst vaak de modelmap zelf aan (... mouse/red/infantry_mix), en dan staan
+    de factie en het team een niveau HOGER dan wat hij koos. Relatief lezen gaf
+    daar "team onbekend" terwijl het gewoon in het pad stond.
+    """
+    delen = os.path.abspath(pad).replace("/", os.sep).split(os.sep)
+    stam, ext = os.path.splitext(delen[-1])
+    if ext:
+        delen[-1] = stam
+    return woorden(delen[-NIVEAUS:])
+
+
+def team_uit(pad):
+    w = padwoorden(pad)
     return next((TEAMWOORDEN[x] for x in w if x in TEAMWOORDEN), None)
 
 
@@ -103,15 +125,16 @@ def verzamel(wortel):
         kleuren = sorted(os.path.join(r, f) for f in fs if is_kleur(f))
         if not blends and not kleuren:
             continue
-        pl = plaats(blends[0] if blends else r + os.sep + "x", wortel)
-        if pl is None and kleuren:
-            # Geen blend om uit af te leiden: probeer het op de map zelf.
-            pl = plaats(os.path.join(r, "x.blend"), wortel)
+        # De mapnaam telt altijd mee; een blend-bestandsnaam mag aanvullen.
+        w = padwoorden(r)
+        if blends:
+            w = w + woorden([os.path.splitext(os.path.basename(blends[0]))[0]])
+        pl = plaats_uit_woorden(w)
         if pl is None:
             posten.append((None, None, None, None, blends[0] if blends else None, kleuren, r))
             continue
         factie, soort, arch = pl
-        posten.append((factie, soort, arch, team_uit(r, wortel),
+        posten.append((factie, soort, arch, team_uit(r),
                        blends[0] if blends else None, kleuren, r))
     return posten
 

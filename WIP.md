@@ -1,5 +1,46 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- team-herkenning stuk als je de modelmap zelf aanwijst
+
+Max: "hij zegt team onbekend terwijl hij zit in folder red." Klopte. `team_uit`
+las het pad RELATIEF aan de map die je in de kiezer aanwijst, en Max wijst de
+modelmap zelf aan. Dan is het relatieve pad "." en staat `red` een niveau
+HOGER dan wat hij koos: nul woorden om in te zoeken.
+
+Opgelost met `padwoorden()`: lees de laatste zes mapniveaus van het VOLLEDIGE
+pad, niet het stukje onder de gekozen map. Zes is genoeg voor
+`... / mouse / red / infantry_mix` en te weinig om de projectmap zelf te laten
+meepraten. Zowel het team als de plaatsing (factie/type/archetype) gaan nu door
+dezelfde woordenlijst; `bouw_modellen.plaats()` is opgesplitst in
+`plaats_uit_woorden()` zodat beide scripts er dezelfde regels op nahouden.
+
+Meteen de type-aliassen uitgebreid voor Max' aangekondigde mapstructuur
+(`mouse/blue/cav`, `mouse/red/cannon`): `cav` -> cavalry, `cannon` en `kanon`
+-> artillery, `inf` -> infantry, `art` -> artillery.
+
+Gemeten op zijn structuur:
+
+| map die je aanwijst | team | plaatsing |
+|---|---|---|
+| mouse/red/infantry_mix | red | mouse/infantry/infantry_mix.glb |
+| mouse/blue/cav/cavalry_atk | blue | mouse/cavalry/cavalry_atk.glb |
+| mouse/red/cannon/artillery_base | red | mouse/artillery/artillery_base.glb |
+| wolf/blue/inf/infantry_spd | blue | wolf/infantry/infantry_spd.glb |
+| mouse/blue/cav (zonder archetype) | blue | geweigerd, archetype ontbreekt |
+
+Echte run vanaf de diepe map: model gebouwd, jas erin op 98,7%, wapencheck
+"beweegt-mee=true texture=true", zweefcheck PASS, tunercheck 0 fouten.
+
+**Wat NIET kan: de team-mapstructuur doortrekken naar assets/models.** Max
+vroeg of het daar ook `mouse/red/...` mag worden. Dat breekt de teamjassen:
+`PawnView.team_texture()` zoekt `<model>_red.png` NAAST de glb (op pad, niet via
+`Bestandsindex`), dus de glb en BEIDE jassen moeten in dezelfde map liggen. Een
+glb kan niet tegelijk in `mouse/red/` en `mouse/blue/` staan, en hij is ook
+team-neutraal: alleen de jas verschilt. Daarom blijft de doelkant
+`assets/models/<factie>/<type>/` met `<model>_red.png` en `<model>_blue.png`
+ernaast. De LEVERING mag wel de teamstructuur hebben -- daar wordt hij juist
+uit gelezen.
+
 ## 7 september -- een hele levering met een knop het spel in
 
 Max: "maak dus een knop in paneel ook dat als in de folder dus de blend met

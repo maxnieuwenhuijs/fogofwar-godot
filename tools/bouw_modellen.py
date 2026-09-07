@@ -40,9 +40,10 @@ FACTIES = {"mouse": "mouse", "muis": "mouse", "pig": "pig", "varken": "pig",
            "lion": "lion", "leeuw": "lion", "bear": "bear", "beer": "bear",
            "wolf": "wolf", "crocodile": "crocodile", "croc": "crocodile",
            "krokodil": "crocodile"}
-TYPES = {"infantry": "infantry", "infanterie": "infantry",
-         "cavalry": "cavalry", "cavalerie": "cavalry",
-         "artillery": "artillery", "artillerie": "artillery"}
+TYPES = {"infantry": "infantry", "infanterie": "infantry", "inf": "infantry",
+         "cavalry": "cavalry", "cavalerie": "cavalry", "cav": "cavalry",
+         "artillery": "artillery", "artillerie": "artillery", "art": "artillery",
+         "cannon": "artillery", "kanon": "artillery"}
 ARCHETYPEN = {"base": "base", "basis": "base", "spd": "spd", "speed": "spd",
               "snel": "spd", "hp": "hp", "health": "hp", "atk": "atk",
               "attack": "atk", "mix": "mix", "mixed": "mix"}
@@ -56,10 +57,8 @@ def woorden(pad_delen):
     return uit
 
 
-def plaats(blend, inbox):
-    """(factie, type, archetype) uit het pad, of None als het niet zeker is."""
-    rel = os.path.relpath(blend, inbox)
-    w = woorden(os.path.dirname(rel).split(os.sep) + [os.path.splitext(os.path.basename(rel))[0]])
+def plaats_uit_woorden(w):
+    """(factie, type, archetype) uit een lijst losse woorden, of None."""
     factie = next((FACTIES[x] for x in w if x in FACTIES), None)
     arch = next((ARCHETYPEN[x] for x in reversed(w) if x in ARCHETYPEN), None)
     # Geen type-woord in de naam betekent infanterie: dat is de standaard in de
@@ -68,6 +67,13 @@ def plaats(blend, inbox):
     if factie is None or arch is None:
         return None
     return factie, soort, arch
+
+
+def plaats(blend, inbox):
+    """(factie, type, archetype) uit het pad, of None als het niet zeker is."""
+    rel = os.path.relpath(blend, inbox)
+    return plaats_uit_woorden(
+        woorden(os.path.dirname(rel).split(os.sep) + [os.path.splitext(os.path.basename(rel))[0]]))
 
 
 def stappen(blend, factie, soort, arch, uit_map):
