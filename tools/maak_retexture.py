@@ -7,9 +7,15 @@
 #   blender --background <blend> --python tools/blender_export_retexture.py -- --uit <glb>
 # maar dan voor een hele map, met een nette naam eraan en een rapport eronder.
 #
-# Wat je krijgt is het KALE LIJF: rusthouding, geen skelet, geen animaties, geen
-# ingebakken wapen, lichaamsdelen aan elkaar. Dat upload je bij de
-# retexture-dienst, met de uitdrukkelijke vraag om de UV's te LATEN STAAN.
+# Je krijgt per model TWEE bestanden, want lijf en wapen hebben elk hun eigen
+# UV-atlas en kunnen dus los hertextureerd worden:
+#
+#   <naam>.glb        het kale lijf: rusthouding, geen skelet, geen animaties,
+#                     geen wapen, lichaamsdelen aan elkaar
+#   <naam>_wapen.glb  alleen het wapen, statisch en losgeknipt van het skelet
+#
+# Allebei upload je bij de retexture-dienst, met de uitdrukkelijke vraag om de
+# UV's te LATEN STAAN. Wil je alleen het lijf: --geen-wapen.
 # Vouwt hij toch opnieuw uit, dan past de jas niet meer op het model in het
 # spel -- en dat merk je pas in de partij. Wat er terugkomt controleer je met:
 #
@@ -42,7 +48,8 @@ def main():
     p.add_argument("--uit", default=os.path.join(PROJ, "results", "retexture"))
     p.add_argument("--blender", default=os.environ.get("BLENDER", BLENDER_STANDAARD))
     p.add_argument("--los", action="store_true", help="lichaamsdelen NIET aan elkaar plakken")
-    p.add_argument("--met-wapen", action="store_true", help="het ingebakken wapen meesturen")
+    p.add_argument("--met-wapen", action="store_true", help="het wapen OOK in het lijf-bestand zetten")
+    p.add_argument("--geen-wapen", action="store_true", help="geen apart wapenbestand maken")
     a = p.parse_args()
 
     if not os.path.isdir(a.map):
@@ -87,6 +94,30 @@ def main():
             for l in (r.stdout + r.stderr).splitlines()[-6:]:
                 print(f"        {l}")
             mislukt.append(blend)
+            continue
+
+        # Het wapen apart: eigen UV-atlas, dus je kunt het los laten hertexturen.
+        # Hetzelfde script dat de pijplijn gebruikt voor de losse wapen-prop.
+        if a.geen_wapen or a.met_wapen:
+            continue
+        wdoel = os.path.splitext(doel)[0] + "_wapen.glb"
+        wr = subprocess.run([a.blender, "--background", blend, "--python",
+                             os.path.join(PROJ, "tools", "blender_export_musket.py"),
+                             "--", "--uit", wdoel],
+                            capture_output=True, text=True, errors="replace", cwd=PROJ)
+        wregel = next((l for l in wr.stdout.splitlines() if l.startswith("MUSKET ->")), "")
+        if wr.returncode == 0 and os.path.exists(wdoel):
+            wkb = os.path.getsize(wdoel) // 1024
+            wdetail = wregel.split("(", 1)[1].rstrip(")") if "(" in wregel else ""
+            print(f"           OK   {os.path.basename(wdoel):34} {wkb:5} KB  {wdetail}")
+            gelukt.append(wdoel)
+        elif "GEEN ingebakken wapen" in wr.stdout:
+            print(f"           --   {os.path.basename(blend)} draagt geen wapen; alleen het lijf")
+        else:
+            print(f"           FOUT wapen uit {os.path.basename(blend)} halen mislukte")
+            for l in (wr.stdout + wr.stderr).splitlines()[-4:]:
+                print(f"                {l}")
+            mislukt.append(blend)
 
     print()
     print(f"{len(gelukt)} klaar in {os.path.relpath(a.uit, PROJ)}")
@@ -95,7 +126,9 @@ def main():
         print("Nu doen:")
         print("  1. Upload deze bestanden bij je retexture-dienst.")
         print("  2. Vraag EXPLICIET om de UV's te laten staan (geen nieuwe unwrap).")
-        print("  3. Zet de png die je terugkrijgt naast de glb als <model>_red.png of _blue.png.")
+        print("  3. De png voor het LIJF zet je naast de glb als <model>_red.png of _blue.png.")
+        print("     Een png voor het WAPEN hoort in de .blend gebakken te worden en dan opnieuw")
+        print("     door de bouwknop; het wapen draagt zijn eigen atlas uit de glb.")
         print("  4. Controleer met: python tools/uv_check.py <model>.glb <die png>")
         print("     Boven de 95% past hij, rond de 70% is het de jas van een ander model.")
     return 1 if mislukt else 0

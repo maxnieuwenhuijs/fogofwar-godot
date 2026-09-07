@@ -141,6 +141,16 @@ naast `--script tools/_wapencheck.gd`.
 - [ ] `assets/models/model_tuning.json` mee-committen
 - [ ] **Melee-timing NIET aanraken** — die is globaal (`effects_tuning.json`, gedeelde clips)
 
+## F-bis. Hangt het wapen goed?
+- [ ] `<godot> --headless --path . res://tools/capture.tscn -- wapenroute <factie>`
+      INGEBAKKEN = het spel gebruikt het geanimeerde wapen uit de .blend en past
+      GEEN afstelling toe. Staat het wapen dan scheef, dan zit dat in de .blend
+      (of in de bot-kind-fix van de export) -- niet in `model_tuning.json`.
+      PROP = terugval: het ingebakken wapen wordt verborgen en er hangt een
+      statische glb in de hand MET de afstelling erop. Een model dat daar per
+      ongeluk belandt krijgt de pos/rot/scale van zijn tuning-sleutel, en een
+      afstelling die bij een OUDER model hoorde zet het wapen zichtbaar scheef.
+
 ## G. Controleren in de tuner (preview-strip bovenin)
 - [ ] `idle / walk / attack / melee / hit / die / ready` spelen goed af
 - [ ] Melee-stoot gaat **recht naar voren** (niet gedraaid)

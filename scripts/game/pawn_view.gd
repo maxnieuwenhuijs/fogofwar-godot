@@ -1609,22 +1609,27 @@ func _shed_first_limb(live: Array, dir: Vector3) -> void:
 ## Verberg het levende deel (naam bevat part_name) en slinger de
 ## gib-tegenhanger weg. false als het model dit deel niet los heeft.
 func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> bool:
-	var target: MeshInstance3D = null
+	# ALLE delen van dit ledemaat, niet alleen het eerste (Max, 7 september).
+	# Een arm bestaat uit Arm.L + Forarm.L en een been uit Upleg.L + Leg.L; de
+	# zoeksleutel "arml" zit in "arml" en in "forarml", "legl" in "legl" en in
+	# "uplegl". Wie hier stopt bij de eerste match laat het halve ledemaat aan
+	# het lijf hangen, en kan zelfs het ene segment verbergen terwijl het andere
+	# wegvliegt. Verse exports heten "Arm.L" / "Upleg.R"; kaal maken zodat
+	# "arml" en "legr" matchen (Max, 29 juli).
+	var targets: Array = []
 	for mi in live:
-		# Verse exports heten "Arm.L" / "Upleg.R"; kaal maken zodat "arml" en
-		# "legr" gewoon matchen (Max, 29 juli).
-		if _kale_deelnaam(String(mi.name)).contains(part_name):
-			target = mi
-			break
-	if target == null or not target.visible:
+		if _kale_deelnaam(String(mi.name)).contains(part_name) and (mi as MeshInstance3D).visible:
+			targets.append(mi)
+	if targets.is_empty():
 		return false
 	# Factie-kreet (besluit Max, 28 juli): alleen ALS er echt iets afgaat --
 	# een arm, een been of het hoedje. Zonder afgevallen deel blijft het bij
 	# de algemene doodskreet die game.gd al speelt.
-	var start: Variant = _fling_single_gib(part_name, dir, violence, time_scale)
+	var start: Variant = _fling_limb_gibs(part_name, dir, violence, time_scale)
 	if start == null:
 		return false
-	target.visible = false
+	for mi in targets:
+		(mi as MeshInstance3D).visible = false
 	if not part_name.contains("hat"):
 		# Bloed spuit uit het gat waar het ledemaat zat, van het lijf af.
 		var out: Vector3 = (start as Vector3) - global_position
@@ -1632,10 +1637,13 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 	return true
 
 
-## Laad het gibs-bestand en slinger alléén het deel met deze naam weg;
-## de rest blijft verborgen. Geeft de startpositie van het deel terug
-## (= de wond-plek op het lijf), of null als het deel niet bestaat.
-func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> Variant:
+## Laad het gibs-bestand en slinger ALLE delen van dit ledemaat weg (een arm is
+## Arm.L + Forarm.L, een been Upleg.L + Leg.L); de rest blijft verborgen.
+## Geeft de wond-plek terug: de startpositie van het deel dat het dichtst bij de
+## romp zat. Dat wordt geometrisch bepaald en niet uit de naam geraden, want bij
+## deze modellen is "Leg" het ONDERbeen en "Upleg" het bovenbeen. null als het
+## ledemaat niet in het gibs-bestand zit.
+func _fling_limb_gibs(part_name: String, dir: Vector3, violence: float, time_scale: float = 1.0) -> Variant:
 	if _model_path == "" or _piece == null:
 		return null
 	var gibs_path := _gibs_pad()
@@ -1651,22 +1659,32 @@ func _fling_single_gib(part_name: String, dir: Vector3, violence: float, time_sc
 	if not is_equal_approx(maat_f, 1.0):
 		parts_root.scale *= maat_f   # gibs stonden op een andere schaal
 	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
-	var chosen: Node3D = null
+	var chosen: Array = []
 	for part in parts_root.find_children("*", "MeshInstance3D", true, false):
 		# KAAL vergelijken, net als de levende kant (_shed_one): Godot maakt
 		# van "Arm.L.001" bij het importeren "Arm_L_001", en "arm_l_001"
 		# bevat "arml" niet. Met to_lower() matchte hier dus alleen het
 		# hoedje en vloog er NOOIT een ledemaat af, bij geen enkele factie
 		# (gevonden 15 augustus, toen Max het bij de nieuwe modellen miste).
-		if chosen == null and _kale_deelnaam(String(part.name)).contains(part_name):
-			chosen = part as Node3D
+		if _kale_deelnaam(String(part.name)).contains(part_name):
+			chosen.append(part as Node3D)
 		else:
 			(part as MeshInstance3D).visible = false
-	if chosen == null:
+	if chosen.is_empty():
 		parts_root.queue_free()
 		return null
-	var start := chosen.global_position
-	_fling_part(chosen, dir, violence, time_scale)
+	# Wond-plek = het segment dat het dichtst bij de romp zat.
+	var start: Vector3 = (chosen[0] as Node3D).global_position
+	var dichtst: float = start.distance_to(global_position)
+	for deel in chosen:
+		var d: float = (deel as Node3D).global_position.distance_to(global_position)
+		if d < dichtst:
+			dichtst = d
+			start = (deel as Node3D).global_position
+	# Elk segment krijgt zijn eigen ruis mee in _fling_part, dus ze vliegen als
+	# een groep dezelfde kant op zonder als een blok aan elkaar te plakken.
+	for deel in chosen:
+		_fling_part(deel as Node3D, dir, violence, time_scale)
 	parts_root.add_to_group("battlefield_debris")
 	return start
 

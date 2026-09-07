@@ -562,6 +562,71 @@ func _ready() -> void:
 		print("[ZWEEF] meshes zichtbaar=%d, meer dan 2 van hun pion: %d (%s)" % [totaal, buiten, "PASS" if buiten == 0 else "FAIL"])
 		get_tree().quit(0)
 		return
+	elif "wapenroute" in args:
+		# Diagnose (7 september): welke wapen-route neemt het spel per model?
+		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt
+		#                met elke animatie mee. Geen afstelling, geen prop.
+		#   PROP       = het ingebakken wapen wordt VERBORGEN en er hangt een
+		#                statische glb in de hand, met model_tuning.json erop.
+		# De prop-route is de terugval voor modellen zonder meebewegend wapen.
+		# Belandt een model daar per ongeluk, dan krijgt het de pos/rot/scale uit
+		# de tuning-sleutel, en een afstelling die bij een OUDER model hoorde zet
+		# het wapen zichtbaar scheef. Gebruik: -- wapenroute [factie]
+		#
+		# Opgebouwd zoals de Model-tuner (set_unit_type + set_character), NIET via
+		# een partij: in een partij verschijnen alleen archetypen waarvoor een
+		# model bestaat, dus op een halfgevulde assets-map zie je niets.
+		var wr_fac: int = Constants.Doctrine.MUIS
+		var wr_namen := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		for wr_n in wr_namen:
+			if wr_n in args:
+				wr_fac = wr_namen[wr_n]
+		var wr_kaarten := {"base": null, "spd": [1, 3, 1], "hp": [3, 1, 1],
+			"atk": [1, 1, 3], "mix": [2, 2, 1]}
+		var wr_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		if wr_scene == null:
+			print("[WAPEN] PawnView.tscn niet gevonden")
+			get_tree().quit(1)
+			return
+		var wr_prop := 0
+		var wr_totaal := 0
+		for wr_tp in [0, 1]:  # 0 = infanterie, 1 = cavalerie
+			for wr_arch in ["base", "spd", "hp", "atk", "mix"]:
+				var wr_pv: PawnView = wr_scene.instantiate()
+				wr_pv.team = Constants.Team.RED
+				add_child(wr_pv)
+				wr_pv.set_unit_type(wr_tp)
+				var wr_st = wr_kaarten[wr_arch]
+				var wr_card = null
+				if wr_st != null:
+					wr_card = Card.new(0, 0, 0, int(wr_st[0]), int(wr_st[1]), int(wr_st[2]))
+				wr_pv.set_character(wr_fac, wr_tp, wr_card)
+				await get_tree().process_frame
+				await get_tree().process_frame
+				var wr_soort: String = "infantry" if wr_tp == 0 else "cavalry"
+				if String(wr_pv._model_path) == "":
+					wr_pv.queue_free()
+					continue
+				wr_totaal += 1
+				var wr_baked: Array = wr_pv._baked_wapens
+				var wr_route: String = "INGEBAKKEN" if not wr_baked.is_empty() else "PROP"
+				if wr_baked.is_empty():
+					wr_prop += 1
+				var wr_sleutel: String = String(wr_pv._weapon_tune_key)
+				var wr_tune: Dictionary = PawnView.model_tuning().get(wr_sleutel, {})
+				var wr_tekst: String = "geen afstelling"
+				if not wr_tune.is_empty():
+					wr_tekst = "pos=%s rot=%s scale=%s %s" % [str(wr_tune.get("pos", [])),
+						str(wr_tune.get("rot", [])), str(wr_tune.get("scale", 1.0)),
+						"(NIET gebruikt op deze route)" if not wr_baked.is_empty() else "(WORDT TOEGEPAST)"]
+				print("[WAPEN] %-9s %-5s %-11s sleutel=%-26s %s" % [wr_soort, wr_arch,
+					wr_route, wr_sleutel, wr_tekst])
+				wr_pv.queue_free()
+		print("[WAPEN] %d model(len) bekeken, %d op de prop-route" % [wr_totaal, wr_prop])
+		get_tree().quit(0)
+		return
 	elif "placetest" in args:
 		# Zelf opstellen: kanonnen + paarden plaatsen, infanterie vult aan.
 		game._start_match(1)

@@ -1,5 +1,53 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- wapen-route bewezen, wapen apart exporteren, hele ledemaat af
+
+Max zag het musket scheef hangen: "nu is het wapen toch nog vreemd en niet
+gealigend. het wapen is geanimeerd ook in de hoofdblend file, dus dat moet
+eigenlijk de main zijn, behalve als het poppetje sterft dan spawn je een los
+wapen net als de gibs."
+
+**Dat gebeurt al, en dat is nu meetbaar.** Nieuwe modus `-- wapenroute [factie]`
+in capture.gd bouwt PawnViews zoals de Model-tuner (NIET via een partij: daar
+verschijnen alleen archetypen waarvoor een model bestaat, en op een halflege
+assets-map zie je dan niets -- eerste poging gaf 40 pionnen zonder model).
+Uitslag voor de muis:
+
+    [WAPEN] infantry mix INGEBAKKEN sleutel=mouse/infantry_mix_musket
+            pos=[0.05, 0.19, 0.05] rot=[75.0, -105.0, -160.0] scale=1.55
+            (NIET gebruikt op deze route)
+
+Dus: het spel gebruikt het geskinde wapen uit de .blend, bot-geparent aan de
+rechterhand, en past GEEN afstelling toe. De verdenking dat de verweesde
+`mouse/infantry_mix_musket`-tuning het wapen scheeftrok is daarmee weerlegd. Wat
+Max ziet is de plaatsing uit zijn eigen blend, of een restje van de Blender
+5.1-bot-kind-bug die de export corrigeert. Volgende meting als hij dat wil: het
+wapen t.o.v. de handbot in de .blend naast dezelfde meting in de glb.
+
+**Wapen apart voor een retexture** (Max: "dan kan ik ook het wapen een retexture
+geven"). `maak_retexture.py` levert nu per model twee bestanden: `<naam>.glb`
+(lijf) en `<naam>_wapen.glb` (alleen het wapen, via `blender_export_musket.py`,
+het script dat de pijplijn er toch al voor gebruikt). Op infantry_mix: 1235 en
+891 driehoeken. `--geen-wapen` slaat het over. Lijf en wapen hebben elk hun
+eigen UV-atlas, dus ze kunnen los.
+
+**Een ledemaat vliegt er nu als GEHEEL af** (Max: "een been of arm bestaan uit 2
+delen soms, dan moeten die beide eraf vliegen"). De oorzaak was erger dan half
+werk: de zoeksleutel `arml` zit ook in `forarml` en `legl` ook in `uplegl`, en
+zowel `_shed_one` als `_fling_single_gib` pakte de EERSTE match en stopte.
+Gevolg: er vloog een van de twee segmenten weg, welk hing af van de
+scene-volgorde, en de levende kant kon `Arm.L` verbergen terwijl de gib-kant
+`Forarm.L` wegslingerde -- gat op de ene plek, brokstuk van de andere.
+
+Nu verzamelt `_shed_one` alle zichtbare delen van het ledemaat en
+`_fling_limb_gibs` (hernoemd) slingert ze allemaal weg. De wond-plek voor de
+bloedspuit is het segment dat het DICHTST bij de romp zat, geometrisch bepaald:
+uit de naam raden kan niet, want bij deze modellen is `Leg` het onderbeen en
+`Upleg` het bovenbeen.
+
+Controles: testsuite 2282 groen / 0 rood, `_gibcheck` PASS (11 delen in de
+mix-gibs), `-- simcheck` 0 afwijkingen.
+
 ## 7 september -- leveringsindeling factie/model/kleur, inbox-knoppen eruit
 
 Max: "factie -> model -> en dan twee mapjes met kleur zodat je in 1x beide teams

@@ -127,15 +127,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (rommelige) bestandsnamen. Draai altijd eerst de droogloop. Wat hij niet
   zeker kan plaatsen bouwt hij NIET. Logs per aanroep in
   `results/modelbouw_<tijd>/`.
+- **Welke wapen-route neemt het spel? `-- wapenroute [factie]`** (capture.tscn,
+  bouwt PawnViews zoals de Model-tuner). INGEBAKKEN = het geskinde wapen uit de
+  .blend blijft staan en beweegt met elke animatie mee, zonder afstelling. PROP
+  = het ingebakken wapen wordt verborgen en er hangt een statische glb in de
+  hand MET `model_tuning.json` erop; een afstelling van een ouder model zet het
+  wapen dan zichtbaar scheef. Draai dit als een wapen er raar bij hangt: het
+  zegt of de plaatsing uit de .blend komt of uit de afstelling.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
   jas van een ander model rond de 70%. Per materiaal, want lijf en ingebakken
   wapen hebben elk hun eigen atlas. Een nieuwe jas laten maken:
   `python tools/maak_retexture.py <map>`, of de paneelknop "Model klaarmaken
-  voor retexture" (die vraagt om een map). Levert per .blend het kale lijf in
-  rusthouding -- geen skelet, animaties of ingebakken wapen -- in
-  `results/retexture/`. Dat upload je, en je vraagt de dienst UITDRUKKELIJK de
+  voor retexture" (die vraagt om een map). Levert per .blend TWEE bestanden in
+  `results/retexture/`: `<naam>.glb` (het kale lijf in rusthouding, geen skelet,
+  animaties of wapen) en `<naam>_wapen.glb` (alleen het wapen, statisch).
+  Lijf en wapen dragen elk hun eigen UV-atlas, dus je kunt ze los laten
+  hertexturen; `--geen-wapen` slaat het tweede bestand over. Dat upload je, en je vraagt de dienst UITDRUKKELIJK de
   UV's te laten staan. Per stuk:
   `blender --background <model>.blend --python tools/blender_export_retexture.py
   -- --uit <naam>.glb` (vlaggen `--los`, `--met-wapen`).
