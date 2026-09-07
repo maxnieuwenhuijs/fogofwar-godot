@@ -2284,6 +2284,9 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	var adoptions: int = 0
 	# Matchup-tally: hoe vaak wint DEZE (getrainde) factie tegen elke tegenstander.
 	var matchup: Dictionary = {}
+	# C15 (7 september): buit over de hele run, zodat het rapport laat zien of
+	# de kandidaten echt op dragers jagen (pt = vaandel, cp = tamboer).
+	var buit_run: Dictionary = {"pt": 0, "cp": 0, "verloren": 0, "potjes": 0}
 	# Convergentie: per factie een venster kampioen-snapshots + generatie-teller.
 	var conv_geschiedenis: Dictionary = {}
 	var gen_factie: Dictionary = {}
@@ -2345,6 +2348,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 			var thread := Thread.new()
 			thread.start(_eval_games_threaded.bind(jobs))
 			threads.append(thread)
+		var gen_buit: Dictionary = {"pt": 0, "cp": 0, "verloren": 0}
 		for j in pop:
 			var res: Dictionary = threads[j].wait_to_finish()
 			candidates[j].fit = float(res.fit)
@@ -2353,8 +2357,13 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 					matchup[od] = {"w": 0.0, "g": 0}
 				matchup[od].w += res.tally[od].w
 				matchup[od].g += res.tally[od].g
-			print("[TRAIN]   gen %d · %s · kandidaat %d/%d: %.1f/%d punten · %.1f min" % [
+			for bk in ["pt", "cp", "verloren"]:
+				gen_buit[bk] += int(res.buit[bk])
+				buit_run[bk] += int(res.buit[bk])
+			buit_run.potjes += games
+			print("[TRAIN]   gen %d · %s · kandidaat %d/%d: %.1f/%d punten · buit %d pt + %d CP, %d dragers verloren · %.1f min" % [
 				gen, Constants.doctrine_name(d), j + 1, pop, float(candidates[j].fit), games,
+				int(res.buit.pt), int(res.buit.cp), int(res.buit.verloren),
 				float(Time.get_ticks_msec() - t0) / 60_000.0])
 		candidates.sort_custom(func(a, b): return a.fit > b.fit)
 		# 3) Recombinatie: meetkundig gemiddelde van de top-helft, met behoud
@@ -2417,6 +2426,11 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 			gen, Constants.doctrine_name(d), float(candidates[0].fit), games,
 			verify, n_verify, ref_tot, verify_champ, float(ref.champ), verify_base, float(ref.base),
 			"GEADOPTEERD 💾" if adopted else "verworpen", float(sigma[d]), elapsed])
+		# C15: jagen de kandidaten op dragers? Per potje, over de hele generatie.
+		var gen_potjes: float = maxf(1.0, float(pop * games))
+		print("[TRAIN] gen %d · %s · buit per potje: %.2f pt + %.2f CP veroverd, %.2f eigen dragers verloren" % [
+			gen, Constants.doctrine_name(d), float(gen_buit.pt) / gen_potjes,
+			float(gen_buit.cp) / gen_potjes, float(gen_buit.verloren) / gen_potjes])
 		# Convergentiecheck (bouwplan §7.4): elke CONV_INTERVAL factie-generaties
 		# de huidige kampioen head-to-head (spiegel d-vs-d, VASTE seeds) tegen de
 		# kampioen van CONV_INTERVAL generaties terug. ~50% = plateau. Alleen
@@ -2444,6 +2458,12 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	lines.append("Fog of War — trainings-matchup voor %s" % my_name)
 	lines.append("Generaties: %d · adopties: %d · minuten: %.1f" % [
 		gen, adoptions, float(Time.get_ticks_msec() - t0) / 60_000.0])
+	var run_potjes: float = maxf(1.0, float(buit_run.potjes))
+	var buit_regel := "Buit op dragers (kandidaten, %d potjes): %.2f pt + %.2f CP per potje veroverd, %.2f eigen dragers per potje verloren" % [
+		int(buit_run.potjes), float(buit_run.pt) / run_potjes, float(buit_run.cp) / run_potjes,
+		float(buit_run.verloren) / run_potjes]
+	lines.append(buit_regel)
+	print("[TRAIN] " + buit_regel)
 	lines.append("Winrate van %s tegen elke tegenstander-factie (alle trainingspotjes):" % my_name)
 	print("[TRAIN] Winrate van %s tegen elke tegenstander-factie (over alle trainingspotjes):" % my_name)
 	for od in Constants.DOCTRINE_DATA.keys():
@@ -2640,19 +2660,26 @@ func _copy_profile(profile: Dictionary) -> Dictionary:
 func _eval_games_threaded(jobs: Array) -> Dictionary:
 	var fit: float = 0.0
 	var tally: Dictionary = {}
+	var buit: Dictionary = {"pt": 0, "cp": 0, "verloren": 0}
 	for job in jobs:
-		var s: float = _train_match(job.cand_w, job.cand_d, job.opp_w, job.opp_d, job.cand_is_p1)
+		var uit: Dictionary = _train_match(job.cand_w, job.cand_d, job.opp_w, job.opp_d, job.cand_is_p1)
+		var s: float = float(uit.score)
 		fit += s
+		for bk in ["pt", "cp", "verloren"]:
+			buit[bk] += int(uit[bk])
 		var od: int = int(job.opp_d)
 		if not tally.has(od):
 			tally[od] = {"w": 0.0, "g": 0}
 		tally[od].w += s
 		tally[od].g += 1
-	return {"fit": fit, "tally": tally}
+	return {"fit": fit, "tally": tally, "buit": buit}
 
 
-## Speel één headless potje; retour: 1.0 = kandidaat wint, 0.5 = gelijk, 0.0 = verlies.
-func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int, cand_is_p1: bool) -> float:
+## Speel één headless potje. Retour {score, pt, cp, verloren}: score 1.0 =
+## kandidaat wint, 0.5 = gelijk, 0.0 = verlies (onder v4.2 de campagne-
+## fitness uit CampagneFitness), pt/cp = wat de kandidaat op dragers
+## veroverde, verloren = zijn eigen neergelegde dragers (C15, 7 september).
+func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int, cand_is_p1: bool) -> Dictionary:
 	var ca = TRAIN_AI.new()
 	ca.weights = cand_w.duplicate()
 	var oa = TRAIN_AI.new()
@@ -2669,57 +2696,14 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 		runner.step()
 	var winner: int = runner.winner
 	var cand_side: int = Constants.PLAYER_1 if cand_is_p1 else Constants.PLAYER_2
+	var buit: Dictionary = runner.buit[cand_side]
 	var score: float
 	if _train_rules != null and _train_rules.campaign_actief():
-		score = _campagne_score(runner.state(), cand_side, winner)
+		score = CampagneFitness.score(runner.state(), cand_side, winner, buit)
 	else:
 		score = 0.5 if winner == -1 else (1.0 if winner == cand_side else 0.0)
 	runner.dispose()
-	return score
-
-
-## Campagne-fitness (26 juli, Max: "lange termijn denken"): onder v4.2-regels
-## traint de bot op het campagne-puntensysteem in plaats van kale winst.
-## Haven (3) > eliminatie (2) > tiebreak (1) > verlies (0), plus een kleine
-## spaarbonus: restleger en gespaarde CP gaan in de campagne mee naar het
-## volgende duel — óók voor de verliezer (die houdt zijn rest). Zo leert de
-## bot winnen ZONDER zichzelf leeg te vechten. Genormaliseerd naar [0, 1];
-## de relatieve adoptie-gate vergelijkt kandidaat en referentie op dezelfde
-## schaal, dus de gate-marge blijft geldig.
-func _campagne_score(s: GameState, kant: int, winner: int) -> float:
-	var punten: float = 0.0
-	if winner == -1:
-		punten = 1.0  # remise: beide het tiebreak-punt
-	elif winner == kant:
-		if Rules.count_pawns_in_haven(s, winner) >= s.rules.pawns_in_haven_to_win:
-			punten = 3.0
-		else:
-			var verliezer: int = Constants.opponent(winner)
-			if s.count_alive_pawns_for(verliezer) + s.pool_total(verliezer) == 0:
-				punten = 2.0
-			else:
-				punten = 1.0
-	var comp: Array = s.doctrine_data_of(kant).comp
-	var factor: float = float(s.rules.campaign.get("poolfactor", 1.5))
-	var start_totaal: int = 0
-	var rest: int = 0
-	if s.punten_model():
-		# C11: alles in puntenwaarde (soldaat 1 / ruiter 2 / kanon 3) zodat
-		# een gespaard kanon ook echt 3x een soldaat waard is.
-		for t in 3:
-			start_totaal += int(comp[t]) * s.spawn_kosten(t) 				+ int(floor(int(comp[t]) * factor)) * s.spawn_kosten(t)
-		for pawn in s.pawns.values():
-			if not pawn.is_eliminated and pawn.owner_id == kant:
-				rest += s.spawn_kosten(pawn.unit_type)
-		rest += s.pool_total(kant)
-	else:
-		for t in 3:
-			start_totaal += int(comp[t]) + int(floor(int(comp[t]) * factor))
-		rest = s.count_alive_pawns_for(kant) + s.pool_total(kant)
-	var rest_fractie: float = clampf(float(rest) / maxf(1.0, float(start_totaal)), 0.0, 1.0)
-	var cp_start: float = maxf(1.0, float(s.rules.campaign.get("cp_start", 10)))
-	var cp_fractie: float = clampf(float(s.cp.get(kant, 0)) / cp_start, 0.0, 1.0)
-	return (punten / 3.0 + 0.15 * rest_fractie + 0.05 * cp_fractie) / 1.2
+	return {"score": score, "pt": int(buit.pt), "cp": int(buit.cp), "verloren": int(buit.verloren)}
 
 
 ## Convergentie-potjes: spiegel-partijen (beide kanten factie d) met VASTE

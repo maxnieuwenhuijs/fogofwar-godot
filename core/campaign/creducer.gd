@@ -286,6 +286,18 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 			var za: int = maxi(0, int(z.get("art", 0)))
 			if zi + zc + za > 0:
 				_boek_ev(c, events, "inzet", sid, -zi, -zc, -za, 0, 0)
+		# C15-buit (7 september): wat een vechter in het duel op dragers
+		# veroverde komt als soldaten terug op de campagnepool. De inzet is
+		# immers deels met die buit betaald; zonder deze boeking boekte de
+		# inzet meer af dan de speler had en zakte de pool onder nul, waarna
+		# zelfs een leeg testament strandde op "boven de helft van het bezit".
+		for sid_str in _gesorteerde_ids(action.get("buit", {})):
+			var sid := int(String(sid_str))
+			if sid != p1 and sid != p2:
+				return "Buit voor een speler buiten het duel"
+			var bpt: int = int(action.buit[sid_str])
+			if bpt > 0:
+				_boek_ev(c, events, "buit", sid, bpt, 0, 0, 0, 0)
 	else:
 		for sid_str in _gesorteerde_ids(action.verliezen):
 			var sid := int(String(sid_str))
@@ -354,10 +366,13 @@ static func _do_testament(c: CState, action: Dictionary, speler: int, events: Ar
 		return "Maximaal %d ontvangers" % c.rules.testament_ontvangers_max
 	var bezit: Dictionary = c.pool_van(speler)
 	var cp_bezit: int = c.cp_van(speler)
-	var max_inf: int = int(floor(int(bezit.inf) * c.rules.testament_fractie))
-	var max_cav: int = int(floor(int(bezit.cav) * c.rules.testament_fractie))
-	var max_art: int = int(floor(int(bezit.art) * c.rules.testament_fractie))
-	var max_cp: int = int(floor(cp_bezit * c.rules.testament_fractie))
+	# Nooit onder nul: een pool die (door welke boekingsfout ook) negatief
+	# staat mag een LEEG testament niet blokkeren, anders staat de campagne
+	# muurvast (gemeten 7 september met een pool van -6).
+	var max_inf: int = maxi(0, int(floor(int(bezit.inf) * c.rules.testament_fractie)))
+	var max_cav: int = maxi(0, int(floor(int(bezit.cav) * c.rules.testament_fractie)))
+	var max_art: int = maxi(0, int(floor(int(bezit.art) * c.rules.testament_fractie)))
+	var max_cp: int = maxi(0, int(floor(cp_bezit * c.rules.testament_fractie)))
 	var som := {"inf": 0, "cav": 0, "art": 0, "cp": 0}
 	for deel in verdeling:
 		var naar: int = int(deel.get("naar", -1))

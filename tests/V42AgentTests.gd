@@ -127,3 +127,74 @@ func test_l0_speelt_v42_legaal() -> void:
 	var uit: Dictionary = _speel(AgentL0.new(), AgentL0.new(), 4244)
 	assert_eq(uit.runner.illegal_count, 0, "geen illegale L0-keuzes onder v4.2")
 	assert_eq(uit.runner.fallback_count, 0)
+
+
+# --- C15-buit in het trainer-pad (7 september 2026) --------------------------
+
+func test_c15_matchrunner_telt_buit() -> void:
+	# De teller leest het result-blok van elk action_applied-event, net als
+	# ArenaMetrics; de tegenpartij verliest die drager.
+	var runner := MatchRunner.new(AIMediumScript.new(), AIMediumScript.new(),
+		Constants.Doctrine.MENS, Constants.Doctrine.MENS, 1, _campaign_rules())
+	runner._tel_buit({"ok": true, "events": [
+		{"type": Reducer.EV_ACTION, "seq": 0, "payload": {"action": {}, "result": {"buit_pt": 2, "buit_cp": 0, "eliminated": true}}},
+		{"type": "phase_changed", "seq": 0, "payload": {}},
+	]}, Constants.PLAYER_1)
+	runner._tel_buit({"ok": true, "events": [
+		{"type": Reducer.EV_ACTION, "seq": 0, "payload": {"result": {"buit_cp": 2}}},
+	]}, Constants.PLAYER_2)
+	runner._tel_buit({"ok": false, "events": []}, Constants.PLAYER_1)
+	runner._tel_buit({}, Constants.PLAYER_1)
+	assert_eq(int(runner.buit[1].pt), 2, "vaandel: 2 punten voor speler 1")
+	assert_eq(int(runner.buit[1].cp), 0)
+	assert_eq(int(runner.buit[1].verloren), 1, "speler 1 verloor zijn tamboer")
+	assert_eq(int(runner.buit[2].cp), 2, "tamboer: 2 CP voor speler 2")
+	assert_eq(int(runner.buit[2].verloren), 1, "speler 2 verloor zijn vaandel")
+
+
+func test_c15_trainerpad_telt_buit_in_een_echte_partij() -> void:
+	# Met de standaardknoppen (2 pt / 2 CP per drager) is elke veroverde drager
+	# precies een boeking van 2: verloren dragers van de een = (pt + cp) / 2
+	# van de ander. Dat moet kloppen over een hele partij.
+	var runner := MatchRunner.new(AIMediumScript.new(), AIMediumScript.new(),
+		Constants.Doctrine.MENS, Constants.Doctrine.MENS, 777, _campaign_rules())
+	runner.max_steps = 1400
+	while not runner.done:
+		runner.step()
+	assert_false(runner.afgekapt, "de partij eindigt regulier")
+	for kant in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		var ander: int = Constants.opponent(kant)
+		assert_eq(int(runner.buit[kant].verloren) * 2, int(runner.buit[ander].pt) + int(runner.buit[ander].cp),
+			"verloren dragers van %d = veroverde buit van %d" % [kant, ander])
+	var totaal: int = int(runner.buit[1].pt) + int(runner.buit[1].cp) + int(runner.buit[2].pt) + int(runner.buit[2].cp)
+	print("    [BUIT] seed 777 Varken-Varken: P1 %d pt + %d CP, P2 %d pt + %d CP (totaal %d)" % [
+		int(runner.buit[1].pt), int(runner.buit[1].cp), int(runner.buit[2].pt), int(runner.buit[2].cp), totaal])
+
+
+func test_c15_campagne_fitness_beloont_buit() -> void:
+	# De trainer-fitness krijgt een eigen buit-term (W_BUIT), genormeerd op de
+	# maximale buit uit de regels; met de knoppen uit is de term weg.
+	var s := GameState.new()
+	s.rules = _campaign_rules()
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	s.init_pools()
+	s._spawn_pawn(Constants.PLAYER_1, Vector2i(5, 9))
+	s._spawn_pawn(Constants.PLAYER_2, Vector2i(5, 1))
+	var kaal: float = CampagneFitness.score(s, Constants.PLAYER_1, Constants.PLAYER_1, {})
+	var met: float = CampagneFitness.score(s, Constants.PLAYER_1, Constants.PLAYER_1, {"pt": 2, "cp": 2, "verloren": 0})
+	assert_true(met > kaal, "buit maakt de fitness hoger")
+	# 2 pt + 2 CP = 3 van de 6 haalbare punten: de helft van de buit-term.
+	assert_true(absf((met - kaal) - CampagneFitness.W_BUIT * 0.5 / CampagneFitness.NOEMER) < 1e-6,
+		"buit-term genormeerd op de maximale buit (%.4f)" % (met - kaal))
+	assert_true(CampagneFitness.score(s, Constants.PLAYER_1, Constants.PLAYER_1, {"pt": 99, "cp": 99}) <= 1.0, "nooit boven 1")
+	assert_true(kaal >= 0.0 and kaal <= 1.0, "genormaliseerd")
+	var uit := GameState.new()
+	uit.rules = RulesConfig.from_dict({"campaign": {"buit_vaandel_pt": 0, "buit_tamboer_cp": 0}})
+	uit.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	uit.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	uit.init_pools()
+	uit._spawn_pawn(Constants.PLAYER_1, Vector2i(5, 9))
+	uit._spawn_pawn(Constants.PLAYER_2, Vector2i(5, 1))
+	assert_eq(CampagneFitness.score(uit, 1, 1, {"pt": 2, "cp": 2}), CampagneFitness.score(uit, 1, 1, {}),
+		"zonder knoppen geen buit-term")

@@ -354,3 +354,61 @@ func test_c17_regelbestand_leesbaar() -> void:
 	assert_true(uit is Dictionary, "laadweg geeft altijd een dict terug")
 	var weg: Dictionary = CRules.facties_uit_bestand("res://bestaat_niet.json")
 	assert_true(weg.is_empty(), "ontbrekend bestand = leeg blok, geen crash")
+
+
+# --- C15-buit: van duel-staat naar campagne-ledger (7 september 2026) --------
+
+func test_c15_verwerk_duel_uitslag_boekt_de_buit_terug() -> void:
+	# Het duel spendeert en verovert in EEN puntenpot; de campagne boekt de
+	# inzet (typed) af en moet de buit erbij boeken, anders zakt de pool onder
+	# nul. buit = eindreserve - startreserve + inzetkosten, dus met 1 extra
+	# soldaat gespawnd en 2 punten buit veroverd: netto +1 op de duel-reserve
+	# en in het ledger inzet -1, buit +2.
+	var driver := SoloDriver.new(2026, 0, 6)
+	driver.duel_ai = "easy"
+	var vangnet := 0
+	while not driver.wacht_op_mens() and vangnet < 50:
+		vangnet += 1
+		driver.stap()
+	var d: Dictionary = driver.mens_duel()
+	assert_false(d.is_empty(), "ronde 1 loot de mens een duel")
+	var b: int = int(d.p2) if int(d.p1) == 0 else int(d.p1)
+	var mens_is_p1: bool = int(d.p1) == 0
+	var kant: int = Constants.PLAYER_1 if mens_is_p1 else Constants.PLAYER_2
+	var rules: RulesConfig = driver.duel_rules_voor(int(d.p1), int(d.p2))
+	var s := GameState.new()
+	s.rules = rules
+	s.doctrines[Constants.PLAYER_1] = int(driver.c.spelers[int(d.p1)].doctrine)
+	s.doctrines[Constants.PLAYER_2] = int(driver.c.spelers[int(d.p2)].doctrine)
+	s.setup_initial_pawns()
+	s.init_pools()
+	var start_pt: int = s.pool_total(kant)
+	assert_true(start_pt > 0, "de mens heeft een duel-reserve (%d)" % start_pt)
+	# Een extra soldaat het veld in (inzet 1, kost 1 punt) en een vaandel veroverd (+2).
+	var rij: int = Constants.get_start_rows_for_player(kant)[0]
+	var vrij: Vector2i = Vector2i(-1, -1)
+	for x in Constants.BOARD_SIZE:
+		if s.is_tile_empty(Vector2i(x, rij)):
+			vrij = Vector2i(x, rij)
+			break
+	assert_true(vrij.x >= 0, "een vrij vak op de spawn-rij")
+	s._spawn_pawn(kant, vrij, Constants.UnitType.INFANTRY)
+	s.pools[kant]["pt"] = int(s.pools[kant]["pt"]) - 1
+	s.pool_bijschrijven(kant, 2)
+	assert_eq(s.pool_total(kant), start_pt + 1, "netto +1 op de duel-reserve")
+	var cp_a: int = driver.c.cp_van(int(d.p1))
+	var cp_b: int = driver.c.cp_van(int(d.p2))
+	var pool_voor: int = int(driver.c.pool_van(0).inf)
+	assert_true(driver.verwerk_duel_uitslag(int(d.idx), int(d.p1), int(d.p2), cp_a, cp_b, s, kant),
+		"bord-uitslag boekt")
+	assert_eq(int(driver.c.pool_van(0).inf), pool_voor - 1 + 2, "campagne: inzet -1, buit +2")
+	var buit_entries: Array = []
+	for e in driver.c.ledger:
+		if String(e.reason) == "buit" and int(e.speler) == 0:
+			buit_entries.append(e)
+	assert_eq(buit_entries.size(), 1, "een buit-boeking voor de mens")
+	assert_eq(int(buit_entries[0].inf), 2)
+	var rapport: Dictionary = driver.feed[driver.feed.size() - 1]
+	assert_eq(String(rapport.type), "report")
+	assert_eq(int((rapport.buit as Dictionary).get("0", 0)), 2, "het battlereport meldt de buit")
+	assert_eq(int((rapport.buit as Dictionary).get(str(b), 0)), 0, "en niets voor wie niets veroverde")

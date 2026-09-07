@@ -492,11 +492,44 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 		elif methode == "eliminatie":
 			tarief = int(s.rules.campaign.get("cp_eliminatie", 4))
 		cp_delta[str(winnaar_id)] = int(cp_delta[str(winnaar_id)]) + tarief
+	# C15-buit in de campagne (7 september). In het duel groeit de reserve
+	# door buit en krimpt hij door spawns; de campagne boekt alleen de inzet
+	# af. Zonder de buit erbij te boeken zakt de campagnepool onder nul zodra
+	# een speler zijn buit in het duel uitgeeft (gemeten in SoloTests: pools
+	# van -6, waarna een LEEG testament strandde op "boven de helft van het
+	# bezit" en de campagne muurvast stond). Spawnen is de enige uitgave en
+	# buit de enige inkomst, dus buit = eindreserve - startreserve + inzet.
+	var buit: Dictionary = {}
+	if c.rules.vol_team_start:
+		for kant in [[a, Constants.PLAYER_1], [b, Constants.PLAYER_2]]:
+			var sid: String = str(kant[0])
+			var kosten: int = 0
+			for t in 3:
+				kosten += int(inzet[sid][["inf", "cav", "art"][t]]) * s.spawn_kosten(t)
+			var pt: int = s.pool_total(int(kant[1])) - _duel_startpunten(s, int(kant[1])) + kosten
+			if pt > 0:
+				buit[sid] = pt
 	duels_gespeeld += 1
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
-		"cp_delta": cp_delta, "inzet": inzet, "cycli": s.cycle})
-	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta, inzet), -1)
+		"cp_delta": cp_delta, "inzet": inzet, "buit": buit, "cycli": s.cycle})
+	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta, inzet, buit), -1)
+
+
+## Startreserve van een duel-kant in punten, uit de expliciete typed pool die
+## duel_rules_voor meegaf: dezelfde omrekening als GameState.init_pools
+## (soldaat 1 / ruiter 2 / kanon 3).
+func _duel_startpunten(s: GameState, kant: int) -> int:
+	var tabel = s.rules.campaign.get("pools", null)
+	if not (tabel is Dictionary) or not tabel.has(str(kant)):
+		return 0
+	var ex = tabel[str(kant)]
+	if not (ex is Dictionary):
+		return int(ex)
+	var pt: int = 0
+	for t in 3:
+		pt += int(ex.get(["inf", "cav", "art"][t], 0)) * s.spawn_kosten(t)
+	return pt
 
 
 ## Bot-vs-bot-duel op vol tempo: het campagne-bezit van beide vechters wordt

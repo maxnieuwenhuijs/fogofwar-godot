@@ -552,3 +552,60 @@ func test_c19_budget_bonus_overal_gelijk() -> void:
 			assert_eq(int((uit_bestand as Dictionary).get("cp", 0)),
 				int((kern[sleutel] as Dictionary).get("cp", 0)),
 				"%s factie %s: cp gelijk aan CRules" % [pad, sleutel])
+
+
+# --- C15-buit in de campagne-boekhouding (7 september 2026) -------------------
+
+func test_c15_buit_uit_een_duel_komt_op_de_campagnepool() -> void:
+	# De inzet wordt afgeboekt, de buit komt als soldaten terug: netto -1.
+	var c := _mini()
+	_stem_unaniem(c, 0, 3)
+	_sluit_donaties(c)
+	assert_eq(c.fase, CState.Fase.DUELS)
+	var voor: int = int(c.pool_van(0).inf)
+	var res: Dictionary = CReducer.apply(c, CActions.make_match_result(
+		0, 0, "haven", {}, {}, {"0": {"inf": 3}, "3": {"inf": 0}}, {"0": 2}), -1)
+	assert_true(res.ok, "match_result met buit: %s" % str(res.get("error", "")))
+	assert_eq(int(c.pool_van(0).inf), voor - 3 + 2, "inzet 3 af, buit 2 erbij")
+	var buit_entries: Array = []
+	for e in c.ledger:
+		if String(e.reason) == "buit":
+			buit_entries.append(e)
+	assert_eq(buit_entries.size(), 1, "een buit-boeking in het ledger")
+	assert_eq(int(buit_entries[0].speler), 0)
+	assert_eq(int(buit_entries[0].inf), 2, "buit komt als soldaten binnen")
+	# Buit voor een speler buiten het duel: geweigerd.
+	var c2 := _mini()
+	_stem_unaniem(c2, 0, 3)
+	_sluit_donaties(c2)
+	var fout: Dictionary = CReducer.apply(c2, CActions.make_match_result(
+		0, 0, "haven", {}, {}, {"0": {"inf": 1}}, {"4": 2}), -1)
+	assert_false(fout.ok, "buit voor een buitenstaander mag niet")
+	# Zonder inzet-veld (oude logs) wordt de buit niet geboekt: het oude pad
+	# boekt verliezen en kent geen inzet om te compenseren.
+	var c3 := _mini()
+	_stem_unaniem(c3, 0, 3)
+	_sluit_donaties(c3)
+	var voor3: int = int(c3.pool_van(0).inf)
+	assert_true(CReducer.apply(c3, CActions.make_match_result(0, 0, "haven", {}, {}, {}, {"0": 2}), -1).ok)
+	assert_eq(int(c3.pool_van(0).inf), voor3, "zonder inzet geen buit-boeking (oude logs folden gelijk)")
+
+
+func test_c15_leeg_testament_kan_niet_stranden_op_een_negatieve_pool() -> void:
+	# Vangnet: een pool die door welke boekingsfout ook onder nul staat mag
+	# een leeg testament niet blokkeren (gemeten 7 september: pool -6 en de
+	# campagne stond muurvast op "boven de helft van het bezit").
+	var c := _mini()
+	_stem_unaniem(c, 0, 3)
+	_sluit_donaties(c)
+	var pool3: Dictionary = c.pool_van(3)
+	# Speler 3 verliest alles en nog 4 soldaten meer (negatief), houdt CP.
+	assert_true(CReducer.apply(c, CActions.make_match_result(
+		0, 0, "eliminatie", {}, {},
+		{"3": {"inf": int(pool3.inf) + 4, "cav": int(pool3.cav), "art": int(pool3.art)}}), -1).ok)
+	assert_eq(String(c.spelers[3].status), "uitgevallen")
+	assert_eq(c.fase, CState.Fase.TESTAMENT)
+	assert_true(c.pool_totaal_van(3) < 0, "de pool staat expres onder nul")
+	var leeg: Dictionary = CReducer.apply(c, CActions.make_testament([]), 3)
+	assert_true(leeg.ok, "een leeg testament gaat altijd door: %s" % str(leeg.get("error", "")))
+	assert_true(c.fase != CState.Fase.TESTAMENT, "en de campagne loopt door")

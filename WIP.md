@@ -1,5 +1,104 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- de bots jagen op de buit, en de trainer telt het mee
+
+Max: "het moet nu ook wel worden meegenomen in de training run dat de
+resources toenemen bij het killen van een drummer of vlagdrager, de ai moet
+daar ook op focussen."
+
+**Wat er mis was.** De buit kwam wel in de staat (`Rules._boek_buit` boekt de
+2 punten op de reserve en de 2 CP in de pot), maar `AIController.evaluate`
+las reserve en pot nergens. Het enige wat de bot van een drager zag was de
+jacht-term (`buit_jacht`: een pakbare drager binnen bereik is winst), en die
+VIEL WEG zodra de drager dood was. Reken het na met de defaults: een gewone
+soldaat naast een drager neerleggen gaf +32 materiaal en liet de jacht-term
+(+24) staan; de drager zelf neerleggen gaf +32 materiaal en -24 jacht. De bot
+koos dus liever de gewone soldaat. En sinds 4.3.2 betaalt elke drager, maar
+de jacht-term telde alleen ongekoppelde standbeelden.
+
+**Wat er nu staat (`scripts/ai/AIController.gd`).**
+- `reserve_pt` (20) en `reserve_cp` (10), leerbaar: de waarde van een punt in
+  de eigen reserve en een CP in de pot, zero-sum tegen de vijand. In de
+  actiefase veranderen die alleen door buit, dus dit is de beloning voor de
+  kill zelf. Op een fog-view is het vijandelijke saldo "?" en telt als 0:
+  een vaste verschuiving binnen een beslissing, verandert de keuze niet.
+- Jacht en hoede zien elke drager, gekoppeld of niet.
+- `drager_front` (-1) en `drager_center` (0), leerbaar: waar de bot zijn
+  EIGEN dragers zet. Tot nu kregen ze de beste infanterievakken, en met
+  `inf_front` 0.6 was dat de voorste rij. Nu default de achterste rij; een
+  zachte spreiding (0.25 per buurdrager, kleiner dan een rij verschil) houdt
+  ze uit elkaar zonder ooit de rij-voorkeur te overstemmen. De eerste versie
+  had een harde "niet naast een andere drager"-regel, en die duwde de vierde
+  drager naar de voorste rij.
+- `AIHard._quick` sorteert een drager-kill 250 hoger, zodat de beam hem niet
+  wegsnoeit voordat de eval (diepte 3-5) hem kan waarderen.
+
+**Trainer (`tools/capture.gd`, `scripts/training/`).**
+- `MatchRunner.buit[kant]` telt pt, cp en verloren dragers uit het
+  `result`-blok van elk action_applied-event (dezelfde bron als
+  ArenaMetrics). Honger-doden tellen niet: geen buit, geen event.
+- De campagne-fitness is verhuisd naar `scripts/training/campagne_fitness.gd`
+  (`CampagneFitness.score`, testbaar) en krijgt een buit-term van 5%,
+  genormeerd op de maximale buit uit de regels (vaandels_max x pt +
+  tamboers_max x cp / 2 = 6 punten). De reserve zat al in de spaarbonus,
+  maar 2 punten op ~70 startpunten is een derde procent: te weinig om iets
+  van te leren. Noemer 1.2 -> 1.25; de relatieve adoptie-gate blijft gelden
+  omdat kandidaat en referentie dezelfde schaal delen.
+- Het log meldt per kandidaat `buit N pt + M CP, K dragers verloren` en per
+  generatie het gemiddelde per potje; `data/matchup_<factie>.txt` krijgt een
+  regel over de hele run. Proefrun van 1 minuut (Muis, pop 2, 1 potje):
+  2,00 pt + 2,00 CP per potje veroverd, 0,50 eigen dragers verloren. De
+  gewichten zijn NIET aangeraakt (geen adoptie in een minuut; het
+  matchup-bestand van de proef is teruggedraaid).
+
+Van 38 naar 42 leerbare gewichten; de f0-f5-profielen krijgen de nieuwe
+sleutels op hun default bij het laden. Hertrainen doet Max zelf (B13).
+
+**Tests.** 5 nieuwe in AITests (veroverde buit in de eval, gekoppelde drager
+telt, greedy kiest de drager boven een gewone soldaat, dragers leerbaar
+achteraan, Hard sorteert de drager-kill vooraan) en 3 in V42AgentTests
+(MatchRunner telt, in een echte partij klopt verloren = (pt + cp) / 2 van de
+ander, fitness beloont buit en is uit als de knoppen uit staan). De
+greedy-test moest de wanhoop-modus buiten de deur houden (minder dan 7 eigen
+pionnen rent liever naar de haven dan dat hij slaat) en de zetten tot de twee
+kills beperken.
+
+**Wat de jagende bots blootlegden: de campagne boekte de buit nooit.** De
+eerste volle testrun gaf twee rode in SoloTests
+(`test_mens_duel_pauzeert_en_bord_uitslag_boekt`: fase 3 in plaats van KLAAR).
+Op een schone HEAD-worktree is die test groen, dus het kwam door de nieuwe
+bots. Een sonde met een ruimer vangnet (6000 stappen) liet zien dat de
+campagne niet traag was maar MUURVAST stond: fase TESTAMENT, alle duels van
+ronde 1 klaar, en ALLE zes spelers met een negatieve pool (-6, -1, -6, -1,
+-1, -3). De keten: in een duel groeit de reserve door buit en krimpt hij door
+spawns, maar `verwerk_duel_uitslag` gaf de campagne alleen `inzet` (de
+gespawnde versterkingen) mee en de reducer boekte die af. Wie zijn buit in
+het duel uitgaf, kreeg dus meer afgeboekt dan hij had. Met pool -6 en 1 CP
+viel de mens uit met een open testament, en een LEEG testament strandde op
+"boven de helft van het bezit" (max_inf = floor(-6 x 0,5) = -3, en 0 > -3).
+De test spinde daar 6000 keer op `submit_mens_testament([])` zonder het
+resultaat te controleren. Oude bots namen zelden een drager, dus dit lag
+sinds C15 stil te wachten.
+
+Gerepareerd op drie plekken: `verwerk_duel_uitslag` berekent de buit
+(eindreserve - startreserve + inzetkosten; spawnen is de enige uitgave en
+buit de enige inkomst) en zet hem als `buit` op MATCH_RESULT en in het
+battlereport; `CReducer._do_match_result` boekt hem als soldaten terug
+(ledger-reden `buit`, alleen naast een `inzet`-veld zodat oude logs
+byte-identiek folden); `_do_testament` klemt zijn maxima op nul, zodat een
+negatieve pool nooit meer een leeg testament blokkeert. Tests: CampaignTests
+(buit geboekt, buitenstaander geweigerd, oud pad ongewijzigd, leeg testament
+op een negatieve pool gaat door) en SoloTests (van duel-staat naar ledger:
+inzet -1, buit +2, battlereport meldt het). Let op: `core/campaign` zit in de
+core-hash, dus zodra er een droplet is hoort hier een server-uitrol en een
+nieuwe client-build bij.
+
+**Metingen.** Testsuite: 2386 groen, 0 rood (335 s parallel). `-- simcheck`: alle vijf ijk-sims
+schuiven (bot-partijen; twee kantelen van winnaar), baseline opnieuw geijkt,
+tabel in de CHANGELOG. `-- uispel 777` blijft `8d6aafaa…` (231 acties, cyclus
+5, het getal dat 4.3.2 vanmiddag vastlegde): in dat potje komt geen drager
+binnen bereik, dus de nieuwe termen kiezen daar niets anders.
+
 ## 7 september -- rol-icoon, en twee valkuilen in het testen zelf
 
 Max: "ik koppel, maar dan zie ik wel nog het icoon dat het een drummer is, en de

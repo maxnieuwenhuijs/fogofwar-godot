@@ -41,11 +41,16 @@ static func make_donate(naar: int, inf: int, cav: int, art: int, cp: int) -> Dic
 static func make_klaar_met_doneren() -> Dictionary:
 	return {"type": KLAAR_MET_DONEREN}
 
-static func make_match_result(duel: int, winnaar: int, methode: String, verliezen: Dictionary, cp_delta: Dictionary, inzet: Dictionary = {}) -> Dictionary:
+## `buit` (C15, 7 september): per speler de versterkingspunten die hij in het
+## duel op dragers veroverde ({"<id>": pt}); de reducer boekt ze als soldaten
+## terug op de campagnepool naast de inzet. Oude logs hebben het veld niet.
+static func make_match_result(duel: int, winnaar: int, methode: String, verliezen: Dictionary, cp_delta: Dictionary, inzet: Dictionary = {}, buit: Dictionary = {}) -> Dictionary:
 	var a := {"type": MATCH_RESULT, "duel": duel, "winnaar": winnaar,
 		"methode": methode, "verliezen": verliezen, "cp_delta": cp_delta}
 	if not inzet.is_empty():
 		a["inzet"] = inzet
+	if not buit.is_empty():
+		a["buit"] = buit
 	return a
 
 static func make_exchange(cp: int) -> Dictionary:

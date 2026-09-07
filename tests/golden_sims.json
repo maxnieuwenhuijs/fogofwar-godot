@@ -1,6 +1,6 @@
 {
 	"_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
-	"gemeten_op": "C19 + Krokodil-compensatie (9 augustus): Krokodil krijgt +3 startpunten (campaign.budget_bonus \"5\"). Gemeten over 1080 partijen: Krokodil 42,4 -> 45,8%, band 45,6-53,3, spreiding 12,6 -> 7,8 procentpunt. Alleen seed 101 schoof, en dat is de enige sim met een Krokodil erin: 16 -> 19 cycli, 432 -> 475 acties, winnaar gelijk. De andere vier zijn byte-identiek gebleven, wat bevestigt dat de wijziging alleen die factie raakt.",
+	"gemeten_op": "Bots jagen op de buit (7 september): geen regelwijziging, wel andere bot-keuzes (reserve_pt/reserve_cp in de eval, dragers achteraan, drager-kill vooraan in de Hard-sortering). Alle vijf ijk-sims schuiven en twee kantelen van winnaar (101: 2 -> 1, 404: 1 -> 2). Dat zegt niets over balans: vijf sims zijn daar veel te weinig voor. Daarvoor: C19 + Krokodil-compensatie (9 augustus), band 45,6-53,3 over 1080 partijen.",
 	"sims": [
 		{
 			"p1": "easy",
@@ -10,7 +10,7 @@
 			"seed": 777,
 			"winner": 2,
 			"cyclus": 7,
-			"acties": 242
+			"acties": 245
 		},
 		{
 			"p1": "easy",
@@ -18,9 +18,9 @@
 			"d1": "mens",
 			"d2": "vos",
 			"seed": 101,
-			"winner": 2,
-			"cyclus": 21,
-			"acties": 539
+			"winner": 1,
+			"cyclus": 18,
+			"acties": 468
 		},
 		{
 			"p1": "easy",
@@ -29,8 +29,8 @@
 			"d2": "beer",
 			"seed": 202,
 			"winner": 2,
-			"cyclus": 20,
-			"acties": 510
+			"cyclus": 16,
+			"acties": 426
 		},
 		{
 			"p1": "medium",
@@ -40,7 +40,7 @@
 			"seed": 303,
 			"winner": 1,
 			"cyclus": 13,
-			"acties": 485
+			"acties": 476
 		},
 		{
 			"p1": "easy",
@@ -48,9 +48,9 @@
 			"d1": "wolf",
 			"d2": "leeuw",
 			"seed": 404,
-			"winner": 1,
-			"cyclus": 16,
-			"acties": 372
+			"winner": 2,
+			"cyclus": 20,
+			"acties": 435
 		}
 	],
 	"rules": "res://arena/arena_configs/rules_v42_campaign.json"

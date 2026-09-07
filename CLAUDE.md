@@ -66,12 +66,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   zetten `afgekapt` en gillen, en de arena boekt dat als eigen categorie.
   Bron: `docs/campagne-intrige-voorstel.md` §1b (V0-V19 = voorstellen; alleen V0
   is aangenomen).
-- **C15-buit (4.3.1)**: vaandeldrager neerleggen = 2 versterkingspunten,
-  tamboer = 2 CP, alleen als het slachtoffer ONgekoppeld is. De rol staat op de
-  pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in de
-  opstelfase. Knoppen: `buit_vaandel_pt`, `buit_tamboer_cp`, `vaandels_max`,
-  `tamboers_max`. Bots hebben `buit_jacht`/`buit_hoede`; de arena meet
-  `buit_pt`/`buit_cp`/`dragers_verloren`.
+- **C15-buit (4.3.2)**: vaandeldrager neerleggen = 2 versterkingspunten,
+  tamboer = 2 CP, gekoppeld of niet (sinds 4.3.2, 7 september). De rol staat
+  op de pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in
+  de opstelfase. Knoppen: `buit_vaandel_pt`, `buit_tamboer_cp`,
+  `vaandels_max`, `tamboers_max`. **Bots (7 september):** `buit_jacht`/
+  `buit_hoede` (drager binnen bereik), `reserve_pt`/`reserve_cp` (wat de
+  VEROVERDE buit waard is; zonder die twee was een gewone soldaat naast een
+  drager de betere kill, want de jacht-term viel weg met de drager) en
+  `drager_front`/`drager_center` (waar de bot zijn eigen dragers zet,
+  default achteraan). De trainer telt buit per kant (`MatchRunner.buit`),
+  beloont het in de campagne-fitness (`CampagneFitness`, 5% genormeerd op
+  de maximale buit) en meldt per generatie pt/CP per potje in het log en in
+  `data/matchup_<factie>.txt`. De arena meet `buit_pt`/`buit_cp`/
+  `dragers_verloren`. Bot-wijziging = `golden_sims.json` opnieuw ijken en
+  de `-- uispel`-digest opnieuw meten; de golden replays blijven staan.
 - **Regelversies zijn heilig.** 4.1.10-hr = het huidige spel; 4.2.0 = de
   campagne-economie, config-gated door het `campaign`-blok (zonder blok speelt
   álles byte-identiek 4.1.x). Spec: `docs/spelregels-v4.2.md` (Deel A = 4.1,
@@ -321,8 +330,9 @@ en dat is nu op vier punten gebeurd:
   haven of op eliminatie. Vanaf cyclus 10 knaagt de honger: elke speler verliest
   bij het begin van een cyclus zijn achterste pion. Geen remise, geen
   cycluslimiet, geen tiebreak.
-- **C15-buit (4.3.1).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
-  tamboer 2 CP, alleen bij een ongekoppeld slachtoffer.
+- **C15-buit (4.3.2).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
+  tamboer 2 CP, gekoppeld of niet. Sinds 7 september jagen de bots er ook op
+  en telt de trainer het mee.
 - **C19 — de facties staan (8 augustus).** Zie de tabel bij de kernregels
   hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 44,7-56,7%;
   was 28-76% in juli.

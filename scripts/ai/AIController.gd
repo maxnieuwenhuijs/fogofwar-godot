@@ -186,12 +186,30 @@ static func default_weights() -> Dictionary:
 		# (1.0 = altijd aanvullen, lager = zuiniger met de reserve).
 		"spawn_drempel": 1.0,
 	"spawn_duur": 0.5,
-		# C15-buit (leerbaar, opdracht Max 30 juli): een DRAGENDE figurant is
-		# geld. buit_jacht = hoe graag ik een vijandelijke drager binnen bereik
-		# neerleg; buit_hoede = hoe erg ik het vind als mijn eigen drager binnen
-		# bereik van de vijand staat. 0 = de bot negeert de buit.
+		# C15-buit (leerbaar, opdracht Max 30 juli; sinds 4.3.2 gekoppeld of
+		# niet): een DRAGER is geld. buit_jacht = hoe graag ik een vijandelijke
+		# drager binnen bereik neerleg; buit_hoede = hoe erg ik het vind als
+		# mijn eigen drager binnen bereik van de vijand staat. 0 = de bot
+		# negeert de buit.
 		"buit_jacht": 12.0,
 		"buit_hoede": 10.0,
+		# Wat de VEROVERDE buit waard is (7 september, Max: "de ai moet daar
+		# ook op focussen"): een versterkingspunt in de reserve en een CP in
+		# de pot, zero-sum tegen de vijand. Zonder deze twee zag de eval een
+		# neergelegde drager alleen als een dode pion: de 2 punten kwamen in de
+		# staat, maar niet in de score, en de jacht-term VIEL WEG met de
+		# drager -- een gewone soldaat naast een drager was dus zelfs de betere
+		# kill. IJk: een levende pion is `material` 32; een punt reserve moet
+		# nog gespawnd worden, dus ~20; 2 CP koopt 1 punt, dus 10.
+		"reserve_pt": 20.0,
+		"reserve_cp": 10.0,
+		# Waar zet ik mijn EIGEN dragers (leerbaar, zelfde schaal als de
+		# opstellingsgewichten hierboven: front < 0 = achterste rij, center > 0
+		# = centrum). Tot 7 september kregen de dragers gewoon de beste
+		# infanterievakken, en met inf_front 0.6 is dat de voorste rij: de
+		# buit stond vooraan te wachten.
+		"drager_front": -1.0,
+		"drager_center": 0.0,
 		# cp_bet_rN: gewenste CP-inzet per setup-ronde (geklemd op saldo en
 		# kaartaantal). Default = de bewezen heuristiek: alles op ronde 3.
 		"cp_bet_r1": 0.01,
@@ -301,8 +319,74 @@ func choose_placement(state: GameState) -> Array:
 	# C15: de bot wijst ook zijn vaandeldragers en tamboers aan. Zonder dit
 	# stond er in botspel NOOIT een drager op het bord, en dan is de buit een
 	# dode regel (gemeten 31 juli: 0 buit in 34 arena-partijen).
-	state._rollen_over_opstelling(placements)
+	# 7 september: WAAR ze staan is leerbaar (drager_front/drager_center);
+	# de vaste uitdeling van GameState (lijstvolgorde met tussenruimte) blijft
+	# voor de mens zijn "vul automatisch"-knop.
+	_wijs_dragers_aan(state, placements)
 	return placements
+
+
+## C15, leerbaar: de dragers krijgen de infanterievakken met de hoogste
+## drager-score (drager_front x voorste rij + drager_center x centrum, met
+## dezelfde vaste tiebreak als het opstellen zelf). Om en om vlag en trom,
+## zodat beide rollen de goede vakken delen; niet pal naast een andere drager
+## zolang er nog een ander vak vrij is, want een kluitje dragers is een
+## kluitje buit. Buiten de campagne bestaan rollen niet.
+func _wijs_dragers_aan(state: GameState, placements: Array) -> void:
+	if not state.campaign_actief_rollen():
+		return
+	var vlaggen: int = int(state.rules.campaign.get("vaandels_max", 2))
+	var tamboers: int = int(state.rules.campaign.get("tamboers_max", 2))
+	if vlaggen <= 0 and tamboers <= 0:
+		return
+	var wf: float = float(weights.get("drager_front", -1.0))
+	var wc: float = float(weights.get("drager_center", 0.0))
+	var rows: Array = Constants.get_start_rows_for_player(player_id)  # [achter, voor]
+	var kandidaten: Array = []
+	for entry in placements:
+		if int(entry.type) == Constants.UnitType.INFANTRY:
+			kandidaten.append(entry)
+	if kandidaten.is_empty():
+		return
+	var beurt: Array = []
+	for i in maxi(vlaggen, tamboers):
+		if i < vlaggen:
+			beurt.append("flag")
+		if i < tamboers:
+			beurt.append("drum")
+	var gekozen: Array = []
+	for rol in beurt:
+		var keuze: Dictionary = {}
+		var beste: float = -1e18
+		for k in kandidaten:
+			if k.has("rol"):
+				continue
+			# Zachte spreiding: elke al gekozen drager op een buurvak kost 0.25,
+			# minder dan een rij verschil (1.0), dus de rij-voorkeur wint altijd
+			# en binnen een rij staan ze uit elkaar.
+			var sc: float = _dragerscore(k.pos, wf, wc, rows) - 0.25 * float(_buren_dragers(k.pos, gekozen))
+			if sc > beste:
+				beste = sc
+				keuze = k
+		if keuze.is_empty():
+			return
+		keuze["rol"] = String(rol)
+		gekozen.append(keuze.pos)
+
+
+func _dragerscore(pos: Vector2i, wf: float, wc: float, rows: Array) -> float:
+	var front: float = 1.0 if pos.y == int(rows[1]) else 0.0
+	var center: float = 1.0 - absf(float(pos.x) - 5.0) / 5.0
+	var tie: float = float(pos.x) * 0.001 + float(pos.y) * 0.0001
+	return wf * front + wc * center - tie
+
+
+func _buren_dragers(pos: Vector2i, gekozen: Array) -> int:
+	var n: int = 0
+	for g in gekozen:
+		if absi(pos.x - g.x) + absi(pos.y - g.y) <= 1:
+			n += 1
+	return n
 
 
 func choose_link(state: GameState) -> Dictionary:
@@ -495,11 +579,11 @@ func evaluate(state: GameState, me: int) -> int:
 				my_risk += 1
 			else:
 				opp_risk += 1
-		# C15: dragende figuranten (vaandel/tamboer zonder kaart) zijn buit.
-		# Een vijandelijke drager binnen bereik is winst; mijn eigen drager
-		# binnen bereik van de vijand is verlies. Standbeelden zijn ook zonder
-		# kaart killable, dus we vragen het los na.
-		if String(pawn.rol) != "" and pawn.linked_card_id == -1:
+		# C15: dragers (vaandel/tamboer) zijn buit, sinds 4.3.2 gekoppeld of
+		# niet. Een vijandelijke drager binnen bereik is winst; mijn eigen
+		# drager binnen bereik van de vijand is verlies. Standbeelden zijn ook
+		# zonder kaart killable, dus we vragen het los na.
+		if String(pawn.rol) != "":
 			var pakbaar: bool = _is_killable(state, pawn)
 			if mine:
 				my_dragers += 1
@@ -534,6 +618,15 @@ func evaluate(state: GameState, me: int) -> int:
 	# C15: buit pakken en buit beschermen. Zero-sum opgebouwd, dus negamax-safe.
 	score += opp_buit_kans * float(weights.get("buit_jacht", 12.0))
 	score -= my_buit_risk * float(weights.get("buit_hoede", 10.0))
+	# C15 (7 september): de VEROVERDE buit. De reducer boekt vaandelpunten op
+	# de reserve en tamboer-CP in de pot; hier telt dat mee, zero-sum. In de
+	# actiefase veranderen reserve en pot alleen door buit (spawnen en bieden
+	# gaan buiten evaluate om), dus dit is precies de beloning voor de kill
+	# zelf. Op een fog-view is het vijandelijke saldo "?" en telt als 0: een
+	# vaste verschuiving binnen een beslissing, die verandert de keuze niet.
+	if state.rules.campaign_actief():
+		score += float(state.pool_total(me) - state.pool_total(opp)) * float(weights.get("reserve_pt", 20.0))
+		score += float(int(state.cp.get(me, 0)) - int(state.cp.get(opp, 0))) * float(weights.get("reserve_cp", 10.0))
 	score += (my_ranged - opp_ranged) * weights.get("ranged", 40.0)
 	score += (my_reach - opp_reach) * weights.reach
 	# WANHOOP-MODUS (besluit Max, 27 juli): met minder dan 7 eigen pionnen is

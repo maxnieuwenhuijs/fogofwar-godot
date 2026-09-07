@@ -19,6 +19,14 @@ var _guard: int = 0
 var max_steps: int = 2500
 var afgekapt: bool = false
 var afkap_reden: String = ""
+## C15 (7 september): veroverde buit per kant, geteld uit de
+## action_applied-events (pt = vaandelpunten, cp = tamboer-CP, verloren =
+## eigen dragers die de vijand neerlegde). De trainer-fitness en het
+## trainingslog lezen dit; honger-doden tellen niet (geen buit, geen event).
+var buit: Dictionary = {
+	Constants.PLAYER_1: {"pt": 0, "cp": 0, "verloren": 0},
+	Constants.PLAYER_2: {"pt": 0, "cp": 0, "verloren": 0},
+}
 
 
 func _init(controller1, controller2, doctrine1: int = Constants.Doctrine.MENS, doctrine2: int = Constants.Doctrine.MENS, seed_val: int = 0, rules: RulesConfig = null) -> void:
@@ -122,26 +130,48 @@ func step() -> void:
 			else:
 				# F2.5/B3: onder campaign spreekt artillerie CANNON_ACT.
 				var camp: bool = _state.rules.campaign_actief()
+				# De beurt kan na de actie wisselen; onthoud wie er sloeg.
+				var speler: int = _state.current_player
+				var res: Dictionary = {}
 				match String(act.type):
 					"move":
 						var loper: Pawn = _state.pawns.get(int(act.pawn_id), null)
 						if camp and loper != null and loper.unit_type == Constants.UnitType.ARTILLERY:
-							Reducer.apply(_state, Actions.make_cannon_roll(int(act.pawn_id), act.target), _state.current_player)
+							Reducer.apply(_state, Actions.make_cannon_roll(int(act.pawn_id), act.target), speler)
 						else:
-							Reducer.apply(_state, Actions.make_move(int(act.pawn_id), act.target), _state.current_player)
+							Reducer.apply(_state, Actions.make_move(int(act.pawn_id), act.target), speler)
 					"attack":
-						Reducer.apply(_state, Actions.make_melee(int(act.attacker_id), int(act.defender_id)), _state.current_player)
+						res = Reducer.apply(_state, Actions.make_melee(int(act.attacker_id), int(act.defender_id)), speler)
 					"shot":
 						var schutter: Pawn = _state.pawns.get(int(act.shooter_id), null)
 						if camp and schutter != null and schutter.unit_type == Constants.UnitType.ARTILLERY:
-							Reducer.apply(_state, Actions.make_cannon_shoot(int(act.shooter_id), int(act.target_id)), _state.current_player)
+							res = Reducer.apply(_state, Actions.make_cannon_shoot(int(act.shooter_id), int(act.target_id)), speler)
 						else:
-							Reducer.apply(_state, Actions.make_shoot(int(act.shooter_id), int(act.target_id)), _state.current_player)
+							res = Reducer.apply(_state, Actions.make_shoot(int(act.shooter_id), int(act.target_id)), speler)
 					"charge":
-						Reducer.apply(_state, Actions.make_charge(int(act.pawn_id), act.move_target, int(act.defender_id)), _state.current_player)
+						res = Reducer.apply(_state, Actions.make_charge(int(act.pawn_id), act.move_target, int(act.defender_id)), speler)
+				_tel_buit(res, speler)
 	if _state.phase == Phase.Type.GAME_OVER:
 		done = true
 		winner = _state.winner
+
+
+## C15: buit uit een Reducer.apply-resultaat bijtellen bij `speler`; de
+## tegenpartij verliest die drager. Zelfde bron als ArenaMetrics (het
+## `result`-blok van elk action_applied-event), zodat trainer en arena
+## hetzelfde tellen.
+func _tel_buit(res: Dictionary, speler: int) -> void:
+	for ev in res.get("events", []):
+		if String(ev.get("type", "")) != Reducer.EV_ACTION:
+			continue
+		var result: Dictionary = (ev.get("payload", {}) as Dictionary).get("result", {})
+		var pt: int = int(result.get("buit_pt", 0))
+		var cp: int = int(result.get("buit_cp", 0))
+		if pt <= 0 and cp <= 0:
+			continue
+		buit[speler].pt += pt
+		buit[speler].cp += cp
+		buit[Constants.opponent(speler)].verloren += 1
 
 
 ## Compat: er is geen Node meer om op te ruimen (RefCounted ruimt zichzelf op).

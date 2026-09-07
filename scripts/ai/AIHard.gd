@@ -75,6 +75,7 @@ func _quick(state: GameState, side: int, action: Dictionary) -> int:
 			s += maxi(0, Constants.BOARD_SIZE - _min_dist(defender.position, opp_target)) * 8
 			if not defender.is_active or attacker.attack_value >= defender.current_hp:
 				s += 300
+			s += _drager_bonus(defender)
 			return s
 		"shot":
 			var target: Pawn = state.pawns[action.target_id]
@@ -83,6 +84,7 @@ func _quick(state: GameState, side: int, action: Dictionary) -> int:
 			s += maxi(0, Constants.BOARD_SIZE - _min_dist(target.position, opp_target)) * 8
 			if not target.is_active or Rules.shot_damage(state, shooter) >= target.current_hp:
 				s += 300
+			s += _drager_bonus(target)
 			return s
 		"charge":
 			var defender2: Pawn = state.pawns[action.defender_id]
@@ -92,9 +94,18 @@ func _quick(state: GameState, side: int, action: Dictionary) -> int:
 			if not defender2.is_active or cav.attack_value >= defender2.current_hp:
 				s2 += 300
 			s2 += (_min_dist(cav.position, my_target) - _min_dist(action.move_target, my_target)) * 10
+			s2 += _drager_bonus(defender2)
 			return s2
 	# move: dichter bij mijn doelhaven = beter.
 	if my_target.has(action.target):
 		return 700
 	var pawn: Pawn = state.pawns[action.pawn_id]
 	return (_min_dist(pawn.position, my_target) - _min_dist(action.target, my_target)) * 20
+
+
+## C15 (7 september): een drager is buit, dus zijn kill hoort vooraan in de
+## zet-sortering -- anders snoeit de beam hem weg voordat de eval
+## (reserve_pt/reserve_cp) hem kan waarderen. Alleen ordening; de score zelf
+## komt uit evaluate.
+func _drager_bonus(doel: Pawn) -> int:
+	return 250 if String(doel.rol) != "" else 0

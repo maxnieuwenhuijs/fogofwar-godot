@@ -54,8 +54,9 @@ leren, bots laten spelen, regels of facties uitproberen, en de trackers
 
 ## AI trainen
 
-De AI leert per factie 38 gewichten via self-play (CMA-lite): evaluatie,
-opstelling, koppelen, CP-inzet, spawnen en de C15-buit.
+De AI leert per factie 42 gewichten via self-play (CMA-lite): evaluatie,
+opstelling (ook waar de dragers staan), koppelen, CP-inzet, spawnen en de
+C15-buit (jagen, hoeden en wat de veroverde buit waard is).
 
 | Manier | Wat het doet |
 |---|---|

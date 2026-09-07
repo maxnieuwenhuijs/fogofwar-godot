@@ -1,5 +1,75 @@
 # Spelregels — CHANGELOG
 
+## Bots — 7 september 2026 (de buit in de bot en in de trainer; geen regelwijziging)
+
+*Opdracht Max: "het moet nu ook wel worden meegenomen in de training run dat de
+resources toenemen bij het killen van een drummer of vlagdrager, de ai moet daar
+ook op focussen."*
+
+Geen regel veranderd, wel wat de bots ermee doen. De eval van `AIController`
+zag een veroverd vaandel niet: de 2 punten kwamen netjes op de reserve (dat
+doet `Rules._boek_buit`), maar `evaluate` las de reserve nergens, en de
+jacht-term (`buit_jacht`, een pakbare drager binnen bereik) viel weg zodra de
+drager dood was. Netto was een gewone soldaat naast een drager de BETERE kill.
+Bovendien telde de jacht-term alleen ongekoppelde dragers, terwijl sinds 4.3.2
+elke drager betaalt.
+
+- **`reserve_pt` / `reserve_cp`** (leerbaar, default 20 en 10): wat een punt in
+  de reserve en een CP in de pot waard zijn, zero-sum tegen de vijand. In de
+  actiefase veranderen die alleen door buit, dus dit is precies de beloning
+  voor de kill zelf. IJk: een levende pion is `material` 32; een reservepunt
+  moet nog gespawnd worden, dus 20; 2 CP koopt 1 punt, dus 10.
+- **Jacht en hoede zien elke drager**, gekoppeld of niet (4.3.2).
+- **`drager_front` / `drager_center`** (leerbaar, default -1 en 0): waar de bot
+  zijn eigen dragers neerzet. Tot nu kregen ze gewoon de beste
+  infanterievakken, en met `inf_front` 0.6 was dat de voorste rij: de buit
+  stond vooraan te wachten. Default nu de achterste rij, uit elkaar.
+- **Hard/Ultra** sorteren een drager-kill voor een gewone kill, zodat de beam
+  hem niet wegsnoeit voordat de eval hem kan waarderen.
+- **Trainer:** `MatchRunner` telt de buit per kant uit de actie-events
+  (`MatchRunner.buit`); de campagne-fitness woont nu in
+  `scripts/training/campagne_fitness.gd` (testbaar) en krijgt een eigen
+  buit-term van 5%, genormeerd op de maximale buit uit de regels (2 CP = 1
+  punt). Het trainingslog en `data/matchup_<factie>.txt` melden per generatie
+  hoeveel pt en CP de kandidaten per potje veroveren en hoeveel eigen dragers
+  ze verliezen. Proefrun (1 minuut, Muis): 2,00 pt + 2,00 CP per potje.
+
+Van 38 naar 42 leerbare gewichten per factie; opgeslagen profielen krijgen de
+nieuwe sleutels bij het laden op hun default (gemerged), de trainer neemt ze
+vanzelf mee. **Hertrainen is nodig** om er iets van te merken; Max start dat
+zelf (B13).
+
+**Campagne-boekhouding meegerepareerd (geen regelwijziging, wel een echte
+bug die de jagende bots blootlegden).** In een campagne-duel groeit de
+duel-reserve door buit en krimpt hij door spawns, maar de campagne boekte
+alleen de `inzet` (gespawnde versterkingen) af: de buit kwam nergens terug.
+Zodra een bot zijn buit in het duel uitgaf, boekte de inzet dus meer af dan
+de speler had en zakte de campagnepool onder nul (gemeten in SoloTests: pools
+van -6). Daarna strandde zelfs een LEEG testament op "boven de helft van het
+bezit" en stond de campagne muurvast. Nu berekent `verwerk_duel_uitslag` de
+buit (eindreserve - startreserve + inzetkosten), reist die als `buit` mee op
+MATCH_RESULT en boekt de reducer hem als soldaten terug (ledger-reden `buit`,
+alleen naast een `inzet`-veld, dus oude logs folden byte-identiek). Het
+testament klemt zijn maxima bovendien op nul, zodat een negatieve pool nooit
+meer een leeg testament kan blokkeren.
+
+**`golden_sims.json`-baseline bijgewerkt.** Alle vijf ijk-sims schuiven: het
+zijn bot-partijen en de bots kiezen anders. Geen regel veranderd, dus de golden
+replays blijven staan. `-- uispel 777` blijft `8d6aafaa…` (231 acties, cyclus
+5, het 4.3.2-getal): in dat ene potje komt geen drager binnen bereik, dus de
+nieuwe termen kiezen daar niets anders.
+
+| sim | was | wordt |
+|---|---|---|
+| muis-wolf seed 777 | winner 2, cyclus 7, 242 acties | winner 2, cyclus 7, 245 acties |
+| mens-vos seed 101 | winner 2, cyclus 21, 539 acties | **winner 1**, cyclus 18, 468 acties |
+| leeuw-beer seed 202 | winner 2, cyclus 20, 510 acties | winner 2, cyclus 16, 426 acties |
+| beer-muis seed 303 | winner 1, cyclus 13, 485 acties | winner 1, cyclus 13, 476 acties |
+| wolf-leeuw seed 404 | winner 1, cyclus 16, 372 acties | **winner 2**, cyclus 20, 435 acties |
+
+Twee kantelende seeds op vijf zegt niets over balans (vuistregel: onder ~2000
+partijen geen uitspraken); de nachtrun na het hertrainen wel.
+
 ## 4.3.2 — 7 september 2026 (C15-buit: gekoppeld of niet maakt niet meer uit)
 
 *Besluit Max: "als ie gekoppeld is wel of niet maakt niet uit; als je die slaat

@@ -183,3 +183,182 @@ func test_choose_wolf_step_returns_valid_or_skip() -> void:
 		assert_true(state.is_tile_empty(target))
 	else:
 		assert_true(choice.is_empty())
+
+
+# =========================================================================
+# C15-buit in de bot (7 september 2026): de veroverde buit telt in de eval,
+# een gekoppelde drager telt mee (4.3.2), de kill op een drager wint het van
+# een gewone kill, en waar de eigen dragers staan is leerbaar.
+# =========================================================================
+
+## Campagne-regels met een lege reserve en een lege CP-pot, zodat elke
+## verschuiving in de eval uit de buit komt en niet uit de startvoorraad.
+func _buit_staat() -> GameState:
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {
+		"pool_model": "punten", "pools": {"1": 0, "2": 0}, "cp_start": 0,
+	}})
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	s.init_pools()
+	s.phase = Phase.Type.ACTION
+	s.current_player = Constants.PLAYER_1
+	return s
+
+
+func _actieve_pion(s: GameState, owner: int, pos: Vector2i, hp: int, spd: int, atk: int) -> Pawn:
+	var p: Pawn = s._spawn_pawn(owner, pos, Constants.UnitType.INFANTRY)
+	var c := Card.new(s.next_card_id(), owner, 0, hp, spd, atk)
+	s.all_cards[c.id] = c
+	p.link_card(c)
+	return p
+
+
+## De eval wordt naar int afgekapt; een verschil van 1 is afkapruis.
+func _assert_ongeveer(werkelijk: int, verwacht: int, boodschap: String) -> void:
+	assert_true(absi(werkelijk - verwacht) <= 1, "%s: %d, verwacht %d" % [boodschap, werkelijk, verwacht])
+
+
+func test_c15_eval_waardeert_veroverde_buit() -> void:
+	# Tot 7 september kwam een veroverd vaandel wel in de staat (reserve +2)
+	# maar niet in de score: de bot zag alleen een dode pion.
+	var ai = preload("res://scripts/ai/AIController.gd").new()
+	ai.player_id = Constants.PLAYER_1
+	var s := _buit_staat()
+	_actieve_pion(s, Constants.PLAYER_1, Vector2i(5, 8), 2, 2, 2)
+	_actieve_pion(s, Constants.PLAYER_2, Vector2i(5, 2), 2, 2, 2)
+	var voor: int = ai.evaluate(s, Constants.PLAYER_1)
+	s.pool_bijschrijven(Constants.PLAYER_1, 2)   # een vaandel geboekt
+	var na_vaandel: int = ai.evaluate(s, Constants.PLAYER_1)
+	_assert_ongeveer(na_vaandel - voor, int(2.0 * float(ai.weights.reserve_pt)), "2 punten reserve = 2 x reserve_pt")
+	s.cp[Constants.PLAYER_1] = int(s.cp.get(Constants.PLAYER_1, 0)) + 2   # een tamboer geboekt
+	var na_tamboer: int = ai.evaluate(s, Constants.PLAYER_1)
+	_assert_ongeveer(na_tamboer - na_vaandel, int(2.0 * float(ai.weights.reserve_cp)), "2 CP = 2 x reserve_cp")
+	# Zero-sum: dezelfde buit bij de vijand kost mij evenveel.
+	s.pool_bijschrijven(Constants.PLAYER_2, 2)
+	_assert_ongeveer(ai.evaluate(s, Constants.PLAYER_1), na_tamboer - int(2.0 * float(ai.weights.reserve_pt)), "vijandelijke reserve telt negatief")
+	# Zonder campagne-blok bestaat er geen reserve: geen term, geen crash.
+	var kaal := GameState.new()
+	kaal.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	kaal.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	_actieve_pion(kaal, Constants.PLAYER_1, Vector2i(5, 8), 2, 2, 2)
+	_actieve_pion(kaal, Constants.PLAYER_2, Vector2i(5, 2), 2, 2, 2)
+	assert_eq(ai.evaluate(kaal, Constants.PLAYER_1), voor, "4.1: zelfde score als de lege campagne-staat")
+
+
+func test_c15_eval_telt_gekoppelde_drager_als_buit() -> void:
+	# 4.3.2: een drager levert buit op, gekoppeld of niet; de jacht-term hoort
+	# hem dus ook gekoppeld te zien. Tot 7 september telde alleen een
+	# ongekoppeld standbeeld mee.
+	var ai = preload("res://scripts/ai/AIController.gd").new()
+	ai.player_id = Constants.PLAYER_1
+	var s := _buit_staat()
+	var jager: Pawn = _actieve_pion(s, Constants.PLAYER_1, Vector2i(5, 5), 3, 2, 3)
+	var drager: Pawn = _actieve_pion(s, Constants.PLAYER_2, Vector2i(5, 4), 1, 2, 1)
+	drager.rol = "flag"
+	ai.weights.buit_jacht = 0.0
+	var zonder: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.buit_jacht = 100.0
+	_assert_ongeveer(ai.evaluate(s, Constants.PLAYER_1) - zonder, 200, "gekoppelde vaandeldrager binnen bereik = 2 punten x buit_jacht")
+	# Buiten bereik (HP boven mijn attack): geen jacht-term.
+	drager.current_hp = 5
+	drager.max_hp = 5
+	ai.weights.buit_jacht = 0.0
+	var zonder2: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.buit_jacht = 100.0
+	assert_eq(ai.evaluate(s, Constants.PLAYER_1), zonder2, "niet pakbaar = geen jacht")
+	# Mijn eigen gekoppelde tamboer naast een vijand die hem kan doden: hoede.
+	jager.rol = "drum"
+	drager.attack_value = 3
+	ai.weights.buit_hoede = 0.0
+	var veilig: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.buit_hoede = 100.0
+	_assert_ongeveer(veilig - ai.evaluate(s, Constants.PLAYER_1), 100, "eigen tamboer in gevaar = 1 punt x buit_hoede")
+
+
+func test_c15_greedy_slaat_de_drager_boven_een_gewone_soldaat() -> void:
+	# Twee standbeelden naast mijn jager: links een vaandeldrager, rechts een
+	# gewone soldaat. Tot 7 september koos de eval de GEWONE soldaat: de kill
+	# op de drager liet zijn jacht-term wegvallen en de 2 punten telden niet.
+	var ai = preload("res://scripts/ai/AIMedium.gd").new()
+	ai.player_id = Constants.PLAYER_1
+	var s := _buit_staat()
+	var jager: Pawn = _actieve_pion(s, Constants.PLAYER_1, Vector2i(5, 5), 3, 2, 3)
+	var drager: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(4, 5), Constants.UnitType.INFANTRY)
+	drager.rol = "flag"
+	var gewoon: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(6, 5), Constants.UnitType.INFANTRY)
+	# Eigen standbeelden voor en achter de jager: dan blijven alleen de twee
+	# kills over als zet. En genoeg eigen pionnen om de wanhoop-modus (minder
+	# dan 7) buiten de deur te houden, want die rent liever naar de haven.
+	s._spawn_pawn(Constants.PLAYER_1, Vector2i(5, 4), Constants.UnitType.INFANTRY)
+	s._spawn_pawn(Constants.PLAYER_1, Vector2i(5, 6), Constants.UnitType.INFANTRY)
+	for x in 5:
+		s._spawn_pawn(Constants.PLAYER_1, Vector2i(x, 10), Constants.UnitType.INFANTRY)
+	assert_eq(ai.enumerate_actions(s, Constants.PLAYER_1).size(), 2, "precies de twee kills als keuze")
+	var keuze: Dictionary = ai.choose_action(s)
+	assert_eq(String(keuze.get("type", "")), "attack", "de bot slaat")
+	assert_eq(int(keuze.get("defender_id", -1)), drager.id, "en kiest de drager (2 punten reserve)")
+	assert_true(jager.is_active and not drager.is_eliminated, "het origineel is niet aangeraakt")
+	# Gespiegeld (de drager rechts): dan mag het niet aan de volgorde liggen.
+	drager.rol = ""
+	gewoon.rol = "flag"
+	var keuze2: Dictionary = ai.choose_action(s)
+	assert_eq(int(keuze2.get("defender_id", -1)), gewoon.id, "spiegel: weer de drager")
+
+
+func test_c15_dragers_staan_leerbaar_achteraan() -> void:
+	# Default drager_front -1: de dragers gaan naar de achterste rij, en niet
+	# naar de beste infanterievakken (met inf_front 0.6 was dat de voorste
+	# rij). drager_front hoog: vooraan. Altijd een geldige opstelling met
+	# precies vaandels_max en tamboers_max dragers.
+	var ai = preload("res://scripts/ai/AIController.gd").new()
+	for pid in [Constants.PLAYER_1, Constants.PLAYER_2]:
+		ai.player_id = pid
+		var rows: Array = Constants.get_start_rows_for_player(pid)
+		var s := GameState.new()
+		s.rules = RulesConfig.from_dict({"campaign": {}})
+		s.doctrines[pid] = Constants.Doctrine.MENS
+		var pl: Array = ai.choose_placement(s)
+		assert_true(s.is_valid_placement(pid, pl), "geldige opstelling met dragers (speler %d)" % pid)
+		var rollen: Dictionary = {"flag": 0, "drum": 0}
+		for e in pl:
+			var rol := String(e.get("rol", ""))
+			if rol == "":
+				continue
+			rollen[rol] += 1
+			assert_eq(int(e.pos.y), int(rows[0]), "default: drager op de achterste rij (speler %d)" % pid)
+		assert_eq(int(rollen.flag), 2, "twee vaandels")
+		assert_eq(int(rollen.drum), 2, "twee tamboers")
+	ai.player_id = Constants.PLAYER_1
+	ai.weights.drager_front = 5.0
+	var s2 := GameState.new()
+	s2.rules = RulesConfig.from_dict({"campaign": {}})
+	s2.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	var front: int = Constants.get_start_rows_for_player(Constants.PLAYER_1)[1]
+	var vooraan: int = 0
+	for e in ai.choose_placement(s2):
+		if String(e.get("rol", "")) != "":
+			vooraan += 1
+			assert_eq(int(e.pos.y), front, "geleerd vooraan: drager op de voorste rij")
+	assert_eq(vooraan, 4)
+	# Zonder campagne-blok bestaan rollen niet.
+	var s41 := GameState.new()
+	s41.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	for e in ai.choose_placement(s41):
+		assert_false(e.has("rol"), "4.1: geen rollen")
+
+
+func test_c15_hard_zet_de_dragerkill_vooraan() -> void:
+	# De beam van Hard/Ultra snoeit op _quick; een drager-kill moet daar voor
+	# een gewone kill staan, anders komt de eval er nooit aan toe.
+	var ai = preload("res://scripts/ai/AIHard.gd").new()
+	ai.player_id = Constants.PLAYER_1
+	var s := _buit_staat()
+	var jager: Pawn = _actieve_pion(s, Constants.PLAYER_1, Vector2i(5, 5), 3, 2, 3)
+	var drager: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(4, 5), Constants.UnitType.INFANTRY)
+	drager.rol = "drum"
+	var gewoon: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(6, 5), Constants.UnitType.INFANTRY)
+	var op_drager: Dictionary = {"type": "attack", "attacker_id": jager.id, "defender_id": drager.id}
+	var op_gewoon: Dictionary = {"type": "attack", "attacker_id": jager.id, "defender_id": gewoon.id}
+	assert_true(ai._quick(s, Constants.PLAYER_1, op_drager) > ai._quick(s, Constants.PLAYER_1, op_gewoon),
+		"de drager-kill sorteert voor de gewone kill")
