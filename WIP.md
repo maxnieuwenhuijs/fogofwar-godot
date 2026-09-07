@@ -1,5 +1,38 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- kaarten en schermen wachten op de animaties
+
+Max: "speel altijd eerst alle animaties af voordat de nieuwe kaarten of schermen
+in beeld komen, altijd", en daarna preciezer: "bij een nieuwe ronde zie je de
+versterkingen een voor een op het bord ploppen en pas daarna definieer je de
+nieuwe kaarten."
+
+Er stond al EEN zo'n wachtmoment (27 juli): `_open_define_hand` wachtte op de
+poef-reveal van verse spawns. Maar alleen daarop -- een sterfte, een naijlende
+beweging, een opruk-hold of hitstop liep gewoon door terwijl de kaarten of het
+onthul-scherm er al overheen kwamen.
+
+`is_rustig()` (F4.3e, voor de herstelcheck) wist al precies wat "het scherm staat
+stil" betekent. Die is gesplitst: `_animaties_bezig()` is het deel dat over
+BEWEGING gaat, en daar wachten de kaartwaaier en `_toon_reveal` nu op via
+`_wacht_op_animaties()` (vangrail 6 s, want liever een kaart te vroeg dan een
+spel dat vastloopt). `is_rustig()` geeft hetzelfde antwoord als eerst, dus de
+herstelcheck merkt er niets van.
+
+Bewust NIET meegenomen in `_animaties_bezig()`: `_fase_overgang_bezig` en
+`_define_open_bezig`. Dat zijn juist de vlaggen die gezet worden TERWIJL we
+wachten; daarop wachten zou zichzelf blokkeren.
+
+**Headless slaat het wachten over.** `-- uispel` liep er minuten langer door en
+er kijkt niemand mee. Het wachten is puur presentatie en verandert niets aan de
+acties die de engine binnenkrijgt; dat is ook precies wat de uitslag bewijst.
+Keerzijde, eerlijk gezegd: de checks toetsen het wachten dus niet -- dat moet in
+het echte spel gezien worden.
+
+Regressieset: `-- uispel 777` geeft `890b6cb4...` met 270 acties en cyclus 6
+(ongewijzigd), `-- naadcheck` PASS, `-- herstelcheck 777` en `4242 wolf` allebei
+0 verschillen en 0 canary.
+
 ## 7 september -- tuner: team-keuze, alle modellen naast elkaar, bord-view
 
 Drie wensen van Max in een keer: "alle modellen checken in rood of blauw", "alle

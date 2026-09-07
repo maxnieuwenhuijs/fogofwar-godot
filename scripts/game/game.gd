@@ -1244,13 +1244,40 @@ func _toon_fase_vanaf_staat() -> void:
 		push_error("_toon_fase_vanaf_staat: %s is nooit een ruststaat" % Phase.to_string_phase(st.phase))
 
 
-## F4.3e -- staat het scherm stil? Geen loop-tweens, ragdolls, opruk-holds,
-## hitstop of een lopende poef-reveal. De herstelcheck vergelijkt pas dan.
+## Beweegt er nog iets op het bord? Loop-tweens, ragdolls, opruk-holds, hitstop
+## of een lopende poef-reveal van verse versterkingen.
+##
+## Hier wachten de kaarten en de schermen op (besluit Max, 7 september: "speel
+## altijd eerst alle animaties af voordat de nieuwe kaarten of schermen in beeld
+## komen"). Bewust ZONDER _fase_overgang_bezig en _define_open_bezig: dat zijn
+## vlaggen die juist gezet worden terwijl we staan te wachten, en daarop wachten
+## zou zichzelf blokkeren.
+func _animaties_bezig() -> bool:
+	return not _tweening_pawns.is_empty() or not _dying_views.is_empty() \
+		or not _advance_holds.is_empty() or _in_hitstop \
+		or Time.get_ticks_msec() < _spawn_reveal_tot_ms + 250
+
+
+## Wacht tot het bord stilstaat. De vangrail is er voor het geval een tween ooit
+## blijft hangen: liever een kaartwaaier die iets te vroeg komt dan een spel dat
+## niet meer verder kan.
+func _wacht_op_animaties(max_sec: float = 6.0) -> void:
+	# Headless kijkt niemand mee: daar wachten kost alleen tijd in de checks
+	# (-- uispel liep er minuten langer op) en verandert niets aan de acties die
+	# er ingaan. Het wachten is puur presentatie.
+	if DisplayServer.get_name() == "headless":
+		return
+	var tot: int = Time.get_ticks_msec() + int(max_sec * 1000.0)
+	while _animaties_bezig() and Time.get_ticks_msec() < tot:
+		await get_tree().process_frame
+
+
+## F4.3e -- staat het scherm stil? Geen beweging (zie _animaties_bezig) en geen
+## fase-overgang of kaartwaaier die staat te wachten. De herstelcheck vergelijkt
+## pas dan.
 func is_rustig() -> bool:
-	return _tweening_pawns.is_empty() and _dying_views.is_empty() \
-		and _advance_holds.is_empty() and not _in_hitstop \
-		and not _fase_overgang_bezig and not _define_open_bezig \
-		and Time.get_ticks_msec() >= _spawn_reveal_tot_ms + 250
+	return not _animaties_bezig() \
+		and not _fase_overgang_bezig and not _define_open_bezig
 
 
 ## F4.3e -- waar tijdens de 0,9 s "ronde klaar"-pauze (koppelen -> define),
@@ -1729,12 +1756,14 @@ func _on_cp_choice(index: int) -> void:
 
 ## Kaartwaaier openen; de eerste `bonus` kaarten dragen het CP-budgetpunt.
 func _open_define_hand(bonus: int) -> void:
-	# Poef-reveal bezig? Eerst het bord z'n moment geven, dan pas de kaarten
-	# (besluit Max, 27 juli: spawns zien landen vóór de define-fase).
-	var nu: int = Time.get_ticks_msec()
-	if nu < _spawn_reveal_tot_ms:
+	# Eerst het bord z'n moment geven, dan pas de kaarten. Dat was er al voor de
+	# poef-reveal van verse versterkingen (besluit 27 juli: spawns zien landen
+	# vóór de define-fase); sinds 7 september geldt het voor ELKE animatie --
+	# ook een sterfte of een beweging die nog naloopt. Zo zie je de
+	# versterkingen een voor een op het bord ploppen en pas daarna de kaarten.
+	if _animaties_bezig():
 		_define_open_bezig = true
-		await get_tree().create_timer(float(_spawn_reveal_tot_ms - nu) / 1000.0 + 0.1).timeout
+		await _wacht_op_animaties()
 		_define_open_bezig = false
 		if session.state == null or not Phase.is_define(session.state.phase):
 			return
@@ -1881,6 +1910,15 @@ func _on_cards_revealed(t1: Dictionary, t2: Dictionary, initiative_winner: int) 
 ## Rules.compute_initiative op een herbouwde staat: dezelfde getallen).
 ## UI-assetpack: het scherm toont beide handen als echte kaarten (OnthulScherm).
 func _toon_reveal(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> void:
+	# Ook het onthul-scherm wacht op het bord (besluit Max, 7 september): een
+	# scherm dat over een lopende dood heen klapt, kost je precies het moment
+	# waar je op zat te wachten.
+	if _animaties_bezig():
+		_fase_overgang_bezig = true
+		await _wacht_op_animaties()
+		_fase_overgang_bezig = false
+		if session.state == null:
+			return
 	_update_hud(tr("PHASE_REVEAL"))
 	# Trommelroffel bij de onthulling. (initiative-bugel staat nu uit.)
 	Audio.play("reveal")
