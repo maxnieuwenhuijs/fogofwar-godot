@@ -41,7 +41,7 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.3.1", "campaign-activering = 4.3.1")
+	assert_eq(met.rules_version, "4.3.2", "campaign-activering = 4.3.2")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
@@ -363,9 +363,12 @@ func test_agent_ziet_eigen_puntenreserve() -> void:
 
 
 func test_c15_buit_vaandel_en_tamboer() -> void:
-	# C15 (besluit Max, 30 juli): een DRAGENDE vaandeldrager levert 2
-	# versterkingspunten op, een tamboer 2 CP. Een gekoppelde drager levert
-	# niets: die heeft zijn vaandel opgeborgen.
+	# C15 (besluit Max, 30 juli): een vaandeldrager levert 2 versterkingspunten
+	# op, een tamboer 2 CP.
+	# 4.3.2 (besluit Max, 7 september): GEKOPPELD OF NIET MAAKT NIET UIT. Tot dan
+	# leverde een gekoppelde drager niets op ("vaandel opgeborgen"), maar dat was
+	# een regel die je aan het bord niet kon zien: de koppeling is geheim tot de
+	# onthulling, dus je wist niet OF je drager iets waard was.
 	# punten_start 0 = knop UIT (dan rekent poolfactor x comp), dus we zetten een
 	# expliciet lege pool om de buit zuiver te kunnen meten.
 	var rules := RulesConfig.from_dict({"campaign": {
@@ -396,7 +399,7 @@ func test_c15_buit_vaandel_en_tamboer() -> void:
 	var res2: Dictionary = Rules.apply_melee(s, a2.id, tamboer.id)
 	assert_eq(int(res2.get("buit_cp", 0)), 2, "tamboer = 2 CP in het resultaat")
 	assert_eq(int(s.cp.get(1, 0)), 2, "CP bijgeschreven")
-	# GEKOPPELDE drager levert niets op.
+	# GEKOPPELDE drager levert sinds 4.3.2 EVENVEEL op.
 	var drager3 := s._spawn_pawn(2, Vector2i(7, 5), Constants.UnitType.INFANTRY)
 	drager3.rol = "flag"
 	drager3.link_card(Card.new(2, 2, 0, 1, 3, 1))
@@ -404,8 +407,16 @@ func test_c15_buit_vaandel_en_tamboer() -> void:
 	a3.link_card(Card.new(3, 1, 0, 1, 3, 5))
 	var res3: Dictionary = Rules.apply_melee(s, a3.id, drager3.id)
 	assert_true(bool(res3.eliminated), "gekoppelde drager sneuvelt ook")
-	assert_eq(int(res3.get("buit_pt", 0)), 0, "maar levert geen buit op")
-	assert_eq(s.pool_total(1), 2, "reserve onveranderd")
+	assert_eq(int(res3.get("buit_pt", 0)), 2, "en levert nu OOK 2 punten op (4.3.2)")
+	assert_eq(s.pool_total(1), 4, "reserve loopt door naar 4")
+	# Een pion ZONDER rol levert nooit iets op, gekoppeld of niet.
+	var gewoon := s._spawn_pawn(2, Vector2i(8, 5), Constants.UnitType.INFANTRY)
+	var a4 := s._spawn_pawn(1, Vector2i(8, 4), Constants.UnitType.INFANTRY)
+	a4.link_card(Card.new(4, 1, 0, 1, 3, 5))
+	var res4: Dictionary = Rules.apply_melee(s, a4.id, gewoon.id)
+	assert_true(bool(res4.eliminated), "gewone soldaat sneuvelt")
+	assert_eq(int(res4.get("buit_pt", 0)), 0, "zonder rol geen buit")
+	assert_eq(s.pool_total(1), 4, "reserve onveranderd")
 
 
 func test_c15_rol_overleeft_koppelen_en_serialisatie() -> void:

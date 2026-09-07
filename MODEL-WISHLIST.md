@@ -183,7 +183,8 @@ verschillende legers:
 |---|---|---|
 | **Toon** | afgedankte veteranen: oorlog overleefd, jaren geleden aan de kant gezet | paradeleger, net uit het depot |
 | **Stof** | versleten tot boerenkleding: echte gaten bij ellebogen, knieen en zoom, grove lappen erop genaaid, draadstof grijsbruin van de jaren | strak, diep van kleur, smetteloos |
-| **Sluiting** | knopen weg, vervangen door houten pinnen; touw waar de leren riem het begaf | vergulde knopen en epauletten, smetteloos wit bandelier |
+| **Banden** | GEEN wit kruis: alleen een versleten taillegordel. Wit was pijpaarde-onderhoud, en dat doet niemand meer voor deze eenheid | smetteloos wit kruis over de borst, strak |
+| **Knopen** | een enkele scheve rij op de borst: er missen er, vervangen door houten pinnen of been, de rest dof aangeslagen messing | vergulde knopen en epauletten, gepoetst |
 | **Metaal** | dof, aangeslagen, roestputjes | spiegelend zilver EN goud, gepoetst |
 | **Schoeisel** | gebarsten, met lappen omwikkeld | glanzend, geolied |
 | **Hout** (wapen) | bleek en versleten | donker gebeitst en gelakt |
@@ -197,7 +198,7 @@ glimmend wel.
 
 | Team | Toevoeging aan de prompt |
 |---|---|
-| rood | `discarded veterans whose uniform has decayed into peasant clothing: cloth worn through into ragged holes at elbows, knees and hem, crude mismatched patches, buttons replaced with wooden toggles, a frayed rope belt, threadbare grey-brown fabric, rust-pitted metal, cracked shoes bound with rag` |
+| rood | `discarded veterans whose uniform has decayed into peasant clothing: no white crossbelts, just a worn waist belt and a single uneven row of buttons down the front with several missing, cloth worn through into ragged holes at elbows, knees and hem, crude mismatched patches, threadbare grey-brown fabric, rust-pitted metal, cracked shoes bound with rag` |
 | blauw | `immaculate parade condition: crisp deep-toned cloth, mirror-polished silver and gleaming gold braid, gilded buttons and epaulettes, spotless white leather, everything buffed and shining` |
 
 **Template:** `Retexture this character, keep the existing UV layout and geometry
@@ -214,6 +215,15 @@ Let op wat de tracker voor BLAUW extra doet: hij haalt "weathered" en "battered"
 uit de model-prompt weg. Die woorden staan er standaard in en versterken de rode
 veldstaat, maar bij blauw zou er "wearing a weathered, immaculate uniform" staan
 -- dan kiest de generator er zelf een.
+
+**Waarom rood geen wit kruis draagt.** Die banden waren wit door *pipeclay*,
+witte pijpaarde die je er voor elke inspectie op smeerde: het was onderhoud, geen
+materiaal. Een eenheid die aan de kant is geschoven stopt daarmee. Andere legers
+uit die tijd deden het sowieso anders -- Pruisen, Russen en de Britse rifles
+droegen zwart leer, Oostenrijk ongeverfd buffleer, lichte infanterie vaak maar
+een schouderband of alleen een gordel. Wij nemen het armoedigste: het kruis
+verdwijnt en er blijft een gordel over, met de knopenrij op de borst als enige
+rest die nog verraadt dat dit ooit een uniform was.
 
 Zelfde regel geldt voor de wapens, zie 3c. En dezelfde waarschuwing als daar:
 laat de materiaal-zin uit de oorspronkelijke model-prompt WEG, anders vraag je

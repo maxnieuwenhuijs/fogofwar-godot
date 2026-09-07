@@ -1,5 +1,54 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- 4.3.2: C15-buit ook op een GEKOPPELDE drager
+
+Max: "als ie gekoppeld is wel of niet maakt niet uit, als je die slaat krijg je
+die resources." `Rules._boek_buit` liet de buit vervallen bij
+`linked_card_id != -1`; die voorwaarde is eruit.
+
+De redenering achter de oude regel ("gekoppeld = vaandel opgeborgen") hield geen
+stand: de rol staat vast vanaf de opstelling en verhuist nooit, maar de KOPPELING
+is geheim tot de onthulling. Je wist dus wel wie de drager was en niet of hij
+deze ronde iets waard was -- een regel die je aan het bord niet kunt aflezen
+stuurt geen enkele beslissing.
+
+`rules_version` 4.3.1 -> **4.3.2**, met de overgang in `rules_config.gd` zodat
+oudere configs meeschuiven. CHANGELOG-entry geschreven.
+
+**Wat er omviel, en wat dat betekent.** Eerst 6 fouten: alle vijftien golden
+replays op `seq 0` met een hash-mismatch -- dat is de VERSIESTRING in de
+staat-hash, niet de buitregel. Opnieuw gegenereerd met `-- makegoldens`.
+
+De baseline in `golden_sims.json` liet de regel wel echt rekenen; vier van de
+vijf ijk-sims schuiven en bij een kantelt de winnaar:
+
+| sim | was | wordt |
+|---|---|---|
+| mens-vos 101 | winner 1, cyclus 19, 475 acties | **winner 2**, cyclus 21, 539 |
+| leeuw-beer 202 | cyclus 19, 481 | cyclus 20, 510 |
+| beer-muis 303 | cyclus 14, 515 | cyclus 13, 485 |
+| wolf-leeuw 404 | cyclus 19, 455 | cyclus 16, 372 |
+
+Dat een enkele seed kantelt zegt niets over balans -- vijf sims zijn daar veel te
+weinig voor (vuistregel: onder ~2000 partijen geen uitspraken over een paar
+procentpunt). Wie het wil weten draait de nachtrun.
+
+Daarna bleven drie fouten over, en dat waren precies de tests die de OUDE regel
+vastlegden. Omgedraaid, met een assertie erbij die eerst impliciet gedekt werd
+door de koppel-voorwaarde en anders stilzwijgend was weggevallen: een pion ZONDER
+rol levert nooit buit op, gekoppeld of niet. Twee `4.3.1`-asserties in
+SpawnTests moesten mee (de tweede zat op een andere plek en zag ik pas na een
+tweede ronde).
+
+Eindstand: testsuite 2287 groen, `-- simcheck` 0 afwijkingen.
+
+**Open gevolg, nog niet gefikst:** het BEELD klopt nu niet meer met de regel. Bij
+het koppelen wordt `_rol` leeggemaakt (`card == null`-voorwaarde in
+`set_character`), dus het vaandel verdwijnt uit de hand terwijl de pion wel 2
+punten waard is. Die voorwaarde kwam recht uit de oude regel. Volgende stap:
+`rol_echt` (uit `Pawn.rol`, houdt zijn vaandel ook gekoppeld) scheiden van
+`rol_vast` (cosmetische aankleding, blijft alleen op ongekoppelde pionnen).
+
 ## 7 september -- lijken en gibs worden na een tijdje donker
 
 Max: "kan je ook een soort donkere shader gooien over alle stukjes lijk en gibs,

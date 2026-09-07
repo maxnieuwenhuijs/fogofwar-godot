@@ -1,5 +1,48 @@
 # Spelregels — CHANGELOG
 
+## 4.3.2 — 7 september 2026 (C15-buit: gekoppeld of niet maakt niet meer uit)
+
+*Besluit Max: "als ie gekoppeld is wel of niet maakt niet uit; als je die slaat
+krijg je die resources."*
+
+`Rules._boek_buit` liet de buit vervallen zodra het slachtoffer een kaart droeg
+(`linked_card_id != -1`), met als redenering: een gekoppelde pion heeft zijn
+vaandel opgeborgen, je ziet het niet op het bord, dus er valt niets te
+veroveren. Die voorwaarde is eruit.
+
+**Waarom.** De rol staat vast vanaf de opstelling en verhuist nooit. Je wist dus
+wel WIE de vaandeldrager was, maar niet OF hij deze ronde iets waard was: dat
+hing af van de koppeling, en die is geheim tot de onthulling. Een regel die je
+aan het bord niet kunt aflezen stuurt geen enkele beslissing -- hij maakt buit
+alleen toevallig.
+
+**Gevolg.** Buit is makkelijker te halen en dragers zijn een aantrekkelijker
+doelwit. `buit_vaandel_pt` (2 punten) en `buit_tamboer_cp` (2 CP) blijven
+ongewijzigd; wie het te sterk vindt draait daaraan, niet aan de voorwaarde.
+
+`rules_version` gaat van 4.3.1 naar **4.3.2**. Zonder campagne-blok verandert er
+niets (4.1 speelt byte-identiek door).
+
+**Goldens opnieuw gegenereerd** (`-- makegoldens`). De vijftien replays vielen
+allemaal om op `seq 0` met een hash-mismatch: dat is de versiestring in de
+staat-hash, niet de buitregel.
+
+**`golden_sims.json`-baseline bijgewerkt**, en daar zie je de regel wel echt
+rekenen. Vier van de vijf ijk-sims schuiven, en bij een kantelt de winnaar:
+
+| sim | was | wordt |
+|---|---|---|
+| mens-vos seed 101 | winner 1, cyclus 19, 475 acties | **winner 2**, cyclus 21, 539 acties |
+| leeuw-beer seed 202 | winner 2, cyclus 19, 481 acties | winner 2, cyclus 20, 510 acties |
+| beer-muis seed 303 | winner 1, cyclus 14, 515 acties | winner 1, cyclus 13, 485 acties |
+| wolf-leeuw seed 404 | winner 1, cyclus 19, 455 acties | winner 1, cyclus 16, 372 acties |
+
+Muis-wolf seed 777 blijft gelijk. Dat een enkele seed van winnaar wisselt is bij
+een economie-wijziging normaal en zegt niets over balans: daarvoor zijn vijf
+sims veel te weinig (vuistregel: onder ~2000 partijen geen uitspraken over een
+paar procentpunt). Wie wil weten wat dit met de factie-band doet, draait de
+nachtrun.
+
 ## F4.2b — 3 september 2026 (actieformaat: CP-inzet als veld op de define; geen regelwijziging)
 
 `rules_version` blijft 4.3.1 en geen golden verandert. `define_cards` kent

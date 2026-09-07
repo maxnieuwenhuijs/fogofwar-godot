@@ -316,8 +316,8 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
-		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0":
-			c.rules_version = "4.3.1"
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1":
+			c.rules_version = "4.3.2"
 	else:
 		c.campaign = null
 	return c

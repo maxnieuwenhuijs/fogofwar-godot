@@ -465,18 +465,23 @@ static func apply_shot(state: GameState, shooter_id: int, target_id: int) -> Dic
 	result.success = true
 	return result
 
-## C15 (besluit Max, 30 juli): BUIT op figuranten. Wie een DRAGENDE
-## vaandeldrager neerlegt krijgt versterkingspunten in zijn reserve, wie een
-## tamboer neerlegt krijgt CP. "Dragend" = ongekoppeld: een pion met een kaart
-## is een gewone soldaat en heeft zijn vaandel opgeborgen -- je ziet dan ook
-## geen vaandel op het bord, dus er valt niets te veroveren.
+## C15 (besluit Max, 30 juli): BUIT op figuranten. Wie een vaandeldrager
+## neerlegt krijgt versterkingspunten in zijn reserve, wie een tamboer neerlegt
+## krijgt CP.
+##
+## 4.3.2 (besluit Max, 7 september): GEKOPPELD OF NIET MAAKT NIET UIT.
+## Tot dan gold "dragend = ongekoppeld": een pion met een kaart zou zijn vaandel
+## hebben opgeborgen. Dat was een regel die je aan het bord niet kon zien -- de
+## rol staat vast vanaf de opstelling en verhuist nooit, dus je wist wel WIE de
+## drager was maar niet OF hij deze ronde iets waard was. Nu betaalt hij altijd.
+## Gevolg: dragers zijn een aantrekkelijker doelwit en buit is makkelijker te
+## halen; dat is de bedoeling.
+##
 ## Zonder campagne-blok (4.1) of met de knoppen op 0 gebeurt er niets.
 static func _boek_buit(state: GameState, slachtoffer: Pawn, winnaar: int,
 		result: Dictionary) -> void:
 	if slachtoffer == null or String(slachtoffer.rol) == "":
 		return
-	if slachtoffer.linked_card_id != -1:
-		return  # had een kaart: droeg niets
 	if not state.rules.campaign_actief():
 		return
 	if winnaar != Constants.PLAYER_1 and winnaar != Constants.PLAYER_2:
