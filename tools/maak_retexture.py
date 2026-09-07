@@ -14,6 +14,10 @@
 #                     geen wapen, lichaamsdelen aan elkaar
 #   <naam>_wapen.glb  alleen het wapen, statisch en losgeknipt van het skelet
 #
+# Ze komen NAAST de .blend te staan, in dezelfde map, zodat alles van een model
+# bij elkaar blijft: de blend, de exports die je uploadt, en straks de png's die
+# je terugkrijgt. Met --uit <map> schrijf je ze ergens anders heen.
+#
 # Allebei upload je bij de retexture-dienst, met de uitdrukkelijke vraag om de
 # UV's te LATEN STAAN. Wil je alleen het lijf: --geen-wapen.
 # Vouwt hij toch opnieuw uit, dan past de jas niet meer op het model in het
@@ -45,7 +49,8 @@ def naam_voor(blend, map_pad):
 def main():
     p = argparse.ArgumentParser(description="Blends uit een map klaarmaken voor een retexture.")
     p.add_argument("map", help="de map met .blend-bestanden (submappen tellen mee)")
-    p.add_argument("--uit", default=os.path.join(PROJ, "results", "retexture"))
+    p.add_argument("--uit", default=None,
+                   help="waar de exports heen gaan (standaard: naast de .blend zelf)")
     p.add_argument("--blender", default=os.environ.get("BLENDER", BLENDER_STANDAARD))
     p.add_argument("--los", action="store_true", help="lichaamsdelen NIET aan elkaar plakken")
     p.add_argument("--met-wapen", action="store_true", help="het wapen OOK in het lijf-bestand zetten")
@@ -66,12 +71,15 @@ def main():
         print("Zet BLENDER of gebruik --blender <pad naar blender.exe>.")
         return 1
 
-    os.makedirs(a.uit, exist_ok=True)
+    if a.uit:
+        os.makedirs(a.uit, exist_ok=True)
     print(f"{len(blends)} .blend gevonden in {a.map}")
     print()
     gelukt, mislukt = [], []
     for i, blend in enumerate(blends, 1):
-        doel = os.path.join(a.uit, naam_voor(blend, a.map) + ".glb")
+        # Standaard naast de .blend: alles van een model in een map.
+        map_uit = a.uit or os.path.dirname(blend)
+        doel = os.path.join(map_uit, naam_voor(blend, a.map) + ".glb")
         args = [a.blender, "--background", blend, "--python",
                 os.path.join(PROJ, "tools", "blender_export_retexture.py"),
                 "--", "--uit", doel]
@@ -120,13 +128,20 @@ def main():
             mislukt.append(blend)
 
     print()
-    print(f"{len(gelukt)} klaar in {os.path.relpath(a.uit, PROJ)}")
+    mappen = sorted({os.path.dirname(g) for g in gelukt})
+    print(f"{len(gelukt)} klaar in:")
+    for m in mappen:
+        try:
+            print("   " + os.path.relpath(m, PROJ))
+        except ValueError:
+            print("   " + m)
     if gelukt:
         print()
         print("Nu doen:")
-        print("  1. Upload deze bestanden bij je retexture-dienst.")
+        print("  1. Upload deze .glb-bestanden bij je retexture-dienst.")
         print("  2. Vraag EXPLICIET om de UV's te laten staan (geen nieuwe unwrap).")
-        print("  3. De png voor het LIJF zet je naast de glb als <model>_red.png of _blue.png.")
+        print("  3. De png voor het LIJF zet je in de kleurmap (red/ of blue/) naast de .blend;")
+        print("     de knop \"Map in het spel zetten\" pakt hem daar op.")
         print("     Een png voor het WAPEN hoort in de .blend gebakken te worden en dan opnieuw")
         print("     door de bouwknop; het wapen draagt zijn eigen atlas uit de glb.")
         print("  4. Controleer met: python tools/uv_check.py <model>.glb <die png>")

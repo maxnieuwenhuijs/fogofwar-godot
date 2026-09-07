@@ -140,9 +140,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   jas van een ander model rond de 70%. Per materiaal, want lijf en ingebakken
   wapen hebben elk hun eigen atlas. Een nieuwe jas laten maken:
   `python tools/maak_retexture.py <map>`, of de paneelknop "Model klaarmaken
-  voor retexture" (die vraagt om een map). Levert per .blend TWEE bestanden in
-  `results/retexture/`: `<naam>.glb` (het kale lijf in rusthouding, geen skelet,
-  animaties of wapen) en `<naam>_wapen.glb` (alleen het wapen, statisch).
+  voor retexture" (die vraagt om een map). Levert per .blend TWEE bestanden
+  NAAST die .blend: `<naam>.glb` (het kale lijf in rusthouding, geen skelet,
+  animaties of wapen) en `<naam>_wapen.glb` (alleen het wapen, statisch). Zo
+  staat alles van een model bij elkaar: blend, uploads en de png's die
+  terugkomen. Met `--uit <map>` schrijf je ze ergens anders heen.
   Lijf en wapen dragen elk hun eigen UV-atlas, dus je kunt ze los laten
   hertexturen; `--geen-wapen` slaat het tweede bestand over. Dat upload je, en je vraagt de dienst UITDRUKKELIJK de
   UV's te laten staan. Per stuk:

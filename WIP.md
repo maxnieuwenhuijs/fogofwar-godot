@@ -1,5 +1,29 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- retexture-exports naast de .blend in plaats van in results/
+
+Max: "doe dan niet de map results als folder maar upload de glbs gewoon in de
+folder". Terecht: `results/` is gitignored werkmateriaal, en zo staat alles van
+een model uit elkaar. `maak_retexture.py` schrijft nu standaard naast de .blend
+zelf; `--uit <map>` overschrijft dat nog steeds. De paneelknop opent daarna de
+map die Max zelf koos, niet meer `results/retexture`.
+
+Zo houdt een modelmap alles bij elkaar:
+
+    mouse/infantry_mix/       infantry_mix_mouse.blend
+                              mouse_infantry_mix.glb        (upload: het lijf)
+                              mouse_infantry_mix_wapen.glb  (upload: het wapen)
+    mouse/infantry_mix/red/   de png die terugkomt
+    mouse/infantry_mix/blue/  idem
+
+`verwerk_levering.py` kijkt alleen naar `.blend` en `.png`, dus die twee exports
+liggen hem niet in de weg.
+
+Bij het bewerken van de meldtekst overschreef ik de afsluitregel van de
+MessageBox (`"Fog of War") | Out-Null`) -- regels invoegen EN vervangen in een
+lijst tegelijk verschuift de indexen onder je handen. Hersteld en opnieuw
+geparseerd.
+
 ## 7 september -- wapen-route bewezen, wapen apart exporteren, hele ledemaat af
 
 Max zag het musket scheef hangen: "nu is het wapen toch nog vreemd en niet

@@ -414,8 +414,11 @@ $btnRetexture.Add_Click({
     }
     # `$? met een backtick: anders vult PowerShell hem HIER al in (True/False)
     # in plaats van in het venster dat straks de opdracht draait.
+    # De exports landen NAAST de .blend, dus de Verkenner opent de map die je zelf
+    # koos. Zo staat alles van een model bij elkaar: blend, uploads, en straks de
+    # png's die je terugkrijgt.
     $opdracht = "python tools/maak_retexture.py '" + $gekozen + "'; if (`$?) { explorer '" +
-        (Join-Path $repo "results\retexture") + "' }"
+        $gekozen + "' }"
     Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", $opdracht)
     [System.Windows.Forms.MessageBox]::Show(
@@ -428,8 +431,11 @@ $btnRetexture.Add_Click({
         "(geen nieuwe unwrap). Doet hij dat toch, dan past de nieuwe jas niet meer " +
         "op je model en zie je dat pas in een partij." +
         [Environment]::NewLine + [Environment]::NewLine +
-        "De png die je terugkrijgt zet je naast de glb als <model>_red.png of " +
-        "<model>_blue.png. Claude meet daarna of hij past.",
+        "De twee .glb-bestanden komen NAAST je .blend te staan, in de map die je " +
+        "zojuist koos: het lijf en het wapen apart, want die hebben elk hun eigen " +
+        "UV-atlas." + [Environment]::NewLine + [Environment]::NewLine +
+        "De png die je terugkrijgt zet je in de kleurmap (red of blue) naast die " +
+        "blend. Claude meet daarna of hij past.",
         "Fog of War") | Out-Null
 })
 $kadModellen.Controls.Add($btnRetexture)
