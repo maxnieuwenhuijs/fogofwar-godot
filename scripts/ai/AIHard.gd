@@ -73,7 +73,7 @@ func _quick(state: GameState, side: int, action: Dictionary) -> int:
 			var s: int = 120
 			# Bedreiging bij de te verdedigen haven wegslaan = topprioriteit.
 			s += maxi(0, Constants.BOARD_SIZE - _min_dist(defender.position, opp_target)) * 8
-			if not defender.is_active or attacker.attack_value >= defender.current_hp:
+			if not defender.is_active or Rules.effectieve_attack(state, attacker) >= defender.current_hp:
 				s += 300
 			s += _drager_bonus(defender)
 			return s
@@ -91,7 +91,7 @@ func _quick(state: GameState, side: int, action: Dictionary) -> int:
 			var cav: Pawn = state.pawns[action.pawn_id]
 			var s2: int = 130
 			s2 += maxi(0, Constants.BOARD_SIZE - _min_dist(defender2.position, opp_target)) * 8
-			if not defender2.is_active or cav.attack_value >= defender2.current_hp:
+			if not defender2.is_active or Rules.effectieve_attack(state, cav) >= defender2.current_hp:
 				s2 += 300
 			s2 += (_min_dist(cav.position, my_target) - _min_dist(action.move_target, my_target)) * 10
 			s2 += _drager_bonus(defender2)

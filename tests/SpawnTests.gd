@@ -41,7 +41,7 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.3.2", "campaign-activering = 4.3.2")
+	assert_eq(met.rules_version, "4.3.3", "campaign-activering = 4.3.3 (C21-aura)")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
@@ -563,3 +563,130 @@ func test_c17_een_economie_campagne_en_potje() -> void:
 	kaal.doctrines[2] = Constants.Doctrine.MENS
 	kaal.init_pools()
 	assert_eq(kaal.pool_total(1), 0, "4.1 kent geen reserve")
+
+
+# =========================================================================
+# C21 (7 september 2026): aura van tamboer en vaandel. "Zo dwingen we de
+# spelers om ze ook echt daadwerkelijk te gebruiken."
+# =========================================================================
+
+func _c21_staat() -> GameState:
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MENS
+	return s
+
+
+func _c21_actief(s: GameState, owner: int, pos: Vector2i, hp: int, spd: int, atk: int) -> Pawn:
+	var p: Pawn = s._spawn_pawn(owner, pos, Constants.UnitType.INFANTRY)
+	p.link_card(Card.new(s.next_card_id(), owner, 0, hp, spd, atk))
+	return p
+
+
+func test_c21_vaandel_aura_geeft_attack() -> void:
+	var s := _c21_staat()
+	assert_eq(s.rules.rules_version, "4.3.3", "de aura is een regelwijziging")
+	var aanvaller: Pawn = _c21_actief(s, 1, Vector2i(5, 5), 3, 3, 1)
+	var vaandel: Pawn = s._spawn_pawn(1, Vector2i(4, 4), Constants.UnitType.INFANTRY)
+	vaandel.rol = "flag"   # diagonaal: hoort bij het blok van acht
+	var doel: Pawn = _c21_actief(s, 2, Vector2i(5, 4), 2, 2, 1)
+	assert_eq(Rules.effectieve_attack(s, aanvaller), 2, "+1 attack in de vorm om het eigen vaandel")
+	assert_eq(aanvaller.attack_value, 1, "de kaartwaarde zelf blijft staan")
+	assert_eq(Rules.effectieve_attack(s, vaandel), 0, "de drager buft zichzelf niet")
+	var res: Dictionary = Rules.apply_melee(s, aanvaller.id, doel.id)
+	assert_eq(int(res.damage), 2, "melee slaat met de aura")
+	assert_true(bool(res.eliminated), "2 schade op 2 HP")
+	# Buiten het blok (afstand 2 in een richting): niets.
+	var ver: Pawn = _c21_actief(s, 1, Vector2i(6, 6), 3, 3, 1)
+	assert_eq(Rules.effectieve_attack(s, ver), 1, "afstand 2 valt buiten de vorm")
+	# Andermans vaandel doet niets; de trom geeft geen attack.
+	var vijand: Pawn = _c21_actief(s, 2, Vector2i(3, 4), 3, 3, 1)
+	assert_eq(Rules.effectieve_attack(s, vijand), 1, "andermans vaandel doet niets")
+	var trom: Pawn = s._spawn_pawn(1, Vector2i(7, 7), Constants.UnitType.INFANTRY)
+	trom.rol = "drum"
+	assert_eq(Rules.effectieve_attack(s, ver), 1, "de trom geeft geen attack")
+	# Schieten gaat ook met de aura.
+	var schutter: Pawn = _c21_actief(s, 1, Vector2i(3, 5), 3, 3, 2)
+	assert_eq(Rules.shot_damage(s, schutter), 3, "een schot vanuit de vorm is ook +1")
+	# Twee vaandels stapelen niet.
+	var vaandel2: Pawn = s._spawn_pawn(1, Vector2i(2, 6), Constants.UnitType.INFANTRY)
+	vaandel2.rol = "flag"
+	assert_eq(Rules.effectieve_attack(s, schutter), 3, "twee vaandels stapelen niet")
+	# Een gekoppelde drager buft ook (4.3.2-lijn); een dode niet.
+	vaandel.link_card(Card.new(s.next_card_id(), 1, 0, 2, 2, 1))
+	assert_eq(Rules.effectieve_attack(s, aanvaller), 2, "gekoppeld vaandel buft nog steeds (aanvaller staat na de kill op 5,4)")
+	s.remove_pawn(vaandel)
+	assert_eq(Rules.effectieve_attack(s, aanvaller), 1, "een dood vaandel buft niet")
+	# Knop uit.
+	s.rules.campaign["aura_vaandel_attack"] = 0
+	assert_eq(Rules.effectieve_attack(s, schutter), 2, "aura_vaandel_attack 0 = uit")
+	# Zonder campagne-blok bestaat de aura niet.
+	var kaal := GameState.new()
+	var a41: Pawn = _c21_actief(kaal, 1, Vector2i(5, 5), 3, 3, 1)
+	var v41: Pawn = kaal._spawn_pawn(1, Vector2i(5, 6), Constants.UnitType.INFANTRY)
+	v41.rol = "flag"
+	assert_eq(Rules.effectieve_attack(kaal, a41), 1, "4.1: geen aura")
+
+
+func test_c21_tamboer_aura_geeft_stamina_bij_koppelen() -> void:
+	# Via de reducer: wie in de vorm om een eigen tamboer gekoppeld wordt,
+	# krijgt die cyclus +1 stamina. Alleen de voorraad, niet max_stamina.
+	var s := _c21_staat()
+	s.phase = Phase.linking_for_round(1)
+	s.current_player = 1
+	s.initiative_player = 1
+	var trom: Pawn = s._spawn_pawn(1, Vector2i(5, 9), Constants.UnitType.INFANTRY)
+	trom.rol = "drum"
+	var naast: Pawn = s._spawn_pawn(1, Vector2i(6, 10), Constants.UnitType.INFANTRY)  # diagonaal
+	var ver: Pawn = s._spawn_pawn(1, Vector2i(9, 9), Constants.UnitType.INFANTRY)     # buiten de vorm
+	var vijand: Pawn = s._spawn_pawn(2, Vector2i(5, 8), Constants.UnitType.INFANTRY)  # naast MIJN trom
+	var kaarten: Array = []
+	for i in 3:
+		var k := Card.new(s.next_card_id(), 1, 1, 2, 2, 2)
+		s.all_cards[k.id] = k
+		kaarten.append(k)
+	s.cards_revealed[1] = kaarten.duplicate()
+	var vk := Card.new(s.next_card_id(), 2, 1, 2, 2, 2)
+	s.all_cards[vk.id] = vk
+	s.cards_revealed[2] = [vk]
+	# Om de beurt koppelen: 1, 2, 1, 1 (staartkoppelen als de ander klaar is).
+	var r1: Dictionary = Reducer.apply(s, Actions.make_link(kaarten[0].id, naast.id), 1)
+	assert_true(bool(r1.ok), "koppelen lukt: %s" % str(r1.get("error", "")))
+	assert_eq(naast.remaining_stamina, 3, "2 van de kaart + 1 van de trom")
+	assert_eq(naast.max_stamina, 2, "max_stamina (de dracht) groeit niet mee")
+	assert_eq(Rules.move_range(s, naast), 3, "de extra stap telt als loopbereik")
+	var r4: Dictionary = Reducer.apply(s, Actions.make_link(vk.id, vijand.id), 2)
+	assert_true(bool(r4.ok), "vijand koppelt: %s" % str(r4.get("error", "")))
+	assert_eq(vijand.remaining_stamina, 2, "andermans trom doet niets")
+	var r2: Dictionary = Reducer.apply(s, Actions.make_link(kaarten[1].id, ver.id), 1)
+	assert_true(bool(r2.ok), "tweede koppeling lukt: %s" % str(r2.get("error", "")))
+	assert_eq(ver.remaining_stamina, 2, "buiten de vorm: alleen de kaart")
+	var r3: Dictionary = Reducer.apply(s, Actions.make_link(kaarten[2].id, trom.id), 1)
+	assert_true(bool(r3.ok), "de tamboer zelf koppelen lukt: %s" % str(r3.get("error", "")))
+	assert_eq(trom.remaining_stamina, 2, "de tamboer krijgt niets van zijn eigen trom")
+	# Knop uit: gewoon de kaart.
+	var s0 := _c21_staat()
+	s0.rules.campaign["aura_tamboer_stamina"] = 0
+	s0.phase = Phase.linking_for_round(1)
+	s0.current_player = 1
+	s0.initiative_player = 1
+	var trom0: Pawn = s0._spawn_pawn(1, Vector2i(5, 9), Constants.UnitType.INFANTRY)
+	trom0.rol = "drum"
+	var p0: Pawn = s0._spawn_pawn(1, Vector2i(5, 10), Constants.UnitType.INFANTRY)
+	var k0 := Card.new(s0.next_card_id(), 1, 1, 2, 2, 2)
+	s0.all_cards[k0.id] = k0
+	s0.cards_revealed[1] = [k0]
+	assert_true(bool(Reducer.apply(s0, Actions.make_link(k0.id, p0.id), 1).ok))
+	assert_eq(p0.remaining_stamina, 2, "aura_tamboer_stamina 0 = uit")
+
+
+func test_c21_aura_bereik_is_een_knop() -> void:
+	var s := _c21_staat()
+	s.rules.campaign["aura_bereik"] = 2
+	var aanvaller: Pawn = _c21_actief(s, 1, Vector2i(5, 5), 3, 3, 1)
+	var vaandel: Pawn = s._spawn_pawn(1, Vector2i(3, 7), Constants.UnitType.INFANTRY)
+	vaandel.rol = "flag"
+	assert_eq(Rules.effectieve_attack(s, aanvaller), 2, "bereik 2: twee vakken diagonaal telt")
+	var ver: Pawn = _c21_actief(s, 1, Vector2i(6, 4), 3, 3, 1)
+	assert_eq(Rules.effectieve_attack(s, ver), 1, "drie vakken ver valt erbuiten")

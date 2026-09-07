@@ -269,7 +269,7 @@ static func _resolve_melee(state: GameState, attacker: Pawn, defender: Pawn, res
 	attacker.card_revealed = true
 	if defender.is_active:
 		defender.card_revealed = true
-	var damage: int = attacker.attack_value
+	var damage: int = effectieve_attack(state, attacker)  # C21: vaandel-aura
 	result.damage = damage
 	var vacated_pos: Vector2i = defender.position
 	if defender.is_active:
@@ -333,11 +333,12 @@ static func _has_free_neighbor(state: GameState, pos: Vector2i) -> bool:
 ## inf_shot_full_attack (default aan): volle Aanval-stat; uit = Attack-1
 ## (de v4.1-doc-variant, waarmee een Aanval-1-pion niet kan schieten).
 static func shot_damage(state: GameState, pawn: Pawn) -> int:
+	var atk: int = effectieve_attack(state, pawn)  # C21: vaandel-aura
 	match pawn.unit_type:
 		Constants.UnitType.INFANTRY:
-			return pawn.attack_value if state.rules.inf_shot_full_attack else maxi(pawn.attack_value - 1, 0)
+			return atk if state.rules.inf_shot_full_attack else maxi(atk - 1, 0)
 		Constants.UnitType.ARTILLERY:
-			return pawn.attack_value
+			return atk
 	return 0
 
 ## Stamina-kosten van een schot (config; default beide 1).
@@ -499,6 +500,40 @@ static func _boek_buit(state: GameState, slachtoffer: Pawn, winnaar: int,
 			state.cp[winnaar] = int(state.cp.get(winnaar, 0)) + cp
 			result["buit_cp"] = int(result.get("buit_cp", 0)) + cp
 			result["buit_rol"] = "drum"
+
+
+## C21 (besluit Max, 7 september): AURA van de figuranten. "Zo dwingen we de
+## spelers om ze ook echt daadwerkelijk te gebruiken." Een pion die in de
+## vorm om een EIGEN, levende tamboer staat krijgt bij het koppelen +1
+## stamina voor die cyclus (reducer._do_link); een pion die in de vorm om een
+## eigen vaandeldrager staat slaat en schiet +1 harder zolang hij daar staat
+## (effectieve_attack). De vorm is het blok om de drager: `aura_bereik`
+## vakken in elke richting, ook diagonaal (default 1 = de acht buurvakken).
+## De drager zelf hoort er niet bij; twee dragers stapelen niet (+1 is +1);
+## gekoppeld of niet maakt niet uit (zoals de buit sinds 4.3.2); dood is
+## dood. Zonder campagne-blok of met de knop op 0 gebeurt er niets.
+static func aura_bonus(state: GameState, pawn: Pawn, rol: String) -> int:
+	if pawn == null or not state.rules.campaign_actief():
+		return 0
+	var knop: String = "aura_tamboer_stamina" if rol == "drum" else "aura_vaandel_attack"
+	var bonus: int = int(state.rules.campaign.get(knop, 0))
+	if bonus <= 0:
+		return 0
+	var bereik: int = int(state.rules.campaign.get("aura_bereik", 1))
+	for ander in state.pawns.values():
+		if ander == pawn or ander.is_eliminated or ander.owner_id != pawn.owner_id:
+			continue
+		if String(ander.rol) != rol:
+			continue
+		if absi(ander.position.x - pawn.position.x) <= bereik and absi(ander.position.y - pawn.position.y) <= bereik:
+			return bonus
+	return 0
+
+
+## Aanval van een pion inclusief de vaandel-aura (C21). Melee, charge en
+## schot lezen hier hun schade; de kaartwaarde zelf blijft op de pion staan.
+static func effectieve_attack(state: GameState, pawn: Pawn) -> int:
+	return pawn.attack_value + aura_bonus(state, pawn, "flag")
 
 
 static func _empty_attack_result() -> Dictionary:

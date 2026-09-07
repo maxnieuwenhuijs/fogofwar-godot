@@ -437,15 +437,42 @@ zelf aan tijdens het opstellen: het zijn losse plaats-stappen, net als kanonnen.
 | Wat | Regel |
 |---|---|
 | Waar de rol woont | Op de pion, in de staat (`Pawn.rol`). Hij verhuist nooit naar een andere pion. |
-| Koppelen | De drager bergt zijn vaandel op en is een gewone soldaat. Geen buit. |
+| Koppelen | De rol blijft op de pion staan; sinds 4.3.2 levert ook een gekoppelde drager buit op. |
 | Ontkoppelen | Hij pakt zijn eigen vaandel weer op. |
 | Vaandeldrager neerleggen | De aanvaller krijgt **2 versterkingspunten** (`buit_vaandel_pt`). |
 | Tamboer neerleggen | De aanvaller krijgt **2 CP** (`buit_tamboer_cp`). |
-| Voorwaarde | Het slachtoffer moet op dat moment ONgekoppeld zijn: alleen wie draagt, kan zijn vaandel verliezen. |
+| Voorwaarde | Geen (4.3.2). Tot 4.3.1 moest het slachtoffer ongekoppeld zijn, maar die regel was aan het bord niet af te lezen: de koppeling is geheim tot de onthulling. |
 | Zonder campagne-blok | Rollen bestaan niet; een opstelling met rollen wordt geweigerd (4.1 blijft byte-identiek). |
 | Gespawnde versterkingen | Krijgen geen rol: alleen wie bij het opstellen is aangewezen, draagt. |
 
 De prijs is bewust laag genoeg om geen doel op zich te zijn (2 punten = één
 soldaat, 2 CP = één punt na de 2:1-ruil), maar hoog genoeg om je te laten
 nadenken over waar je je standbeelden parkeert.
+
+## C21 — Aura van tamboer en vaandel (4.3.3)
+
+*Besluit Max, 7 september 2026: "een drummer en een vaandeldrager geven in een
+vorm om zich heen een buff: +1 stamina bij de trom, +1 attack bij het vaandel.
+Zo dwingen we de spelers om ze ook echt daadwerkelijk te gebruiken."*
+
+Tot nu toe waren de dragers alleen buit voor de tegenstander (C15). Nu doen ze
+ook iets voor hun eigen leger, en dat verschuift de vraag "waar zet ik ze" van
+"zo ver mogelijk van de vijand" naar "bij de troepen die ze nodig hebben".
+
+| Wat | Regel |
+|---|---|
+| De vorm | Het blok om de drager: `aura_bereik` vakken in elke richting, ook diagonaal (default 1 = de acht buurvakken). De drager zelf staat er niet in. |
+| Tamboer | Een eigen pion die **bij het koppelen** in de vorm om een levende tamboer staat, krijgt die cyclus **+1 stamina** (`aura_tamboer_stamina`). Alleen de voorraad; `max_stamina` (en dus de dracht van een kanon) groeit niet mee. |
+| Vaandeldrager | Een eigen pion die in de vorm om een levend vaandel staat, slaat en schiet **+1** (`aura_vaandel_attack`) zolang hij daar staat: melee, charge, infanterieschot en kanonschot. |
+| Stapelen | Nee. Twee tamboers naast je is nog steeds +1; een tamboer én een vaandel is +1 stamina én +1 attack. |
+| Gekoppeld of niet | Maakt niet uit, zoals de buit sinds 4.3.2: de rol zit op de pion. Dood is dood. |
+| Wanneer stamina | Alleen op het moment van koppelen: stamina is een cyclusvoorraad die daar wordt uitgedeeld. De tamboer mag daarna weglopen; wie zijn +1 heeft, houdt hem die cyclus. Waar je je troepen aan het eind van de vorige cyclus laat staan, bepaalt dus wie er bij het koppelen naast de trom staat. |
+| Zichtbaar | De rol staat in de fog-view (4.3.2), dus ook de aura van de vijand is af te lezen. |
+| Zonder campagne-blok | Rollen bestaan niet, dus ook geen aura (4.1 blijft byte-identiek). |
+| Knoppen | `aura_bereik` (1), `aura_tamboer_stamina` (1), `aura_vaandel_attack` (1); 0 = uit. |
+
+Implementatie: `Rules.aura_bonus` en `Rules.effectieve_attack` (melee, charge en
+schot lezen daar hun schade), `Reducer._do_link` (de stamina). De bots kennen
+de aura: `effectieve_attack` zit in hun kill-check en in de Hard-sortering, en
+`aura_waarde` (leerbaar) beloont eigen actieve pionnen in een eigen aura.
 

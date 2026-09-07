@@ -362,3 +362,54 @@ func test_c15_hard_zet_de_dragerkill_vooraan() -> void:
 	var op_gewoon: Dictionary = {"type": "attack", "attacker_id": jager.id, "defender_id": gewoon.id}
 	assert_true(ai._quick(s, Constants.PLAYER_1, op_drager) > ai._quick(s, Constants.PLAYER_1, op_gewoon),
 		"de drager-kill sorteert voor de gewone kill")
+
+
+# =========================================================================
+# C21-aura in de bot (7 september 2026): de eval waardeert eigen pionnen in
+# de vorm om tamboer en vaandel, en de kill-check rekent met de aura-attack.
+# =========================================================================
+
+func test_c21_eval_waardeert_pionnen_in_de_aura() -> void:
+	var ai = preload("res://scripts/ai/AIController.gd").new()
+	ai.player_id = Constants.PLAYER_1
+	var s := _buit_staat()
+	var soldaat: Pawn = _actieve_pion(s, Constants.PLAYER_1, Vector2i(5, 8), 2, 2, 2)
+	_actieve_pion(s, Constants.PLAYER_2, Vector2i(5, 2), 2, 2, 2)
+	var trom: Pawn = s._spawn_pawn(Constants.PLAYER_1, Vector2i(4, 9), Constants.UnitType.INFANTRY)
+	trom.rol = "drum"   # diagonaal naast de soldaat: in de vorm
+	var met_trom: int = ai.evaluate(s, Constants.PLAYER_1)
+	# De trom zelf is ook een pion (material) en een drager (hoede-term is 0:
+	# niemand kan hem pakken), dus vergelijk met en zonder aura_waarde.
+	ai.weights.aura_waarde = 0.0
+	var zonder_waarde: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.aura_waarde = 6.0
+	_assert_ongeveer(met_trom - zonder_waarde, 6, "een actieve pion in de trom-vorm = 1 x aura_waarde")
+	# Een vaandel erbij: nog een aura (per pion per aura).
+	var vaandel: Pawn = s._spawn_pawn(Constants.PLAYER_1, Vector2i(6, 9), Constants.UnitType.INFANTRY)
+	vaandel.rol = "flag"
+	var met_beide: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.aura_waarde = 0.0
+	var zonder2: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.aura_waarde = 6.0
+	_assert_ongeveer(met_beide - zonder2, 12, "trom en vaandel tellen allebei")
+	# Standbeelden tellen niet mee (die koppelen en slaan niet).
+	soldaat.unlink()
+	ai.weights.aura_waarde = 0.0
+	var st0: int = ai.evaluate(s, Constants.PLAYER_1)
+	ai.weights.aura_waarde = 6.0
+	assert_eq(ai.evaluate(s, Constants.PLAYER_1), st0, "een standbeeld in de vorm telt niet")
+
+
+func test_c21_kill_check_rekent_met_de_aura_attack() -> void:
+	# Een vijand met attack 1 naast mijn pion met 2 HP is geen bedreiging;
+	# naast ZIJN vaandel slaat hij 2 en is mijn pion ineens pakbaar.
+	var ai = preload("res://scripts/ai/AIController.gd").new()
+	ai.player_id = Constants.PLAYER_1
+	var s := _buit_staat()
+	var mijn: Pawn = _actieve_pion(s, Constants.PLAYER_1, Vector2i(5, 5), 2, 2, 1)
+	var vijand: Pawn = _actieve_pion(s, Constants.PLAYER_2, Vector2i(5, 4), 2, 2, 1)
+	assert_false(ai._is_killable(s, mijn), "attack 1 tegen 2 HP: veilig")
+	var vaandel: Pawn = s._spawn_pawn(Constants.PLAYER_2, Vector2i(4, 3), Constants.UnitType.INFANTRY)
+	vaandel.rol = "flag"
+	assert_true(ai._is_killable(s, mijn), "met het vijandelijke vaandel naast hem slaat hij 2")
+	assert_false(ai._is_killable(s, vijand), "andersom geldt dat niet (mijn attack 1, zijn 2 HP)")

@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "9eab0e24e09144895124c43d45f4bbcaabadf72e79b98687828b3b610251ca91",
+			"hash": "21e3cd09a7604edac8fc2e1b3099908634553db9bb0bf53b89a2df462c4b1566",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788780325.37
+			"ts": 1788792653.825
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "ac7c620f606e2800e89c6bc09c3866bfaab3ef9f8eaf47505e825c7bb6362146",
+			"hash": "52bed401e39b4f440b6d7c89a0a075bc8b17fe2dc99249fb41aa83b24d4733a2",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788780325.37
+			"ts": 1788792653.826
 		}
 	],
-	"final_hash": "ac7c620f606e2800e89c6bc09c3866bfaab3ef9f8eaf47505e825c7bb6362146",
+	"final_hash": "52bed401e39b4f440b6d7c89a0a075bc8b17fe2dc99249fb41aa83b24d4733a2",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -279,6 +279,9 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"aura_bereik": 1,
+				"aura_tamboer_stamina": 1,
+				"aura_vaandel_attack": 1,
 				"budget_bonus": {},
 				"buit_tamboer_cp": 2,
 				"buit_vaandel_pt": 2,
@@ -342,7 +345,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.2",
+			"rules_version": "4.3.3",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0
@@ -363,7 +366,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-07T13:25:25",
+		"created": "2026-09-07T16:50:53",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -521,6 +524,9 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"aura_bereik": 1,
+					"aura_tamboer_stamina": 1,
+					"aura_vaandel_attack": 1,
 					"budget_bonus": {},
 					"buit_tamboer_cp": 2,
 					"buit_vaandel_pt": 2,
@@ -584,7 +590,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.2",
+				"rules_version": "4.3.3",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0
@@ -604,6 +610,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.2"
+		"rules_version": "4.3.3"
 	}
 }

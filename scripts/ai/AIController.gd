@@ -210,6 +210,12 @@ static func default_weights() -> Dictionary:
 		# buit stond vooraan te wachten.
 		"drager_front": -1.0,
 		"drager_center": 0.0,
+		# C21-aura (leerbaar, 7 september): wat het waard is om een actieve
+		# pion in de vorm om een eigen tamboer of vaandel te hebben staan
+		# (+1 stamina bij het koppelen, +1 attack bij het slaan). Per pion per
+		# aura, zero-sum. IJk: een HP is 3, een kaartpunt stamina of attack is
+		# meer waard dan een HP, dus 6.
+		"aura_waarde": 6.0,
 		# cp_bet_rN: gewenste CP-inzet per setup-ronde (geklemd op saldo en
 		# kaartaantal). Default = de bewezen heuristiek: alles op ronde 3.
 		"cp_bet_r1": 0.01,
@@ -549,6 +555,10 @@ func evaluate(state: GameState, me: int) -> int:
 	var opp_dragers: int = 0
 	var my_buit_risk: float = 0.0
 	var opp_buit_kans: float = 0.0
+	# C21-aura
+	var campagne: bool = state.rules.campaign_actief()
+	var my_aura: int = 0
+	var opp_aura: int = 0
 	for pawn in state.pawns.values():
 		if pawn.is_eliminated:
 			continue
@@ -593,6 +603,19 @@ func evaluate(state: GameState, me: int) -> int:
 				opp_dragers += 1
 				if pakbaar:
 					opp_buit_kans += _buit_waarde(state, pawn)
+		# C21-aura: actieve pionnen in de vorm om een eigen tamboer of vaandel.
+		# Waar je je troepen laat EINDIGEN bepaalt wie bij het koppelen +1
+		# stamina krijgt, en wie naast het vaandel staat slaat harder.
+		if pawn.is_active and campagne:
+			var in_aura: int = 0
+			if Rules.aura_bonus(state, pawn, "drum") > 0:
+				in_aura += 1
+			if Rules.aura_bonus(state, pawn, "flag") > 0:
+				in_aura += 1
+			if mine:
+				my_aura += in_aura
+			else:
+				opp_aura += in_aura
 		# Vuurdreiging: hoeveel doelwitten hebben mijn schutters NU in de vuurlijn?
 		if pawn.is_active and pawn.unit_type != Constants.UnitType.CAVALRY:
 			var shots: int = Rules.get_valid_shot_targets(state, pawn.id).size()
@@ -627,6 +650,7 @@ func evaluate(state: GameState, me: int) -> int:
 	if state.rules.campaign_actief():
 		score += float(state.pool_total(me) - state.pool_total(opp)) * float(weights.get("reserve_pt", 20.0))
 		score += float(int(state.cp.get(me, 0)) - int(state.cp.get(opp, 0))) * float(weights.get("reserve_cp", 10.0))
+		score += float(my_aura - opp_aura) * float(weights.get("aura_waarde", 6.0))
 	score += (my_ranged - opp_ranged) * weights.get("ranged", 40.0)
 	score += (my_reach - opp_reach) * weights.reach
 	# WANHOOP-MODUS (besluit Max, 27 juli): met minder dan 7 eigen pionnen is
@@ -654,7 +678,7 @@ func _is_killable(state: GameState, pawn: Pawn) -> bool:
 		var enemy: Pawn = state.get_pawn_at(neighbor)
 		if enemy != null and not enemy.is_eliminated and enemy.owner_id != pawn.owner_id \
 				and enemy.is_active and enemy.remaining_stamina >= 1 \
-				and enemy.attack_value >= pawn.current_hp:
+				and Rules.effectieve_attack(state, enemy) >= pawn.current_hp:
 			return true
 	return false
 

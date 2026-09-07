@@ -81,6 +81,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `data/matchup_<factie>.txt`. De arena meet `buit_pt`/`buit_cp`/
   `dragers_verloren`. Bot-wijziging = `golden_sims.json` opnieuw ijken en
   de `-- uispel`-digest opnieuw meten; de golden replays blijven staan.
+- **C21-aura (4.3.3, 7 september)**: de tamboer en het vaandel doen ook iets
+  voor het EIGEN leger. Een pion die bij het koppelen in het blok van acht
+  vakken om een levende eigen tamboer staat krijgt die cyclus +1 stamina
+  (alleen de voorraad, niet de dracht); wie in het blok om een eigen vaandel
+  staat slaat en schiet +1 zolang hij daar staat. Niet stapelbaar, gekoppeld
+  of niet, alleen eigen pionnen. Knoppen `aura_bereik`,
+  `aura_tamboer_stamina`, `aura_vaandel_attack` (0 = uit). Engine:
+  `Rules.aura_bonus`/`Rules.effectieve_attack` en `Reducer._do_link`; bots:
+  `aura_waarde` (leerbaar). Nog open: de vorm op het bord tekenen.
 - **Regelversies zijn heilig.** 4.1.10-hr = het huidige spel; 4.2.0 = de
   campagne-economie, config-gated door het `campaign`-blok (zonder blok speelt
   álles byte-identiek 4.1.x). Spec: `docs/spelregels-v4.2.md` (Deel A = 4.1,
@@ -199,9 +208,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `8d6aafaa…` geven (231 acties, cyclus 5). Was
-  `890b6cb4…` met 270 acties en cyclus 6 tot regelversie 4.3.1; 4.3.2
-  (buit ook op een gekoppelde drager) rekent anders, en dat werkt door in
+  eind-zobrist; seed 777 moet `c5db0ff3…` geven (243 acties, cyclus 6, sinds
+  4.3.3). Was `8d6aafaa…` (231, cyclus 5) onder 4.3.2 en `890b6cb4…` (270,
+  cyclus 6) tot 4.3.1: elke regelwijziging rekent anders, en dat werkt door in
   het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
   user://ref_na.json easy easy muis wolf 777` gevolgd door `python
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
@@ -333,6 +342,9 @@ en dat is nu op vier punten gebeurd:
 - **C15-buit (4.3.2).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
   tamboer 2 CP, gekoppeld of niet. Sinds 7 september jagen de bots er ook op
   en telt de trainer het mee.
+- **C21-aura (4.3.3, 7 september).** Tamboer = +1 stamina bij het koppelen voor
+  wie in de acht vakken om hem heen staat; vaandel = +1 attack zolang je erin
+  staat. De bord-markering van de vorm is nog open.
 - **C19 — de facties staan (8 augustus).** Zie de tabel bij de kernregels
   hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 44,7-56,7%;
   was 28-76% in juli.

@@ -70,7 +70,7 @@ var campaign = null
 
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
-## rules_version naar 4.3.1 (C15-buit bovenop V0); zonder blok speelt de
+## rules_version naar 4.3.3 (C15-buit en C21-aura bovenop V0); zonder blok speelt de
 ## engine exact 4.1.x.
 const CAMPAIGN_DEFAULTS := {
 	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
@@ -85,15 +85,23 @@ const CAMPAIGN_DEFAULTS := {
 	# Vaste puntenreserve voor beide spelers (besluit Max, 30 juli): een 1v1
 	# start met 15 punten, ongeacht de doctrine-comp. 0 = uit, dan rekent
 	# poolfactor x comp het bedrag uit zoals voorheen (campagne doet dat).
-	# C15 (besluit Max, 30 juli): BUIT op figuranten. Wie een dragende
-	# vaandeldrager neerlegt krijgt versterkingspunten, wie een tamboer neerlegt
-	# CP. Alleen als het slachtoffer op dat moment ONgekoppeld is -- dan draagt
-	# hij het vaandel ook echt. 0 = uit.
+	# C15 (besluit Max, 30 juli): BUIT op figuranten. Wie een vaandeldrager
+	# neerlegt krijgt versterkingspunten, wie een tamboer neerlegt CP;
+	# gekoppeld of niet (4.3.2, 7 september). 0 = uit.
 	"buit_vaandel_pt": 2,
 	"buit_tamboer_cp": 2,
 	# Hoeveel je er bij het opstellen mag aanwijzen (per speler).
 	"vaandels_max": 2,
 	"tamboers_max": 2,
+	# C21 (besluit Max, 7 september): AURA. Een eigen pion in de vorm om een
+	# tamboer krijgt bij het koppelen +1 stamina voor die cyclus; in de vorm om
+	# een vaandeldrager slaat en schiet hij +1 harder. De vorm is het blok om
+	# de drager (aura_bereik vakken in elke richting, ook diagonaal; 1 = de
+	# acht buurvakken). De drager zelf hoort er niet bij, twee dragers
+	# stapelen niet, gekoppeld of niet maakt niet uit. 0 = uit.
+	"aura_bereik": 1,
+	"aura_tamboer_stamina": 1,
+	"aura_vaandel_attack": 1,
 	# C17 (besluit Max, 31 juli): EEN REGELSET, en dat is de campagne. "De 1v1 is
 	# gewoon een afgeleide van de campagne: in plaats van meerdere duels speel je
 	# er een, en dus heb je iets gedowngrade CP en reinforcements, meer niet."
@@ -316,8 +324,8 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
-		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1":
-			c.rules_version = "4.3.2"
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2":
+			c.rules_version = "4.3.3"
 	else:
 		c.campaign = null
 	return c

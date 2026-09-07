@@ -1,5 +1,64 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- 4.3.3: C21, de tamboer en het vaandel geven een buff
+
+Max: "Bouw ook in als spelregel dat een drummer en een vaandeldrager in een
+vorm om zich heen een buff geven. Dus als een model daarin staat heeft ie +1
+stamina bij de drum en bij de vaandel +1 atk. Zo dwingen we de spelers om ze
+ook echt daadwerkelijk te gebruiken."
+
+**De regel** (spec: `docs/spelregels-v4.2.md` C21, knoppen in het
+campagne-blok): de vorm is het blok om de drager, `aura_bereik` vakken in elke
+richting, ook diagonaal (default 1 = de acht buurvakken), de drager zelf niet.
+Wie **bij het koppelen** in de vorm om een levende eigen tamboer staat krijgt
+die cyclus +1 stamina (`aura_tamboer_stamina`; alleen `remaining_stamina`, de
+dracht van een kanon groeit niet mee). Wie in de vorm om een levend eigen
+vaandel staat slaat en schiet +1 (`aura_vaandel_attack`) zolang hij daar
+staat. Niet stapelbaar, gekoppeld of niet, alleen eigen pionnen, 0 = uit.
+
+**Twee keuzes die Max niet hardop maakte, dus hier vastgelegd.**
+1. "Een vorm" is het blok van acht geworden: de kleinste vorm die je in een
+   oogopslag afleest en waarin diagonaal meetelt. Het is een knop.
+2. Stamina bij het koppelen, attack bij het slaan. Stamina is in dit spel een
+   cyclusvoorraad die bij het koppelen wordt uitgedeeld (`reset_for_new_cycle`
+   ontkoppelt alles, `_do_link` vult); "zolang je ernaast staat" zou per pion
+   een extra stukje staat vergen (bonus al gebruikt of niet) dat je aan het
+   bord niet kunt volgen. Een aanval is een moment, dus daar geldt wel "zolang
+   je er staat". Gevolg voor het spel: waar je je troepen aan het EIND van een
+   cyclus laat staan, bepaalt wie er bij het koppelen naast de trom staat.
+
+**Engine.** `Rules.aura_bonus(state, pawn, rol)` en
+`Rules.effectieve_attack(state, pawn)`; `_resolve_melee` en `shot_damage`
+lezen daar hun schade (melee, charge, infanterie- en kanonschot);
+`Reducer._do_link` telt de trom-bonus op de voorraad. `rules_version`
+4.3.2 -> 4.3.3 met de overgang in `rules_config.gd`. Geen nieuw stukje staat:
+de bonus landt in `remaining_stamina`, en de rol was al zichtbaar in de view
+(4.3.2), dus ook de aura van de vijand is af te lezen.
+
+**Bots.** `Rules.effectieve_attack` in `_is_killable` en in `AIHard._quick`
+(een vijand met attack 1 naast zijn vaandel is een bedreiging voor 2 HP);
+`aura_waarde` (leerbaar, 6) beloont eigen actieve pionnen in een eigen aura,
+zero-sum. L1 blijft conservatief op de kaartwaarde.
+
+**Tests.** SpawnTests: `test_c21_vaandel_aura_geeft_attack` (melee, schot,
+diagonaal, afstand 2 niet, andermans vaandel niet, trom geeft geen attack,
+niet stapelen, gekoppeld wel, dood niet, knop uit, 4.1 niets),
+`test_c21_tamboer_aura_geeft_stamina_bij_koppelen` (via de reducer: +1 op de
+voorraad, max_stamina niet, buiten de vorm niet, de tamboer zelf niet, de
+vijand niet, knop uit) en `test_c21_aura_bereik_is_een_knop`. AITests:
+`test_c21_eval_waardeert_pionnen_in_de_aura` en
+`test_c21_kill_check_rekent_met_de_aura_attack`.
+
+**Metingen.** Testsuite: 2421 groen, 0 rood. Goldens opnieuw gegenereerd
+(`-- makegoldens`: de versiestring zit in de staat-hash). `-- simcheck`:
+alle vijf ijk-sims schuiven (777: cyclus 7 -> 12; 101: 18 -> 11; 202: 16 -> 9; 303: 13 -> 14; 404 kantelt van winnaar 2 naar 1 en gaat van 20 naar 8 cycli), tabel in de CHANGELOG, baseline opnieuw geijkt en daarna 0 afwijkingen. `-- uispel 777`: `c5db0ff3…`, 243 acties, cyclus 6 (was `8d6aafaa…`, 231, cyclus 5 onder 4.3.2).
+
+**Nog open (client, niet in deze stap):** de vorm op het bord tekenen bij het
+selecteren van of hoveren over een drager, en de +1 in de stat-blokjes tonen.
+De stamina-blokjes laten nu gewoon een vol rijtje zien als de voorraad boven
+de kaart uitkomt (`HP_COLS` vaste kolommen, dus geen overflow). Dit hoort bij
+de sessie die vandaag het rol-icoon bouwde (685d58f).
+
 ## 7 september -- de bots jagen op de buit, en de trainer telt het mee
 
 Max: "het moet nu ook wel worden meegenomen in de training run dat de

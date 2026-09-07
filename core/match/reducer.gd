@@ -273,6 +273,10 @@ static func _do_link(state: GameState, action: Dictionary, player_id: int, event
 	# 2 HP en een kaart-HP telt daar bovenop. {} = byte-identiek 4.1.
 	var basis: int = int(state.rules.basis_hp.get(["inf", "cav", "art"][pawn.unit_type], 0))
 	pawn.link_card(card, int(doctrine.hp_bonus) + basis, speed_bonus)
+	# C21 (7 september): gekoppeld in de vorm om een eigen tamboer = +1 stamina
+	# voor deze cyclus. Alleen de voorraad, niet max_stamina: de dracht van
+	# een kanon groeit niet mee met de trom.
+	pawn.remaining_stamina += Rules.aura_bonus(state, pawn, "drum")
 	# Vos: de toewijzing is gedekt tot de pion schade toebrengt of ontvangt (§6.6).
 	pawn.card_revealed = not doctrine.hidden_link
 	_ev(events, EV_STATE, {})

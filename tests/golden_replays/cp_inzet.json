@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "c85ef04f93306ac529622e3b8e9113d4998e985f34feec4ffce506e1c1ebd20a",
+			"hash": "4ab6a3b8b69d8590ce1c6b3c7084194e3dd0fe398bb6f19e468f2af6a22cfc3f",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788780325.353
+			"ts": 1788792653.809
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "cd35616a6d9649f792381d4c2fc1b779c2890bea3e898dd21ebd2f9c47cda235",
+			"hash": "769f181c29cbd83453bfb4edc9717b03015850366f4f5a4b157caa7734fad4f9",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788780325.354
+			"ts": 1788792653.81
 		},
 		{
 			"action": {
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "35c68cd50505761934e76f7a246d18f373e7f9a3ec05634916b77da23a2ca51a",
+			"hash": "a2b40d4183d3b4147423597ee73ff1a8f517a96fd60fb5745ea090a2a8b1db22",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1788780325.354
+			"ts": 1788792653.81
 		}
 	],
-	"final_hash": "35c68cd50505761934e76f7a246d18f373e7f9a3ec05634916b77da23a2ca51a",
+	"final_hash": "a2b40d4183d3b4147423597ee73ff1a8f517a96fd60fb5745ea090a2a8b1db22",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -248,6 +248,9 @@
 			"art_shot_cost": 1,
 			"basis_hp": {},
 			"campaign": {
+				"aura_bereik": 1,
+				"aura_tamboer_stamina": 1,
+				"aura_vaandel_attack": 1,
 				"budget_bonus": {},
 				"buit_tamboer_cp": 2,
 				"buit_vaandel_pt": 2,
@@ -311,7 +314,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.2",
+			"rules_version": "4.3.3",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0
@@ -332,7 +335,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-07T13:25:25",
+		"created": "2026-09-07T16:50:53",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -442,6 +445,9 @@
 				"art_shot_cost": 1,
 				"basis_hp": {},
 				"campaign": {
+					"aura_bereik": 1,
+					"aura_tamboer_stamina": 1,
+					"aura_vaandel_attack": 1,
 					"budget_bonus": {},
 					"buit_tamboer_cp": 2,
 					"buit_vaandel_pt": 2,
@@ -505,7 +511,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.2",
+				"rules_version": "4.3.3",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0
@@ -525,6 +531,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.2"
+		"rules_version": "4.3.3"
 	}
 }
