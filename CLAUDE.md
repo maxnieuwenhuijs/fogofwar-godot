@@ -114,6 +114,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   GEBOUWDE glb: onder de 90% dekking gaat hij er NIET in en zegt het script
   waarom. Een map met alleen texturen mag ook (dan alleen de jas wisselen).
   Normal-maps gaan er nooit in: de engine zet alleen een albedo-override.
+  Draait daarna zelf de vaste ronde (`--import`, `_wapencheck.gd`, `zweefcheck`
+  per geraakte factie, `tunercheck`) en vat de uitslag samen; `--geen-controles`
+  slaat dat over, `--godot <pad>` of `GODOT_PATH` wijst de binary aan. Alleen de
+  Model-tuner blijft handwerk.
 - **Modellen bouwen** (7 september): `python tools/bouw_modellen.py
   [--droogloop] [--factie <naam>] [--model <naam>] [--parallel N]`, of de
   paneelknoppen "Eerst kijken (verandert niets)" en "Modellen bouwen". Draait

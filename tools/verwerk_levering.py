@@ -37,6 +37,9 @@ import subprocess
 import sys
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+GODOT_STANDAARD = os.path.join(
+    "C:", os.sep, "Users", "maxni", "Downloads", "Godot_v4.7-stable_win64.exe",
+    "Godot_v4.7-stable_win64_console.exe")
 sys.path.insert(0, os.path.join(PROJ, "tools"))
 from bouw_modellen import (BLENDER_STANDAARD, plaats_uit_woorden,  # noqa: E402
                            stappen, woorden)
@@ -161,6 +164,64 @@ def past(glb, png, drempel):
     return max(scores) if scores else (0.0, "-")
 
 
+def _godot(godot, args):
+    r = subprocess.run([godot, "--headless", "--path", "."] + args,
+                       capture_output=True, text=True, errors="replace", cwd=PROJ)
+    return r.returncode, (r.stdout + r.stderr).splitlines()
+
+
+def controleer(godot, modellen, facties):
+    """De vaste controleronde na een bouw. Geeft het aantal problemen terug.
+
+    Precies de reeks uit MODEL-PIPELINE-CHECKLIST F/G die anders met de hand
+    getypt moest worden. Alleen de regels die over DIT werk gaan worden getoond:
+    op een halflege assets-map meldt wapencheck anders tientallen "GEEN MODEL"
+    voor alles wat nog niet geleverd is, en dat zegt niets over wat je net bouwde.
+    """
+    if not os.path.exists(godot):
+        print(f"  Godot niet gevonden ({godot}); controles overgeslagen.")
+        print("  Zet GODOT_PATH of gebruik --godot <pad>.")
+        return 0
+    problemen = 0
+
+    print("  importeren...")
+    code, _ = _godot(godot, ["--import"])
+    if code != 0:
+        print("  FOUT: de import van Godot gaf een foutcode")
+        problemen += 1
+
+    code, regels = _godot(godot, ["--script", "tools/_wapencheck.gd"])
+    for naam in modellen:
+        factie, model = naam.split("/")
+        arch = model.split("_")[-1]
+        soort = model.split("_")[0]
+        zoek = f"{soort} {factie}/{arch}:"
+        regel = next((l for l in regels if l.startswith(zoek)), None)
+        if regel is None:
+            print(f"  wapen  {naam}: geen uitslag van wapencheck")
+            problemen += 1
+        elif "GEEN MODEL" in regel:
+            print(f"  wapen  {naam}: FOUT, wapencheck ziet geen model")
+            problemen += 1
+        else:
+            print(f"  wapen  {naam}: {regel.split(':', 1)[1].strip()}")
+
+    for factie in sorted(facties):
+        code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "zweefcheck", factie])
+        regel = next((l for l in regels if "[ZWEEF]" in l), "")
+        ok = "(PASS)" in regel
+        problemen += 0 if ok else 1
+        print(f"  zweef  {factie}: {regel.replace('[ZWEEF] ', '') or 'geen uitslag'}")
+
+    code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "tunercheck"])
+    slot = next((l for l in regels if "klaar:" in l), "")
+    gevonden = next((l for l in regels if "modellen gevonden" in l), "")
+    if "0 fout" not in slot:
+        problemen += 1
+    print(f"  tuner  {gevonden.replace('[TUNER] ', '')} -- {slot.replace('[TUNER] klaar: ', '')}")
+    return problemen
+
+
 def main():
     p = argparse.ArgumentParser(description="Een complete levering (blend + texturen) in het spel zetten.")
     p.add_argument("map", help="de leveringsmap")
@@ -168,6 +229,9 @@ def main():
     p.add_argument("--blender", default=os.environ.get("BLENDER", BLENDER_STANDAARD))
     p.add_argument("--drempel", type=float, default=90.0, help="dekking waaronder een jas geweigerd wordt")
     p.add_argument("--droogloop", action="store_true", help="alleen tonen wat er zou gebeuren")
+    p.add_argument("--godot", default=os.environ.get("GODOT_PATH", GODOT_STANDAARD))
+    p.add_argument("--geen-controles", action="store_true",
+                   help="niet importeren en niet controleren na afloop")
     a = p.parse_args()
 
     if not os.path.isdir(a.map):
@@ -250,14 +314,19 @@ def main():
     if onbekend:
         print(f"  {len(onbekend)} map(pen) niet geplaatst (zie hierboven)")
     print()
-    if gebouwd or jassen:
-        print("Nu nog, in deze volgorde:")
-        print("  <godot> --headless --path . --import")
-        print("  <godot> --headless --path . --script tools/_wapencheck.gd")
-        print("  <godot> --path . res://tools/capture.tscn -- zweefcheck <factie>")
-        print("  <godot> --headless --path . res://tools/capture.tscn -- tunercheck")
-        print("Daarna de Model-tuner voor schaal en hoogte.")
-    return 1 if (fout or geweigerd or onbekend) else 0
+    problemen = 0
+    if (gebouwd or jassen) and not a.geen_controles:
+        print("Controleren:")
+        problemen = controleer(a.godot, sorted(set(gebouwd)),
+                               {n.split("/")[0] for n in gebouwd} or
+                               {x[0] for x in goed})
+        print()
+        if problemen == 0:
+            print("Alles klopt. Open de Model-tuner in het hoofdmenu voor schaal en hoogte;")
+            print("dat is het enige wat nog met de hand moet.")
+        else:
+            print(f"{problemen} probleem(en) hierboven -- laat Claude even meekijken.")
+    return 1 if (fout or geweigerd or onbekend or problemen) else 0
 
 
 if __name__ == "__main__":

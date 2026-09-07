@@ -132,6 +132,25 @@ function Start-Training([int]$minuten) {
     }
 }
 
+
+# Waar de mapkiezer opengaat. Max wees eerst steeds assets aan en moest dan
+# drie keer doorklikken; nu begint hij bij de map die hij het laatst koos, en
+# anders bij de leveringsinbox.
+$MapGeheugen = Join-Path $repo "results\laatste_map.txt"
+function Kies-Startmap {
+    if (Test-Path $MapGeheugen) {
+        $laatst = Get-Content $MapGeheugen -TotalCount 1
+        if ($laatst -and (Test-Path $laatst)) { return $laatst }
+    }
+    foreach ($kandidaat in @((Join-Path $repo "assets\new upload folder"), (Join-Path $repo "assets"))) {
+        if (Test-Path $kandidaat) { return $kandidaat }
+    }
+    return $repo
+}
+function Onthoud-Map([string]$pad) {
+    New-Item -ItemType Directory -Force (Split-Path $MapGeheugen) | Out-Null
+    Set-Content -Path $MapGeheugen -Value $pad -Encoding utf8
+}
 # --- 1. De nacht-knop: bots leren, daarna meten, rapport klaar bij het ontbijt.
 $kadNacht = Maak-Kader "Een hele nacht" 36 86
 Maak-Uitleg $kadNacht "Bots leren 7 uur, daarna meten ze zich en staat het rapport klaar."
@@ -322,10 +341,11 @@ $btnLevering.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $btnLevering.Add_Click({
     $kiezer = New-Object System.Windows.Forms.FolderBrowserDialog
     $kiezer.Description = "Kies de map met je .blend en de nieuwe texturen"
-    $start = Join-Path $repo "assets"
+    $start = Kies-Startmap
     if (Test-Path $start) { $kiezer.SelectedPath = $start }
     if ($kiezer.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
     $gekozen = $kiezer.SelectedPath
+    Onthoud-Map $gekozen
     $plan = Join-Path $repo "results\levering_plan.txt"
     New-Item -ItemType Directory -Force (Split-Path $plan) | Out-Null
     # De opdracht EERST in een variabele bouwen. Inline samenplakken binnen de
@@ -347,6 +367,9 @@ $btnLevering.Add_Click({
         $tekst + [Environment]::NewLine + [Environment]::NewLine +
         "Elk model wordt uit zijn .blend gebouwd, en de nieuwe jas wordt eerst tegen " +
         "dat model gemeten. Past hij niet, dan gaat hij er NIET in en hoor je waarom." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Daarna draait hij zelf de controles: importeren in Godot, zit het wapen " +
+        "goed vast, zweeft er niets, en vindt de tuner het model." +
         [Environment]::NewLine + [Environment]::NewLine +
         "Bestaande modellen met dezelfde naam worden overschreven. Doorgaan?",
         "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
@@ -399,7 +422,7 @@ $btnModellenBouw.Add_Click({
 })
 $kadModellen.Controls.Add($btnModellenBouw)
 $lblModellenHint = New-Object System.Windows.Forms.Label
-$lblModellenHint.Text = "Boven: een losse levering verwerken, of een model klaarmaken om te laten hertexturen. Onder: de hele map assets\new 3d models in een keer."
+$lblModellenHint.Text = "Boven: een losse levering verwerken (bouwen, jas meten, controles draaien), of een model klaarmaken om te laten hertexturen. Onder: de hele inbox in een keer."
 $lblModellenHint.Location = New-Object System.Drawing.Point(12, 122)
 $lblModellenHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblModellenHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
@@ -416,10 +439,11 @@ $btnRetexture.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $btnRetexture.Add_Click({
     $kiezer = New-Object System.Windows.Forms.FolderBrowserDialog
     $kiezer.Description = "Kies de map waar je .blend in staat"
-    $start = Join-Path $repo "assets"
+    $start = Kies-Startmap
     if (Test-Path $start) { $kiezer.SelectedPath = $start }
     if ($kiezer.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
     $gekozen = $kiezer.SelectedPath
+    Onthoud-Map $gekozen
     $blends = @(Get-ChildItem -Path $gekozen -Filter *.blend -Recurse -File -ErrorAction SilentlyContinue)
     if ($blends.Count -eq 0) {
         [System.Windows.Forms.MessageBox]::Show(

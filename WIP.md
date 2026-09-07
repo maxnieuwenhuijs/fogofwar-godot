@@ -1,5 +1,39 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- de knop doet nu ook de controles, en onthoudt je map
+
+Max' test slaagde ("OK model gebouwd / OK jas red erin (98.7% dekking)") en
+daarna twee terechte opmerkingen: "moet ik dit nu doen?" over de vier
+Godot-commando's die eronder stonden, en "het paneel moet dat dan ook doen he".
+
+**Controles zitten nu in `verwerk_levering.py`.** Na het bouwen draait hij zelf
+`--import`, `_wapencheck.gd`, `zweefcheck` per geraakte factie en `tunercheck`,
+en vat de uitslag samen. `--geen-controles` slaat het over, `--godot <pad>` of
+`GODOT_PATH` wijst de binary aan; ontbreekt Godot, dan slaat hij de ronde over
+met een nette melding in plaats van te struikelen.
+
+Alleen de regels die over DIT werk gaan komen in beeld. Op een halflege
+assets-map meldt wapencheck anders tientallen "GEEN MODEL" voor alles wat nog
+niet geleverd is, en dat zegt niets over wat je net bouwde. Uitvoer nu:
+
+```
+Controleren:
+  importeren...
+  wapen  mouse/infantry_mix: tripo_node_356d7a7b... beweegt-mee=true texture=true
+  zweef  mouse: meshes zichtbaar=65, meer dan 2 van hun pion: 0 (PASS)
+  tuner  1 modellen gevonden, 29 nog niet geleverd -- 0 fout(en)
+
+Alles klopt. Open de Model-tuner in het hoofdmenu voor schaal en hoogte;
+dat is het enige wat nog met de hand moet.
+```
+
+**Mapkiezer onthoudt waar je was.** Max: "kan je dan in het paneel de new upload
+folder als standaard pad openen dat ik niet zoveel hoef te klikken." Beide
+kiezers (levering en retexture) beginnen nu bij de map die je het laatst koos
+(`results/laatste_map.txt`), anders bij `assets/new upload folder`, anders bij
+`assets`. Verdwijnt de onthouden map, dan valt hij netjes terug. Alle drie de
+takken getest.
+
 ## 7 september -- team-herkenning stuk als je de modelmap zelf aanwijst
 
 Max: "hij zegt team onbekend terwijl hij zit in folder red." Klopte. `team_uit`
