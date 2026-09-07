@@ -102,7 +102,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - **Paneel** (Max' knoppen, herbouw 28-07 in gewone taal): `"FogOfWar
   Paneel.bat"` → TRAINING-NACHT (pijplijn), Bots laten leren, Bots laten
   spelen (meting), Bekijk het rapport, Map in het spel zetten, Model
-  klaarmaken voor retexture, Inbox bouwen, STOP alles. Meet-gereedschap voor
+  klaarmaken voor retexture, STOP alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
 - **Een levering in het spel zetten** (7 september): `python
@@ -118,9 +118,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   per geraakte factie, `tunercheck`) en vat de uitslag samen; `--geen-controles`
   slaat dat over, `--godot <pad>` of `GODOT_PATH` wijst de binary aan. Alleen de
   Model-tuner blijft handwerk.
-- **Modellen bouwen** (7 september): `python tools/bouw_modellen.py
-  [--droogloop] [--factie <naam>] [--model <naam>] [--parallel N]`, of de
-  paneelknoppen "Eerst kijken (verandert niets)" en "Modellen bouwen". Draait
+- **Een hele blend-inbox bouwen** (7 september, alleen CLI -- de paneelknoppen
+  zijn er op 7 september weer uit gehaald omdat Max met losse leveringen werkt):
+  `python tools/bouw_modellen.py [--droogloop] [--factie <naam>]
+  [--model <naam>] [--parallel N]`. Draait
   per .blend in `assets/new 3d models/` de drie Blender-stappen uit
   MODEL-PIPELINE-CHECKLIST sectie C en herkent factie/type/archetype uit de
   (rommelige) bestandsnamen. Draai altijd eerst de droogloop. Wat hij niet

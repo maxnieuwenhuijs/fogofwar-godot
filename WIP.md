@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- leveringsindeling factie/model/kleur, inbox-knoppen eruit
+
+Max: "factie -> model -> en dan twee mapjes met kleur zodat je in 1x beide teams
+kan uploaden is dat goed?" Ja, en het is beter dan wat hij eerst deed
+(`mouse/red/infantry_mix`): de .blend staat er nu een keer in plaats van per
+team, dus een ronde bouwt het model en zet er twee jassen op.
+
+    mouse/infantry_mix/            infantry_mix_mouse.blend
+    mouse/infantry_mix/blue/       ...-color.png
+    mouse/infantry_mix/red/        ...-color.png
+
+`verwerk_levering.py` liep hier meteen op, zonder aanpassing: `os.walk` levert de
+ouder voor de kinderen, dus de blend-post bouwt het model en de twee kleurposten
+leggen daarna hun jas erop. Uitslag: model gebouwd, blauw 98,8%, rood 98,7%,
+wapencheck beweegt-mee=true, zweefcheck PASS, tunercheck 0 fouten.
+
+De map met alleen een .blend en geen png geeft geen "team onbekend"-waarschuwing
+meer -- die staat alleen bij een map die wel jassen draagt.
+
+**Paneelknoppen "Inbox: eerst kijken" en "Inbox: alles bouwen" verwijderd**
+(Max: "die gebruik ik toch niet"). Het kader "Modellen bouwen" houdt twee
+knoppen over en krimpt van 162 naar 122; de noodrem van y=864 naar 824 en het
+venster van 1008 naar 968. Kaders eindigen op 910 in een clienthoogte van 929,
+dezelfde onderrand als altijd, geen overlap.
+
+`tools/bouw_modellen.py` blijft WEL bestaan: `verwerk_levering.py` leent er
+`plaats_uit_woorden()`, `stappen()` en `woorden()` uit, en voor de bulk-inbox
+van dertig blends is het nog steeds het juiste gereedschap. Alleen niet meer
+vanaf een knop.
+
 ## 7 september -- de knop doet nu ook de controles, en onthoudt je map
 
 Max' test slaagde ("OK model gebouwd / OK jas red erin (98.7% dekking)") en

@@ -41,7 +41,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 1008)
+$form.Size = New-Object System.Drawing.Size(470, 968)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -328,7 +328,7 @@ $kadKijk.Controls.Add($lblKijkHint)
 # --- 7. Modellen bouwen uit de blend-inbox.
 # Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
 # Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
-$kadModellen = Maak-Kader "Modellen bouwen" 696 162
+$kadModellen = Maak-Kader "Modellen bouwen" 696 122
 Maak-Uitleg $kadModellen "Een map met een .blend en de nieuwe texturen erin gaat in een keer het spel in."
 # Hoofdknop: een complete levering (een map met de .blend EN de nieuwe texturen)
 # in een keer verwerken. Eerst de droogloop tonen en om bevestiging vragen; die
@@ -380,50 +380,9 @@ $btnLevering.Add_Click({
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", $bouwen)
 })
 $kadModellen.Controls.Add($btnLevering)
-$btnInboxKijk = Maak-Knop $kadModellen "Inbox: eerst kijken" {
-    $uit = Join-Path $repo "results\modelbouw_indeling.txt"
-    New-Item -ItemType Directory -Force (Split-Path $uit) | Out-Null
-    Start-Process powershell -WorkingDirectory $repo -WindowStyle Hidden -Wait `
-        -RedirectStandardOutput $uit `
-        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-            "python tools/bouw_modellen.py --droogloop")
-    if (Test-Path $uit) { Invoke-Item $uit }
-    else {
-        [System.Windows.Forms.MessageBox]::Show("Kon de lijst niet opbouwen. Staat Python op deze machine?",
-            "Fog of War") | Out-Null
-    }
-}
-# Maak-Knop zet elke knop op (12,42); de inbox-knoppen horen op rij twee.
-$btnInboxKijk.Location = New-Object System.Drawing.Point(12, 82)
-# Tweede knop: echt bouwen. Eigen bevestiging, want dit OVERSCHRIJFT modellen.
-$btnModellenBouw = New-Object System.Windows.Forms.Button
-$btnModellenBouw.Text = "Inbox: alles bouwen"
-$btnModellenBouw.Location = New-Object System.Drawing.Point(210, 82)
-$btnModellenBouw.Size = New-Object System.Drawing.Size(203, 34)
-$btnModellenBouw.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$btnModellenBouw.Add_Click({
-    $antwoord = [System.Windows.Forms.MessageBox]::Show(
-        "Elke .blend in de inbox wordt omgebouwd tot een spel-model." +
-        [Environment]::NewLine + [Environment]::NewLine +
-        "Bestaande modellen met dezelfde naam worden OVERSCHREVEN." +
-        [Environment]::NewLine +
-        "Reken op ongeveer een halve minuut per model, vier tegelijk." +
-        [Environment]::NewLine + [Environment]::NewLine +
-        "Er opent een venster waarin je ziet wat er gebeurt. Wat hij niet zeker " +
-        "kan plaatsen bouwt hij NIET, dat noemt hij aan het eind." +
-        [Environment]::NewLine + [Environment]::NewLine +
-        "Doorgaan?",
-        "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
-        [System.Windows.Forms.MessageBoxIcon]::Question)
-    if ($antwoord -ne [System.Windows.Forms.DialogResult]::Yes) { return }
-    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command",
-        "python tools/bouw_modellen.py")
-})
-$kadModellen.Controls.Add($btnModellenBouw)
 $lblModellenHint = New-Object System.Windows.Forms.Label
-$lblModellenHint.Text = "Boven: een losse levering verwerken (bouwen, jas meten, controles draaien), of een model klaarmaken om te laten hertexturen. Onder: de hele inbox in een keer."
-$lblModellenHint.Location = New-Object System.Drawing.Point(12, 122)
+$lblModellenHint.Text = "Links: een map met je .blend en de nieuwe texturen erin, bouwen plus jassen plus controles. Rechts: het kale lijf eruit om te laten hertexturen."
+$lblModellenHint.Location = New-Object System.Drawing.Point(12, 82)
 $lblModellenHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblModellenHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblModellenHint.ForeColor = [System.Drawing.Color]::DimGray
@@ -476,7 +435,7 @@ $btnRetexture.Add_Click({
 $kadModellen.Controls.Add($btnRetexture)
 
 # --- 8. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 864 86
+$kadStop = Maak-Kader "Noodrem" 824 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots
