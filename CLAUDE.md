@@ -89,7 +89,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   of niet, alleen eigen pionnen. Knoppen `aura_bereik`,
   `aura_tamboer_stamina`, `aura_vaandel_attack` (0 = uit). Engine:
   `Rules.aura_bonus`/`Rules.effectieve_attack` en `Reducer._do_link`; bots:
-  `aura_waarde` (leerbaar). Nog open: de vorm op het bord tekenen.
+  `aura_waarde` (leerbaar). **Op het bord:** elke tegel in de vorm krijgt een
+  minimale gloeiende rand in de kleur van het rol-icoon (goud = vaandel,
+  blauw = trom; beide op een tegel = goud buiten, blauw net daarbinnen;
+  vijand gedimd), en de stat-blokjes die uit de aura komen (stamina boven
+  de kaart, attack boven de kaart) krijgen een randje in dezelfde kleur.
+  Expres GEEN vlak (Max: "vreselijk"). Sterkte: knop `aura_gloed` in het
+  sfeer-paneel (toets L). Code: `_werk_aura_bij` in game.gd, per frame uit
+  de staat, telt mee in `render_digest` (herstelcheck).
 - **Regelversies zijn heilig.** 4.1.10-hr = het huidige spel; 4.2.0 = de
   campagne-economie, config-gated door het `campaign`-blok (zonder blok speelt
   álles byte-identiek 4.1.x). Spec: `docs/spelregels-v4.2.md` (Deel A = 4.1,
@@ -344,7 +351,8 @@ en dat is nu op vier punten gebeurd:
   en telt de trainer het mee.
 - **C21-aura (4.3.3, 7 september).** Tamboer = +1 stamina bij het koppelen voor
   wie in de acht vakken om hem heen staat; vaandel = +1 attack zolang je erin
-  staat. De bord-markering van de vorm is nog open.
+  staat. Op het bord: gloeiende tegelrand en gekleurde randjes om de extra
+  stat-blokjes.
 - **C19 — de facties staan (8 augustus).** Zie de tabel bij de kernregels
   hierboven, plus C20 (9 augustus: Krokodil +3 startpunten). Band 44,7-56,7%;
   was 28-76% in juli.

@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- C21 op het bord: gloeiende tegelrand en gekleurde blokjesrand
+
+Max: "geef dan een lichte glow om die tegels", en op de eerste versie: "nee
+vreselijk, laat alleen omliggende tegels een minimale gloed-rand hebben en dan
+ook de extra hp blokjes of stamina ook die zelfde kleur rand."
+
+**Wat er staat (`scripts/game/game.gd`).** Elke tegel in de vorm om een levende
+tamboer of vaandeldrager krijgt een dunne gloeiende rand in de kleur van het
+rol-icoon (`ROL_KLEUR`: goud = vaandel, blauw = trom). Per tegel een plat
+vlakje net boven de tegel (0.056, onder de highlights) met een vierkant
+verloop (`GradientTexture2D.FILL_SQUARE`, dezelfde Chebyshev-vorm als
+`Rules.aura_bonus`) dat pas bij de buitenste tien procent oplicht; additief,
+unshaded. Gelden beide auras op een tegel, dan staat de vaandelrand buiten
+(0.98) en de tromrand er net binnen (0.88): naast elkaar in plaats van wit op
+elkaar geteld. De vijand zijn vorm is ook zichtbaar (zijn rol staat sinds
+4.3.2 in de view en het icoon toont hem al), gedimd (0.6). De laag wordt per
+frame uit de staat afgeleid met een sleutel (alleen herbouwen als er iets
+verandert), telt mee in `render_digest` ("aura": rol:x,y per tegel) en heeft
+een sterkte-knop `aura_gloed` in het sfeer-paneel (toets L, effects_tuning).
+
+De stat-blokjes: elk blokje heeft nu een verborgen `ReferenceRect` als rand.
+Stamina-blokjes boven `max_stamina` (dat zijn de punten van de trom, bij het
+koppelen geteld) krijgen de blauwe rand; de attack-rij toont
+`Rules.effectieve_attack` en de blokjes boven `attack_value` (het vaandel,
+zolang de pion in de vorm staat) krijgen de gouden rand. Gedekte vijanden
+tonen zoals altijd alleen het vraagteken.
+
+**Wat eraf ging.** De eerste versie was een zacht vlak over de hele vorm
+(een groot verloop per drager). Op het bord werd dat een lichte waas, en met
+twee dragers naast elkaar bijna wit. Max keurde het af; de rand-versie is
+wat hij vroeg.
+
+**Checks.** `-- play` met venster voor de screenshots (headless slaat het
+schieten over), `-- herstelcheck 777` en `-- herstelcheck 4242 wolf`
+allebei PASS (147 en 114 momenten, 0 verschillen, canary 0); testgroep GameSession/UiAssets/ClientState/
+RemoteSession/View: 685 groen, 0 rood. Geen engine-wijziging, dus geen goldens.
+
 ## 7 september -- 4.3.3: C21, de tamboer en het vaandel geven een buff
 
 Max: "Bouw ook in als spelregel dat een drummer en een vaandeldrager in een

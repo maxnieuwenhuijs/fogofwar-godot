@@ -28,10 +28,14 @@ om ze ook echt daadwerkelijk te gebruiken."*
   de Hard-sortering; `aura_waarde` (leerbaar, default 6) beloont eigen actieve
   pionnen in een eigen aura, zero-sum. L1 blijft conservatief (rekent met de
   kaartwaarde, claimt dus nooit een kill die alleen met aura lukt).
-- **Client:** de rol staat sinds vandaag als icoon op de pion (685d58f). Nog
-  open: de vorm zelf op het bord tekenen en de +1 in de stat-blokjes tonen
-  (de stamina-blokjes laten nu gewoon een vol rijtje zien als de voorraad
-  boven de kaart uitkomt).
+- **Client (later op de dag):** de rol staat als icoon op de pion (685d58f),
+  en de vorm staat op het bord: elke tegel in de vorm krijgt een minimale
+  gloeiende rand in de kleur van het icoon (goud = vaandel, blauw = trom;
+  allebei op een tegel = goud buiten en blauw net daarbinnen; de vijand
+  gedimd). De stat-blokjes die uit de aura komen (stamina boven de kaart,
+  attack boven de kaart) krijgen een randje in dezelfde kleur. Een eerste
+  versie met een zacht vlak over de hele vorm keurde Max af ("vreselijk");
+  dit is de rand-versie. Sterkte: `aura_gloed` in het sfeer-paneel.
 
 `rules_version` 4.3.2 -> **4.3.3**. Goldens opnieuw gegenereerd (de
 versiestring zit in de staat-hash) en `golden_sims.json` opnieuw geijkt:

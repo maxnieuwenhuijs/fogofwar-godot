@@ -71,6 +71,8 @@ var _rim_light: DirectionalLight3D = null
 var _env: Environment = null
 var _grid_mat: StandardMaterial3D = null
 var _haven_mats: Array = []  # doorzichtige haven-plakkaten (rood/blauw)
+var _aura_gloed: Array = []       # C21: per aura-tegel {node, mat, basis, rol, pos}; de gloeiende rand
+var _aura_sleutel: String = ""    # C21: staat-sleutel van de gebouwde auras (alleen herbouwen bij verandering)
 var _ambiance_panel: PanelContainer = null
 var _dust_motes: Array = []
 var _footprints: Array = []  # blijven staan tot de cyclus voorbij is
@@ -163,6 +165,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_update_screen_shake(delta)
 	_update_health_bars()
+	_werk_aura_bij()
 	_update_context_knop()
 	if _timer_active:
 		_timer_left -= delta
@@ -1322,6 +1325,10 @@ func render_digest() -> Dictionary:
 	for h in _highlights:
 		highlights.append("%.2f,%.2f" % [h.position.x, h.position.z])
 	highlights.sort()
+	var aura: Array = []
+	for e in _aura_gloed:
+		aura.append("%s:%d,%d" % [String(e.rol), (e.pos as Vector2i).x, (e.pos as Vector2i).y])
+	aura.sort()
 	var tegels: Array = []
 	for t in _wolf_step_tiles:
 		tegels.append([t.x, t.y])
@@ -1343,6 +1350,7 @@ func render_digest() -> Dictionary:
 		"topbalk": _top_label.text,
 		"wolf": {"modus": _wolf_step_mode, "tegels": tegels},
 		"highlights": highlights,
+		"aura": aura,
 		"timer": _timer_active,
 		"selectie": _selected_pawn_id,
 	}
@@ -1635,6 +1643,113 @@ func _werk_rol_iconen_bij(state: GameState, total_w: float, total_h: float) -> v
 		lbl.position = Vector2(total_w * 0.5 - 5.0, total_h + 1.0)
 
 
+# --- C21-aura op het bord (7 september) ----------------------------------------
+
+## Een minimale gloeiende RAND op elke tegel in de vorm om een levende tamboer
+## (blauw: +1 stamina bij het koppelen) of vaandeldrager (goud: +1 attack), in
+## de kleuren van het rol-icoon; de tegel van de drager zelf niet. Max wilde
+## expres geen vlak ("vreselijk"): alleen de rand, en dezelfde kleurrand om
+## de stat-blokjes die uit de aura komen (zie _update_health_bars). Eén dun
+## vlak per tegel met een vierkant verloop dat alleen bij de rand oplicht,
+## additief, dus twee auras over dezelfde tegel worden iets lichter. Ook de
+## aura van de VIJAND is zichtbaar (zijn rol staat sinds 4.3.2 in de fog-view
+## en het icoon toont hem al), wat gedimder. Puur uit de staat afgeleid, dus
+## na een herstart identiek (render_digest telt de tegels mee). Sterkte: knop
+## `aura_gloed` in het sfeer-paneel (toets L) / effects_tuning.json.
+const AURA_HOOGTE := 0.056   # net boven de tegel (top 0.05), onder de highlights (vanaf 0.06)
+const AURA_ALPHA := 0.34     # sterkte van de rand; het verloop zelf is smal ("minimaal", Max)
+const AURA_VIJAND := 0.6
+
+
+func _werk_aura_bij() -> void:
+	var state: GameState = session.state if session != null else null
+	if state == null or _board == null or state.phase == Phase.Type.PRE_GAME \
+			or state.rules == null or not state.rules.campaign_actief():
+		_wis_aura()
+		return
+	var c: Dictionary = state.rules.campaign
+	var bereik: int = int(c.get("aura_bereik", 1))
+	var knoppen: Dictionary = {"drum": int(c.get("aura_tamboer_stamina", 0)), "flag": int(c.get("aura_vaandel_attack", 0))}
+	# Per tegel en rol: eigen aura wint van een vijandelijke (die is gedimd).
+	var tegels: Dictionary = {}
+	if bereik > 0:
+		for pawn in state.pawns.values():
+			var rol: String = String(pawn.rol)
+			if pawn.is_eliminated or not ROL_KLEUR.has(rol) or int(knoppen[rol]) <= 0:
+				continue
+			var eigen: bool = pawn.owner_id == _human_id
+			for dx in range(-bereik, bereik + 1):
+				for dy in range(-bereik, bereik + 1):
+					if dx == 0 and dy == 0:
+						continue
+					var vak := Vector2i(pawn.position.x + dx, pawn.position.y + dy)
+					if not Constants.is_on_board(vak):
+						continue
+					var key: String = "%s:%d,%d" % [rol, vak.x, vak.y]
+					if not tegels.has(key):
+						tegels[key] = {"rol": rol, "pos": vak, "eigen": eigen}
+					elif eigen:
+						tegels[key].eigen = true
+	var keys: Array = tegels.keys()
+	keys.sort()
+	var delen: PackedStringArray = []
+	for key in keys:
+		delen.append("%s%s" % [key, "+" if bool(tegels[key].eigen) else "-"])
+	var sleutel: String = "%d|%s" % [bereik, ",".join(delen)]
+	if sleutel == _aura_sleutel:
+		return
+	_wis_aura()
+	_aura_sleutel = sleutel
+	for key in keys:
+		var t: Dictionary = tegels[key]
+		_maak_aura_rand(t.pos, String(t.rol), bool(t.eigen))
+
+
+## Een dunne gloeiende rand op één tegel: vierkant verloop dat pas bij de
+## buitenste ~10% oplicht (zachte binnenkant, felle rand).
+func _maak_aura_rand(vak: Vector2i, rol: String, eigen: bool) -> void:
+	var kleur: Color = ROL_KLEUR[rol]
+	var basis: float = AURA_ALPHA * (1.0 if eigen else AURA_VIJAND)
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.80, 0.93, 1.0])
+	grad.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.0), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.55)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_SQUARE
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 96
+	tex.height = 96
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.albedo_texture = tex
+	mat.albedo_color = Color(kleur.r, kleur.g, kleur.b, basis * PawnView.fx("aura_gloed", 1.0))
+	var mesh := QuadMesh.new()
+	# Twee auras op een tegel: de vaandelrand buiten, de tromrand er net
+	# binnen, zodat ze naast elkaar staan in plaats van wit op te tellen.
+	var maat: float = 0.98 if rol == "flag" else 0.88
+	mesh.size = Vector2(maat, maat)
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	mi.position = tile_position(vak.x, vak.y) + Vector3(0.0, AURA_HOOGTE, 0.0)
+	_board.add_child(mi)
+	_aura_gloed.append({"node": mi, "mat": mat, "basis": basis, "rol": rol, "pos": vak})
+
+
+func _wis_aura() -> void:
+	for e in _aura_gloed:
+		if is_instance_valid(e.node):
+			e.node.queue_free()
+	_aura_gloed.clear()
+	_aura_sleutel = ""
+
+
 func _build_health_bars() -> void:
 	if _hp_layer == null:
 		return
@@ -1646,6 +1761,7 @@ func _build_health_bars() -> void:
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		holder.visible = false
 		var blocks: Array = []
+		var randen: Array = []
 		for r in HP_ROWS:
 			for c in HP_COLS:
 				var block := ColorRect.new()
@@ -1656,6 +1772,18 @@ func _build_health_bars() -> void:
 					r * (HP_BLOCK_SIZE + HP_BLOCK_GAP))
 				holder.add_child(block)
 				blocks.append(block)
+				# C21: rand in de aura-kleur om een blokje dat uit de aura komt
+				# (+1 stamina van de trom, +1 attack van het vaandel). Verborgen
+				# tot _update_health_bars hem aanzet.
+				var rand := ReferenceRect.new()
+				rand.editor_only = false
+				rand.border_width = 1.5
+				rand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				rand.size = Vector2(HP_BLOCK_SIZE + 3.0, HP_BLOCK_SIZE + 3.0)
+				rand.position = block.position - Vector2(1.5, 1.5)
+				rand.visible = false
+				holder.add_child(rand)
+				randen.append(rand)
 		# F0.6: "?"-label voor gedekte Krokodil-pionnen (stats zijn geheim; lege
 		# blokjes zouden 0-waarden lekken, dus de hele rij wordt een vraagteken).
 		var qlabel := Label.new()
@@ -1682,7 +1810,7 @@ func _build_health_bars() -> void:
 		holder.add_child(rol_lbl)
 		_hp_layer.add_child(holder)
 		_hp_bars[pawn.id] = {"holder": holder, "blocks": blocks, "qlabel": qlabel,
-			"rol": rol_lbl}
+			"rol": rol_lbl, "randen": randen}
 
 
 func _update_health_bars() -> void:
@@ -1711,14 +1839,33 @@ func _update_health_bars() -> void:
 		var covered: bool = session.pion_gedekt(pawn.id)
 		if entry.has("qlabel"):
 			entry.qlabel.visible = covered
+		var randen: Array = entry.get("randen", [])
 		if covered:
 			for b in blocks:
 				b.color = HP_COLOR_EMPTY
+			for rr in randen:
+				rr.visible = false
 			continue
+		# C21-aura: de stamina boven de kaart komt van de trom (bij het koppelen
+		# geteld, zit al in remaining_stamina); de attack boven de kaart komt van
+		# het vaandel en geldt zolang de pion in de vorm staat. Die extra blokjes
+		# krijgen een rand in de aura-kleur, zodat je ziet wat je aan de drager
+		# te danken hebt.
+		var attack_nu: int = Rules.effectieve_attack(state, pawn)
 		for c in HP_COLS:
 			blocks[c].color = HP_COLOR_HEALTH if c < pawn.current_hp else HP_COLOR_EMPTY
 			blocks[HP_COLS + c].color = HP_COLOR_STAMINA if c < pawn.remaining_stamina else HP_COLOR_EMPTY
-			blocks[2 * HP_COLS + c].color = HP_COLOR_ATTACK if c < pawn.attack_value else HP_COLOR_EMPTY
+			blocks[2 * HP_COLS + c].color = HP_COLOR_ATTACK if c < attack_nu else HP_COLOR_EMPTY
+			if randen.size() == blocks.size():
+				randen[c].visible = false
+				var trom: bool = c >= pawn.max_stamina and c < pawn.remaining_stamina
+				randen[HP_COLS + c].visible = trom
+				if trom:
+					randen[HP_COLS + c].border_color = ROL_KLEUR["drum"]
+				var vaandel: bool = c >= pawn.attack_value and c < attack_nu
+				randen[2 * HP_COLS + c].visible = vaandel
+				if vaandel:
+					randen[2 * HP_COLS + c].border_color = ROL_KLEUR["flag"]
 
 
 # --- State-sync --------------------------------------------------------------
@@ -2882,6 +3029,9 @@ func _apply_ambiance() -> void:
 	for pv in _pawn_views.values():
 		if is_instance_valid(pv):
 			(pv as PawnView).set_ring_glow(PawnView.fx("ring_glow", 1.0))
+	for e in _aura_gloed:
+		if is_instance_valid(e.node):
+			(e.mat as StandardMaterial3D).albedo_color.a = float(e.basis) * PawnView.fx("aura_gloed", 1.0)
 
 
 # --- Sfeer-paneel (toets L): live licht-sliders op het echte bord ------------
@@ -2907,6 +3057,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "grid_alpha", "label": "raster", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.3},
 	{"key": "haven_alpha", "label": "haven-zichtbaarheid", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.45},
 	{"key": "ring_glow", "label": "ring-gloed", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "aura_gloed", "label": "aura-gloed (trom en vaandel)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "footprint_dark", "label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},
