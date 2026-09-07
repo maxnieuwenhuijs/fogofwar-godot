@@ -1,5 +1,44 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- gemeten: de teamjassen overleven de nieuwe lichting (op een na)
+
+Max: "moet ik nu opnieuw retextureren of gaat het goed?" Op 6 en 7 september
+stond hier de verwachting dat nieuwe blends nieuwe UV's zouden geven en dat
+alle twintig jassen opnieuw door Tripo moesten. **Dat klopt niet.** Nu gemeten
+met `uv_check.py`, en de uitkomst is bijna overal goed.
+
+De vijf muis-cavalerie-modellen opnieuw gebouwd uit `assets/new 3d models/Mouse`
+(naar een kladmap, niet in assets/models) en de tien jassen uit `d5c87d7`
+ertegenaan gehouden:
+
+| jas | dekking | oordeel |
+|---|---|---|
+| cavalry_base rood+blauw | 99,8% | past |
+| cavalry_spd rood+blauw | 99,8% | past |
+| cavalry_hp rood+blauw | 99,8% | past |
+| cavalry_atk rood+blauw | 99,9% | past |
+| **cavalry_mix rood+blauw** | **75,2%** | **past nergens op** |
+| infantry_mix rood+blauw | 98,8% | past |
+
+**cavalry_mix is de enige echte fout, en hij is gratis te repareren.** Die twee
+jassen (bake `5d8cfcce`) passen op GEEN van de vijf cavalerie-modellen: hun beste
+score is 75,2% en dan nog op het vlakke `Material`, niet op een lijf. Ze horen
+bij een mesh die niet in het spel zit. Op 6 september viel al op dat die uuid
+bij geen enkel model hoorde; de conclusie daar ("een uuid die bij geen bestaand
+model hoort is gewoon een nieuwe bake en gaat er wel in") was FOUT.
+
+Nieuwe retexture is er niet voor nodig: **cavalry_mix draagt hetzelfde lijf als
+cavalry_base** (beide `tripo_material_ed40c828`), en `cavalry_base_red.png` /
+`_blue.png` scoren 99,8% op cavalry_mix. Als de cavalerie terugkomt, krijgt
+cavalry_mix dus gewoon de base-jas -- precies zoals het vóór 6 september al was.
+
+Reden dat de jassen het overleven: de nieuwe blends dragen **dezelfde meshes**
+(zelfde `tripo_material_<uuid>`), alleen beter gerigd en met wapen. Een jas
+sneuvelt pas als het lijf zelf opnieuw uitgevouwen wordt.
+
+Nog niet te meten: mouse infantry base/spd/hp/atk. Die .blends zijn nog niet
+geleverd; zodra ze er zijn is het een enkele `uv_check.py` per stuk.
+
 ## 7 september -- eerste model van de nieuwe lichting + twee nieuwe controles
 
 Max zette een complete levering neer in `assets/new upload folder/mouse/red/
