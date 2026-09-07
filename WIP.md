@@ -1,5 +1,33 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- Model-tuner: kleiner, breder, en niets valt meer weg
+
+Max: "fix de tuner ui zorg dat alles past gewoon simpele stijl ui buttons en
+gebruik meer van het scherm. kleinere fonts etc."
+
+Vier dingen zaten fout, en ze versterkten elkaar:
+
+- **Het paneel was 430 vaste pixels hoog.** Op een groot scherm bleef de rest
+  ongebruikt, terwijl de rijen er tegelijk uitliepen. Nu op ANKERS
+  (`anchor_top = 0.44`), dus het pakt 56% van de schermhoogte en schaalt mee
+  zonder resize-afhandeling.
+- **De tabs konden niet scrollen.** Wat niet paste was gewoon weg: geen balk,
+  geen melding. Alle zeven tabs zitten nu in een ScrollContainer.
+- **Sliders hadden een vaste breedte** (280 en 200 px) en duwden bij een smal
+  venster de spinboxes buiten beeld. Nu `SIZE_EXPAND_FILL` met een klein
+  minimum, dus ze krimpen mee.
+- **Alles op de standaardlettergrootte.** Nieuw `_tuner_thema()`: 12 punt over
+  de hele linie, vlakke knoppen met een dunne rand en 3 px hoeken, op het paneel
+  gezet zodat alles eronder het erft in plaats van een override per widget.
+
+`-- tunercheck` bewaakt het nu ook: het meldt hoeveel schermhoogte het paneel
+pakt (FOUT onder de 40%) en of elke tab kan scrollen (FOUT zodra er een niet
+kan). Zo hoeft de tuner niet met de hand geopend te worden om te zien dat er
+iets afgekapt raakt:
+
+    [TUNER] paneel pakt 56% van de schermhoogte
+    [TUNER] tabs: 7, waarvan scrollbaar 7 (Model, In de hand, Geluid, Melee, Gore, Bloed, Rook)
+
 ## 7 september -- het scheve musket: de bot-kind-fix deéd het
 
 Max, met een schermafdruk: "het wapen blijft gedraaid en niet goed hoe kan dat

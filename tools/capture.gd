@@ -768,6 +768,33 @@ func _ready() -> void:
 				await get_tree().process_frame
 				await get_tree().process_frame
 				print("[TUNER] scene opgebouwd: %d kind-nodes" % t.get_child_count())
+				# UI-vorm: pakt het paneel genoeg scherm, en kan elke tab scrollen?
+				var pnl: PanelContainer = null
+				for kind in t.find_children("*", "PanelContainer", true, false):
+					pnl = kind as PanelContainer
+					break
+				if pnl != null:
+					var deel: float = 1.0 - pnl.anchor_top
+					print("[TUNER] paneel pakt %.0f%% van de schermhoogte" % (deel * 100.0))
+					if deel < 0.4:
+						print("[TUNER] FOUT: paneel gebruikt te weinig scherm")
+						tuner_fouten += 1
+				var tabc: TabContainer = null
+				for kind in t.find_children("*", "TabContainer", true, false):
+					tabc = kind as TabContainer
+					break
+				if tabc != null:
+					var scrollbaar := 0
+					var namen: Array = []
+					for kind in tabc.get_children():
+						namen.append(String(kind.name))
+						if kind is ScrollContainer:
+							scrollbaar += 1
+					print("[TUNER] tabs: %d, waarvan scrollbaar %d (%s)" % [
+						tabc.get_child_count(), scrollbaar, ", ".join(namen)])
+					if scrollbaar != tabc.get_child_count():
+						print("[TUNER] FOUT: niet elke tab kan scrollen; inhoud kan wegvallen")
+						tuner_fouten += 1
 				t.queue_free()
 				await get_tree().process_frame
 		# 3. Opslaan en teruglezen.

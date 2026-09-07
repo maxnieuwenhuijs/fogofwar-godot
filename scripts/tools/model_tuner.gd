@@ -318,20 +318,27 @@ func _build_ui() -> void:
 	var ui := CanvasLayer.new()
 	add_child(ui)
 	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	panel.offset_top = -430.0
-	panel.offset_left = 6.0
-	panel.offset_right = -6.0
-	panel.offset_bottom = -6.0
+	# Aandeel van het scherm in plaats van 430 vaste pixels: op een groot scherm
+	# bleef de onderste helft anders leeg terwijl de rijen er tegelijk uitliepen.
+	# Met ankers schaalt hij mee zonder resize-afhandeling.
+	panel.anchor_left = 0.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 0.44
+	panel.anchor_bottom = 1.0
+	panel.offset_left = 4.0
+	panel.offset_right = -4.0
+	panel.offset_top = 0.0
+	panel.offset_bottom = -4.0
+	panel.theme = _tuner_thema()
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.10, 0.11, 0.15, 0.96)
 	style.border_color = Color(0.38, 0.44, 0.60, 0.7)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(10)
-	style.content_margin_left = 10.0
-	style.content_margin_right = 10.0
-	style.content_margin_top = 8.0
-	style.content_margin_bottom = 8.0
+	style.content_margin_left = 8.0
+	style.content_margin_right = 8.0
+	style.content_margin_top = 6.0
+	style.content_margin_bottom = 6.0
 	panel.add_theme_stylebox_override("panel", style)
 	ui.add_child(panel)
 	# Vaste knoppen RECHTSBOVEN (Max, 28 juli): het paneel onderin groeit mee
@@ -348,12 +355,12 @@ func _build_ui() -> void:
 	ui.add_child(top)
 	var save_top := Button.new()
 	save_top.text = "  OPSLAAN  "
-	save_top.add_theme_font_size_override("font_size", 16)
+	save_top.add_theme_font_size_override("font_size", 13)
 	save_top.pressed.connect(_save)
 	top.add_child(save_top)
 	var back_top := Button.new()
 	back_top.text = "Terug naar het spel"
-	back_top.add_theme_font_size_override("font_size", 16)
+	back_top.add_theme_font_size_override("font_size", 13)
 	back_top.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
 	top.add_child(back_top)
@@ -467,7 +474,7 @@ func _build_ui() -> void:
 
 	# --- Tabs per categorie ---------------------------------------------------
 	var tabs := TabContainer.new()
-	tabs.custom_minimum_size = Vector2(0, 230)
+	tabs.custom_minimum_size = Vector2(0, 160)
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(tabs)
 
@@ -484,7 +491,8 @@ func _build_ui() -> void:
 	_scale_slider.max_value = 2.5
 	_scale_slider.step = 0.01
 	_scale_slider.value = 1.0
-	_scale_slider.custom_minimum_size = Vector2(280, 0)
+	_scale_slider.custom_minimum_size = Vector2(120, 0)
+	_scale_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scale_slider.value_changed.connect(_on_slider_paired.bind("scale"))
 	row2.add_child(_scale_slider)
 	_scale_spin = _make_spin(row2, 0.4, 2.5, 0.01, 1.0, _on_spin_paired.bind("scale"))
@@ -494,7 +502,8 @@ func _build_ui() -> void:
 	_y_slider.max_value = 0.4
 	_y_slider.step = 0.005
 	_y_slider.value = 0.0
-	_y_slider.custom_minimum_size = Vector2(200, 0)
+	_y_slider.custom_minimum_size = Vector2(100, 0)
+	_y_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_y_slider.value_changed.connect(_on_slider_paired.bind("y"))
 	row2.add_child(_y_slider)
 	_y_spin = _make_spin(row2, -0.4, 0.4, 0.005, 0.0, _on_spin_paired.bind("y"))
@@ -624,9 +633,58 @@ func _build_ui() -> void:
 			dp_test.pressed.connect(_on_death_pool_test)
 			rowd.add_child(dp_test)
 
+	# Elke tab in een ScrollContainer. Zonder dit viel alles wat niet paste
+	# gewoon weg -- geen balk, geen melding (Max, 7 september).
+	for tab_kind in tabs.get_children():
+		if tab_kind is ScrollContainer:
+			continue
+		var tab_ctrl := tab_kind as Control
+		var tab_naam := tab_ctrl.name
+		tabs.remove_child(tab_ctrl)
+		var scroll := ScrollContainer.new()
+		scroll.name = tab_naam
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		tab_ctrl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(tab_ctrl)
+		tabs.add_child(scroll)
+
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_info.add_theme_font_size_override("font_size", 11)
+	_info.add_theme_color_override("font_color", Color(0.66, 0.71, 0.82))
 	box.add_child(_info)
+
+
+## Eén thema voor het hele tunerpaneel: kleiner lettertype en vlakke knoppen.
+## Op het paneel gezet, dus alles eronder erft het -- labels, knoppen,
+## spinboxes en de tabbladen tegelijk. Scheelt een override per widget.
+func _tuner_thema() -> Theme:
+	var th := Theme.new()
+	th.default_font_size = 12
+	for soort in ["Button", "OptionButton", "CheckBox", "CheckButton", "Label",
+			"SpinBox", "LineEdit", "TabContainer"]:
+		th.set_font_size("font_size", soort, 12)
+	var knop := StyleBoxFlat.new()
+	knop.bg_color = Color(0.18, 0.20, 0.26, 1.0)
+	knop.border_color = Color(0.34, 0.39, 0.52, 1.0)
+	knop.set_border_width_all(1)
+	knop.set_corner_radius_all(3)
+	knop.content_margin_left = 8.0
+	knop.content_margin_right = 8.0
+	knop.content_margin_top = 3.0
+	knop.content_margin_bottom = 3.0
+	var hover: StyleBoxFlat = knop.duplicate()
+	hover.bg_color = Color(0.24, 0.27, 0.35, 1.0)
+	var druk: StyleBoxFlat = knop.duplicate()
+	druk.bg_color = Color(0.13, 0.15, 0.20, 1.0)
+	for soort in ["Button", "OptionButton"]:
+		th.set_stylebox("normal", soort, knop)
+		th.set_stylebox("hover", soort, hover)
+		th.set_stylebox("pressed", soort, druk)
+		th.set_stylebox("focus", soort, hover)
+	return th
 
 func _make_label(text: String) -> Label:
 	var l := Label.new()
