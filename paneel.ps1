@@ -41,7 +41,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 968)
+$form.Size = New-Object System.Drawing.Size(470, 1008)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -309,7 +309,7 @@ $kadKijk.Controls.Add($lblKijkHint)
 # --- 7. Modellen bouwen uit de blend-inbox.
 # Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
 # Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
-$kadModellen = Maak-Kader "Modellen bouwen" 696 122
+$kadModellen = Maak-Kader "Modellen bouwen" 696 162
 Maak-Uitleg $kadModellen "Zet je .blend-bestanden in de map assets\new 3d models en bouw ze om tot spel-modellen."
 $null = Maak-Knop $kadModellen "Eerst kijken (verandert niets)" {
     $uit = Join-Path $repo "results\modelbouw_indeling.txt"
@@ -352,14 +352,59 @@ $btnModellenBouw.Add_Click({
 $kadModellen.Controls.Add($btnModellenBouw)
 $lblModellenHint = New-Object System.Windows.Forms.Label
 $lblModellenHint.Text = "Kijk eerst: dan zie je welk bestand welk model wordt, zonder dat er iets verandert. Na het bouwen laat Claude de controles lopen en doe jij de Model-tuner."
-$lblModellenHint.Location = New-Object System.Drawing.Point(12, 82)
+$lblModellenHint.Location = New-Object System.Drawing.Point(12, 122)
 $lblModellenHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblModellenHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblModellenHint.ForeColor = [System.Drawing.Color]::DimGray
 $kadModellen.Controls.Add($lblModellenHint)
+# Derde knop: een model klaarmaken om te laten hertexturen. Kies de map waar je
+# .blend in staat; je krijgt het kale lijf terug (rusthouding, geen skelet, geen
+# wapen) om te uploaden. Zie tools/maak_retexture.py.
+$btnRetexture = New-Object System.Windows.Forms.Button
+$btnRetexture.Text = "Model klaarmaken voor retexture"
+$btnRetexture.Location = New-Object System.Drawing.Point(12, 82)
+$btnRetexture.Size = New-Object System.Drawing.Size(401, 34)
+$btnRetexture.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnRetexture.Add_Click({
+    $kiezer = New-Object System.Windows.Forms.FolderBrowserDialog
+    $kiezer.Description = "Kies de map waar je .blend in staat"
+    $start = Join-Path $repo "assets"
+    if (Test-Path $start) { $kiezer.SelectedPath = $start }
+    if ($kiezer.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+    $gekozen = $kiezer.SelectedPath
+    $blends = @(Get-ChildItem -Path $gekozen -Filter *.blend -Recurse -File -ErrorAction SilentlyContinue)
+    if ($blends.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            "Geen .blend gevonden in die map (submappen zijn meegeteld)." +
+            [Environment]::NewLine + [Environment]::NewLine +
+            "Zet het bestand dat je wilt laten hertexturen daar neer en probeer opnieuw.",
+            "Fog of War") | Out-Null
+        return
+    }
+    # `$? met een backtick: anders vult PowerShell hem HIER al in (True/False)
+    # in plaats van in het venster dat straks de opdracht draait.
+    $opdracht = "python tools/maak_retexture.py '" + $gekozen + "'; if (`$?) { explorer '" +
+        (Join-Path $repo "results\retexture") + "' }"
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", $opdracht)
+    [System.Windows.Forms.MessageBox]::Show(
+        "$($blends.Count) blend-bestand(en) gevonden; ze worden klaargemaakt." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Je krijgt het KALE LIJF: rusthouding, geen skelet, geen animaties, geen " +
+        "ingebakken wapen. Dat is wat je uploadt." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Vraag de retexture-dienst UITDRUKKELIJK om de UV-indeling te laten staan " +
+        "(geen nieuwe unwrap). Doet hij dat toch, dan past de nieuwe jas niet meer " +
+        "op je model en zie je dat pas in een partij." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "De png die je terugkrijgt zet je naast de glb als <model>_red.png of " +
+        "<model>_blue.png. Claude meet daarna of hij past.",
+        "Fog of War") | Out-Null
+})
+$kadModellen.Controls.Add($btnRetexture)
 
 # --- 8. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 824 86
+$kadStop = Maak-Kader "Noodrem" 864 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots

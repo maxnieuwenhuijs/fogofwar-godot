@@ -101,7 +101,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (console-variant `..._console.exe` voor terminal-output).
 - **Paneel** (Max' knoppen, herbouw 28-07 in gewone taal): `"FogOfWar
   Paneel.bat"` → TRAINING-NACHT (pijplijn), Bots laten leren, Bots laten
-  spelen (meting), Bekijk het rapport, Modellen bouwen, STOP alles. Meet-gereedschap voor
+  spelen (meting), Bekijk het rapport, Modellen bouwen, Model klaarmaken
+  voor retexture, STOP alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
 - **Modellen bouwen** (7 september): `python tools/bouw_modellen.py
@@ -117,9 +118,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
   jas van een ander model rond de 70%. Per materiaal, want lijf en ingebakken
   wapen hebben elk hun eigen atlas. Een nieuwe jas laten maken:
+  `python tools/maak_retexture.py <map>`, of de paneelknop "Model klaarmaken
+  voor retexture" (die vraagt om een map). Levert per .blend het kale lijf in
+  rusthouding -- geen skelet, animaties of ingebakken wapen -- in
+  `results/retexture/`. Dat upload je, en je vraagt de dienst UITDRUKKELIJK de
+  UV's te laten staan. Per stuk:
   `blender --background <model>.blend --python tools/blender_export_retexture.py
-  -- --uit results/retexture/<naam>.glb` (kaal lijf in rusthouding, geen skelet
-  of wapen) en de dienst vragen de UV's te laten staan.
+  -- --uit <naam>.glb` (vlaggen `--los`, `--met-wapen`).
 - **Factiezoeker** (1 augustus): `python tools/balans/factiezoeker.py --minuten
   120 --potjes 2 [--facties 2,3]`, of de paneelknop "Facties uitproberen
   (balans)". Zoekt aan kaartbudget, kaarten per ronde, legersamenstelling en de

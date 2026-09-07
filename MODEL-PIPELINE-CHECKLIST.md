@@ -119,7 +119,10 @@ naast `--script tools/_wapencheck.gd`.
       draagt twee atlassen (lijf en ingebakken wapen) die over elkaar heen
       liggen; samengevoegd meet je niets. Doe dit voor elke jas: de uuid in de
       bestandsnaam is maar een naam.
-- [ ] **Een nieuwe jas laten maken** (Tripo/Meshy retexture):
+- [ ] **Een nieuwe jas laten maken** (Tripo/Meshy retexture): paneelknop
+      "Model klaarmaken voor retexture" (kies de map met je .blend), of
+      `python tools/maak_retexture.py <map>` -- die doet elke .blend in de map en
+      schrijft naar `results/retexture/`. Per stuk is het
       `blender --background model.blend --python tools/blender_export_retexture.py
       -- --uit results/retexture/<factie>_<model>.glb`. Dat levert het kale lijf
       in RUSTHOUDING: geen skelet, geen animaties, geen ingebakken wapen, delen

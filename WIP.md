@@ -53,6 +53,33 @@ juiste jassen, 70-75% voor de verkeerde). Wat er terugkomt past dus, mits de
 dienst niet opnieuw uitvouwt -- daar moet Max expliciet om vragen, en
 `uv_check.py` controleert het antwoord.
 
+## 7 september -- retexture-knop in het paneel
+
+Max: "kan een retexture paneel aanmaken waarbij ik de folder selecteer en dan
+checkt ie voor blender file". Gebouwd als derde knop in het kader "Modellen
+bouwen": een mapkiezer, en daarna `tools/maak_retexture.py` in een zichtbaar
+venster met `-NoExit`, gevolgd door Verkenner op `results/retexture/`. Vindt hij
+geen .blend in de gekozen map (submappen meegeteld), dan zegt hij dat en start
+er niets.
+
+`tools/maak_retexture.py <map>` haalt elke .blend door
+`blender_export_retexture.py` en geeft ze een nette naam via `plaats()` uit
+`bouw_modellen.py` -- met de OUDER van de gekozen map als startpunt, want de
+gekozen map draagt vaak zelf de factienaam. Getest op twee naamstijlen:
+`assets/new upload folder/mouse/red/infantry_mix` wordt `mouse_infantry_mix.glb`,
+en `assets/new 3d models/Mouse` levert alle vijf als `mouse_cavalry_<arch>.glb`
+(950-1448 driehoeken, ~220 KB per stuk).
+
+Twee valkuilen in dit paneelwerk:
+- **`$?` in een dubbel aangehaalde PowerShell-string wordt HIER al ingevuld.**
+  De opdrachtregel `"...; if ($?) { explorer ... }"` werd letterlijk
+  `if (True) {` in het venster dat hem moest draaien. Backtick ervoor.
+- Layout is handwerk: het kader groeide van 122 naar 162, de noodrem van y=824
+  naar 864, het venster van 968 naar 1008 hoog. Gecontroleerd door het script
+  tot `Add_Shown` te draaien en de kaders uit te lezen (laatste kader eindigt op
+  950 in een clienthoogte van 969, dezelfde onderrand als altijd), en de
+  opdrachtregel die de knop bouwt is los uitgevoerd met een pad met spaties.
+
 ## 7 september -- schone lei voor de modellen + een runner voor de blend-inbox
 
 Max: "kunnen we alle models allemaal verwijderen echt alles wat we hebben, want
