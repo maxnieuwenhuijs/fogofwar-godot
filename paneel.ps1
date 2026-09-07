@@ -41,7 +41,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 838)
+$form.Size = New-Object System.Drawing.Size(470, 968)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -306,8 +306,60 @@ $lblKijkHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblKijkHint.ForeColor = [System.Drawing.Color]::DimGray
 $kadKijk.Controls.Add($lblKijkHint)
 
-# --- 7. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 694 86
+# --- 7. Modellen bouwen uit de blend-inbox.
+# Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
+# Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
+$kadModellen = Maak-Kader "Modellen bouwen" 696 122
+Maak-Uitleg $kadModellen "Zet je .blend-bestanden in de map assets\new 3d models en bouw ze om tot spel-modellen."
+$null = Maak-Knop $kadModellen "Eerst kijken (verandert niets)" {
+    $uit = Join-Path $repo "results\modelbouw_indeling.txt"
+    New-Item -ItemType Directory -Force (Split-Path $uit) | Out-Null
+    Start-Process powershell -WorkingDirectory $repo -WindowStyle Hidden -Wait `
+        -RedirectStandardOutput $uit `
+        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+            "python tools/bouw_modellen.py --droogloop")
+    if (Test-Path $uit) { Invoke-Item $uit }
+    else {
+        [System.Windows.Forms.MessageBox]::Show("Kon de lijst niet opbouwen. Staat Python op deze machine?",
+            "Fog of War") | Out-Null
+    }
+}
+# Tweede knop: echt bouwen. Eigen bevestiging, want dit OVERSCHRIJFT modellen.
+$btnModellenBouw = New-Object System.Windows.Forms.Button
+$btnModellenBouw.Text = "Modellen bouwen"
+$btnModellenBouw.Location = New-Object System.Drawing.Point(210, 42)
+$btnModellenBouw.Size = New-Object System.Drawing.Size(203, 34)
+$btnModellenBouw.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnModellenBouw.Add_Click({
+    $antwoord = [System.Windows.Forms.MessageBox]::Show(
+        "Elke .blend in de inbox wordt omgebouwd tot een spel-model." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Bestaande modellen met dezelfde naam worden OVERSCHREVEN." +
+        [Environment]::NewLine +
+        "Reken op ongeveer een halve minuut per model, vier tegelijk." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Er opent een venster waarin je ziet wat er gebeurt. Wat hij niet zeker " +
+        "kan plaatsen bouwt hij NIET, dat noemt hij aan het eind." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Doorgaan?",
+        "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Question)
+    if ($antwoord -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command",
+        "python tools/bouw_modellen.py")
+})
+$kadModellen.Controls.Add($btnModellenBouw)
+$lblModellenHint = New-Object System.Windows.Forms.Label
+$lblModellenHint.Text = "Kijk eerst: dan zie je welk bestand welk model wordt, zonder dat er iets verandert. Na het bouwen laat Claude de controles lopen en doe jij de Model-tuner."
+$lblModellenHint.Location = New-Object System.Drawing.Point(12, 82)
+$lblModellenHint.Size = New-Object System.Drawing.Size(400, 28)
+$lblModellenHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$lblModellenHint.ForeColor = [System.Drawing.Color]::DimGray
+$kadModellen.Controls.Add($lblModellenHint)
+
+# --- 8. Alles stoppen.
+$kadStop = Maak-Kader "Noodrem" 824 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots

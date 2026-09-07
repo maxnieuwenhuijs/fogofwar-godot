@@ -101,9 +101,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (console-variant `..._console.exe` voor terminal-output).
 - **Paneel** (Max' knoppen, herbouw 28-07 in gewone taal): `"FogOfWar
   Paneel.bat"` → TRAINING-NACHT (pijplijn), Bots laten leren, Bots laten
-  spelen (meting), Bekijk het rapport, STOP alles. Meet-gereedschap voor
+  spelen (meting), Bekijk het rapport, Modellen bouwen, STOP alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
+- **Modellen bouwen** (7 september): `python tools/bouw_modellen.py
+  [--droogloop] [--factie <naam>] [--model <naam>] [--parallel N]`, of de
+  paneelknoppen "Eerst kijken (verandert niets)" en "Modellen bouwen". Draait
+  per .blend in `assets/new 3d models/` de drie Blender-stappen uit
+  MODEL-PIPELINE-CHECKLIST sectie C en herkent factie/type/archetype uit de
+  (rommelige) bestandsnamen. Draai altijd eerst de droogloop. Wat hij niet
+  zeker kan plaatsen bouwt hij NIET. Logs per aanroep in
+  `results/modelbouw_<tijd>/`.
 - **Factiezoeker** (1 augustus): `python tools/balans/factiezoeker.py --minuten
   120 --potjes 2 [--facties 2,3]`, of de paneelknop "Facties uitproberen
   (balans)". Zoekt aan kaartbudget, kaarten per ronde, legersamenstelling en de

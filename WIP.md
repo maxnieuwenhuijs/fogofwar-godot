@@ -46,6 +46,24 @@ PASS (333 meshes zichtbaar, 0 los van hun pion), `-- cliplengtes` vertaalt alle
 1-3 -> idle1-3, ...), `-- tunercheck` 0 fouten. Dat testmodel is daarna weer
 verwijderd: het kwam uit de OUDE lichting en de lei moet schoon blijven.
 
+**Paneelknop erbij** (Max: "ja doe maar"). Nieuw kader "Modellen bouwen" met
+twee knoppen: "Eerst kijken (verandert niets)" draait de droogloop naar
+`results/modelbouw_indeling.txt` en opent dat, "Modellen bouwen" vraagt eerst
+om bevestiging (het OVERSCHRIJFT modellen) en start de bouw in een zichtbaar
+venster met `-NoExit`, zodat het rapport blijft staan. De noodrem schoof van
+y=694 naar 824, het venster van 838 naar 968 hoog; de kaders eindigen op 910 in
+een clienthoogte van 929, dezelfde onderrand als eerst. Getest zonder het
+paneel te tonen: het formulier bouwt op (script tot `Add_Shown` gedraaid en de
+kaders uitgelezen), en de droogloop-aanroep is exact zoals de knop hem doet
+uitgevoerd -- 32 regels, alle dertig blends geplaatst.
+
+Valkuil onderweg: `assets
+ew 3d models` in een niet-rauwe Python-string maakte
+van `
+` een echt regeleinde en brak de PowerShell-regel doormidden.
+PowerShell-tekst met Windows-paden patchen: rauwe string, en daarna
+`[Parser]::ParseFile` erop.
+
 **Volgorde voor de nieuwe lichting:** blends in `assets/new 3d models/`,
 `python tools/bouw_modellen.py --droogloop`, dan zonder vlag, dan `--import`,
 `_wapencheck.gd`, `-- zweefcheck <factie>`, `-- cliplengtes`, `-- tunercheck`.
