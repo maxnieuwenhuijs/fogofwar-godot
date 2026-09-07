@@ -101,10 +101,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (console-variant `..._console.exe` voor terminal-output).
 - **Paneel** (Max' knoppen, herbouw 28-07 in gewone taal): `"FogOfWar
   Paneel.bat"` → TRAINING-NACHT (pijplijn), Bots laten leren, Bots laten
-  spelen (meting), Bekijk het rapport, Modellen bouwen, Model klaarmaken
-  voor retexture, STOP alles. Meet-gereedschap voor
+  spelen (meting), Bekijk het rapport, Map in het spel zetten, Model
+  klaarmaken voor retexture, Inbox bouwen, STOP alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
+- **Een levering in het spel zetten** (7 september): `python
+  tools/verwerk_levering.py <map> [--droogloop]`, of de paneelknop "Map in het
+  spel zetten" (vraagt om een map, toont eerst de droogloop). Voor een map met
+  per model een submap die de .blend EN de nieuwe texturen draagt; factie/type/
+  archetype komen uit de mapnamen, het TEAM uit het woord red/rood of
+  blue/blauw in het pad. Bouwt het model en meet de jas met `uv_check` tegen de
+  GEBOUWDE glb: onder de 90% dekking gaat hij er NIET in en zegt het script
+  waarom. Een map met alleen texturen mag ook (dan alleen de jas wisselen).
+  Normal-maps gaan er nooit in: de engine zet alleen een albedo-override.
 - **Modellen bouwen** (7 september): `python tools/bouw_modellen.py
   [--droogloop] [--factie <naam>] [--model <naam>] [--parallel N]`, of de
   paneelknoppen "Eerst kijken (verandert niets)" en "Modellen bouwen". Draait

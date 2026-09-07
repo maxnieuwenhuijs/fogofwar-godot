@@ -310,8 +310,54 @@ $kadKijk.Controls.Add($lblKijkHint)
 # Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
 # Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
 $kadModellen = Maak-Kader "Modellen bouwen" 696 162
-Maak-Uitleg $kadModellen "Zet je .blend-bestanden in de map assets\new 3d models en bouw ze om tot spel-modellen."
-$null = Maak-Knop $kadModellen "Eerst kijken (verandert niets)" {
+Maak-Uitleg $kadModellen "Een map met een .blend en de nieuwe texturen erin gaat in een keer het spel in."
+# Hoofdknop: een complete levering (een map met de .blend EN de nieuwe texturen)
+# in een keer verwerken. Eerst de droogloop tonen en om bevestiging vragen; die
+# kost geen Blender en is dus meteen klaar. Zie tools/verwerk_levering.py.
+$btnLevering = New-Object System.Windows.Forms.Button
+$btnLevering.Text = "Map in het spel zetten"
+$btnLevering.Location = New-Object System.Drawing.Point(12, 42)
+$btnLevering.Size = New-Object System.Drawing.Size(185, 34)
+$btnLevering.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnLevering.Add_Click({
+    $kiezer = New-Object System.Windows.Forms.FolderBrowserDialog
+    $kiezer.Description = "Kies de map met je .blend en de nieuwe texturen"
+    $start = Join-Path $repo "assets"
+    if (Test-Path $start) { $kiezer.SelectedPath = $start }
+    if ($kiezer.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+    $gekozen = $kiezer.SelectedPath
+    $plan = Join-Path $repo "results\levering_plan.txt"
+    New-Item -ItemType Directory -Force (Split-Path $plan) | Out-Null
+    # De opdracht EERST in een variabele bouwen. Inline samenplakken binnen de
+    # @()-lijst gaat mis bij een pad met spaties: het pad komt dan met een spatie
+    # ervoor aan de andere kant uit ("Dat is geen map:  C:\...").
+    $opdracht = "python tools/verwerk_levering.py --droogloop '" + $gekozen + "'"
+    Start-Process powershell -WorkingDirectory $repo -WindowStyle Hidden -Wait `
+        -RedirectStandardOutput $plan `
+        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $opdracht)
+    $regels = @()
+    if (Test-Path $plan) { $regels = @(Get-Content $plan) }
+    if ($regels.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            "Kon die map niet lezen. Staat Python op deze machine?", "Fog of War") | Out-Null
+        return
+    }
+    $tekst = ($regels | Select-Object -First 22) -join [Environment]::NewLine
+    $antwoord = [System.Windows.Forms.MessageBox]::Show(
+        $tekst + [Environment]::NewLine + [Environment]::NewLine +
+        "Elk model wordt uit zijn .blend gebouwd, en de nieuwe jas wordt eerst tegen " +
+        "dat model gemeten. Past hij niet, dan gaat hij er NIET in en hoor je waarom." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Bestaande modellen met dezelfde naam worden overschreven. Doorgaan?",
+        "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Question)
+    if ($antwoord -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+    $bouwen = "python tools/verwerk_levering.py '" + $gekozen + "'"
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", $bouwen)
+})
+$kadModellen.Controls.Add($btnLevering)
+$btnInboxKijk = Maak-Knop $kadModellen "Inbox: eerst kijken" {
     $uit = Join-Path $repo "results\modelbouw_indeling.txt"
     New-Item -ItemType Directory -Force (Split-Path $uit) | Out-Null
     Start-Process powershell -WorkingDirectory $repo -WindowStyle Hidden -Wait `
@@ -324,10 +370,12 @@ $null = Maak-Knop $kadModellen "Eerst kijken (verandert niets)" {
             "Fog of War") | Out-Null
     }
 }
+# Maak-Knop zet elke knop op (12,42); de inbox-knoppen horen op rij twee.
+$btnInboxKijk.Location = New-Object System.Drawing.Point(12, 82)
 # Tweede knop: echt bouwen. Eigen bevestiging, want dit OVERSCHRIJFT modellen.
 $btnModellenBouw = New-Object System.Windows.Forms.Button
-$btnModellenBouw.Text = "Modellen bouwen"
-$btnModellenBouw.Location = New-Object System.Drawing.Point(210, 42)
+$btnModellenBouw.Text = "Inbox: alles bouwen"
+$btnModellenBouw.Location = New-Object System.Drawing.Point(210, 82)
 $btnModellenBouw.Size = New-Object System.Drawing.Size(203, 34)
 $btnModellenBouw.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $btnModellenBouw.Add_Click({
@@ -351,7 +399,7 @@ $btnModellenBouw.Add_Click({
 })
 $kadModellen.Controls.Add($btnModellenBouw)
 $lblModellenHint = New-Object System.Windows.Forms.Label
-$lblModellenHint.Text = "Kijk eerst: dan zie je welk bestand welk model wordt, zonder dat er iets verandert. Na het bouwen laat Claude de controles lopen en doe jij de Model-tuner."
+$lblModellenHint.Text = "Boven: een losse levering verwerken, of een model klaarmaken om te laten hertexturen. Onder: de hele map assets\new 3d models in een keer."
 $lblModellenHint.Location = New-Object System.Drawing.Point(12, 122)
 $lblModellenHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblModellenHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
@@ -362,8 +410,8 @@ $kadModellen.Controls.Add($lblModellenHint)
 # wapen) om te uploaden. Zie tools/maak_retexture.py.
 $btnRetexture = New-Object System.Windows.Forms.Button
 $btnRetexture.Text = "Model klaarmaken voor retexture"
-$btnRetexture.Location = New-Object System.Drawing.Point(12, 82)
-$btnRetexture.Size = New-Object System.Drawing.Size(401, 34)
+$btnRetexture.Location = New-Object System.Drawing.Point(210, 42)
+$btnRetexture.Size = New-Object System.Drawing.Size(203, 34)
 $btnRetexture.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $btnRetexture.Add_Click({
     $kiezer = New-Object System.Windows.Forms.FolderBrowserDialog

@@ -1,5 +1,43 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- een hele levering met een knop het spel in
+
+Max: "maak dus een knop in paneel ook dat als in de folder dus de blend met
+animaties heb en de glb eruit gedestilleerd en de nieuwe textures dat alles dan
+geupload kan worden in de assets map." Dus niet bouwen en jassen apart, maar een
+map ineens.
+
+**`tools/verwerk_levering.py <map>`.** Per submap met een .blend en/of een
+kleur-png: factie/type/archetype uit de mapnamen (`plaats()` uit
+`bouw_modellen.py`), het TEAM uit red/rood of blue/blauw in het pad. Dan de drie
+Blender-stappen, en daarna de jas met `uv_check` tegen de NET GEBOUWDE glb
+gemeten. Onder de 90% dekking gaat hij er niet in en staat er waarom. Een map
+met alleen texturen mag ook: dan wordt alleen de jas gewisseld op een model dat
+er al staat. Normal-maps nooit -- de engine zet alleen een albedo-override.
+
+Beide takken bewezen:
+- `assets/new upload folder` -> model gebouwd, jas erin op 98,7% dekking.
+- Kladlevering met de kapotte cavalry_mix-jas -> `GEWEIGERD ... dekt maar 75,2%
+  van de UV's (op 'Material')`, exitcode 1, terwijl de goede base-jas in
+  dezelfde run gewoon op 99,8% naar binnen ging.
+
+**Paneel: kader "Modellen bouwen" is nu een 2x2.** Boven de losse levering:
+"Map in het spel zetten" en "Model klaarmaken voor retexture". Onder de bulk:
+"Inbox: eerst kijken" en "Inbox: alles bouwen". Hoogte ongewijzigd (162), geen
+overlap, clienthoogte 969. De hoofdknop draait eerst de droogloop (geen Blender,
+dus meteen klaar), toont die in een venster met Ja/Nee, en pas daarna het echte
+werk in een venster met `-NoExit`.
+
+Twee PowerShell-valkuilen, allebei kostbaar:
+- **Bouw de opdrachtregel EERST in een variabele.** Inline samenplakken binnen
+  de `@()`-lijst van `-ArgumentList` gaat mis bij een pad met spaties: het pad
+  komt er met een spatie ervoor uit ("Dat is geen map:  C:\..."). De
+  retexture-knop deed het al via een variabele en werkte daarom wel.
+- **Een `@`-teken als plaatsvervanger voor een backslash gebruiken en dan
+  globaal vervangen sloopt `@(`.** Vier PowerShell-array-literals werden
+  `@(` -> `<bs>(`. Regelgebaseerd bewerken is hier veiliger dan zoek-en-vervang
+  met escapes, want de tool-laag eet ook nog een backslash-niveau op.
+
 ## 7 september -- gemeten: de teamjassen overleven de nieuwe lichting (op een na)
 
 Max: "moet ik nu opnieuw retextureren of gaat het goed?" Op 6 en 7 september
