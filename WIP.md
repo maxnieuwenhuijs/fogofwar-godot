@@ -1,5 +1,39 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- het scheve musket: de bot-kind-fix deéd het
+
+Max, met een schermafdruk: "het wapen blijft gedraaid en niet goed hoe kan dat
+nou." De plaats klopte, de bajonet wees omlaag.
+
+`-- wapenroute` had al bewezen dat het spel de INGEBAKKEN route neemt en geen
+afstelling toepast, dus de scheefstand moest uit de export komen. Gemeten door
+dezelfde blend te exporteren en de wapen-node te lezen VOOR en NA
+`blender_botkind_fix.fix_glb`:
+
+| | translation | rotatie (euler) |
+|---|---|---|
+| exporter | [3.4617, 17.7872, 0.6005] | [-38.6, 80.5, -39.5] |
+| na fix_glb | [3.4617, 17.7872, 0.6005] | **[-128.6, 80.5, -39.5]** |
+
+Zelfde beeld op `mouse_cavalry_atk` (144,4 -> 54,4). De translatie is in beide
+bestanden AL identiek -- de fix corrigeerde daar dus niets -- en de rotatie
+wordt precies 90 graden om X gekanteld.
+
+Oorzaak: `_bot_relatief` rekent in Blender's BOT-ruimte (+Y langs het bot) en
+schreef die matrix ongecorrigeerd als glTF-node-rotatie weg. De joint-ruimte van
+glTF staat daar 90 graden om X naast. De bevinding van 3 september ging over de
+TRANSLATIE (Y kreeg de botlengte gedeeld door de armature-schaal erbij); het
+meeschrijven van rotatie en schaal was meegenomen zonder dat iemand het mat.
+
+`fix_glb` schrijft nu alleen nog de translatie, en alleen als die echt afwijkt
+(anders logt hij "staat goed"). Rotatie en schaal blijven van de exporter. Na
+een herbouw draagt de node weer euler [-38.6, 80.5, -39.5]. wapencheck
+beweegt-mee=true, zweefcheck PASS, tunercheck 0 fouten.
+
+Les: schrijf nooit een Blender-bot-matrix rechtstreeks in een glTF-node zonder
+de bot-as-conversie. En: een "fix" die meer overschrijft dan het gemeten
+probleem is zelf een bug in de wacht.
+
 ## 7 september -- model_tuning.json leeggemaakt, met een vangrail erbij
 
 Max: "doe dan ook alle opties voor model tuning opnieuw, want dat zit nu in de

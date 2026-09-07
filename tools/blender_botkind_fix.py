@@ -8,10 +8,23 @@ plaats van de botlengte zelf. Met een Mixamo-rig op schaal 0,009 is dat
 staan en zweeft over het bord (alle cavalerie en de beer/krokodil/wolf-
 infanterie). In Blender zelf staat het wapen gewoon in de hand.
 
-Oplossing: na de export de wapen-node in de glb overschrijven met de matrix
-die Blender ZELF ziet, relatief aan de bot-kop in de huidige pose (dezelfde
-pose die de exporter gebruikt). Godot hangt de node aan het bewegende bot en
-het wapen volgt de hand precies zoals in Blender.
+Oplossing: na de export de TRANSLATIE van de wapen-node in de glb overschrijven
+met de plek die Blender ZELF ziet, relatief aan de bot-kop in de huidige pose.
+Godot hangt de node aan het bewegende bot en het wapen volgt de hand.
+
+LET OP -- rotatie en schaal blijven van de exporter (bijstelling 7 september).
+Tot die datum overschreef dit script ook de rotatie, met de matrix uit Blender's
+BOT-ruimte. Die ruimte heeft +Y langs het bot en is niet de joint-ruimte van
+glTF; het verschil is precies 90 graden om X. Gemeten op infantry_mix en
+mouse_cavalry_atk:
+
+    exporter :  translation [3.4617, 17.7872, 0.6005]  euler [ -38.6, 80.5, -39.5]
+    oude fix :  translation [3.4617, 17.7872, 0.6005]  euler [-128.6, 80.5, -39.5]
+
+De translatie was in beide bestanden AL gelijk -- de fix corrigeerde daar dus
+niets -- en de rotatie werd 90 graden gekanteld. Het musket hing op de goede
+plek met de bajonet omlaag. Schrijf hier nooit meer een Blender-bot-matrix
+rechtstreeks in een glTF-node zonder de bot-as-conversie.
 
 Gebruik vanuit een Blender-script, NA bpy.ops.export_scene.gltf:
     import blender_botkind_fix
@@ -62,9 +75,10 @@ def _schrijf_glb(pad, gltf, rest):
 
 
 def fix_glb(pad, objecten, armature):
-    """Overschrijf translation/rotation/scale van elke bot-geparente node in
-    de glb met de bot-relatieve matrix uit Blender. Geeft het aantal gefixte
-    nodes terug."""
+    """Corrigeer de TRANSLATIE van elke bot-geparente node in de glb naar de
+    plek die Blender ziet. Rotatie en schaal blijven van de exporter: die had ze
+    goed, en de bot-ruimte van Blender staat er 90 graden om X naast (zie de
+    module-docstring). Geeft het aantal echt gewijzigde nodes terug."""
     gltf, rest = _lees_glb(pad)
     nodes = gltf.get("nodes", [])
     op_naam = {}
@@ -83,13 +97,17 @@ def fix_glb(pad, objecten, armature):
             print("  bot-kind-fix: node %s niet in de glb" % obj.name)
             continue
         t = rel.to_translation()
-        q = rel.to_quaternion()
-        s = rel.to_scale()
         node = nodes[idx]
-        oud = node.get("translation", [0, 0, 0])
-        node["translation"] = [float(t.x), float(t.y), float(t.z)]
-        node["rotation"] = [float(q.x), float(q.y), float(q.z), float(q.w)]
-        node["scale"] = [float(s.x), float(s.y), float(s.z)]
+        oud = node.get("translation", [0.0, 0.0, 0.0])
+        nieuw = [float(t.x), float(t.y), float(t.z)]
+        # Alleen ingrijpen als de exporter er echt naast zit. Zo blijft in het
+        # log zichtbaar wanneer de Y-bug van 3 september daadwerkelijk toeslaat,
+        # in plaats van dat elke export "gefixt" heet.
+        if max(abs(float(a) - b) for a, b in zip(oud, nieuw)) < 1e-4:
+            print("  bot-kind: %s aan %s staat goed (%.2f, %.2f, %.2f)" % (
+                obj.name, obj.parent_bone, nieuw[0], nieuw[1], nieuw[2]))
+            continue
+        node["translation"] = nieuw
         node.pop("matrix", None)
         n_fix += 1
         print("  bot-kind-fix: %s aan %s: t %s -> (%.2f, %.2f, %.2f)" % (
