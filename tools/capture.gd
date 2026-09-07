@@ -774,10 +774,24 @@ func _ready() -> void:
 					pnl = kind as PanelContainer
 					break
 				if pnl != null:
-					var deel: float = 1.0 - pnl.anchor_top
-					print("[TUNER] paneel pakt %.0f%% van de schermhoogte" % (deel * 100.0))
-					if deel < 0.4:
-						print("[TUNER] FOUT: paneel gebruikt te weinig scherm")
+					# Het paneel hangt onderaan met een hoogte in pixels en is
+					# sleepbaar (Max, 7 september). Een vast AANDEEL van het
+					# scherm werkte niet: op zijn staande venster (1080x1920)
+					# vrat 56% het hele model op.
+					var hoog: float = -pnl.offset_top
+					var schermh: float = float(t.get_viewport().get_visible_rect().size.y)
+					print("[TUNER] paneel %.0f px hoog van %.0f (%.0f%%), sleepbaar" % [
+						hoog, schermh, 100.0 * hoog / maxf(schermh, 1.0)])
+					if hoog < 120.0 or hoog > schermh * 0.9:
+						print("[TUNER] FOUT: paneelhoogte buiten het bruikbare bereik")
+						tuner_fouten += 1
+					var greep_gevonden := false
+					for kind in pnl.find_children("*", "Panel", true, false):
+						if (kind as Control).mouse_default_cursor_shape == Control.CURSOR_VSIZE:
+							greep_gevonden = true
+							break
+					if not greep_gevonden:
+						print("[TUNER] FOUT: geen sleepgreep om de paneelhoogte mee te zetten")
 						tuner_fouten += 1
 				var tabc: TabContainer = null
 				for kind in t.find_children("*", "TabContainer", true, false):

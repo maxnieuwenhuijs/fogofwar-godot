@@ -1,5 +1,32 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- tunerpaneel sleepbaar; een vast schermaandeel was ook fout
+
+Max stuurde een schermafdruk van zijn venster: **1080x1920, staand.** Mijn
+"gebruik meer van het scherm"-oplossing (paneel op 56% van de schermhoogte)
+werd daar ruim 1000 px en er bleef van het model een streepje over. Een vast
+AANDEEL is dus net zo fout als de 430 vaste pixels die het verving, alleen de
+andere kant op. Les: schermverhoudingen zijn geen constante, en een tuner wordt
+op een staand venster gebruikt.
+
+Zijn vraag: "maak dit interactief dat ik het naar boven of beneden kan sliden."
+
+- Het paneel hangt nu aan de ONDERKANT met een hoogte in pixels
+  (`offset_top = -hoogte`), standaard 300.
+- Bovenop zit een sleepgreep van 12 px met een verticale-sleep-cursor. Omhoog
+  slepen maakt het paneel groter, omlaag kleiner. Begrensd op 130 px en 85% van
+  het scherm, zodat er altijd model zichtbaar blijft.
+- Dubbelklik op de greep wisselt tussen compact (150) en ruim (300).
+- De gekozen hoogte wordt onthouden in `user://tuner_ui.cfg`. Bewust NIET in
+  `model_tuning.json`: dat is speldata die de engine leest, daar hoort geen
+  vensterstand in.
+
+`-- tunercheck` meet nu de hoogte in pixels in plaats van het aandeel, en
+controleert dat de sleepgreep bestaat:
+
+    [TUNER] paneel 300 px hoog van 1920 (16%), sleepbaar
+    [TUNER] tabs: 7, waarvan scrollbaar 7
+
 ## 7 september -- Model-tuner: kleiner, breder, en niets valt meer weg
 
 Max: "fix de tuner ui zorg dat alles past gewoon simpele stijl ui buttons en

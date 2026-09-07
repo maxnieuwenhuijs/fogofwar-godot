@@ -318,18 +318,20 @@ func _build_ui() -> void:
 	var ui := CanvasLayer.new()
 	add_child(ui)
 	var panel := PanelContainer.new()
-	# Aandeel van het scherm in plaats van 430 vaste pixels: op een groot scherm
-	# bleef de onderste helft anders leeg terwijl de rijen er tegelijk uitliepen.
-	# Met ankers schaalt hij mee zonder resize-afhandeling.
+	# Aan de ONDERKANT hangen met een hoogte in pixels, sleepbaar via de greep
+	# bovenin. Een vast aandeel van het scherm werkt niet: op Max' staande venster
+	# (1080x1920) is 56% ruim 1000 px en blijft er van het model een streepje
+	# over. Een vast aantal pixels werkt ook niet, want schermen verschillen.
+	# Dus: zelf slepen, en de keuze onthouden.
 	panel.anchor_left = 0.0
 	panel.anchor_right = 1.0
-	panel.anchor_top = 0.44
+	panel.anchor_top = 1.0
 	panel.anchor_bottom = 1.0
 	panel.offset_left = 4.0
 	panel.offset_right = -4.0
-	panel.offset_top = 0.0
 	panel.offset_bottom = -4.0
 	panel.theme = _tuner_thema()
+	_paneel = panel
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.10, 0.11, 0.15, 0.96)
 	style.border_color = Color(0.38, 0.44, 0.60, 0.7)
@@ -366,6 +368,7 @@ func _build_ui() -> void:
 	top.add_child(back_top)
 
 	var box := VBoxContainer.new()
+	box.add_child(_maak_sleepgreep())
 	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
 
@@ -650,11 +653,79 @@ func _build_ui() -> void:
 		scroll.add_child(tab_ctrl)
 		tabs.add_child(scroll)
 
+	_zet_paneelhoogte(_lees_paneelhoogte(), false)
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.add_theme_font_size_override("font_size", 11)
 	_info.add_theme_color_override("font_color", Color(0.66, 0.71, 0.82))
 	box.add_child(_info)
+
+
+# --- Sleepbare paneelhoogte -------------------------------------------------
+# Max wil zelf bepalen hoeveel scherm het paneel pakt: veel bij het afstellen,
+# weinig als hij het model wil zien. Bewaard in user://tuner_ui.cfg, want
+# model_tuning.json is speldata die de engine leest -- daar hoort geen
+# vensterstand in.
+
+const UI_CFG := "user://tuner_ui.cfg"
+const PANEEL_MIN := 130.0
+const PANEEL_STANDAARD := 300.0
+const PANEEL_COMPACT := 150.0
+
+var _paneel: PanelContainer = null
+var _paneel_hoogte: float = PANEEL_STANDAARD
+var _sleept: bool = false
+
+
+## De greep bovenaan het paneel: een dun balkje dat je op en neer sleept.
+## Dubbelklik wisselt tussen compact en de laatst gebruikte hoogte.
+func _maak_sleepgreep() -> Control:
+	var greep := Panel.new()
+	greep.custom_minimum_size = Vector2(0, 12)
+	greep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+	greep.tooltip_text = "Sleep omhoog of omlaag om het paneel groter of kleiner te maken (dubbelklik: compact)"
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.30, 0.35, 0.46, 1.0)
+	st.set_corner_radius_all(3)
+	st.content_margin_top = 0.0
+	st.content_margin_bottom = 0.0
+	greep.add_theme_stylebox_override("panel", st)
+	greep.gui_input.connect(_op_greep_input)
+	return greep
+
+
+func _op_greep_input(e: InputEvent) -> void:
+	if e is InputEventMouseButton and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var mb := e as InputEventMouseButton
+		if mb.double_click:
+			# Compact <-> ruim, zodat je met een dubbelklik het model vrij maakt.
+			var doel: float = PANEEL_COMPACT if _paneel_hoogte > PANEEL_COMPACT + 20.0 else PANEEL_STANDAARD
+			_zet_paneelhoogte(doel)
+		_sleept = mb.pressed
+	elif e is InputEventMouseMotion and _sleept:
+		# Omhoog slepen = groter paneel, dus relative.y eraf halen.
+		_zet_paneelhoogte(_paneel_hoogte - (e as InputEventMouseMotion).relative.y)
+
+
+func _zet_paneelhoogte(h: float, bewaren: bool = true) -> void:
+	if _paneel == null:
+		return
+	var scherm: float = float(get_viewport().get_visible_rect().size.y)
+	# Nooit hoger dan 85% van het scherm: er moet altijd model zichtbaar blijven.
+	_paneel_hoogte = clampf(h, PANEEL_MIN, maxf(PANEEL_MIN, scherm * 0.85))
+	_paneel.offset_top = -_paneel_hoogte
+
+	if bewaren:
+		var cfg := ConfigFile.new()
+		cfg.set_value("tuner", "paneel_hoogte", _paneel_hoogte)
+		cfg.save(UI_CFG)
+
+
+func _lees_paneelhoogte() -> float:
+	var cfg := ConfigFile.new()
+	if cfg.load(UI_CFG) != OK:
+		return PANEEL_STANDAARD
+	return float(cfg.get_value("tuner", "paneel_hoogte", PANEEL_STANDAARD))
 
 
 ## Eén thema voor het hele tunerpaneel: kleiner lettertype en vlakke knoppen.
