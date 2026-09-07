@@ -826,6 +826,64 @@ func _ready() -> void:
 					if scrollbaar != tabc.get_child_count():
 						print("[TUNER] FOUT: niet elke tab kan scrollen; inhoud kan wegvallen")
 						tuner_fouten += 1
+				# De drie knoppen van 7 september indrukken. Alleen opbouwen zegt
+				# niets over wat er PAS bij het indrukken gebeurt.
+				var knoppen: Dictionary = {}
+				for kn in t.find_children("*", "Button", true, false):
+					knoppen[String((kn as Button).text)] = kn
+				var keuze: OptionButton = null
+				for kn in t.find_children("*", "OptionButton", true, false):
+					if (kn as OptionButton).get_item_count() == 3 and (kn as OptionButton).get_item_text(1) == "alles rood":
+						keuze = kn as OptionButton
+						break
+				if keuze == null:
+					print("[TUNER] FOUT: geen team-keuze (rood / blauw / rood vs blauw)")
+					tuner_fouten += 1
+				if not knoppen.has("alle modellen") or not knoppen.has("bord"):
+					print("[TUNER] FOUT: knop 'alle modellen' of 'bord' ontbreekt")
+					tuner_fouten += 1
+				else:
+					(knoppen["alle modellen"] as Button).button_pressed = true
+					await get_tree().process_frame
+					await get_tree().process_frame
+					var pionnen: Array = t.find_children("*", "Node3D", true, false).filter(
+						func(n): return n is PawnView)
+					print("[TUNER] alle modellen: %d pionnen op het veld" % pionnen.size())
+					if pionnen.size() != 30:
+						print("[TUNER] FOUT: verwacht 30 (6 facties x 5 archetypen)")
+						tuner_fouten += 1
+					# Team-keuze: alles rood moet ELKE pion rood maken.
+					if keuze != null:
+						keuze.select(1)
+						keuze.item_selected.emit(1)
+						await get_tree().process_frame
+						await get_tree().process_frame
+						var rood := 0
+						var alle: Array = t.find_children("*", "Node3D", true, false).filter(
+							func(n): return n is PawnView)
+						for p in alle:
+							if (p as PawnView).team == Constants.Team.RED:
+								rood += 1
+						print("[TUNER] alles rood: %d van de %d pionnen rood" % [rood, alle.size()])
+						if alle.size() == 0 or rood != alle.size():
+							print("[TUNER] FOUT: team-keuze werkt niet door op alle pionnen")
+							tuner_fouten += 1
+					(knoppen["bord"] as Button).button_pressed = true
+					await get_tree().process_frame
+					await get_tree().process_frame
+					var borden: Array = t.find_children("Board", "Node3D", true, false)
+					var camaan := 0
+					for b in borden:
+						for c in (b as Node3D).find_children("*", "Camera3D", true, false):
+							if (c as Camera3D).current:
+								camaan += 1
+					print("[TUNER] bord-view: %d bord(en), %d actieve bord-camera(s)" % [borden.size(), camaan])
+					if borden.size() != 1:
+						print("[TUNER] FOUT: bord-view laadt Board.tscn niet")
+						tuner_fouten += 1
+					if camaan > 0:
+						print("[TUNER] FOUT: de bord-camera neemt het beeld over van de tuner")
+						tuner_fouten += 1
 				t.queue_free()
 				await get_tree().process_frame
 		# 3. Opslaan en teruglezen.

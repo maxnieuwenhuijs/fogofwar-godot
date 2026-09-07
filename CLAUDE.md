@@ -246,7 +246,18 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek
   overleeft). Draai dit na elke map- of modelwijziging; het is meteen het
-  statusbord van "wat is er al geleverd".
+  statusbord van "wat is er al geleverd". Sinds 7 september controleert hij ook
+  de UI: paneelhoogte en sleepgreep, of elke tab kan scrollen, en hij DRUKT de
+  knoppen in -- "alle modellen" moet 30 pionnen zetten (6 facties x 5
+  archetypen), "alles rood" moet ze alle 30 rood maken, en "bord" moet
+  Board.tscn laden met zijn eigen camera UIT.
+- **Model-tuner, wat je ermee kunt** (hoofdmenu): losse model + referentiestuk,
+  `formatie` (twee facties tegenover elkaar), `alle modellen` (alle zes de
+  facties naast elkaar -- rijen facties, kolommen archetypen; hiermee beoordeel
+  je de SCHAAL tussen facties), `Team` (rood vs blauw, alles rood, alles blauw)
+  en `bord` (het echte Board.tscn eronder met zijn textures en licht, zodat je
+  ziet wat de speler ziet). Het onderste paneel is sleepbaar aan de greep
+  bovenin; de hoogte wordt onthouden in `user://tuner_ui.cfg`.
 - Kijken zonder te spelen: `-- cliplengtes` (elke animatie met lengte EN de
   naam die het spel ervan maakt) en `-- geluidcheck` (elke geluidscategorie met
   aantal varianten, mix-dB, tuner-dB en vertraging; meldt categorieen zonder

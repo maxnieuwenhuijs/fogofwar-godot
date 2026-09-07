@@ -105,6 +105,11 @@ const GIZMO_KLEUREN := [Color(0.95, 0.35, 0.35), Color(0.4, 0.9, 0.45), Color(0.
 const AS_NAMEN := ["X", "Y", "Z"]
 var _tuner_light: DirectionalLight3D = null
 var _tuner_env: WorldEnvironment = null
+var _team_btn: OptionButton = null      # rood / blauw / rood vs blauw
+var _alles_btn: Button = null           # alle facties naast elkaar
+var _bord_btn: Button = null            # het echte bord eronder
+var _bord: Node3D = null                # de Board.tscn-instantie, als hij aan staat
+var _alles_modus: bool = false          # staat de alle-facties-opstelling aan?
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
@@ -298,17 +303,19 @@ func _apply_camera() -> void:
 	if _cam == null:
 		return
 	var view := 0 if _view_btn == null else _view_btn.selected
+	# Zes rijen facties passen niet in het formatie-kader, dus die krijgen meer.
 	var big := not _formation_pawns.is_empty()
+	var alles := _alles_modus
 	match view:
 		1:  # close-up: zelfde spel-hoek, strak op het model
-			_cam.size = 8.5 if big else 1.5
+			_cam.size = (13.0 if alles else 8.5) if big else 1.5
 			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.55, 0.0) + CAM_BASIS.z * 8.0)
 		2:  # voorkant: recht van voren, licht van boven (linies vallen vrij)
-			_cam.size = 9.0 if big else 1.7
+			_cam.size = (14.0 if alles else 9.0) if big else 1.7
 			_cam.transform = Transform3D(Basis(), Vector3(0.0, 1.2, 3.6))
 			_cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
 		_:  # spel-camera (bordhoek)
-			_cam.size = 12.5 if big else 2.9
+			_cam.size = (17.0 if alles else 12.5) if big else 2.9
 			_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.6, 0.0) + CAM_BASIS.z * 8.0)
 
 
@@ -416,6 +423,29 @@ func _build_ui() -> void:
 	_formation_btn.toggle_mode = true
 	_formation_btn.toggled.connect(_on_formation_toggled)
 	row1.add_child(_formation_btn)
+	# Team-keuze (Max, 7 september): alles in rood of alles in blauw bekijken.
+	# Tot nu toe kon je alleen rood TEGENOVER blauw zien, en dan staat de ene
+	# jas altijd van je af.
+	row1.add_child(_make_label("  Team:"))
+	_team_btn = OptionButton.new()
+	for tn in ["rood vs blauw", "alles rood", "alles blauw"]:
+		_team_btn.add_item(tn)
+	_team_btn.item_selected.connect(func(_i: int) -> void: _herbouw_huidige())
+	row1.add_child(_team_btn)
+	# Alle facties naast elkaar: zes rijen, vijf kolommen. De formatie-knop toont
+	# er maar twee, en de schaalvraag ("is de beer te groot naast de muis?") gaat
+	# juist over alle zes tegelijk.
+	_alles_btn = Button.new()
+	_alles_btn.text = "alle modellen"
+	_alles_btn.toggle_mode = true
+	_alles_btn.toggled.connect(_on_alles_toggled)
+	row1.add_child(_alles_btn)
+	# Het echte bord eronder, met zijn eigen textures en licht.
+	_bord_btn = Button.new()
+	_bord_btn.text = "bord"
+	_bord_btn.toggle_mode = true
+	_bord_btn.toggled.connect(_zet_bord)
+	row1.add_child(_bord_btn)
 	for fb in [_my_fac_btn, _opp_fac_btn]:
 		(fb as OptionButton).item_selected.connect(func(_i: int) -> void:
 			if _formation_btn.button_pressed:
@@ -659,6 +689,115 @@ func _build_ui() -> void:
 	_info.add_theme_font_size_override("font_size", 11)
 	_info.add_theme_color_override("font_color", Color(0.66, 0.71, 0.82))
 	box.add_child(_info)
+
+
+# --- Team, alle modellen, bord (Max, 7 september) ---------------------------
+
+## Welk team hoort bij deze kant? kant 0 = links/eigen, 1 = tegenover.
+## "alles rood" en "alles blauw" negeren de kant: dan draagt ELK model dezelfde
+## jas, zodat je een hele factie in een teamkleur kunt beoordelen.
+func _team_voor(kant: int) -> int:
+	match (0 if _team_btn == null else _team_btn.selected):
+		1:
+			return Constants.Team.RED
+		2:
+			return Constants.Team.BLUE
+		_:
+			return Constants.Team.RED if kant == 0 else Constants.Team.BLUE
+
+
+## Bouw opnieuw op wat er NU staat: de alle-modellen-opstelling, de formatie,
+## of het losse model. Gebruikt door de team-keuze.
+func _herbouw_huidige() -> void:
+	if _alles_btn != null and _alles_btn.button_pressed:
+		_bouw_alle_modellen()
+	elif _formation_btn != null and _formation_btn.button_pressed:
+		_build_formation()
+	else:
+		_reload_pawns()
+
+
+func _on_alles_toggled(aan: bool) -> void:
+	if aan and _formation_btn != null and _formation_btn.button_pressed:
+		_formation_btn.set_pressed_no_signal(false)
+	if aan:
+		_bouw_alle_modellen()
+	else:
+		_clear_formation()
+		_alles_modus = false
+		_reload_pawns()
+
+
+## Alle zes de facties naast elkaar, van het gekozen type: facties in RIJEN
+## (naar achteren), archetypen in KOLOMMEN. Zo staat de muis-base naast de
+## beer-base en zie je meteen of de schaalverhouding klopt.
+##
+## Bij "rood vs blauw" krijgt elke tweede factie-rij de andere jas; kies je
+## "alles rood" of "alles blauw", dan draagt de hele opstelling die ene.
+func _bouw_alle_modellen() -> void:
+	_clear_formation()
+	if _pawn != null and is_instance_valid(_pawn):
+		_pawn.queue_free()
+		_pawn = null
+	if _ref != null and is_instance_valid(_ref):
+		_ref.queue_free()
+		_ref = null
+	_alles_modus = true
+	var tp: int = _type_btn.get_selected_id()
+	var facties: Array = Constants.DOCTRINE_DATA.keys()
+	var kol := 1.6
+	var rij := 1.6
+	for fi in facties.size():
+		for ai in ARCHS.size():
+			var arch: String = ARCHS[ai]
+			var card = null
+			if ARCH_CARDS.has(arch):
+				var st: Array = ARCH_CARDS[arch]
+				card = Card.new(0, 0, 0, int(st[0]), int(st[1]), int(st[2]))
+			var pv: PawnView = PAWN_SCENE.instantiate()
+			pv.team = _team_voor(fi % 2)
+			pv.position = Vector3((float(ai) - 2.0) * kol, 0.05,
+				(float(fi) - (facties.size() - 1) * 0.5) * rij)
+			add_child(pv)
+			pv.face_dir(Vector2i(0, 1))  # allemaal naar de camera
+			pv.set_unit_type(tp)
+			pv.set_character(int(facties[fi]), tp, card)
+			_formation_pawns.append({"pv": pv, "fac": int(facties[fi]), "tp": tp, "arch": arch})
+	_info.text = "Alle facties, %s. Rijen = %s (voor naar achter), kolommen = base/spd/hp/atk/mix. Sliders tunen het model uit de dropdowns." % [
+		Constants.unit_type_name(tp),
+		", ".join(facties.map(func(d): return Constants.doctrine_name(int(d))))]
+	_sync_sliders_from_tuning()
+	_apply_camera()
+
+
+## Het echte bord eronder (Board.tscn): tegels, bordmodel en zijn eigen licht.
+## Het bord is 11x11 tegels van 1x0.1x1 met de Board-node op (-5, 0, -5), dus de
+## oorsprong is de middelste tegel en het tegeloppervlak ligt op y = 0,05 -- net
+## waar de tuner zijn pionnen al neerzet. Verschuiven hoeft dus niet.
+##
+## De camera van Board.tscn zetten we UIT, anders neemt die het beeld over van
+## de tuner-camera. Het tuner-licht gaat omlaag zodat het bord-licht de sfeer
+## bepaalt; uit zetten we het niet, want dan valt de voorkant van de modellen weg.
+func _zet_bord(aan: bool) -> void:
+	if _bord != null and is_instance_valid(_bord):
+		_bord.queue_free()
+		_bord = null
+	if not aan:
+		if _tuner_light != null:
+			_tuner_light.light_energy = 1.2
+		return
+	var scene: PackedScene = load("res://Board.tscn")
+	if scene == null:
+		push_warning("Board.tscn niet gevonden; bord-view overgeslagen")
+		_bord_btn.set_pressed_no_signal(false)
+		return
+	_bord = scene.instantiate() as Node3D
+	add_child(_bord)
+	move_child(_bord, 0)  # onder de pionnen in de boom, telt niet voor 3D
+	for cam in _bord.find_children("*", "Camera3D", true, false):
+		(cam as Camera3D).current = false
+	if _tuner_light != null:
+		_tuner_light.light_energy = 0.55
 
 
 # --- Sleepbare paneelhoogte -------------------------------------------------
@@ -949,7 +1088,7 @@ func _build_formation() -> void:
 					var st: Array = ARCH_CARDS[arch]
 					card = Card.new(0, 0, 0, int(st[0]), int(st[1]), int(st[2]))
 				var pv: PawnView = PAWN_SCENE.instantiate()
-				pv.team = Constants.Team.RED if side == 0 else Constants.Team.BLUE
+				pv.team = _team_voor(side)
 				pv.position = Vector3((float(ci) - 2.0) * col_x, 0.05, sgn * row_z[tp])
 				add_child(pv)
 				pv.face_dir(Vector2i(0, -1) if side == 0 else Vector2i(0, 1))
@@ -974,14 +1113,14 @@ func _reload_pawns() -> void:
 	var unit_type: int = _type_btn.get_selected_id()
 	# Referentie: het geometrische stuk op de linker tegel (maatvergelijking).
 	_ref = PAWN_SCENE.instantiate()
-	_ref.team = Constants.Team.RED
+	_ref.team = _team_voor(0)
 	_ref.position = Vector3(-1.0, 0.05, 0.0)
 	add_child(_ref)
 	_ref.face_dir(Vector2i(0, 1))
 	_ref.set_unit_type(unit_type)
 	# Het echte model in het midden, via exact dezelfde route als in het spel.
 	_pawn = PAWN_SCENE.instantiate()
-	_pawn.team = Constants.Team.BLUE
+	_pawn.team = _team_voor(1)
 	_pawn.position = Vector3(0.0, 0.05, 0.0)
 	add_child(_pawn)
 	_pawn.face_dir(Vector2i(0, 1))  # neus naar de camera

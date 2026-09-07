@@ -1,5 +1,38 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- tuner: team-keuze, alle modellen naast elkaar, bord-view
+
+Drie wensen van Max in een keer: "alle modellen checken in rood of blauw", "alle
+modellen op een rij naast elkaar op het bord om zo de schaal te bepalen", en
+"een originele bord view zoals in het spel zelf met alle kleuren en textures".
+
+- **Team-keuze** (`rood vs blauw` / `alles rood` / `alles blauw`). Tot nu toe
+  kon je alleen rood TEGENOVER blauw zien, en dan staat de ene jas altijd van je
+  af. De keuze werkt door op het losse model, de formatie en de nieuwe
+  alle-modellen-opstelling.
+- **`alle modellen`**: zes facties in rijen, vijf archetypen in kolommen, 30
+  pionnen. De bestaande formatie-knop toont er maar twee, en de schaalvraag
+  ("is de beer te groot naast de muis?") gaat juist over alle zes tegelijk. Bij
+  `rood vs blauw` krijgt elke tweede factie-rij de andere jas.
+- **`bord`**: `Board.tscn` eronder, met zijn textures en zijn eigen licht. Twee
+  dingen moesten daarbij: de camera van het bord UIT (anders neemt die het beeld
+  over van de tuner-camera) en het tuner-licht omlaag naar 0,55 (niet uit, want
+  dan valt de voorkant van de modellen weg).
+- De camera zoomt in alle-modellen-modus verder uit (17 in plaats van 12,5 op de
+  bordhoek), anders vallen de buitenste rijen buiten beeld.
+
+Meevaller bij het bord: het is 11x11 tegels van 1x0,1x1 met de Board-node op
+(-5, 0, -5), dus de oorsprong IS de middelste tegel en het tegeloppervlak ligt op
+y = 0,05 -- precies de hoogte waarop de tuner zijn pionnen al zet. Geen enkele
+verschuiving nodig.
+
+`-- tunercheck` drukt de knoppen nu ook echt in, want alleen "bouwt de scene op"
+zegt niets over wat er PAS bij het indrukken gebeurt:
+
+    [TUNER] alle modellen: 30 pionnen op het veld
+    [TUNER] alles rood: 30 van de 30 pionnen rood
+    [TUNER] bord-view: 1 bord(en), 0 actieve bord-camera(s)
+
 ## 7 september -- teamprompts per MODEL in de tracker, ook voor het wapen
 
 Max: "nee het moet juist in de model tracker komen, nee zie ik maar 1 musket
