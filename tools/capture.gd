@@ -644,6 +644,61 @@ func _ready() -> void:
 		print("[WAPEN] %d model(len) bekeken, %d op de prop-route" % [wr_totaal, wr_prop])
 		get_tree().quit(0)
 		return
+	elif "debrischeck" in args:
+		# Worden lijken en gibs na een tijdje donker (Max, 7 september)? En blijft
+		# een LEVENDE pion met hetzelfde model onaangetast -- oftewel: is het
+		# materiaal per instantie gedupliceerd en niet het gedeelde glb-materiaal?
+		var db_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var db_fac: int = Constants.Doctrine.MUIS
+		var db_namen := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		for db_n in db_namen:
+			if db_n in args:
+				db_fac = db_namen[db_n]
+		var db_dood: PawnView = db_scene.instantiate()
+		var db_levend: PawnView = db_scene.instantiate()
+		for db_pv in [db_dood, db_levend]:
+			add_child(db_pv)
+			db_pv.set_unit_type(0)
+			db_pv.set_character(db_fac, 0, null)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		if String(db_dood._model_path) == "":
+			print("[DEBRIS] geen model geleverd voor deze factie; niets te meten")
+			get_tree().quit(0)
+			return
+		var db_meet := func(pv: PawnView) -> Color:
+			for mi in pv.find_children("*", "MeshInstance3D", true, false):
+				var m: Material = (mi as MeshInstance3D).material_override
+				if m == null:
+					m = (mi as MeshInstance3D).get_active_material(0)
+				if m is BaseMaterial3D:
+					return (m as BaseMaterial3D).albedo_color
+			return Color.WHITE
+		var db_voor: Color = db_meet.call(db_dood)
+		var db_levend_voor: Color = db_meet.call(db_levend)
+		db_dood._become_debris()
+		var db_na: float = PawnView.fx("debris_donker_na", 4.0)
+		var db_duur: float = PawnView.fx("debris_donker_duur", 2.5)
+		var db_kracht: float = PawnView.fx("debris_donker", 0.7)
+		print("[DEBRIS] instelling: na %.1f s, verloop %.1f s, kracht %.2f" % [db_na, db_duur, db_kracht])
+		await get_tree().create_timer(db_na + db_duur + 0.4).timeout
+		var db_daarna: Color = db_meet.call(db_dood)
+		var db_levend_na: Color = db_meet.call(db_levend)
+		var db_fouten := 0
+		var db_verwacht: float = 1.0 - clampf(db_kracht, 0.0, 1.0)
+		print("[DEBRIS] lijk : albedo %.2f -> %.2f (verwacht ~%.2f)" % [db_voor.r, db_daarna.r, db_verwacht])
+		if absf(db_daarna.r - db_verwacht) > 0.05:
+			print("[DEBRIS] FOUT: het lijk is niet donker geworden")
+			db_fouten += 1
+		print("[DEBRIS] levend: albedo %.2f -> %.2f (moet gelijk blijven)" % [db_levend_voor.r, db_levend_na.r])
+		if absf(db_levend_na.r - db_levend_voor.r) > 0.01:
+			print("[DEBRIS] FOUT: een LEVENDE pion verkleurde mee -- gedeeld materiaal aangeraakt")
+			db_fouten += 1
+		print("[DEBRIS] %s: %d fout(en)" % ["PASS" if db_fouten == 0 else "FAIL", db_fouten])
+		get_tree().quit(1 if db_fouten > 0 else 0)
+		return
 	elif "placetest" in args:
 		# Zelf opstellen: kanonnen + paarden plaatsen, infanterie vult aan.
 		game._start_match(1)

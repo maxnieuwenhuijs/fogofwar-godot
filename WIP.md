@@ -1,5 +1,34 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- lijken en gibs worden na een tijdje donker
+
+Max: "kan je ook een soort donkere shader gooien over alle stukjes lijk en gibs,
+na x seconden."
+
+Het probleem erachter: alles wat blijft liggen heeft dezelfde felheid als een
+LEVENDE pion, en debris verdwijnt pas bij de volgende definieerfase. Na een paar
+rondes is het bord een bonte bende waarin je de stukken die er nog toe doen niet
+meer terugvindt.
+
+Geen aparte shader nodig: `BaseMaterial3D.albedo_color` VERMENIGVULDIGT met de
+texture, dus die van wit naar donkergrijs tweenen dimt het hele stuk -- ook
+bovenop de gore-textures die er dan al op liggen. `PawnView.verduister_later()`
+doet dat voor het lijk, allebei de gib-wortels en het weggeslingerde wapen (de
+bloedvlekken blijven; die zijn al donker en horen bij de grond).
+
+Drie knoppen in `effects_tuning.json`, af te stellen in de Model-tuner tab Gore:
+`debris_donker_na` (4 s), `debris_donker_duur` (2,5 s), `debris_donker` (0,7).
+
+**De valkuil zat in het materiaal.** Een glb-materiaal is GEDEELD tussen alle
+pionnen met datzelfde model; kleur je dat, dan wordt elke levende muis ook
+donker. `verduister_later` dupliceert daarom eerst naar een `material_override`
+per instantie. De nieuwe modus `-- debrischeck [factie]` meet precies dat:
+
+    [DEBRIS] instelling: na 4.0 s, verloop 2.5 s, kracht 0.70
+    [DEBRIS] lijk : albedo 1.00 -> 0.30 (verwacht ~0.30)
+    [DEBRIS] levend: albedo 1.00 -> 1.00 (moet gelijk blijven)
+    [DEBRIS] PASS: 0 fout(en)
+
 ## 7 september -- kaarten en schermen wachten op de animaties
 
 Max: "speel altijd eerst alle animaties af voordat de nieuwe kaarten of schermen

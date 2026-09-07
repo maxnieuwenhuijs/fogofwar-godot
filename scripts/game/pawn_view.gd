@@ -1057,6 +1057,7 @@ func _fling_weapon(world_dir: Vector3) -> void:
 	arc.tween_property(w, "rotation", _flat_rotation(w), 0.12)
 	# Het musket blijft op het bord liggen (opruiming via battlefield_debris).
 	w.add_to_group("battlefield_debris")
+	verduister_later(w)
 
 
 ## Maak het wapen los voor de doodsworp. Twee routes:
@@ -1171,6 +1172,7 @@ func _become_debris() -> void:
 	if _team_ring != null:
 		_team_ring.visible = false  # gesneuveld: geen team-ring meer
 	add_to_group("battlefield_debris")
+	verduister_later(_piece if _piece != null else self)
 	if _sokkel != null and is_instance_valid(_sokkel):
 		_sokkel.visible = false  # geen team-marker onder een lijk (leest als pion)
 	var area := get_node_or_null("Area3D")
@@ -1505,6 +1507,7 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 		else:
 			_fling_part(part as Node3D, dir, violence)
 	parts_root.add_to_group("battlefield_debris")
+	verduister_later(parts_root)
 	return true
 
 
@@ -1686,6 +1689,7 @@ func _fling_limb_gibs(part_name: String, dir: Vector3, violence: float, time_sca
 	for deel in chosen:
 		_fling_part(deel as Node3D, dir, violence, time_scale)
 	parts_root.add_to_group("battlefield_debris")
+	verduister_later(parts_root)
 	return start
 
 
@@ -2553,6 +2557,49 @@ func _zet_wapenjas() -> void:
 			apply_albedo_to_mesh(mi as MeshInstance3D, jas)
 		else:
 			(mi as MeshInstance3D).material_override = null
+
+
+## Alles wat op het slagveld blijft liggen wordt na een tijdje donker: een lijk
+## of een brokstuk hoort niet even fel mee te schreeuwen als een levende pion.
+## Na een paar rondes is het bord anders een bonte bende waarin je de stukken
+## die er nog toe doen niet meer terugvindt.
+##
+## Geen aparte shader: albedo_color vermenigvuldigt met de texture, dus die van
+## wit naar donkergrijs tweenen dimt het hele stuk. Dat werkt ook bovenop de
+## gore-textures die er dan al op liggen.
+##
+## Knoppen (effects_tuning.json, Model-tuner tab Gore):
+##   debris_donker_na    seconden voordat het begint
+##   debris_donker_duur  hoe lang het verlopen duurt
+##   debris_donker       hoe donker (0 = onveranderd, 1 = zwart)
+static func verduister_later(root: Node) -> void:
+	if root == null or not is_instance_valid(root):
+		return
+	var kracht: float = clampf(fx("debris_donker", 0.7), 0.0, 1.0)
+	if kracht <= 0.001:
+		return
+	var na: float = maxf(fx("debris_donker_na", 4.0), 0.0)
+	var duur: float = maxf(fx("debris_donker_duur", 2.5), 0.05)
+	var doel := Color(1.0 - kracht, 1.0 - kracht, 1.0 - kracht, 1.0)
+	var meshes: Array = []
+	if root is MeshInstance3D:
+		meshes.append(root)
+	meshes.append_array(root.find_children("*", "MeshInstance3D", true, false))
+	for mi in meshes:
+		var m3 := mi as MeshInstance3D
+		# Per-instantie materiaal, anders verkleur je het GEDEELDE glb-materiaal
+		# en wordt elke levende pion met datzelfde model ook donker.
+		var mat: Material = m3.material_override
+		if not (mat is BaseMaterial3D):
+			var actief := m3.get_active_material(0)
+			if not (actief is BaseMaterial3D):
+				continue
+			mat = (actief as BaseMaterial3D).duplicate()
+			m3.material_override = mat
+		var bm := mat as BaseMaterial3D
+		var tw := m3.create_tween()
+		tw.tween_interval(na)
+		tw.tween_property(bm, "albedo_color", doel, duur).from(bm.albedo_color)
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):
