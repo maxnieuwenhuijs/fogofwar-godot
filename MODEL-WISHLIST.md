@@ -203,11 +203,16 @@ glimmend wel.
 unchanged. <team-toevoeging>. Gritty realistic AAA-game concept art, highly
 detailed, no text.`
 
-**De volledige teksten staan in `model-tracker.html`** (paneelknop of dubbelklik
-op het bestand), onder TEXTURES: daar staan ze klaar om te kopieren, en ze
-gelden voor ELK model -- er is maar EEN paar. Deze paragraaf beschrijft de
-regel, de tracker draagt de tekst; verander je iets, doe het daar en werk deze
-tabel bij. Ook de twee wapenjassen staan er.
+**De volledige teksten staan in `model-tracker.html`**, en daar worden ze PER
+MODEL gebouwd: klap een model open en je krijgt de model-prompt, de rood- en
+blauw-variant daarvan, de wapen-prompt en de rood- en blauw-retexture van dat
+wapen. Deze paragraaf beschrijft de regel, de tracker draagt de tekst; verander
+je iets, doe het in `const TEAM` en werk deze tabel bij.
+
+Let op wat de tracker voor BLAUW extra doet: hij haalt "weathered" en "battered"
+uit de model-prompt weg. Die woorden staan er standaard in en versterken de rode
+veldstaat, maar bij blauw zou er "wearing a weathered, immaculate uniform" staan
+-- dan kiest de generator er zelf een.
 
 Zelfde regel geldt voor de wapens, zie 3c. En dezelfde waarschuwing als daar:
 laat de materiaal-zin uit de oorspronkelijke model-prompt WEG, anders vraag je

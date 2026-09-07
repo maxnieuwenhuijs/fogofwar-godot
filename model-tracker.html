@@ -503,9 +503,25 @@ const MODEL_HOED = {
   "mouse.infantry_mix": true,
 };
 
+/* Teamstijl (besluit Max 7 september): ROOD is een veldleger dat maanden
+   onderweg is, BLAUW komt net uit het depot. Het verschil zit dus niet alleen in
+   de jaskleur maar ook in de STAAT -- dat leest van een afstand, twee gedempte
+   donkere jassen niet. Let op: het goud is naar BLAUW verhuisd; rood houdt dof
+   aangeslagen messing. `staat` sluit elke prompt af en vervangt het oude
+   "Muted colours, nothing bright or saturated" dat bij allebei stond. */
 const TEAM = {
-  rood:  { naam: "Rood team",  jas: "deep desaturated dark brick red", metaal: "antique brass gold", pluim: "lighter coral red" },
-  blauw: { naam: "Blauw team", jas: "deep desaturated dark navy blue", metaal: "dull silver",        pluim: "lighter steel blue" },
+  rood: {
+    naam: "Rood team", jas: "deep desaturated dark brick red",
+    metaal: "dull tarnished dark brass", pluim: "faded coral red",
+    staat: "The whole uniform is heavily weathered and field-worn after months on campaign: sun-bleached and faded cloth, dust and mud staining, frayed cuffs and hems, belts gone grey with wear, scratched and discoloured leather. Muted colours, nothing bright, nothing polished.",
+    wapen: "pale bleached worn wood stock, dull tarnished dark iron fittings, scuffed, chipped and battle-worn",
+  },
+  blauw: {
+    naam: "Blauw team", jas: "deep dark navy blue", schoon: true,
+    metaal: "mirror-polished silver and gleaming gilded gold", pluim: "steel blue",
+    staat: "The whole uniform is in immaculate parade condition, freshly issued from the depot: crisp clean cloth with sharp pressed edges, spotless bright white belts, glossy well-oiled leather, every metal fitting buffed and shining. Not a scuff or a stain anywhere.",
+    wapen: "mirror-polished silver steel with gleaming gilded brass fittings, dark stained lacquered wood stock, immaculate parade condition",
+  },
 };
 
 /* Draagt DIT model een hoed? MODEL_HOED is uit de glb's gelezen
@@ -531,9 +547,18 @@ function zonderHoed(tekst) {
 function teamPrompt(tekst, id, sleutel) {
   const t = TEAM[id];
   const hoed = heeftHoed(tekst, sleutel);
-  const s = (hoed ? tekst : zonderHoed(tekst))
+  let s = (hoed ? tekst : zonderHoed(tekst))
     .replace(/strictly dark grey/g, t.jas)
     .replace(/dark grey epaulettes/g, t.metaal + " epaulettes");
+  /* De model-prompt zegt "a weathered ... uniform" en bij de cavalerie "a
+     battered shako". Voor ROOD versterkt dat de veldstaat, maar voor BLAUW
+     spreekt het de paradestaat regelrecht tegen -- "wearing a weathered,
+     immaculate uniform" is onzin en de generator kiest er zelf een. Voor blauw
+     halen we die twee woorden er dus uit. */
+  if (t.schoon) {
+    s = s.replace(/\bweathered,\s*/g, "").replace(/\bweathered\s+/g, "")
+         .replace(/\bbattered\s+/g, "");
+  }
 
   /* De staart noemt alleen wat dit model ECHT draagt: infanterie heeft een jas
      met kruisbanden, knopen en epauletten, de big bro een harnas met gespen en
@@ -561,8 +586,21 @@ function teamPrompt(tekst, id, sleutel) {
     staart = delen.join(", ").replace(/^./, c => c.toUpperCase());
     if (staart) staart += ".";
   }
-  staart = (staart ? staart + " " : "") + "Muted colours, nothing bright or saturated. ";
+  staart = (staart ? staart + " " : "") + t.staat + " ";
   return s.replace("Clean neutral studio background", staart + "Clean neutral studio background");
+}
+
+
+/* Team-variant van een WAPEN-prompt (musket of melee).
+   Dit is een RETEXTURE van de bestaande glb, dus de vorm komt uit de mesh en de
+   prompt hoeft alleen de kleur te leveren. "Ignore its original materials" staat
+   er expliciet in: de model-prompt noemt de factie-materialen (bij de muis dof
+   donker ijzer en versleten bleek hout), en zonder die zin vraag je bij blauw
+   tegelijk om dof ijzer en gepolijst zilver -- dan kiest de dienst er zelf een. */
+function wapenTeamPrompt(watHetIs, id) {
+  const t = TEAM[id];
+  if (!watHetIs || !t) return null;
+  return `Retexture this weapon, keep the existing UV layout and geometry unchanged. It is ${watHetIs}. Ignore its original materials and retexture it as: ${t.wapen}. Gritty realistic AAA-game concept art, highly detailed, no text.`;
 }
 
 /* Startstand (23 juli 2026): alles wat al op disk staat, aangevinkt.
@@ -873,8 +911,18 @@ function bouw() {
             box += promptGroepHtml(`${f.naam} / ${unit} -- ROOD team (meteen in kleur)${hoedNoot}`, teamPrompt(prompt, "rood", mk), false, "teamrood");
             box += promptGroepHtml(`${f.naam} / ${unit} -- BLAUW team (meteen in kleur)${hoedNoot}`, teamPrompt(prompt, "blauw", mk), false, "teamblauw");
           }
-          if (musket) box += promptGroepHtml(`Musket ${f.naam} / ${unit}_musket`, musket, true);
-          if (melee) box += promptGroepHtml(`Melee ${f.naam} / ${unit}_melee`, melee, true);
+          if (musket) {
+            box += promptGroepHtml(`Musket ${f.naam} / ${unit}_musket (neutraal, voor de glb)`, musket, true);
+            const sil = MUSKET_SIL[arch];
+            box += promptGroepHtml(`${unit}_musket_red.png -- ROOD wapen (retexture)`, wapenTeamPrompt(sil, "rood"), true, "teamrood");
+            box += promptGroepHtml(`${unit}_musket_blue.png -- BLAUW wapen (retexture)`, wapenTeamPrompt(sil, "blauw"), true, "teamblauw");
+          }
+          if (melee) {
+            box += promptGroepHtml(`Melee ${f.naam} / ${unit}_melee (neutraal, voor de glb)`, melee, true);
+            const mw = MELEE_WAPENS[f.id] && MELEE_WAPENS[f.id][arch];
+            box += promptGroepHtml(`${unit}_melee_red.png -- ROOD wapen (retexture)`, wapenTeamPrompt(mw, "rood"), true, "teamrood");
+            box += promptGroepHtml(`${unit}_melee_blue.png -- BLAUW wapen (retexture)`, wapenTeamPrompt(mw, "blauw"), true, "teamblauw");
+          }
           box += `</div>`;
           html += `<tr class="promptrij" id="${prId}" hidden><td colspan="${STAPPEN.length + 3}">${box}</td></tr>`;
         }

@@ -1,5 +1,41 @@
 # Fog of War — Work In Progress & Context
 
+## 7 september -- teamprompts per MODEL in de tracker, ook voor het wapen
+
+Max: "nee het moet juist in de model tracker komen, nee zie ik maar 1 musket
+prompt per model bijv." Klopte: de tracker bouwt zijn prompts PER MODEL met
+functies, en daar zaten twee gaten.
+
+1. **`const TEAM` droeg nog het schema van 30 juli** (rood = brikrood + goud,
+   blauw = navy + zilver, allebei afgesloten met "muted, nothing bright or
+   saturated"). Nu draagt elk team ook een `staat`-zin: rood is een veldleger na
+   maanden campagne, blauw komt uit het depot. Het goud is naar blauw verhuisd
+   (zilver EN goud); rood houdt dof aangeslagen messing.
+2. **Per model stond er maar EEN wapen-prompt.** Nu staan er drie: de neutrale
+   voor de glb, plus een rood- en blauw-retexture. Zelfde voor de melee-wapens
+   van de cavalerie. Nieuwe functie `wapenTeamPrompt()`; die zet er expliciet
+   "Ignore its original materials" in, want de wapen-prompt noemt de
+   factie-materialen (bij de muis dof donker ijzer en bleek hout) en zonder die
+   zin vraag je bij blauw tegelijk om dof ijzer en gepolijst zilver.
+
+Ook opgelost: de model-prompt zegt "Wearing a weathered ... uniform" en bij de
+cavalerie "a battered shako". Voor rood versterkt dat de veldstaat, voor blauw
+stond er "wearing a weathered, immaculate uniform" -- onzin. Voor blauw worden
+die twee woorden er nu uitgehaald.
+
+**Twee keer dezelfde escape-val in een uur.** Een `` in een Python-heredoc
+werd een echt BACKSPACE-teken (0x08) in het JavaScript, dus de regex
+`/<BS>weathered,\s*/` matchte nooit -- en dat zie je niet aan de uitvoer van
+grep. Gevonden door de regel als `repr()` te printen. Eerder vandaag ging het
+net zo mis met `
+` in `assets
+ew 3d models` in paneel.ps1. Regel voor
+mezelf: bewerk je een bestand met backslashes via een heredoc, print de regel
+daarna als repr en controleer wat er echt staat.
+
+Gecontroleerd door de tracker-functies in node te draaien: JS geldig
+(`node --check`), en de zes prompts voor mouse/infantry_mix uitgeprint.
+
 ## 7 september -- teamstijl doorgevoerd in ALLE teamjas-prompts
 
 Max: "dit moet dan voor alle prompts team jas textures, de modellen blijven
