@@ -1,5 +1,46 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- low-poly schaakbord uit Blender
+
+Max, met een foto van een oud houten schaakbord: "kun je in blender een
+schaakbord maken in deze stijl alleen dan met weinig faces etc goed voor
+performance".
+
+Nieuw `tools/blender_schaakbord.py` (Blender 5.1, headless). Bouwt de plank
+als bmesh: een afgeronde rechthoek (4 hoeken x 4 segmenten) met een
+kwartrond profiel op de bovenrand (3 segmenten) en een zijwand; bovenkant en
+onderkant zijn elk EEN n-gon. Totaal 196 driehoeken, 100 vertices, een
+materiaal, tegen 930 driehoeken voor het Tripo-bord dat nu in Board.tscn
+staat. Al het hout zit in een textuur van 2048x2048 die het script zelf
+rekent met numpy (waarde-ruis met een eigen celmaat per as, zaagtand-ringen
+op twee schalen, porien, vuil, spikkels, krassen): elk vak is een eigen
+ingelegd stukje met zijn eigen nerfrichting en -dichtheid, het frame is een
+verstek-lijst van vier latten, dunne zwarte lijnen tussen de vakken en een
+licht biesje om het speelveld. De zijwand en de afronding projecteren dezelfde
+textuur van boven naar binnen gevouwen, dus ze bemonsteren het frame-hout
+zonder naad; de onderkant is een piepklein stukje frame. Kleuren uit de foto
+gepikt.
+
+Uitvoer in `assets/models/board/schaakbord/`: `schaakbord.glb` (2,5 MB,
+textuur ingebakken), `schaakbord.png` (de textuur los, voor een retexture),
+`bron/schaakbord.blend` (93 KB, wijst naar de png). Preview-render (Eevee,
+camera als de foto) in `results/schaakbord/schaakbord_preview.png`; daar ook
+een 11x11-proef (`--vakken 11`, de maat van het spelbord) als `bord11/`.
+Niet in Board.tscn gezet: dat is een keuze voor Max.
+
+Twee valkuilen onderweg, allebei in het script gedocumenteerd: (1) in bpy
+wist een toekenning aan `img.colorspace_settings.name` de buffer van een
+gegenereerd plaatje, dus na `pixels.foreach_set` nooit meer aanraken (eerste
+run leverde een pikzwart bord; nu een canary die de png terugleest); (2) een
+.blend in een map die Godot scant breekt de hele import-run zonder
+Blender-pad (er kwam ook voor de glb geen .import), vandaar `bron/` met
+`.gdignore`, net als "assets/new upload folder/".
+
+**Checks.** `--import` in Godot: glb en png netjes geimporteerd (Godot trekt
+de ingebakken textuur er als `schaakbord_schaakbord.png` naast, zoals bij
+`board_Image_0.png`); laadcheck via een SceneTree-script: een MeshInstance3D,
+196 driehoeken, albedo-textuur 2048x2048; `blender_tel_tris.py` telt ook 196.
+
 ## 8 september -- geluidsinstellingen in het menu
 
 Max: "voeg ook audio controllers toe in settings belangrijk."

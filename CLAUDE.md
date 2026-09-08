@@ -168,6 +168,25 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   hand MET `model_tuning.json` erop; een afstelling van een ouder model zet het
   wapen dan zichtbaar scheef. Draai dit als een wapen er raar bij hangt: het
   zegt of de plaatsing uit de .blend komt of uit de afstelling.
+- **Low-poly schaakbord bouwen (8 september):** `blender --background --python
+  tools/blender_schaakbord.py -- --uit assets/models/board/schaakbord/schaakbord.glb
+  [--vakken 8] [--textuur 2048] [--seed 7]`. Een afgeronde plank van 196
+  driehoeken (100 vertices) met EEN materiaal en EEN gebakken houttextuur
+  (numpy in Blender's Python, geen Cycles-bake): donker frame met ronde hoeken
+  en een afgeronde bovenrand, losse ingelegde licht/donker-vakken met dunne
+  zwarte lijnen, slijtage. Levert glb (textuur ingebakken) + png (voor een
+  retexture) + `bron/<naam>.blend` (bron/ krijgt een `.gdignore`: Godot wil
+  elke .blend zelf importeren en breekt zonder Blender-pad de hele
+  import-run) + een Eevee-preview in `results/schaakbord/`. `--vakken 11`
+  geeft het spelbord-formaat (vakken van 1 eenheid, plank 12,1 breed).
+  Knoppen: `--vak`, `--rand`, `--dikte`, `--hoek`/`--hoeksegmenten`,
+  `--afronding`/`--afrondsegmenten`, `--zonder-onderkant`, `--oorsprong
+  boven`, `--geen-preview`, `--geen-blend`. Zijwand en afronding bemonsteren
+  dezelfde textuur (van boven naar binnen gevouwen), dus geen naad en geen
+  tweede materiaal. Bpy-valkuil: na `pixels.foreach_set` NOOIT
+  `colorspace_settings` van een gegenereerd plaatje aanraken, dat wist de
+  buffer en je bewaart zwart (Blender 5.1.2); het script heeft er een canary
+  op.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

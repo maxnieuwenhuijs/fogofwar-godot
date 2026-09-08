@@ -7,7 +7,10 @@ Twee bestanden met dezelfde naam: die het minst diep zit wint.
 
 ```
 assets/models/
-  board/                  het bord
+  board/                  het bord (Tripo-model, 930 driehoeken)
+    schaakbord/           low-poly schaakbord, 196 driehoeken, gebouwd door
+                          tools/blender_schaakbord.py; bron/ = het .blend
+                          (met .gdignore, Godot mag dat niet importeren)
   props/                  gedeelde voorwerpen (prop_drum, prop_pole, ...)
   <factie>/               per factie, bv mouse/
     infantry/           de modellen zelf + gibs + musket-variant + teamkleuren
