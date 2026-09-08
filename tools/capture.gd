@@ -329,8 +329,12 @@ func _ready() -> void:
 		tr.set("_steps_per_frame", 8)  # laag voor de test (16+eval potjes is zwaar)
 		await get_tree().create_timer(6.0).timeout
 		print("[TRAINER] run klaar, generatie=%d — screenshot opslaan" % tr.get("_generation"))
-		get_viewport().get_texture().get_image().save_png("res://_shot_trainer.png")
-		print("[TRAINER] screenshot opgeslagen")
+		var tr_tex := get_viewport().get_texture()
+		if tr_tex != null:
+			tr_tex.get_image().save_png("res://_shot_trainer.png")
+			print("[TRAINER] screenshot opgeslagen")
+		else:
+			print("[TRAINER] headless: geen viewport-texture, screenshot overgeslagen")
 		get_tree().quit()
 		return
 

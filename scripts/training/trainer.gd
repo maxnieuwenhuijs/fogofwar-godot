@@ -10,6 +10,9 @@ const GAMES_PER_GEN := 8  # balans: betrouwbaar signaal, maar ~2× sneller dan 1
 ## F0.1: alle trainer-loting seedbaar. Default varieert per run (exploratie),
 ## maar zet run_seed vast en de hele trainingsrun is reproduceerbaar.
 var run_seed: int = int(Time.get_ticks_msec())
+## 8 september: ook dit (oude dashboard-)trainerpad speelt de echte regels
+## (C17: een regelset), niet de kale 4.1-defaults.
+var _rules: RulesConfig = RulesConfig.load_from_file(CRules.REGELS_BESTAND)
 @onready var rng: SeededRng = SeededRng.new(run_seed)
 const MAX_POOL := 8
 const EVAL_GAMES := 4   # kampioen vs baseline, voor de kracht-grafiek
@@ -166,7 +169,7 @@ func _start_generation() -> void:
 		var a2 = opp_ai if chal_is_p1 else chal_ai
 		var d1: int = _mutated_doctrine if chal_is_p1 else opp_doctrine
 		var d2: int = opp_doctrine if chal_is_p1 else _mutated_doctrine
-		var runner := MatchRunner.new(a1, a2, d1, d2, hash([run_seed, _generation, i]))
+		var runner := MatchRunner.new(a1, a2, d1, d2, hash([run_seed, _generation, i]), _rules)
 		_runners.append(runner)
 		_chal_side.append(Constants.PLAYER_1 if chal_is_p1 else Constants.PLAYER_2)
 		if i < _boards.size():
@@ -272,7 +275,7 @@ func _start_eval(is_new: bool) -> void:
 		ba.weights = (_baseline[base_doctrine] as Dictionary).duplicate()
 		var a1 = ca if champ_p1 else ba
 		var a2 = ba if champ_p1 else ca
-		var r := MatchRunner.new(a1, a2, pair[0], pair[1])
+		var r := MatchRunner.new(a1, a2, pair[0], pair[1], 0, _rules)
 		_eval_runners.append(r)
 		_eval_side.append(Constants.PLAYER_1 if champ_p1 else Constants.PLAYER_2)
 

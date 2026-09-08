@@ -78,6 +78,18 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 				print("[ARENA] facties uit %s (het regels-bestand droeg er geen)" % facties_bron)
 		else:
 			facties_bron = String(config.get("rules", ""))
+		# 8 september: dezelfde gedachte voor de fysieke basisregels van de pion
+		# (C12 basis-HP, C22 ruiter-ondergrens). Draagt het regels-bestand ze
+		# niet, dan gelden die van het echte spel, zodat ook een oude sweep de
+		# ruiter meet zoals hij nu op het bord staat. Uitzetten: zelfde
+		# schakelaar als de facties ("facties_uit_bestand": false).
+		var echt := RulesConfig.load_from_file(CRules.REGELS_BESTAND)
+		if (rules.basis_hp as Dictionary).is_empty() and not (echt.basis_hp as Dictionary).is_empty():
+			rules.basis_hp = echt.basis_hp.duplicate(true)
+			print("[ARENA] basis_hp uit %s (het regels-bestand droeg er geen)" % CRules.REGELS_BESTAND)
+		if (rules.stat_minimum as Dictionary).is_empty() and not (echt.stat_minimum as Dictionary).is_empty():
+			rules.stat_minimum = echt.stat_minimum.duplicate(true)
+			print("[ARENA] stat_minimum uit %s (het regels-bestand droeg er geen)" % CRules.REGELS_BESTAND)
 	var max_steps := int(config.get("max_steps", 1500))
 	var per := int(config.get("games_per_matchup", 5))
 	var base_seed := int(config.get("base_seed", 1000))
@@ -97,6 +109,8 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		# een run over de aangenomen facties of over de kale tabel ging.
 		"facties_bron": facties_bron,
 		"doctrines": (rules.doctrines if rules != null else {}),
+		"basis_hp": (rules.basis_hp if rules != null else {}),
+		"stat_minimum": (rules.stat_minimum if rules != null else {}),
 	}))
 	var matrix: Dictionary = {}
 	var games := 0

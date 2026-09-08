@@ -244,13 +244,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - **Alles meet het echte spel (8 augustus).** `arena/run.gd` legt het aangenomen
   `doctrines`-blok over elk regels-bestand dat er zelf geen draagt, net als
   `game.gd` voor een los potje; de run-metadata schrijft `facties_bron` + het
-  blok op. Ook de **fuzz** draait op `rules_v42_campaign.json`, dus mét
+  blok op. Sinds 8 september geldt dat ook voor de fysieke pionregels
+  `basis_hp` (C12) en `stat_minimum` (C22): draagt een regels-bestand ze
+  niet, dan komen ze uit `rules_v42_campaign.json` en staan ze in de
+  run-metadata. Ook de **fuzz** draait op `rules_v42_campaign.json`, dus mét
   campagne-economie en de echte facties. Wil je expres de kale tabel meten:
-  `"facties_uit_bestand": false` in de config.
+  `"facties_uit_bestand": false` in de config (zet ook de overlay van
+  `basis_hp`/`stat_minimum` uit). De factiezoeker en de regelzoeker
+  starten van `rules_v42_campaign.json` en erven dus alles; de oude
+  dashboard-trainer (`Trainer.tscn`, `-- trainer`) speelt sinds 8 september
+  ook die regels in plaats van kaal 4.1.
 - Arena: `.\arena.ps1 -Config arena/arena_configs/<x>.json -Procs N -Naam run`
   (machine heeft 32 threads). Dashboard: `python tools/dashboard/build_dashboard.py`
   → `results/dashboard.html`; vergelijken: `python tools/dashboard/compare_runs.py A B`.
-- Training: `train_ai.bat [min]` (6 facties, 4.1) of per factie met v4.2-regels:
+- Training: `train_ai.bat [min]` (6 facties, sinds 8 augustus op
+  `rules_v42_campaign.json`, dus de echte regels) of per factie:
   `<godot> --headless --path . res://tools/capture.tscn -- train <min> 6 6 <factie> <seed> arena/arena_configs/rules_v42_campaign.json`
   (trainer heeft een relatieve adoptie-gate + convergentiecheck; onder
   v4.2-regels traint hij op campagne-fitness: haven 3 > eliminatie 2 >

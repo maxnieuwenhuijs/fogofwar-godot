@@ -6,6 +6,12 @@
  "basis_hp": {
   "cav": 2
  },
+ "stat_minimum": {
+  "cav": {
+   "stamina": 2,
+   "attack": 2
+  }
+ },
  "campaign": {
   "cp_bijschrijving": "campagnelaag",
   "cp_effect_mode": "define_budget",

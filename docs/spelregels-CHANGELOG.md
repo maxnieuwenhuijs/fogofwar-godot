@@ -1,5 +1,25 @@
 # Spelregels — CHANGELOG
 
+## Meten — 8 september 2026 (de nieuwe regels overal; geen regelwijziging)
+
+*Max: "werk overal de nieuwe spelregels door en in alle trainers en
+factiezoekers, alles."*
+
+Nagelopen wie regels laadt. Trainer (`-- train`, `train_ai.bat`,
+TRAINING-NACHT), nachtrun-matrix, fuzz, ijk-sims, factiezoeker en
+regelzoeker lezen `rules_v42_campaign.json`; los potje, oefenpotje en online
+lezen `v42_default.json`; campagne-duels bouwen hun blok in
+`duel_rules_voor`. Die drie bronnen dragen 4.3.5 volledig (aura- en
+buitknoppen zitten in de campagne-defaults, `basis_hp` en `stat_minimum`
+staan erin). Wat nog achterliep: de zes `duur/rules_pt*.json` (C14-proeven,
+hadden wel `basis_hp`) hebben nu ook `stat_minimum`; `arena/run.gd` legt
+`basis_hp` en `stat_minimum` uit het echte spel over elk regels-bestand dat
+ze niet draagt (zoals hij al deed met de facties) en schrijft ze in de
+run-metadata; de oude dashboard-trainer (`Trainer.tscn`) speelde kaal 4.1
+en speelt nu de echte regels. Bewezen met een sweep-config zonder de
+knoppen (overlay gemeld, run-metadata 4.3.5 met beide blokken) en een
+fuzz onder 4.3.5.
+
 ## 4.3.5 — 8 september 2026 (de trom-bonus is dynamisch; de ruiter heeft minstens 2 stamina en 2 attack)
 
 *Besluit Max: "zorg dat als de drummer of vlag verplaatst dat ze dan ook de

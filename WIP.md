@@ -1,5 +1,40 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- de nieuwe regels overal: trainers, zoekers, arena, fuzz
+
+Max: "werk overal de nieuwe spelregels door en in alle trainers en
+factiezoekers, alles."
+
+**Wie laadt wat.** Drie bronnen dragen het echte spel: `rules_v42_campaign.json`
+(trainer via `-- train`/`train_ai.bat`/TRAINING-NACHT, de nachtrun-matrix
+`v42_matrix_l2.json`, fuzz, ijk-sims, `quick_l1`, `v42_check_*`,
+factiezoeker en regelzoeker als `BASIS` waar ze kandidaten van afleiden),
+`v42_default.json` (los potje, oefenpotje op de loopback en online via
+`OnlineBridge.nieuwe_match(_potje_regels())`) en `duel_rules_voor` in
+`solo_driver.gd` (campagne-duels, bot en mens). Alle drie hebben `basis_hp`
+en `stat_minimum`; de aura- en buitknoppen komen uit `CAMPAIGN_DEFAULTS`,
+dus die zaten al overal waar een campagne-blok staat.
+
+**Wat achterliep, nu bij.**
+- De zes `duur/rules_pt*.json` (C14-proeven) droegen `basis_hp` maar niet
+  `stat_minimum`: toegevoegd.
+- `arena/run.gd` legt nu ook `basis_hp` en `stat_minimum` uit
+  `rules_v42_campaign.json` over elk regels-bestand dat ze niet draagt
+  (dezelfde schakelaar als de facties, `facties_uit_bestand`), en schrijft
+  ze in de run-metadata. Bewezen met een proef-config op
+  `rules_v42d15_pf15.json` (droeg geen van beide): drie overlay-regels in de
+  log, run-metadata `4.3.5` met `basis_hp {cav: 2}` en `stat_minimum {cav:
+  {stamina: 2, attack: 2}}`.
+- De oude dashboard-trainer (`scripts/training/trainer.gd`, `Trainer.tscn`,
+  `-- trainer`) speelde zijn potjes zonder regels (kaal 4.1); hij laadt nu
+  `CRules.REGELS_BESTAND` en geeft dat aan beide MatchRunner-paden.
+- CLAUDE.md zei nog "train_ai.bat (6 facties, 4.1)"; dat pad geeft sinds 8
+  augustus `rules_v42_campaign.json` mee. Tekst rechtgezet.
+
+**Checks.** `--fuzz 40 4242` onder 4.3.5: 0 schendingen (55,7 s). Overlay-proef
+hierboven. Dashboard-trainer: een generatie gespeeld op de echte regels, gewichten onaangeraakt; de headless screenshot van `-- trainer` gaf een oude null-fout en is nu afgevangen zoals bij `-- play`. Geen regelwijziging, dus
+geen goldens.
+
 ## 8 september -- 4.3.5: de trom-bonus is dynamisch, en de ruiter heeft minstens 2/2
 
 Max: "zorg dat als de drummer of vlag verplaatst dat ze dan ook de buff
