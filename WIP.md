@@ -217,6 +217,44 @@ het kamp onder en de overkant boven het bord), `-- vosview` PASS,
 = `d9985647…`, 272 acties, cyclus 7: de nieuwe referentie sinds 4.3.5 van
 de andere sessie, het diorama rekent niet mee.
 
+**Bewoners: geanimeerde poppetjes (zelfde middag).** Max: "bedenk een manier
+dat ik kleine 3d poppetjes kan animeren die dingen doen daaromheen, bijv als
+ik een peasant_mouse aanlever die bij hout hakt als je op hem drukt." Nieuw
+`scripts/game/bewoner.gd` (`Bewoner`): laadt `<naam>.glb` uit
+`assets/models/bewoners/<naam>/`, schaalt op `hoogte` (0,62) met de voeten op
+het gras, sorteert de clips met dezelfde woordenlijst als de pionnen (idle is
+idle; walk, die, hit, rush, charge doen niet mee; al het onbekende zoals
+Chopping is een ACTIE), laat de idles om en om lopen en speelt bij een klik
+een actie, met geluid uit het manifest, daarna weer idle. Het factiewoord in
+de naam bepaalt waar hij staat: vooraan bij wie die factie speelt, aan de
+overkant bij de tegenstander, nergens als niemand haar speelt
+(`Omgeving.zet_facties`, uit `game._omgeving_facties` bij `_start_match`, de
+online reveal en de herstart vanaf de staat). Manifest `<naam>.json`, alles
+optioneel: hoogte, schaal, draai, plek, kant, idle, acties, geluid,
+geluid_moment, decor (stronk, houtstapel, kist, vuurtje), model (een glb
+elders hergebruiken). `verwerk_levering.py` herkent het woord `bewoners` in
+het pad: alleen de karakter-export met clips (geen musket, geen gibs, geen
+jassen) naar `assets/models/bewoners/<naam>/`, dan `-- bewonercheck`.
+Handleiding: `assets/models/bewoners/LEESMIJ.md`. Voorbeeld zonder eigen
+model: `soldaat_mouse.json` zet de muis-infanterist bij een houtstapel
+(acties melee en ready).
+
+Een echte valkuil onderweg: uispel crashte 4 s na de start (segfault). Alle
+instanties van een glb delen hun AnimationLibrary en Animation-objecten;
+PawnView hernoemt daarin de vuile Mixamo-namen zodra de eerste pion van dat
+model verschijnt, en de bewoner speelde net "Idle  2" die onder hem
+verdween. De bewoner neemt nu een diepe kopie van zijn bibliotheken en
+hernoemt zelf op dezelfde manier; `-- bewonercheck` bewaakt dat de kopie los
+is (`deelt_clips_met`) en kan een bewoner eerst N seconden idle laten staan
+(het wisselpad tussen idles, dat zat anders nergens in).
+
+**Checks.** `-- bewonercheck soldaat_mouse 8` PASS (idle1..3, melee1..2,
+ready1, eigen kopie, 8 s idle, actie in 4,0 s weer idle); `-- omgevingcheck`
+PASS (bewoners: menu 0, Wolf tegen Muis 1 aan de overkant op z -3,4, als Muis
+1 vooraan op z 14,6, klik raak); `-- uispel 777` = `d9985647…`;
+`-- herstelcheck 777` PASS; `verwerk_levering.py --droogloop` op een
+nep-inbox plaatst `bewoners/peasant_mouse` naast een gewone pion.
+
 ## 8 september -- geluidsinstellingen in het menu
 
 Max: "voeg ook audio controllers toe in settings belangrijk."

@@ -53,6 +53,15 @@ var _kraai_kop: Node3D
 var _kraai_kop_timer := 0.0
 var _tijd := 0.0
 var _mat_cache: Dictionary = {}
+# bewoners: de kleine poppetjes uit assets/models/bewoners/ (Bewoner)
+const BEWONER_SLOTS_EIGEN: Array = [Vector3(0.7, GROND_Y, 14.6), Vector3(4.1, GROND_Y, 13.6),
+		Vector3(2.5, GROND_Y, 15.4), Vector3(-1.3, GROND_Y, 12.5)]
+const BEWONER_SLOTS_ANDER: Array = [Vector3(9.5, GROND_Y, -3.4), Vector3(6.3, GROND_Y, -2.1),
+		Vector3(3.4, GROND_Y, -3.2)]
+var _bewoners_root: Node3D
+var _bewoners: Array = []
+var _factie_eigen := -1
+var _factie_ander := -1
 
 
 func bouw(camera: Camera3D, ui_laag: CanvasLayer) -> void:
@@ -65,9 +74,25 @@ func bouw(camera: Camera3D, ui_laag: CanvasLayer) -> void:
 	add_child(_props_root)
 	_bouw_kamp()
 	_bouw_overkant()
+	_bouw_bewoners()
 	if ui_laag != null:
 		_bouw_vignet(ui_laag)
 	pas_toe()
+
+
+## Welke facties er spelen (game.gd roept dit bij de start van een potje en
+## als de keuzes online binnenkomen): de bewoners van jouw factie komen in
+## het kamp vooraan, die van de ander aan de overkant, factieloze altijd.
+func zet_facties(eigen: int, ander: int) -> void:
+	if eigen == _factie_eigen and ander == _factie_ander and _bewoners_root != null:
+		return
+	_factie_eigen = eigen
+	_factie_ander = ander
+	_bouw_bewoners()
+
+
+func bewoners() -> Array:
+	return _bewoners.duplicate()
 
 
 ## Alle sfeer-knoppen die dit diorama raken, in een keer (game._apply_ambiance).
@@ -478,6 +503,110 @@ func _bouw_wegwijzer(pos: Vector3) -> void:
 	var plank2 := _mesh(_box(Vector3(0.42, 0.1, 0.03)), Color(0.55, 0.45, 0.28), root, Vector3(-0.14, 0.66, 0.0))
 	plank2.rotation.y = deg_to_rad(35.0)
 	_registreer(root, 0.95, Callable(self, "_reageer_wegwijzer"), {})
+
+
+# ---------------------------------------------------------------- bewoners
+
+func _bouw_bewoners() -> void:
+	for b in _bewoners:
+		if is_instance_valid(b):
+			for i in range(_props.size() - 1, -1, -1):
+				if _props[i].node == b:
+					_props.remove_at(i)
+			b.queue_free()
+	_bewoners.clear()
+	if _bewoners_root == null:
+		_bewoners_root = Node3D.new()
+		_bewoners_root.name = "Bewoners"
+		_props_root.add_child(_bewoners_root)
+	var slot: Dictionary = {"eigen": 0, "ander": 0}
+	for n in Bewoner.alle_namen():
+		var m := Bewoner.lees_manifest(String(n))
+		var fac := Bewoner.factie_van(String(n), m)
+		# met factie: standaard aan beide kanten, bij wie die factie speelt;
+		# zonder factie: standaard alleen vooraan
+		var kant := String(m.get("kant", "beide" if fac >= 0 else "eigen"))
+		var kanten: Array = []
+		if fac < 0:
+			kanten = ["eigen", "ander"] if kant == "beide" else [kant]
+		else:
+			if fac == _factie_eigen and kant != "ander":
+				kanten.append("eigen")
+			if fac == _factie_ander and kant != "eigen":
+				kanten.append("ander")
+		for k in kanten:
+			var b := Bewoner.new()
+			if not b.laad(String(n)):
+				b.free()
+				continue
+			var plek_sleutel := "plek" if k == "eigen" else "plek_ander"
+			if m.has(plek_sleutel):
+				var pl: Array = m[plek_sleutel]
+				b.position = Vector3(float(pl[0]), GROND_Y, float(pl[1]))
+			else:
+				var slots: Array = BEWONER_SLOTS_EIGEN if k == "eigen" else BEWONER_SLOTS_ANDER
+				b.position = slots[int(slot[k]) % slots.size()]
+				slot[k] = int(slot[k]) + 1
+			var draai_std := 0.0 if k == "eigen" else 180.0
+			b.rotation.y = deg_to_rad(float(m.get("draai", draai_std)))
+			_bewoners_root.add_child(b)
+			_bewoners.append(b)
+			_bouw_decor(b, m)
+			_registreer(b, b.hoogte, Callable(self, "_reageer_bewoner"), {"bewoner": b})
+
+
+## Spulletjes bij een bewoner (manifest "decor": ["stronk", "houtstapel",
+## "kist"]), als kinderen van het poppetje zodat ze meedraaien en meegaan.
+func _bouw_decor(b: Node3D, m: Dictionary) -> void:
+	var lijst: Array = Array(m.get("decor", []))
+	var off: Array = Array(m.get("decor_offset", [0.0, 0.5]))
+	var basis := Vector3(float(off[0]), 0.0, float(off[1]))
+	var i := 0
+	for d in lijst:
+		var pos := basis + Vector3(0.35 * float(i), 0.0, 0.0)
+		match String(d):
+			"stronk":
+				_mesh(_cilinder(0.15, 0.22), Color(0.40, 0.29, 0.18), b, pos + Vector3(0.0, 0.11, 0.0))
+				_mesh(_cilinder(0.13, 0.012), Color(0.62, 0.50, 0.33), b, pos + Vector3(0.0, 0.225, 0.0))
+				var blok := _mesh(_cilinder(0.045, 0.22), Color(0.55, 0.42, 0.26), b, pos + Vector3(0.0, 0.34, 0.0))
+				blok.rotation.z = deg_to_rad(6.0)
+			"houtstapel":
+				for r in 3:
+					for c in (3 - r):
+						var log := _mesh(_cilinder(0.04, 0.32), Color(0.45, 0.33, 0.20), b,
+								pos + Vector3(-0.09 + 0.09 * float(c) + 0.045 * float(r), 0.04 + 0.075 * float(r), 0.0))
+						log.rotation.x = deg_to_rad(90.0)
+			"kist":
+				_mesh(_box(Vector3(0.36, 0.22, 0.26)), Color(0.42, 0.31, 0.19), b, pos + Vector3(0.0, 0.11, 0.0))
+				_mesh(_box(Vector3(0.38, 0.03, 0.28)), Color(0.55, 0.42, 0.26), b, pos + Vector3(0.0, 0.235, 0.0))
+			"vuurtje":
+				var gloed := _mesh(_cilinder(0.1, 0.02), Color(0.9, 0.35, 0.08), b, pos + Vector3(0.0, 0.01, 0.0))
+				var gm := gloed.material_override as StandardMaterial3D
+				gm.emission_enabled = true
+				gm.emission = Color(1.0, 0.45, 0.1)
+				gm.emission_energy_multiplier = 1.4
+				for j in 3:
+					var st := _mesh(_cilinder(0.025, 0.28), Color(0.33, 0.23, 0.14), b, pos + Vector3(0.0, 0.03, 0.0))
+					st.rotation = Vector3(deg_to_rad(82.0), deg_to_rad(60.0 * float(j)), 0.0)
+			_:
+				pass
+		i += 1
+
+
+func _reageer_bewoner(p: Dictionary) -> void:
+	var b: Bewoner = p.bewoner
+	if not is_instance_valid(b):
+		p.bezig = false
+		return
+	if b.doe_actie():
+		b.actie_klaar.connect(func() -> void: p.bezig = false, CONNECT_ONE_SHOT)
+		return
+	# geen actie-clip: een huppeltje, zodat een klik altijd iets doet
+	var basis: Vector3 = b.scale
+	var tw := create_tween()
+	tw.tween_property(b, "scale", basis * Vector3(1.08, 0.9, 1.08), 0.08)
+	tw.tween_property(b, "scale", basis, 0.45).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void: p.bezig = false)
 
 
 # ---------------------------------------------------------------- reacties

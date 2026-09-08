@@ -469,6 +469,13 @@ index zoekt op naam) doet automatisch mee, geen code nodig; varianten heten
 | `prop_kikker` | `prop_kikker.wav` | 2 | kikker springt de plas over: plons, klein | geen | ➕ |
 | `prop_wegwijzer` | `prop_wegwijzer.wav` | 1 | wegwijzer wiebelt: hout kraakt | `impact_wood` | ➕ |
 
+**Bewoners** (de poppetjes, `assets/models/bewoners/LEESMIJ.md`): elke bewoner
+noemt in zijn manifest zelf zijn categorieen (`"geluid": ["bewoner_hakken",
+"prop_bijl", "impact_wood"]`, de eerste die bestaat klinkt) en het moment in
+de clip (`geluid_moment`). Afspraak: `bewoner_<wat hij doet>.wav`, bv.
+`bewoner_hakken.wav` (bijl in hout, kort), `bewoner_oefenen.wav` (geweerkolf
+op hout). Zo deelt een varken-houthakker en een muis-houthakker een geluid.
+
 ## ElevenLabs SFX-prompts (kopieer-klaar)
 
 Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:

@@ -1708,6 +1708,80 @@ func _ready() -> void:
 			otex.get_image().save_png("res://_shot_play_online.png")
 		get_tree().quit(0 if o_fouten == 0 else 1)
 		return
+	elif "bewonercheck" in args:
+		# 8 september: de poppetjes in assets/models/bewoners/ (Bewoner). Per
+		# bewoner: laadt hij, welke factie, hoe hoog, welke clips zijn idle en
+		# welke actie; dan een actie afspelen en kijken of hij daarna weer in
+		# idle staat. `-- bewonercheck <naam>` voor een enkele. Exit 1 bij een
+		# fout; een bewoner zonder actie-clip is een waarschuwing, geen fout.
+		var bw_i := args.find("bewonercheck")
+		var bw_wie: String = String(args[bw_i + 1]) if args.size() > bw_i + 1 else ""
+		# derde argument: zoveel seconden eerst idle laten staan (de idle-clips
+		# wisselen om en om; dat pad zit anders niet in de check)
+		var bw_idle_s: float = float(args[bw_i + 2]) if args.size() > bw_i + 2 else 0.0
+		var bw_namen: Array = [bw_wie] if bw_wie != "" else Bewoner.alle_namen()
+		var bw_fouten := 0
+		if bw_namen.is_empty():
+			print("[BEWONER] geen bewoners in assets/models/bewoners/ (zet er een <naam>.glb of <naam>.json neer)")
+		for bw_naam in bw_namen:
+			var bw := Bewoner.new()
+			add_child(bw)
+			if not bw.laad(String(bw_naam)):
+				print("[BEWONER] FOUT: %s laadt niet (geen glb gevonden?)" % bw_naam)
+				bw_fouten += 1
+				bw.queue_free()
+				continue
+			var bw_fac: String = Constants.doctrine_display_name(bw.factie) if bw.factie >= 0 else "iedereen"
+			print("[BEWONER] %s: factie=%s hoogte=%.2f idle=%s acties=%s geluid=%s" % [
+				bw_naam, bw_fac, bw.hoogte, str(bw.idles()), str(bw.acties()), str(bw.manifest.get("geluid", []))])
+			if bw.idles().is_empty():
+				print("[BEWONER] FOUT: %s heeft geen idle-clip" % bw_naam)
+				bw_fouten += 1
+			# eigen kopie van de clips? (een pion van hetzelfde model hernoemt
+			# anders de gedeelde bibliotheek onder hem vandaan: segfault)
+			var bw_model := String(bw.manifest.get("model", bw_naam))
+			var bw_pad := Bestandsindex.vind(Bewoner.BEWONERS_DIR, bw_model + ".glb")
+			if bw_pad == "":
+				bw_pad = Bestandsindex.vind(Bewoner.MODELS_DIR, bw_model + ".glb")
+			if bw_pad != "":
+				var bw_raw: Node = (load(bw_pad) as PackedScene).instantiate()
+				add_child(bw_raw)
+				var bw_ap: AnimationPlayer = Bewoner._zoek_anim(bw_raw)
+				if bw.deelt_clips_met(bw_ap):
+					print("[BEWONER] FOUT: %s deelt zijn clips nog met andere instanties van %s" % [bw_naam, bw_model])
+					bw_fouten += 1
+				else:
+					print("[BEWONER] %s: eigen kopie van de clips (los van %s)" % [bw_naam, bw_model])
+				bw_raw.queue_free()
+			if bw_idle_s > 0.0:
+				await get_tree().create_timer(bw_idle_s).timeout
+				if not bw.speelt_idle():
+					print("[BEWONER] FOUT: %s staat na %.0f s idle niet meer in een idle-clip" % [bw_naam, bw_idle_s])
+					bw_fouten += 1
+				else:
+					print("[BEWONER] %s: %.0f s idle gestaan, speelt %s" % [bw_naam, bw_idle_s, bw._anim.current_animation])
+			if bw.acties().is_empty():
+				print("[BEWONER] LET OP: %s heeft geen actie-clip, een klik geeft een huppeltje" % bw_naam)
+			else:
+				if not bw.doe_actie():
+					print("[BEWONER] FOUT: %s speelt zijn actie niet" % bw_naam)
+					bw_fouten += 1
+				var bw_t := 0.0
+				while bw.bezig and bw_t < 25.0:
+					await get_tree().create_timer(0.1).timeout
+					bw_t += 0.1
+				if bw.bezig:
+					print("[BEWONER] FOUT: %s komt na 25 s niet terug uit zijn actie" % bw_naam)
+					bw_fouten += 1
+				elif not bw.speelt_idle():
+					print("[BEWONER] FOUT: %s staat na zijn actie niet in idle" % bw_naam)
+					bw_fouten += 1
+				else:
+					print("[BEWONER] %s: actie gespeeld in %.1f s, weer idle" % [bw_naam, bw_t])
+			bw.queue_free()
+		print("[BEWONER] " + ("PASS" if bw_fouten == 0 else "FAIL (%d fouten)" % bw_fouten))
+		get_tree().quit(0 if bw_fouten == 0 else 1)
+		return
 	elif "omgevingcheck" in args:
 		# 8 september: het diorama om het bord (scripts/game/omgeving.gd).
 		# Bewijst dat de Omgeving er staat (grond, wolken, vignet, props), dat
@@ -1747,14 +1821,40 @@ func _ready() -> void:
 			if og.klik(og_midden):
 				print("[OMGEVING] FOUT: een klik op het bordmidden raakt een prop")
 				og_fouten += 1
-			# de langste korte reactie is de kogel (3,75 s); alleen de kraai
-			# blijft langer weg (16-28 s)
-			await get_tree().create_timer(4.5).timeout
+			# bewoners volgen de facties: soldaat_mouse (assets/models/bewoners)
+			# staat bij wie Muis speelt, vooraan bij jou, aan de overkant bij de
+			# ander, en nergens zolang niemand Muis speelt.
+			var bw_menu: int = og.bewoners().size()
+			og.zet_facties(Constants.Doctrine.WOLF, Constants.Doctrine.MUIS)
+			var bw_ander: Array = og.bewoners()
+			og.zet_facties(Constants.Doctrine.MUIS, Constants.Doctrine.WOLF)
+			var bw_eigen: Array = og.bewoners()
+			print("[OMGEVING] bewoners: menu=%d, Wolf tegen Muis=%d (z %s), als Muis=%d (z %s)" % [
+				bw_menu, bw_ander.size(), str(bw_ander.map(func(b): return snappedf(b.position.z, 0.1))),
+				bw_eigen.size(), str(bw_eigen.map(func(b): return snappedf(b.position.z, 0.1)))])
+			if Bewoner.alle_namen().has("soldaat_mouse"):
+				if bw_eigen.size() < 1 or bw_ander.size() < 1:
+					print("[OMGEVING] FOUT: soldaat_mouse verschijnt niet bij een Muis-speler")
+					og_fouten += 1
+				elif bw_eigen[0].position.z < 10.0 or bw_ander[0].position.z > 0.0:
+					print("[OMGEVING] FOUT: bewoner staat aan de verkeerde kant (eigen z %.1f, ander z %.1f)" % [bw_eigen[0].position.z, bw_ander[0].position.z])
+					og_fouten += 1
+			for b in bw_eigen:
+				var bp: Vector2 = og_cam.unproject_position((b as Node3D).global_position + Vector3(0.0, 0.3, 0.0))
+				if not og.klik(bp):
+					print("[OMGEVING] FOUT: klik op bewoner %s (scherm %s) raakt niets" % [b.naam, bp])
+					og_fouten += 1
+				elif not b.bezig and not b.acties().is_empty():
+					print("[OMGEVING] FOUT: bewoner %s speelt geen actie na de klik" % b.naam)
+					og_fouten += 1
+			# de langste korte reactie is een bewoner-actie (~4,2 s) of de kogel
+			# (3,75 s); alleen de kraai blijft langer weg (16-28 s)
+			await get_tree().create_timer(5.5).timeout
 			var og_bezig := 0
-			for p in og_props:
+			for p in og._props:
 				if p.bezig:
 					og_bezig += 1
-			print("[OMGEVING] na 4,5 s nog bezig: %d (alleen de kraai mag)" % og_bezig)
+			print("[OMGEVING] na 5,5 s nog bezig: %d (alleen de kraai mag)" % og_bezig)
 			if og_bezig > 1:
 				og_fouten += 1
 		print("[OMGEVING] " + ("PASS" if og_fouten == 0 else "FAIL (%d fouten)" % og_fouten))

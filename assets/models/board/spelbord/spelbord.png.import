@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bel0s0icl7kj5"
-path="res://.godot/imported/spelbord.png-5c9122888d71e7e6d8911a163ff1fd3c.ctex"
+path.s3tc="res://.godot/imported/spelbord.png-5c9122888d71e7e6d8911a163ff1fd3c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/board/spelbord/spelbord.png"
-dest_files=["res://.godot/imported/spelbord.png-5c9122888d71e7e6d8911a163ff1fd3c.ctex"]
+dest_files=["res://.godot/imported/spelbord.png-5c9122888d71e7e6d8911a163ff1fd3c.s3tc.ctex"]
 
 [params]
 

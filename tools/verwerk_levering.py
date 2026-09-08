@@ -143,8 +143,36 @@ def is_wapenmap(pad, wortel):
     return any(x in WAPENWOORDEN for x in woorden(rel.split(os.sep)))
 
 
+BEWONERWOORDEN = {"bewoner", "bewoners", "poppetje", "poppetjes", "inhabitant", "inhabitants"}
+
+
+def is_bewonermap(pad, wortel):
+    """Een bewoner (klein poppetje in het diorama, assets/models/bewoners/LEESMIJ.md):
+    het woord bewoners ergens in het pad onder de leveringsmap."""
+    rel = os.path.relpath(pad, wortel)
+    delen = re.split(r"[\\/]+", rel.lower())
+    return any(d in BEWONERWOORDEN for d in delen)
+
+
+def bewonernaam(blend):
+    """peasant_mouse.blend -> peasant_mouse; 'Peasant Mouse v2.blend' -> peasant_mouse_v2."""
+    naam = os.path.splitext(os.path.basename(blend))[0].lower()
+    return re.sub(r"[^a-z0-9]+", "_", naam).strip("_")
+
+
+def stappen_bewoner(blend, naam, uit_map):
+    """Alleen de karakter-export: clips mee, geen musket-stap, geen gibs."""
+    doel = os.path.join(uit_map, "bewoners", naam)
+    basis = os.path.join(doel, f"{naam}.glb")
+    plan = [("karakter", ["--background", blend, "--python",
+                          os.path.join(PROJ, "tools", "blender_export_blend.py"),
+                          "--", "--uit", basis])]
+    return doel, basis, plan
+
+
 def verzamel(wortel):
-    """Per submap: wat er te doen valt. (factie, soort, arch, team, blend, kleuren)"""
+    """Per submap: wat er te doen valt. (factie, soort, arch, team, blend, kleuren)
+    Een bewoner komt terug als ("bewoners", "bewoner", <naam>, ...)."""
     posten = []
     for r, _, fs in os.walk(wortel):
         blends = sorted(os.path.join(r, f) for f in fs if f.lower().endswith(".blend"))
@@ -155,6 +183,10 @@ def verzamel(wortel):
         w = padwoorden(r)
         if blends:
             w = w + woorden([os.path.splitext(os.path.basename(blends[0]))[0]])
+        if is_bewonermap(r, wortel) and blends:
+            posten.append(("bewoners", "bewoner", bewonernaam(blends[0]), None,
+                           blends[0], kleuren, r, False))
+            continue
         pl = plaats_uit_woorden(w)
         if pl is None:
             posten.append((None, None, None, None, blends[0] if blends else None, kleuren, r, False))
@@ -214,8 +246,10 @@ def _godot(godot, args):
     return r.returncode, (r.stdout + r.stderr).splitlines()
 
 
-def controleer(godot, modellen, facties):
+def controleer(godot, modellen, facties, bewoners=()):
     """De vaste controleronde na een bouw. Geeft het aantal problemen terug.
+    `bewoners` zijn namen als peasant_mouse: die krijgen bewonercheck in plaats
+    van wapen- en zweefcheck (geen wapen, geen tegel om op te staan).
 
     Precies de reeks uit MODEL-PIPELINE-CHECKLIST F/G die anders met de hand
     getypt moest worden. Alleen de regels die over DIT werk gaan worden getoond:
@@ -249,6 +283,16 @@ def controleer(godot, modellen, facties):
             problemen += 1
         else:
             print(f"  wapen  {naam}: {regel.split(':', 1)[1].strip()}")
+
+    for naam in bewoners:
+        code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "bewonercheck", naam])
+        uitslag = next((l for l in regels if l.startswith("[BEWONER] PASS") or l.startswith("[BEWONER] FAIL")), "")
+        for l in regels:
+            if l.startswith(f"[BEWONER] {naam}:") or "FOUT" in l or "LET OP" in l:
+                print(f"  bewoner {l.replace('[BEWONER] ', '')}")
+        ok = uitslag.startswith("[BEWONER] PASS")
+        problemen += 0 if ok else 1
+        print(f"  bewoner {naam}: {uitslag.replace('[BEWONER] ', '') or 'geen uitslag'}")
 
     for factie in sorted(facties):
         code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "zweefcheck", factie])
@@ -298,7 +342,11 @@ def main():
             waarvoor = "wapenjas" if wapen else "jas"
             wat.append(f"{len(kleuren)} {waarvoor}" + ("" if team is None else f" ({team})"))
         merk = "" if (team or not kleuren) else "   LET OP: team onbekend, jas blijft liggen"
-        print(f"  {os.path.relpath(r, a.map):48} -> {factie}/{soort}_{arch}: {', '.join(wat)}{merk}")
+        if soort == "bewoner":
+            wat = ["bewoner uit .blend (karakter + clips, geen wapen, geen gibs)"]
+            merk = "   LET OP: bewoners houden de textuur uit de glb, plaatjes blijven liggen" if kleuren else ""
+        label = f"bewoners/{arch}" if soort == "bewoner" else f"{factie}/{soort}_{arch}"
+        print(f"  {os.path.relpath(r, a.map):48} -> {label}: {', '.join(wat)}{merk}")
     for x in onbekend:
         print(f"  {os.path.relpath(x[6], a.map):48} -> ?? factie of archetype niet herkend")
     print()
@@ -311,8 +359,12 @@ def main():
 
     gebouwd, jassen, geweigerd, fout = [], [], [], []
     for factie, soort, arch, team, blend, kleuren, r, wapen in goed:
-        naam = f"{factie}/{soort}_{arch}"
-        doel, basis, plan = stappen(blend or "", factie, soort, arch, a.uit)
+        if soort == "bewoner":
+            naam = f"bewoners/{arch}"
+            doel, basis, plan = stappen_bewoner(blend or "", arch, a.uit)
+        else:
+            naam = f"{factie}/{soort}_{arch}"
+            doel, basis, plan = stappen(blend or "", factie, soort, arch, a.uit)
         os.makedirs(doel, exist_ok=True)
         if blend:
             mislukt = None
@@ -330,9 +382,12 @@ def main():
                 continue
             print(f"  OK   {naam}: model gebouwd")
             gebouwd.append(naam)
-            for sleutel in oude_afstelling(factie, soort, arch):
+            for sleutel in (oude_afstelling(factie, soort, arch) if soort != "bewoner" else []):
                 print(f"  LET OP {naam}: er ligt nog afstelling onder '{sleutel}' van het "
                       f"VORIGE model. Zet hem opnieuw in de Model-tuner.")
+        if soort == "bewoner":
+            # geen jassen: een bewoner draagt de textuur uit zijn eigen glb
+            continue
         if not os.path.exists(basis):
             if kleuren:
                 print(f"  FOUT {naam}: geen model om de jas op te leggen ({os.path.basename(basis)})")
@@ -377,9 +432,12 @@ def main():
     problemen = 0
     if (gebouwd or jassen) and not a.geen_controles:
         print("Controleren:")
-        problemen = controleer(a.godot, sorted(set(gebouwd)),
-                               {n.split("/")[0] for n in gebouwd} or
-                               {x[0] for x in goed})
+        pionnen = [n for n in gebouwd if not n.startswith("bewoners/")]
+        bewoners = [n.split("/", 1)[1] for n in gebouwd if n.startswith("bewoners/")]
+        problemen = controleer(a.godot, sorted(set(pionnen)),
+                               {n.split("/")[0] for n in pionnen} or
+                               {x[0] for x in goed if x[1] != "bewoner"},
+                               sorted(set(bewoners)))
         print()
         if problemen == 0:
             print("Alles klopt. Open de Model-tuner in het hoofdmenu voor schaal en hoogte;")

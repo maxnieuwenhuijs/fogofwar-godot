@@ -235,9 +235,33 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   een zwarte band weg); een orthografisch beeld verandert daar niet van.
   Deeltjes: de maat hoort in de quad, niet in scale_min/max van het
   ParticleProcessMaterial (die kwam niet door). Check: `-- omgevingcheck`
-  (lagen, props, klik per prop raak, bordmidden niet raak, alles behalve de
-  kraai na 4,5 s weer vrij; met venster `_shot_omgeving.png`), plus
-  `-- play` voor het beeld.
+  (lagen, props, klik per prop raak, bordmidden niet raak, bewoners volgen
+  de facties, alles behalve de kraai na 5,5 s weer vrij; met venster
+  `_shot_omgeving.png`), plus `-- play` voor het beeld.
+- **Bewoners: geanimeerde poppetjes in het diorama (8 september, Max: "een
+  peasant_mouse die bij hout hakt als je op hem drukt").**
+  `scripts/game/bewoner.gd` (`Bewoner`) laadt een glb met clips uit
+  `assets/models/bewoners/<naam>/`, schaalt hem op `hoogte` (0,62), zet zijn
+  voeten op het gras, laat de idle-clips lopen en speelt bij een klik een
+  ACTIE-clip een keer (met geluid uit het manifest). Clipnamen gaan door
+  dezelfde vertaling als de pionnen (`PawnView.CLIP_WOORDEN`): idle is idle,
+  walk/die/hit/rush/charge doen niet mee, **alles wat het spel niet kent
+  (Chopping, Cheer) is een actie**. Het factiewoord in de naam
+  (`peasant_mouse`) bepaalt waar hij staat: vooraan bij wie die factie
+  speelt, aan de overkant bij de tegenstander, nergens als niemand haar
+  speelt; zonder factiewoord altijd. `Omgeving.zet_facties` (uit
+  `game._omgeving_facties`, bij `_start_match`, de online reveal en de
+  herstart vanaf de staat) bouwt ze opnieuw. Manifest `<naam>.json` (alles
+  optioneel: hoogte, draai, plek, kant, idle, acties, geluid, geluid_moment,
+  decor zoals stronk/houtstapel/kist/vuurtje, model = een glb elders
+  hergebruiken): `assets/models/bewoners/LEESMIJ.md`. Levering:
+  `verwerk_levering.py` herkent het woord `bewoners` in het pad en doet dan
+  alleen de karakter-export (clips mee, geen musket, geen gibs, geen jassen)
+  naar `assets/models/bewoners/<naam>/<naam>.glb`, gevolgd door
+  `-- bewonercheck <naam>` (laadt, sorteert clips, speelt een actie, moet
+  weer in idle komen). Voorbeeld zonder eigen model:
+  `bewoners/soldaat_mouse/soldaat_mouse.json` hergebruikt de
+  muis-infanterist (acties melee en ready) bij een houtstapel.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

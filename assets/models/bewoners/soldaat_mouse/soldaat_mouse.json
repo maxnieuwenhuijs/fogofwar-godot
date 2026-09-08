@@ -1,0 +1,11 @@
+{
+  "model": "infantry_base",
+  "factie": "mouse",
+  "hoogte": 0.62,
+  "draai": 200,
+  "acties": ["melee", "ready"],
+  "geluid": ["bewoner_oefenen", "prop_bijl", "impact_wood"],
+  "geluid_moment": 0.8,
+  "decor": ["houtstapel"],
+  "decor_offset": [0.55, 0.15]
+}

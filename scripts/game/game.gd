@@ -876,7 +876,17 @@ func _start_match(difficulty: int) -> void:
 	else:
 		regels = _potje_regels()
 	session.start_new_game(_human_doctrine, _ai_doctrine, regels)
+	_omgeving_facties()
 	_show_placement_overlay()
+
+
+## De bewoners van het diorama volgen de facties: die van jou vooraan, die
+## van de ander aan de overkant (Omgeving.zet_facties). Aanroepen zodra de
+## keuzes bekend zijn: bij de start van een potje, als ze online binnenkomen
+## en bij een herstart vanaf de staat.
+func _omgeving_facties() -> void:
+	if _omgeving != null:
+		_omgeving.zet_facties(_human_doctrine, _ai_doctrine)
 
 
 ## De regels van een los potje (F4.3g: ook de online-weg gebruikt deze).
@@ -1241,6 +1251,7 @@ func _on_doctrines_revealed(_doctrines: Dictionary) -> void:
 	# dat de enige bron). De opstel-overlay volgt uit de fasewissel.
 	_human_doctrine = session.state.doctrine_of(_human_id)
 	_ai_doctrine = session.state.doctrine_of(_ai_id)
+	_omgeving_facties()
 
 
 func _on_state_updated(_state: GameState) -> void:
@@ -1300,6 +1311,7 @@ func _toon_fase_vanaf_staat() -> void:
 	var me: int = _human_id
 	_human_doctrine = st.doctrine_of(me)
 	_ai_doctrine = st.doctrine_of(_ai_id)
+	_omgeving_facties()
 	_card_hand.visible = false
 	_overlay.hide()
 	_end_wolf_step_mode()

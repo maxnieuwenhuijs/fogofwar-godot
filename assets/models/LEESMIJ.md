@@ -14,6 +14,9 @@ assets/models/
                           vervang je bij een retexture. bron/ = het .blend
                           (met .gdignore, Godot mag dat niet importeren)
     schaakbord/           dezelfde bouw als 8x8-schaakbord (referentie)
+  bewoners/               kleine geanimeerde poppetjes in het diorama, per
+                          stuk een map <naam>/ met <naam>.glb (+ <naam>.json);
+                          zie bewoners/LEESMIJ.md (peasant_mouse hakt hout)
     omgeving/             het landschap om het bord: gras.png (naadloze tegel),
                           gras_vlekken.png (grove multiply-laag), wolken.png
                           (wolkenschaduw, alfa); uit tools/maak_omgeving_texturen.py,
