@@ -204,7 +204,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   buffer en je bewaart zwart (Blender 5.1.2); het script heeft er een canary
   op. Checks na een bordwijziging: `-- uispel 777` (zobrist ongewijzigd, het
   bord is puur visueel), `-- play` (met venster: `_shot_play.png`),
-  `-- tunercheck` (knop bord).
+  `-- tunercheck` (knop bord). **De huidige `spelbord.png` is de
+  veld-retexture van 8 september** (AI-plaatje uit Max' prompt, 1024, jpeg
+  in `bron/spelbord_veld_origineel.jpeg`): een AI schuift het raster
+  makkelijk een paar procent op (toen 11,5 px in x, 29 px in y), dus elke
+  nieuwe retexture gaat door `python tools/bord_raster_fix.py <plaatje>
+  --uit assets/models/board/spelbord/spelbord.png [--raster <overlay.png>]`:
+  meet offset en vakmaat per as via het dambord-contrast, warpt affien op
+  het verwachte raster (frame 4,55%, 11 vakken) en weigert boven 2,5 px
+  restafwijking; de overlay tekent rood = verwacht, groen = gemeten. Daarna
+  `uv_check.py`, `--import`, `-- play`. Het houten bord terug: het
+  Blender-script opnieuw draaien.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

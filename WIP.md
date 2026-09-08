@@ -148,6 +148,20 @@ tot 11,05 in x en z, override met textuur 2048; `-- uispel 777` = zobrist
 op de hoeken, raster valt op de lijnen; `-- tunercheck`: 0 fouten, knop bord
 laadt Board.tscn met de camera uit.
 
+**Retexture naar een veld (zelfde middag).** Max vroeg een prompt ("het moet
+wel lijken alsof men op een veld is"); de truc daarin is een geblokt
+maaipatroon zoals op een voetbalveld, zodat de 11x11 leesbaar blijft op
+gras. Hij kwam terug met een AI-plaatje (1024, jpeg): "KAN JE DIT GEBRUIKEN
+DIRECT?" Bijna: de AI had het speelveld naar binnen en naar boven geschoven
+(gemeten 11,5 px in x en 29 px in y, een derde vak onderaan). Nieuw
+`tools/bord_raster_fix.py` meet waar het dambord werkelijk ligt (offset en
+vakmaat per as, door het dambord-contrast te maximaliseren) en warpt het
+plaatje affien op het raster dat de mesh verwacht; na de warp onder 1 px.
+Origineel bewaard in `bron/spelbord_veld_origineel.jpeg`, resultaat is de
+nieuwe `spelbord.png` (1024, dus lichter dan het houten 2048-plaatje).
+Checks: `uv_check.py` 100% (past), `--import`, `-- play`: pionnen en
+selectievakken precies op de grasplots.
+
 ## 8 september -- geluidsinstellingen in het menu
 
 Max: "voeg ook audio controllers toe in settings belangrijk."
