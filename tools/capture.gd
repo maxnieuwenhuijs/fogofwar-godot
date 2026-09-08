@@ -330,7 +330,7 @@ func _ready() -> void:
 		await get_tree().create_timer(6.0).timeout
 		print("[TRAINER] run klaar, generatie=%d — screenshot opslaan" % tr.get("_generation"))
 		var tr_tex := get_viewport().get_texture()
-		if tr_tex != null:
+		if tr_tex != null and tr_tex.get_image() != null:
 			tr_tex.get_image().save_png("res://_shot_trainer.png")
 			print("[TRAINER] screenshot opgeslagen")
 		else:
@@ -526,19 +526,56 @@ func _ready() -> void:
 	elif "zweefcheck" in args:
 		# Diagnose (3 september): welke mesh-nodes liggen BUITEN het bord na de
 		# opstelling (zwevende wapens/props)? Print naam, ouderketen en positie.
-		# Gebruik: -- zweefcheck [factie] (beide kanten dezelfde factie).
+		# Gebruik: -- zweefcheck [factie] [cyclus] (beide kanten dezelfde factie).
+		# 8 september (Max: "zwevende wapens bij blauw na ontkoppeling"): met een
+		# cyclus-getal >= 2 speelt de check door tot die cyclus (mens via het
+		# timeout-pad, bot zoals altijd), dus VOORBIJ de cyclus-reset waarin elke
+		# pion ontkoppelt en van vecht-model terug naar basismodel wisselt, en
+		# meet dan pas. Per pion ook team en koppeling, plus meshes die aan geen
+		# pion hangen en toch in de lucht staan (geen debris).
 		var zf := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
 			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		var zn_cyclus: int = 1
 		for zn in zf:
 			if zn in args:
 				game._human_doctrine = zf[zn]
 				game._ai_doctrine = zf[zn]
+		for za in args:
+			if String(za).is_valid_int() and int(za) >= 2:
+				zn_cyclus = int(za)
 		game._start_match(1)
 		await get_tree().create_timer(0.3).timeout
 		game._confirm_placement()
 		await get_tree().create_timer(1.5).timeout
+		if zn_cyclus >= 2:
+			var z_t0 := Time.get_ticks_msec()
+			var z_stil := Time.get_ticks_msec()
+			while GameSession.state.cycle < zn_cyclus and GameSession.state.phase != Phase.Type.GAME_OVER \
+					and Time.get_ticks_msec() - z_t0 < 10 * 60 * 1000:
+				var zst: GameState = GameSession.state
+				if Phase.is_reveal(zst.phase) and not zst.reveal_acks.get(1, false):
+					game._continue_after_reveal()
+					z_stil = Time.get_ticks_msec()
+				elif game._timer_active:
+					game._timer_left = 0.0
+					z_stil = Time.get_ticks_msec()
+				elif Time.get_ticks_msec() - z_stil > 3000 and zst.current_player == 1:
+					if zst.phase == Phase.Type.ACTION or Phase.is_linking(zst.phase):
+						game._on_phase_timeout()
+						z_stil = Time.get_ticks_msec()
+				await get_tree().create_timer(0.05).timeout
+			var zw := 0
+			while not game.is_rustig() and zw < 600:
+				zw += 1
+				await get_tree().create_timer(0.05).timeout
+			await get_tree().create_timer(1.0).timeout
+			print("[ZWEEF] gemeten in cyclus %d, fase %s" % [GameSession.state.cycle, Phase.to_string_phase(GameSession.state.phase)])
 		var buiten := 0
 		var totaal := 0
+		var los_in_de_lucht := 0
+		var view_van: Dictionary = {}
+		for vpid in game._pawn_views:
+			view_van[game._pawn_views[vpid]] = int(vpid)
 		for mi in game._world.find_children("*", "MeshInstance3D", true, false):
 			var m := mi as MeshInstance3D
 			if not m.is_visible_in_tree():
@@ -552,19 +589,94 @@ func _ready() -> void:
 			while pion != null and pion.get_parent() != game._pawns_root:
 				pion = pion.get_parent() as Node3D
 			var centrum: Vector3 = m.global_transform * m.get_aabb().get_center()
-			var ver: bool = pion != null and centrum.distance_to(pion.global_position) > 2.0
+			if pion == null:
+				# Bordrand-decor (Board/Omgeving/Props: hekjes, boompjes) telt niet mee.
+				var decor: bool = false
+				var dn: Node = m
+				while dn != null and dn != game._world:
+					if dn.name == "Omgeving" or dn.name == "Board":
+						decor = true
+					dn = dn.get_parent()
+				if centrum.y > 0.5 and not decor and not m.is_in_group("battlefield_debris"):
+					los_in_de_lucht += 1
+					print("[ZWEEF] LOS (geen pion): %s midden=(%.2f, %.2f, %.2f) keten=%s" % [
+						m.name, centrum.x, centrum.y, centrum.z, _zweef_keten(m, game._world)])
+				continue
+			# Gibs en ander strooisel hangen als eigen container onder Pawns (bv
+			# infantry_mix_gibs): geen pion, dus geen wapen dat zweeft. Sinds de
+			# check voorbij cyclus 1 meet (er vallen doden) telt alleen een echte
+			# PawnView mee.
+			if not (pion is PawnView):
+				continue
+			var ver: bool = centrum.distance_to(pion.global_position) > 2.0
 			if ver:
 				buiten += 1
-				var keten: Array = []
-				var n: Node = m
-				while n != null and n != game._world:
-					keten.append(n.name + ("(" + n.get_class() + ")" if not (n is MeshInstance3D) else ""))
-					n = n.get_parent()
-				var midden: Vector3 = m.global_transform * m.get_aabb().get_center()
-				print("[ZWEEF] %s node=(%.2f, %.2f, %.2f) meshmidden=(%.2f, %.2f, %.2f) keten=%s" % [m.name, gp.x, gp.y, gp.z,
-					midden.x, midden.y, midden.z, " < ".join(keten)])
-		print("[ZWEEF] meshes zichtbaar=%d, meer dan 2 van hun pion: %d (%s)" % [totaal, buiten, "PASS" if buiten == 0 else "FAIL"])
-		get_tree().quit(0)
+				var zpid: int = int(view_van.get(pion, -1))
+				var zp: Pawn = GameSession.state.pawns.get(zpid, null)
+				var team: String = "?"
+				if pion is PawnView:
+					team = "rood" if (pion as PawnView).team == Constants.Team.RED else "blauw"
+				var koppeling: String = "?"
+				if zp != null:
+					koppeling = "gekoppeld" if zp.linked_card_id != -1 else "ontkoppeld"
+					if zp.is_eliminated:
+						koppeling = "dood"
+				print("[ZWEEF] %s team=%s pion=%d (%s) node=(%.2f, %.2f, %.2f) meshmidden=(%.2f, %.2f, %.2f) keten=%s" % [
+					m.name, team, zpid, koppeling, gp.x, gp.y, gp.z, centrum.x, centrum.y, centrum.z,
+					_zweef_keten(m, game._world)])
+		# Fijnmeting (8 september, Max: "zwevende wapens bij het blauwe basismodel"):
+		# per pion de VERSTE mesh, zodat een wapen dat een halve tegel naast de
+		# hand hangt ook opvalt; de acht verste pionnen met team, model en koppeling.
+		var verste: Array = []
+		for vpv in game._pawn_views.values():
+			if not (vpv as Node3D).visible:
+				continue
+			var maxd: float = 0.0
+			var maxnaam: String = ""
+			for mi2 in (vpv as Node).find_children("*", "MeshInstance3D", true, false):
+				var m2 := mi2 as MeshInstance3D
+				if not m2.is_visible_in_tree():
+					continue
+				var c2: Vector3 = m2.global_transform * m2.get_aabb().get_center()
+				var d2: float = c2.distance_to((vpv as Node3D).global_position)
+				if d2 > maxd:
+					maxd = d2
+					maxnaam = m2.name
+			var vpid: int = int(view_van.get(vpv, -1))
+			var vp: Pawn = GameSession.state.pawns.get(vpid, null)
+			var vteam: String = "rood" if (vpv as PawnView).team == Constants.Team.RED else "blauw"
+			var vkop: String = "?" if vp == null else ("dood" if vp.is_eliminated else ("gekoppeld" if vp.linked_card_id != -1 else "ontkoppeld"))
+			var wh: Dictionary = (vpv as PawnView).wapen_hand_afstand()
+			verste.append({"d": maxd, "naam": maxnaam, "pid": vpid, "team": vteam, "kop": vkop,
+				"model": String((vpv as PawnView)._model_path).get_file(), "rol": String((vpv as PawnView)._rol),
+				"swaps": (vpv as PawnView).swaps, "hand": float(wh.afstand), "bron": String(wh.bron), "wapen": String(wh.wapen)})
+		verste.sort_custom(func(a, b): return float(a.hand) > float(b.hand))
+		var los_van_hand := 0
+		for v in verste:
+			if float(v.hand) > 0.25:
+				los_van_hand += 1
+		for i in verste.size():
+			var v: Dictionary = verste[i]
+			if i >= 12 and String(v.rol) == "" and float(v.hand) <= 0.25:
+				continue
+			print("[ZWEEF] wapen-hand %.2f (%s %s) swaps=%d pion=%d team=%s %s model=%s rol=%s" % [
+				float(v.hand), String(v.bron), String(v.wapen), int(v.swaps), int(v.pid), String(v.team), String(v.kop), String(v.model), String(v.rol)])
+		print("[ZWEEF] wapens verder dan 0.25 van de hand: %d" % los_van_hand)
+		# Headless geeft soms wel een texture maar geen image: save_png op null
+		# brak de run af VOOR quit() en liet het proces hangen (8 september).
+		var z_tex := get_viewport().get_texture()
+		if z_tex != null and z_tex.get_image() != null:
+			game._overlay.hide()
+			game._card_hand.visible = false
+			await get_tree().create_timer(0.3).timeout
+			var z_img: Image = z_tex.get_image()
+			if z_img != null:
+				z_img.save_png("res://_shot_zweefcheck.png")
+				print("[ZWEEF] screenshot -> _shot_zweefcheck.png")
+		var z_ok: bool = buiten == 0 and los_in_de_lucht == 0
+		print("[ZWEEF] meshes zichtbaar=%d, meer dan 2 van hun pion: %d, los in de lucht: %d (%s)" % [
+			totaal, buiten, los_in_de_lucht, "PASS" if z_ok else "FAIL"])
+		get_tree().quit(0 if z_ok else 1)
 		return
 	elif "windcheck" in args:
 		# Wind (8 september): een richting per potje, alle vlaggen wapperen die
@@ -614,12 +726,14 @@ func _ready() -> void:
 		print("[WIND] %s: %d fout(en) over drie windrichtingen" % ["PASS" if fouten == 0 else "FAIL", fouten])
 		# Met venster: een plaatje van de laatste stand (225 graden) als bijvangst.
 		var wind_tex := get_viewport().get_texture()
-		if wind_tex != null:
+		if wind_tex != null and wind_tex.get_image() != null:
 			game._overlay.hide()
 			game._card_hand.visible = false
 			await get_tree().create_timer(0.3).timeout
-			wind_tex.get_image().save_png("res://_shot_windcheck.png")
-			print("[WIND] screenshot -> _shot_windcheck.png")
+			var wind_img: Image = wind_tex.get_image()
+			if wind_img != null:
+				wind_img.save_png("res://_shot_windcheck.png")
+				print("[WIND] screenshot -> _shot_windcheck.png")
 		get_tree().quit(0 if fouten == 0 else 1)
 		return
 	elif "audiopaneel" in args:
@@ -663,10 +777,12 @@ func _ready() -> void:
 			ap_fouten += 1
 		print("[AUDIO] bewaard in settings_check.cfg: %s" % ("OK" if ok_cfg else "FOUT"))
 		var ap_tex := get_viewport().get_texture()
-		if ap_tex != null:
+		if ap_tex != null and ap_tex.get_image() != null:
 			await get_tree().create_timer(0.3).timeout
-			ap_tex.get_image().save_png("res://_shot_audiopaneel.png")
-			print("[AUDIO] screenshot -> _shot_audiopaneel.png")
+			var ap_img: Image = ap_tex.get_image()
+			if ap_img != null:
+				ap_img.save_png("res://_shot_audiopaneel.png")
+				print("[AUDIO] screenshot -> _shot_audiopaneel.png")
 		Audio.stop_music()
 		for s in ap_oud:
 			Audio.zet_volume(String(s), float(ap_oud[s]), false)
@@ -3007,6 +3123,16 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 		return 0.5
 	var kant: int = Constants.PLAYER_1 if nieuw_is_p1 else Constants.PLAYER_2
 	return 1.0 if winner == kant else 0.0
+
+
+## Ouderketen van een node tot aan de wereld, voor de zweefcheck.
+func _zweef_keten(n: Node, wereld: Node) -> String:
+	var keten: Array = []
+	var k: Node = n
+	while k != null and k != wereld:
+		keten.append(k.name + ("(" + k.get_class() + ")" if not (k is MeshInstance3D) else ""))
+		k = k.get_parent()
+	return " < ".join(keten)
 
 
 func _click_at(pos: Vector2) -> void:

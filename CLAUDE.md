@@ -97,10 +97,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   nooit rechtstreeks `remaining_stamina` voor een beslissing. Engine:
   `Rules.aura_bonus`/`Rules.effectieve_attack`/`Rules.trom_bonus`; bots:
   `aura_waarde` (leerbaar). **Op het bord:** elke tegel in de vorm krijgt een
-  minimale gloeiende rand in de kleur van het rol-icoon (goud = vaandel,
-  blauw = trom; beide op een tegel = goud buiten, blauw net daarbinnen;
-  vijand gedimd), en de stat-blokjes die uit de aura komen (stamina boven
-  de kaart, attack boven de kaart) krijgen een randje in dezelfde kleur.
+  minimale gloeiende rand in de kleur van het TEAM van de drager
+  (`AURA_KLEUR` in game.gd, 8 september: rood = oranjerood voor het vaandel
+  en karmijn voor de trom, blauw = hemelsblauw en indigo; vaandel is
+  altijd de lichte tint, trom de diepe; vaandel buiten, trom net
+  daarbinnen; vijand gedimd), en de stat-blokjes die uit de aura komen
+  (stamina boven de kaart, attack boven de kaart) en het rol-icoon onder
+  de blokjes krijgen dezelfde teamkleur.
   Expres GEEN vlak (Max: "vreselijk"). Sterkte: knop `aura_gloed` in het
   sfeer-paneel (toets L). Code: `_werk_aura_bij` in game.gd, per frame uit
   de staat, telt mee in `render_digest` (herstelcheck). **Wind (8
@@ -390,9 +393,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   thema over het hele spel en schermen kiezen vormen met
   `theme_type_variation` (lijst bij THEMA-VARIANTEN in dat bestand). Nieuwe
   png's onder `assets/ui/` eerst `--import`-en. Zie `assets/ui/LEESMIJ.md`.
-- **Zwevende wapens/props: `-- zweefcheck [factie]`** (capture.tscn, na de
+- **Zwevende wapens/props: `-- zweefcheck [factie] [cyclus]`** (capture.tscn, na de
   opstelling: elke zichtbare mesh die meer dan 2 eenheden van zijn eigen pion
-  staat, met naam en ouderketen; PASS/FAIL). Bot-geparente wapens uit Blender
+  staat, met naam en ouderketen; PASS/FAIL). Met een cyclus-getal (bv `muis
+  2`, 8 september) speelt hij door tot die cyclus, dus voorbij de reset
+  waarin iedereen ontkoppelt en van vecht- naar basismodel terugwisselt, en
+  print per pion de afstand hand-tot-wapen (`PawnView.wapen_hand_afstand`:
+  prop of ingebakken, met team, rol en modelwissels; boven 0,25 = verdacht,
+  de vaandelstok zit door zijn lengte op 0,35), met venster ook
+  `_shot_zweefcheck.png`. Gibs tellen niet mee. Zo kwam de "zwevende musket
+  bij blauw" boven water: de figuranten sapper/canteen/drummajor heten
+  anders dan hun props (prop_axe/prop_barrel/prop_mace) en kregen daardoor
+  een onafgestelde losse musket; nu `PawnView.PROP_ALIAS` plus de vangrail
+  dat een rol zonder prop zijn ingebakken musket houdt. Bot-geparente wapens uit Blender
   5.1 zweefden meters naast de hand door een export- en importbug; de
   pijplijn corrigeert dat (`tools/blender_botkind_fix.py`, zie
   MODEL-PIPELINE-CHECKLIST sectie C). Draai dit na elke her-export.

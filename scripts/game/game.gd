@@ -1438,7 +1438,8 @@ func render_digest() -> Dictionary:
 	highlights.sort()
 	var aura: Array = []
 	for e in _aura_gloed:
-		aura.append("%s:%d,%d" % [String(e.rol), (e.pos as Vector2i).x, (e.pos as Vector2i).y])
+		aura.append("%s%s:%d,%d" % [String(e.rol), "R" if int(e.get("team", 0)) == Constants.Team.RED else "B",
+			(e.pos as Vector2i).x, (e.pos as Vector2i).y])
 	aura.sort()
 	var tegels: Array = []
 	for t in _wolf_step_tiles:
@@ -1733,7 +1734,27 @@ const HP_COLOR_ATTACK := Color(0.98, 0.56, 0.3)
 ## trom-icoon, en een letter met een dikke rand leest op deze maat prima. Zodra
 ## de assets er zijn is dit een TextureRect.
 const ROL_TEKEN := {"flag": "\u2691", "drum": "\u266A"}
-const ROL_KLEUR := {"flag": Color(0.95, 0.82, 0.35), "drum": Color(0.62, 0.80, 1.0)}
+## Aura-kleur per TEAM en rol (8 september, Max: "geef de teams hun eigen
+## kleur invloed-area"). Binnen een team is het vaandel de lichte, warme
+## tint en de trom de diepe tint, zodat je op het bord in een oogopslag ziet
+## WIENS vorm het is en WELKE. Rood: oranjerood / karmijn; blauw:
+## hemelsblauw / indigo. Dezelfde kleur zit om de extra stat-blokjes en op
+## het rol-icoon onder de blokjes.
+const AURA_KLEUR := {
+	Constants.Team.RED: {"flag": Color(1.0, 0.58, 0.30), "drum": Color(1.0, 0.30, 0.42)},
+	Constants.Team.BLUE: {"flag": Color(0.45, 0.80, 1.0), "drum": Color(0.42, 0.48, 1.0)},
+}
+
+
+## Team van een eigenaar (speler 1 = rood, speler 2 = blauw), voor de kleuren.
+static func _team_van(owner_id: int) -> int:
+	return Constants.Team.RED if owner_id == Constants.PLAYER_1 else Constants.Team.BLUE
+
+
+## De aura-kleur van een rol voor het team van deze eigenaar.
+static func rol_kleur(rol: String, owner_id: int) -> Color:
+	var per_team: Dictionary = AURA_KLEUR[_team_van(owner_id)]
+	return per_team.get(rol, Color.WHITE)
 
 
 func _werk_rol_iconen_bij(state: GameState, total_w: float, total_h: float) -> void:
@@ -1748,7 +1769,7 @@ func _werk_rol_iconen_bij(state: GameState, total_w: float, total_h: float) -> v
 			lbl.visible = false
 			continue
 		lbl.text = String(ROL_TEKEN[rol])
-		lbl.add_theme_color_override("font_color", ROL_KLEUR[rol])
+		lbl.add_theme_color_override("font_color", rol_kleur(rol, pawn.owner_id))
 		lbl.visible = true
 		# Onder de blokjes, gecentreerd op de kolom-breedte.
 		lbl.position = Vector2(total_w * 0.5 - 5.0, total_h + 1.0)
@@ -1757,7 +1778,8 @@ func _werk_rol_iconen_bij(state: GameState, total_w: float, total_h: float) -> v
 # --- C21-aura op het bord (7 september) ----------------------------------------
 
 ## Een minimale gloeiende RAND op elke tegel in de vorm om een levende tamboer
-## (blauw: +1 stamina bij het koppelen) of vaandeldrager (goud: +1 attack), in
+## (+1 stamina bij het koppelen) of vaandeldrager (+1 attack), in de kleur van
+## het TEAM van de drager (AURA_KLEUR: vaandel licht, trom diep), in
 ## de kleuren van het rol-icoon; de tegel van de drager zelf niet. Max wilde
 ## expres geen vlak ("vreselijk"): alleen de rand, en dezelfde kleurrand om
 ## de stat-blokjes die uit de aura komen (zie _update_health_bars). Eén dun
@@ -1786,9 +1808,10 @@ func _werk_aura_bij() -> void:
 	if bereik > 0:
 		for pawn in state.pawns.values():
 			var rol: String = String(pawn.rol)
-			if pawn.is_eliminated or not ROL_KLEUR.has(rol) or int(knoppen[rol]) <= 0:
+			if pawn.is_eliminated or not knoppen.has(rol) or int(knoppen[rol]) <= 0:
 				continue
 			var eigen: bool = pawn.owner_id == _human_id
+			var team: int = _team_van(pawn.owner_id)
 			for dx in range(-bereik, bereik + 1):
 				for dy in range(-bereik, bereik + 1):
 					if dx == 0 and dy == 0:
@@ -1797,15 +1820,19 @@ func _werk_aura_bij() -> void:
 					if not Constants.is_on_board(vak):
 						continue
 					var key: String = "%s:%d,%d" % [rol, vak.x, vak.y]
+					# Per tegel en rol een rand; eigen wint van vijand, en de rand
+					# draagt de kleur van het team dat hem wint.
 					if not tegels.has(key):
-						tegels[key] = {"rol": rol, "pos": vak, "eigen": eigen}
-					elif eigen:
+						tegels[key] = {"rol": rol, "pos": vak, "eigen": eigen, "team": team}
+					elif eigen and not bool(tegels[key].eigen):
 						tegels[key].eigen = true
+						tegels[key].team = team
 	var keys: Array = tegels.keys()
 	keys.sort()
 	var delen: PackedStringArray = []
 	for key in keys:
-		delen.append("%s%s" % [key, "+" if bool(tegels[key].eigen) else "-"])
+		delen.append("%s%s%s" % [key, "+" if bool(tegels[key].eigen) else "-",
+			"R" if int(tegels[key].team) == Constants.Team.RED else "B"])
 	var sleutel: String = "%d|%s" % [bereik, ",".join(delen)]
 	if sleutel == _aura_sleutel:
 		return
@@ -1813,13 +1840,13 @@ func _werk_aura_bij() -> void:
 	_aura_sleutel = sleutel
 	for key in keys:
 		var t: Dictionary = tegels[key]
-		_maak_aura_rand(t.pos, String(t.rol), bool(t.eigen))
+		_maak_aura_rand(t.pos, String(t.rol), bool(t.eigen), int(t.team))
 
 
 ## Een dunne gloeiende rand op één tegel: vierkant verloop dat pas bij de
 ## buitenste ~10% oplicht (zachte binnenkant, felle rand).
-func _maak_aura_rand(vak: Vector2i, rol: String, eigen: bool) -> void:
-	var kleur: Color = ROL_KLEUR[rol]
+func _maak_aura_rand(vak: Vector2i, rol: String, eigen: bool, team: int) -> void:
+	var kleur: Color = (AURA_KLEUR[team] as Dictionary)[rol]
 	var basis: float = AURA_ALPHA * (1.0 if eigen else AURA_VIJAND)
 	var grad := Gradient.new()
 	grad.offsets = PackedFloat32Array([0.0, 0.80, 0.93, 1.0])
@@ -1850,7 +1877,7 @@ func _maak_aura_rand(vak: Vector2i, rol: String, eigen: bool) -> void:
 	mi.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
 	mi.position = tile_position(vak.x, vak.y) + Vector3(0.0, AURA_HOOGTE, 0.0)
 	_board.add_child(mi)
-	_aura_gloed.append({"node": mi, "mat": mat, "basis": basis, "rol": rol, "pos": vak})
+	_aura_gloed.append({"node": mi, "mat": mat, "basis": basis, "rol": rol, "pos": vak, "team": team})
 
 
 func _wis_aura() -> void:
@@ -1973,11 +2000,11 @@ func _update_health_bars() -> void:
 				var trom: bool = c >= pawn.remaining_stamina and c < stamina_nu
 				randen[HP_COLS + c].visible = trom
 				if trom:
-					randen[HP_COLS + c].border_color = ROL_KLEUR["drum"]
+					randen[HP_COLS + c].border_color = rol_kleur("drum", pawn.owner_id)
 				var vaandel: bool = c >= pawn.attack_value and c < attack_nu
 				randen[2 * HP_COLS + c].visible = vaandel
 				if vaandel:
-					randen[2 * HP_COLS + c].border_color = ROL_KLEUR["flag"]
+					randen[2 * HP_COLS + c].border_color = rol_kleur("flag", pawn.owner_id)
 
 
 # --- State-sync --------------------------------------------------------------

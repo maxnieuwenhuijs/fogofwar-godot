@@ -75,6 +75,7 @@ var _vlag_as: Vector3 = Vector3.UP     # stok-as (omhoog), in prop-ruimte
 var _vlag_breedte: float = 0.0
 var _vlag_zak: float = 0.0             # hoe ver het doek onder de top hangt
 var _baked_wapens: Array = []  # zichtbare INGEBAKKEN muskets (geskinde MeshInstance3D's)
+var swaps: int = 0  # diagnose (zweefcheck): hoe vaak dit stuk van model wisselde
 var _baked_prop_pad: String = ""  # statische musket-glb die bij de dood vanaf de hand vliegt
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
@@ -1913,6 +1914,8 @@ func set_unit_type(unit_type: int) -> void:
 ## game.gd rekent de afstanden uit en zet de rol hier in `rol_vast`. Minimaal 4
 ## vakken tussen twee gelijke rollen; zie `_verdeel_figurant_rollen` in game.gd.
 const ROLLEN_EXTRA := ["horn", "sapper", "canteen", "drummajor"]
+## Rol -> geleverde prop-naam (props/LEESMIJ.md); zie prop_for.
+const PROP_ALIAS := {"sapper": "prop_axe", "canteen": "prop_barrel", "drummajor": "prop_mace"}
 ## Kleine legers krijgen maar een vaandel en een tamboer; vanaf dit aantal
 ## infanteristen komt het tweede stel erbij (besluit Max, 28 juli).
 const TWEEDE_STEL_VANAF := 8
@@ -1985,6 +1988,15 @@ static func prop_for(rol: String, fac: String) -> Dictionary:
 	var namen: Array = ["prop_" + rol]
 	if rol == "flag":
 		namen.append("prop_pole")
+	# De extra figuranten heten in de code naar hun rol (sapper, canteen,
+	# drummajor) maar de props zijn geleverd onder de naam van het VOORWERP
+	# (props/LEESMIJ.md: prop_axe = sapeur, prop_barrel = marketentster,
+	# prop_mace = tamboer-majeur). Zonder deze aliassen vond geen van de drie
+	# ooit zijn prop, verborg _attach_weapon het ingebakken musket en hing
+	# hij een onafgestelde losse musket op: het "zwevende wapen" naast een
+	# ontkoppelde basispion (Max, 8 september).
+	if PROP_ALIAS.has(rol):
+		namen.append(String(PROP_ALIAS[rol]))
 	for naam in namen:
 		# Eerst een factie-eigen prop, dan de gedeelde set. De sleutel blijft
 		# "<factie>/<naam>" of "props/<naam>" -- dus onafhankelijk van de map
@@ -2065,6 +2077,7 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	if _piece != null:
 		_piece.queue_free()
 		_piece = null
+		swaps += 1
 	if _sokkel != null:
 		_sokkel.queue_free()
 		_sokkel = null
@@ -2172,6 +2185,51 @@ func _vind_ingebakken_wapens() -> Array:
 	return uit
 
 
+## Diagnose (zweefcheck, 8 september): waar hangt het wapen ten opzichte van de
+## rechterhand? {afstand, wapen, bron}; afstand -1 als er geen wapen of geen
+## hand-bot is. bron = "ingebakken" (geskind/bot-geparent mesh) of "prop".
+func wapen_hand_afstand() -> Dictionary:
+	var uit: Dictionary = {"afstand": -1.0, "wapen": "", "bron": ""}
+	if _piece == null:
+		return uit
+	var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return uit
+	var skel: Skeleton3D = skels[0]
+	var bone := -1
+	for cand in ["mixamorig:RightHand", "RightHand"]:
+		bone = skel.find_bone(cand)
+		if bone >= 0:
+			break
+	if bone < 0:
+		for i in skel.get_bone_count():
+			if String(skel.get_bone_name(i)).contains("RightHand"):
+				bone = i
+				break
+	if bone < 0:
+		return uit
+	var hand: Vector3 = (skel.global_transform * skel.get_bone_global_pose(bone)).origin
+	var wapen: Node3D = null
+	if _weapon != null and is_instance_valid(_weapon):
+		wapen = _weapon
+		uit.bron = "prop"
+	elif not _baked_wapens.is_empty() and is_instance_valid(_baked_wapens[0]):
+		wapen = _baked_wapens[0]
+		uit.bron = "ingebakken"
+	if wapen == null:
+		return uit
+	var mi: MeshInstance3D = wapen as MeshInstance3D
+	if mi == null:
+		var kinderen: Array = wapen.find_children("*", "MeshInstance3D", true, false)
+		if kinderen.is_empty():
+			return uit
+		mi = kinderen[0]
+	var midden: Vector3 = mi.global_transform * mi.get_aabb().get_center()
+	uit.afstand = midden.distance_to(hand)
+	uit.wapen = String(mi.name)
+	return uit
+
+
 ## Het meegebakken musket verbergen — alleen nog voor de PROP-route (muis,
 ## figuranten, modellen zonder eigen musket-glb): daar hangen we zelf een prop
 ## in de hand en zou het ingebakken wapen dubbel staan. Sinds 16 augustus is
@@ -2213,7 +2271,16 @@ func _attach_weapon(fac: String) -> void:
 			n = n.get_parent()
 		if beweegt:
 			meebewegend.append(mi)
-	if _rol == "" and not meebewegend.is_empty() and meebewegend.size() == ingebakken.size():
+	# Een rol telt hier alleen mee als er ook echt een prop voor ligt. Een rol
+	# ZONDER prop (bestand weg of verkeerd genoemd) houdt gewoon zijn
+	# ingebakken musket: de oude terugval (musket verbergen en een statische
+	# musket-glb ophangen) zette op een baked model een wapen zonder
+	# afstelling 0,44 naast de hand (8 september).
+	var rp: Dictionary = {"file": "", "key": ""}
+	if _rol != "":
+		rp = prop_for(_rol, fac)
+	var rol_met_prop: bool = String(rp["file"]) != ""
+	if not rol_met_prop and not meebewegend.is_empty() and meebewegend.size() == ingebakken.size():
 		var bp := weapon_for(_model_path, fac, soort)
 		if String(bp["file"]) != "":
 			_baked_wapens = meebewegend
@@ -2233,12 +2300,11 @@ func _attach_weapon(fac: String) -> void:
 			return
 	_verberg_ingebakken_wapen()
 	var wp := weapon_for(_model_path, fac, soort)
-	if _rol != "":
-		# Figurant: trommel/vaandel in plaats van het musket. Ontbreekt de
-		# prop, dan valt hij terug op het gewone wapen (niets gaat stuk).
-		var rp := prop_for(_rol, fac)
-		if String(rp["file"]) != "":
-			wp = rp
+	if rol_met_prop:
+		# Figurant: trommel/vaandel/attribuut in plaats van het musket. Een
+		# rol zonder prop komt hier alleen nog op een model ZONDER ingebakken
+		# musket (oude modellen) en krijgt dan het gewone, afgestelde wapen.
+		wp = rp
 	var path: String = wp["file"]
 	_weapon_tune_key = wp["key"]
 	if path == "":

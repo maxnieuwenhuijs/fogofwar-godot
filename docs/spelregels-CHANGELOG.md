@@ -1,5 +1,26 @@
 # Spelregels — CHANGELOG
 
+## Client — 8 september 2026 (aura in teamkleur; figuranten-props; geen regelwijziging)
+
+*Max: "geef de teams ook hun eigen kleur invloed-area, dus de drummer een
+kleur roodish en de vaandel ook maar net verschillend, en hetzelfde geldt
+voor blauw."*
+
+- De aura-rand op het bord draagt nu de kleur van het TEAM van de drager:
+  rood = oranjerood (vaandel) en karmijn (trom), blauw = hemelsblauw
+  (vaandel) en indigo (trom). Binnen een team is het vaandel de lichte tint
+  en de trom de diepe; vaandel buiten, trom net daarbinnen; de vijand blijft
+  gedimd. De randjes om de extra stat-blokjes en het rol-icoon onder de
+  blokjes volgen dezelfde teamkleur. Tabel `AURA_KLEUR` in `game.gd`.
+- Zwevende musket naast een ontkoppelde basispion (Max, screenshot): de
+  extra figuranten heten in de code sapper/canteen/drummajor, maar hun
+  props zijn geleverd als `prop_axe`/`prop_barrel`/`prop_mace`. Geen van de
+  drie vond ooit zijn prop; de terugval verborg het ingebakken musket en hing
+  een onafgestelde losse musket op, 0,44 naast de hand. Nu: aliassen in
+  `prop_for` (`PawnView.PROP_ALIAS`) plus een vangrail (een rol zonder prop
+  houdt zijn ingebakken musket). Gemeten met `-- zweefcheck muis 2`: alle
+  props op 0,00-0,12 van de hand (vaandelstok 0,35 door zijn lengte).
+
 ## Meten — 8 september 2026 (de nieuwe regels overal; geen regelwijziging)
 
 *Max: "werk overal de nieuwe spelregels door en in alle trainers en

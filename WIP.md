@@ -1,5 +1,59 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- zwevende musket bij figuranten; aura in teamkleur
+
+Max (screenshot): "er gaat toch iets mis met zwevende wapens, met name bij
+het blauwe team, base model, na ontkoppeling" en "het zit hem echt bij muis
+model_base blauw".
+
+**Diagnose.** `-- zweefcheck` kreeg een `[cyclus]`-argument (speelt door tot
+die cyclus, dus voorbij de reset waarin elke pion ontkoppelt en van vecht-
+naar basismodel terugwisselt) en meet nu per pion de afstand tussen de
+rechterhand-bot en het midden van het wapen (`PawnView.wapen_hand_afstand`,
+prop of ingebakken), met team, koppeling, rol en het aantal modelwissels.
+Uitkomst: rood en blauw identiek, dus geen teambug. Wat wel opviel: de
+figuranten met rol sapper/canteen/drummajor droegen een losse musket op 0,44
+van de hand. Oorzaak: de props zijn geleverd als `prop_axe`, `prop_barrel` en
+`prop_mace` (props/LEESMIJ.md: sapeur, marketentster, tamboer-majeur), maar
+`prop_for` zocht `prop_sapper`, `prop_canteen`, `prop_drummajor`. Geen van de
+drie vond ooit zijn prop; de terugval verborg het ingebakken musket en hing
+de statische musket-glb (zonder afstelling, dus op zijn bind-positie) in de
+hand. Dat is de musket die rechtop naast de pion stond. Blauw viel op omdat
+de blauwe figuranten in beeld stonden; rood had hem net zo goed.
+
+**Fix.** `PawnView.PROP_ALIAS` (sapper -> prop_axe, canteen -> prop_barrel,
+drummajor -> prop_mace) in `prop_for`, en een vangrail in `_attach_weapon`:
+een rol telt alleen als er ook echt een prop ligt, anders houdt de pion zijn
+ingebakken musket (de oude terugval naar een losse musket geldt nog alleen
+voor modellen zonder ingebakken musket, die hebben er een afstelling voor).
+Gemeten (`-- zweefcheck muis 2`, cyclus 2 na de ontkoppel-reset): bijl, vat
+en staf op 0,00-0,01 van de hand, hoorn 0,07, musket 0,11, trom 0,12,
+vaandelstok 0,35 (zijn lengte); "verder dan 0,25": alleen de twee vaandels.
+Screenshot bekeken: elke blauwe basispion houdt zijn musket vast. Voor bijl,
+vat en staf staat nog geen afstelling in `model_tuning.json`; ze hangen op
+het handbot zelf (dat is de Model-tuner, tab Hand).
+
+**Headless-hang.** De nieuwe screenshot in zweefcheck (en windcheck,
+audiopaneel, trainer) deed `get_image().save_png()` op een texture die
+headless soms wel bestaat maar geen image geeft; die scriptfout brak de
+coroutine af VOOR `quit()` en liet het proces meer dan tien minuten hangen.
+Nu overal `get_image() != null` als voorwaarde.
+
+**Aura in teamkleur.** Max: "geef de teams ook hun eigen kleur invloed-area,
+dus de drummer een kleur roodish en de vaandel ook maar net verschillend, en
+hetzelfde geldt voor blauw." `ROL_KLEUR` is `AURA_KLEUR` per team geworden:
+rood = oranjerood (vaandel) / karmijn (trom), blauw = hemelsblauw (vaandel) /
+indigo (trom); vaandel is in beide teams de lichte tint, trom de diepe.
+`_werk_aura_bij` onthoudt per tegel het team van de drager die de tegel wint
+(eigen boven vijand, vijand gedimd zoals eerder), `_maak_aura_rand` kleurt
+ermee, de randjes om de extra stat-blokjes en het rol-icoon volgen het team
+van de pion (`rol_kleur(rol, owner_id)`), en `render_digest` telt het team
+mee in de aura-sleutel.
+
+**Checks.** `-- zweefcheck muis 2` (venster) PASS, screenshot bekeken;
+`-- herstelcheck 777`: PASS, 141 momenten, 0 verschillen, canary 0; `-- uispel 777`: d9985647, 272 acties, cyclus 7 (ongewijzigd, de engine is niet geraakt);
+testsuite: 2471 groen, 0 rood (761 s). Geen regelwijziging, dus geen goldens.
+
 ## 8 september -- de nieuwe regels overal: trainers, zoekers, arena, fuzz
 
 Max: "werk overal de nieuwe spelregels door en in alle trainers en

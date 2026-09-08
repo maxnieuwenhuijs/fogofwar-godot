@@ -468,7 +468,7 @@ ook iets voor hun eigen leger, en dat verschuift de vraag "waar zet ik ze" van
 | Stapelen | Nee. Een tamboer én een vaandel is +1 stamina én +1 attack, meer wordt het nooit (en sinds 4.3.4 heeft een leger er ook maar één van elk). |
 | Gekoppeld of niet | Maakt niet uit, zoals de buit sinds 4.3.2: de rol zit op de pion. Dood is dood. |
 | Wanneer stamina | Dynamisch (4.3.5). Loopt de trom weg of stap je eruit voordat je het punt gebruikte, dan is het weg; stap je erin (of komt de trom naast je staan) en gebruikte je het nog niet, dan heb je het. Een pion met een lege voorraad die in de vorm staat, kan dus nog één keer handelen. Tot 4.3.4 kreeg je het punt alleen bij het koppelen en bleef het van jou. |
-| Zichtbaar | De rol staat in de fog-view (4.3.2), dus ook de aura van de vijand is af te lezen. Op het bord: een minimale gloeiende rand op elke tegel in de vorm (goud = vaandel, blauw = trom, vijand gedimd) en een randje in die kleur om de stat-blokjes die uit de aura komen. |
+| Zichtbaar | De rol staat in de fog-view (4.3.2), dus ook de aura van de vijand is af te lezen. Op het bord: een minimale gloeiende rand op elke tegel in de vorm in de kleur van het team van de drager (rood: oranjerood = vaandel, karmijn = trom; blauw: hemelsblauw = vaandel, indigo = trom; vijand gedimd) en een randje in die kleur om de stat-blokjes die uit de aura komen. |
 | Zonder campagne-blok | Rollen bestaan niet, dus ook geen aura (4.1 blijft byte-identiek). |
 | Knoppen | `aura_bereik` (1), `aura_tamboer_stamina` (1), `aura_vaandel_attack` (1); 0 = uit. |
 
