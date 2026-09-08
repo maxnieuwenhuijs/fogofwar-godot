@@ -447,6 +447,28 @@ track afloopt start automatisch een willekeurige volgende variant.
 
 ---
 
+## 11. Diorama-props om het bord (klikbaar, 8 september)
+
+De props in het kamp en aan de overkant (`scripts/game/omgeving.gd`) zoeken
+bij een klik EERST hun eigen categorie en vallen anders terug op iets uit het
+arsenaal. Een bestand met precies deze naam in `sounds/` (waar dan ook, de
+index zoekt op naam) doet automatisch mee, geen code nodig; varianten heten
+`prop_vuur_2.wav`, `prop_vuur_3.wav` (met underscore, zo leest
+`_vind_losse_bestanden` ze). Kort en droog, zoals het recept in sectie 0.
+
+| Categorie | Bestand | Var. | Waarvoor | Terugval nu | Status |
+|---|---|---|---|---|---|
+| `prop_vuur` | `prop_vuur.wav` | 2-3 | kampvuur laait op na een klik: korte knetter met een vonkenzucht | geen | ➕ |
+| `prop_trom` | `prop_trom.wav` | 2 | trommel: een korte roffel, twee tellen | `val_drum` (valt-geluid) | ➕ |
+| `prop_ton` | `prop_ton.wav` | 2 | ton: holle houten bonk, wiebelt na | `impact_wood` | ➕ |
+| `prop_hoorn` | `prop_hoorn.wav` | 1-2 | hoorn: een korte signaalstoot | `val_horn` (valt-geluid) | ➕ |
+| `prop_bijl` | `prop_bijl.wav` | 2 | bijl in de stronk: droge tik op hout | `impact_wood` | ➕ |
+| `prop_kogel` | `prop_kogel.wav` | 2 | kanonskogel rolt van de stapel: ijzer op ijzer, dof | `impact_armor` | ➕ |
+| `prop_lantaarn` | `prop_lantaarn.wav` | 1 | lantaarn zwaait: metaal piept zachtjes | geen | ➕ |
+| `prop_kraai` | `prop_kraai.wav` | 2 | kraai vliegt op: een krassende kreet en vleugelslag | geen | ➕ |
+| `prop_kikker` | `prop_kikker.wav` | 2 | kikker springt de plas over: plons, klein | geen | ➕ |
+| `prop_wegwijzer` | `prop_wegwijzer.wav` | 1 | wegwijzer wiebelt: hout kraakt | `impact_wood` | ➕ |
+
 ## ElevenLabs SFX-prompts (kopieer-klaar)
 
 Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:

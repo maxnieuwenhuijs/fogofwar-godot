@@ -25,6 +25,7 @@ const PAWN_Y := 0.05
 @onready var _count_label: RichTextLabel = $UI/CountLabel
 
 var _board: Node3D
+var _omgeving: Omgeving = null   # het diorama om het bord (gras, wolken, klik-props)
 var _camera: Camera3D
 var _instructions = null  # InstructionsScreen (uitleg-tab, altijd via "?" te openen)
 var _human_auto_ai = null # greedy zet-kiezer voor de mens bij beurt-timeout
@@ -134,6 +135,7 @@ func _ready() -> void:
 	for node in [_camera, _sun_light, _spot_light, _rim_light]:
 		if node != null:
 			(node as Node3D).reparent(_kijk_pivot, true)
+	_setup_omgeving()
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
 	_index_tiles()
 	_connect_session_signals()
@@ -2947,6 +2949,23 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	return dur
 
 
+## Het diorama om het bord (8 september): graslandschap, wolkenschaduwen,
+## vignet en klik-props, gebouwd door Omgeving (scripts/game/omgeving.gd)
+## onder de kijk-pivot, zodat beide stoelen hun eigen kamp vooraan zien.
+## Uit te zetten met de knop "omgeving" in het sfeer-paneel.
+func _setup_omgeving() -> void:
+	# De orthografische camera tekent niets achter zijn eigen positie (het
+	# near-vlak), en die staat maar 5 hoog en net voor het bord: het gras en
+	# het kamp vooraan vielen daardoor in een zwarte band weg. Langs de
+	# kijkrichting naar achteren schuiven verandert een orthografisch beeld
+	# niet (geen perspectief), maar zet het near-vlak ruim achter alles.
+	_camera.position += _camera.transform.basis.z * 40.0
+	_cam_base = _camera.position
+	_omgeving = Omgeving.new()
+	_kijk_pivot.add_child(_omgeving)
+	_omgeving.bouw(_camera, $UI)
+
+
 ## Het 3D-bordmodel staat als node "BoardModel" in Board.tscn - plaats en
 ## schaal het gewoon in de Godot-editor. Staat het er, dan verbergen we hier
 ## de checker-CSG-tegels (het model is de vloer) en gaan de haven-tegels een
@@ -3129,6 +3148,8 @@ func _apply_ambiance() -> void:
 	for e in _aura_gloed:
 		if is_instance_valid(e.node):
 			(e.mat as StandardMaterial3D).albedo_color.a = float(e.basis) * PawnView.fx("aura_gloed", 1.0)
+	if _omgeving != null:
+		_omgeving.pas_toe()
 
 
 # --- Sfeer-paneel (toets L): live licht-sliders op het echte bord ------------
@@ -3160,6 +3181,11 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "footprint_dark", "label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},
 	{"key": "wheel_width", "label": "wielspoor-breedte", "min": 0.005, "max": 0.12, "step": 0.001, "def": 0.024},
 	{"key": "wheel_base", "label": "wielbasis", "min": 0.05, "max": 0.6, "step": 0.005, "def": 0.17},
+	{"key": "omgeving", "label": "omgeving (landschap om het bord)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "omgeving_licht", "label": "omgeving-helderheid", "min": 0.2, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "wolken", "label": "wolkenschaduw", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "vignet", "label": "vignet (donkere randen)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.5},
+	{"key": "props", "label": "props (kamp, klikbaar)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 ]
 
 
@@ -3726,6 +3752,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	if not mb.pressed:
+		return
+	# Diorama-props om het bord (Omgeving): klikken mag altijd, juist ook
+	# terwijl je op de tegenstander wacht. Ze liggen buiten het bord, dus
+	# een prop-klik kan nooit een tegel-klik zijn.
+	if mb.button_index == MOUSE_BUTTON_LEFT and _omgeving != null and _omgeving.klik(mb.position):
 		return
 	var state: GameState = session.state
 	if state.current_player != _human_id:

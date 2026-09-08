@@ -1708,6 +1708,62 @@ func _ready() -> void:
 			otex.get_image().save_png("res://_shot_play_online.png")
 		get_tree().quit(0 if o_fouten == 0 else 1)
 		return
+	elif "omgevingcheck" in args:
+		# 8 september: het diorama om het bord (scripts/game/omgeving.gd).
+		# Bewijst dat de Omgeving er staat (grond, wolken, vignet, props), dat
+		# elke prop een klik op zijn eigen schermpositie pakt (game.gd vraagt
+		# Omgeving.klik VOOR de beurt-check, dus ook terwijl je wacht), dat een
+		# klik op het bordmidden GEEN prop raakt, en dat de korte reacties na
+		# een paar seconden weer vrij zijn. Met venster ook _shot_omgeving.png.
+		await get_tree().create_timer(1.2).timeout
+		var og_fouten := 0
+		var og: Node = game._omgeving
+		if og == null:
+			print("[OMGEVING] FOUT: game._omgeving is null")
+			og_fouten += 1
+		else:
+			var og_cam: Camera3D = game._camera
+			var og_props: Array = og._props
+			print("[OMGEVING] props=%d grond=%s wolken=%s vignet=%s camera=%s" % [
+				og_props.size(), og._grond != null, og._wolken != null, og._vignet != null, og_cam.position])
+			if og_props.size() < 8:
+				print("[OMGEVING] FOUT: maar %d props (verwacht minstens 8)" % og_props.size())
+				og_fouten += 1
+			var og_namen: Array = []
+			for p in og_props:
+				var pn: Node3D = p.node
+				var wp: Vector3 = pn.global_position + Vector3(0.0, float(p.hoogte) * 0.5, 0.0)
+				var sp: Vector2 = og_cam.unproject_position(wp)
+				var raak: bool = og.klik(sp)
+				og_namen.append("%s@(%d,%d)" % [pn.name, int(sp.x), int(sp.y)])
+				if not raak:
+					print("[OMGEVING] FOUT: klik op %s (scherm %s) raakt niets" % [pn.name, sp])
+					og_fouten += 1
+				elif not p.bezig:
+					print("[OMGEVING] FOUT: %s pakt de klik maar reageert niet" % pn.name)
+					og_fouten += 1
+			print("[OMGEVING] geklikt: " + ", ".join(og_namen))
+			var og_midden: Vector2 = og_cam.unproject_position(game._board.to_global(game.tile_position(5, 5)))
+			if og.klik(og_midden):
+				print("[OMGEVING] FOUT: een klik op het bordmidden raakt een prop")
+				og_fouten += 1
+			# de langste korte reactie is de kogel (3,75 s); alleen de kraai
+			# blijft langer weg (16-28 s)
+			await get_tree().create_timer(4.5).timeout
+			var og_bezig := 0
+			for p in og_props:
+				if p.bezig:
+					og_bezig += 1
+			print("[OMGEVING] na 4,5 s nog bezig: %d (alleen de kraai mag)" % og_bezig)
+			if og_bezig > 1:
+				og_fouten += 1
+		print("[OMGEVING] " + ("PASS" if og_fouten == 0 else "FAIL (%d fouten)" % og_fouten))
+		var og_tex := get_viewport().get_texture()
+		if og_tex != null and og_tex.get_image() != null:
+			og_tex.get_image().save_png("res://_shot_omgeving.png")
+			print("[OMGEVING] screenshot -> _shot_omgeving.png")
+		get_tree().quit(0 if og_fouten == 0 else 1)
+		return
 	elif "vosview" in args:
 		# F0.6-check: speel tot de actiefase tegen een Krokodil-AI en assert dat
 		# de HP-blokjes van gedekte vijandelijke pionnen het "?"-sentinel tonen

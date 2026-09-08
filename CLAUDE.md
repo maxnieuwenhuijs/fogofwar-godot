@@ -215,6 +215,29 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   restafwijking; de overlay tekent rood = verwacht, groen = gemeten. Daarna
   `uv_check.py`, `--import`, `-- play`. Het houten bord terug: het
   Blender-script opnieuw draaien.
+- **Het diorama om het bord (8 september): `scripts/game/omgeving.gd`.**
+  `game._setup_omgeving` bouwt het procedureel onder de kijk-pivot (draait
+  met de camera mee, speler 2 ziet hetzelfde kamp vooraan): grondvlak van
+  160 eenheden met de naadloze grastegel uit `assets/models/board/omgeving/`
+  (`tools/maak_omgeving_texturen.py`, palet uit de bord-retexture) plus een
+  grove multiply-laag, een wolkenschaduw-vlak dat met de wind meedrijft, een
+  vignet achter de UI, en twaalf klik-props (Hearthstone-idee van Max):
+  kampvuur, trommel, ton, hoorn, bijl in een stronk, kogelstapel, tenten met
+  lantaarn vooraan; hek met kraai, plas met kikker, wegwijzer en de tent van
+  de ander aan de overkant. `game._unhandled_input` vraagt `Omgeving.klik`
+  VOOR de beurt-check (klikken mag altijd, ook tijdens het wachten); picking
+  via unproject binnen 46 px, geen physics. Geluid per prop: eerst
+  `prop_<naam>` (zet `prop_vuur.wav` enz. in sounds/, zie
+  SOUND-WISHLIST.md), anders een terugval uit het arsenaal. Knoppen in het
+  sfeer-paneel: `omgeving`, `omgeving_licht`, `wolken`, `vignet`, `props`.
+  **Let op:** de orthografische camera staat sinds die dag 40 eenheden
+  langs zijn kijkrichting naar achteren (near-vlak, anders viel het kamp in
+  een zwarte band weg); een orthografisch beeld verandert daar niet van.
+  Deeltjes: de maat hoort in de quad, niet in scale_min/max van het
+  ParticleProcessMaterial (die kwam niet door). Check: `-- omgevingcheck`
+  (lagen, props, klik per prop raak, bordmidden niet raak, alles behalve de
+  kraai na 4,5 s weer vrij; met venster `_shot_omgeving.png`), plus
+  `-- play` voor het beeld.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

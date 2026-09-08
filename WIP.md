@@ -162,6 +162,61 @@ nieuwe `spelbord.png` (1024, dus lichter dan het houten 2048-plaatje).
 Checks: `uv_check.py` 100% (past), `--import`, `-- play`: pionnen en
 selectievakken precies op de grasplots.
 
+**Het diorama om het bord (zelfde middag).** Max: "hoe kunnen we het zo
+maken dat de rest van het scherm ook een grasachtig landschap is", en: "ik
+wil net als bij Hearthstone kleine props om op te klikken als je moet
+wachten, en het mag wel een beetje cinematografisch zijn." Nieuw
+`scripts/game/omgeving.gd` (`Omgeving`), procedureel gebouwd in
+`game._setup_omgeving` als kind van de kijk-pivot (draait met de camera mee,
+dus speler 2 ziet hetzelfde kamp vooraan). Lagen: een grondvlak van 160
+eenheden op de onderkant van het bord met een naadloze grastegel in het
+palet van de bord-retexture plus een grove multiply-laag tegen het
+herhaal-effect (`tools/maak_omgeving_texturen.py` schrijft gras.png,
+gras_vlekken.png en wolken.png, periodieke ruis, dus zonder rand); een
+doorzichtig wolkenschaduw-vlak net boven het gras dat met de wereldwind
+meedrijft en onder het bord vanzelf onzichtbaar is; een vignet (ColorRect
+met shader, achter de UI); en twaalf props: vooraan het kamp (kampvuur met
+vlammen, rook, vonken en flakkerend licht; trommel, ton, hoorn en bijl uit
+de gedeelde glb-props; stronk, kanonskogels, twee tenten waarvan een met
+een lantaarn), aan de overkant een hek met een kraai, een plas met een
+kikker, een wegwijzer en de tent van de tegenstander. Alles behalve de vier
+glb's is primitieven in het bord-palet, per stuk te vervangen door een echt
+model.
+
+Klikken: `game._unhandled_input` vraagt `Omgeving.klik(schermpositie)` VOOR
+de beurt-check, dus ook terwijl je op de tegenstander wacht; het kiest de
+dichtstbijzijnde prop binnen 46 schermpixels via unproject (zelfde principe
+als `_pick_coord`), en een prop die nog bezig is slikt de klik. Reacties:
+vuur laait op met een vonkenregen, trommel stuitert, ton wiebelt, hoorn
+wipt, bijl trilt, de bovenste kogel springt van de stapel en rolt terug, de
+lantaarn zwaait, de kraai vliegt weg en komt na 16-28 s terug, de kikker
+springt de plas over met een kring, de wegwijzer wiebelt. Elke prop zoekt
+eerst een eigen geluidscategorie (`prop_vuur`, `prop_trom`, `prop_ton`,
+`prop_hoorn`, `prop_bijl`, `prop_kogel`, `prop_lantaarn`, `prop_kraai`,
+`prop_kikker`, `prop_wegwijzer`; zet een `prop_<naam>.wav` in sounds/ en hij
+klinkt) en valt anders terug op wat er is (val_drum, impact_wood, val_horn,
+impact_armor); zie SOUND-WISHLIST.md. Knoppen in het sfeer-paneel:
+`omgeving`, `omgeving_licht`, `wolken`, `vignet`, `props`.
+
+Twee dingen die onderweg bleken. De orthografische camera tekent niets
+achter zijn eigen positie (het near-vlak), en die stond maar 5 hoog net
+voor het bord, dus het kamp viel in een zwarte band weg: `_setup_omgeving`
+schuift de camera 40 eenheden langs zijn kijkrichting naar achteren (een
+orthografisch beeld verandert daar niet van, `_cam_base` gaat mee). En de
+schaal uit een ParticleProcessMaterial kwam niet door (een quad van 1 bleef
+1 en het vuur was een witte blok van een eenheid): de maat zit nu in de
+quad zelf, scale_min/max zijn alleen nog de spreiding.
+
+**Checks.** Nieuw `-- omgevingcheck` (capture.tscn): bouwt het spel, telt de
+lagen en de props, klikt elke prop op zijn eigen schermpositie (moet raak
+zijn en de prop bezig maken), klikt het bordmidden (mag niets raken) en
+kijkt na 4,5 s of alles behalve de kraai weer vrij is; met venster ook
+`_shot_omgeving.png`. PASS (12 props). Verder `-- play` (screenshot met
+het kamp onder en de overkant boven het bord), `-- vosview` PASS,
+`-- herstelcheck 777` PASS (141 momenten, 0 verschillen) en `-- uispel 777`
+= `d9985647…`, 272 acties, cyclus 7: de nieuwe referentie sinds 4.3.5 van
+de andere sessie, het diorama rekent niet mee.
+
 ## 8 september -- geluidsinstellingen in het menu
 
 Max: "voeg ook audio controllers toe in settings belangrijk."
@@ -4640,6 +4695,16 @@ hill-climbing self-play en toont het live:
       (Glicko-2 + SQLite, leaderboard, matchmaking, seizoenen, rematch) → Fase 4
       (dichttimmeren: leak-canary, replay-verificatie). Schatting Fase 0+1: 60-90 uur.
 - [ ] Export-presets (Android AAB, Web, iOS) — later.
+- [ ] **Diorama: mini-animaties van je eigen factie** (Max, 8 september: "wat
+      dan leuk is dat je kleine mini animaties ziet van de factie die je hebt
+      gekozen"). Idee: in het kamp vooraan (scripts/game/omgeving.gd) een of
+      twee pionnen van de gekozen factie neerzetten die niet meespelen, met
+      korte idle-clips uit de bestaande animaties (zitten bij het vuur, musket
+      poetsen, trommelen, om zich heen kijken), per factie een eigen setje en
+      een klikreactie zoals de andere props. De tegenstander krijgt hetzelfde
+      aan de overkant zodra zijn factie bekend is (na de blinde keuze). Bouwt
+      voort op PawnView (modellen, teamkleur, clips) en de prop-registratie in
+      Omgeving; de speler-factie is bekend vanaf CHOOSE_DOCTRINE.
 
 ## 10. Open ontwerpvragen (wachten op keuze)
 
