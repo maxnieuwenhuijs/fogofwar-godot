@@ -1,5 +1,53 @@
 # Spelregels — CHANGELOG
 
+## 4.3.5 — 8 september 2026 (de trom-bonus is dynamisch; de ruiter heeft minstens 2 stamina en 2 attack)
+
+*Besluit Max: "zorg dat als de drummer of vlag verplaatst dat ze dan ook de
+buff verliezen als ze erin staan, maar ook kunnen krijgen als ze die nog niet
+verbruikt hebben door er in te gaan staan." En: "een bigbro / paard heeft
+altijd 2 stamina en 2 attack."*
+
+**Trom-bonus dynamisch (C21).** Tot 4.3.4 kreeg een pion zijn +1 stamina bij
+het koppelen en bleef dat punt van hem, ook als de trom wegliep. Nu is het een
+extra punt dat je één keer per cyclus mag gebruiken, alleen op het moment dat
+je in de vorm om een eigen tamboer staat:
+
+- Elke stamina-check leest `Rules.stamina_beschikbaar` (eigen voorraad plus
+  het trompunt als je er nu recht op hebt): loopbereik, melee, schot, charge,
+  kanon-rollen en -schieten, `can_pawn_act`, de validator en de bots.
+- Betalen (`Rules.besteed_stamina`) gaat eerst van de trom, dan van de eigen
+  voorraad; de bonus wordt gemeten waar de pion VERTREKT, niet waar hij
+  eindigt. De pion onthoudt het gebruik (`Pawn.trom_gebruikt`, in staat, view,
+  replay en hash) tot het volgende (ont)koppelen.
+- Loopt de trom weg of stap je eruit vóór je het punt gebruikte, dan is het
+  weg; stap je erin (of komt de trom naast je staan) en gebruikte je het nog
+  niet, dan heb je het. Een pion met een lege voorraad in de vorm kan dus nog
+  één keer handelen. De trom telt niet voor zichzelf.
+- Het vaandel (+1 attack) werkte al zo en is niet veranderd.
+- Client: het stamina-blokje met de blauwe rand is nu het trompunt zolang je
+  er recht op hebt; de HUD toont wat je NU kunt uitgeven. Hulptekst
+  HELP_COMBAT_LOOT_3 bijgewerkt.
+
+**Ruiter minstens 2/2 (C22).** Nieuwe knop `stat_minimum` naast `basis_hp`,
+in de campagne- en potje-configs op `{"cav": {"stamina": 2, "attack": 2}}`;
+toegepast in `Reducer._do_link` na kaart en factie-bonussen. Gelezen als
+ondergrens: een 1-stamina-kaart op een ruiter geeft 2, een 4-stamina-kaart
+blijft 4. Aanname: Max zei "altijd 2", niet "+2" of "vast 2"; dat is één knop.
+
+`rules_version` 4.3.4 -> **4.3.5**. Goldens opnieuw gegenereerd en
+`golden_sims.json` opnieuw geijkt; `-- uispel 777` geeft nu `d9985647…` (272
+acties, cyclus 7; was `718992dc…`, 238, 6).
+
+| sim | was | wordt |
+|---|---|---|
+| muis-wolf seed 777 | winner 2, cyclus 7, 256 acties | winner 2, cyclus 12, 409 acties |
+| mens-vos seed 101 | winner 1, cyclus 16, 425 acties | winner 1, cyclus 15, 421 acties |
+| leeuw-beer seed 202 | winner 2, cyclus 21, 568 acties | winner 2, cyclus 18, 499 acties |
+| beer-muis seed 303 | winner 1, cyclus 10, 367 acties | winner 1, cyclus 12, 455 acties |
+| wolf-leeuw seed 404 | winner 1, cyclus 5, 128 acties | winner 1, cyclus 4, 85 acties |
+
+Vijf sims zeggen niets over balans; dat meet de nachtrun na het hertrainen.
+
 ## Client — 8 september 2026 (geluidsinstellingen; geen regelwijziging)
 
 *Max: "voeg ook audio controllers toe in settings, belangrijk."*

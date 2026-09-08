@@ -35,6 +35,10 @@ var per_stat_cap: int = 0             # >0: harde bovengrens per losse kaart-sta
 var schutkleur_onthul_nabij: bool = true
 
 var basis_hp: Dictionary = {}         # C12: basis-HP per type BOVENOP de kaart (bv {"cav": 2}); {} = 4.1-gedrag
+## 4.3.5 (Max, 8 september): ondergrens per type, na kaart en bonussen, bv
+## {"cav": {"stamina": 2, "attack": 2}}: "een bigbro heeft altijd 2 stamina en
+## 2 attack". Sleutels stamina/attack/hp. {} = 4.1-gedrag.
+var stat_minimum: Dictionary = {}
 
 # --- Schotparameters ---
 var inf_shot_range: int = 2           # afstand exact N (min = max)
@@ -70,7 +74,7 @@ var campaign = null
 
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
-## rules_version naar 4.3.4 (C15-buit en C21-aura bovenop V0); zonder blok speelt de
+## rules_version naar 4.3.5 (C15-buit en C21-aura bovenop V0); zonder blok speelt de
 ## engine exact 4.1.x.
 const CAMPAIGN_DEFAULTS := {
 	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
@@ -209,6 +213,7 @@ func to_dict() -> Dictionary:
 		"haven_score_cumulative": haven_score_cumulative,
 		"per_stat_cap": per_stat_cap,
 		"basis_hp": basis_hp,
+		"stat_minimum": stat_minimum,
 		"schutkleur_onthul_nabij": schutkleur_onthul_nabij,
 		"inf_shot_range": inf_shot_range,
 		"inf_shot_cost": inf_shot_cost,
@@ -242,6 +247,14 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 	if bhp is Dictionary:
 		for k in bhp:
 			c.basis_hp[String(k)] = int(bhp[k])
+	var smin = d.get("stat_minimum", {})
+	if smin is Dictionary:
+		for k in smin:
+			if smin[k] is Dictionary:
+				var per_type: Dictionary = {}
+				for stat in smin[k]:
+					per_type[String(stat)] = int(smin[k][stat])
+				c.stat_minimum[String(k)] = per_type
 	c.inf_shot_range = int(d.get("inf_shot_range", c.inf_shot_range))
 	c.inf_shot_cost = int(d.get("inf_shot_cost", c.inf_shot_cost))
 	c.inf_shot_full_attack = bool(d.get("inf_shot_full_attack", c.inf_shot_full_attack))
@@ -325,8 +338,8 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
-		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3":
-			c.rules_version = "4.3.4"
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3" or c.rules_version == "4.3.4":
+			c.rules_version = "4.3.5"
 	else:
 		c.campaign = null
 	return c

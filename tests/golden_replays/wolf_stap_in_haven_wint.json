@@ -63,10 +63,10 @@
 					"type": "wolf_step_pending"
 				}
 			],
-			"hash": "f179fe3cd636c3df530ba4cdb0b91a29c28e7cdcb9a7da2f756482aec18c99cf",
+			"hash": "0b130d4bfe183539734c63b7ca78d9aa3bb4f742b2ce536cee2c873804950f07",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788853354.73
+			"ts": 1788858480.231
 		},
 		{
 			"action": {
@@ -119,13 +119,13 @@
 					"type": "game_over"
 				}
 			],
-			"hash": "a3c068515b8b87ce285d676f912815d8e7aff7ec48e78041975df338fcf3deda",
+			"hash": "032f0d8264fdd62a669958304f91340b0744bc7c75989355803fd67ade18ff61",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788853354.73
+			"ts": 1788858480.232
 		}
 	],
-	"final_hash": "a3c068515b8b87ce285d676f912815d8e7aff7ec48e78041975df338fcf3deda",
+	"final_hash": "032f0d8264fdd62a669958304f91340b0744bc7c75989355803fd67ade18ff61",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -198,6 +198,7 @@
 				],
 				"remaining_stamina": 0,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			},
 			"1": {
@@ -217,6 +218,7 @@
 				],
 				"remaining_stamina": 1,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			},
 			"2": {
@@ -236,6 +238,7 @@
 				],
 				"remaining_stamina": 2,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			},
 			"3": {
@@ -255,6 +258,7 @@
 				],
 				"remaining_stamina": 0,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			}
 		},
@@ -302,6 +306,7 @@
 			"rules_version": "4.3.0",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
+			"stat_minimum": {},
 			"statue_threshold": 0
 		},
 		"spawn_commits": {
@@ -320,7 +325,7 @@
 		"winner": 1
 	},
 	"meta": {
-		"created": "2026-09-08T09:42:34",
+		"created": "2026-09-08T11:08:00",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -394,6 +399,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				},
 				"1": {
@@ -413,6 +419,7 @@
 					],
 					"remaining_stamina": 2,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				},
 				"2": {
@@ -432,6 +439,7 @@
 					],
 					"remaining_stamina": 2,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				},
 				"3": {
@@ -451,6 +459,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				}
 			},
@@ -498,6 +507,7 @@
 				"rules_version": "4.3.0",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
+				"stat_minimum": {},
 				"statue_threshold": 0
 			},
 			"spawn_commits": {

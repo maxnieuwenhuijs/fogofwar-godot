@@ -625,8 +625,9 @@ func evaluate(state: GameState, me: int) -> int:
 				opp_ranged += shots
 		# Bereik: kan deze actieve pion z'n doelhaven halen? Goedkope voorfilter,
 		# dan de echte looppaden (houdt rekening met blokkades → blokkeren beloond).
-		if pawn.is_active and pawn.remaining_stamina > 0 \
-				and _min_dist(pawn.position, tgt) <= pawn.remaining_stamina \
+		var stamina_nu: int = Rules.stamina_beschikbaar(state, pawn) if pawn.is_active else 0
+		if pawn.is_active and stamina_nu > 0 \
+				and _min_dist(pawn.position, tgt) <= stamina_nu \
 				and _can_reach_haven(state, pawn, tgt):
 			if mine:
 				my_reach += 1
@@ -677,7 +678,7 @@ func _is_killable(state: GameState, pawn: Pawn) -> bool:
 	for neighbor in Constants.manhattan_neighbors(pawn.position):
 		var enemy: Pawn = state.get_pawn_at(neighbor)
 		if enemy != null and not enemy.is_eliminated and enemy.owner_id != pawn.owner_id \
-				and enemy.is_active and enemy.remaining_stamina >= 1 \
+				and enemy.is_active and Rules.stamina_beschikbaar(state, enemy) >= 1 \
 				and Rules.effectieve_attack(state, enemy) >= pawn.current_hp:
 			return true
 	return false
@@ -734,7 +735,7 @@ func enumerate_actions(state: GameState, side: int) -> Array:
 		# Cavalerie: charge = bewegen + melee in één actie (kost stappen + 1).
 		if pawn.unit_type == Constants.UnitType.CAVALRY:
 			for pos in paths.keys():
-				if (paths[pos] as Array).size() + 1 > pawn.remaining_stamina:
+				if (paths[pos] as Array).size() + 1 > Rules.stamina_beschikbaar(state, pawn):
 					continue
 				for neighbor in Constants.manhattan_neighbors(pos):
 					var other: Pawn = state.get_pawn_at(neighbor)

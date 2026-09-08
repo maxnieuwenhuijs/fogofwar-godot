@@ -463,17 +463,33 @@ ook iets voor hun eigen leger, en dat verschuift de vraag "waar zet ik ze" van
 | Wat | Regel |
 |---|---|
 | De vorm | Het blok om de drager: `aura_bereik` vakken in elke richting, ook diagonaal (default 1 = de acht buurvakken). De drager zelf staat er niet in. |
-| Tamboer | Een eigen pion die **bij het koppelen** in de vorm om een levende tamboer staat, krijgt die cyclus **+1 stamina** (`aura_tamboer_stamina`). Alleen de voorraad; `max_stamina` (en dus de dracht van een kanon) groeit niet mee. |
+| Tamboer | Een eigen pion die **op het moment van handelen** in de vorm om een levende tamboer staat, heeft **één extra stamina-punt** (`aura_tamboer_stamina`), één keer per cyclus. Betalen gaat eerst van de trom, dan van de eigen voorraad; de pion onthoudt dat hij hem gebruikte (`Pawn.trom_gebruikt`, tot het volgende koppelen). `max_stamina` (de dracht van een kanon) groeit niet mee. |
 | Vaandeldrager | Een eigen pion die in de vorm om een levend vaandel staat, slaat en schiet **+1** (`aura_vaandel_attack`) zolang hij daar staat: melee, charge, infanterieschot en kanonschot. |
 | Stapelen | Nee. Een tamboer én een vaandel is +1 stamina én +1 attack, meer wordt het nooit (en sinds 4.3.4 heeft een leger er ook maar één van elk). |
 | Gekoppeld of niet | Maakt niet uit, zoals de buit sinds 4.3.2: de rol zit op de pion. Dood is dood. |
-| Wanneer stamina | Alleen op het moment van koppelen: stamina is een cyclusvoorraad die daar wordt uitgedeeld. De tamboer mag daarna weglopen; wie zijn +1 heeft, houdt hem die cyclus. Waar je je troepen aan het eind van de vorige cyclus laat staan, bepaalt dus wie er bij het koppelen naast de trom staat. |
+| Wanneer stamina | Dynamisch (4.3.5). Loopt de trom weg of stap je eruit voordat je het punt gebruikte, dan is het weg; stap je erin (of komt de trom naast je staan) en gebruikte je het nog niet, dan heb je het. Een pion met een lege voorraad die in de vorm staat, kan dus nog één keer handelen. Tot 4.3.4 kreeg je het punt alleen bij het koppelen en bleef het van jou. |
 | Zichtbaar | De rol staat in de fog-view (4.3.2), dus ook de aura van de vijand is af te lezen. Op het bord: een minimale gloeiende rand op elke tegel in de vorm (goud = vaandel, blauw = trom, vijand gedimd) en een randje in die kleur om de stat-blokjes die uit de aura komen. |
 | Zonder campagne-blok | Rollen bestaan niet, dus ook geen aura (4.1 blijft byte-identiek). |
 | Knoppen | `aura_bereik` (1), `aura_tamboer_stamina` (1), `aura_vaandel_attack` (1); 0 = uit. |
 
 Implementatie: `Rules.aura_bonus` en `Rules.effectieve_attack` (melee, charge en
-schot lezen daar hun schade), `Reducer._do_link` (de stamina). De bots kennen
-de aura: `effectieve_attack` zit in hun kill-check en in de Hard-sortering, en
-`aura_waarde` (leerbaar) beloont eigen actieve pionnen in een eigen aura.
+schot lezen daar hun schade), `Rules.trom_bonus` / `Rules.stamina_beschikbaar` /
+`Rules.besteed_stamina` (elke stamina-check en -betaling loopt daarlangs). De
+bots kennen de aura: `effectieve_attack` en `stamina_beschikbaar` zitten in hun
+kill-check en zetten, de Hard-sortering leest ze, en `aura_waarde` (leerbaar)
+beloont eigen actieve pionnen in een eigen aura.
+
+## C22 — De ruiter heeft altijd minstens 2 stamina en 2 attack (4.3.5)
+
+*Besluit Max, 8 september 2026: "een bigbro / paard heeft altijd 2 stamina en
+2 attack."*
+
+Naast de basis-HP van C12 (`basis_hp`, +2 HP bovenop de kaart) krijgt de
+ruiter een **ondergrens**: na kaart en factie-bonussen is zijn stamina minstens
+2 en zijn attack minstens 2 (`stat_minimum`, default `{"cav": {"stamina": 2,
+"attack": 2}}` in de campagne- en potje-configs). Een sterkere kaart telt
+gewoon: 4 stamina blijft 4. Gelezen als "minstens", niet als "+2" of "vast
+2"; dat is één knop. Infanterie en artillerie hebben geen ondergrens. Zonder
+de knop (4.1, oude configs) verandert er niets. Implementatie:
+`Reducer._do_link`, direct na `basis_hp`.
 

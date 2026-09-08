@@ -72,8 +72,40 @@ static func _inzetbare_reserve(state: GameState, player_id: int) -> int:
 ## voor artillerie gemaximeerd op rules.art_move stappen per beurt (v4.1 §3.3).
 static func move_range(state: GameState, pawn: Pawn) -> int:
 	if pawn.unit_type == Constants.UnitType.ARTILLERY:
-		return mini(state.rules.art_move, pawn.remaining_stamina)
-	return pawn.remaining_stamina
+		return mini(state.rules.art_move, stamina_beschikbaar(state, pawn))
+	return stamina_beschikbaar(state, pawn)
+
+
+## C21 dynamisch (besluit Max, 8 september; 4.3.5): de trom-bonus is een extra
+## stamina-punt dat een pion deze cyclus EEN keer mag gebruiken, en alleen op
+## het moment dat hij in de vorm om een eigen tamboer staat. Loopt de trom
+## weg of stap je eruit voordat je hem gebruikte, dan is hij weg; stap je erin
+## en heb je hem nog niet gebruikt, dan heb je hem. Betalen gaat eerst van de
+## trom, dan van de eigen voorraad; de pion onthoudt dat hij hem op heeft
+## (Pawn.trom_gebruikt, tot het volgende koppelen). Tot 4.3.5 kreeg je hem
+## alleen bij het koppelen, en dan bleef hij van jou, ook als de trom wegliep.
+static func trom_bonus(state: GameState, pawn: Pawn) -> int:
+	if pawn == null or not pawn.is_active or pawn.is_eliminated or pawn.trom_gebruikt:
+		return 0
+	return aura_bonus(state, pawn, "drum")
+
+
+## Wat een pion NU kan uitgeven: eigen voorraad plus de trom-bonus als hij
+## er op dit moment recht op heeft. Elke stamina-check leest dit.
+static func stamina_beschikbaar(state: GameState, pawn: Pawn) -> int:
+	return pawn.remaining_stamina + trom_bonus(state, pawn)
+
+
+## Stamina betalen: eerst de trom-bonus (als die er is), dan de eigen
+## voorraad. `bonus_vooraf` is de bonus zoals gemeten VOOR een verplaatsing
+## (de pion moet in de vorm staan op het moment dat hij handelt, niet waar
+## hij eindigt); -1 = nu meten.
+static func besteed_stamina(state: GameState, pawn: Pawn, kosten: int, bonus_vooraf: int = -1) -> void:
+	var bonus: int = bonus_vooraf if bonus_vooraf >= 0 else trom_bonus(state, pawn)
+	if bonus > 0:
+		pawn.trom_gebruikt = true
+		kosten -= bonus
+	pawn.spend_stamina(maxi(0, kosten))
 
 static func get_valid_moves(state: GameState, pawn_id: int) -> Array:
 	return get_valid_move_paths(state, pawn_id).keys()
@@ -171,8 +203,9 @@ static func apply_move(state: GameState, pawn_id: int, target_pos: Vector2i) -> 
 	var paths: Dictionary = get_valid_move_paths(state, pawn_id)
 	if not paths.has(target_pos):
 		return false
+	var bonus: int = trom_bonus(state, pawn)  # gemeten waar hij vertrekt
 	state.set_pawn_position(pawn, target_pos)
-	pawn.spend_stamina((paths[target_pos] as Array).size())
+	besteed_stamina(state, pawn, (paths[target_pos] as Array).size(), bonus)
 	_after_action_stamina(state, pawn)
 	return true
 
@@ -185,7 +218,7 @@ static func apply_move(state: GameState, pawn_id: int, target_pos: Vector2i) -> 
 static func get_valid_melee_targets(state: GameState, pawn_id: int) -> Array:
 	var targets: Array = []
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
-	if pawn == null or pawn.is_eliminated or not pawn.is_active or pawn.remaining_stamina < 1:
+	if pawn == null or pawn.is_eliminated or not pawn.is_active or stamina_beschikbaar(state, pawn) < 1:
 		return targets
 	if pawn.unit_type == Constants.UnitType.ARTILLERY:
 		return targets
@@ -209,7 +242,7 @@ static func apply_melee(state: GameState, attacker_id: int, defender_id: int) ->
 		return result
 	result.attacker_from_pos = attacker.position
 	result.defender_pos = defender.position
-	attacker.spend_stamina(1)
+	besteed_stamina(state, attacker, 1)
 	_resolve_melee(state, attacker, defender, result)
 	_after_action_stamina(state, attacker)
 	result.success = true
@@ -238,8 +271,9 @@ static func apply_charge(state: GameState, pawn_id: int, move_target: Vector2i, 
 	# one_action-model (v4.1-doc): de charge is één actie, de aanval kost geen
 	# extra stamina bovenop de stappen (steps <= Speed volstaat).
 	var cost: int = steps + (1 if defender_id != -1 and state.rules.stamina_model != "one_action" else 0)
-	if cost > pawn.remaining_stamina:
+	if cost > stamina_beschikbaar(state, pawn):
 		return result
+	var bonus: int = trom_bonus(state, pawn)  # gemeten waar hij vertrekt
 	# Valideer de aanval VANAF het doelvak vóór we bewegen (atomaire actie).
 	if defender_id != -1:
 		var defender: Pawn = state.pawns.get(defender_id, null)
@@ -253,7 +287,7 @@ static func apply_charge(state: GameState, pawn_id: int, move_target: Vector2i, 
 	result.moved = moved
 	result.move_target = move_target
 	result.attacker_from_pos = pawn.position
-	pawn.spend_stamina(cost)
+	besteed_stamina(state, pawn, cost, bonus)
 	if defender_id != -1:
 		var defender2: Pawn = state.pawns.get(defender_id, null)
 		result.defender_pos = defender2.position
@@ -416,7 +450,7 @@ static func _scan_fire_lines(state: GameState, pawn: Pawn, collect_tiles: bool) 
 static func get_valid_shot_targets(state: GameState, pawn_id: int) -> Array:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null or pawn.is_eliminated or not pawn.is_active \
-			or pawn.remaining_stamina < shot_cost(state, pawn):
+			or stamina_beschikbaar(state, pawn) < shot_cost(state, pawn):
 		return []
 	return _scan_fire_lines(state, pawn, false)
 
@@ -425,7 +459,7 @@ static func get_valid_shot_targets(state: GameState, pawn_id: int) -> Array:
 static func get_shot_range_tiles(state: GameState, pawn_id: int) -> Array:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
 	if pawn == null or pawn.is_eliminated or not pawn.is_active \
-			or pawn.remaining_stamina < shot_cost(state, pawn):
+			or stamina_beschikbaar(state, pawn) < shot_cost(state, pawn):
 		return []
 	return _scan_fire_lines(state, pawn, true)
 
@@ -461,7 +495,7 @@ static func apply_shot(state: GameState, shooter_id: int, target_id: int) -> Dic
 			_boek_buit(state, target, shooter.owner_id, result)
 			state.remove_pawn(target)
 			result.eliminated = true
-	shooter.spend_stamina(shot_cost(state, shooter))
+	besteed_stamina(state, shooter, shot_cost(state, shooter))
 	_after_action_stamina(state, shooter)
 	result.success = true
 	return result
@@ -568,10 +602,11 @@ static func _empty_attack_result() -> Dictionary:
 static func _after_action_stamina(state: GameState, pawn: Pawn) -> void:
 	if state.rules.stamina_model == "one_action" and not pawn.is_eliminated:
 		pawn.remaining_stamina = 0
+		pawn.trom_gebruikt = true  # een actie is een actie, ook met de trom
 
 static func can_pawn_act(state: GameState, pawn_id: int) -> bool:
 	var pawn: Pawn = state.pawns.get(pawn_id, null)
-	if pawn == null or pawn.is_eliminated or not pawn.is_active or pawn.remaining_stamina < 1:
+	if pawn == null or pawn.is_eliminated or not pawn.is_active or stamina_beschikbaar(state, pawn) < 1:
 		return false
 	# F1.3: goedkoopste checks eerst (dit draait na élke actie voor beide
 	# spelers). Leeg buurvak = 4 lookups; melee = 4 lookups; de schot-scan en

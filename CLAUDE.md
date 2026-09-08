@@ -83,14 +83,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `data/matchup_<factie>.txt`. De arena meet `buit_pt`/`buit_cp`/
   `dragers_verloren`. Bot-wijziging = `golden_sims.json` opnieuw ijken en
   de `-- uispel`-digest opnieuw meten; de golden replays blijven staan.
-- **C21-aura (4.3.3, 7 september)**: de tamboer en het vaandel doen ook iets
-  voor het EIGEN leger. Een pion die bij het koppelen in het blok van acht
-  vakken om een levende eigen tamboer staat krijgt die cyclus +1 stamina
-  (alleen de voorraad, niet de dracht); wie in het blok om een eigen vaandel
-  staat slaat en schiet +1 zolang hij daar staat. Niet stapelbaar, gekoppeld
-  of niet, alleen eigen pionnen. Knoppen `aura_bereik`,
-  `aura_tamboer_stamina`, `aura_vaandel_attack` (0 = uit). Engine:
-  `Rules.aura_bonus`/`Rules.effectieve_attack` en `Reducer._do_link`; bots:
+- **C21-aura (4.3.3, dynamisch sinds 4.3.5)**: de tamboer en het vaandel doen
+  ook iets voor het EIGEN leger. Wie op het moment van handelen in het blok
+  van acht vakken om een levende eigen tamboer staat heeft één extra
+  stamina-punt, één keer per cyclus (eerst van de trom betalen, dan eigen
+  voorraad; `Pawn.trom_gebruikt` onthoudt het; weg als de trom wegloopt of
+  jij eruit stapt vóór je het gebruikte, terug als je erin stapt en het nog
+  niet gebruikte); wie in het blok om een eigen vaandel staat slaat en
+  schiet +1 zolang hij daar staat. Niet stapelbaar, gekoppeld of niet,
+  alleen eigen pionnen. Knoppen `aura_bereik`, `aura_tamboer_stamina`,
+  `aura_vaandel_attack` (0 = uit). ELKE stamina-check leest
+  `Rules.stamina_beschikbaar` en betaalt via `Rules.besteed_stamina`; lees
+  nooit rechtstreeks `remaining_stamina` voor een beslissing. Engine:
+  `Rules.aura_bonus`/`Rules.effectieve_attack`/`Rules.trom_bonus`; bots:
   `aura_waarde` (leerbaar). **Op het bord:** elke tegel in de vorm krijgt een
   minimale gloeiende rand in de kleur van het rol-icoon (goud = vaandel,
   blauw = trom; beide op een tegel = goud buiten, blauw net daarbinnen;
@@ -253,10 +258,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `718992dc…` geven (238 acties, cyclus 6, sinds
-  4.3.4). Was `c5db0ff3…` (243, 6) onder 4.3.3, `8d6aafaa…` (231, 5) onder
-  4.3.2 en `890b6cb4…` (270, 6) tot 4.3.1: elke regelwijziging rekent anders,
-  en dat werkt door in het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
+  eind-zobrist; seed 777 moet `d9985647…` geven (272 acties, cyclus 7, sinds
+  4.3.5). Was `718992dc…` (238, 6) onder 4.3.4, `c5db0ff3…` (243, 6) onder
+  4.3.3, `8d6aafaa…` (231, 5) onder 4.3.2 en `890b6cb4…` (270, 6) tot 4.3.1:
+  elke regelwijziging rekent anders, en dat werkt door in het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
   user://ref_na.json easy easy muis wolf 777` gevolgd door `python
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
   entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Sinds
@@ -398,6 +403,10 @@ en dat is nu op vier punten gebeurd:
   haven of op eliminatie. Vanaf cyclus 10 knaagt de honger: elke speler verliest
   bij het begin van een cyclus zijn achterste pion. Geen remise, geen
   cycluslimiet, geen tiebreak.
+- **C22 (4.3.5, 8 september)**: de ruiter heeft na kaart en bonussen minstens
+  2 stamina en 2 attack (`stat_minimum`, naast `basis_hp` uit C12; staat in
+  `rules_v42_campaign.json`, `v42_default.json` en `duel_rules_voor`).
+  Gelezen als ondergrens, niet als +2; één knop als Max iets anders bedoelt.
 - **C15-buit (4.3.4).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
   tamboer 4 CP, gekoppeld of niet; een van elk per leger. Sinds 7 september
   jagen de bots er ook op en telt de trainer het mee.

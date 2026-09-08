@@ -1,5 +1,53 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- 4.3.5: de trom-bonus is dynamisch, en de ruiter heeft minstens 2/2
+
+Max: "zorg dat als de drummer of vlag verplaatst dat ze dan ook de buff
+verliezen als ze erin staan, maar ook kunnen krijgen als ze die nog niet
+verbruikt hebben door er in te gaan staan." En: "een bigbro / paard heeft
+altijd 2 stamina en 2 attack."
+
+**Trom.** Tot 4.3.4 kreeg een pion zijn +1 stamina bij het koppelen en bleef
+dat punt van hem, ook als de trom wegliep. Nu is het een punt dat je een keer
+per cyclus mag gebruiken, alleen op het moment dat je in de vorm staat:
+- `Rules.trom_bonus` (0 als de pion niet actief is, het punt al gebruikte, of
+  niet in de vorm staat), `Rules.stamina_beschikbaar` (eigen voorraad plus
+  het punt) en `Rules.besteed_stamina` (eerst de trom, dan de eigen
+  voorraad; `bonus_vooraf` omdat een verplaatsing gemeten wordt waar de pion
+  VERTREKT). Alle stamina-checks lopen daarlangs: `move_range`, melee,
+  charge, schot, kanon-rollen en -schieten, `can_pawn_act`, de validator
+  (kanon-acties, actie-opsomming, charges), de bots (bereik, kill-check,
+  charge-kosten) en de client (blokjes, HUD, charge-doelen).
+- `Pawn.trom_gebruikt` (staat, view, replay, hash; terug naar false bij
+  (ont)koppelen). Het link-moment deelt niets meer uit.
+- Het vaandel (+1 attack op het moment van slaan) werkte al zo.
+- Client: het blauw omrande stamina-blokje is nu het trompunt zolang je er
+  recht op hebt; de HUD toont wat je nu kunt uitgeven. Hulptekst
+  HELP_COMBAT_LOOT_3 herschreven, vertalingen opnieuw gecompileerd.
+
+**Ruiter.** Nieuwe knop `stat_minimum` (naast `basis_hp` van C12), in
+`rules_v42_campaign.json`, `v42_default.json` en `duel_rules_voor` op
+`{"cav": {"stamina": 2, "attack": 2}}`; toegepast in `Reducer._do_link` na
+kaart en factie-bonussen. Gelezen als ONDERGRENS (een 4-stamina-kaart blijft
+4). Max zei "altijd 2", niet "+2" of "vast 2"; als hij een van die twee
+bedoelt is het een knop plus een regel in `_do_link`. `RulesConfig.to_dict`
+/`from_dict` dragen de knop (view, replay).
+
+**Tests.** SpawnTests: `test_c21_trom_bonus_is_dynamisch` (bereik met bonus,
+validator, eruit stappen betaalt eerst de trom, terug erin niets, trom loopt
+naar een pion en weer weg, lege voorraad in de vorm handelt nog een keer,
+(ont)koppelen reset, roundtrip en hash, knop uit),
+`test_c21_trom_bonus_bij_charge_en_kanon` (charge van 3 met 2 stamina,
+kanon rolt met 0 eigen stamina via de reducer) en
+`test_ruiter_heeft_minstens_2_stamina_en_2_attack` (ondergrens, sterkere
+kaart blijft, infanterie niet, zonder knop niet, knop overleeft to_dict).
+De oude koppel-test van de trom is vervangen. Engine/bot-groep 1035 groen.
+
+**Metingen.** Testsuite: 2471 groen, 0 rood (698 s parallel). Goldens opnieuw gegenereerd
+(versiestring en het nieuwe pionveld zitten in de staat-hash),
+`golden_sims.json` opnieuw geijkt (alle vijf schuiven, geen winnaar kantelt; tabel in de CHANGELOG), `-- uispel 777`:
+`d9985647…`, 272 acties, cyclus 7 (was `718992dc…`, 238, 6).
+
 ## 8 september -- low-poly schaakbord uit Blender
 
 Max, met een foto van een oud houten schaakbord: "kun je in blender een

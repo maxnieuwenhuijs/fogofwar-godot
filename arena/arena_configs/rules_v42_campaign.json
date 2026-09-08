@@ -4,6 +4,12 @@
  "basis_hp": {
   "cav": 2
  },
+ "stat_minimum": {
+  "cav": {
+   "stamina": 2,
+   "attack": 2
+  }
+ },
  "campaign": {
   "budget_bonus": {
    "1": {

@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "1b829c7876c24d1d12945a8ce59ddf469f7fdd975faab4945028b5f77be85a13",
+			"hash": "9596b38ea55cb7f68b8761297d7a043e00a0d633a232019c31f333054b56a93e",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788853354.838
+			"ts": 1788858480.34
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "3a9eda1d99f214f6a2775a74b7bbf8a412e0054622183caf70136fbe483b8c1d",
+			"hash": "2a63e9e82d2bb4e8b18d066917e4b0333f7aa0525dbfc32dcf460dc4c30faa39",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788853354.839
+			"ts": 1788858480.34
 		}
 	],
-	"final_hash": "3a9eda1d99f214f6a2775a74b7bbf8a412e0054622183caf70136fbe483b8c1d",
+	"final_hash": "2a63e9e82d2bb4e8b18d066917e4b0333f7aa0525dbfc32dcf460dc4c30faa39",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -189,6 +189,7 @@
 				],
 				"remaining_stamina": 1,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 2
 			},
 			"1": {
@@ -208,6 +209,7 @@
 				],
 				"remaining_stamina": 0,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			},
 			"2": {
@@ -227,6 +229,7 @@
 				],
 				"remaining_stamina": 0,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			},
 			"3": {
@@ -246,6 +249,7 @@
 				],
 				"remaining_stamina": 0,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			}
 		},
@@ -345,9 +349,10 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.4",
+			"rules_version": "4.3.5",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
+			"stat_minimum": {},
 			"statue_threshold": 0
 		},
 		"spawn_commits": {
@@ -366,7 +371,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-08T09:42:34",
+		"created": "2026-09-08T11:08:00",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -434,6 +439,7 @@
 					],
 					"remaining_stamina": 3,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 2
 				},
 				"1": {
@@ -453,6 +459,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				},
 				"2": {
@@ -472,6 +479,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				},
 				"3": {
@@ -491,6 +499,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				}
 			},
@@ -590,9 +599,10 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.4",
+				"rules_version": "4.3.5",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
+				"stat_minimum": {},
 				"statue_threshold": 0
 			},
 			"spawn_commits": {
@@ -610,6 +620,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.4"
+		"rules_version": "4.3.5"
 	}
 }

@@ -118,13 +118,13 @@ static func _check_cannon_act(state: GameState, action: Dictionary, player_id: i
 	var kost: Dictionary = state.rules.campaign.get("kanon_actie_kost", {"roll": 1, "shoot": 1})
 	match String(action.sub):
 		"roll":
-			if pawn.remaining_stamina < int(kost.get("roll", 1)):
+			if Rules.stamina_beschikbaar(state, pawn) < int(kost.get("roll", 1)):
 				return _nee("Onvoldoende stamina")
 			if not Rules.get_valid_move_costs(state, pawn.id).has(action.target):
 				return _nee("Ongeldige rol-bestemming")
 			return _ok()
 		"shoot":
-			if pawn.remaining_stamina < int(kost.get("shoot", 1)):
+			if Rules.stamina_beschikbaar(state, pawn) < int(kost.get("shoot", 1)):
 				return _nee("Onvoldoende stamina")
 			if not Rules.get_valid_shot_targets(state, pawn.id).has(int(action.target_id)):
 				return _nee("Ongeldig doelwit")
@@ -569,7 +569,7 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 			out.append(Actions.make_skip_wolf_step())
 		return out
 	for pawn in state.get_active_pawns_for(player_id):
-		if pawn.remaining_stamina < 1:
+		if Rules.stamina_beschikbaar(state, pawn) < 1:
 			continue
 		# F1.3: kosten-BFS EENMAAL (zonder pad-arrays) en hergebruiken voor
 		# moves en charges — apply berekent het volle pad alleen voor de
@@ -600,7 +600,7 @@ static func _enumerate_charges(state: GameState, pawn: Pawn, costs: Dictionary) 
 	for end_pos in end_positions:
 		var steps: int = 0 if end_pos == pawn.position else int(costs[end_pos])
 		var cost: int = steps + (0 if one_action else 1)
-		if cost > pawn.remaining_stamina:
+		if cost > Rules.stamina_beschikbaar(state, pawn):
 			continue
 		for neighbor in Constants.manhattan_neighbors(end_pos):
 			var other: Pawn = state.get_pawn_at(neighbor)

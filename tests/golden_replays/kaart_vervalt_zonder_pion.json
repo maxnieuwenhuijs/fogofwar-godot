@@ -21,13 +21,13 @@
 					"type": "phase_changed"
 				}
 			],
-			"hash": "b25e5f792fc894dc75d0fab2b7309e6e6bd1cbfec12ad3856cccaaa2993a497f",
+			"hash": "91ba653b4bd4cd6ff5f40934e3700e10ade141b759bdf45ac7aaea903bcdd656",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788853354.775
+			"ts": 1788858480.278
 		}
 	],
-	"final_hash": "b25e5f792fc894dc75d0fab2b7309e6e6bd1cbfec12ad3856cccaaa2993a497f",
+	"final_hash": "91ba653b4bd4cd6ff5f40934e3700e10ade141b759bdf45ac7aaea903bcdd656",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -100,6 +100,7 @@
 				],
 				"remaining_stamina": 2,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			},
 			"1": {
@@ -119,6 +120,7 @@
 				],
 				"remaining_stamina": 0,
 				"rol": "",
+				"trom_gebruikt": false,
 				"unit_type": 0
 			}
 		},
@@ -166,6 +168,7 @@
 			"rules_version": "4.3.0",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
+			"stat_minimum": {},
 			"statue_threshold": 0
 		},
 		"spawn_commits": {
@@ -184,7 +187,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-08T09:42:34",
+		"created": "2026-09-08T11:08:00",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -261,6 +264,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				},
 				"1": {
@@ -280,6 +284,7 @@
 					],
 					"remaining_stamina": 0,
 					"rol": "",
+					"trom_gebruikt": false,
 					"unit_type": 0
 				}
 			},
@@ -327,6 +332,7 @@
 				"rules_version": "4.3.0",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
+				"stat_minimum": {},
 				"statue_threshold": 0
 			},
 			"spawn_commits": {

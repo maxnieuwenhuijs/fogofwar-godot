@@ -1942,19 +1942,20 @@ func _update_health_bars() -> void:
 			for rr in randen:
 				rr.visible = false
 			continue
-		# C21-aura: de stamina boven de kaart komt van de trom (bij het koppelen
-		# geteld, zit al in remaining_stamina); de attack boven de kaart komt van
-		# het vaandel en geldt zolang de pion in de vorm staat. Die extra blokjes
-		# krijgen een rand in de aura-kleur, zodat je ziet wat je aan de drager
-		# te danken hebt.
+		# C21-aura: het stamina-blokje boven de eigen voorraad is de trom-bonus
+		# (4.3.5: alleen zolang de pion in de vorm staat en hem nog niet gebruikte);
+		# de attack boven de kaart komt van het vaandel, zolang hij in die vorm
+		# staat. Die extra blokjes krijgen een rand in de aura-kleur, zodat je ziet
+		# wat je aan de drager te danken hebt.
 		var attack_nu: int = Rules.effectieve_attack(state, pawn)
+		var stamina_nu: int = Rules.stamina_beschikbaar(state, pawn)
 		for c in HP_COLS:
 			blocks[c].color = HP_COLOR_HEALTH if c < pawn.current_hp else HP_COLOR_EMPTY
-			blocks[HP_COLS + c].color = HP_COLOR_STAMINA if c < pawn.remaining_stamina else HP_COLOR_EMPTY
+			blocks[HP_COLS + c].color = HP_COLOR_STAMINA if c < stamina_nu else HP_COLOR_EMPTY
 			blocks[2 * HP_COLS + c].color = HP_COLOR_ATTACK if c < attack_nu else HP_COLOR_EMPTY
 			if randen.size() == blocks.size():
 				randen[c].visible = false
-				var trom: bool = c >= pawn.max_stamina and c < pawn.remaining_stamina
+				var trom: bool = c >= pawn.remaining_stamina and c < stamina_nu
 				randen[HP_COLS + c].visible = trom
 				if trom:
 					randen[HP_COLS + c].border_color = ROL_KLEUR["drum"]
@@ -1997,7 +1998,7 @@ func _refresh_all() -> void:
 			pv.rol_echt = String(pawn.rol)
 			pv.rol_vast = String(_figurant_rollen.get(pawn.id, ""))
 		pv.set_character(state.doctrine_of(pawn.owner_id), pawn.unit_type, card)
-		pv.set_stats_label(pawn.is_active, pawn.current_hp, pawn.remaining_stamina)
+		pv.set_stats_label(pawn.is_active, pawn.current_hp, Rules.stamina_beschikbaar(state, pawn))
 		pv.set_team_ring_active(pawn.is_active)
 		if Phase.is_linking(state.phase):
 			# Koppel-fase: donkere ring om EIGEN pionnen die nog geen kaart
@@ -3913,7 +3914,7 @@ func _select_pawn(pawn_id: int) -> void:
 				hint += tr("HUD_HINT_ART_NO_TARGET") % Constants.ARTILLERY_RANGE
 			else:
 				hint += tr("HUD_HINT_ART") % Constants.ARTILLERY_RANGE
-	_update_hud(tr("HUD_SELECTED") % [Constants.unit_type_name(pawn.unit_type), hint, pawn.remaining_stamina])
+	_update_hud(tr("HUD_SELECTED") % [Constants.unit_type_name(pawn.unit_type), hint, Rules.stamina_beschikbaar(session.state, pawn)])
 
 
 ## Voor elke vijand die via een charge bereikbaar is: de beste (kortste) zet
@@ -3923,7 +3924,7 @@ func _select_pawn(pawn_id: int) -> void:
 func _compute_charge_targets(state: GameState, pawn_id: int, move_paths: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
 	var best_cost: Dictionary = {}
-	var stamina: int = state.pawns[pawn_id].remaining_stamina
+	var stamina: int = Rules.stamina_beschikbaar(state, state.pawns[pawn_id])
 	for pos in move_paths.keys():
 		var cost: int = (move_paths[pos] as Array).size() + 1  # stappen + aanval
 		if cost > stamina:

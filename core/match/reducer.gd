@@ -273,10 +273,26 @@ static func _do_link(state: GameState, action: Dictionary, player_id: int, event
 	# 2 HP en een kaart-HP telt daar bovenop. {} = byte-identiek 4.1.
 	var basis: int = int(state.rules.basis_hp.get(["inf", "cav", "art"][pawn.unit_type], 0))
 	pawn.link_card(card, int(doctrine.hp_bonus) + basis, speed_bonus)
-	# C21 (7 september): gekoppeld in de vorm om een eigen tamboer = +1 stamina
-	# voor deze cyclus. Alleen de voorraad, niet max_stamina: de dracht van
-	# een kanon groeit niet mee met de trom.
-	pawn.remaining_stamina += Rules.aura_bonus(state, pawn, "drum")
+	# C21 (4.3.5): de trom-bonus wordt NIET meer bij het koppelen uitgedeeld;
+	# hij is dynamisch (Rules.trom_bonus) en telt op het moment van handelen.
+	# 4.3.5 (besluit Max, 8 september): "een bigbro / paard heeft altijd 2
+	# stamina en 2 attack". Ondergrens per type uit `stat_minimum` (bv
+	# {"cav": {"stamina": 2, "attack": 2}}), NA de kaart en de factie-
+	# bonussen; gelezen als "minstens 2": een sterkere kaart telt gewoon.
+	# {} = 4.1-gedrag. Zelfde plek als de basis-HP van C12.
+	var minima = state.rules.stat_minimum.get(["inf", "cav", "art"][pawn.unit_type], {})
+	if minima is Dictionary and not (minima as Dictionary).is_empty():
+		var min_spd: int = int(minima.get("stamina", 0))
+		if pawn.max_stamina < min_spd:
+			pawn.max_stamina = min_spd
+			pawn.remaining_stamina = min_spd
+		var min_atk: int = int(minima.get("attack", 0))
+		if pawn.attack_value < min_atk:
+			pawn.attack_value = min_atk
+		var min_hp: int = int(minima.get("hp", 0))
+		if pawn.max_hp < min_hp:
+			pawn.max_hp = min_hp
+			pawn.current_hp = min_hp
 	# Vos: de toewijzing is gedekt tot de pion schade toebrengt of ontvangt (§6.6).
 	pawn.card_revealed = not doctrine.hidden_link
 	_ev(events, EV_STATE, {})
@@ -608,7 +624,7 @@ static func _do_cannon_act(state: GameState, action: Dictionary, events: Array) 
 	match String(action.sub):
 		"roll":
 			var kost_roll: int = int(kost.get("roll", 1))
-			if pawn.remaining_stamina < kost_roll:
+			if Rules.stamina_beschikbaar(state, pawn) < kost_roll:
 				return false
 			var from_pos: Vector2i = pawn.position
 			if not Rules.apply_move(state, pawn_id, action.target):

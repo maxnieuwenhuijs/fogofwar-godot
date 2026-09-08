@@ -23,6 +23,12 @@ var is_eliminated: bool = false
 ## vaandel weer op.
 var rol: String = ""
 
+## C21 dynamisch (4.3.5): de trom-bonus van deze cyclus is gebruikt. Een pion
+## mag het extra stamina-punt van een eigen tamboer een keer per cyclus
+## gebruiken, alleen als hij op dat moment in de vorm staat; dit onthoudt dat
+## hij het al deed. Terug naar false bij (ont)koppelen, dus elke cyclus opnieuw.
+var trom_gebruikt: bool = false
+
 func _init(p_id: int = 0, p_owner: int = 0, p_pos: Vector2i = Vector2i.ZERO, p_type: int = 0) -> void:
 	id = p_id
 	owner_id = p_owner
@@ -41,6 +47,7 @@ func link_card(card: Card, hp_bonus: int = 0, speed_bonus: int = 0) -> void:
 	remaining_stamina = card.stamina + speed_bonus
 	max_stamina = card.stamina + speed_bonus
 	attack_value = card.attack
+	trom_gebruikt = false
 	card.linked_pawn_id = id
 
 func unlink() -> void:
@@ -52,6 +59,7 @@ func unlink() -> void:
 	max_stamina = 0
 	attack_value = 0
 	card_revealed = true
+	trom_gebruikt = false
 
 func spend_stamina(amount: int) -> void:
 	remaining_stamina = maxi(0, remaining_stamina - amount)
@@ -68,6 +76,7 @@ func clone() -> Pawn:
 	p.card_revealed = card_revealed
 	p.is_eliminated = is_eliminated
 	p.rol = rol
+	p.trom_gebruikt = trom_gebruikt
 	return p
 
 func to_dict() -> Dictionary:
@@ -86,6 +95,7 @@ func to_dict() -> Dictionary:
 		"card_revealed": card_revealed,
 		"is_eliminated": is_eliminated,
 		"rol": rol,
+		"trom_gebruikt": trom_gebruikt,
 	}
 
 static func from_dict(d: Dictionary) -> Pawn:
@@ -106,4 +116,5 @@ static func from_dict(d: Dictionary) -> Pawn:
 	p.card_revealed = bool(d.get("card_revealed", true))
 	p.is_eliminated = bool(d.get("is_eliminated", false))
 	p.rol = String(d.get("rol", ""))
+	p.trom_gebruikt = bool(d.get("trom_gebruikt", false))
 	return p
