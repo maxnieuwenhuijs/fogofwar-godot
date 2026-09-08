@@ -548,7 +548,12 @@ if not GEEN_BLEND:
         f.write("")
     blend = os.path.join(bron, naam + ".blend")
     img.filepath = basis + ".png"
+    # geen <naam>.blend1-backup bij overschrijven (die hoort niet in git)
+    bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True, relative_remap=True)
+    for oud in (blend + "1", blend + "2"):
+        if os.path.exists(oud):
+            os.remove(oud)
     print("blend -> %s (%.1f MB, textuur via %s)" % (blend, os.path.getsize(blend) / 1e6, img.filepath))
 
 print("KLAAR in %.1fs: %d driehoeken, textuur %dx%d" % (time.time() - t0, tris, TEX, TEX))

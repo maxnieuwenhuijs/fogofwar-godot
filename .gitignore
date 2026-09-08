@@ -28,3 +28,5 @@ assets/new textures/
 
 # Inbox voor een complete levering (blend + bijbehorende texturen bij elkaar)
 assets/new upload folder/
+*.blend1
+*.blend2
