@@ -65,6 +65,15 @@ var _tune_key: String = ""   # "mouse/infantry_base" — sleutel in model_tuning
 var _weapon_tune_key: String = "mouse/musket"   # actieve musket-tuning-sleutel
 var _model_path: String = "" # pad van het geladen karaktermodel (voor _gibs.glb)
 var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
+## Wind (Max, 8 september): een richting per potje, alle vlaggen wapperen
+## dezelfde kant op, ook die van de vijand. game.gd loot hem bij de start
+## (_loot_wind); hier staat de wereld-richting (XZ, lengte 1). Puur visueel.
+static var wind_richting: Vector3 = Vector3(1.0, 0.0, 0.0)
+var _vlagdoek: MeshInstance3D = null   # het doek aan de stok, per frame in de wind gedraaid
+var _vlag_top: Vector3 = Vector3.ZERO  # top van de stok, in prop-ruimte
+var _vlag_as: Vector3 = Vector3.UP     # stok-as (omhoog), in prop-ruimte
+var _vlag_breedte: float = 0.0
+var _vlag_zak: float = 0.0             # hoe ver het doek onder de top hangt
 var _baked_wapens: Array = []  # zichtbare INGEBAKKEN muskets (geskinde MeshInstance3D's)
 var _baked_prop_pad: String = ""  # statische musket-glb die bij de dood vanaf de hand vliegt
 var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
@@ -2431,6 +2440,42 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 	doek.position = top + Vector3(breedte * 0.5, 0.0, 0.0)
 	doek.position[as_i] -= lengte * VLAG_ZAKT + hoogte * 0.5
 	pool.add_child(doek)
+	# Wind: onthoud stok-top en stok-as in prop-ruimte; _richt_vlag draait het
+	# doek per frame zo dat het in de wereld met de wind mee steekt.
+	_vlagdoek = doek
+	_vlag_top = top
+	_vlag_as = Vector3.ZERO
+	_vlag_as[as_i] = 1.0
+	_vlag_breedte = breedte
+	_vlag_zak = lengte * VLAG_ZAKT + hoogte * 0.5
+	_richt_vlag()
+
+
+func _process(_delta: float) -> void:
+	if _vlagdoek != null:
+		_richt_vlag()
+
+
+## Draai het doek in de wind: de wereld-richting (PawnView.wind_richting) naar
+## prop-ruimte, geprojecteerd op het vlak loodrecht op de stok, en dan het
+## doek met zijn vrije zijde die kant op. De stok hangt aan een bot dat met
+## elke animatie meebeweegt, vandaar per frame; het is één basis-berekening
+## per drager. Stok plat (dood, gevallen)? Dan blijft de vorige stand staan.
+func _richt_vlag() -> void:
+	if not is_instance_valid(_vlagdoek):
+		_vlagdoek = null
+		return
+	var ouder: Node3D = _vlagdoek.get_parent() as Node3D
+	if ouder == null or not ouder.is_inside_tree():
+		return
+	var g: Basis = ouder.global_transform.basis.orthonormalized()
+	var wl: Vector3 = g.inverse() * wind_richting
+	wl -= _vlag_as * wl.dot(_vlag_as)
+	if wl.length() < 0.05:
+		return
+	wl = wl.normalized()
+	_vlagdoek.transform = Transform3D(Basis(wl, _vlag_as, wl.cross(_vlag_as)),
+		_vlag_top + wl * _vlag_breedte * 0.5 - _vlag_as * _vlag_zak)
 
 
 ## Normaliseer een geïmporteerd model naar bord-maat: meet de gezamenlijke AABB,

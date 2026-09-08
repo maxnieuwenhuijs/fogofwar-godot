@@ -562,6 +562,62 @@ func _ready() -> void:
 		print("[ZWEEF] meshes zichtbaar=%d, meer dan 2 van hun pion: %d (%s)" % [totaal, buiten, "PASS" if buiten == 0 else "FAIL"])
 		get_tree().quit(0)
 		return
+	elif "windcheck" in args:
+		# Wind (8 september): een richting per potje, alle vlaggen wapperen die
+		# kant op, ook die van de vijand. Controle: na de opstelling de wind op
+		# een vaste richting zetten en per vlagdoek meten of zijn vrije zijde
+		# (lokale +X van het doek, in wereldruimte) met de wind mee wijst; daarna
+		# de wind een kwartslag draaien en opnieuw meten. Beide teams moeten een
+		# vlag hebben (rood en blauw kijken tegengesteld, dus dit vangt precies de
+		# fout dat het doek in pion-ruimte staat). Gebruik: -- windcheck [factie]
+		var wf := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
+			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.MUIS
+		for wn in wf:
+			if wn in args:
+				game._human_doctrine = wf[wn]
+				game._ai_doctrine = wf[wn]
+		game._start_match(1)
+		await get_tree().create_timer(0.3).timeout
+		game._confirm_placement()
+		await get_tree().create_timer(1.5).timeout
+		var fouten := 0
+		for hoek in [0.0, PI * 0.5, PI * 1.25]:
+			var wind := Vector3(cos(hoek), 0.0, sin(hoek))
+			PawnView.wind_richting = wind
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var per_team := {Constants.Team.RED: 0, Constants.Team.BLUE: 0}
+			for pid in game._pawn_views:
+				var pv: PawnView = game._pawn_views[pid]
+				if not pv.visible or pv._vlagdoek == null or not is_instance_valid(pv._vlagdoek):
+					continue
+				var vrij: Vector3 = pv._vlagdoek.global_transform.basis.x
+				vrij.y = 0.0
+				var d: float = vrij.normalized().dot(wind) if vrij.length() > 0.001 else -1.0
+				per_team[pv.team] = int(per_team[pv.team]) + 1
+				var ok: bool = d > 0.95
+				if not ok:
+					fouten += 1
+				print("[WIND] hoek=%3.0f team=%s pion=%d vrij=(%.2f, %.2f) dot=%.3f %s" % [
+					rad_to_deg(hoek), "rood" if pv.team == Constants.Team.RED else "blauw", pid,
+					vrij.normalized().x, vrij.normalized().z, d, "OK" if ok else "FOUT"])
+			if int(per_team[Constants.Team.RED]) == 0 or int(per_team[Constants.Team.BLUE]) == 0:
+				fouten += 1
+				print("[WIND] hoek=%3.0f: geen vlag gevonden bij rood=%d blauw=%d (heeft deze factie een model met vlag-prop?)" % [
+					rad_to_deg(hoek), int(per_team[Constants.Team.RED]), int(per_team[Constants.Team.BLUE])])
+		print("[WIND] %s: %d fout(en) over drie windrichtingen" % ["PASS" if fouten == 0 else "FAIL", fouten])
+		# Met venster: een plaatje van de laatste stand (225 graden) als bijvangst.
+		var wind_tex := get_viewport().get_texture()
+		if wind_tex != null:
+			game._overlay.hide()
+			game._card_hand.visible = false
+			await get_tree().create_timer(0.3).timeout
+			wind_tex.get_image().save_png("res://_shot_windcheck.png")
+			print("[WIND] screenshot -> _shot_windcheck.png")
+		get_tree().quit(0 if fouten == 0 else 1)
+		return
 	elif "wapenroute" in args:
 		# Diagnose (7 september): welke wapen-route neemt het spel per model?
 		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt

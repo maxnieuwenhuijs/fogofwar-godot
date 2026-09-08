@@ -779,6 +779,7 @@ func _start_match(difficulty: int) -> void:
 	_clear_footprints()
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
 	ai_difficulty = difficulty
+	_loot_wind()
 	# F4.3c: de kant van de mens komt uit de sessie (offline altijd 1), de
 	# tegenstander is de andere kant. Voor vs-AI is dat 1/2, zoals altijd.
 	_human_id = session.local_player_id()
@@ -825,6 +826,17 @@ func _start_oefenpotje(seat: int) -> void:
 ## F4.3g -- een online partij starten: eerst de sessie verbinden (status +
 ## eerste view), dan het scherm opbouwen vanaf de staat. Elke online start is
 ## per definitie een herstart.
+## Wind van dit potje (Max, 8 september): een richting, alle vlaggen wapperen
+## die kant op, ook die van de vijand. Los potje: willekeurig. Online: uit
+## het match-id, zodat beide stoelen dezelfde wind zien zonder dat de engine
+## er iets van hoeft te weten. Puur visueel: geen staat, geen digest.
+func _loot_wind() -> void:
+	var hoek: float = randf() * TAU
+	if session != null and session.is_online() and String(OnlineBridge.match_id) != "":
+		hoek = float(hash(String(OnlineBridge.match_id)) % 360) * TAU / 360.0
+	PawnView.wind_richting = Vector3(cos(hoek), 0.0, sin(hoek))
+
+
 func _start_online(sessie: RemoteSession) -> void:
 	if sessie.get_parent() == null:
 		add_child(sessie)
@@ -1179,6 +1191,7 @@ func _start_vanaf_sessie(sessie: SessionInterface) -> void:
 	if sessie.get_parent() == null:
 		add_child(sessie)
 	session = sessie
+	_loot_wind()
 	_human_id = session.local_player_id()
 	_ai_id = Constants.opponent(_human_id)
 	assert(not (CampaignBridge.duel_actief and session.is_online()),

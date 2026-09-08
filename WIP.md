@@ -1,5 +1,34 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- wind: alle vlaggen wapperen dezelfde kant op
+
+Max: "voeg 1 windrichting toe, die is random per potje, dan wapperen alle
+vlaggen dezelfde kant op ook van de vijand."
+
+Het vaandeldoek hangt als kind onder de vlag-prop, en die hangt aan het
+rechterhand-bot van het model. Tot nu stak het doek in de lokale +X van de
+prop, dus in de kijkrichting van de pion: rood en blauw kijken tegengesteld
+en hun vlaggen wapperden tegen elkaar in.
+
+**Wat er staat.** `PawnView.wind_richting` (statisch, wereld-XZ, lengte 1).
+`_hang_vlagdoek` onthoudt de top en de as van de stok in prop-ruimte;
+`_richt_vlag` zet het doek per frame (`_process`, alleen bij een doek) zo dat
+zijn vrije zijde in wereldruimte met de wind mee wijst: wereldwind naar de
+ruimte van de ouder, projecteren op het vlak loodrecht op de stok, en het
+doek een basis geven met X = die richting, Y = de stok. Staat de stok plat
+(dood, gevallen), dan blijft de vorige stand staan. `game._loot_wind` loot bij
+`_start_match` en `_start_vanaf_sessie`: los potje willekeurig, online uit
+`hash(OnlineBridge.match_id)` zodat beide stoelen dezelfde wind zien zonder
+dat de engine er iets van weet. Geen staat, geen digest.
+
+**Controle.** Nieuw: `-- windcheck [factie]` (capture.tscn, default muis):
+opstelling, wind op 0, 90 en 225 graden, per vlagdoek de vrije zijde in
+wereldruimte gedeeld door de wind; rood en blauw moeten allebei boven 0,95
+zitten, anders FAIL. Met venster ook `_shot_windcheck.png` (overlay en
+kaarthand weg). Uitslag: PASS, 0 fouten, dot 1,000 voor beide teams bij alle
+drie de hoeken. Screenshots bekeken: beide vlaggen naar linksboven. Testgroep
+GameSession/UiAssets/ClientState/View/Agent: 643 groen, 0 rood.
+
 ## 8 september -- 4.3.4: een vaandeldrager en een tamboer per leger, tamboer 4 CP
 
 Max: "we doen 1 drummer en 1 flag bearer want het staat te vol en dan 1

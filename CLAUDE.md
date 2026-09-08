@@ -98,7 +98,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   de kaart, attack boven de kaart) krijgen een randje in dezelfde kleur.
   Expres GEEN vlak (Max: "vreselijk"). Sterkte: knop `aura_gloed` in het
   sfeer-paneel (toets L). Code: `_werk_aura_bij` in game.gd, per frame uit
-  de staat, telt mee in `render_digest` (herstelcheck).
+  de staat, telt mee in `render_digest` (herstelcheck). **Wind (8
+  september):** een windrichting per potje, alle vlaggen wapperen die kant
+  op, ook die van de vijand (`PawnView.wind_richting`, geloot in
+  `game._loot_wind`; online uit het match-id zodat beide stoelen dezelfde
+  wind zien; puur visueel, geen staat). Controle: `-- windcheck [factie]`.
 - **Regelversies zijn heilig.** 4.1.10-hr = het huidige spel; 4.2.0 = de
   campagne-economie, config-gated door het `campaign`-blok (zonder blok speelt
   álles byte-identiek 4.1.x). Spec: `docs/spelregels-v4.2.md` (Deel A = 4.1,
@@ -271,6 +275,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   5.1 zweefden meters naast de hand door een export- en importbug; de
   pijplijn corrigeert dat (`tools/blender_botkind_fix.py`, zie
   MODEL-PIPELINE-CHECKLIST sectie C). Draai dit na elke her-export.
+- **Wapperen de vlaggen met de wind mee? `-- windcheck [factie]`** (capture.tscn:
+  opstelling met beide kanten dezelfde factie, default muis; zet de wind op
+  drie richtingen en meet per vlagdoek of zijn vrije zijde in wereldruimte met
+  de wind mee wijst, voor rood en blauw; PASS/FAIL, met venster ook
+  `_shot_windcheck.png`). Een factie zonder model met vlag-prop geeft FAIL
+  "geen vlag gevonden".
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

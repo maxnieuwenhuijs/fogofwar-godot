@@ -1,5 +1,19 @@
 # Spelregels — CHANGELOG
 
+## Client — 8 september 2026 (wind: alle vlaggen wapperen dezelfde kant op; geen regelwijziging)
+
+*Max: "voeg 1 windrichting toe, die is random per potje, dan wapperen alle
+vlaggen dezelfde kant op ook van de vijand."*
+
+Tot nu toe stak elk vaandeldoek in de kijkrichting van zijn eigen pion uit:
+rood en blauw kijken tegengesteld, dus hun vlaggen wapperden tegen elkaar
+in. Nu loot `game._loot_wind` bij de start van een potje één windrichting
+(los potje: willekeurig; online uit het match-id, zodat beide stoelen
+dezelfde wind zien) en draait `PawnView._richt_vlag` elk doek per frame in
+wereldruimte die kant op, ook als de stok aan een bewegend bot hangt. Puur
+visueel: geen staat, geen digest. Controle: `-- windcheck [factie]`, drie
+richtingen, rood en blauw allebei binnen 0,95 op de wind (PASS).
+
 ## 4.3.4 — 8 september 2026 (één vaandeldrager en één tamboer per leger; de tamboer is 4 CP)
 
 *Besluit Max: "we doen 1 drummer en 1 flag bearer want het staat te vol, en dan
