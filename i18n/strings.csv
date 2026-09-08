@@ -447,3 +447,9 @@ MENU_ONLINE_COPY,Copy match id,Kopieer match-id
 MENU_ONLINE_CANCEL,Cancel,Annuleren
 MENU_ONLINE_ERROR_TITLE,That did not work,Dat lukte niet
 MENU_ONLINE_FINISHED,That match is already over.,Die match is al afgelopen.
+MENU_AUDIO,"Sound","Geluid"
+MENU_AUDIO_ALL,"Overall volume","Alles"
+MENU_AUDIO_MUSIC,"Music","Muziek"
+MENU_AUDIO_SFX,"Effects","Effecten"
+MENU_AUDIO_AMBIENT,"Ambience","Omgeving"
+MENU_AUDIO_HINT,"During play, M mutes everything at once.","Tijdens het spel dempt M alles in een keer."

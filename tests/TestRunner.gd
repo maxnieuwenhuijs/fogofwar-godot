@@ -66,6 +66,7 @@ func _run_all() -> void:
 		preload("res://tests/ClientStateTests.gd").new(),
 		preload("res://tests/RemoteSessionTests.gd").new(),
 		preload("res://tests/UiAssetsTests.gd").new(),
+		preload("res://tests/AudioTests.gd").new(),
 		preload("res://tests/GoldenReplayTests.gd").new(),
 		preload("res://tests/ClockTests.gd").new(),
 		preload("res://tests/AgentTests.gd").new(),

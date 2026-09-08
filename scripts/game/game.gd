@@ -74,6 +74,7 @@ var _haven_mats: Array = []  # doorzichtige haven-plakkaten (rood/blauw)
 var _aura_gloed: Array = []       # C21: per aura-tegel {node, mat, basis, rol, pos}; de gloeiende rand
 var _aura_sleutel: String = ""    # C21: staat-sleutel van de gebouwde auras (alleen herbouwen bij verandering)
 var _ambiance_panel: PanelContainer = null
+var _audio_panel: PanelContainer = null   # geluidsinstellingen (instellingenmenu)
 var _dust_motes: Array = []
 var _footprints: Array = []  # blijven staan tot de cyclus voorbij is
 var _footstep_cache: Dictionary = {}  # pad -> Texture2D of null (assets/textures/footstep/)
@@ -548,15 +549,97 @@ func _show_campagne_difficulty() -> void:
 func _show_settings_menu() -> void:
 	var taal_optie: String = "Language: English" if Constants.get_language() == "nl" else "Taal: Nederlands"
 	_overlay.show_choice(tr("MENU_SETTINGS"), "",
-		[taal_optie, tr("MENU_DIFF_TUNER"), tr("MENU_BACK")],
+		[taal_optie, tr("MENU_AUDIO"), tr("MENU_DIFF_TUNER"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i == 0:
 				Constants.set_language("en" if Constants.get_language() == "nl" else "nl")
 				_show_settings_menu()
 			elif i == 1:
+				_show_audio_panel()
+			elif i == 2:
 				get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
 			else:
 				_show_difficulty_menu())
+
+
+## Geluidsinstellingen (Max, 8 september: "audio controllers in settings,
+## belangrijk"): vier schuiven (alles, muziek, effecten, omgeving), meteen
+## hoorbaar en bewaard in user://settings.cfg via Audio.zet_volume. Toets M
+## dempt daarnaast alles tijdelijk. Elke keer opnieuw opgebouwd, zodat een
+## taalwissel in hetzelfde menu meteen doorwerkt.
+const AUDIO_SOORTEN: Array = [
+	["alles", "MENU_AUDIO_ALL"], ["muziek", "MENU_AUDIO_MUSIC"],
+	["effecten", "MENU_AUDIO_SFX"], ["omgeving", "MENU_AUDIO_AMBIENT"],
+]
+
+
+func _show_audio_panel() -> void:
+	_overlay.hide()
+	if _audio_panel != null:
+		_audio_panel.queue_free()
+	_audio_panel = PanelContainer.new()
+	_audio_panel.custom_minimum_size = Vector2(600.0, 0.0)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	_audio_panel.add_child(vbox)
+	var title := Label.new()
+	title.text = tr("MENU_AUDIO")
+	title.theme_type_variation = "LabelInkt"
+	title.add_theme_font_size_override("font_size", 30)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+	for soort in AUDIO_SOORTEN:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		var lbl := Label.new()
+		lbl.text = tr(String(soort[1]))
+		lbl.theme_type_variation = "LabelInkt"
+		lbl.custom_minimum_size = Vector2(170.0, 0.0)
+		lbl.add_theme_font_size_override("font_size", 22)
+		row.add_child(lbl)
+		var slider := HSlider.new()
+		slider.min_value = 0.0
+		slider.max_value = 100.0
+		slider.step = 1.0
+		slider.value = round(Audio.volume(String(soort[0])) * 100.0)
+		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		slider.custom_minimum_size = Vector2(260.0, 0.0)
+		row.add_child(slider)
+		var val := Label.new()
+		val.text = "%d%%" % int(slider.value)
+		val.theme_type_variation = "LabelInkt"
+		val.custom_minimum_size = Vector2(70.0, 0.0)
+		val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		val.add_theme_font_size_override("font_size", 22)
+		row.add_child(val)
+		slider.value_changed.connect(_on_audio_slider.bind(String(soort[0]), val))
+		# Loslaten = een proefgeluid, zodat je hoort wat je instelde.
+		slider.drag_ended.connect(func(_veranderd: bool) -> void: Audio.play("inf_select"))
+		vbox.add_child(row)
+	var hint := Label.new()
+	hint.text = tr("MENU_AUDIO_HINT")
+	hint.theme_type_variation = "LabelInktZacht"
+	hint.add_theme_font_size_override("font_size", 16)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hint)
+	var terug := Button.new()
+	terug.text = tr("MENU_BACK")
+	terug.theme_type_variation = "KnopBreed"
+	terug.pressed.connect(func() -> void:
+		_audio_panel.visible = false
+		_show_settings_menu())
+	vbox.add_child(terug)
+	$UI.add_child(_audio_panel)
+	# Gecentreerd, en dat blijft zo als het paneel met de inhoud meegroeit.
+	_audio_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_audio_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_audio_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+
+
+func _on_audio_slider(value: float, soort: String, val_label: Label) -> void:
+	Audio.zet_volume(soort, value / 100.0)
+	val_label.text = "%d%%" % int(value)
 
 
 ## F3.4b — een campagne-duel vanuit de hub: config komt van de brug, geen menu's.

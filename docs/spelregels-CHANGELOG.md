@@ -1,5 +1,17 @@
 # Spelregels — CHANGELOG
 
+## Client — 8 september 2026 (geluidsinstellingen; geen regelwijziging)
+
+*Max: "voeg ook audio controllers toe in settings, belangrijk."*
+
+Instellingen > Geluid: vier schuiven (alles, muziek, effecten, omgeving),
+meteen hoorbaar (loslaten speelt een proefgeluid, de muziek- en
+ambience-laag volgen direct) en bewaard in `user://settings.cfg` onder
+`[audio]`, naast de taal. `Audio.zet_volume`/`Audio.volume`; de volumes
+komen bovenop `master_db` en de per-categorie dB uit de Model-tuner, dus die
+afstelling blijft wat hij was. Toets M blijft de snelle demper. Controle:
+`-- audiopaneel` (PASS) en `tests/AudioTests.gd`.
+
 ## Client — 8 september 2026 (wind: alle vlaggen wapperen dezelfde kant op; geen regelwijziging)
 
 *Max: "voeg 1 windrichting toe, die is random per potje, dan wapperen alle

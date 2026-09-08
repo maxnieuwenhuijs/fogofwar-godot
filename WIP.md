@@ -1,5 +1,39 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- geluidsinstellingen in het menu
+
+Max: "voeg ook audio controllers toe in settings belangrijk."
+
+Er was alleen toets M (alles dempen) en de per-categorie dB in de Model-tuner;
+een speler kon nergens het volume zetten. Nu: Instellingen > Geluid met vier
+schuiven, alles (schaalt de rest), muziek, effecten en omgeving (de
+ambience-laag). Elke verandering is meteen hoorbaar: de muziek- en
+ambience-laag krijgen hun nieuwe `volume_db` direct (`Audio.pas_lagen_toe`),
+losse effecten pakken het bij het volgende afspelen, en loslaten van een
+schuif speelt een proefgeluid. Bewaard in `user://settings.cfg` onder
+`[audio]`, naast de taal (`Constants.set_language` schrijft in hetzelfde
+bestand; beide laden met "bestaande instellingen behouden").
+
+**Code.** `scripts/core/audio_manager.gd`: `vol_alles`/`vol_muziek`/
+`vol_effecten`/`vol_omgeving`, `volume_naar_db` (0 = -80 dB, geen -inf),
+`zet_volume`, `volume`, `pas_lagen_toe`, `_laad_volumes` in `_ready`,
+`_bewaar_volumes`; de volumes komen bovenop `master_db` en de per-categorie
+dB, dus de tuner-afstelling blijft wat hij was. `scripts/game/game.gd`:
+`_show_audio_panel` (perkament-paneel in de huisstijl, LabelInkt/KnopBreed,
+elke keer opnieuw opgebouwd zodat een taalwissel doorwerkt), optie
+MENU_AUDIO in het instellingenmenu. Zes nieuwe strings (MENU_AUDIO*),
+vertalingen opnieuw gecompileerd.
+
+**Checks.** Nieuw `tests/AudioTests.gd` (dB-omrekening; zet_volume landt
+meteen op de muzieklaag en omgeving raakt de muziek niet; bewaren en
+teruglezen, de taal overleeft een volume-opslag, klemmen op 1), geregistreerd
+in TestRunner en tests.ps1; schrijft naar een eigen cfg en zet alles terug.
+Nieuw `-- audiopaneel` (capture.tscn): bouwt het paneel, zet de vier schuiven
+op 25/35/45/55, controleert `Audio.volume`, de muzieklaag (-41,16 dB verwacht
+en gemeten) en het cfg-bestand (`settings_check.cfg`, daarna weg); PASS. Met
+venster ook `_shot_audiopaneel.png`, bekeken: paneel in de huisstijl.
+Testgroep Audio/GameSession/UiAssets: 402 groen.
+
 ## 8 september -- wind: alle vlaggen wapperen dezelfde kant op
 
 Max: "voeg 1 windrichting toe, die is random per potje, dan wapperen alle

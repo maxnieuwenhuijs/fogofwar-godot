@@ -281,6 +281,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   de wind mee wijst, voor rood en blauw; PASS/FAIL, met venster ook
   `_shot_windcheck.png`). Een factie zonder model met vlag-prop geeft FAIL
   "geen vlag gevonden".
+- **Geluidsinstellingen nakijken: `-- audiopaneel`** (capture.tscn: bouwt het
+  paneel Instellingen > Geluid, zet elke schuif, bewijst dat `Audio.zet_volume`
+  meteen op de muzieklaag landt en dat het in een cfg wordt bewaard; schrijft
+  naar `settings_check.cfg`, niet naar die van de speler; met venster ook
+  `_shot_audiopaneel.png`). De vier volumes (alles, muziek, effecten,
+  omgeving) wonen in de autoload `Audio` (`vol_*`, `zet_volume`, `volume`)
+  en in `user://settings.cfg` onder `[audio]`, naast de taal. Toets M dempt
+  daarnaast alles tijdelijk.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

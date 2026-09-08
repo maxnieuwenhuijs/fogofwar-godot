@@ -618,6 +618,59 @@ func _ready() -> void:
 			print("[WIND] screenshot -> _shot_windcheck.png")
 		get_tree().quit(0 if fouten == 0 else 1)
 		return
+	elif "audiopaneel" in args:
+		# Geluidsinstellingen (8 september): het paneel opbouwen, elke schuif
+		# aanraken en bewijzen dat Audio.zet_volume meteen op de muzieklaag
+		# landt. Schrijft naar een eigen cfg (settings_check.cfg), niet naar
+		# die van de speler. Met venster ook _shot_audiopaneel.png.
+		var ap_fouten := 0
+		var ap_pad_oud: String = Audio.instellingen_pad
+		var ap_oud: Dictionary = {}
+		for s in Audio.VOLUME_SOORTEN:
+			ap_oud[s] = Audio.volume(String(s))
+		Audio.instellingen_pad = "user://settings_check.cfg"
+		game._show_audio_panel()
+		await get_tree().process_frame
+		var sliders: Array = game._audio_panel.find_children("*", "HSlider", true, false)
+		if sliders.size() != 4:
+			ap_fouten += 1
+			print("[AUDIO] FOUT: verwacht 4 schuiven, gevonden %d" % sliders.size())
+		Audio.play_music("music_battle")
+		for i in sliders.size():
+			(sliders[i] as HSlider).value = 25.0 + 10.0 * i
+		await get_tree().process_frame
+		for i in mini(4, sliders.size()):
+			var soort: String = String(Audio.VOLUME_SOORTEN[i])
+			var gezet: float = Audio.volume(soort)
+			var bedoeld: float = (25.0 + 10.0 * i) / 100.0
+			if absf(gezet - bedoeld) > 0.001:
+				ap_fouten += 1
+			print("[AUDIO] %-9s schuif %.0f%% -> Audio.volume %.2f %s" % [soort, 25.0 + 10.0 * i, gezet, "OK" if absf(gezet - bedoeld) <= 0.001 else "FOUT"])
+		var verwacht_db: float = Audio.master_db + float(Audio.MUSIC_DB.get(Audio._music_cat, -16.0)) \
+			+ Audio.volume_naar_db(Audio.vol_alles * Audio.vol_muziek)
+		var ok_laag: bool = absf(Audio._music_player.volume_db - verwacht_db) < 0.01
+		if not ok_laag:
+			ap_fouten += 1
+		print("[AUDIO] muzieklaag %.2f dB, verwacht %.2f %s" % [Audio._music_player.volume_db, verwacht_db, "OK" if ok_laag else "FOUT"])
+		var ap_cfg := ConfigFile.new()
+		var ok_cfg: bool = ap_cfg.load("user://settings_check.cfg") == OK \
+			and absf(float(ap_cfg.get_value("audio", "muziek", -1.0)) - 0.35) < 0.001
+		if not ok_cfg:
+			ap_fouten += 1
+		print("[AUDIO] bewaard in settings_check.cfg: %s" % ("OK" if ok_cfg else "FOUT"))
+		var ap_tex := get_viewport().get_texture()
+		if ap_tex != null:
+			await get_tree().create_timer(0.3).timeout
+			ap_tex.get_image().save_png("res://_shot_audiopaneel.png")
+			print("[AUDIO] screenshot -> _shot_audiopaneel.png")
+		Audio.stop_music()
+		for s in ap_oud:
+			Audio.zet_volume(String(s), float(ap_oud[s]), false)
+		Audio.instellingen_pad = ap_pad_oud
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://settings_check.cfg"))
+		print("[AUDIO] %s: %d fout(en)" % ["PASS" if ap_fouten == 0 else "FAIL", ap_fouten])
+		get_tree().quit(0 if ap_fouten == 0 else 1)
+		return
 	elif "wapenroute" in args:
 		# Diagnose (7 september): welke wapen-route neemt het spel per model?
 		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt

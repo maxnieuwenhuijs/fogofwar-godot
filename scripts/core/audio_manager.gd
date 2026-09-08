@@ -89,6 +89,17 @@ const BANK := {
 
 ## Globale demping + per-categorie bijstelling (mp3's zijn ongelijk genormaliseerd).
 @export var master_db: float = -4.0
+## Volumes van de speler (instellingenmenu, 8 september; Max: "audio
+## controllers in settings, belangrijk"): lineair 0..1, bovenop master_db
+## en de per-categorie dB. `alles` schaalt de andere drie. Bewaard in
+## user://settings.cfg onder [audio], naast de taal. Toets M dempt daarnaast
+## alles tijdelijk (enabled), dat staat hier los van.
+var vol_alles: float = 1.0
+var vol_muziek: float = 1.0
+var vol_effecten: float = 1.0
+var vol_omgeving: float = 1.0
+var instellingen_pad: String = "user://settings.cfg"
+const VOLUME_SOORTEN: Array = ["alles", "muziek", "effecten", "omgeving"]
 const CATEGORY_DB := {
 	"cannon_fire": 0.0,
 	"cannon_air": -6.0,
@@ -228,6 +239,84 @@ func _ready() -> void:
 	_ambient_player.bus = "Master"
 	_ambient_player.finished.connect(func() -> void: _loop_layer(_ambient_player, _ambient_cat))
 	add_child(_ambient_player)
+	_laad_volumes()
+
+
+# --- Volumes van de speler (instellingenmenu) --------------------------------
+
+## Lineair volume (0..1) naar dB; 0 = stil (-80 dB, geen -inf).
+static func volume_naar_db(lineair: float) -> float:
+	if lineair <= 0.001:
+		return -80.0
+	return linear_to_db(clampf(lineair, 0.0, 1.0))
+
+
+func volume(soort: String) -> float:
+	match soort:
+		"alles":
+			return vol_alles
+		"muziek":
+			return vol_muziek
+		"effecten":
+			return vol_effecten
+		"omgeving":
+			return vol_omgeving
+	return 1.0
+
+
+## Zet een volume (0..1), pas het meteen toe op de lopende muziek- en
+## ambience-laag (losse effecten pakken het bij hun volgende afspeel) en
+## bewaar het. Onbekende soort = niets.
+func zet_volume(soort: String, waarde: float, bewaar: bool = true) -> void:
+	var w: float = clampf(waarde, 0.0, 1.0)
+	match soort:
+		"alles":
+			vol_alles = w
+		"muziek":
+			vol_muziek = w
+		"effecten":
+			vol_effecten = w
+		"omgeving":
+			vol_omgeving = w
+		_:
+			return
+	pas_lagen_toe()
+	if bewaar:
+		_bewaar_volumes()
+
+
+## De lopende lagen op het huidige volume zetten.
+func pas_lagen_toe() -> void:
+	if _music_player != null:
+		_music_player.volume_db = master_db + float(MUSIC_DB.get(_music_cat, -16.0)) + _laag_volume_db(_music_player)
+	if _ambient_player != null:
+		_ambient_player.volume_db = master_db + float(MUSIC_DB.get(_ambient_cat, -16.0)) + _laag_volume_db(_ambient_player)
+
+
+func _laag_volume_db(player: AudioStreamPlayer) -> float:
+	var eigen: float = vol_omgeving if player == _ambient_player else vol_muziek
+	return volume_naar_db(vol_alles * eigen)
+
+
+func _laad_volumes() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(instellingen_pad) != OK:
+		return
+	vol_alles = clampf(float(cfg.get_value("audio", "alles", 1.0)), 0.0, 1.0)
+	vol_muziek = clampf(float(cfg.get_value("audio", "muziek", 1.0)), 0.0, 1.0)
+	vol_effecten = clampf(float(cfg.get_value("audio", "effecten", 1.0)), 0.0, 1.0)
+	vol_omgeving = clampf(float(cfg.get_value("audio", "omgeving", 1.0)), 0.0, 1.0)
+	pas_lagen_toe()
+
+
+func _bewaar_volumes() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(instellingen_pad)  # bestaande instellingen (taal) behouden
+	cfg.set_value("audio", "alles", vol_alles)
+	cfg.set_value("audio", "muziek", vol_muziek)
+	cfg.set_value("audio", "effecten", vol_effecten)
+	cfg.set_value("audio", "omgeving", vol_omgeving)
+	cfg.save(instellingen_pad)
 
 
 ## Speel een geluid uit een categorie.
@@ -495,7 +584,8 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	_next = (_next + 1) % _pool.size()
 	var idx: int = (variant % variants.size()) if variant >= 0 else (randi() % variants.size())
 	player.stream = variants[idx]
-	player.volume_db = master_db + float(CATEGORY_DB.get(category, 0.0)) + volume_correctie(category)
+	player.volume_db = master_db + volume_naar_db(vol_alles * vol_effecten) \
+		+ float(CATEGORY_DB.get(category, 0.0)) + volume_correctie(category)
 	player.pitch_scale = pitch if pitch > 0.0 else randf_range(0.96, 1.04)
 	player.play()
 
@@ -564,7 +654,7 @@ func _start_layer(player: AudioStreamPlayer, category: String) -> void:
 	if variants.is_empty():
 		return
 	player.stream = variants[randi() % variants.size()]
-	player.volume_db = master_db + float(MUSIC_DB.get(category, -16.0))
+	player.volume_db = master_db + float(MUSIC_DB.get(category, -16.0)) + _laag_volume_db(player)
 	player.stream_paused = not enabled
 	player.play()
 
