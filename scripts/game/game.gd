@@ -886,7 +886,8 @@ func _start_match(difficulty: int) -> void:
 ## en bij een herstart vanaf de staat.
 func _omgeving_facties() -> void:
 	if _omgeving != null:
-		_omgeving.zet_facties(_human_doctrine, _ai_doctrine)
+		# stoel 1 is rood (het arme kamp), stoel 2 blauw (het rijke)
+		_omgeving.zet_facties(_human_doctrine, _ai_doctrine, "red" if _human_id == Constants.PLAYER_1 else "blue")
 
 
 ## De regels van een los potje (F4.3g: ook de online-weg gebruikt deze).

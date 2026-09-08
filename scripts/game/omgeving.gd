@@ -62,6 +62,58 @@ var _bewoners_root: Node3D
 var _bewoners: Array = []
 var _factie_eigen := -1
 var _factie_ander := -1
+# teams: het kamp vooraan draagt de kleur van jouw stoel (1 = rood, 2 = blauw);
+# rood is het arme kamp, blauw het rijke (PROP-WISHLIST.md)
+var _team_eigen := "red"
+var _team_ander := "blue"
+# ware hoogte (bordeenheden) waarop een geleverde prop-glb wordt geschaald,
+# tenzij prop_<naam>.json zelf "hoogte" geeft
+const PROP_HOOGTE: Dictionary = {
+	"tent": 1.0, "fakkel": 0.8, "wagen": 1.0, "kookpot": 0.6, "hakblok": 0.3, "houtblok": 0.15,
+	"kogels": 0.3, "hek": 0.4, "wegwijzer": 0.95, "plas": 0.04, "musketrek": 0.75, "kruitvat": 0.4,
+	"waslijn": 0.85, "kanon": 0.6, "vogelverschrikker": 0.95, "boom": 1.7, "struik": 0.4,
+	"muurtje": 0.35, "rots": 0.35, "bloemen": 0.12, "hooiberg": 0.7, "geit": 0.4, "kip": 0.18,
+	"kaarttafel": 0.5, "kruk": 0.3, "bierton": 0.5, "wijnvat": 0.5, "troon": 0.7, "tapijt": 0.03,
+	"kapotte_kar": 0.7, "waterput": 0.75, "aambeeld": 0.35, "werkbank": 0.5, "emmer": 0.25,
+	"zaag": 0.2, "spit": 0.55, "takkenbos": 0.3, "ketel": 0.25, "veldbed": 0.35, "kandelaar": 0.4,
+}
+# props uit de wishlist die geen placeholder hebben: ze verschijnen zodra
+# prop_<naam>[_team].glb in assets/models/props/ ligt. Posities in het
+# bordframe (vooraan z 12-17, overkant z -1,5..-4,6; x al gecorrigeerd voor de
+# camera-yaw zoals de rest van het kamp). Een prop die maar voor een team
+# bestaat lever je met het teamwoord (prop_hooiberg_red.glb): dan blijft het
+# andere kamp leeg.
+const EXTRA_PROPS: Array = [
+	{"naam": "fakkel", "eigen": [0.6, 16.2], "ander": [8.0, -4.3], "geluid": ["prop_vuur"]},
+	{"naam": "houtblok", "eigen": [-0.4, 13.4], "geluid": ["prop_hout", "impact_wood"]},
+	{"naam": "wagen", "eigen": [7.4, 15.9], "ander": [1.2, -4.2], "draai": -30.0, "draai_ander": 150.0, "geluid": ["prop_wagen", "impact_wood"]},
+	{"naam": "kookpot", "eigen": [2.2, 13.4], "geluid": ["prop_kookpot", "impact_armor"]},
+	{"naam": "musketrek", "eigen": [5.3, 12.6], "ander": [5.0, -2.5], "geluid": ["prop_musketrek", "impact_wood"]},
+	{"naam": "kruitvat", "eigen": [4.9, 14.9], "geluid": ["prop_kruit"]},
+	{"naam": "waslijn", "eigen": [-2.8, 13.0], "draai": 20.0, "geluid": []},
+	{"naam": "kanon", "ander": [9.2, -3.9], "draai_ander": 170.0, "geluid": ["cannon_move"]},
+	{"naam": "vogelverschrikker", "ander": [0.2, -3.0], "geluid": ["prop_kraai"]},
+	{"naam": "boom", "eigen": [-3.4, 16.6], "ander": [11.0, -4.6], "geluid": []},
+	{"naam": "struik", "eigen": [-3.0, 11.9], "ander": [3.9, -4.4], "geluid": []},
+	{"naam": "muurtje", "ander": [11.4, -1.4], "draai_ander": 90.0, "geluid": ["impact_wood"]},
+	{"naam": "rots", "eigen": [7.9, 12.1], "ander": [-0.8, -1.6], "geluid": []},
+	{"naam": "bloemen", "eigen": [1.5, 11.9], "ander": [7.0, -1.5], "geluid": []},
+	{"naam": "hooiberg", "eigen": [6.9, 17.0], "geluid": []},
+	{"naam": "geit", "eigen": [-1.6, 12.2], "geluid": ["prop_geit"]},
+	{"naam": "kip", "eigen": [3.6, 15.6], "geluid": ["prop_kip"]},
+	{"naam": "kaarttafel", "eigen": [5.7, 14.6], "ander": [4.4, -3.6], "draai": 15.0, "draai_ander": 180.0, "geluid": ["impact_wood"]},
+	{"naam": "kruk", "eigen": [6.3, 14.2], "ander": [5.1, -3.3], "geluid": ["impact_wood"]},
+	{"naam": "bierton", "eigen": [4.9, 11.9], "geluid": ["prop_kruik", "impact_wood"]},
+	{"naam": "wijnvat", "eigen": [4.9, 11.9], "geluid": ["prop_kruik", "impact_wood"]},
+	{"naam": "troon", "eigen": [-0.4, 15.0], "ander": [3.0, -3.0], "draai": 30.0, "draai_ander": 200.0, "geluid": ["impact_wood"]},
+	{"naam": "tapijt", "eigen": [-0.4, 15.0], "ander": [3.0, -3.0], "geluid": []},
+	{"naam": "kapotte_kar", "eigen": [8.1, 16.2], "draai": -40.0, "geluid": ["prop_wagen", "impact_wood"]},
+	{"naam": "waterput", "ander": [10.4, -4.3], "geluid": ["prop_emmer"]},
+	{"naam": "aambeeld", "eigen": [1.2, 12.3], "geluid": ["prop_aambeeld", "impact_armor"]},
+	{"naam": "werkbank", "eigen": [-2.6, 14.4], "draai": 90.0, "geluid": ["impact_wood"]},
+	{"naam": "emmer", "eigen": [1.6, 12.6], "geluid": ["prop_emmer"]},
+	{"naam": "zaag", "eigen": [-1.0, 14.3], "geluid": ["prop_zaag"]},
+]
 
 
 func bouw(camera: Camera3D, ui_laag: CanvasLayer) -> void:
@@ -72,9 +124,7 @@ func bouw(camera: Camera3D, ui_laag: CanvasLayer) -> void:
 	_props_root = Node3D.new()
 	_props_root.name = "Props"
 	add_child(_props_root)
-	_bouw_kamp()
-	_bouw_overkant()
-	_bouw_bewoners()
+	_bouw_props()
 	if ui_laag != null:
 		_bouw_vignet(ui_laag)
 	pas_toe()
@@ -83,12 +133,16 @@ func bouw(camera: Camera3D, ui_laag: CanvasLayer) -> void:
 ## Welke facties er spelen (game.gd roept dit bij de start van een potje en
 ## als de keuzes online binnenkomen): de bewoners van jouw factie komen in
 ## het kamp vooraan, die van de ander aan de overkant, factieloze altijd.
-func zet_facties(eigen: int, ander: int) -> void:
-	if eigen == _factie_eigen and ander == _factie_ander and _bewoners_root != null:
+func zet_facties(eigen: int, ander: int, eigen_team: String = "") -> void:
+	var team := eigen_team if eigen_team != "" else _team_eigen
+	var ander_team := "blue" if team == "red" else "red"
+	if eigen == _factie_eigen and ander == _factie_ander and team == _team_eigen and _bewoners_root != null:
 		return
 	_factie_eigen = eigen
 	_factie_ander = ander
-	_bouw_bewoners()
+	_team_eigen = team
+	_team_ander = ander_team
+	_bouw_props()
 
 
 func bewoners() -> Array:
@@ -340,6 +394,8 @@ func _bouw_glb_prop(naam: String, pos: Vector3, schaal: float, draai: float, rea
 
 
 func _bouw_bijl_stronk(pos: Vector3) -> void:
+	if _glb_prop("hakblok", pos, 0.0, _team_op(pos), ["prop_bijl", "impact_wood"], 0.3):
+		return
 	var root := Node3D.new()
 	root.name = "Stronk"
 	root.position = pos
@@ -364,6 +420,8 @@ func _bouw_bijl_stronk(pos: Vector3) -> void:
 
 
 func _bouw_kogels(pos: Vector3) -> void:
+	if _glb_prop("kogels", pos, 0.0, "", ["prop_kogel", "impact_armor"], 0.3):
+		return
 	var root := Node3D.new()
 	root.name = "Kogels"
 	root.position = pos
@@ -386,6 +444,8 @@ func _bouw_kogels(pos: Vector3) -> void:
 
 
 func _bouw_tent(pos: Vector3, draai: float, met_lantaarn: bool) -> void:
+	if _glb_prop("tent", pos, draai, _team_op(pos), ["prop_lantaarn"], 1.0):
+		return
 	var root := Node3D.new()
 	root.name = "Tent%d" % (_props.size() + 1)
 	root.position = pos
@@ -433,11 +493,12 @@ func _bouw_hek_met_kraai(pos: Vector3) -> void:
 	root.position = pos
 	_props_root.add_child(root)
 	var hout := Color(0.38, 0.29, 0.19)
-	var paal_x: Array = [0.0, 0.9, 1.8, 2.7]
-	for x in paal_x:
-		_mesh(_box(Vector3(0.07, 0.36, 0.07)), hout, root, Vector3(x, 0.18, 0.0))
-	for h in [0.13, 0.28]:
-		_mesh(_box(Vector3(2.85, 0.035, 0.03)), hout, root, Vector3(1.35, h, 0.0))
+	if not _glb_prop("hek", pos, 0.0, "", ["impact_wood"], 0.4):
+		var paal_x: Array = [0.0, 0.9, 1.8, 2.7]
+		for x in paal_x:
+			_mesh(_box(Vector3(0.07, 0.36, 0.07)), hout, root, Vector3(x, 0.18, 0.0))
+		for h in [0.13, 0.28]:
+			_mesh(_box(Vector3(2.85, 0.035, 0.03)), hout, root, Vector3(1.35, h, 0.0))
 	# de kraai op de tweede paal
 	var kraai := Node3D.new()
 	kraai.name = "Kraai"
@@ -468,13 +529,14 @@ func _bouw_plas_met_kikker(pos: Vector3) -> void:
 	root.name = "Plas"
 	root.position = pos
 	_props_root.add_child(root)
-	# geen metaal: dat spiegelt de zwarte hemel en wordt een gat in het gras
-	var plas := _mesh(_cilinder(0.6, 0.012), Color(0.46, 0.52, 0.54), root, Vector3(0.0, 0.006, 0.0))
-	plas.scale = Vector3(1.0, 1.0, 0.72)
-	var pmat := plas.material_override as StandardMaterial3D
-	pmat.metallic = 0.0
-	pmat.roughness = 0.35
-	pmat.metallic_specular = 0.6
+	if not _glb_prop("plas", pos, 0.0, "", [], 0.04):
+		# geen metaal: dat spiegelt de zwarte hemel en wordt een gat in het gras
+		var plas := _mesh(_cilinder(0.6, 0.012), Color(0.46, 0.52, 0.54), root, Vector3(0.0, 0.006, 0.0))
+		plas.scale = Vector3(1.0, 1.0, 0.72)
+		var pmat := plas.material_override as StandardMaterial3D
+		pmat.metallic = 0.0
+		pmat.roughness = 0.35
+		pmat.metallic_specular = 0.6
 	var kikker := Node3D.new()
 	kikker.name = "Kikker"
 	kikker.position = Vector3(-0.3, 0.012, 0.05)
@@ -491,6 +553,8 @@ func _bouw_plas_met_kikker(pos: Vector3) -> void:
 
 
 func _bouw_wegwijzer(pos: Vector3) -> void:
+	if _glb_prop("wegwijzer", pos, deg_to_rad(12.0), "", ["prop_wegwijzer", "impact_wood"], 0.95):
+		return
 	var root := Node3D.new()
 	root.name = "Wegwijzer"
 	root.position = pos
@@ -503,6 +567,117 @@ func _bouw_wegwijzer(pos: Vector3) -> void:
 	var plank2 := _mesh(_box(Vector3(0.42, 0.1, 0.03)), Color(0.55, 0.45, 0.28), root, Vector3(-0.14, 0.66, 0.0))
 	plank2.rotation.y = deg_to_rad(35.0)
 	_registreer(root, 0.95, Callable(self, "_reageer_wegwijzer"), {})
+
+
+# ---------------------------------------------------------------- props (her)bouwen
+
+## Alles onder Props opnieuw: kamp, overkant, geleverde extra props en de
+## bewoners, met de teams en facties van dit moment. De tweens van de
+## reacties hangen aan hun eigen prop-node, dus die sterven netjes mee.
+func _bouw_props() -> void:
+	for kind in _props_root.get_children():
+		kind.queue_free()
+	_props.clear()
+	_bewoners.clear()
+	_bewoners_root = null
+	_lantaarns.clear()
+	_vuur_licht = null
+	_kikker_keel = null
+	_kraai_kop = null
+	_bouw_kamp()
+	_bouw_overkant()
+	_bouw_extra_props()
+	_bouw_bewoners()
+
+
+## Het team van het kamp waar deze positie ligt (vooraan = eigen).
+func _team_op(pos: Vector3) -> String:
+	return _team_eigen if pos.z > 8.0 else _team_ander
+
+
+## prop_<naam>_<team>.glb, anders prop_<naam>.glb, anders "".
+func _prop_glb(naam: String, team: String) -> String:
+	var kandidaten: Array = []
+	if team != "":
+		kandidaten.append("prop_%s_%s.glb" % [naam, team])
+	kandidaten.append("prop_%s.glb" % naam)
+	for k in kandidaten:
+		var pad := Bestandsindex.vind(PROPS_DIR.trim_suffix("/"), String(k))
+		if pad != "" and ResourceLoader.exists(pad):
+			return pad
+	return ""
+
+
+func _lees_prop_manifest(naam: String) -> Dictionary:
+	var pad := Bestandsindex.vind(PROPS_DIR.trim_suffix("/"), "prop_%s.json" % naam)
+	if pad == "":
+		return {}
+	var f := FileAccess.open(pad, FileAccess.READ)
+	if f == null:
+		return {}
+	var data = JSON.parse_string(f.get_as_text())
+	return data if data is Dictionary else {}
+
+
+## Ligt er een glb voor deze prop (per team of gedeeld)? Dan die in plaats van
+## de primitieven: op zijn ware hoogte geschaald (PROP_HOOGTE of het manifest),
+## voeten op het gras, en een wiebel met het geluid van de prop als klik.
+func _glb_prop(naam: String, pos: Vector3, draai: float, team: String, geluid: Array, hoogte_std: float) -> bool:
+	var pad := _prop_glb(naam, team)
+	if pad == "":
+		return false
+	var ps: PackedScene = load(pad)
+	if ps == null:
+		return false
+	var inst: Node3D = ps.instantiate() as Node3D
+	if inst == null:
+		return false
+	var root := Node3D.new()
+	root.name = "prop_" + naam
+	root.position = pos
+	root.rotation.y = draai
+	_props_root.add_child(root)
+	root.add_child(inst)
+	var m := _lees_prop_manifest(naam)
+	var hoogte := float(m.get("hoogte", PROP_HOOGTE.get(naam, hoogte_std)))
+	var aabb := _aabb_van(inst)
+	if aabb.size.y > 0.0001:
+		var sc := hoogte / aabb.size.y
+		inst.scale = Vector3(sc, sc, sc)
+		inst.position.y = -aabb.position.y * sc + float(m.get("y", 0.0))
+	inst.rotation.y = deg_to_rad(float(m.get("draai", 0.0)))
+	for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_registreer(root, hoogte, Callable(self, "_reageer_glb"), {"inst": inst, "geluid": geluid})
+	return true
+
+
+func _reageer_glb(p: Dictionary) -> void:
+	var n: Node3D = p.inst
+	_geluid(p.geluid)
+	var tw := (p.node as Node3D).create_tween()
+	var amp := 0.14
+	for i in 3:
+		tw.tween_property(n, "rotation:z", amp, 0.1).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(n, "rotation:z", -amp, 0.1).set_trans(Tween.TRANS_SINE)
+		amp *= 0.5
+	tw.tween_property(n, "rotation:z", 0.0, 0.1)
+	tw.tween_callback(func() -> void: p.bezig = false)
+
+
+## Wishlist-props zonder placeholder: alleen als hun glb er ligt.
+func _bouw_extra_props() -> void:
+	for e in EXTRA_PROPS:
+		var naam := String(e.naam)
+		var geluid: Array = e.get("geluid", [])
+		if e.has("eigen"):
+			var pe: Array = e.eigen
+			_glb_prop(naam, Vector3(float(pe[0]), GROND_Y, float(pe[1])), deg_to_rad(float(e.get("draai", 0.0))),
+					_team_eigen, geluid, 0.5)
+		if e.has("ander"):
+			var pa: Array = e.ander
+			_glb_prop(naam, Vector3(float(pa[0]), GROND_Y, float(pa[1])), deg_to_rad(float(e.get("draai_ander", 180.0))),
+					_team_ander, geluid, 0.5)
 
 
 # ---------------------------------------------------------------- bewoners
@@ -523,8 +698,10 @@ func _bouw_bewoners() -> void:
 	for n in Bewoner.alle_namen():
 		var m := Bewoner.lees_manifest(String(n))
 		var fac := Bewoner.factie_van(String(n), m)
+		var team := Bewoner.team_van(String(n), m)
 		# met factie: standaard aan beide kanten, bij wie die factie speelt;
-		# zonder factie: standaard alleen vooraan
+		# zonder factie: standaard alleen vooraan; een teamwoord (red/blue)
+		# beperkt tot het kamp met die kleur (rood arm, blauw rijk)
 		var kant := String(m.get("kant", "beide" if fac >= 0 else "eigen"))
 		var kanten: Array = []
 		if fac < 0:
@@ -534,6 +711,8 @@ func _bouw_bewoners() -> void:
 				kanten.append("eigen")
 			if fac == _factie_ander and kant != "eigen":
 				kanten.append("ander")
+		if team != "":
+			kanten = kanten.filter(func(k): return (k == "eigen" and team == _team_eigen) or (k == "ander" and team == _team_ander))
 		for k in kanten:
 			var b := Bewoner.new()
 			if not b.laad(String(n)):
@@ -603,7 +782,7 @@ func _reageer_bewoner(p: Dictionary) -> void:
 		return
 	# geen actie-clip: een huppeltje, zodat een klik altijd iets doet
 	var basis: Vector3 = b.scale
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_property(b, "scale", basis * Vector3(1.08, 0.9, 1.08), 0.08)
 	tw.tween_property(b, "scale", basis, 0.45).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(func() -> void: p.bezig = false)
@@ -616,7 +795,7 @@ func _reageer_kampvuur(p: Dictionary) -> void:
 	_geluid(["prop_vuur"])
 	vonken.restart()
 	vonken.emitting = true
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_property(self, "_vuur_basis", 3.2, 0.12)
 	tw.tween_property(self, "_vuur_basis", 1.3, 1.4).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func() -> void: p.bezig = false)
@@ -626,7 +805,7 @@ func _reageer_trommel(p: Dictionary) -> void:
 	var n: Node3D = p.inst
 	var basis: Vector3 = n.scale
 	_geluid(["prop_trom", "val_drum"])
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_property(n, "scale", basis * Vector3(1.14, 0.78, 1.14), 0.07)
 	tw.tween_property(n, "scale", basis, 0.55).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(func() -> void: p.bezig = false)
@@ -635,7 +814,7 @@ func _reageer_trommel(p: Dictionary) -> void:
 func _reageer_ton(p: Dictionary) -> void:
 	var n: Node3D = p.inst
 	_geluid(["prop_ton", "impact_wood"])
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	var amp := 0.22
 	for i in 4:
 		tw.tween_property(n, "rotation:z", amp, 0.11).set_trans(Tween.TRANS_SINE)
@@ -648,7 +827,7 @@ func _reageer_ton(p: Dictionary) -> void:
 func _reageer_hoorn(p: Dictionary) -> void:
 	var n: Node3D = p.inst
 	_geluid(["prop_hoorn", "val_horn"])
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_property(n, "rotation:x", -0.5, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_interval(0.35)
 	tw.tween_property(n, "rotation:x", 0.0, 0.3).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
@@ -662,7 +841,7 @@ func _reageer_bijl(p: Dictionary) -> void:
 		p.bezig = false
 		return
 	var basis: float = n.rotation.y
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	var amp := 0.16
 	for i in 3:
 		tw.tween_property(n, "rotation:y", basis + amp, 0.09)
@@ -676,7 +855,7 @@ func _reageer_kogels(p: Dictionary) -> void:
 	var top: Node3D = p.top
 	var rust: Vector3 = p.rust
 	var zij: Vector3 = p.zij
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_method(func(t: float) -> void:
 		top.position = rust.lerp(zij, t) + Vector3(0.0, 0.3 * sin(t * PI), 0.0), 0.0, 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func() -> void: _geluid(["prop_kogel", "impact_armor"]))
@@ -691,7 +870,7 @@ func _reageer_tent(p: Dictionary) -> void:
 	var lantaarn: Node3D = p.lantaarn
 	var doek: Node3D = p.doek
 	_geluid(["prop_lantaarn"])
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	if lantaarn != null:
 		var amp := 0.55
 		for i in 5:
@@ -716,7 +895,7 @@ func _reageer_kraai(p: Dictionary) -> void:
 		var vt := (v as Node3D).create_tween().set_loops(8)
 		vt.tween_property(v, "rotation:z", signf((v as Node3D).position.x) * 0.9, 0.1)
 		vt.tween_property(v, "rotation:z", signf((v as Node3D).position.x) * -0.5, 0.1)
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_property(n, "position", thuis + Vector3(0.0, 0.25, 0.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(n, "position", weg, 1.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.parallel().tween_property(n, "rotation:y", n.rotation.y - 1.2, 0.6)
@@ -738,7 +917,7 @@ func _reageer_kikker(p: Dictionary) -> void:
 	var van: Vector3 = n.position
 	n.rotation.y = atan2(doel.x - van.x, doel.z - van.z)
 	_geluid(["prop_kikker"])
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	tw.tween_method(func(t: float) -> void:
 		n.position = van.lerp(doel, t) + Vector3(0.0, 0.22 * sin(t * PI), 0.0), 0.0, 1.0, 0.42).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func() -> void: _rimpel(p.plas, doel))
@@ -750,7 +929,7 @@ func _reageer_wegwijzer(p: Dictionary) -> void:
 	var n: Node3D = p.node
 	_geluid(["prop_wegwijzer", "impact_wood"])
 	var basis: float = n.rotation.z
-	var tw := create_tween()
+	var tw := (p.node as Node3D).create_tween()
 	var amp := 0.12
 	for i in 3:
 		tw.tween_property(n, "rotation:z", basis + amp, 0.12).set_trans(Tween.TRANS_SINE)

@@ -85,6 +85,23 @@ static func factie_van(n: String, m: Dictionary) -> int:
 	return factie_uit_woord(n)
 
 
+## Teamwoord in de naam (peasant_mouse_red): "red", "blue" of "" (elk team).
+## Rood is het arme kamp, blauw het rijke (PROP-WISHLIST.md).
+static func team_uit_woord(tekst: String) -> String:
+	for w in tekst.to_lower().replace("-", "_").split("_"):
+		if w == "red" or w == "rood":
+			return "red"
+		if w == "blue" or w == "blauw":
+			return "blue"
+	return ""
+
+
+static func team_van(n: String, m: Dictionary) -> String:
+	if m.has("team"):
+		return team_uit_woord(String(m.team))
+	return team_uit_woord(n)
+
+
 func laad(n: String) -> bool:
 	naam = n
 	name = "Bewoner_" + n

@@ -305,7 +305,7 @@ $kadKijk.Controls.Add($btnFactieTabel)
 $btnGeluidTracker = New-Object System.Windows.Forms.Button
 $btnGeluidTracker.Text = "Welke geluiden ontbreken?"
 $btnGeluidTracker.Location = New-Object System.Drawing.Point(12, 82)
-$btnGeluidTracker.Size = New-Object System.Drawing.Size(401, 34)
+$btnGeluidTracker.Size = New-Object System.Drawing.Size(196, 34)
 $btnGeluidTracker.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $btnGeluidTracker.Add_Click({
     try { & python (Join-Path $repo "tools\bouw_geluid_tracker.py") | Out-Null } catch {}
@@ -317,8 +317,26 @@ $btnGeluidTracker.Add_Click({
     }
 })
 $kadKijk.Controls.Add($btnGeluidTracker)
+# Vierde knop: de prop-tracker (het diorama om het bord, 8 september). Leest
+# PROP-WISHLIST.md en de mappen props/ en bewoners/, dus een geleverde glb
+# staat er meteen groen in, per team (rood arm, blauw rijk).
+$btnPropTracker = New-Object System.Windows.Forms.Button
+$btnPropTracker.Text = "Welke props ontbreken?"
+$btnPropTracker.Location = New-Object System.Drawing.Point(217, 82)
+$btnPropTracker.Size = New-Object System.Drawing.Size(196, 34)
+$btnPropTracker.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnPropTracker.Add_Click({
+    try { & python (Join-Path $repo "tools\bouw_prop_tracker.py") | Out-Null } catch {}
+    $pad = "$repo\prop-tracker.html"
+    if (Test-Path $pad) { Invoke-Item $pad }
+    else {
+        [System.Windows.Forms.MessageBox]::Show("De prop-tracker kon niet worden opgebouwd.",
+            "Fog of War") | Out-Null
+    }
+})
+$kadKijk.Controls.Add($btnPropTracker)
 $lblKijkHint = New-Object System.Windows.Forms.Label
-$lblKijkHint.Text = "Facties: draai voor en na het aannemen van een voorstel, een sterretje wijst het verschil aan. Geluid: per factie zien wat er nog mist, met de prompt erbij."
+$lblKijkHint.Text = "Facties: voor en na een voorstel, een sterretje wijst het verschil aan. Geluid en props: zien wat er nog mist, met de prompt erbij."
 $lblKijkHint.Location = New-Object System.Drawing.Point(12, 122)
 $lblKijkHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblKijkHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)

@@ -255,6 +255,38 @@ PASS (bewoners: menu 0, Wolf tegen Muis 1 aan de overkant op z -3,4, als Muis
 `-- herstelcheck 777` PASS; `verwerk_levering.py --droogloop` op een
 nep-inbox plaatst `bewoners/peasant_mouse` naast een gewone pion.
 
+**Props per team en de prop-tracker (einde van de middag).** Max: "maak dan
+een extra prop tracker, met die scenes, een tent een fakkel, een houtblok een
+stuk hout, een bijl, een peasant variatie per team. rood armoede en blauw
+pompeus en rijk. Wagon spullen uit die tijd allemaal props die evt relevant
+zijn echt een stuk of 100 bedenken." Nieuw `PROP-WISHLIST.md`: tien scenes
+(kampvuur en koken, tent en slapen, hout en ambacht, wagen en vervoer,
+wapens en uitrusting, eten en drinken, rijk, arm, land en overkant,
+bewoners), 110 regels, per prop het team (gedeeld / rood / blauw / beide),
+wat een klik doet, de status en een korte text-to-3D-prompt met een vaste
+teamstijl (rood: worn, patched, rope and rough wood, rust and mud; blauw:
+ornate, gilded, blue cloth with gold trim). `tools/bouw_prop_tracker.py`
+bouwt `prop-tracker.html` uit die lijst en de mappen (net als de
+geluid-tracker: hij kan niet verouderen), paneelknop "Welke props
+ontbreken?" naast de geluidknop. Stand nu: 6 ✓ (de handprops), 1 ½ (de ton,
+alleen gedeeld), 12 ⚙ placeholders, 91 ➕.
+
+In het spel hoort daar de teamkant bij: stoel 1 is rood, stoel 2 blauw, en
+`Omgeving.zet_facties(eigen, ander, eigen_team)` herbouwt alles onder Props
+(kamp, overkant, extra props, bewoners) als team of factie wisselt.
+`_glb_prop` kijkt per prop eerst naar `prop_<naam>_<team>.glb`, dan
+`prop_<naam>.glb`, en zet die geschaald op zijn ware hoogte (`PROP_HOOGTE`,
+of `prop_<naam>.json`) in plaats van de primitieven (tent, hakblok, kogels,
+wegwijzer, hek en plas; de kraai en de kikker blijven); `EXTRA_PROPS` geeft
+dertig wishlist-props een vaste plek die pas gevuld wordt als hun glb er
+ligt. Bewoners met een teamwoord in de naam staan alleen in dat kamp. Omdat
+een herbouw de oude props vrijgeeft, hangen de tweens van alle reacties nu
+aan hun eigen prop-node in plaats van aan de Omgeving.
+
+**Checks.** `-- omgevingcheck` PASS (herbouw via zet_facties, alle klikken
+raak), `-- play`, `-- uispel 777` = `d9985647…`, `-- herstelcheck 777` PASS,
+`bouw_prop_tracker.py` bouwt 110 regels in 10 scenes.
+
 ## 8 september -- geluidsinstellingen in het menu
 
 Max: "voeg ook audio controllers toe in settings belangrijk."

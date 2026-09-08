@@ -262,6 +262,25 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   weer in idle komen). Voorbeeld zonder eigen model:
   `bewoners/soldaat_mouse/soldaat_mouse.json` hergebruikt de
   muis-infanterist (acties melee en ready) bij een houtstapel.
+- **Props per team en de prop-tracker (8 september, Max: "rood armoede en
+  blauw pompeus en rijk, een stuk of 100").** `PROP-WISHLIST.md` is de lijst
+  (tien scenes, ruim honderd props en poppetjes, met per prop team, klik,
+  status en een text-to-3D-prompt); `python tools/bouw_prop_tracker.py`
+  bouwt `prop-tracker.html` uit die lijst plus de mappen `props/` en
+  `bewoners/` (paneelknop "Welke props ontbreken?"): ✓ ligt er, ½ een deel,
+  ⚙ placeholder uit primitieven, ➕ nog maken. Bestanden:
+  `assets/models/props/prop_<naam>.glb` (gedeeld) en `prop_<naam>_red.glb` /
+  `_blue.glb` (arm / rijk); een prop die maar voor een team bestaat lever je
+  MET het teamwoord. In het spel: stoel 1 is rood, stoel 2 blauw
+  (`game._omgeving_facties` geeft het team mee aan `Omgeving.zet_facties`,
+  die dan alles onder Props herbouwt); `Omgeving._glb_prop` vervangt de
+  primitieven van tent, hakblok, kogels, wegwijzer, hek en plas door een
+  geleverde glb (op ware hoogte via `PROP_HOOGTE` of `prop_<naam>.json`) en
+  `EXTRA_PROPS` zet dertig wishlist-props op een vaste plek zodra hun glb er
+  ligt (fakkel, wagen, kookpot, musketrek, kanon, boom, troon, ...). Een
+  bewoner met teamwoord (`peasant_mouse_red`) staat alleen in het kamp van
+  die kleur. De tweens van alle reacties hangen aan hun prop-node, zodat een
+  herbouw ze netjes meeneemt.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

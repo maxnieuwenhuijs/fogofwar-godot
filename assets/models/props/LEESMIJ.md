@@ -1,6 +1,17 @@
-# Props (attributen in de hand)
+# Props (attributen in de hand, en het diorama om het bord)
 
 Losse voorwerpen die een pion vasthoudt. Gedeeld door alle facties.
+
+**Sinds 8 september ook de props van het diorama om het bord** (tent, fakkel,
+wagen, hakblok, ...): zelfde map, zelfde naamregel `prop_<naam>.glb`, met een
+team-variant `prop_<naam>_red.glb` (arm) en `prop_<naam>_blue.glb` (rijk). Het
+spel (`scripts/game/omgeving.gd`) pakt voor elk kamp de eigen kleur en anders
+de gedeelde, schaalt hem op zijn ware hoogte (een tegel is 1, een pion 0,62;
+tabel `PROP_HOOGTE`, of `prop_<naam>.json` met `hoogte`, `draai`, `y`) en zet
+hem klikbaar neer. De volledige lijst met scenes, prompts en wat er al ligt:
+`PROP-WISHLIST.md` en `prop-tracker.html` (`python tools/bouw_prop_tracker.py`,
+paneelknop "Welke props ontbreken?"). Een prop die maar voor een team bestaat
+lever je MET het teamwoord, anders komt hij in beide kampen.
 
 ## Formaat
 
