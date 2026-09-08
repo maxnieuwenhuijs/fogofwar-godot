@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "4ab6a3b8b69d8590ce1c6b3c7084194e3dd0fe398bb6f19e468f2af6a22cfc3f",
+			"hash": "df2de29121c436ff602d1d820a2c56afe5bd6c14c896b80f06b23102de005382",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788792653.809
+			"ts": 1788853354.824
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "769f181c29cbd83453bfb4edc9717b03015850366f4f5a4b157caa7734fad4f9",
+			"hash": "cf88fbe445e0c86872832720d71f516d5a928a02771b3697ac19399540f4a880",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788792653.81
+			"ts": 1788853354.824
 		},
 		{
 			"action": {
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "a2b40d4183d3b4147423597ee73ff1a8f517a96fd60fb5745ea090a2a8b1db22",
+			"hash": "01d2e81dcb075b6ad74a711e6479713acd3b01c353c91411531d338a84350246",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1788792653.81
+			"ts": 1788853354.824
 		}
 	],
-	"final_hash": "a2b40d4183d3b4147423597ee73ff1a8f517a96fd60fb5745ea090a2a8b1db22",
+	"final_hash": "01d2e81dcb075b6ad74a711e6479713acd3b01c353c91411531d338a84350246",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -252,7 +252,7 @@
 				"aura_tamboer_stamina": 1,
 				"aura_vaandel_attack": 1,
 				"budget_bonus": {},
-				"buit_tamboer_cp": 2,
+				"buit_tamboer_cp": 4,
 				"buit_vaandel_pt": 2,
 				"comp_override": null,
 				"cp": null,
@@ -289,8 +289,8 @@
 				"spawn_vakken": "achterste_rij",
 				"spawn_vanaf_cyclus": 2,
 				"start_poolfactor": 0.5,
-				"tamboers_max": 2,
-				"vaandels_max": 2
+				"tamboers_max": 1,
+				"vaandels_max": 1
 			},
 			"clock": {
 				"bank_sec": 0,
@@ -314,7 +314,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.3",
+			"rules_version": "4.3.4",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0
@@ -335,7 +335,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-07T16:50:53",
+		"created": "2026-09-08T09:42:34",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -449,7 +449,7 @@
 					"aura_tamboer_stamina": 1,
 					"aura_vaandel_attack": 1,
 					"budget_bonus": {},
-					"buit_tamboer_cp": 2,
+					"buit_tamboer_cp": 4,
 					"buit_vaandel_pt": 2,
 					"comp_override": null,
 					"cp": null,
@@ -486,8 +486,8 @@
 					"spawn_vakken": "achterste_rij",
 					"spawn_vanaf_cyclus": 2,
 					"start_poolfactor": 0.5,
-					"tamboers_max": 2,
-					"vaandels_max": 2
+					"tamboers_max": 1,
+					"vaandels_max": 1
 				},
 				"clock": {
 					"bank_sec": 0,
@@ -511,7 +511,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.3",
+				"rules_version": "4.3.4",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0
@@ -531,6 +531,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.3"
+		"rules_version": "4.3.4"
 	}
 }

@@ -1,5 +1,33 @@
 # Fog of War — Work In Progress & Context
 
+## 8 september -- 4.3.4: een vaandeldrager en een tamboer per leger, tamboer 4 CP
+
+Max: "we doen 1 drummer en 1 flag bearer want het staat te vol en dan 1
+drummer is 4 ipv."
+
+`vaandels_max` en `tamboers_max` van 2 naar 1, `buit_tamboer_cp` van 2 naar 4.
+Het vaandel blijft 2 punten (aanname: Max noemde alleen de tamboer; met een
+tamboer per leger telt hij nu dubbel, zodat de trom zijn gewicht houdt). Alles
+leest de knoppen al (opstelling van mens en bot, validator, buit, fitness,
+aura-laag), dus de wijziging zit in `CAMPAIGN_DEFAULTS` plus de
+terugval-waarden in code die voor de lezer gelijk moeten lopen.
+`rules_version` 4.3.3 -> 4.3.4.
+
+**Wat mee moest.** Vier tests legden de oude aantallen vast (dragers-opstelling
+van de bot: 2 en 2; tamboer 2 CP in het resultaat; de trainer-invariant
+"verloren dragers = (pt + cp) / 2", nu pt / 2 + cp / 4; de fitness-normering,
+nu 4 haalbare punten in plaats van 6) en twee de versiestring. De
+hulpteksten in `i18n/strings.csv` (HELP_COMBAT_LOOT_1..3, HELP_GAME_SETUP_ROLES)
+beschreven nog de 4.3.1-wereld: "een pion zonder kaart draagt", "2 CP",
+"bergt zijn vaandel op, geen buit". Nu: een van elk, gekoppeld of niet, 4 CP,
+en een regel over de aura. Vertalingen opnieuw gecompileerd (`--import`) en
+meegecommit; anders verandert er niets aan wat de speler ziet.
+
+**Metingen.** Testsuite: 2415 groen, 0 rood. Goldens opnieuw gegenereerd,
+`golden_sims.json` opnieuw geijkt (alle vijf schuiven, geen winnaar kantelt;
+tabel in de CHANGELOG), `-- uispel 777`: `718992dc…`, 238 acties, cyclus 6
+(was `c5db0ff3…`, 243, 6 onder 4.3.3).
+
 ## 7 september -- C21 op het bord: gloeiende tegelrand en gekleurde blokjesrand
 
 Max: "geef dan een lichte glow om die tegels", en op de eerste versie: "nee

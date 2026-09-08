@@ -273,7 +273,8 @@ func test_c15_eval_telt_gekoppelde_drager_als_buit() -> void:
 	ai.weights.buit_hoede = 0.0
 	var veilig: int = ai.evaluate(s, Constants.PLAYER_1)
 	ai.weights.buit_hoede = 100.0
-	_assert_ongeveer(veilig - ai.evaluate(s, Constants.PLAYER_1), 100, "eigen tamboer in gevaar = 1 punt x buit_hoede")
+	# 4.3.4: de tamboer is 4 CP = 2 punten waard (2 CP = 1 punt).
+	_assert_ongeveer(veilig - ai.evaluate(s, Constants.PLAYER_1), 200, "eigen tamboer in gevaar = 2 punten x buit_hoede")
 
 
 func test_c15_greedy_slaat_de_drager_boven_een_gewone_soldaat() -> void:
@@ -327,8 +328,8 @@ func test_c15_dragers_staan_leerbaar_achteraan() -> void:
 				continue
 			rollen[rol] += 1
 			assert_eq(int(e.pos.y), int(rows[0]), "default: drager op de achterste rij (speler %d)" % pid)
-		assert_eq(int(rollen.flag), 2, "twee vaandels")
-		assert_eq(int(rollen.drum), 2, "twee tamboers")
+		assert_eq(int(rollen.flag), 1, "een vaandel (4.3.4)")
+		assert_eq(int(rollen.drum), 1, "een tamboer (4.3.4)")
 	ai.player_id = Constants.PLAYER_1
 	ai.weights.drager_front = 5.0
 	var s2 := GameState.new()
@@ -340,7 +341,7 @@ func test_c15_dragers_staan_leerbaar_achteraan() -> void:
 		if String(e.get("rol", "")) != "":
 			vooraan += 1
 			assert_eq(int(e.pos.y), front, "geleerd vooraan: drager op de voorste rij")
-	assert_eq(vooraan, 4)
+	assert_eq(vooraan, 2, "beide dragers vooraan")
 	# Zonder campagne-blok bestaan rollen niet.
 	var s41 := GameState.new()
 	s41.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MENS

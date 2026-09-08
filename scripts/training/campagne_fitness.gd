@@ -81,6 +81,6 @@ static func buit_max(s: GameState) -> float:
 	if s.rules == null or not s.rules.campaign_actief():
 		return 0.0
 	var c: Dictionary = s.rules.campaign
-	var vaandels: float = float(int(c.get("vaandels_max", 2)) * int(c.get("buit_vaandel_pt", 0)))
-	var tamboers: float = float(int(c.get("tamboers_max", 2)) * int(c.get("buit_tamboer_cp", 0)))
+	var vaandels: float = float(int(c.get("vaandels_max", 1)) * int(c.get("buit_vaandel_pt", 0)))
+	var tamboers: float = float(int(c.get("tamboers_max", 1)) * int(c.get("buit_tamboer_cp", 0)))
 	return vaandels + 0.5 * tamboers

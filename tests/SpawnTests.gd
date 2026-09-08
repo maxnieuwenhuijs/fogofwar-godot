@@ -41,7 +41,7 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.3.3", "campaign-activering = 4.3.3 (C21-aura)")
+	assert_eq(met.rules_version, "4.3.4", "campaign-activering = 4.3.4 (een drager van elk, tamboer 4 CP)")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
@@ -364,7 +364,7 @@ func test_agent_ziet_eigen_puntenreserve() -> void:
 
 func test_c15_buit_vaandel_en_tamboer() -> void:
 	# C15 (besluit Max, 30 juli): een vaandeldrager levert 2 versterkingspunten
-	# op, een tamboer 2 CP.
+	# op, een tamboer 2 CP; sinds 4.3.4 (8 september) 4 CP, want er is er nog een.
 	# 4.3.2 (besluit Max, 7 september): GEKOPPELD OF NIET MAAKT NIET UIT. Tot dan
 	# leverde een gekoppelde drager niets op ("vaandel opgeborgen"), maar dat was
 	# een regel die je aan het bord niet kon zien: de koppeling is geheim tot de
@@ -391,14 +391,14 @@ func test_c15_buit_vaandel_en_tamboer() -> void:
 	assert_true(bool(res.eliminated), "standbeeld sneuvelt")
 	assert_eq(int(res.get("buit_pt", 0)), 2, "vaandel = 2 punten in het resultaat")
 	assert_eq(s.pool_total(1), 2, "punten bijgeschreven op de reserve")
-	# Tamboer: 2 CP.
+	# Tamboer: 4 CP (4.3.4, was 2: met een tamboer per leger telt hij dubbel).
 	var tamboer := s._spawn_pawn(2, Vector2i(6, 5), Constants.UnitType.INFANTRY)
 	tamboer.rol = "drum"
 	var a2 := s._spawn_pawn(1, Vector2i(6, 4), Constants.UnitType.INFANTRY)
 	a2.link_card(Card.new(1, 1, 0, 1, 3, 2))
 	var res2: Dictionary = Rules.apply_melee(s, a2.id, tamboer.id)
-	assert_eq(int(res2.get("buit_cp", 0)), 2, "tamboer = 2 CP in het resultaat")
-	assert_eq(int(s.cp.get(1, 0)), 2, "CP bijgeschreven")
+	assert_eq(int(res2.get("buit_cp", 0)), 4, "tamboer = 4 CP in het resultaat")
+	assert_eq(int(s.cp.get(1, 0)), 4, "CP bijgeschreven")
 	# GEKOPPELDE drager levert sinds 4.3.2 EVENVEEL op.
 	var drager3 := s._spawn_pawn(2, Vector2i(7, 5), Constants.UnitType.INFANTRY)
 	drager3.rol = "flag"
@@ -586,7 +586,7 @@ func _c21_actief(s: GameState, owner: int, pos: Vector2i, hp: int, spd: int, atk
 
 func test_c21_vaandel_aura_geeft_attack() -> void:
 	var s := _c21_staat()
-	assert_eq(s.rules.rules_version, "4.3.3", "de aura is een regelwijziging")
+	assert_eq(s.rules.rules_version, "4.3.4", "de aura is een regelwijziging (4.3.3), een drager van elk de volgende (4.3.4)")
 	var aanvaller: Pawn = _c21_actief(s, 1, Vector2i(5, 5), 3, 3, 1)
 	var vaandel: Pawn = s._spawn_pawn(1, Vector2i(4, 4), Constants.UnitType.INFANTRY)
 	vaandel.rol = "flag"   # diagonaal: hoort bij het blok van acht

@@ -66,11 +66,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   zetten `afgekapt` en gillen, en de arena boekt dat als eigen categorie.
   Bron: `docs/campagne-intrige-voorstel.md` §1b (V0-V19 = voorstellen; alleen V0
   is aangenomen).
-- **C15-buit (4.3.2)**: vaandeldrager neerleggen = 2 versterkingspunten,
-  tamboer = 2 CP, gekoppeld of niet (sinds 4.3.2, 7 september). De rol staat
-  op de pion (`Pawn.rol`) en verhuist nooit; je wijst de dragers zelf aan in
-  de opstelfase. Knoppen: `buit_vaandel_pt`, `buit_tamboer_cp`,
-  `vaandels_max`, `tamboers_max`. **Bots (7 september):** `buit_jacht`/
+- **C15-buit (4.3.4)**: vaandeldrager neerleggen = 2 versterkingspunten,
+  tamboer = 4 CP (4.3.4, 8 september; was 2), gekoppeld of niet (sinds
+  4.3.2). Sinds 4.3.4 heeft elk leger EEN vaandeldrager en EEN tamboer
+  (`vaandels_max`/`tamboers_max` 1; was 2 en 2, Max: "het staat te vol").
+  De rol staat op de pion (`Pawn.rol`) en verhuist nooit; je wijst de
+  dragers zelf aan in de opstelfase. Knoppen: `buit_vaandel_pt`,
+  `buit_tamboer_cp`, `vaandels_max`, `tamboers_max`. **Bots (7 september):** `buit_jacht`/
   `buit_hoede` (drager binnen bereik), `reserve_pt`/`reserve_cp` (wat de
   VEROVERDE buit waard is; zonder die twee was een gewone soldaat naast een
   drager de betere kill, want de jacht-term viel weg met de drager) en
@@ -215,10 +217,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `c5db0ff3…` geven (243 acties, cyclus 6, sinds
-  4.3.3). Was `8d6aafaa…` (231, cyclus 5) onder 4.3.2 en `890b6cb4…` (270,
-  cyclus 6) tot 4.3.1: elke regelwijziging rekent anders, en dat werkt door in
-  het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
+  eind-zobrist; seed 777 moet `718992dc…` geven (238 acties, cyclus 6, sinds
+  4.3.4). Was `c5db0ff3…` (243, 6) onder 4.3.3, `8d6aafaa…` (231, 5) onder
+  4.3.2 en `890b6cb4…` (270, 6) tot 4.3.1: elke regelwijziging rekent anders,
+  en dat werkt door in het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
   user://ref_na.json easy easy muis wolf 777` gevolgd door `python
   tools/vergelijk_opname.py` (vergelijkt eind-zobrist, eindstaat en elke
   entry; een byte-`fc` is nooit leeg door `meta.created` en `ts`). Sinds
@@ -346,9 +348,9 @@ en dat is nu op vier punten gebeurd:
   haven of op eliminatie. Vanaf cyclus 10 knaagt de honger: elke speler verliest
   bij het begin van een cyclus zijn achterste pion. Geen remise, geen
   cycluslimiet, geen tiebreak.
-- **C15-buit (4.3.2).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
-  tamboer 2 CP, gekoppeld of niet. Sinds 7 september jagen de bots er ook op
-  en telt de trainer het mee.
+- **C15-buit (4.3.4).** Vaandeldrager neerleggen levert 2 versterkingspunten op,
+  tamboer 4 CP, gekoppeld of niet; een van elk per leger. Sinds 7 september
+  jagen de bots er ook op en telt de trainer het mee.
 - **C21-aura (4.3.3, 7 september).** Tamboer = +1 stamina bij het koppelen voor
   wie in de acht vakken om hem heen staat; vaandel = +1 attack zolang je erin
   staat. Op het bord: gloeiende tegelrand en gekleurde randjes om de extra

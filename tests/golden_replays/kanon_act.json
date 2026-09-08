@@ -46,10 +46,10 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "21e3cd09a7604edac8fc2e1b3099908634553db9bb0bf53b89a2df462c4b1566",
+			"hash": "1b829c7876c24d1d12945a8ce59ddf469f7fdd975faab4945028b5f77be85a13",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788792653.825
+			"ts": 1788853354.838
 		},
 		{
 			"action": {
@@ -116,13 +116,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "52bed401e39b4f440b6d7c89a0a075bc8b17fe2dc99249fb41aa83b24d4733a2",
+			"hash": "3a9eda1d99f214f6a2775a74b7bbf8a412e0054622183caf70136fbe483b8c1d",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788792653.826
+			"ts": 1788853354.839
 		}
 	],
-	"final_hash": "52bed401e39b4f440b6d7c89a0a075bc8b17fe2dc99249fb41aa83b24d4733a2",
+	"final_hash": "3a9eda1d99f214f6a2775a74b7bbf8a412e0054622183caf70136fbe483b8c1d",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -283,7 +283,7 @@
 				"aura_tamboer_stamina": 1,
 				"aura_vaandel_attack": 1,
 				"budget_bonus": {},
-				"buit_tamboer_cp": 2,
+				"buit_tamboer_cp": 4,
 				"buit_vaandel_pt": 2,
 				"comp_override": null,
 				"cp": null,
@@ -320,8 +320,8 @@
 				"spawn_vakken": "achterste_rij",
 				"spawn_vanaf_cyclus": 2,
 				"start_poolfactor": 0.5,
-				"tamboers_max": 2,
-				"vaandels_max": 2
+				"tamboers_max": 1,
+				"vaandels_max": 1
 			},
 			"clock": {
 				"bank_sec": 0,
@@ -345,7 +345,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.3",
+			"rules_version": "4.3.4",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"statue_threshold": 0
@@ -366,7 +366,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-07T16:50:53",
+		"created": "2026-09-08T09:42:34",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -528,7 +528,7 @@
 					"aura_tamboer_stamina": 1,
 					"aura_vaandel_attack": 1,
 					"budget_bonus": {},
-					"buit_tamboer_cp": 2,
+					"buit_tamboer_cp": 4,
 					"buit_vaandel_pt": 2,
 					"comp_override": null,
 					"cp": null,
@@ -565,8 +565,8 @@
 					"spawn_vakken": "achterste_rij",
 					"spawn_vanaf_cyclus": 2,
 					"start_poolfactor": 0.5,
-					"tamboers_max": 2,
-					"vaandels_max": 2
+					"tamboers_max": 1,
+					"vaandels_max": 1
 				},
 				"clock": {
 					"bank_sec": 0,
@@ -590,7 +590,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.3",
+				"rules_version": "4.3.4",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"statue_threshold": 0
@@ -610,6 +610,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.3"
+		"rules_version": "4.3.4"
 	}
 }

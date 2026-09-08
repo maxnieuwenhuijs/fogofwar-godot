@@ -153,9 +153,9 @@ func test_c15_matchrunner_telt_buit() -> void:
 
 
 func test_c15_trainerpad_telt_buit_in_een_echte_partij() -> void:
-	# Met de standaardknoppen (2 pt / 2 CP per drager) is elke veroverde drager
-	# precies een boeking van 2: verloren dragers van de een = (pt + cp) / 2
-	# van de ander. Dat moet kloppen over een hele partij.
+	# Met de standaardknoppen (vaandel 2 pt, tamboer 4 CP sinds 4.3.4) is elke
+	# veroverde drager een boeking van 2 pt OF 4 CP: verloren dragers van de
+	# een = pt / 2 + cp / 4 van de ander. Dat moet kloppen over een hele partij.
 	var runner := MatchRunner.new(AIMediumScript.new(), AIMediumScript.new(),
 		Constants.Doctrine.MENS, Constants.Doctrine.MENS, 777, _campaign_rules())
 	runner.max_steps = 1400
@@ -164,7 +164,7 @@ func test_c15_trainerpad_telt_buit_in_een_echte_partij() -> void:
 	assert_false(runner.afgekapt, "de partij eindigt regulier")
 	for kant in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		var ander: int = Constants.opponent(kant)
-		assert_eq(int(runner.buit[kant].verloren) * 2, int(runner.buit[ander].pt) + int(runner.buit[ander].cp),
+		assert_eq(int(runner.buit[kant].verloren) * 4, int(runner.buit[ander].pt) * 2 + int(runner.buit[ander].cp),
 			"verloren dragers van %d = veroverde buit van %d" % [kant, ander])
 	var totaal: int = int(runner.buit[1].pt) + int(runner.buit[1].cp) + int(runner.buit[2].pt) + int(runner.buit[2].cp)
 	print("    [BUIT] seed 777 Varken-Varken: P1 %d pt + %d CP, P2 %d pt + %d CP (totaal %d)" % [
@@ -184,8 +184,9 @@ func test_c15_campagne_fitness_beloont_buit() -> void:
 	var kaal: float = CampagneFitness.score(s, Constants.PLAYER_1, Constants.PLAYER_1, {})
 	var met: float = CampagneFitness.score(s, Constants.PLAYER_1, Constants.PLAYER_1, {"pt": 2, "cp": 2, "verloren": 0})
 	assert_true(met > kaal, "buit maakt de fitness hoger")
-	# 2 pt + 2 CP = 3 van de 6 haalbare punten: de helft van de buit-term.
-	assert_true(absf((met - kaal) - CampagneFitness.W_BUIT * 0.5 / CampagneFitness.NOEMER) < 1e-6,
+	# Maximaal haalbaar: 1 vaandel x 2 pt + 1 tamboer x 4 CP / 2 = 4 punten;
+	# 2 pt + 2 CP = 3 daarvan, dus driekwart van de buit-term.
+	assert_true(absf((met - kaal) - CampagneFitness.W_BUIT * 0.75 / CampagneFitness.NOEMER) < 1e-6,
 		"buit-term genormeerd op de maximale buit (%.4f)" % (met - kaal))
 	assert_true(CampagneFitness.score(s, Constants.PLAYER_1, Constants.PLAYER_1, {"pt": 99, "cp": 99}) <= 1.0, "nooit boven 1")
 	assert_true(kaal >= 0.0 and kaal <= 1.0, "genormaliseerd")

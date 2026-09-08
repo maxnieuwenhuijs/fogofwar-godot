@@ -899,8 +899,8 @@ func _begin_manual_placement() -> void:
 	# net als bij een kanon. Wat je niet plaatst, wordt gewone infanterie.
 	var camp: Dictionary = session.state.rules.campaign
 	if session.state.rules.campaign_actief():
-		for rol_stap in [["flag", int(camp.get("vaandels_max", 2))],
-				["drum", int(camp.get("tamboers_max", 2))]]:
+		for rol_stap in [["flag", int(camp.get("vaandels_max", 1))],
+				["drum", int(camp.get("tamboers_max", 1))]]:
 			if int(rol_stap[1]) > 0:
 				order.append({"type": Constants.UnitType.INFANTRY,
 					"count": int(rol_stap[1]), "rol": String(rol_stap[0])})

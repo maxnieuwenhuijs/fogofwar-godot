@@ -316,14 +316,16 @@ func clear_placement(player_id: int) -> void:
 ## aan en dan het centrum achter, cavalerie op de achterste rij (randen).
 ## C15: vaandels en tamboers over de opstelling verdelen. Op de achterste rij is
 ## de index ook echt de afstand, dus vlag op 0 en 4, tamboer op 2 en 6 geeft
-## minimaal 4 vakken tussen twee gelijke rollen (besluit Max, 30 juli). Bots en
-## de "vul automatisch"-knop gebruiken dit; de mens kan het in de opstelfase
-## zelf aanwijzen.
+## minimaal 4 vakken tussen twee gelijke rollen (besluit Max, 30 juli). Sinds
+## 4.3.4 is de default één vaandel en één tamboer per leger; de tussenruimte
+## blijft dan de stap tussen die twee. De "vul automatisch"-knop gebruikt dit;
+## de mens kan het in de opstelfase zelf aanwijzen, de bot kiest zelf
+## (AIController._wijs_dragers_aan).
 func _rollen_over_opstelling(placements: Array) -> void:
 	if not campaign_actief_rollen():
 		return
-	var vlaggen: int = int(rules.campaign.get("vaandels_max", 2))
-	var tamboers: int = int(rules.campaign.get("tamboers_max", 2))
+	var vlaggen: int = int(rules.campaign.get("vaandels_max", 1))
+	var tamboers: int = int(rules.campaign.get("tamboers_max", 1))
 	if vlaggen <= 0 and tamboers <= 0:
 		return
 	# Alleen infanterie kan dragen; op leesbare afstand van elkaar.
@@ -446,9 +448,9 @@ func is_valid_placement(player_id: int, placements: Array) -> bool:
 		if not rollen.is_empty():
 			return false   # zonder campagne bestaan figurant-rollen niet
 	else:
-		if int(rollen.get("flag", 0)) > int(rules.campaign.get("vaandels_max", 2)):
+		if int(rollen.get("flag", 0)) > int(rules.campaign.get("vaandels_max", 1)):
 			return false
-		if int(rollen.get("drum", 0)) > int(rules.campaign.get("tamboers_max", 2)):
+		if int(rollen.get("drum", 0)) > int(rules.campaign.get("tamboers_max", 1)):
 			return false
 	return counts[0] == comp[0] and counts[1] == comp[1] and counts[2] == comp[2]
 

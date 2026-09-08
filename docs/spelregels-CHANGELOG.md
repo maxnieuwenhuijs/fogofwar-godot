@@ -1,5 +1,42 @@
 # Spelregels — CHANGELOG
 
+## 4.3.4 — 8 september 2026 (één vaandeldrager en één tamboer per leger; de tamboer is 4 CP)
+
+*Besluit Max: "we doen 1 drummer en 1 flag bearer want het staat te vol, en dan
+1 drummer is 4 ipv 2."*
+
+- **`vaandels_max` en `tamboers_max` van 2 naar 1.** Met vier dragers per
+  leger, elk met een rol-icoon en sinds 4.3.3 een gloeiende vorm om zich heen,
+  stond het bord te vol. Eén van elk is leesbaar: één plek om te bewaken, één
+  plek om op te jagen.
+- **`buit_tamboer_cp` van 2 naar 4.** Met nog maar één tamboer per leger zou
+  de trom anders de helft van zijn gewicht verliezen; nu is één tamboer
+  evenveel waard als de twee van gisteren. Het vaandel blijft 2
+  versterkingspunten (aanname: Max noemde alleen de tamboer). In de bots
+  telt de tamboer daarmee automatisch dubbel (`_buit_waarde`: 4 CP x 0,5 = 2
+  punten, gelijk aan het vaandel), en de maximale buit in de
+  trainer-fitness is 1 x 2 + 1 x 4 / 2 = 4 punten.
+- **Hulpteksten bijgewerkt** (HELP_COMBAT_LOOT_1..3, HELP_GAME_SETUP_ROLES):
+  die beschreven nog de 4.3.1-wereld (alleen ongekoppelde dragers, 2 CP,
+  "bergt zijn vaandel op"). Nu: één van elk, gekoppeld of niet, 4 CP, en de
+  aura. Vertalingen opnieuw gecompileerd.
+- Zonder campagne-blok verandert er niets.
+
+`rules_version` 4.3.3 -> **4.3.4**. Goldens opnieuw gegenereerd en
+`golden_sims.json` opnieuw geijkt; `-- uispel 777` geeft nu `718992dc…` (238
+acties, cyclus 6; was `c5db0ff3…`, 243, 6).
+
+| sim | was | wordt |
+|---|---|---|
+| muis-wolf seed 777 | winner 2, cyclus 12, 417 acties | winner 2, cyclus 7, 256 acties |
+| mens-vos seed 101 | winner 1, cyclus 11, 303 acties | winner 1, cyclus 16, 425 acties |
+| leeuw-beer seed 202 | winner 2, cyclus 9, 237 acties | winner 2, cyclus 21, 568 acties |
+| beer-muis seed 303 | winner 1, cyclus 14, 542 acties | winner 1, cyclus 10, 367 acties |
+| wolf-leeuw seed 404 | winner 1, cyclus 8, 202 acties | winner 1, cyclus 5, 128 acties |
+
+Alle vijf schuiven, geen winnaar kantelt. Vijf sims zeggen niets over balans;
+dat meet de nachtrun na het hertrainen.
+
 ## 4.3.3 — 7 september 2026 (C21: de tamboer en het vaandel geven een buff)
 
 *Besluit Max: "Bouw ook in als spelregel dat een drummer en een vaandeldrager

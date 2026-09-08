@@ -1,6 +1,6 @@
 {
 	"_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
-	"gemeten_op": "4.3.3 / C21-aura (7 september): tamboer = +1 stamina bij het koppelen voor wie in de acht vakken om hem heen staat, vaandel = +1 attack zolang je erin staat. Regelwijziging, dus opnieuw geijkt direct na de bot-wijziging van dezelfde dag (bots jagen op de buit). Vijf sims zeggen niets over balans; daarvoor de nachtrun.",
+	"gemeten_op": "4.3.4 (8 september): een vaandeldrager en een tamboer per leger (was 2 en 2), tamboer 4 CP (was 2). Regelwijziging, dus opnieuw geijkt; de vorige ijk (4.3.3, C21-aura) was van de dag ervoor. Vijf sims zeggen niets over balans; daarvoor de nachtrun na het hertrainen.",
 	"sims": [
 		{
 			"p1": "easy",
@@ -9,8 +9,8 @@
 			"d2": "wolf",
 			"seed": 777,
 			"winner": 2,
-			"cyclus": 12,
-			"acties": 417
+			"cyclus": 7,
+			"acties": 256
 		},
 		{
 			"p1": "easy",
@@ -19,8 +19,8 @@
 			"d2": "vos",
 			"seed": 101,
 			"winner": 1,
-			"cyclus": 11,
-			"acties": 303
+			"cyclus": 16,
+			"acties": 425
 		},
 		{
 			"p1": "easy",
@@ -29,8 +29,8 @@
 			"d2": "beer",
 			"seed": 202,
 			"winner": 2,
-			"cyclus": 9,
-			"acties": 237
+			"cyclus": 21,
+			"acties": 568
 		},
 		{
 			"p1": "medium",
@@ -39,8 +39,8 @@
 			"d2": "muis",
 			"seed": 303,
 			"winner": 1,
-			"cyclus": 14,
-			"acties": 542
+			"cyclus": 10,
+			"acties": 367
 		},
 		{
 			"p1": "easy",
@@ -49,8 +49,8 @@
 			"d2": "leeuw",
 			"seed": 404,
 			"winner": 1,
-			"cyclus": 8,
-			"acties": 202
+			"cyclus": 5,
+			"acties": 128
 		}
 	],
 	"rules": "res://arena/arena_configs/rules_v42_campaign.json"

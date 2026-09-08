@@ -430,9 +430,10 @@ tweede spel dat niemand traint.
 ## C15 — Figuranten en buit (4.2.1)
 
 Een pion **zonder gekoppelde kaart** is een standbeeld: hij handelt niet, maar
-hij staat er wel. Twee van die pionnen per leger dragen het **vaandel** en twee
-de **trommel** (`vaandels_max` / `tamboers_max`, default 2 en 2). Je wijst ze
-zelf aan tijdens het opstellen: het zijn losse plaats-stappen, net als kanonnen.
+hij staat er wel. Eén pion per leger draagt het **vaandel** en één de
+**trommel** (`vaandels_max` / `tamboers_max`, default 1 en 1 sinds 4.3.4; tot
+dan 2 en 2, "het staat te vol"). Je wijst ze zelf aan tijdens het opstellen:
+het zijn losse plaats-stappen, net als kanonnen.
 
 | Wat | Regel |
 |---|---|
@@ -440,7 +441,7 @@ zelf aan tijdens het opstellen: het zijn losse plaats-stappen, net als kanonnen.
 | Koppelen | De rol blijft op de pion staan; sinds 4.3.2 levert ook een gekoppelde drager buit op. |
 | Ontkoppelen | Hij pakt zijn eigen vaandel weer op. |
 | Vaandeldrager neerleggen | De aanvaller krijgt **2 versterkingspunten** (`buit_vaandel_pt`). |
-| Tamboer neerleggen | De aanvaller krijgt **2 CP** (`buit_tamboer_cp`). |
+| Tamboer neerleggen | De aanvaller krijgt **4 CP** (`buit_tamboer_cp`; 2 tot 4.3.4, verdubbeld toen het er nog maar één per leger werd). |
 | Voorwaarde | Geen (4.3.2). Tot 4.3.1 moest het slachtoffer ongekoppeld zijn, maar die regel was aan het bord niet af te lezen: de koppeling is geheim tot de onthulling. |
 | Zonder campagne-blok | Rollen bestaan niet; een opstelling met rollen wordt geweigerd (4.1 blijft byte-identiek). |
 | Gespawnde versterkingen | Krijgen geen rol: alleen wie bij het opstellen is aangewezen, draagt. |
@@ -464,7 +465,7 @@ ook iets voor hun eigen leger, en dat verschuift de vraag "waar zet ik ze" van
 | De vorm | Het blok om de drager: `aura_bereik` vakken in elke richting, ook diagonaal (default 1 = de acht buurvakken). De drager zelf staat er niet in. |
 | Tamboer | Een eigen pion die **bij het koppelen** in de vorm om een levende tamboer staat, krijgt die cyclus **+1 stamina** (`aura_tamboer_stamina`). Alleen de voorraad; `max_stamina` (en dus de dracht van een kanon) groeit niet mee. |
 | Vaandeldrager | Een eigen pion die in de vorm om een levend vaandel staat, slaat en schiet **+1** (`aura_vaandel_attack`) zolang hij daar staat: melee, charge, infanterieschot en kanonschot. |
-| Stapelen | Nee. Twee tamboers naast je is nog steeds +1; een tamboer én een vaandel is +1 stamina én +1 attack. |
+| Stapelen | Nee. Een tamboer én een vaandel is +1 stamina én +1 attack, meer wordt het nooit (en sinds 4.3.4 heeft een leger er ook maar één van elk). |
 | Gekoppeld of niet | Maakt niet uit, zoals de buit sinds 4.3.2: de rol zit op de pion. Dood is dood. |
 | Wanneer stamina | Alleen op het moment van koppelen: stamina is een cyclusvoorraad die daar wordt uitgedeeld. De tamboer mag daarna weglopen; wie zijn +1 heeft, houdt hem die cyclus. Waar je je troepen aan het eind van de vorige cyclus laat staan, bepaalt dus wie er bij het koppelen naast de trom staat. |
 | Zichtbaar | De rol staat in de fog-view (4.3.2), dus ook de aura van de vijand is af te lezen. Op het bord: een minimale gloeiende rand op elke tegel in de vorm (goud = vaandel, blauw = trom, vijand gedimd) en een randje in die kleur om de stat-blokjes die uit de aura komen. |

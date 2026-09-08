@@ -341,8 +341,8 @@ func choose_placement(state: GameState) -> Array:
 func _wijs_dragers_aan(state: GameState, placements: Array) -> void:
 	if not state.campaign_actief_rollen():
 		return
-	var vlaggen: int = int(state.rules.campaign.get("vaandels_max", 2))
-	var tamboers: int = int(state.rules.campaign.get("tamboers_max", 2))
+	var vlaggen: int = int(state.rules.campaign.get("vaandels_max", 1))
+	var tamboers: int = int(state.rules.campaign.get("tamboers_max", 1))
 	if vlaggen <= 0 and tamboers <= 0:
 		return
 	var wf: float = float(weights.get("drager_front", -1.0))
