@@ -7,10 +7,15 @@ Twee bestanden met dezelfde naam: die het minst diep zit wint.
 
 ```
 assets/models/
-  board/                  het bord (Tripo-model, 930 driehoeken)
-    schaakbord/           low-poly schaakbord, 196 driehoeken, gebouwd door
-                          tools/blender_schaakbord.py; bron/ = het .blend
+  board/                  het bord
+    spelbord/             HET bord in Board.tscn: 11x11, 196 driehoeken, uit
+                          tools/blender_schaakbord.py. spelbord.png is de
+                          textuur (material_override in Board.tscn): die
+                          vervang je bij een retexture. bron/ = het .blend
                           (met .gdignore, Godot mag dat niet importeren)
+    schaakbord/           dezelfde bouw als 8x8-schaakbord (referentie)
+    board.glb, board_Image_0.png   het oude Tripo-bord (930 driehoeken),
+                          sinds 8 september niet meer in gebruik
   props/                  gedeelde voorwerpen (prop_drum, prop_pole, ...)
   <factie>/               per factie, bv mouse/
     infantry/           de modellen zelf + gibs + musket-variant + teamkleuren

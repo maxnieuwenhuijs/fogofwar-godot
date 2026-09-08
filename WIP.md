@@ -21,8 +21,8 @@ textuur van boven naar binnen gevouwen, dus ze bemonsteren het frame-hout
 zonder naad; de onderkant is een piepklein stukje frame. Kleuren uit de foto
 gepikt.
 
-Uitvoer in `assets/models/board/schaakbord/`: `schaakbord.glb` (2,5 MB,
-textuur ingebakken), `schaakbord.png` (de textuur los, voor een retexture),
+Uitvoer in `assets/models/board/schaakbord/`: `schaakbord.glb` (60 KB, de
+textuur zit er niet in), `schaakbord.png` (de textuur, 2048x2048),
 `bron/schaakbord.blend` (93 KB, wijst naar de png). Preview-render (Eevee,
 camera als de foto) in `results/schaakbord/schaakbord_preview.png`; daar ook
 een 11x11-proef (`--vakken 11`, de maat van het spelbord) als `bord11/`.
@@ -36,10 +36,34 @@ run leverde een pikzwart bord; nu een canary die de png terugleest); (2) een
 Blender-pad (er kwam ook voor de glb geen .import), vandaar `bron/` met
 `.gdignore`, net als "assets/new upload folder/".
 
-**Checks.** `--import` in Godot: glb en png netjes geimporteerd (Godot trekt
-de ingebakken textuur er als `schaakbord_schaakbord.png` naast, zoals bij
-`board_Image_0.png`); laadcheck via een SceneTree-script: een MeshInstance3D,
-196 driehoeken, albedo-textuur 2048x2048; `blender_tel_tris.py` telt ook 196.
+**Checks.** `--import` in Godot zonder fouten; laadcheck via een
+SceneTree-script: een MeshInstance3D, 196 driehoeken, albedo-textuur
+2048x2048; `blender_tel_tris.py` telt ook 196.
+
+**In het spel (zelfde dag).** Max: "Ja importeer maar dan retexture ik
+later." Board.tscn instantieert nu `assets/models/board/spelbord/spelbord.glb`
+(`--vakken 11 --seed 11 --oorsprong boven`) op (5, 0,05, 5) zonder schaal: de
+bovenkant ligt op `PAWN_Y`, net als het oude Tripo-bord (dat stond op
+-0,754 + 0,0535 x 15 = 0,049), en het speelveld van 11 vakken valt precies
+op de tegelmiddens 0..10. Met het oog op de retexture zit de textuur NIET in
+de glb (die is nu 10 KB) maar ernaast als `spelbord.png`, en Board.tscn legt
+hem er via een material_override op (roughness 0,55, geen emissie meer; het
+oude override had emissie x4,43 om het donkere Tripo-plaatje op te lichten).
+Retexture = dat png vervangen, klaar. Godot trok een ingebakken plaatje er
+anders als `<glb>_<naam>.png` naast (een tweede kopie van 3 MB in git),
+vandaar `--textuur-ingebakken` als optie en los als standaard; de
+8x8-schaakversie is ook zo herbouwd en zijn duplicaat is weg. De png-imports
+staan op VRAM-compressie + mipmaps, zoals `board_Image_0.png` had. Het
+Tripo-bord (`board.glb` in de root, `assets/models/board/board.glb`,
+`board_Image_0.png`) wordt nergens meer gebruikt; laten staan tot Max het
+weggooit.
+
+**Checks.** Boardcheck (SceneTree-script): bovenkant 0,050, plank van -1,05
+tot 11,05 in x en z, override met textuur 2048; `-- uispel 777` = zobrist
+`718992dc…`, 238 acties, cyclus 6 (ongewijzigd, het bord is puur visueel);
+`-- play` met venster: `_shot_play.png`, pionnen op de vakken, havens gloeien
+op de hoeken, raster valt op de lijnen; `-- tunercheck`: 0 fouten, knop bord
+laadt Board.tscn met de camera uit.
 
 ## 8 september -- geluidsinstellingen in het menu
 

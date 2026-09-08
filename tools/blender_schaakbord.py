@@ -12,8 +12,11 @@
 #       [--geen-preview] [--geen-blend]
 #
 # Wat er uit komt, naast elkaar (zelfde basisnaam als --uit):
-#   <naam>.glb          het bord, Y-up, textuur ingebakken, een materiaal, een mesh
-#   <naam>.png          dezelfde textuur los (albedo, sRGB), voor een retexture
+#   <naam>.glb          het bord, Y-up, een materiaal, een mesh; de textuur zit
+#                       er standaard NIET in (--textuur-ingebakken wel)
+#   <naam>.png          de textuur (albedo, sRGB): het spel legt hem via een
+#                       material_override op het bord, en dit is het bestand
+#                       dat je vervangt bij een retexture
 #   bron/<naam>.blend   het Blender-bestand (textuur niet ingepakt, wijst naar de
 #                       png); bron/ krijgt een .gdignore, want Godot wil elke
 #                       .blend zelf importeren en struikelt zonder Blender-pad
@@ -69,6 +72,12 @@ OORSPRONG = _arg("--oorsprong", "onder", str)   # onder = staat op tafel, boven 
 PREVIEW = _arg("--preview", None, str)
 GEEN_PREVIEW = "--geen-preview" in argv
 GEEN_BLEND = "--geen-blend" in argv
+# Standaard blijft de textuur LOS naast de glb (de glb is dan ~60 KB): het spel
+# legt hem er via een material_override in Board.tscn op, en Godot trekt een
+# ingebakken plaatje anders als <glb>_<naam>.png ernaast (een tweede kopie
+# van 3 MB in git). Voor een upload naar een retexture-dienst of een viewer
+# die het plaatje in de glb wil: --textuur-ingebakken.
+TEXTUUR_INGEBAKKEN = "--textuur-ingebakken" in argv
 
 if HOEK <= 0.0:
     HOEK = 0.0
@@ -440,11 +449,13 @@ bpy.context.view_layer.objects.active = obj
 bpy.ops.export_scene.gltf(
     filepath=uit, export_format="GLB", use_selection=True,
     export_apply=True, export_yup=True, export_texcoords=True,
-    export_normals=True, export_materials="EXPORT", export_image_format="AUTO",
+    export_normals=True, export_materials="EXPORT",
+    export_image_format=("AUTO" if TEXTUUR_INGEBAKKEN else "NONE"),
     export_animations=False, export_skins=False, export_morph=False,
     export_lights=False, export_cameras=False,
 )
-print("glb -> %s (%.1f MB)" % (uit, os.path.getsize(uit) / 1e6))
+print("glb -> %s (%.2f MB, textuur %s)" % (uit, os.path.getsize(uit) / 1e6,
+      "ingebakken" if TEXTUUR_INGEBAKKEN else "los in " + os.path.basename(basis) + ".png"))
 
 # ---------------------------------------------------------------- preview
 if not GEEN_PREVIEW:

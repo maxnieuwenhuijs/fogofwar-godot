@@ -168,25 +168,38 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   hand MET `model_tuning.json` erop; een afstelling van een ouder model zet het
   wapen dan zichtbaar scheef. Draai dit als een wapen er raar bij hangt: het
   zegt of de plaatsing uit de .blend komt of uit de afstelling.
-- **Low-poly schaakbord bouwen (8 september):** `blender --background --python
-  tools/blender_schaakbord.py -- --uit assets/models/board/schaakbord/schaakbord.glb
-  [--vakken 8] [--textuur 2048] [--seed 7]`. Een afgeronde plank van 196
-  driehoeken (100 vertices) met EEN materiaal en EEN gebakken houttextuur
-  (numpy in Blender's Python, geen Cycles-bake): donker frame met ronde hoeken
-  en een afgeronde bovenrand, losse ingelegde licht/donker-vakken met dunne
-  zwarte lijnen, slijtage. Levert glb (textuur ingebakken) + png (voor een
-  retexture) + `bron/<naam>.blend` (bron/ krijgt een `.gdignore`: Godot wil
-  elke .blend zelf importeren en breekt zonder Blender-pad de hele
-  import-run) + een Eevee-preview in `results/schaakbord/`. `--vakken 11`
-  geeft het spelbord-formaat (vakken van 1 eenheid, plank 12,1 breed).
-  Knoppen: `--vak`, `--rand`, `--dikte`, `--hoek`/`--hoeksegmenten`,
-  `--afronding`/`--afrondsegmenten`, `--zonder-onderkant`, `--oorsprong
-  boven`, `--geen-preview`, `--geen-blend`. Zijwand en afronding bemonsteren
-  dezelfde textuur (van boven naar binnen gevouwen), dus geen naad en geen
-  tweede materiaal. Bpy-valkuil: na `pixels.foreach_set` NOOIT
+- **Het bord (8 september): low-poly, uit `tools/blender_schaakbord.py`.**
+  Board.tscn instantieert `assets/models/board/spelbord/spelbord.glb` (11x11,
+  vakken van 1 eenheid, plank 12,1 breed, 196 driehoeken, 100 vertices) op
+  (5, 0,05, 5) zonder schaal: bovenkant op `PAWN_Y`, speelveld precies op de
+  tegels -0,5..10,5. De textuur zit NIET in de glb maar ernaast als
+  `spelbord.png`, via een material_override in Board.tscn: **retexture = dat
+  png vervangen** (zelfde UV: platte projectie van boven; zijwand en afronding
+  vouwen dezelfde textuur naar binnen, dus geen naad en geen tweede
+  materiaal). Het Tripo-bord (`board.glb`, `assets/models/board/board.glb`,
+  `board_Image_0.png`) wordt niet meer gebruikt. Opnieuw bouwen: `blender
+  --background --python tools/blender_schaakbord.py -- --uit
+  assets/models/board/spelbord/spelbord.glb --vakken 11 --seed 11 --oorsprong
+  boven` (de 8x8-schaakversie: `--uit
+  assets/models/board/schaakbord/schaakbord.glb`, standaardknoppen), daarna
+  `--import`. Het script rekent de houttextuur zelf met numpy (geen
+  Cycles-bake): donker verstek-frame, ronde hoeken, afgeronde bovenrand, losse
+  ingelegde licht/donker-vakken met dunne zwarte lijnen, slijtage. Levert glb
+  + png + `bron/<naam>.blend` (bron/ krijgt een `.gdignore`: Godot wil elke
+  .blend zelf importeren en breekt zonder Blender-pad de hele import-run) +
+  een Eevee-preview in `results/schaakbord/`. Knoppen: `--vakken`, `--vak`,
+  `--rand`, `--dikte`, `--hoek`/`--hoeksegmenten`,
+  `--afronding`/`--afrondsegmenten`, `--textuur`, `--seed`,
+  `--zonder-onderkant`, `--oorsprong boven`, `--textuur-ingebakken` (plaatje
+  wel in de glb, bv voor een upload; Godot trekt het er dan als
+  `<glb>_<naam>.png` naast, een tweede kopie van 3 MB), `--geen-preview`,
+  `--geen-blend`. De png-imports staan op VRAM-compressie + mipmaps
+  (`compress/mode=2`), hou dat zo. Bpy-valkuil: na `pixels.foreach_set` NOOIT
   `colorspace_settings` van een gegenereerd plaatje aanraken, dat wist de
   buffer en je bewaart zwart (Blender 5.1.2); het script heeft er een canary
-  op.
+  op. Checks na een bordwijziging: `-- uispel 777` (zobrist ongewijzigd, het
+  bord is puur visueel), `-- play` (met venster: `_shot_play.png`),
+  `-- tunercheck` (knop bord).
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
