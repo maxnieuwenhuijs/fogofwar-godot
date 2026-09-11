@@ -307,10 +307,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   sectie 11). Gereedschap: `_fx_tekst` (Label3D-wolkje), `_fx_hart`,
   `_fx_veren`, `_fx_wolk`, `_fx_spetters`, `_fx_knal`, `_boog` (boogje voor
   tween_method via bind), `_maak_vogel`/`_vlieg`/`_land_vogel`,
-  `_maak_kip`/`_ren_weg`. Check: `-- omgevingcheck [nr]` bouwt alle twaalf
-  (elk minstens 8 props), eindigt op nr, klikt elke prop, en speelt daarna
-  elke reactie van elke prop een keer (script-fouten vangt de grep op
-  `SCRIPT ERROR`).
+  `_maak_kip`/`_ren_weg`. **Tik (11 september, Max: "minimaal 3 dingen die
+  lekker dingen of pingen, zo vaak je klikt"):** `klik` roept ALTIJD eerst
+  `_tik` (geluid uit `TIK_GELUID` op de naam van de prop-node, oplopende
+  toon bij snel doorklikken via `combo`, stuiter op de root-scale, plus een
+  `tik_extra` per prop: bel zwaait, flessen wiebelen, hamer slaat, deksel
+  wipt, deur rammelt, vuur schrikt), ook als de grote reactie nog loopt.
+  `TIK_NAMEN` zijn de dingers; `Omgeving.dinger_aantal(i)` telt ze per
+  diorama en elk heeft er minstens drie. Nieuwe pure dingers: bel, glaswerk,
+  aambeeld, kookpot. Check: `-- omgevingcheck [nr]` bouwt alle twaalf (elk
+  minstens 8 props en 3 dingers), eindigt op nr, klikt elke prop, speelt
+  daarna elke reactie van elke prop een keer, en klikt zes keer snel op de
+  eerste prop (alle zes raak, combo minstens 4); script-fouten vangt de grep
+  op `SCRIPT ERROR`.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

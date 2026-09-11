@@ -1948,9 +1948,13 @@ func _ready() -> void:
 			for di in range(1, Omgeving.aantal_dioramas() + 1):
 				og.zet_diorama(di)
 				await get_tree().process_frame
-				print("[OMGEVING] diorama %d %s: %d props" % [di, og.diorama_naam(), og._props.size()])
+				var dingers: int = Omgeving.dinger_aantal(di)
+				print("[OMGEVING] diorama %d %s: %d props, %d tik-dingen" % [di, og.diorama_naam(), og._props.size(), dingers])
 				if og._props.size() < 8:
 					print("[OMGEVING] FOUT: diorama %d heeft maar %d props" % [di, og._props.size()])
+					og_fouten += 1
+				if dingers < 3:
+					print("[OMGEVING] FOUT: diorama %d heeft maar %d tik-dingen (minstens 3)" % [di, dingers])
 					og_fouten += 1
 			og.zet_diorama(og_wil)
 			await get_tree().create_timer(0.5).timeout
@@ -2020,6 +2024,21 @@ func _ready() -> void:
 					await get_tree().create_timer(0.3).timeout
 			print("[OMGEVING] %d reacties gespeeld op %d props" % [og_reacties, og._props.size()])
 			await get_tree().create_timer(5.0).timeout
+			# snel doorklikken (11 september): elke klik moet raak zijn en de
+			# combo moet oplopen, ook terwijl de grote reactie nog loopt
+			if og._props.size() > 0:
+				var tp: Dictionary = og._props[0]
+				var tn: Node3D = tp.node
+				var tsp: Vector2 = og_cam.unproject_position(tn.global_position + Vector3(0.0, float(tp.hoogte) * 0.5, 0.0))
+				var raak_n := 0
+				for ti in 6:
+					if og.klik(tsp):
+						raak_n += 1
+					await get_tree().create_timer(0.08).timeout
+				print("[OMGEVING] snel klikken op %s: %d van 6 raak, combo %d" % [tn.name, raak_n, int(tp.combo)])
+				if raak_n < 6 or int(tp.combo) < 4:
+					print("[OMGEVING] FOUT: snel klikken werkt niet (raak %d, combo %d)" % [raak_n, int(tp.combo)])
+					og_fouten += 1
 		print("[OMGEVING] " + ("PASS" if og_fouten == 0 else "FAIL (%d fouten)" % og_fouten))
 		var og_tex := get_viewport().get_texture()
 		if og_tex != null and og_tex.get_image() != null:

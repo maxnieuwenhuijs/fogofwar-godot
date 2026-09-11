@@ -54,7 +54,7 @@ with gold trim, polished, wealthy`.
 | Bestand | Wat | Team | Klik | Status | Prompt |
 |---|---|---|---|---|---|
 | `prop_kampvuur` | kampvuur: stenenring, houtblokken, gloeiende as (vlammen doet het spel) | gedeeld | laait op, `prop_vuur` | ⚙ | stone ring campfire with charred logs and embers |
-| `prop_kookpot` | ijzeren kookpot aan een driepoot boven het vuur | gedeeld | deksel klappert, `prop_kookpot` | ➕ | iron cooking pot hanging from a wooden tripod |
+| `prop_kookpot` | ijzeren kookpot aan een driepoot boven het vuur | gedeeld | bong bij elke tik, deksel wipt, stoom, hete soep, `prop_kookpot` | ⚙ | iron cooking pot hanging from a wooden tripod |
 | `prop_spit` | spit met een gebraad (rood: een schrale haas; blauw: een heel zwijn) | beide | draait een slag, `prop_spit` | ➕ | roasting spit over a fire with meat |
 | `prop_houtstapel` | stapel gehakt hout | gedeeld | een blok rolt eraf, `prop_hout` | ⚙ | stack of split firewood logs |
 | `prop_takkenbos` | bos sprokkelhout met touw erom | rood | wiebelt | ➕ | bundle of sticks tied with rope |
@@ -217,6 +217,21 @@ van 1800 en de hoeve van Waterloo.
 | 11 Alpenpas | rots met sneeuw | rotsen, vuur, tent, kanon op de pas, wegkruis; overkant rotsen, wegwijzer, hek, kale boom | over de Alpen in 1800 |
 | 12 Hoeve van Waterloo | modder | hoevemuur, hooiberg, put, kanon bij de poort, vuur, kruis, tent; overkant muur, hek, boom, plas, kruis | de ommuurde hoeve |
 
+**Tik-dingen (Max, 11 september: "minimaal 3 dingen die lekker dingen of
+pingen of dongen die je zo vaak als je klikt kunt klikken").** Elke klik op
+elke prop geeft METEEN een geluid en een schudding (stuiter van de hele prop),
+ook als er nog een grote reactie loopt; snel doorklikken duwt de toon per
+klik iets omhoog (combo, valt na 0,7 s terug). Sommige props doen daar nog
+iets bovenop bij elke tik: de bel zwaait, de flessen wiebelen, de hamer slaat
+met vonken, de deksel van de kookpot wipt, de deur van het toilethuisje
+rammelt, het vuur schrikt op. Dingers (`TIK_NAMEN`): trommel, ton, hoorn,
+hakblok, kogels, toilethuisje, kanon, put, lantaarnpaal, fontein, bel,
+glaswerk, aambeeld, kookpot, sneeuwpop, marktkraam; elk diorama heeft er
+minstens drie (`-- omgevingcheck` telt ze). Geluiden per prop: eerst de
+eigen categorie (`prop_bel.wav`, `prop_glas.wav`, `prop_klop.wav`, ...), dan
+een terugval uit het arsenaal; `prop_tik.wav` is de algemene terugval voor
+alles zonder eigen tik-geluid (SOUND-WISHLIST sectie 11).
+
 **Wat een klik doet (drie per prop, willekeurig):**
 
 | Prop | Reactie 1 | Reactie 2 | Reactie 3 |
@@ -279,6 +294,9 @@ houden, lever dan het model in delen of zeg het, dan haak ik ze aan.
 | `prop_vogel` | kraai (zwart), meeuw (wit), papegaai (rood) als los model | gedeeld | vliegt / hartjes / geschoten, `prop_kraai` | ⚙ | crow |
 | `prop_scarabee` | scarabee | gedeeld | schiet weg | ⚙ | scarab beetle |
 | `prop_uil` | uil in de ruine (nu alleen ogen) | gedeeld | Oehoe, `prop_uil` | ⚙ | owl |
+| `prop_bel` | bel aan een galgje (dorp, haven, kapel, Alpen) | gedeeld | ding bij elke tik, luiden, `prop_bel` | ⚙ | brass bell hanging from a wooden frame |
+| `prop_glaswerk` | kist met flessen en glazen (rood: kruiken en tinnen bekers, blauw: kristal) | beide | klink bij elke tik, fles valt om, Proost!, `prop_glas` | ⚙ | wooden crate with bottles and glasses |
+| `prop_aambeeld` | aambeeld op een blok met hamer | gedeeld | kleng bij elke tik met vonken, hoefijzer, `prop_aambeeld` | ⚙ | anvil on a stump with a hammer |
 
 ## 10. Bewoners (poppetjes, `assets/models/bewoners/`)
 

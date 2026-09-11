@@ -469,6 +469,29 @@ index zoekt op naam) doet automatisch mee, geen code nodig; varianten heten
 | `prop_kikker` | `prop_kikker.wav` | 2 | kikker springt de plas over: plons, klein | geen | ➕ |
 | `prop_wegwijzer` | `prop_wegwijzer.wav` | 1 | wegwijzer wiebelt: hout kraakt | `impact_wood` | ➕ |
 
+**Tik-geluiden (11 september).** Elke klik op elke prop klinkt meteen (met
+een oplopende toon bij snel doorklikken); het spel zoekt per prop eerst de
+eigen categorie en valt anders terug op iets uit het arsenaal. Kort en
+"punchy", een halve seconde:
+
+| Categorie | Bestand | Var. | Waarvoor | Terugval nu | Status |
+|---|---|---|---|---|---|
+| `prop_tik` | `prop_tik.wav` | 3 | de algemene tik: een droog houten tokje | `ui_click` | ➕ |
+| `prop_bel` | `prop_bel.wav` | 2 | de bel: een heldere ding | `haven_score` | ➕ |
+| `prop_glas` | `prop_glas.wav` | 3 | flessen en glazen: klink, tink | `card_stat_up` | ➕ |
+| `prop_aambeeld` | `prop_aambeeld.wav` | 2 | hamer op aambeeld: kleng | `impact_armor` | ➕ |
+| `prop_kookpot` | `prop_kookpot.wav` | 2 | deksel op de pot: bong | `impact_armor` | ➕ |
+| `prop_klop` | `prop_klop.wav` | 2 | klop op de deur van het toilethuisje | `impact_wood` | ➕ |
+| `prop_doek` | `prop_doek.wav` | 2 | tentdoek dat klappert | `prop_tik` | ➕ |
+| `prop_ritsel` | `prop_ritsel.wav` | 2 | bladeren, palm | `prop_tik` | ➕ |
+| `prop_zand` | `prop_zand.wav` | 1 | zand dat schuift (piramide, sfinx) | `prop_tik` | ➕ |
+| `prop_steen` | `prop_steen.wav` | 2 | steen op steen (ruine) | `impact_wood` | ➕ |
+| `prop_sneeuw` | `prop_sneeuw.wav` | 2 | sneeuw: pof, knerp | `prop_tik` | ➕ |
+| `prop_hooi` | `prop_hooi.wav` | 1 | hooi dat ritselt | `prop_tik` | ➕ |
+| `prop_plons` | `prop_plons.wav` | 2 | plons (fontein, put, sloep) | `small_blood_splash` | ➕ |
+| `prop_molen` | `prop_molen.wav` | 1 | molenwieken die kraken | `cannon_wheel_loose` | ➕ |
+| `prop_kanon_tik` | `prop_kanon_tik.wav` | 1 | tik op de kanonsloop | `impact_armor` | ➕ |
+
 **Bewoners** (de poppetjes, `assets/models/bewoners/LEESMIJ.md`): elke bewoner
 noemt in zijn manifest zelf zijn categorieen (`"geluid": ["bewoner_hakken",
 "prop_bijl", "impact_wood"]`, de eerste die bestaat klinkt) en het moment in

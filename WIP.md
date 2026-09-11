@@ -46,6 +46,23 @@ mipmaps). Twee GDScript-lessen: `as` is een sleutelwoord (geen
 variabelenaam voor een molenas), en een `:=` met een ternary van Color en
 Array-element kan het type niet afleiden.
 
+**Tik-dingen (later die ochtend).** Max: "ieder diorama moet minimaal 3
+dingen hebben die lekker dingen of pingen of dongen die je zo vaak als je
+klikt kunt klikken: glaswerk, drums, bijlen, poophuizen; alles wat geen
+animatie heeft alleen een kleine schudding of stuiter." Nu roept `klik`
+altijd eerst `_tik`: meteen een geluid (per prop een eigen categorie met
+terugval, `TIK_GELUID`) met een toon die per snelle klik iets oploopt
+(combo), en een stuiter van de hele prop, ook als de grote reactie nog
+loopt; de grote reactie komt er alleen bij als de prop vrij is. Per prop een
+tik-extra bovenop: bel zwaait, flessen wiebelen, de hamer slaat met vonken,
+de deksel wipt, de deur rammelt, het vuur schrikt op. Vier nieuwe pure
+dingers (bel, glaswerk met flessen en glazen, aambeeld met hamer, kookpot
+aan een driepoot) en elk diorama heeft er nu minstens drie; de check telt
+ze uit de data en klikt zes keer snel op een prop (alle zes raak, combo
+loopt op). Tik-geluiden staan in SOUND-WISHLIST sectie 11 (`prop_tik`,
+`prop_bel`, `prop_glas`, `prop_aambeeld`, `prop_kookpot`, `prop_klop`, ...);
+tot die tijd klinken ui_click, haven_score, card_stat_up en impact_armor.
+
 **De RNG-les (belangrijk).** uispel gaf ineens `d16a14f8` in plaats van
 `d9985647`, ook met de herbouw bij de start uitgezet, en een schone
 checkout van HEAD gaf wel `d9985647`. De oorzaak: de omgeving trok bij de
