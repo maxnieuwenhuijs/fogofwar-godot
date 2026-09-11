@@ -886,6 +886,14 @@ func _start_match(difficulty: int) -> void:
 ## en bij een herstart vanaf de staat.
 func _omgeving_facties() -> void:
 	if _omgeving != null:
+		# Het diorama (11 september) volgt uit de windrichting, die per potje
+		# geloot is (online uit het match-id, dus beide stoelen hetzelfde).
+		# GEEN eigen trek uit de globale RNG en niet voor start_new_game
+		# bouwen: dat verschuift de seed van de sessie en -- uispel klopt niet
+		# meer (gemeten 11 september). De knop `diorama` in het sfeer-paneel
+		# wint van de loting.
+		var w: Vector3 = PawnView.wind_richting
+		_omgeving.loot_diorama(int(round(atan2(w.z, w.x) * 1000.0)), false)
 		# stoel 1 is rood (het arme kamp), stoel 2 blauw (het rijke)
 		_omgeving.zet_facties(_human_doctrine, _ai_doctrine, "red" if _human_id == Constants.PLAYER_1 else "blue")
 
@@ -3226,6 +3234,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "wolken", "label": "wolkenschaduw", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "vignet", "label": "vignet (donkere randen)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.5},
 	{"key": "props", "label": "props (kamp, klikbaar)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "diorama", "label": "diorama (0 = loten per potje, 1-12 vast)", "min": 0.0, "max": 12.0, "step": 1.0, "def": 0.0},
 ]
 
 

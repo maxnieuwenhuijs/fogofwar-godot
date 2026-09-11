@@ -1,5 +1,72 @@
 # Fog of War — Work In Progress & Context
 
+## 11 september -- twaalf diorama's, en elke prop reageert anders
+
+Max: "Bedenk iets van 12 verschillende diorama's. Voeg sowieso ook een
+hartvorm houten toilethuisje etc. En allemaal iconische dingen voor de
+Napoleon-tijd. Ook moet er per diorama een beetje variatie komen: je klikt
+op de vogel en dan vliegt ie weg, je klikt op de vogel en er komt een andere
+vogel bij en een klein hartje, je klikt op de vogel dan wordt ie geschoten
+en ploft hij in een verenbal om. Per klikbaar element verschillende dingen
+die je random krijgt te zien."
+
+**Reacties.** `Omgeving._registreer` neemt nu een lijst Callables; een klik
+kiest er willekeurig een (`_speel_willekeurig`), nooit twee keer achter
+elkaar dezelfde. Elke bestaande prop kreeg er twee bij (de kraai: weg en
+terug / een tweede kraai met hartjes / geschoten, verenbal, valt van de
+paal en later zit er een nieuwe; de kikker: springen / kwaken / duiken; het
+vuur, de trommel, de ton, de hoorn, de bijl, de kogels, de tent, de
+wegwijzer, de geleverde glb's en de bewoners net zo; tabel in
+PROP-WISHLIST.md sectie 11). Gereedschap: tekstwolkjes (Label3D:
+Bezet!, Zzz, Kwaak!, Plons!, Oehoe), hartjes (twee bollen en een
+gekantelde kubus), veren, rook- en stofwolken, spetters, een knal met
+lichtflits, een boogje voor tween_method (`_boog` via bind), vogels die
+komen aanvliegen en weer weggaan (`_maak_vogel`, `_vlieg`, `_land_vogel`),
+kippen die wegrennen (`_maak_kip`, `_ren_weg`). Alles hangt aan zijn
+prop-node en ruimt zichzelf op.
+
+**De twaalf diorama's** (`Omgeving.DIORAMAS`, data: grond, tint, extra's,
+props als `[naam, x, z, draai, {opties}]`): Weidekamp, Boerenerf, Dorpsrand
+met molen, Na de slag (modder, smeulend vuur, kanonnen, kruisen), Winterkamp
+(sneeuw op de grond en uit de lucht, bevroren plas, sneeuwpop), Rivierhaven
+(water met kade, steiger met sloep, een meeuw), Bosrand, Kapelruine (uil in
+de boog), Marktplein (keien, kramen in teamkleur, fontein), Egypte 1798
+(zand, piramiden, sfinx, palmen), Alpenpas (rots met sneeuw, kanon op de
+pas), Hoeve van Waterloo. Per potje geloot in `game._loot_wind` (online uit
+het match-id), knop `diorama` in het sfeer-paneel zet er een vast, en
+`zet_diorama` herbouwt alles onder Props. Zestien nieuwe placeholder-props
+uit primitieven, met het hartjes-toilethuisje voorop (deur aan een
+scharnier: Bezet!, stinkwolk uit de pijp, een kip rent eruit), de molen
+(wieken draaien met de wind, harder na een klik), het kanon (schiet met
+flits, rook en terugslag), put, kruis met hoed, palm, piramide, sfinx,
+steiger met sloep, ruine, fontein, marktkraam, sneeuwpop, hooiberg,
+lantaarnpaal, boom (ook kaal), rots. Zes grondvarianten uit
+`tools/maak_omgeving_texturen.py --varianten` (768, naadloos, VRAM +
+mipmaps). Twee GDScript-lessen: `as` is een sleutelwoord (geen
+variabelenaam voor een molenas), en een `:=` met een ternary van Color en
+Array-element kan het type niet afleiden.
+
+**De RNG-les (belangrijk).** uispel gaf ineens `d16a14f8` in plaats van
+`d9985647`, ook met de herbouw bij de start uitgezet, en een schone
+checkout van HEAD gaf wel `d9985647`. De oorzaak: de omgeving trok bij de
+herbouw uit de GLOBALE RNG (`randf_range` voor een boomrotatie, stenen van
+het vuur, de idle-keuze van een bewoner), en die herbouw zit tussen
+`seed(777)` en de auto-opstelling van de mens, die de globale RNG wel
+gebruikt. Elk ander aantal trekjes = een andere opstelling = een andere
+partij. De referentie `d9985647` van 4.3.5 bevatte dus stiekem het aantal
+trekjes van het diorama van 8 september. Nu hebben Omgeving en Bewoner een
+eigen `RandomNumberGenerator` (96 + 2 aanroepen omgezet) en is `d16a14f8…`
+(246 acties, cyclus 6) de referentie: twee keer gedraaid, gelijk. Regel in
+CLAUDE.md: visuele code trekt nooit uit de globale RNG.
+
+**Checks.** `-- omgevingcheck [nr]` bouwt alle twaalf (elk minstens 8
+props), eindigt op nr, klikt elke prop en speelt daarna elke reactie van
+elke prop een keer: PASS, 39 reacties op 13 props, geen scriptfouten;
+`-- dioramashots` (nieuw: alle twaalf op de foto in het menu,
+`_shot_diorama_<nr>.png`, contactvel in `results/schaakbord/dioramas.png`);
+`-- uispel 777` = `d16a14f8…` (twee keer); `-- herstelcheck 777` PASS;
+`-- play`; `-- vosview` PASS. Tracker: 129 regels, 31 placeholders.
+
 ## 8 september -- zwevende musket bij figuranten; aura in teamkleur
 
 Max (screenshot): "er gaat toch iets mis met zwevende wapens, met name bij

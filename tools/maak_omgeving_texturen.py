@@ -168,12 +168,92 @@ def maak_wolken(T, seed):
     return rgba
 
 
+def maak_grond(variant, T, seed):
+    """Grondvarianten voor de diorama's (11 september): sneeuw, zand, modder,
+    kei, bos, rots. Allemaal periodiek, dus naadloos."""
+    kol = (np.arange(T, dtype=np.float32) + 0.5) / T
+    u = np.broadcast_to(kol[None, :], (T, T))
+    v = np.broadcast_to(kol[:, None], (T, T))
+    fijn = fbm(u, v, 256, 256, 2, seed + 31)
+    grof = fbm(u, v, 4, 4, 3, seed + 32)
+    rng = np.random.default_rng(seed + 40)
+
+    def stipjes(kleur, aantal, r_max, sterkte):
+        for _ in range(aantal):
+            cx, cy = rng.integers(0, T, size=2)
+            r = int(rng.integers(1, r_max + 1))
+            for dy in range(-r, r + 1):
+                for dx in range(-r, r + 1):
+                    if dx * dx + dy * dy <= r * r:
+                        kleur_px = kleur_arr[(cy + dy) % T, (cx + dx) % T]
+                        kleur_arr[(cy + dy) % T, (cx + dx) % T] = kleur * sterkte + kleur_px * (1 - sterkte)
+
+    if variant == "sneeuw":
+        basis = np.array([228, 233, 240], np.float32)
+        kleur_arr = basis[None, None, :] * (0.92 + 0.08 * grof)[..., None] * (0.96 + 0.06 * fijn)[..., None]
+        schaduw = np.clip((fbm(u, v, 6, 6, 2, seed + 33) - 0.55) / 0.3, 0, 1)
+        kleur_arr = kleur_arr * (1.0 - 0.12 * schaduw)[..., None] * np.array([0.96, 0.98, 1.03], np.float32)
+        kaal = np.clip((fbm(u, v, 5, 5, 3, seed + 34) - 0.72) / 0.08, 0, 1)
+        kleur_arr = kleur_arr + (np.array([120, 105, 80], np.float32) - kleur_arr) * (0.7 * kaal)[..., None]
+    elif variant == "zand":
+        basis = np.array([198, 174, 122], np.float32)
+        kleur_arr = basis[None, None, :] * (0.9 + 0.14 * grof)[..., None] * (0.95 + 0.08 * fijn)[..., None]
+        r = fbm(u, v, 3, 60, 2, seed + 35)
+        ribbel = 0.5 + 0.5 * np.sin(2 * np.pi * (v * 90 + (r - 0.5) * 4))
+        kleur_arr = kleur_arr * (0.9 + 0.12 * ribbel)[..., None]
+        spik = np.clip((fbm(u, v, 180, 180, 2, seed + 36) - 0.78) / 0.06, 0, 1)
+        kleur_arr = kleur_arr * (1.0 - 0.3 * spik)[..., None]
+    elif variant == "modder":
+        basis = np.array([96, 76, 54], np.float32)
+        kleur_arr = basis[None, None, :] * (0.85 + 0.3 * grof)[..., None] * (0.92 + 0.14 * fijn)[..., None]
+        streep = fbm(u, v, 2, 120, 2, seed + 37)
+        kleur_arr = kleur_arr * (0.85 + 0.3 * streep)[..., None]
+        plas = np.clip((fbm(u, v, 5, 5, 3, seed + 38) - 0.64) / 0.08, 0, 1)
+        kleur_arr = kleur_arr + (np.array([58, 64, 70], np.float32) - kleur_arr) * (0.85 * plas)[..., None]
+        stipjes(np.array([70, 95, 40], np.float32), int(T * T / 6000), 2, 0.6)
+    elif variant == "kei":
+        n = 36   # keien van ~0,33 eenheid (14 was een straatje van reuzen)
+        cx = np.floor(u * n)
+        cy = np.floor(v * n)
+        fx = u * n - cx
+        fy = v * n - cy
+        jx = (_hash01(cx.astype(np.int64) % n, cy.astype(np.int64) % n, seed + 41) - 0.5) * 0.16
+        jy = (_hash01(cx.astype(np.int64) % n, cy.astype(np.int64) % n, seed + 42) - 0.5) * 0.16
+        d = np.sqrt((fx - 0.5 - jx) ** 2 + (fy - 0.5 - jy) ** 2)
+        steen = np.clip((0.44 - d) / 0.05, 0, 1)
+        toon = 112 + 42 * _hash01(cx.astype(np.int64) % n, cy.astype(np.int64) % n, seed + 43)
+        kleur_arr = np.stack([toon * 1.02, toon, toon * 0.94], axis=-1) * (0.94 + 0.12 * fijn)[..., None]
+        # licht van linksboven: de bovenkant van elke kei net lichter
+        kleur_arr = kleur_arr * (1.0 + 0.08 * (0.5 - fy) - 0.04 * (fx - 0.5))[..., None]
+        voeg = np.array([66, 62, 56], np.float32)
+        kleur_arr = kleur_arr * steen[..., None] + voeg[None, None, :] * (1 - steen)[..., None] * (0.9 + 0.2 * fijn)[..., None]
+        kleur_arr = kleur_arr * (0.92 + 0.12 * grof)[..., None]
+    elif variant == "bos":
+        basis = np.array([72, 80, 44], np.float32)
+        kleur_arr = basis[None, None, :] * (0.85 + 0.35 * grof)[..., None] * (0.9 + 0.2 * fijn)[..., None]
+        mos = np.clip((fbm(u, v, 6, 6, 3, seed + 44) - 0.58) / 0.15, 0, 1)
+        kleur_arr = kleur_arr + (np.array([72, 96, 42], np.float32) - kleur_arr) * (0.7 * mos)[..., None]
+        stipjes(np.array([150, 90, 40], np.float32), int(T * T / 900), 2, 0.7)
+        stipjes(np.array([110, 70, 30], np.float32), int(T * T / 1200), 2, 0.6)
+    else:  # rots
+        basis = np.array([122, 118, 110], np.float32)
+        kleur_arr = basis[None, None, :] * (0.85 + 0.3 * grof)[..., None] * (0.92 + 0.14 * fijn)[..., None]
+        barst = np.clip((fbm(u, v, 90, 90, 3, seed + 45) - 0.66) / 0.03, 0, 1) * np.clip((0.7 - fbm(u, v, 90, 90, 3, seed + 45)) / 0.03, 0, 1)
+        kleur_arr = kleur_arr * (1.0 - 0.45 * barst)[..., None]
+        sneeuw = np.clip((fbm(u, v, 4, 4, 3, seed + 46) - 0.66) / 0.08, 0, 1)
+        kleur_arr = kleur_arr + (np.array([225, 230, 238], np.float32) - kleur_arr) * (0.85 * sneeuw)[..., None]
+    return np.clip(kleur_arr, 0, 255).astype(np.uint8)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--uit", default="assets/models/board/omgeving")
     ap.add_argument("--bord", default="assets/models/board/spelbord/spelbord.png")
     ap.add_argument("--seed", type=int, default=3)
     ap.add_argument("--maat", type=int, default=1024)
+    ap.add_argument("--varianten", default="sneeuw,zand,modder,kei,bos,rots",
+                    help="grondvarianten voor de diorama's (leeg = geen)")
+    ap.add_argument("--maat-variant", type=int, default=768)
     args = ap.parse_args()
     os.makedirs(args.uit, exist_ok=True)
     if os.path.exists(args.bord):
@@ -187,6 +267,12 @@ def main():
     Image.fromarray(gras, "RGB").save(os.path.join(args.uit, "gras.png"), optimize=True)
     Image.fromarray(maak_vlekken(512, args.seed), "L").save(os.path.join(args.uit, "gras_vlekken.png"), optimize=True)
     Image.fromarray(maak_wolken(512, args.seed), "RGBA").save(os.path.join(args.uit, "wolken.png"), optimize=True)
+    for variant in [x.strip() for x in args.varianten.split(",") if x.strip()]:
+        grond = maak_grond(variant, args.maat_variant, args.seed)
+        Image.fromarray(grond, "RGB").save(os.path.join(args.uit, "grond_%s.png" % variant), optimize=True)
+        g2 = grond.astype(np.int16)
+        print("grond_%s.png (%d): naad links-rechts %.1f, boven-onder %.1f" % (
+            variant, args.maat_variant, np.abs(g2[:, 0] - g2[:, -1]).mean(), np.abs(g2[0, :] - g2[-1, :]).mean()))
     # naadloosheid: linker- en rechterkolom moeten op elkaar lijken (en boven/onder)
     g = gras.astype(np.int16)
     print("naadcheck gras: links-rechts %.1f, boven-onder %.1f (binnen de tegel gemiddeld %.1f)" % (

@@ -1898,6 +1898,26 @@ func _ready() -> void:
 		print("[BEWONER] " + ("PASS" if bw_fouten == 0 else "FAIL (%d fouten)" % bw_fouten))
 		get_tree().quit(0 if bw_fouten == 0 else 1)
 		return
+	elif "dioramashots" in args:
+		# 11 september: alle diorama's een voor een op de foto, in het menu
+		# (`_shot_diorama_<nr>.png`), om ze naast elkaar te bekijken. Alleen
+		# met venster zinvol; headless telt hij alleen de props.
+		await get_tree().create_timer(1.0).timeout
+		var ds: Node = game._omgeving
+		if ds == null:
+			print("[DIORAMA] FOUT: geen omgeving")
+			get_tree().quit(1)
+			return
+		for di in range(1, Omgeving.aantal_dioramas() + 1):
+			ds.zet_diorama(di)
+			await get_tree().create_timer(1.2).timeout
+			var dtex := get_viewport().get_texture()
+			if dtex != null and dtex.get_image() != null:
+				dtex.get_image().save_png("res://_shot_diorama_%d.png" % di)
+			print("[DIORAMA] %d %s: %d props" % [di, ds.diorama_naam(), ds._props.size()])
+		print("[DIORAMA] klaar")
+		get_tree().quit(0)
+		return
 	elif "omgevingcheck" in args:
 		# 8 september: het diorama om het bord (scripts/game/omgeving.gd).
 		# Bewijst dat de Omgeving er staat (grond, wolken, vignet, props), dat
@@ -1919,6 +1939,22 @@ func _ready() -> void:
 			if og_props.size() < 8:
 				print("[OMGEVING] FOUT: maar %d props (verwacht minstens 8)" % og_props.size())
 				og_fouten += 1
+			# alle twaalf diorama's een keer opbouwen (elk minstens 8 props) en
+			# eindigen op het diorama uit het argument (`-- omgevingcheck 5`), anders 1
+			var og_i := args.find("omgevingcheck")
+			var og_wil: int = 1
+			if args.size() > og_i + 1 and String(args[og_i + 1]).is_valid_int():
+				og_wil = int(args[og_i + 1])
+			for di in range(1, Omgeving.aantal_dioramas() + 1):
+				og.zet_diorama(di)
+				await get_tree().process_frame
+				print("[OMGEVING] diorama %d %s: %d props" % [di, og.diorama_naam(), og._props.size()])
+				if og._props.size() < 8:
+					print("[OMGEVING] FOUT: diorama %d heeft maar %d props" % [di, og._props.size()])
+					og_fouten += 1
+			og.zet_diorama(og_wil)
+			await get_tree().create_timer(0.5).timeout
+			og_props = og._props
 			var og_namen: Array = []
 			for p in og_props:
 				var pn: Node3D = p.node
@@ -1973,6 +2009,17 @@ func _ready() -> void:
 			print("[OMGEVING] na 5,5 s nog bezig: %d (alleen de kraai mag)" % og_bezig)
 			if og_bezig > 1:
 				og_fouten += 1
+			# de variatie (11 september): elke reactie van elke prop een keer, kort
+			# na elkaar. Overlappen mag; script-fouten niet (die vangt de grep).
+			var og_reacties := 0
+			for p in og._props:
+				var lijst: Array = p.get("reacties", [])
+				for ri in range(lijst.size()):
+					og.speel_reactie(p, ri)
+					og_reacties += 1
+					await get_tree().create_timer(0.3).timeout
+			print("[OMGEVING] %d reacties gespeeld op %d props" % [og_reacties, og._props.size()])
+			await get_tree().create_timer(5.0).timeout
 		print("[OMGEVING] " + ("PASS" if og_fouten == 0 else "FAIL (%d fouten)" % og_fouten))
 		var og_tex := get_viewport().get_texture()
 		if og_tex != null and og_tex.get_image() != null:

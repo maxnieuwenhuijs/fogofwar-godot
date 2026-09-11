@@ -190,6 +190,90 @@ with gold trim, polished, wealthy`.
 | `prop_rots` | rotsblok met mos | gedeeld | geen | ➕ | mossy boulder |
 | `prop_bloemen` | pol veldbloemen | gedeeld | vlinder | ➕ | tuft of wildflowers |
 
+## 11. De twaalf diorama's (11 september)
+
+Het landschap om het bord is een van twaalf sets, per potje geloot (online
+uit het match-id, dus beide stoelen zien hetzelfde) of vastgezet met de knop
+`diorama` in het sfeer-paneel (toets L). Elk heeft eigen grond, licht en
+props; `scripts/game/omgeving.gd` (`DIORAMAS`) is de bron. Alle props zijn
+klikbaar en hebben DRIE reacties waaruit per klik willekeurig wordt gekozen,
+nooit twee keer dezelfde achter elkaar (tabel hieronder). Iconen uit de tijd
+van Napoleon: het kamp, de boerderij, de molen, het slagveld, de winter van
+1812, de haven, het bos, de kapel, het marktplein, Egypte 1798, de Alpenpas
+van 1800 en de hoeve van Waterloo.
+
+| Diorama | Grond | Iconen (placeholders nu, glb's later uit de lijst hierboven) | Sfeer |
+|---|---|---|---|
+| 1 Weidekamp | gras | kampvuur, trommel, ton, hoorn, hakblok, kogels, twee tenten, toilethuisje met hartje; overkant hek met kraai, plas met kikker, wegwijzer, tent | het gewone kamp |
+| 2 Boerenerf | gras | hooiberg, put, toilethuisje, hakblok, vuur, tent, boom; overkant hek, plas, boom, kruis, wegwijzer | een boerderij achter de linies |
+| 3 Dorpsrand met molen | gras | molen (wieken draaien met de wind), marktkraam, lantaarnpaal, put, vuur, tent, toilethuisje; overkant wegwijzer, hek, boom, lantaarn, plas | de rand van een dorp |
+| 4 Na de slag | modder | kanon, smeulend vuur, kogels, kruisen met hoed, tent, ton; overkant hek met kraai, kruisen, plas, kale boom, kanon | de ochtend erna |
+| 5 Winterkamp | sneeuw, vallende sneeuw | vuur, sneeuwpop, tenten, hakblok, kale boom, kogels; overkant bevroren plas, hek, wegwijzer, kale boom, sneeuwpop | de winter van 1812 |
+| 6 Rivierhaven | gras, water aan de overkant | tonnen, vuur, lantaarn, tent, marktkraam (vis), toilethuisje; overkant steiger met sloep, meeuw op het hek, put, lantaarn | een kade aan de rivier |
+| 7 Bosrand | bos | bomen, hakblok, vuur, tent, rots; overkant bomen, hek, plas, kruis | een open plek, houthakkers |
+| 8 Kapelruine | gras | ruine met boog, kruis, lantaarn, vuur, tent, boom; overkant ruine, hek, plas, wegwijzer, kruis | een vervallen kapel, een uil |
+| 9 Marktplein | kei | twee kramen, fontein, lantaarn, put, ton, toilethuisje; overkant kraam, lantaarn, put, hek, wegwijzer | het plein van een stadje |
+| 10 Egypte 1798 | zand | piramide, palmen, vuur, tent, sfinx, ton; overkant twee piramiden, sfinx, palmen | de veldtocht naar Egypte |
+| 11 Alpenpas | rots met sneeuw | rotsen, vuur, tent, kanon op de pas, wegkruis; overkant rotsen, wegwijzer, hek, kale boom | over de Alpen in 1800 |
+| 12 Hoeve van Waterloo | modder | hoevemuur, hooiberg, put, kanon bij de poort, vuur, kruis, tent; overkant muur, hek, boom, plas, kruis | de ommuurde hoeve |
+
+**Wat een klik doet (drie per prop, willekeurig):**
+
+| Prop | Reactie 1 | Reactie 2 | Reactie 3 |
+|---|---|---|---|
+| kraai / meeuw | vliegt weg en komt na een tijd terug | er landt een tweede, hartjes, die vliegt later weg | wordt geschoten: knal, verenbal, valt van de paal; later zit er een nieuwe |
+| kikker | springt de plas over met een kring | kwaakt, keel zwelt op | duikt onder met spetters, komt aan de andere kant boven |
+| kampvuur | laait op met vonken | dikke rookpluim, iemand hoest | een dennenappel knalt |
+| trommel | stuitert | roffel | valt om en rolt, komt terug |
+| ton | wiebelt | de deksel wipt, een appel rolt weg | valt om en rolt weg, komt terug |
+| hoorn | wipt | signaalstoot: TOEOET, alle kraaien vliegen op | valt om |
+| bijl in de stronk | trilt | hakt: het blok splijt in tweeen | valt van de stronk, ligt ernaast |
+| kogelstapel | bovenste rolt eraf en terug | de hele stapel stort in en wordt opgestapeld | een kogel rolt naar de tent: Au! |
+| tent | lantaarn zwaait / doek trilt | Zzz, de tent ademt | een laars vliegt uit de opening: Wegwezen! |
+| wegwijzer | wiebelt | draait een rondje: Die kant? | een kraai landt erop |
+| toilethuisje | deur open, Bezet!, deur dicht | stinkwolk uit de pijp: Poeh! | deur zwaait open, een kip rent eruit |
+| molen | wieken draaien hard: Krrrk | een vogel landt op de kap | een zak meel valt uit het deurtje: Oeps! |
+| kanon | schiet: flits, rook, terugslag | wiel wiebelt | een kogel rolt uit de loop |
+| put | de emmer valt: Plons! | een kikker springt eruit | Hallo? ...hallo? ...lo? |
+| kruis met hoed | de hoed waait af | een kraai landt erop | iemand legt bloemen neer, hartjes |
+| palm | wiegt | een kokosnoot valt: Bonk! | een papegaai landt in de kroon |
+| piramide / sfinx | zandwolk | ? | een scarabee schiet weg / de sfinx kijkt je aan |
+| steiger met sloep | de sloep schommelt | riemen in het water | een vis springt: Plons! |
+| ruine | een steen valt eraf | twee gele ogen in de boog: Oehoe | stofwolk |
+| fontein | plons met kring | een muntje: Plink!, een hartje | een vogel komt baden |
+| marktkraam | een appel rolt eraf: He! | het zeil klappert | Verse appels! Twee voor een stuiver! |
+| sneeuwpop | de hoed waait af | smelt een beetje: Poef | een sneeuwbal: Pats! |
+| bevroren plas | Krak!, een barst | een steentje glijdt over het ijs | Krak! |
+| hooiberg | een kip springt eruit | Hatsjoe! hooiwolk | Zzz |
+| lantaarnpaal | flakkert | zwaait | een mot cirkelt om de lamp |
+| boom | bladeren vallen (sneeuw als hij kaal is) | een vogel vliegt op | appels vallen / een tak |
+| geleverde glb-prop | wiebelt | hopt | stofwolkje |
+| bewoner | zijn actie-clip | zijn actie-clip | hartje boven het hoofd, dan zijn actie |
+
+## 12. Nieuw voor de diorama's (placeholders in omgeving.gd, glb's welkom)
+
+| Bestand | Wat | Team | Klik | Status | Prompt |
+|---|---|---|---|---|---|
+| `prop_toilethuisje` | houten toilethuisje met een hartje in de deur en een pijp op het dak | beide | Bezet! / stinkwolk / kip, `prop_wc` | ⚙ | wooden outhouse with a heart cut-out in the door |
+| `prop_molen` | windmolen met vier wieken (de wieken draaien in het spel; lever ze als los deel `wieken`) | gedeeld | draait hard / vogel / zak meel, `prop_molen` | ⚙ | dutch windmill with four sails |
+| `prop_put` | waterput met dakje en emmer | gedeeld | emmer valt / kikker / echo, `prop_emmer` | ⚙ | stone well with a small roof and a bucket |
+| `prop_kruis` | houten kruis met een sjako erop | beide | hoed waait af / kraai / bloemen | ⚙ | wooden grave cross with a soldier hat on top |
+| `prop_palm` | dadelpalm met kokosnoten | gedeeld | wiegt / kokos valt / papegaai, `prop_kokos` | ⚙ | date palm tree |
+| `prop_piramide` | piramide (Gizeh) | gedeeld | zand / ? / scarabee | ⚙ | egyptian pyramid |
+| `prop_sfinx` | sfinx met hoofddoek | gedeeld | ? / zand / kijkt je aan | ⚙ | egyptian sphinx statue |
+| `prop_steiger` | houten steiger op palen | gedeeld | schommelt (met de sloep) | ⚙ | wooden jetty on posts |
+| `prop_sloep` | roeisloep met riemen | beide | schommelt / riemen / vis, `prop_boot` | ⚙ | wooden rowing boat with oars |
+| `prop_ruine` | vervallen muur met een boog | gedeeld | steen valt / uil / stof, `prop_steen` | ⚙ | ruined stone wall with an arch |
+| `prop_fontein` | stenen fontein met straal (de straal doet het spel) | gedeeld | plons / munt / vogel, `prop_munt` | ⚙ | stone fountain |
+| `prop_marktkraam` | marktkraam met zeil (rood of blauw) en waar | beide | appel / zeil / koopman, `prop_koopman` | ⚙ | wooden market stall with an awning |
+| `prop_sneeuwpop` | sneeuwpop met hoed en wortel | gedeeld | hoed / smelt / sneeuwbal, `prop_sneeuw` | ⚙ | snowman with a top hat |
+| `prop_lantaarnpaal` | ijzeren lantaarnpaal met olielamp | beide | flakkert / zwaait / mot | ⚙ | iron street lantern |
+| `prop_boom_kaal` | kale winterboom | gedeeld | sneeuw valt / vogel / tak | ⚙ | bare leafless tree |
+| `prop_kip` | kip (rent weg uit toilethuisje en hooiberg) | rood | fladdert, `prop_kip` | ⚙ | chicken |
+| `prop_vogel` | kraai (zwart), meeuw (wit), papegaai (rood) als los model | gedeeld | vliegt / hartjes / geschoten, `prop_kraai` | ⚙ | crow |
+| `prop_scarabee` | scarabee | gedeeld | schiet weg | ⚙ | scarab beetle |
+| `prop_uil` | uil in de ruine (nu alleen ogen) | gedeeld | Oehoe, `prop_uil` | ⚙ | owl |
+
 ## 10. Bewoners (poppetjes, `assets/models/bewoners/`)
 
 Per factie en per team, rood arm en blauw rijk. Naam: `<rol>_<factie>_<team>`,

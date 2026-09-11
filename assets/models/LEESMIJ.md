@@ -18,6 +18,8 @@ assets/models/
                           stuk een map <naam>/ met <naam>.glb (+ <naam>.json);
                           zie bewoners/LEESMIJ.md (peasant_mouse hakt hout)
     omgeving/             het landschap om het bord: gras.png (naadloze tegel),
+                          grond_<variant>.png (sneeuw, zand, modder, kei, bos,
+                          rots: de grond van de twaalf diorama's),
                           gras_vlekken.png (grove multiply-laag), wolken.png
                           (wolkenschaduw, alfa); uit tools/maak_omgeving_texturen.py,
                           gebruikt door scripts/game/omgeving.gd

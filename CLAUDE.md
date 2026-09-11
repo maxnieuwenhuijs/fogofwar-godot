@@ -284,6 +284,33 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   bewoner met teamwoord (`peasant_mouse_red`) staat alleen in het kamp van
   die kleur. De tweens van alle reacties hangen aan hun prop-node, zodat een
   herbouw ze netjes meeneemt.
+- **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
+  iets van 12 diorama's... per klikbaar element verschillende dingen die je
+  random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama
+  grond (`gras`, of `grond_<variant>.png` uit `assets/models/board/omgeving/`
+  voor sneeuw, zand, modder, kei, bos, rots; `tools/maak_omgeving_texturen.py
+  --varianten`), een tint, extra's (`sneeuw` = vallende sneeuw, `water` =
+  een rivier met kade aan de overkant) en de props als `[naam, x, z, draai,
+  {opties}]` voor het kamp en de overkant (`_plaats` kent ze). Geloot per
+  potje in `game._loot_wind` (online uit het match-id), knop `diorama` in
+  het sfeer-paneel (1-12) zet er een vast; `zet_diorama(i)` herbouwt alles
+  onder Props. De twaalf: Weidekamp, Boerenerf, Dorpsrand met molen, Na de
+  slag, Winterkamp, Rivierhaven, Bosrand, Kapelruine, Marktplein, Egypte
+  1798, Alpenpas, Hoeve van Waterloo (tabel in PROP-WISHLIST.md sectie 11).
+  Nieuwe placeholder-props: toilethuisje met hartje in de deur, molen
+  (wieken draaien in `_process`), kanon, put, kruis met hoed, palm,
+  piramide, sfinx, steiger met sloep, ruine, fontein, marktkraam (zeil in
+  teamkleur), sneeuwpop, hooiberg, lantaarnpaal, boom (ook kaal), rots
+  (decor). **Reacties:** `_registreer` neemt een Array van Callables, een
+  klik kiest er willekeurig een (`_speel_willekeurig`, nooit twee keer
+  achter elkaar dezelfde); elke prop heeft er drie (tabel in PROP-WISHLIST
+  sectie 11). Gereedschap: `_fx_tekst` (Label3D-wolkje), `_fx_hart`,
+  `_fx_veren`, `_fx_wolk`, `_fx_spetters`, `_fx_knal`, `_boog` (boogje voor
+  tween_method via bind), `_maak_vogel`/`_vlieg`/`_land_vogel`,
+  `_maak_kip`/`_ren_weg`. Check: `-- omgevingcheck [nr]` bouwt alle twaalf
+  (elk minstens 8 props), eindigt op nr, klikt elke prop, en speelt daarna
+  elke reactie van elke prop een keer (script-fouten vangt de grep op
+  `SCRIPT ERROR`).
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
@@ -345,8 +372,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `d9985647…` geven (272 acties, cyclus 7, sinds
-  4.3.5). Was `718992dc…` (238, 6) onder 4.3.4, `c5db0ff3…` (243, 6) onder
+  eind-zobrist; seed 777 moet `d16a14f8…` geven (246 acties, cyclus 6, sinds
+  11 september: de omgeving en de bewoners hebben een EIGEN
+  RandomNumberGenerator; de oude referentie `d9985647…` (272, 7, onder
+  4.3.5) bevatte stiekem het aantal trekjes dat het diorama bij de herbouw
+  uit de globale RNG deed, tussen `seed(777)` en de auto-opstelling van de
+  mens, die wel de globale RNG gebruikt: elke visuele verandering verschoof
+  daardoor de hele partij. **Visuele code trekt NOOIT uit de globale RNG**
+  (`randf`, `randi`, `randf_range` zonder eigen RNG-instantie), anders is
+  uispel weer een lot). Was `718992dc…` (238, 6) onder 4.3.4, `c5db0ff3…` (243, 6) onder
   4.3.3, `8d6aafaa…` (231, 5) onder 4.3.2 en `890b6cb4…` (270, 6) tot 4.3.1:
   elke regelwijziging rekent anders, en dat werkt door in het hele potje. Elke F4.3-stap: uispel gelijk, én `-- record
   user://ref_na.json easy easy muis wolf 777` gevolgd door `python

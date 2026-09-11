@@ -45,6 +45,7 @@ var _idles: Array = []
 var _acties: Array = []
 var _geluid: Array = []
 var _geluid_moment := 0.0
+var _rng := RandomNumberGenerator.new()   # nooit de globale RNG (zie Omgeving)
 
 
 ## Alle namen die in assets/models/bewoners/ liggen: een glb, of een json
@@ -103,6 +104,7 @@ static func team_van(n: String, m: Dictionary) -> String:
 
 
 func laad(n: String) -> bool:
+	_rng.randomize()
 	naam = n
 	name = "Bewoner_" + n
 	manifest = lees_manifest(n)
@@ -222,7 +224,7 @@ func doe_actie() -> bool:
 	if bezig or _anim == null or _acties.is_empty():
 		return false
 	bezig = true
-	var clip: String = _acties[randi() % _acties.size()]
+	var clip: String = _acties[_rng.randi() % _acties.size()]
 	_anim.get_animation(clip).loop_mode = Animation.LOOP_NONE
 	_anim.play(clip, 0.15)
 	if not _geluid.is_empty():
@@ -247,7 +249,7 @@ func _on_klaar(anim_naam: StringName) -> void:
 func _speel_idle() -> void:
 	if _anim == null or _idles.is_empty():
 		return
-	var clip: String = _idles[randi() % _idles.size()]
+	var clip: String = _idles[_rng.randi() % _idles.size()]
 	# idle loopt door; met meer idles wisselen we per einde (om en om), dus
 	# geen LOOP_LINEAR: dan zou animation_finished nooit komen
 	_anim.get_animation(clip).loop_mode = Animation.LOOP_NONE if _idles.size() > 1 else Animation.LOOP_LINEAR
