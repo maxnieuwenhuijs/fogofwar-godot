@@ -252,6 +252,12 @@ van 1800 en de hoeve van Waterloo.
 
 ## 12. Nieuw voor de diorama's (placeholders in omgeving.gd, glb's welkom)
 
+Lever je een van deze als `prop_<naam>.glb` (of `_red`/`_blue`), dan wijkt
+de placeholder in elk diorama voor jouw model; het krijgt dan de generieke
+klikreacties (wiebel, hop, stofwolkje) met het geluid `prop_<naam>`. De
+molen verliest zo zijn draaiende wieken en het kanon zijn schot: wil je die
+houden, lever dan het model in delen of zeg het, dan haak ik ze aan.
+
 | Bestand | Wat | Team | Klik | Status | Prompt |
 |---|---|---|---|---|---|
 | `prop_toilethuisje` | houten toilethuisje met een hartje in de deur en een pijp op het dak | beide | Bezet! / stinkwolk / kip, `prop_wc` | ⚙ | wooden outhouse with a heart cut-out in the door |

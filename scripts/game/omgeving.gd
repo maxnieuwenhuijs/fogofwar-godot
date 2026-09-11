@@ -86,6 +86,8 @@ const PROP_HOOGTE: Dictionary = {
 	"kaarttafel": 0.5, "kruk": 0.3, "bierton": 0.5, "wijnvat": 0.5, "troon": 0.7, "tapijt": 0.03,
 	"kapotte_kar": 0.7, "waterput": 0.75, "aambeeld": 0.35, "werkbank": 0.5, "emmer": 0.25,
 	"zaag": 0.2, "spit": 0.55, "takkenbos": 0.3, "ketel": 0.25, "veldbed": 0.35, "kandelaar": 0.4,
+	"toilethuisje": 1.3, "molen": 2.0, "put": 1.2, "kruis": 0.85, "palm": 1.9, "sfinx": 0.5, "steiger_boot": 0.4,
+	"ruine": 1.1, "fontein": 0.8, "marktkraam": 1.2, "sneeuwpop": 0.95, "lantaarnpaal": 1.5,
 }
 # props uit de wishlist die geen placeholder hebben: ze verschijnen zodra
 # prop_<naam>[_team].glb in assets/models/props/ ligt. Posities in het
@@ -93,6 +95,9 @@ const PROP_HOOGTE: Dictionary = {
 # camera-yaw zoals de rest van het kamp). Een prop die maar voor een team
 # bestaat lever je met het teamwoord (prop_hooiberg_red.glb): dan blijft het
 # andere kamp leeg.
+# placeholders die wijken voor een geleverde glb met dezelfde naam
+const GLB_VERVANGBAAR: Array = ["toilethuisje", "molen", "kanon", "put", "kruis", "palm", "piramide",
+	"sfinx", "steiger_boot", "ruine", "fontein", "marktkraam", "sneeuwpop", "hooiberg", "lantaarnpaal", "boom", "rots"]
 const EXTRA_PROPS: Array = [
 	{"naam": "fakkel", "eigen": [0.6, 16.2], "ander": [8.0, -4.3], "geluid": ["prop_vuur"]},
 	{"naam": "houtblok", "eigen": [-0.4, 13.4], "geluid": ["prop_hout", "impact_wood"]},
@@ -404,6 +409,18 @@ func _plaats(spec: Array) -> void:
 	var pos := Vector3(float(spec[1]), GROND_Y, float(spec[2]))
 	var draai := deg_to_rad(float(spec[3])) if spec.size() > 3 else 0.0
 	var o: Dictionary = spec[4] if spec.size() > 4 else {}
+	# Ligt er een geleverde glb voor deze prop (prop_<naam>[_team].glb)? Dan
+	# die, met de generieke reacties (wiebel, hop, stof); de placeholders
+	# hieronder zijn alleen voor wat er nog niet is. (Tent, hakblok, kogels,
+	# wegwijzer, hek en plas kijken zelf, die houden hun kraai en kikker.)
+	if GLB_VERVANGBAAR.has(naam):
+		var hoogte: float = float(PROP_HOOGTE.get(naam, 0.8))
+		if naam == "piramide":
+			hoogte = float(o.get("maat", 1.2)) * 0.85
+		elif naam == "boom":
+			hoogte = 1.6 * float(o.get("schaal", 1.4))
+		if _glb_prop(naam, pos, draai, _team_op(pos), ["prop_" + naam, "impact_wood"], hoogte):
+			return
 	match naam:
 		"kampvuur":
 			_bouw_kampvuur(pos, bool(o.get("smeulend", false)))
