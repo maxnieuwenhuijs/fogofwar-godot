@@ -469,28 +469,62 @@ index zoekt op naam) doet automatisch mee, geen code nodig; varianten heten
 | `prop_kikker` | `prop_kikker.wav` | 2 | kikker springt de plas over: plons, klein | geen | ➕ |
 | `prop_wegwijzer` | `prop_wegwijzer.wav` | 1 | wegwijzer wiebelt: hout kraakt | `impact_wood` | ➕ |
 
-**Tik-geluiden (11 september).** Elke klik op elke prop klinkt meteen (met
-een oplopende toon bij snel doorklikken); het spel zoekt per prop eerst de
-eigen categorie en valt anders terug op iets uit het arsenaal. Kort en
-"punchy", een halve seconde:
+**Tik-geluiden per prop (11 september, Max: "iedere prop z'n eigen geluidjes
+met variatie per prop").** Elke klik op elke prop klinkt meteen. Binnen een
+combo (klikken binnen `tik_pauze` seconden, standaard 0,6, knop in het
+sfeer-paneel) blijft het dezelfde variant met een oplopende toon (`tik_toon`
+per klik); na een pauze herstart de ladder met een ANDERE variant van
+dezelfde categorie, en elke vijfde klik geeft een chime (`prop_combo`) met
+een "x5!". **Alles hieronder klinkt nu al**: `tools/maak_prop_geluiden.py`
+synthetiseert per categorie 2-3 varianten (FM-bel, glasklink,
+aambeeld-partialen, een kraai, een kikker...) in `sounds/props/`. Zet een
+echte opname op dezelfde naam (`prop_bel.wav`, varianten `prop_bel_2.wav`,
+`prop_bel_3.wav`) en de synthetische wijkt. Kort en "punchy", meestal een
+kwart tot een halve seconde; drie varianten per stuk is genoeg, want de
+toon varieert al per klik.
 
-| Categorie | Bestand | Var. | Waarvoor | Terugval nu | Status |
-|---|---|---|---|---|---|
-| `prop_tik` | `prop_tik.wav` | 3 | de algemene tik: een droog houten tokje | `ui_click` | ➕ |
-| `prop_bel` | `prop_bel.wav` | 2 | de bel: een heldere ding | `haven_score` | ➕ |
-| `prop_glas` | `prop_glas.wav` | 3 | flessen en glazen: klink, tink | `card_stat_up` | ➕ |
-| `prop_aambeeld` | `prop_aambeeld.wav` | 2 | hamer op aambeeld: kleng | `impact_armor` | ➕ |
-| `prop_kookpot` | `prop_kookpot.wav` | 2 | deksel op de pot: bong | `impact_armor` | ➕ |
-| `prop_klop` | `prop_klop.wav` | 2 | klop op de deur van het toilethuisje | `impact_wood` | ➕ |
-| `prop_doek` | `prop_doek.wav` | 2 | tentdoek dat klappert | `prop_tik` | ➕ |
-| `prop_ritsel` | `prop_ritsel.wav` | 2 | bladeren, palm | `prop_tik` | ➕ |
-| `prop_zand` | `prop_zand.wav` | 1 | zand dat schuift (piramide, sfinx) | `prop_tik` | ➕ |
-| `prop_steen` | `prop_steen.wav` | 2 | steen op steen (ruine) | `impact_wood` | ➕ |
-| `prop_sneeuw` | `prop_sneeuw.wav` | 2 | sneeuw: pof, knerp | `prop_tik` | ➕ |
-| `prop_hooi` | `prop_hooi.wav` | 1 | hooi dat ritselt | `prop_tik` | ➕ |
-| `prop_plons` | `prop_plons.wav` | 2 | plons (fontein, put, sloep) | `small_blood_splash` | ➕ |
-| `prop_molen` | `prop_molen.wav` | 1 | molenwieken die kraken | `cannon_wheel_loose` | ➕ |
-| `prop_kanon_tik` | `prop_kanon_tik.wav` | 1 | tik op de kanonsloop | `impact_armor` | ➕ |
+| Categorie | Waarvoor (prop) | Hoe het moet klinken | Var. | Nu |
+|---|---|---|---|---|
+| `prop_tik` | alles zonder eigen geluid (tent, boom, rots, bewoner) | droog houten tokje | 3 | synthetisch |
+| `prop_bel` | de bel (dorp, haven, kapel, Alpen, winter) | heldere ding met een staart | 3 | synthetisch |
+| `prop_glas` | glaswerk | klink, tink, twee glazen tegen elkaar | 3 | synthetisch |
+| `prop_aambeeld` | aambeeld | kleng, hamer op ijzer | 3 | synthetisch |
+| `prop_kookpot` | kookpot | bong, deksel op de pot | 3 | synthetisch |
+| `prop_trom` | trommel | doffe slag op het vel | 3 | synthetisch |
+| `prop_ton` | ton, bierton, wijnvat | holle houten bonk | 3 | synthetisch |
+| `prop_hoorn` | hoorn | korte signaalstoot | 3 | synthetisch |
+| `prop_bijl` | bijl, hakblok | thunk in hout | 3 | synthetisch |
+| `prop_kogel` | kanonskogels | ijzer op ijzer, dof | 3 | synthetisch |
+| `prop_klop` | toilethuisje (tik) | klop klop op een deur | 3 | synthetisch |
+| `prop_wc` | toilethuisje (grote reacties) | deur die dichtslaat met een piep | 2 | synthetisch |
+| `prop_doek` | tent | tentdoek dat klappert | 2 | synthetisch |
+| `prop_kraai` | kraai, meeuw, vogels | krassende kreet | 3 | synthetisch |
+| `prop_kikker` | kikker, put | kwaak | 3 | synthetisch |
+| `prop_wegwijzer` | wegwijzer | hout dat kraakt | 2 | synthetisch |
+| `prop_hek` | hek | kraak, lat die tikt | 2 | synthetisch |
+| `prop_molen` | molen | wieken die kraken | 2 | synthetisch |
+| `prop_kanon_tik` | kanon (tik) | tik op de loop | 2 | synthetisch |
+| `prop_kanon` | kanon (schot) | doffe dreun | 2 | synthetisch (terugval `cannon_heavy`) |
+| `prop_emmer` | put, emmer | houten emmer aan een touw | 2 | synthetisch |
+| `prop_plons` | plas, fontein, sloep, put | plons met belletjes | 3 | synthetisch |
+| `prop_ritsel` | palm, boom met blad | bladeren die ritselen | 3 | synthetisch |
+| `prop_zand` | piramide, sfinx | zand dat schuift | 2 | synthetisch |
+| `prop_steen` | ruine, rots | steen op steen | 3 | synthetisch |
+| `prop_sneeuw` | sneeuwpop, kale boom in de winter | pof, knerp | 2 | synthetisch |
+| `prop_hooi` | hooiberg | hooi dat ritselt | 2 | synthetisch |
+| `prop_lantaarn` | lantaarnpaal, lantaarn aan de tent | tink van metaal | 3 | synthetisch |
+| `prop_vuur` | kampvuur | knetter | 3 | synthetisch |
+| `prop_uil` | ruine (uil) | oehoe, twee keer | 2 | synthetisch |
+| `prop_kip` | toilethuisje, hooiberg (kip) | tok tok tok | 2 | synthetisch |
+| `prop_munt` | fontein (muntje) | plink | 2 | synthetisch |
+| `prop_kokos` | palm (kokosnoot) | bonk op de grond | 2 | synthetisch |
+| `prop_boot` | steiger, sloep | hol hout op water | 2 | synthetisch |
+| `prop_ijs` | bevroren plas | krak | 2 | synthetisch |
+| `prop_geit` | geit (als de glb er is) | mekker | 2 | synthetisch |
+| `prop_nies` | hooiberg (Hatsjoe) | een nies | 2 | synthetisch |
+| `prop_combo` | elke vijfde klik van een combo | vrolijke chime, vier tonen omhoog | 1 | synthetisch |
+| `bewoner_snurken` | tent, hooiberg (Zzz) | gesnurk | 2 | synthetisch |
+| `prop_schot` | kraai geschoten | musketschot | - | `musket` (bestaat) |
 
 **Bewoners** (de poppetjes, `assets/models/bewoners/LEESMIJ.md`): elke bewoner
 noemt in zijn manifest zelf zijn categorieen (`"geluid": ["bewoner_hakken",

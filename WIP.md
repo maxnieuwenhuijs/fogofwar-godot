@@ -63,6 +63,27 @@ loopt op). Tik-geluiden staan in SOUND-WISHLIST sectie 11 (`prop_tik`,
 `prop_bel`, `prop_glas`, `prop_aambeeld`, `prop_kookpot`, `prop_klop`, ...);
 tot die tijd klinken ui_click, haven_score, card_stat_up en impact_armor.
 
+**Eigen geluid per prop, en de combo (nog later die dag).** Max: "iedere
+prop moet ook z'n eigen geluidjes hebben met variatie per prop", "de
+lijst", en "maak de afspeelgeluidjes leuker: de toon omhoog bij snelheid is
+goed, maar bij stoppen van x milliseconden moet ik herstarten of een net
+ander geluidje afspelen." Nieuw `tools/maak_prop_geluiden.py`: 39
+categorieen, 95 wav's in `sounds/props/` (22 kHz, piek -6 dB), puur
+gesynthetiseerd: een FM-bel, glasklink uit hoge partialen, een aambeeld met
+onharmonische partialen, een trommelslag met toonval, een sawtooth-hoorn met
+vibrato, een kraai uit een blokgolf met ruis en tremolo, een kikker uit een
+gepulste toon, een klop-klop, een plons met belletjes, geritsel uit
+gepoorte ruis, en zo verder, elk 2-3 varianten met een eigen toon en lengte.
+Zelfde naamregel als de losse bestanden (`prop_bel.wav`, `prop_bel_2.wav`),
+dus een echte opname op die naam wint. De lijst met wat elk moet klinken:
+SOUND-WISHLIST sectie 11. Combo: binnen `tik_pauze` (0,6 s, knop) blijft de
+variant gelijk en gaat de toon per klik omhoog; na een pauze herstart de
+ladder met een andere variant; elke vijfde klik een chime met "x5!" (en
+vanaf tien een hartje). Ook afgesteld: klikpunt en straal uit de omhullende
+doos (een brede ruine of steiger is nu op zijn midden raak; de check klikt
+in elk diorama op elke prop), en hek, plas en rotsen reageren ook (kraak,
+spetters, stof). `-- geluidcheck` ziet alle 39 categorieen met hun varianten.
+
 **De RNG-les (belangrijk).** uispel gaf ineens `d16a14f8` in plaats van
 `d9985647`, ook met de herbouw bij de start uitgezet, en een schone
 checkout van HEAD gaf wel `d9985647`. De oorzaak: de omgeving trok bij de

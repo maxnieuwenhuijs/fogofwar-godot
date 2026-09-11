@@ -33,3 +33,13 @@ Controleren of alles meedoet:
 
 Dat toont per categorie het aantal varianten, de mix-dB, jouw tuner-dB en de
 vertraging, en meldt categorieen zonder geluid of die niemand afspeelt.
+
+## props/ (11 september): de tik-geluiden van het diorama
+
+Per prop om het bord een eigen categorie (`prop_bel`, `prop_glas`,
+`prop_trom`, `prop_kraai`, ...; de lijst staat in SOUND-WISHLIST sectie 11).
+Wat er nu ligt is SYNTHETISCH, uit `tools/maak_prop_geluiden.py`, 2-3
+varianten per categorie. Een echte opname op dezelfde naam (`prop_bel.wav`,
+`prop_bel_2.wav`, `prop_bel_3.wav`) vervangt hem: gewoon overschrijven en
+`--import`. Kort en droog, een kwart tot een halve seconde; de toon varieert
+in het spel al per klik.

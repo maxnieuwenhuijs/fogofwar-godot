@@ -3235,6 +3235,8 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "vignet", "label": "vignet (donkere randen)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.5},
 	{"key": "props", "label": "props (kamp, klikbaar)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "diorama", "label": "diorama (0 = loten per potje, 1-12 vast)", "min": 0.0, "max": 12.0, "step": 1.0, "def": 0.0},
+	{"key": "tik_pauze", "label": "tik-combo: pauze tot herstart (s)", "min": 0.15, "max": 1.5, "step": 0.05, "def": 0.6},
+	{"key": "tik_toon", "label": "tik-combo: toon omhoog per klik", "min": 0.0, "max": 0.15, "step": 0.005, "def": 0.07},
 ]
 
 

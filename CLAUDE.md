@@ -315,7 +315,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   wipt, deur rammelt, vuur schrikt), ook als de grote reactie nog loopt.
   `TIK_NAMEN` zijn de dingers; `Omgeving.dinger_aantal(i)` telt ze per
   diorama en elk heeft er minstens drie. Nieuwe pure dingers: bel, glaswerk,
-  aambeeld, kookpot. Check: `-- omgevingcheck [nr]` bouwt alle twaalf (elk
+  aambeeld, kookpot. **Eigen geluid per prop (Max: "iedere prop z'n eigen
+  geluidjes met variatie"):** 39 categorieen in `sounds/props/`, 95
+  bestanden, gesynthetiseerd door `tools/maak_prop_geluiden.py` (FM-bel,
+  glasklink, aambeeld-partialen, trommel, kraai, kikker, klop, plons,
+  geritsel, ...; 2-3 varianten per categorie); een echte opname op dezelfde
+  naam (`prop_bel.wav`, `prop_bel_2.wav`) wint. Combo: binnen `tik_pauze`
+  (knop, 0,6 s) dezelfde variant met oplopende toon (`tik_toon`, 0,07 per
+  klik, max 10); na een pauze herstart de ladder met een ANDERE variant
+  (`_tik_geluid_prop`); elke vijfde klik een chime (`prop_combo`) met
+  "x5!". Klikpunt en straal komen uit de omhullende doos van de prop
+  (`midden`/`omvang` in `_registreer`), dus ook een brede ruine of steiger
+  is op zijn midden raak; hek, plas en rotsen zijn ook klikbaar. Alles zit
+  in `sounds/props/`, dus `sounds/LEESMIJ.md` en de geluid-tracker kennen ze. Check: `-- omgevingcheck [nr]` bouwt alle twaalf (elk
   minstens 8 props en 3 dingers), eindigt op nr, klikt elke prop, speelt
   daarna elke reactie van elke prop een keer, en klikt zes keer snel op de
   eerste prop (alle zes raak, combo minstens 4); script-fouten vangt de grep

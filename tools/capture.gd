@@ -1956,13 +1956,23 @@ func _ready() -> void:
 				if dingers < 3:
 					print("[OMGEVING] FOUT: diorama %d heeft maar %d tik-dingen (minstens 3)" % [di, dingers])
 					og_fouten += 1
+				# elke prop in dit diorama moet op zijn eigen klikpunt raak zijn
+				var mis: Array = []
+				for dp in og._props:
+					var dn: Node3D = dp.node
+					var dwp: Vector3 = dn.to_global(dp.get("midden", Vector3(0.0, float(dp.hoogte) * 0.5, 0.0)))
+					if not og.klik(og_cam.unproject_position(dwp)):
+						mis.append(dn.name)
+				if not mis.is_empty():
+					print("[OMGEVING] FOUT: diorama %d, niet raak: %s" % [di, ", ".join(mis)])
+					og_fouten += 1
 			og.zet_diorama(og_wil)
 			await get_tree().create_timer(0.5).timeout
 			og_props = og._props
 			var og_namen: Array = []
 			for p in og_props:
 				var pn: Node3D = p.node
-				var wp: Vector3 = pn.global_position + Vector3(0.0, float(p.hoogte) * 0.5, 0.0)
+				var wp: Vector3 = pn.to_global(p.get("midden", Vector3(0.0, float(p.hoogte) * 0.5, 0.0)))
 				var sp: Vector2 = og_cam.unproject_position(wp)
 				var raak: bool = og.klik(sp)
 				og_namen.append("%s@(%d,%d)" % [pn.name, int(sp.x), int(sp.y)])

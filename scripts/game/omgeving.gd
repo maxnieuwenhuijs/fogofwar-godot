@@ -124,6 +124,7 @@ const TIK_GELUID: Dictionary = {
 	"Lantaarnpaal": ["prop_lantaarn", "impact_armor"], "Boom": ["prop_ritsel", "prop_tik"],
 	"Bel": ["prop_bel", "haven_score"], "Glaswerk": ["prop_glas", "card_stat_up"],
 	"Aambeeld": ["prop_aambeeld", "impact_armor"], "Kookpot": ["prop_kookpot", "impact_armor"],
+	"Hek": ["prop_hek", "impact_wood"], "Plas": ["prop_plons", "small_blood_splash"], "Rots": ["prop_steen", "impact_wood"],
 }
 const EXTRA_PROPS: Array = [
 	{"naam": "fakkel", "eigen": [0.6, 16.2], "ander": [8.0, -4.3], "geluid": ["prop_vuur"]},
@@ -255,11 +256,12 @@ func klik(screen_pos: Vector2) -> bool:
 		var n: Node3D = p.node
 		if not is_instance_valid(n) or not n.visible:
 			continue
-		var wp: Vector3 = n.global_position + Vector3(0.0, float(p.hoogte) * 0.5, 0.0)
+		var wp: Vector3 = n.to_global(p.get("midden", Vector3(0.0, float(p.hoogte) * 0.5, 0.0)))
 		if _camera.is_position_behind(wp):
 			continue
 		var d := _camera.unproject_position(wp).distance_to(screen_pos)
-		if d < float(p.straal) and d < beste_d:
+		var straal: float = maxf(float(p.straal), float(p.get("omvang", 0.0)) * _px_per_eenheid() * 0.7)
+		if d < straal and d < beste_d:
 			beste = p
 			beste_d = d
 	if beste.is_empty():
@@ -747,11 +749,16 @@ func _bouw_hek_met_kraai(pos: Vector3, kleur_naam: String = "zwart") -> void:
 	_props_root.add_child(root)
 	var hout := Color(0.38, 0.29, 0.19)
 	if not _glb_prop("hek", pos, 0.0, "", ["impact_wood"], 0.4):
+		var hek := Node3D.new()
+		hek.name = "Hek"
+		root.add_child(hek)
 		var paal_x: Array = [0.0, 0.9, 1.8, 2.7]
 		for x in paal_x:
-			_mesh(_box(Vector3(0.07, 0.36, 0.07)), hout, root, Vector3(x, 0.18, 0.0))
+			_mesh(_box(Vector3(0.07, 0.36, 0.07)), hout, hek, Vector3(x, 0.18, 0.0))
+		var latten: Array = []
 		for h in [0.13, 0.28]:
-			_mesh(_box(Vector3(2.85, 0.035, 0.03)), hout, root, Vector3(1.35, h, 0.0))
+			latten.append(_mesh(_box(Vector3(2.85, 0.035, 0.03)), hout, hek, Vector3(1.35, h, 0.0)))
+		_registreer(hek, 0.36, [_reageer_hek_kraak], {"latten": latten, "tik_extra": _tik_hek})
 	# de kraai (of meeuw) op de tweede paal
 	var zwart: Color = Color(0.92, 0.92, 0.9) if String(kleur_naam) == "wit" else Color(0.07, 0.065, 0.08)
 	var kraai := _maak_vogel(root, Vector3(0.9, 0.36, 0.0), zwart)
@@ -782,6 +789,7 @@ func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false) -> void:
 		pmat.metallic = 0.0
 		pmat.roughness = 0.35
 		pmat.metallic_specular = 0.6
+		_registreer(root, 0.05, [_reageer_plas_plons], {"tik_extra": _tik_plas})
 	var kikker := Node3D.new()
 	kikker.name = "Kikker"
 	kikker.position = Vector3(-0.3, 0.012, 0.05)
@@ -915,7 +923,8 @@ func _glb_prop(naam: String, pos: Vector3, draai: float, team: String, geluid: A
 	inst.rotation.y = deg_to_rad(float(m.get("draai", 0.0)))
 	for mi in inst.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	_registreer(root, hoogte, [_reageer_glb, _reageer_glb_hop, _reageer_glb_stof], {"inst": inst, "geluid": geluid})
+	_registreer(root, hoogte, [_reageer_glb, _reageer_glb_hop, _reageer_glb_stof],
+			{"inst": inst, "geluid": geluid, "tik": geluid if not geluid.is_empty() else ["prop_tik", "ui_click"]})
 	return true
 
 
@@ -2881,7 +2890,7 @@ func _reageer_kookpot_spat(p: Dictionary) -> void:
 	_klaar(p, tw)
 
 
-## Rotsen: decor, niet klikbaar.
+## Rotsen: alleen een tok en wat stof.
 func _bouw_rots(pos: Vector3, maat: float) -> void:
 	var root := _prop_root("Rots", pos, _rng.randf_range(0.0, TAU))
 	var grijs := Color(0.5, 0.49, 0.46)
@@ -2889,6 +2898,54 @@ func _bouw_rots(pos: Vector3, maat: float) -> void:
 	a.scale = Vector3(1.0, 0.65, 0.85)
 	var b := _mesh(_bol(maat * 0.32), grijs.darkened(0.08), root, Vector3(maat * 0.4, maat * 0.18, maat * 0.2))
 	b.scale = Vector3(1.0, 0.6, 1.0)
+	_registreer(root, maat * 0.5, [_reageer_rots_stof], {"maat": maat})
+
+
+func _tik_hek(p: Dictionary) -> void:
+	for lat in p.latten:
+		var l: Node3D = lat
+		var tw := l.create_tween()
+		tw.tween_property(l, "rotation:x", _rng.randf_range(-0.12, 0.12), 0.05)
+		tw.tween_property(l, "rotation:x", 0.0, 0.25).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+func _reageer_hek_kraak(p: Dictionary) -> void:
+	# een lat schiet los en valt terug
+	var lat: Node3D = p.latten[0]
+	var thuis: Vector3 = lat.position
+	var tw := (p.node as Node3D).create_tween()
+	tw.tween_property(lat, "rotation:z", 0.12, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lat, "position:y", thuis.y - 0.06, 0.2)
+	tw.tween_callback(func() -> void: _tik_geluid(p.tik, 0.8))
+	tw.tween_interval(1.5)
+	tw.tween_property(lat, "rotation:z", 0.0, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lat, "position:y", thuis.y, 0.3)
+	_klaar(p, tw)
+
+
+func _tik_plas(p: Dictionary) -> void:
+	var root: Node3D = p.node
+	_fx_spetters(root, Vector3(_rng.randf_range(-0.2, 0.2), 0.02, _rng.randf_range(-0.15, 0.15)), 4)
+	_rimpel(root, Vector3(0.0, 0.0, 0.0))
+
+
+func _reageer_plas_plons(p: Dictionary) -> void:
+	var root: Node3D = p.node
+	_fx_spetters(root, Vector3(0.0, 0.02, 0.0), 12)
+	_rimpel(root, Vector3(0.0, 0.0, 0.0))
+	_fx_tekst(root, Vector3(0.0, 0.3, 0.0), "Plons!", Color(0.7, 0.85, 1.0))
+	var tw := root.create_tween()
+	tw.tween_interval(1.0)
+	_klaar(p, tw)
+
+
+func _reageer_rots_stof(p: Dictionary) -> void:
+	var root: Node3D = p.node
+	var maat: float = p.maat
+	_fx_wolk(root, Vector3(0.0, maat * 0.3, maat * 0.3), Color(0.6, 0.58, 0.52), 0.6)
+	var tw := root.create_tween()
+	tw.tween_interval(0.8)
+	_klaar(p, tw)
 
 
 # ---------------------------------------------------------------- scene-extra's
@@ -3206,6 +3263,15 @@ func _registreer(node: Node3D, hoogte: float, reageer, extra: Dictionary) -> voi
 	if not p.has("tik"):
 		var basisnaam := String(node.name).rstrip("0123456789")
 		p["tik"] = TIK_GELUID.get(basisnaam, ["prop_tik", "ui_click"])
+	# klikpunt op het midden van het model (niet op de wortel: een ruine of
+	# steiger is breed) en een straal die met de omvang meegroeit
+	var aabb := _aabb_van(node)
+	if aabb.size.length() > 0.0001:
+		p["midden"] = aabb.get_center()
+		p["omvang"] = aabb.size.length() * 0.5
+	else:
+		p["midden"] = Vector3(0.0, hoogte * 0.5, 0.0)
+		p["omvang"] = 0.0
 	_props.append(p)
 
 
@@ -3215,10 +3281,24 @@ func _tik(p: Dictionary) -> void:
 	var n: Node3D = p.node
 	if not is_instance_valid(n):
 		return
-	p.combo = (int(p.combo) + 1) if _tijd - float(p.combo_tijd) < 0.7 else 0
+	# combo: binnen `tik_pauze` seconden telt de klik door en gaat de toon
+	# omhoog; na een pauze herstart de ladder met een NET ander geluidje
+	# (een andere variant van dezelfde categorie)
+	var pauze: float = PawnView.fx("tik_pauze", 0.6)
+	var stap: float = PawnView.fx("tik_toon", 0.07)
+	var doorgeklikt: bool = _tijd - float(p.combo_tijd) < pauze
+	p.combo = (int(p.combo) + 1) if doorgeklikt else 0
 	p.combo_tijd = _tijd
-	var toon := 1.0 + 0.07 * float(mini(int(p.combo), 8))
-	_tik_geluid(p.get("tik", []), toon)
+	var toon := (1.0 + stap * float(mini(int(p.combo), 10))) * _rng.randf_range(0.985, 1.015)
+	_tik_geluid_prop(p, toon, not doorgeklikt)
+	var c: int = int(p.combo)
+	if c > 0 and c % 5 == 0:
+		# een klein feestje op elke vijfde: chime en een x5!
+		if Audio.variant_aantal("prop_combo") > 0:
+			Audio.play("prop_combo", 0.0, -1, 1.0 + 0.04 * float(c / 5))
+		_fx_tekst(n, p.get("midden", Vector3(0.0, float(p.hoogte) * 0.5, 0.0)) + Vector3(0.0, 0.35, 0.0), "x%d!" % c, Color(1.0, 0.85, 0.3))
+		if c >= 10:
+			_fx_hart(n, p.get("midden", Vector3.ZERO) + Vector3(0.0, 0.5, 0.0), 1)
 	var oud = p.get("tik_tween", null)
 	if oud != null and (oud as Tween).is_valid():
 		(oud as Tween).kill()
@@ -3241,6 +3321,30 @@ func _tik_geluid(categorieen: Array, toon: float) -> void:
 		Audio.play("ui_click", 0.0, -1, toon)
 
 
+## Het tik-geluid van een prop: de eerste categorie uit p.tik die bestaat.
+## Binnen een combo dezelfde variant (een schone ladder), bij een herstart
+## een andere variant dan de vorige keer.
+func _tik_geluid_prop(p: Dictionary, toon: float, herstart: bool) -> void:
+	var cat := ""
+	for c in p.get("tik", []):
+		if Audio.variant_aantal(String(c)) > 0:
+			cat = String(c)
+			break
+	if cat == "":
+		if Audio.variant_aantal("ui_click") > 0:
+			Audio.play("ui_click", 0.0, -1, toon)
+		return
+	var n_var: int = Audio.variant_aantal(cat)
+	var variant: int = int(p.get("variant", -1))
+	if herstart or variant < 0 or variant >= n_var:
+		if n_var > 1:
+			variant = (variant + 1 + (_rng.randi() % (n_var - 1))) % n_var if variant >= 0 else _rng.randi() % n_var
+		else:
+			variant = 0
+		p.variant = variant
+	Audio.play(cat, 0.0, variant, toon)
+
+
 ## Hoeveel tik-dingen (TIK_NAMEN) een diorama heeft, uit de data (voor de check).
 static func dinger_aantal(i: int) -> int:
 	var d: Dictionary = DIORAMAS[clampi(i, 1, DIORAMAS.size()) - 1]
@@ -3249,6 +3353,14 @@ static func dinger_aantal(i: int) -> int:
 		if TIK_NAMEN.has(String(spec[0])):
 			n += 1
 	return n
+
+
+## Schermpixels per bordeenheid (orthografische camera: hoogte van het beeld
+## gedeeld door de camera-size), voor kliksstralen die met de prop meegroeien.
+func _px_per_eenheid() -> float:
+	if _camera == null or _camera.projection != Camera3D.PROJECTION_ORTHOGONAL or _camera.size <= 0.0:
+		return 75.0
+	return float(get_viewport().get_visible_rect().size.y) / _camera.size
 
 
 ## Willekeurig een van de reacties, nooit twee keer achter elkaar dezelfde.
