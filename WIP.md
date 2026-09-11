@@ -1,5 +1,113 @@
 # Fog of War — Work In Progress & Context
 
+## 11 september -- drie trainingsruns, de Beer op 39%, en de factiezoeker gerepareerd
+
+Max: "wat hebben ze geleerd, heb een run gedaan" en daarna "dan moet de
+factietrainer maar even kijken wat de juiste samenstelling is".
+
+**Wat de bots leerden: bijna niets.** Drie keer TRAINING-NACHT (8-9 sept
+nacht, 9 sept avond na twee uur afgebroken, 10 sept overdag, elk 420 min
+budget per factie). Alleen de Wolf nam een kandidaat aan (8 sept 23:03,
+generatie 3, verificatie 8,9/12 tegen referentie 6,6): zijn nieuwe termen
+kwamen op ~0,6-0,75 van de defaults uit (reserve_pt 14,5, reserve_cp 7,6,
+aura_waarde 3,9, drager_front -0,7) en de rest schoof mee. De andere vijf
+spelen de augustus-gewichten met de defaults erbij; ruim tweehonderd
+kandidaten verworpen, convergentiecheck overal "plateau". De bots jagen
+wel op dragers: 0,75-1,45 pt en 2,0-2,6 CP buit per potje, 0,5-1,0 eigen
+dragers verloren. Trainingsdata (wolf-gewichten + matchup-logs) apart
+gecommit.
+
+**De nachtmeting is het nieuws** (10 sept, 3240 partijen, L2, 4.3.5; 9 sept
+binnen 2,3 pp hetzelfde): Leeuw 55,6, Varken 54,7, Krokodil 53,1, Muis
+51,3, Wolf 46,1, **Beer 39,3** (augustus: 56,7, de top). Band 16,3 pp (was
+11,9). Beer verloor vooral van Muis (57 -> 31), Wolf (72 -> 34) en Krokodil
+(84 -> 52): de ruiter-ondergrens 2/2 (C22) en de buit helpen iedereen
+behalve de factie zonder ruiters van betekenis. De scharen Krokodil >
+Varken (99%), Varken > Muis (91) en Varken > Beer (88) zijn NIET nieuw:
+die stonden in augustus ook al zo.
+
+**Factiezoeker, gerichte modus.** `--facties 3 --achtergrond
+<games.jsonl>`: nulmeting en kandidaten spelen alleen de 11 paren met de
+gezochte factie; de 25 andere paren komen uit het meegegeven bestand (de
+nachtmatrix), teruggesnoeid tot evenveel partijen per paar als de zoeker
+zelf speelt. Die paren spelen met vaste seeds toch byte-identiek, en onder
+4.3.5 duurt een partij bijna een minuut (nachtrun: 0,51 partij/s met 30
+processen), dus dit scheelt ruim drie keer. Seeds lopen in run.gd op met
+de positie in de paarlijst, dus nulmeting en kandidaten spelen dezelfde
+lijst en blijven gepaard.
+
+**Twee fouten in de zoeker gevonden en gefixt.**
+1. Run 1 (09:07): negen "ongewijzigde" kandidaten scoorden Beer 14,7%
+   tegen 43,3% in de nulmeting, met dezelfde seeds. `muteer` haalde
+   knoppen die gelijk zijn aan de basis uit het voorstel, maar sinds C19
+   IS de basis het aangenomen blok (Beer: comp [19,3,0]); zonder dat blok
+   valt de arena terug op de kale tabel uit constants.gd ([16,3,3], drie
+   kanonnen). Vrijwel elke kandidaat sinds C19 is dus op de juli-factie
+   gemeten. Nu blijft wat in het blok van de kampioen staat altijd staan.
+   Bijvangst: de juli-Beer met drie kanonnen haalt onder 4.3.5 maar 14,7%.
+2. Twaalf van de dertig kandidaten waren kopieen (integer-knoppen ronden
+   een kleine stap weg), elk een half uur rekenen. Nu ontdubbeld, ook over
+   generaties heen zolang de kampioen niet wisselt. En een ruilzet in de
+   comp (een pion van type naar type, totaal gelijk): een factie op het
+   bordmaximum (Beer 22) kon anders nooit een ruiter erbij krijgen.
+
+**Run 2 (12:22, gerepareerd, 170 min, 30 kandidaten):** "niets veranderd
+ten opzichte van nu", score 0,8848. Beste uitdager: ruiters +1 snelheid
+(Beer 56,7, Wolf zakt naar 38,7; 0,8804). Kaartbudget 8: Beer 68,7;
+budget 9: 81,3; kaarten 4: 44,0; snelheidslimiet 5: 40,0; 17 of 18
+infanterie: 31-33; HP-bonus eraf: 10,7; 2 kaarten: 8,0. De knoppen zijn
+grof (een budgetpunt is 25 pp) en de HP-bonus per koppeling is het hart
+van de Beer.
+
+**Batch met de hand (zes samenstellingen, 11 paren x 15 partijen, dezelfde
+seeds als run 2):**
+
+| Beer | score | afwijking | Beer wint | tegen Varken / Muis / Leeuw / Wolf / Krokodil |
+|---|---|---|---|---|
+| zoals nu, [19,3,0], 3 startpunten | 0,8848 | 4,2 | 43,3% | 20 / 27 / 70 / 33 / 67 |
+| [18,4,0] | 0,8697 | 5,1 | 46,0% | 7 / 37 / 63 / 60 / 63 |
+| **[17,5,0]** | **0,8958** | **2,9** | 46,7% | 10 / 50 / 70 / 23 / 80 |
+| [18,3,1] (een kanon) | 0,7574 | 11,3 | 16,0% | 3 / 7 / 23 / 0 / 47 |
+| [17,4,1] | 0,7525 | 11,8 | 14,7% | 0 / 0 / 27 / 3 / 43 |
+| startpunten 6 | 0,8592 | 5,8 | 41,3% | 13 / 33 / 63 / 47 / 50 |
+| startpunten 9 | 0,8760 | 5,1 | 54,7% | 17 / 37 / 80 / 70 / 70 |
+
+Per tegenstander 30 partijen (ruis ~9 pp), totaal 150 (ruis ~4 pp). Een
+kanon is voor de Beer gif (net als de juli-Beer met drie kanonnen). Twee
+ruiters erbij ten koste van twee infanteristen geeft de beste balansscore
+van alles wat vandaag gemeten is: de Beer zelf op 46,7 en de gemiddelde
+afwijking van de zes facties van 4,2 naar 2,9. Startpunten werken niet
+lineair (3 -> 6 doet niets, 6 -> 9 wel), dus die knop is verdacht ruisig.
+
+**Nameting op verse seeds (777000, 11 paren x 30 partijen = 300 Beer-partijen
+per kandidaat zonder spiegel, ruis ~3 pp), gepaard:**
+
+| Beer | score | afwijking | Beer wint | alle zes (band) |
+|---|---|---|---|---|
+| zoals nu | 0,8486 | 6,7 | 35,7% | Leeuw 59,3 / Varken 57,0 / Krokodil 52,0 / Muis 51,7 / Wolf 44,3 / Beer 35,7 (23,6 pp) |
+| **[17,5,0]** | **0,8933** | **3,3** | **49,7%** | Leeuw 53,7 / Krokodil 53,3 / Varken 53,0 / Beer 49,7 / Muis 48,0 / Wolf 42,3 (11,4 pp) |
+| startpunten 9 | 0,8803 | 4,4 | 52,3% | Varken 56,7 / Leeuw 54,3 / Beer 52,3 / Krokodil 49,7 / Muis 45,7 / Wolf 41,3 (15,4 pp); vs Varken 5%, vs Muis 62% |
+
+**Advies: Beer [19,3,0] -> [17,5,0]** (twee infanteristen worden ruiters; 22
+pionnen blijft 22). Op verse seeds landt de Beer op 49,7 en krimpt de band
+van 23,6 naar 11,4 procentpunt. Startpunten 9 zet de Beer ook rond de 50,
+maar scheef (5% tegen Varken, 62% tegen Muis) en de knop is niet lineair.
+Vastzetten is een regelwijziging: `comp` van factie 3 in het
+`doctrines`-blok van `rules_v42_campaign.json` (de enige bron; los potje
+en campagne lezen mee), dan `-- facties`, goldens (`-- makegoldens`),
+`golden_sims.json` opnieuw ijken, `-- uispel 777` opnieuw meten, en de
+bots hertrainen op de nieuwe Beer. Besluit ligt bij Max; niets is
+gewijzigd. Uitslagen: `results/beer_batch_20260911_153518/uitslag.json`,
+`results/beer_nameting_20260911_160530/uitslag.json`, zoeker-runs
+`results/facties_20260911_090747` (fout, zie boven) en
+`results/facties_20260911_122213`.
+
+**Checks.** Geen spelcode geraakt (alleen `tools/balans/factiezoeker.py`
+en scratch-scripts), dus geen goldens, geen uispel. `py_compile` plus
+droge proeven van `muteer` (blok blijft staan in 60/60 kandidaten;
+ruilzet levert [18,4,0]/[18,3,1]/...) en van `achtergrond_partijen`
+(375 partijen, 25 paren, 15 per paar, geen Beer).
+
 ## 11 september -- twaalf diorama's, en elke prop reageert anders
 
 Max: "Bedenk iets van 12 verschillende diorama's. Voeg sowieso ook een

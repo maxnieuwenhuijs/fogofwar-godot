@@ -357,7 +357,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   perks, met een **identiteits-rem**: elke afwijking van het huidige ontwerp
   kost punten, anders eindig je met zes klonen. Zijn voorstel is een regels-json
   met een `doctrines`-blok: dat kun je direct aan de trainer of de arena
-  meegeven zonder `constants.gd` aan te raken.
+  meegeven zonder `constants.gd` aan te raken. **Gericht op een factie (11
+  september):** `--facties 3 --achtergrond results/nacht_<stempel>_v42_matrix_l2/games.jsonl`
+  speelt alleen de 11 paren met die factie en haalt de rest uit de
+  nachtmatrix (ruim drie keer sneller; een 4.3.5-partij duurt bijna een
+  minuut, dus reken op een half uur per generatie met `--potjes 3 --procs
+  5`). Sinds die dag blijft het aangenomen blok van de kampioen in elke
+  kandidaat staan (daarvoor viel een "ongewijzigde" factie stilletjes
+  terug op de kale tabel uit constants.gd), worden kandidaten ontdubbeld
+  en kent de comp een ruilzet (pion van type naar type, totaal gelijk).
+  Zijn knoppen zijn grof (kaartbudget ~25 pp per punt); de fijne knop
+  `budget_bonus` (startpunten, C11) zit NIET in zijn zoekruimte.
 - **Regelzoeker** (31 juli): `python tools/balans/regelzoeker.py --minuten 60
   --potjes 2 --kandidaten 6`, of de paneelknop "Regels uitproberen (balans)".
   Zoekt betere REGELS met vaste bots (de trainer zoekt betere bots met vaste

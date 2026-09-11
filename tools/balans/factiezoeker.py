@@ -18,6 +18,11 @@ arena mee en ze spelen met de voorgestelde facties.
 
     python tools/balans/factiezoeker.py --minuten 120 --potjes 2 --kandidaten 6
 
+Gericht op een factie (11 september), ruim drie keer sneller:
+
+    python tools/balans/factiezoeker.py --minuten 150 --potjes 3 --procs 5 --facties 3 \
+        --achtergrond results/nacht_<stempel>_v42_matrix_l2/games.jsonl
+
 Hij verandert NOOIT zelf iets aan het spel. Alles komt in
 results/facties_<tijd>/: elke kandidaat met zijn cijfers, en `voorstel.json`.
 
@@ -35,6 +40,7 @@ import os
 import random
 import statistics as st
 import subprocess
+import sys
 import time
 from collections import Counter, defaultdict
 
@@ -44,6 +50,52 @@ GODOT = os.environ.get("GODOT_PATH") or (
 BASIS = os.path.join(PROJECT, "arena", "arena_configs", "rules_v42_campaign.json")
 
 FACTIES = {"0": "Varken", "1": "Muis", "2": "Leeuw", "3": "Beer", "4": "Wolf", "5": "Krokodil"}
+# Dezelfde dieren zoals arena/run.gd ze in een matchups-lijst leest.
+ARENA_NAAM = {"0": "varken", "1": "muis", "2": "leeuw", "3": "beer", "4": "wolf", "5": "krokodil"}
+
+
+# --- Gerichte modus (11 september) -----------------------------------------
+# Zoek je aan EEN factie (--facties 3), dan veranderen de 25 paren zonder die
+# factie niet: met vaste seeds spelen ze in elke kandidaat byte-identiek.
+# Onder 4.3.5 duurt een partij bijna een minuut, dus die paren steeds opnieuw
+# spelen is 70% van de tijd weggooien. Met --achtergrond <games.jsonl> (bv de
+# nachtmatrix) spelen nulmeting en kandidaten alleen de paren MET de gezochte
+# facties, en komt de rest uit dat bestand -- teruggesnoeid tot evenveel
+# partijen per gericht paar als de zoeker zelf speelt, zodat elk paar even
+# zwaar telt, precies als in een volle run. De seeds lopen in run.gd op met de
+# positie in de paarlijst, dus nulmeting en kandidaten spelen dezelfde lijst
+# en blijven gepaard vergelijkbaar.
+def gerichte_paren(alleen):
+    """Alle gerichte paren (arena-namen) waarin een van de gezochte facties speelt."""
+    uit = []
+    for a in sorted(FACTIES):
+        for b in sorted(FACTIES):
+            if a in alleen or b in alleen:
+                uit.append([ARENA_NAAM[a], ARENA_NAAM[b]])
+    return uit
+
+
+def achtergrond_partijen(pad, alleen, per_paar):
+    """De partijen ZONDER gezochte factie uit een eerder games.jsonl, hoogstens
+    `per_paar` per gericht paar (de eerste in het bestand, dus vast)."""
+    namen = set(FACTIES[k] for k in alleen)
+    per = defaultdict(list)
+    for g in lees_games(pad):
+        if g["d1"] in namen or g["d2"] in namen:
+            continue
+        sleutel = (g["d1"], g["d2"])
+        if len(per[sleutel]) < per_paar:
+            per[sleutel].append(g)
+    uit = []
+    tekort = []
+    for a in FACTIES.values():
+        for b in FACTIES.values():
+            if a in namen or b in namen:
+                continue
+            uit.extend(per[(a, b)])
+            if len(per[(a, b)]) < per_paar:
+                tekort.append("%s-%s (%d)" % (a, b, len(per[(a, b)])))
+    return uit, tekort
 
 # De KALE facties (spiegelt scripts/core/constants.gd, stand na C18). Dit is
 # nog niet het ijkpunt: `_actieve_facties()` hieronder legt er het aangenomen
@@ -332,7 +384,8 @@ def muteer(regels, rng, sigma, alleen=None):
     for sleutel, basis in BASIS_FACTIES.items():
         if alleen and sleutel not in alleen:
             continue
-        ov = dict(doctrines.get(sleutel, {}))
+        kampioen_ov = dict(doctrines.get(sleutel, {}))
+        ov = dict(kampioen_ov)
         # Per kandidaat maar een paar knoppen aanraken: grote sprongen in alles
         # tegelijk maken het onmogelijk te zien WAT hielp. Richt je op EEN
         # factie, dan moet er wel iets gebeuren -- anders zit je kandidaten te
@@ -351,8 +404,18 @@ def muteer(regels, rng, sigma, alleen=None):
             ov[naam] = int(round(waarde))
         if rng.random() < 0.25:
             comp = list(ov.get("comp", basis["comp"]))
-            i = rng.randrange(3)
-            comp[i] = max(COMP_MIN, min(COMP_MAX, comp[i] + int(round(rng.gauss(0.0, 2.0)))))
+            if rng.random() < 0.5:
+                # Ruilzet (11 september): een pion van type i naar type j, het
+                # totaal blijft gelijk. Zonder deze zet kon een factie op het
+                # bordmaximum (Beer 19+3+0 = 22) nooit een ruiter of kanon
+                # erbij krijgen: "+1" gaf 23 en viel af, "-1" alleen verzwakt.
+                i, j = rng.sample(range(3), 2)
+                if comp[i] > COMP_MIN and comp[j] < COMP_MAX:
+                    comp[i] -= 1
+                    comp[j] += 1
+            else:
+                i = rng.randrange(3)
+                comp[i] = max(COMP_MIN, min(COMP_MAX, comp[i] + int(round(rng.gauss(0.0, 2.0)))))
             totaal = sum(comp)
             if COMP_TOTAAL_MIN <= totaal <= COMP_TOTAAL_MAX:
                 ov["comp"] = comp
@@ -360,8 +423,13 @@ def muteer(regels, rng, sigma, alleen=None):
         # iets wat niets kan doen en betaalt hij er identiteit voor.
         ov = snoei_dode_knoppen(ov, basis)
         # Knoppen die gelijk zijn aan de basis houden we uit het voorstel: dan
-        # blijft leesbaar WAT er nu eigenlijk verandert.
+        # blijft leesbaar WAT er nu eigenlijk verandert. MAAR wat in het blok
+        # van de kampioen staat blijft staan: sinds C19 is de basis dat blok,
+        # en zonder de regel valt de arena terug op de kale tabel uit
+        # constants.gd (gevonden 11 september: Beer speelde stiekem [16,3,3]).
         for naam in list(ov.keys()):
+            if naam in kampioen_ov:
+                continue
             if naam != "comp" and ov.get(naam) == basis.get(naam):
                 ov.pop(naam)
             elif naam == "comp" and list(ov["comp"]) == list(basis["comp"]):
@@ -374,7 +442,7 @@ def muteer(regels, rng, sigma, alleen=None):
     return nieuw
 
 
-def draai_kandidaat(map_pad, naam, regels, potjes, seed, procs=3):
+def draai_kandidaat(map_pad, naam, regels, potjes, seed, procs=3, matchups="all"):
     regels_pad = os.path.join(map_pad, "%s_regels.json" % naam)
     with open(regels_pad, "w", encoding="utf-8") as f:
         json.dump(regels, f, indent=1, ensure_ascii=False, sort_keys=True)
@@ -387,7 +455,7 @@ def draai_kandidaat(map_pad, naam, regels, potjes, seed, procs=3):
     # waarom de zoeker op 61% eerste-speler-voorsprong uitkwam en de nachtrun
     # op 51%: dat was geen ander spel, dat was geen spreiding.
     arena_cfg = {
-        "matchups": "all", "games_per_matchup": potjes,
+        "matchups": matchups, "games_per_matchup": potjes,
         "agents": {"p1": "l2", "p2": "l2"},
         "base_seed": seed, "max_steps": 2500, "track_repetitions": False,
         "tie_break_loting": True,
@@ -418,12 +486,13 @@ def toon_voorstel(doctrines):
         basis = BASIS_FACTIES[sleutel]
         stukjes = []
         for naam, _o, _b, _p in KNOPPEN:
-            if naam in ov:
+            if naam in ov and int(ov[naam]) != int(basis[naam]):
                 stukjes.append("%s %s->%s" % (naam, basis[naam], ov[naam]))
-        if "comp" in ov:
+        if "comp" in ov and list(ov["comp"]) != list(basis["comp"]):
             stukjes.append("comp %s->%s" % (basis["comp"], ov["comp"]))
-        regels.append("   %-10s %s" % (FACTIES[sleutel], ", ".join(stukjes)))
-    return "\n".join(regels) if regels else "   (niets veranderd)"
+        if stukjes:
+            regels.append("   %-10s %s" % (FACTIES[sleutel], ", ".join(stukjes)))
+    return "\n".join(regels) if regels else "   (niets veranderd ten opzichte van nu)"
 
 
 def main():
@@ -436,6 +505,9 @@ def main():
     p.add_argument("--facties", type=str, default="",
                    help="alleen deze facties aanpassen, bv. 2,3 (Leeuw en Beer)")
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--achtergrond", type=str, default="",
+                   help="games.jsonl (bv de nachtmatrix) voor de paren ZONDER de facties uit --facties; "
+                        "dan spelen nulmeting en kandidaten alleen de paren met die facties")
     args = p.parse_args()
 
     alleen = [s.strip() for s in args.facties.split(",") if s.strip()] if args.facties else None
@@ -447,19 +519,34 @@ def main():
 
     kampioen = json.load(open(BASIS, encoding="utf-8"))
     kampioen.setdefault("doctrines", {})
+    matchups = "all"
+    achtergrond = []
+    if alleen and args.achtergrond:
+        matchups = gerichte_paren(alleen)
+        achtergrond, tekort = achtergrond_partijen(
+            os.path.join(PROJECT, args.achtergrond) if not os.path.isabs(args.achtergrond) else args.achtergrond,
+            alleen, args.potjes * max(1, args.procs))
+        print("[FACTIES] gericht: alleen de %d paren met %s worden gespeeld; %d partijen voor de overige "
+              "%d paren komen uit %s (%d per paar)" % (
+                  len(matchups), ", ".join(FACTIES[a] for a in alleen), len(achtergrond),
+                  36 - len(matchups), args.achtergrond, args.potjes * max(1, args.procs)))
+        if tekort:
+            print("[FACTIES] LET OP: te weinig achtergrond-partijen voor %s" % ", ".join(tekort))
+        if not achtergrond:
+            sys.exit("[FACTIES] geen bruikbare achtergrond-partijen in %s" % args.achtergrond)
     print("[FACTIES] basis: %s" % os.path.relpath(BASIS, PROJECT))
     print("[FACTIES] %d kandidaten, %d potjes x %d processen, sigma %.2f%s"
           % (args.kandidaten, args.potjes, args.procs, args.sigma,
              ", alleen %s" % ", ".join(FACTIES[a] for a in alleen) if alleen else ""))
 
-    procs0, paden0 = draai_kandidaat(map_pad, "gen0_basis", kampioen, args.potjes, ZOEK_SEED, args.procs)
+    procs0, paden0 = draai_kandidaat(map_pad, "gen0_basis", kampioen, args.potjes, ZOEK_SEED, args.procs, matchups)
     for pr in procs0:
         pr.wait()
-    beste_score, beste_detail = score_run(lees_alle(paden0), kampioen.get("doctrines", {}))
+    beste_score, beste_detail = score_run(lees_alle(paden0) + achtergrond, kampioen.get("doctrines", {}))
     # Veto-drempel ijken op wat DIT spel met DEZE seeds al doet, en de
     # nulmeting daarna opnieuw scoren zodat hij niet zijn eigen veto krijgt.
     globals()["BASIS_KANT"] = float(beste_detail.get("speler1_wint_pct", 50.0))
-    beste_score, beste_detail = score_run(lees_alle(paden0), kampioen.get("doctrines", {}))
+    beste_score, beste_detail = score_run(lees_alle(paden0) + achtergrond, kampioen.get("doctrines", {}))
     print("[FACTIES] kant-drempel geijkt: speler 1 wint %.0f%% in de nulmeting, veto boven %.0f%%" % (BASIS_KANT, kant_grens()))
     print("[FACTIES] huidige facties: score %.4f (afwijking %.1f%%, speler1 wint %.0f%%) %s" % (
         beste_score, beste_detail["gem_afwijking_van_50"], beste_detail["speler1_wint_pct"],
@@ -471,6 +558,9 @@ def main():
     start = time.time()
     generatie = 0
     sigma = args.sigma
+    # Alles wat al gemeten is (zolang de kampioen dezelfde blijft): run 2 van
+    # 11 september speelde "speed_max 4->5" vijf keer, elk een half uur.
+    gezien = {json.dumps(kampioen.get("doctrines", {}), sort_keys=True)}
     while True:
         generatie += 1
         if args.minuten > 0:
@@ -480,17 +570,35 @@ def main():
             break
         lopend = []
         for i in range(args.kandidaten):
-            kandidaat = muteer(kampioen, rng, sigma, alleen)
+            # Integer-knoppen ronden een kleine stap vaak weg: op 11 september
+            # waren 12 van de 30 kandidaten kopieen van elkaar of van de
+            # kampioen, elk 30 minuten rekenen voor niets. Dus: nieuw trekken
+            # tot hij echt anders is (met een grens, anders blijft hij hangen).
+            kandidaat = None
+            for _poging in range(40):
+                proef = muteer(kampioen, rng, sigma, alleen)
+                vinger = json.dumps(proef.get("doctrines", {}), sort_keys=True)
+                if vinger not in gezien:
+                    gezien.add(vinger)
+                    kandidaat = proef
+                    break
+            if kandidaat is None:
+                print("[FACTIES] gen %d: geen nieuwe kandidaat meer te vinden na kandidaat %d" % (generatie, i))
+                break
+        if not lopend:
+            print("[FACTIES] de zoekruimte rond deze kampioen is uitgeput; klaar")
+            generatie += 1
+            break
             naam = "gen%d_k%d" % (generatie, i)
             plist, gpaden = draai_kandidaat(map_pad, naam, kandidaat, args.potjes,
-                                            ZOEK_SEED, args.procs)
+                                            ZOEK_SEED, args.procs, matchups)
             lopend.append((naam, kandidaat, plist, gpaden))
         for naam, kandidaat, plist, gpaden in lopend:
             for pr in plist:
                 pr.wait()
         beste_ronde = None
         for naam, kandidaat, plist, gpaden in lopend:
-            s, detail = score_run(lees_alle(gpaden), kandidaat.get("doctrines", {}))
+            s, detail = score_run(lees_alle(gpaden) + achtergrond, kandidaat.get("doctrines", {}))
             with open(log_pad, "a", encoding="utf-8") as f:
                 f.write(json.dumps({"generatie": generatie, "naam": naam, "detail": detail,
                                     "doctrines": kandidaat.get("doctrines", {})},
@@ -506,6 +614,8 @@ def main():
             kampioen, beste_score, beste_detail = kandidaat, s, detail
             sigma = max(0.08, sigma * 0.9)
             print(toon_voorstel(kampioen.get("doctrines", {})))
+            # Nieuwe kampioen = nieuwe vergelijkingen: de lijst mag opnieuw.
+            gezien = {json.dumps(kampioen.get("doctrines", {}), sort_keys=True)}
         else:
             sigma = min(0.5, sigma * 1.05)
         with open(os.path.join(map_pad, "voorstel.json"), "w", encoding="utf-8") as f:
