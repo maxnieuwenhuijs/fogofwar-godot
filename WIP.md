@@ -56,7 +56,11 @@ een plaatje van 3 x 4. Max: "sla ook deze prompts op een file tracker":
 PROP-WISHLIST sectie 14 (Texturen) draagt ze, en de prop-tracker kent nu
 png-rijen (status = ligt het plaatje ergens onder assets/models), prompts
 zonder prop-sjabloon eromheen, en variant-rijen (zelfde bestandsnaam als
-de rij erboven, een pijltje, tellen niet dubbel).
+de rij erboven, een pijltje, tellen niet dubbel). Max leverde meteen
+variant 1 (velours met goudgalon en lelies, 1152 x 1536) als
+`assets/models/props/cape_blue.png`: import op VRAM-compressie met
+mipmaps (zoals de bord-textuur; een lap in 3D zonder mipmaps flikkert),
+capecheck meldt "geleverd", de tracker staat op 7 klaar.
 
 **Kegelen en keilen (Max: "de bowling werkt niet goed: je klikt, dan komt
 de pijl, en dan inhouden en de pijl groeit; de pijl moet meteen komen; en
