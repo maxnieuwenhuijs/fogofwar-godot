@@ -46,6 +46,8 @@ var _acties: Array = []
 var _geluid: Array = []
 var _geluid_moment := 0.0
 var _rng := RandomNumberGenerator.new()   # nooit de globale RNG (zie Omgeving)
+var kamp_team := ""            # kleur van het kamp waarin hij staat ("red"/"blue"), voor de cape
+var _cape: MeshInstance3D = null
 
 
 ## Alle namen die in assets/models/bewoners/ liggen: een glb, of een json
@@ -144,6 +146,39 @@ func laad(n: String) -> bool:
 		_anim.animation_finished.connect(_on_klaar)
 		_speel_idle()
 	return true
+
+
+## Cape in de kleur van het kamp waarin hij staat (Omgeving zet dit na het
+## plaatsen; 12 september, Max: "alle blauwe team karakters een blauwe
+## cape"). Dezelfde lap als de pionnen (PawnView.maak_cape), dus dezelfde
+## knoppen in het sfeer-paneel; standaard alleen blauw.
+func zet_cape(team: String) -> void:
+	kamp_team = team
+	if is_instance_valid(_cape):
+		var oud: Node = _cape.get_parent()
+		if oud is BoneAttachment3D and oud.name == "CapeBot":
+			oud.queue_free()
+		else:
+			_cape.queue_free()
+	_cape = null
+	if _model == null or not is_inside_tree():
+		return
+	var aan := false
+	if team == "blue":
+		aan = PawnView.fx("cape_blauw", 1.0) > 0.5
+	elif team == "red":
+		aan = PawnView.fx("cape_rood", 0.0) > 0.5
+	if not aan:
+		return
+	_cape = PawnView.maak_cape(_model, hoogte, team == "blue", naam.hash())
+
+
+func _process(_delta: float) -> void:
+	if _cape != null:
+		if is_instance_valid(_cape):
+			PawnView.cape_wind(_cape)
+		else:
+			_cape = null
 
 
 ## Eigen kopie van de animatiebibliotheken, met de clipnamen van het spel.

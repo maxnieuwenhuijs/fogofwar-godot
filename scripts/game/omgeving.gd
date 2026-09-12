@@ -1093,8 +1093,16 @@ func _bouw_bewoners() -> void:
 			b.rotation.y = deg_to_rad(float(m.get("draai", draai_std)))
 			_bewoners_root.add_child(b)
 			_bewoners.append(b)
+			b.zet_cape(_team_eigen if k == "eigen" else _team_ander)
 			_bouw_decor(b, m)
 			_registreer(b, b.hoogte, [_reageer_bewoner, _reageer_bewoner, _reageer_bewoner_hart], {"bewoner": b})
+
+
+## Sfeer-paneel: een cape-knop is verdraaid, elke bewoner opnieuw.
+func herhang_capes() -> void:
+	for b in _bewoners:
+		if is_instance_valid(b):
+			(b as Bewoner).zet_cape((b as Bewoner).kamp_team)
 
 
 ## Spulletjes bij een bewoner (manifest "decor": ["stronk", "houtstapel",

@@ -791,6 +791,165 @@ func _ready() -> void:
 		print("[AUDIO] %s: %d fout(en)" % ["PASS" if ap_fouten == 0 else "FAIL", ap_fouten])
 		get_tree().quit(0 if ap_fouten == 0 else 1)
 		return
+	elif "capecheck" in args:
+		# 12 september (Max: "alle blauwe team karakters een blauwe cape,
+		# vanuit Godot"). Bouwt de muis-infanterist rood en blauw zoals de
+		# Model-tuner. Blauw moet EEN Cape aan een rugbot hebben die achter
+		# de pion hangt (lokale +Z van de PawnView) en onder de schouders
+		# begint; rood geen. Dan: teamwissel haalt hem weg en zet hem terug,
+		# een modelwissel (ander archetype) hangt een verse, de knop cape_rood
+		# geeft rood er ook een, en de bewoner van het blauwe kamp draagt er
+		# een. Met venster: _shot_capecheck.png (van schuin achter).
+		var cc_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var cc_fouten := 0
+		var cc_licht := DirectionalLight3D.new()
+		cc_licht.rotation_degrees = Vector3(-50.0, 35.0, 0.0)
+		cc_licht.light_energy = 1.2
+		add_child(cc_licht)
+		var cc_pvs: Array = []
+		for cc_i in 2:
+			var cc_pv: PawnView = cc_scene.instantiate()
+			cc_pv.team = Constants.Team.RED if cc_i == 0 else Constants.Team.BLUE
+			cc_pv.pawn_id = 10 + cc_i
+			cc_pv.position = Vector3(1.0 * float(cc_i), 0.0, 0.0)
+			add_child(cc_pv)
+			cc_pv.face_dir(Vector2i(0, -1))   # kijkt van de camera af: we zien de rug
+			cc_pv.set_unit_type(0)
+			cc_pv.set_character(Constants.Doctrine.MUIS, 0, null)
+			cc_pvs.append(cc_pv)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		if String((cc_pvs[1] as PawnView)._model_path) == "":
+			print("[CAPE] geen muis-infanterist gevonden; check overgeslagen")
+			get_tree().quit(1)
+			return
+		# achter = afstand achter de rug: een PawnView heeft zijn rug op lokaal
+		# +Z (auto-fit draait het model 180 graden), een kale glb (bewoner)
+		# kijkt naar +Z en heeft zijn rug dus op -Z; vandaar het teken.
+		var cc_meet := func(n: Node3D, rug_teken: float = 1.0) -> Dictionary:
+			var capes: Array = n.find_children("Cape", "MeshInstance3D", true, false)
+			if capes.is_empty():
+				return {"heeft": false, "aantal": 0}
+			var c: MeshInstance3D = capes[0]
+			var mid_w: Vector3 = c.global_transform * c.get_aabb().get_center()
+			var rel: Vector3 = n.global_transform.affine_inverse() * mid_w
+			rel.z *= rug_teken
+			var bot: String = "?"
+			var att := c.get_parent() as BoneAttachment3D
+			if att != null:
+				var sk := att.get_parent() as Skeleton3D
+				if sk != null:
+					bot = String(sk.get_bone_name(att.bone_idx))
+			return {"heeft": true, "aantal": capes.size(), "achter": rel.z, "hoogte": rel.y, "bot": bot}
+		var cc_rood: Dictionary = cc_meet.call(cc_pvs[0])
+		var cc_blauw: Dictionary = cc_meet.call(cc_pvs[1])
+		print("[CAPE] rood: %s  blauw: %s" % [str(cc_rood), str(cc_blauw)])
+		if bool(cc_rood.heeft):
+			print("[CAPE] FOUT: rood heeft een cape (knop cape_rood staat uit)")
+			cc_fouten += 1
+		if not bool(cc_blauw.heeft):
+			print("[CAPE] FOUT: blauw heeft geen cape")
+			cc_fouten += 1
+		else:
+			if int(cc_blauw.aantal) != 1:
+				print("[CAPE] FOUT: blauw heeft %d capes" % int(cc_blauw.aantal))
+				cc_fouten += 1
+			if float(cc_blauw.achter) <= 0.02:
+				print("[CAPE] FOUT: de cape hangt niet achter de rug (z=%.3f)" % float(cc_blauw.achter))
+				cc_fouten += 1
+			if float(cc_blauw.hoogte) < 0.15 or float(cc_blauw.hoogte) > 0.85:
+				print("[CAPE] FOUT: de cape hangt op de verkeerde hoogte (y=%.3f)" % float(cc_blauw.hoogte))
+				cc_fouten += 1
+			if not String(cc_blauw.bot).contains("Spine") and not String(cc_blauw.bot).contains("Neck"):
+				print("[CAPE] FOUT: de cape hangt aan bot %s" % String(cc_blauw.bot))
+				cc_fouten += 1
+		# teamwissel: weg, en weer terug (zonder restjes)
+		(cc_pvs[1] as PawnView).zet_team(Constants.Team.RED)
+		await get_tree().process_frame
+		if bool(cc_meet.call(cc_pvs[1]).heeft):
+			print("[CAPE] FOUT: na de wissel naar rood hangt de cape er nog")
+			cc_fouten += 1
+		(cc_pvs[1] as PawnView).zet_team(Constants.Team.BLUE)
+		await get_tree().process_frame
+		var cc_terug: Dictionary = cc_meet.call(cc_pvs[1])
+		if not bool(cc_terug.heeft) or int(cc_terug.aantal) != 1:
+			print("[CAPE] FOUT: na de wissel terug naar blauw: %s" % str(cc_terug))
+			cc_fouten += 1
+		# modelwissel: ander archetype (spd) -> verse cape aan het nieuwe model
+		(cc_pvs[1] as PawnView).set_character(Constants.Doctrine.MUIS, 0, Card.new(0, 0, 0, 1, 3, 1))
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var cc_spd: Dictionary = cc_meet.call(cc_pvs[1])
+		print("[CAPE] na modelwissel (%s): %s" % [String((cc_pvs[1] as PawnView)._model_path).get_file(), str(cc_spd)])
+		if not bool(cc_spd.heeft) or int(cc_spd.aantal) != 1 or float(cc_spd.achter) <= 0.02:
+			print("[CAPE] FOUT: na de modelwissel klopt de cape niet")
+			cc_fouten += 1
+		# knop cape_rood
+		PawnView.set_fx("cape_rood", 1.0)
+		(cc_pvs[0] as PawnView).herhang_cape()
+		await get_tree().process_frame
+		if not bool(cc_meet.call(cc_pvs[0]).heeft):
+			print("[CAPE] FOUT: cape_rood=1 geeft rood geen cape")
+			cc_fouten += 1
+		PawnView.set_fx("cape_rood", 0.0)
+		(cc_pvs[0] as PawnView).herhang_cape()
+		await get_tree().process_frame
+		if bool(cc_meet.call(cc_pvs[0]).heeft):
+			print("[CAPE] FOUT: cape_rood=0 laat de rode cape hangen")
+			cc_fouten += 1
+		# wind: de shader krijgt per frame een vector, nooit door de rug naar voren
+		PawnView.wind_richting = Vector3(0.0, 0.0, -1.0)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var cc_cape: MeshInstance3D = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)[0]
+		var cc_w = (cc_cape.material_override as ShaderMaterial).get_shader_parameter("wind")
+		print("[CAPE] wind in cape-ruimte: %s" % str(cc_w))
+		if not (cc_w is Vector3) or not (cc_w as Vector3).is_finite() or (cc_w as Vector3).z < -0.0001:
+			print("[CAPE] FOUT: wind-uniform deugt niet: %s" % str(cc_w))
+			cc_fouten += 1
+		# bewoner van het blauwe kamp
+		var cc_bw := Bewoner.new()
+		add_child(cc_bw)
+		if cc_bw.laad("soldaat_mouse"):
+			cc_bw.position = Vector3(2.0, 0.0, 0.0)
+			cc_bw.rotation.y = PI   # rug naar de camera
+			cc_bw.zet_cape("blue")
+			await get_tree().process_frame
+			var cc_b: Dictionary = cc_meet.call(cc_bw._model, -1.0)
+			print("[CAPE] bewoner soldaat_mouse blauw: %s" % str(cc_b))
+			if not bool(cc_b.heeft) or float(cc_b.achter) <= 0.01:
+				print("[CAPE] FOUT: de bewoner van het blauwe kamp heeft geen cape achter zich")
+				cc_fouten += 1
+			cc_bw.zet_cape("red")
+			await get_tree().process_frame
+			if bool(cc_meet.call(cc_bw).heeft):
+				print("[CAPE] FOUT: bewoner in het rode kamp draagt een cape")
+				cc_fouten += 1
+			cc_bw.zet_cape("blue")
+		else:
+			print("[CAPE] bewoner soldaat_mouse laadt niet; bewoner-deel overgeslagen")
+		# plaatje: van schuin achter, zodat je de rug ziet
+		var cc_tex := get_viewport().get_texture()
+		if cc_tex != null and cc_tex.get_image() != null:
+			# het spel-menu en de UI-laag (met vignet) weg, anders staan ze voor de pionnen
+			game._overlay.hide()
+			game._card_hand.visible = false
+			var cc_ui := game.get_node_or_null("UI")
+			if cc_ui != null:
+				cc_ui.visible = false
+			var cc_cam := Camera3D.new()
+			add_child(cc_cam)
+			cc_cam.position = Vector3(1.0, 1.3, 3.0)
+			cc_cam.look_at(Vector3(1.0, 0.4, 0.0), Vector3.UP)
+			cc_cam.current = true
+			await get_tree().create_timer(0.6).timeout
+			var cc_img: Image = cc_tex.get_image()
+			if cc_img != null:
+				cc_img.save_png("res://_shot_capecheck.png")
+				print("[CAPE] screenshot -> _shot_capecheck.png")
+		print("[CAPE] %s: %d fout(en)" % ["PASS" if cc_fouten == 0 else "FAIL", cc_fouten])
+		get_tree().quit(0 if cc_fouten == 0 else 1)
+		return
 	elif "wapenroute" in args:
 		# Diagnose (7 september): welke wapen-route neemt het spel per model?
 		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt

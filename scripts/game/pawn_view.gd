@@ -70,6 +70,7 @@ var _weapon: Node3D = null   # musket-prop aan de hand (vliegt weg bij dood)
 ## (_loot_wind); hier staat de wereld-richting (XZ, lengte 1). Puur visueel.
 static var wind_richting: Vector3 = Vector3(1.0, 0.0, 0.0)
 var _vlagdoek: MeshInstance3D = null   # het doek aan de stok, per frame in de wind gedraaid
+var _cape: MeshInstance3D = null       # de cape op de rug (blauw team; knop cape_rood voor rood)
 var _vlag_top: Vector3 = Vector3.ZERO  # top van de stok, in prop-ruimte
 var _vlag_as: Vector3 = Vector3.UP     # stok-as (omhoog), in prop-ruimte
 var _vlag_breedte: float = 0.0
@@ -2404,6 +2405,7 @@ uniform float snelheid = 3.6;
 uniform float golf = 7.0;
 uniform float vuil = 0.55;    // 0 = schoon fabrieksdoek, 1 = smerig veldvaandel
 uniform float rafel = 1.0;    // hapjes uit de vrije rand (0 = strak afgezoomd)
+uniform float dim = 1.0;      // 1 = normaal, lager = gevallen vaandel (verduister_later)
 
 varying float golfhoogte;
 
@@ -2459,7 +2461,7 @@ void fragment() {
 	doek *= 0.92 + 0.08 * korrel;
 	// Vouwen: bollingen vangen licht, dalen lopen donker weg.
 	doek *= 0.85 + 0.3 * (golfhoogte * 0.5 + 0.5);
-	ALBEDO = doek;
+	ALBEDO = doek * dim;
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.05;
 	// Achterkant net zo belicht als de voorkant (het is maar een vlak).
@@ -2506,6 +2508,7 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 	mat.shader = sh
 	mat.set_shader_parameter("kleur",
 		Color(0.85, 0.25, 0.28) if team == Constants.Team.RED else Color(0.2, 0.45, 0.9))
+	mat.set_shader_parameter("dim", 1.0)
 	doek.material_override = mat
 	# Vanaf de mast zijwaarts uitsteken (halve breedte opzij), net onder de top.
 	doek.position = top + Vector3(breedte * 0.5, 0.0, 0.0)
@@ -2525,6 +2528,11 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 func _process(_delta: float) -> void:
 	if _vlagdoek != null:
 		_richt_vlag()
+	if _cape != null:
+		if is_instance_valid(_cape):
+			cape_wind(_cape)
+		else:
+			_cape = null
 
 
 ## Draai het doek in de wind: de wereld-richting (PawnView.wind_richting) naar
@@ -2547,6 +2555,212 @@ func _richt_vlag() -> void:
 	wl = wl.normalized()
 	_vlagdoek.transform = Transform3D(Basis(wl, _vlag_as, wl.cross(_vlag_as)),
 		_vlag_top + wl * _vlag_breedte * 0.5 - _vlag_as * _vlag_zak)
+
+
+# --- Cape (Max, 12 september: "alle blauwe team karakters een blauwe cape, -----
+# vanuit Godot") ---------------------------------------------------------------
+# Geen Blender: een lap (PlaneMesh) aan het bovenste rugbot (mixamorig:Spine2)
+# in de teamkleur, met een vertex-shader die de zoom laat wapperen en met de
+# wind meeneemt (PawnView.wind_richting). Hij hangt in de RUST-houding van het
+# bot recht naar beneden en volgt daarna elke animatie via het bot; geen
+# cloth-physics (duur, jittert, en op bordafstand zie je het verschil niet).
+# Puur visueel: geen staat, geen RNG. Standaard alleen het blauwe team
+# (pompeus en rijk: goudgalon, lichte voering); rood via de knop cape_rood.
+# Knoppen in het sfeer-paneel: cape_blauw, cape_rood (0/1), cape_lengte en
+# cape_breedte (x pionhoogte), cape_wapper, cape_wind. De bewoners van het
+# diorama gebruiken dezelfde maak_cape (Bewoner.zet_cape).
+const CAPE_SHADER := """
+shader_type spatial;
+render_mode cull_disabled;
+
+uniform vec4 kleur : source_color = vec4(0.16, 0.34, 0.86, 1.0);
+uniform vec4 voering : source_color = vec4(0.78, 0.72, 0.55, 1.0);   // binnenkant
+uniform vec4 zoom : source_color = vec4(0.88, 0.70, 0.28, 1.0);      // galon langs de rand
+uniform float zoom_breedte = 0.07;   // fractie van de lap (0 = geen galon)
+uniform float hoogte = 0.45;         // laplengte in mesh-eenheden (top = +hoogte/2)
+uniform float amp = 0.03;            // wapper-uitslag onderaan, mesh-eenheden
+uniform float snelheid = 2.6;
+uniform float golf = 5.0;
+uniform float fase = 0.0;
+uniform float flare = 1.45;          // zoom breder dan de schouders
+uniform float bol = 0.05;            // hoe ver de zoom van de rug af staat
+uniform vec3 wind = vec3(0.0);       // windverzet onderaan, in mesh-ruimte
+uniform float dim = 1.0;             // 1 = normaal, lager = lijk (verduister_later)
+
+varying float vouw;
+varying float tv;
+
+void vertex() {
+	float t = clamp(0.5 - VERTEX.y / max(hoogte, 0.0001), 0.0, 1.0);  // 0 schouders, 1 zoom
+	float los = t * t;                       // bovenaan zit de lap vast
+	VERTEX.x *= mix(1.0, flare, t);
+	float g = sin(TIME * snelheid + t * golf + fase);
+	float g2 = sin(TIME * snelheid * 0.73 + t * golf * 0.6 + fase * 1.7);
+	VERTEX.z += bol * t + g * amp * los + wind.z * los;
+	VERTEX.x += g2 * amp * 0.5 * los + wind.x * los;
+	VERTEX.y += wind.y * los - abs(g) * amp * 0.25 * los;
+	vouw = g * los;
+	tv = t;
+}
+
+void fragment() {
+	float weefsel = 0.95 + 0.05 * sin(UV.y * 380.0) * sin(UV.x * 240.0);
+	vec3 basis = FRONT_FACING ? kleur.rgb : voering.rgb;
+	// Galon langs de zoom en de twee zijranden.
+	float rand = min(min(UV.x, 1.0 - UV.x), 1.0 - tv);
+	float galon = 1.0 - smoothstep(zoom_breedte * 0.8, zoom_breedte, rand);
+	if (zoom_breedte <= 0.0001) {
+		galon = 0.0;
+	}
+	vec3 doek = mix(basis, zoom.rgb, galon) * weefsel;
+	// Plooien: bollingen vangen licht, dalen lopen donker weg; schaduw onder de schouders.
+	doek *= 0.82 + 0.3 * (vouw * 0.5 + 0.5);
+	doek *= 0.8 + 0.2 * smoothstep(0.0, 0.25, tv);
+	ALBEDO = doek * dim;
+	ROUGHNESS = 0.9;
+	SPECULAR = 0.08;
+	if (!FRONT_FACING) {
+		NORMAL = -NORMAL;
+	}
+}
+"""
+
+const CAPE_BOTTEN: Array = ["mixamorig:Spine2", "Spine2", "mixamorig:Spine1", "Spine1",
+	"mixamorig:Neck", "Neck", "mixamorig:Spine", "Spine"]
+
+
+## Cape aan het bovenste rugbot van een geanimeerd model (pion of bewoner).
+## root = de glb-instantie (voorkant +Z, zoals elke generator hem levert),
+## hoogte_w = hoogte van het model in wereld-eenheden. Maten uit de knoppen
+## (x hoogte). Geeft het doek terug; null als er geen skelet of rugbot is.
+static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int = 0) -> MeshInstance3D:
+	if root == null or not root.is_inside_tree() or hoogte_w <= 0.01:
+		return null
+	var skels: Array = root.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return null
+	var skel: Skeleton3D = skels[0]
+	var bone := -1
+	for cand in CAPE_BOTTEN:
+		bone = skel.find_bone(String(cand))
+		if bone >= 0:
+			break
+	if bone < 0:
+		for i in skel.get_bone_count():
+			var bn := String(skel.get_bone_name(i))
+			if bn.contains("Spine2") or bn.contains("Neck"):
+				bone = i
+				break
+	if bone < 0:
+		return null
+	skel.force_update_all_bone_transforms()
+	var lengte: float = hoogte_w * fx("cape_lengte", 0.5)
+	var breedte: float = hoogte_w * fx("cape_breedte", 0.4)
+	# Ruimte van het bot in RUST (T-pose): daarin hangt de lap recht naar
+	# beneden, en daarna volgt hij het bot door elke animatie heen. De pose
+	# van dit moment is minder geschikt: die kan midden in een clip staan
+	# (leunend, schietend), en dan hing de cape in idle scheef.
+	var rust_w: Basis = skel.global_transform.basis * skel.get_bone_global_rest(bone).basis
+	var inv: Basis = rust_w.inverse()
+	var achter_w: Vector3 = (root.global_transform.basis * Vector3(0.0, 0.0, -1.0)).normalized()
+	var achter_l: Vector3 = (inv * achter_w).normalized()
+	var op_l: Vector3 = (inv * Vector3.UP).normalized()
+	var rechts_l: Vector3 = op_l.cross(achter_l).normalized()
+	op_l = achter_l.cross(rechts_l).normalized()
+	# Schaal van de ouder (skelet x auto-fit): mesh-eenheden = wereld-eenheden.
+	var s_ouder: float = rust_w.get_scale().x
+	if s_ouder <= 0.000001 or not is_finite(s_ouder):
+		s_ouder = 1.0
+	var att := BoneAttachment3D.new()
+	att.name = "CapeBot"
+	skel.add_child(att)
+	att.bone_idx = bone
+	var doek := MeshInstance3D.new()
+	doek.name = "Cape"
+	var vlak := PlaneMesh.new()
+	vlak.orientation = PlaneMesh.FACE_Z
+	vlak.size = Vector2(breedte, lengte)
+	vlak.subdivide_width = 6
+	vlak.subdivide_depth = 10
+	doek.mesh = vlak
+	doek.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	var sh := Shader.new()
+	sh.code = CAPE_SHADER
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	mat.set_shader_parameter("kleur", Color(0.16, 0.34, 0.86) if blauw else Color(0.66, 0.16, 0.18))
+	mat.set_shader_parameter("voering", Color(0.78, 0.72, 0.55) if blauw else Color(0.42, 0.3, 0.24))
+	mat.set_shader_parameter("zoom", Color(0.88, 0.7, 0.28) if blauw else Color(0.5, 0.42, 0.3))
+	mat.set_shader_parameter("zoom_breedte", 0.07 if blauw else 0.0)
+	mat.set_shader_parameter("hoogte", lengte)
+	mat.set_shader_parameter("amp", lengte * 0.07 * fx("cape_wapper", 1.0))
+	mat.set_shader_parameter("bol", hoogte_w * 0.1)
+	mat.set_shader_parameter("fase", float(absi(fase_bron) % 97) * 0.35)
+	mat.set_shader_parameter("dim", 1.0)
+	doek.material_override = mat
+	doek.set_meta("cape_lengte", lengte)
+	# Top van de lap op de schouderlijn (het nekbot als het er is, anders een
+	# tiende pionhoogte boven het rugbot), een stukje achter de rug.
+	var nek_op: float = hoogte_w * 0.1
+	var nek := skel.find_bone("mixamorig:Neck")
+	if nek < 0:
+		nek = skel.find_bone("Neck")
+	if nek >= 0 and nek != bone:
+		var d_w: Vector3 = skel.global_transform.basis * (skel.get_bone_global_rest(nek).origin - skel.get_bone_global_rest(bone).origin)
+		nek_op = clampf(d_w.y, 0.0, hoogte_w * 0.2)
+	var offset_w: Vector3 = Vector3.UP * (nek_op - lengte * 0.5) + achter_w * (hoogte_w * 0.045)
+	doek.transform = Transform3D(Basis(rechts_l, op_l, achter_l).scaled(Vector3.ONE / s_ouder), inv * offset_w)
+	att.add_child(doek)
+	return doek
+
+
+## Wind op een cape, per frame: de wereldrichting (PawnView.wind_richting)
+## naar de ruimte van het doek, dat met het bot meebeweegt. De zoom mag niet
+## door de rug heen naar voren (lokale -Z); dat deel wordt afgekapt.
+static func cape_wind(doek: MeshInstance3D) -> void:
+	if doek == null or not is_instance_valid(doek) or not doek.is_inside_tree():
+		return
+	var mat := doek.material_override as ShaderMaterial
+	if mat == null:
+		return
+	var lengte: float = float(doek.get_meta("cape_lengte", 0.45))
+	var g: Basis = doek.global_transform.basis.orthonormalized()
+	var w: Vector3 = g.inverse() * (wind_richting * lengte * 0.3 * fx("cape_wind", 1.0))
+	w.z = maxf(w.z, 0.0)
+	mat.set_shader_parameter("wind", w)
+
+
+## De cape van deze pion: bouwen of weghalen volgens team en knoppen.
+## Idempotent; loopt na elke modelwissel (via _apply_team_texture) en bij een
+## knopwijziging in het sfeer-paneel (herhang_cape).
+func _hang_cape() -> void:
+	if is_instance_valid(_cape):
+		var oud: Node = _cape.get_parent()
+		if oud is BoneAttachment3D and oud.name == "CapeBot":
+			oud.queue_free()
+		else:
+			_cape.queue_free()
+	_cape = null
+	if _piece == null or _unit_type == Constants.UnitType.ARTILLERY or not is_inside_tree():
+		return
+	var aan: bool = (fx("cape_blauw", 1.0) > 0.5) if team == Constants.Team.BLUE else (fx("cape_rood", 0.0) > 0.5)
+	if not aan:
+		return
+	var h: float = float(last_fit.get("h", 0.0)) * float(last_fit.get("s", 0.0))
+	if h <= 0.01:
+		h = 1.1 if _unit_type == Constants.UnitType.CAVALRY else 0.9
+	_cape = maak_cape(_piece, h, team == Constants.Team.BLUE, pawn_id)
+
+
+## Sfeer-paneel: een cape-knop is verdraaid, hang hem opnieuw.
+func herhang_cape() -> void:
+	_hang_cape()
+
+
+## Teamwissel NA het bouwen (checks, gereedschap): jas en cape gaan mee.
+func zet_team(t: int) -> void:
+	team = t
+	_apply_team_texture()
 
 
 ## Normaliseer een geïmporteerd model naar bord-maat: meet de gezamenlijke AABB,
@@ -2679,6 +2893,7 @@ func _apply_team_texture() -> void:
 	# factie zijn eigen musket-stijl. Anders gaat de override eraf en houdt het
 	# wapen zijn glb-materiaal, precies zoals voorheen.
 	_zet_wapenjas()
+	_hang_cape()
 
 
 ## De teamjas op het INGEBAKKEN wapen, of de override eraf als die er niet is.
@@ -2727,6 +2942,15 @@ static func verduister_later(root: Node) -> void:
 		# Per-instantie materiaal, anders verkleur je het GEDEELDE glb-materiaal
 		# en wordt elke levende pion met datzelfde model ook donker.
 		var mat: Material = m3.material_override
+		if mat is ShaderMaterial:
+			# Eigen shader (cape, vlaggendoek): die draagt een dim-uniform en
+			# is al per instantie, dus gewoon die tweenen.
+			var sm := mat as ShaderMaterial
+			if sm.get_shader_parameter("dim") != null:
+				var tws := m3.create_tween()
+				tws.tween_interval(na)
+				tws.tween_property(sm, "shader_parameter/dim", 1.0 - kracht, duur).from(1.0)
+			continue
 		if not (mat is BaseMaterial3D):
 			var actief := m3.get_active_material(0)
 			if not (actief is BaseMaterial3D):

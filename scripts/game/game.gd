@@ -3285,6 +3285,12 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "diorama", "label": "diorama (0 = loten per potje, 1-12 vast)", "min": 0.0, "max": 12.0, "step": 1.0, "def": 0.0},
 	{"key": "tik_pauze", "label": "tik-combo: pauze tot herstart (s)", "min": 0.15, "max": 1.5, "step": 0.05, "def": 0.6},
 	{"key": "tik_toon", "label": "tik-combo: toon omhoog per klik", "min": 0.0, "max": 0.15, "step": 0.005, "def": 0.07},
+	{"key": "cape_blauw", "label": "cape blauw team (0/1)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "cape_rood", "label": "cape rood team (0/1)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 0.0},
+	{"key": "cape_lengte", "label": "cape-lengte (x pionhoogte)", "min": 0.25, "max": 0.9, "step": 0.01, "def": 0.5},
+	{"key": "cape_breedte", "label": "cape-breedte (x pionhoogte)", "min": 0.2, "max": 0.7, "step": 0.01, "def": 0.4},
+	{"key": "cape_wapper", "label": "cape-wapper", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "cape_wind", "label": "cape-wind", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 ]
 
 
@@ -3365,6 +3371,11 @@ func _on_ambiance_slider(value: float, key: String, val_label: Label) -> void:
 	_apply_ambiance()
 	if key == "dust":
 		_refresh_dust()
+	if key.begins_with("cape_"):
+		for pv in _pawn_views.values():
+			(pv as PawnView).herhang_cape()
+		if _omgeving != null:
+			_omgeving.herhang_capes()
 
 
 ## Schrijft alle knoppen (sfeer + effecten) terug naar effects_tuning.json:
