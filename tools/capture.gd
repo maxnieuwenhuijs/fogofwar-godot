@@ -1933,6 +1933,104 @@ func _ready() -> void:
 		print("[DIORAMA] klaar")
 		get_tree().quit(0)
 		return
+	elif "koppelcheck" in args:
+		# 12 september (Max: "houd mijn kaart geselecteerd ook al is de AI eerst
+		# aan de beurt, totdat ik gelinkt heb"). Speelt tot de koppel-fase, geeft
+		# de beurt aan de bot door zelf een kaart te koppelen, kiest DAN de
+		# volgende kaart terwijl de bot denkt, en bewijst: de keuze staat (een
+		# pion-klik doet nog niets), overleeft de beurtwissel met de waaier erbij,
+		# en gaat pas weg als de kaart aan een pion hangt.
+		var kc_fouten := 0
+		var kc_hand: CardHand = game.get_node("UI/CardHand")
+		var kc_steps := 0
+		while not Phase.is_linking(GameSession.state.phase) and kc_steps < 80:
+			kc_steps += 1
+			var kst: GameState = GameSession.state
+			if kst.phase == Phase.Type.PRE_GAME:
+				game._start_match(1)
+			elif kst.phase == Phase.Type.PLACEMENT:
+				game._confirm_placement()
+			elif Phase.is_reveal(kst.phase):
+				game._continue_after_reveal()
+			elif Phase.is_define(kst.phase) and kst.cards_defined[1].size() == 0:
+				var kbud: int = int(kst.doctrine_data_of(1).budget)
+				for c in kc_hand.get_card_views():
+					c.data.hp = 1
+					c.data.stamina = mini(kbud - 2, 3)
+					c.data.attack = kbud - 1 - mini(kbud - 2, 3)
+					c._refresh()
+				kc_hand._on_confirm_pressed()
+			await get_tree().create_timer(0.05).timeout
+		if not Phase.is_linking(GameSession.state.phase):
+			print("[KOPPEL] FOUT: koppel-fase niet bereikt (fase %s)" % Phase.to_string_phase(GameSession.state.phase))
+			get_tree().quit(1)
+			return
+		await get_tree().process_frame
+		# eigen beurt? koppel dan eerst een kaart, zodat de bot aan de beurt komt
+		if GameSession.state.current_player == 1:
+			game._on_link_card_picked(0)
+			game._on_link_pawn_clicked(_kc_vrije_pion())
+			await get_tree().process_frame
+		var kst2: GameState = GameSession.state
+		if not Phase.is_linking(kst2.phase) or kst2.current_player != 2:
+			print("[KOPPEL] FOUT: de bot is niet aan de beurt na de eerste koppeling (fase %s, beurt %d)" % [Phase.to_string_phase(kst2.phase), kst2.current_player])
+			get_tree().quit(1)
+			return
+		# de volgende vrije kaart kiezen TERWIJL de bot denkt
+		var kc_kaarten: Array = kst2.cards_revealed[1]
+		var keuze := -1
+		for i in kc_kaarten.size():
+			if not (kc_kaarten[i] as Card).is_linked():
+				keuze = i
+				break
+		game._on_link_card_picked(keuze)
+		var kaart_id: int = (kc_kaarten[keuze] as Card).id
+		if game._selected_link_card_id != kaart_id:
+			print("[KOPPEL] FOUT: kaart %d kiezen tijdens de beurt van de bot werd geweigerd" % keuze)
+			kc_fouten += 1
+		# een pion-klik in de beurt van de bot koppelt NIET en laat de keuze staan
+		var kc_pion := _kc_vrije_pion()
+		game._on_link_pawn_clicked(kc_pion)
+		if (GameSession.state.pawns[kc_pion] as Pawn).linked_card_id != -1:
+			print("[KOPPEL] FOUT: pion %d werd gekoppeld terwijl de bot aan de beurt was" % kc_pion)
+			kc_fouten += 1
+		if game._selected_link_card_id != kaart_id:
+			print("[KOPPEL] FOUT: de keuze verdween door een pion-klik in de beurt van de bot")
+			kc_fouten += 1
+		# wachten tot de bot gekoppeld heeft en de beurt terug is
+		var kc_wacht := 0.0
+		while GameSession.state.current_player != 1 and Phase.is_linking(GameSession.state.phase) and kc_wacht < 5.0:
+			await get_tree().create_timer(0.05).timeout
+			kc_wacht += 0.05
+		var kst3: GameState = GameSession.state
+		if not Phase.is_linking(kst3.phase) or kst3.current_player != 1:
+			print("[KOPPEL] FOUT: de beurt kwam niet terug (fase %s, beurt %d)" % [Phase.to_string_phase(kst3.phase), kst3.current_player])
+			kc_fouten += 1
+		if game._selected_link_card_id != kaart_id:
+			print("[KOPPEL] FOUT: de keuze overleefde de beurtwissel niet (%d)" % game._selected_link_card_id)
+			kc_fouten += 1
+		if kc_hand._selected_index != keuze:
+			print("[KOPPEL] FOUT: de waaier toont kaart %d als gekozen, verwacht %d" % [kc_hand._selected_index, keuze])
+			kc_fouten += 1
+		var kc_views: Array = kc_hand.get_card_views()
+		if keuze < kc_views.size() and not (kc_views[keuze] as CardView)._selected:
+			print("[KOPPEL] FOUT: de gekozen kaart licht niet op in de waaier")
+			kc_fouten += 1
+		# nu koppelen: de keuze gaat weg, de pion draagt de kaart
+		kc_pion = _kc_vrije_pion()
+		game._on_link_pawn_clicked(kc_pion)
+		await get_tree().process_frame
+		var kc_pk: Pawn = GameSession.state.pawns[kc_pion]
+		if kc_pk.linked_card_id != kaart_id:
+			print("[KOPPEL] FOUT: pion %d draagt kaart %d, verwacht %d" % [kc_pion, kc_pk.linked_card_id, kaart_id])
+			kc_fouten += 1
+		if game._selected_link_card_id != -1:
+			print("[KOPPEL] FOUT: de keuze bleef staan na het koppelen")
+			kc_fouten += 1
+		print("[KOPPEL] kaart %d gekozen in de beurt van de bot, bleef staan over de beurtwissel, gekoppeld aan pion %d" % [keuze, kc_pion])
+		print("[KOPPEL] " + ("PASS" if kc_fouten == 0 else "FAIL (%d fouten)" % kc_fouten))
+		get_tree().quit(0 if kc_fouten == 0 else 1)
+		return
 	elif "omgevingcheck" in args:
 		# 8 september: het diorama om het bord (scripts/game/omgeving.gd).
 		# Bewijst dat de Omgeving er staat (grond, wolken, vignet, props), dat
@@ -4099,3 +4197,12 @@ func _lobbycheck(game: Node, url: String) -> bool:
 	meld.call("hervat-id staat in identity.cfg", OnlineBridge.identiteit.laatste_match_id == match_id)
 	print("[LOBBY] %s: %d stappen, %d fouten, match %s" % ["PASS" if teller[1] == 0 else "FAIL", teller[0], teller[1], match_id])
 	return teller[1] == 0
+
+
+## koppelcheck: een eigen (speler 1), levende, nog ongekoppelde pion, of -1.
+func _kc_vrije_pion() -> int:
+	for pid in GameSession.state.pawns:
+		var p: Pawn = GameSession.state.pawns[pid]
+		if p.owner_id == 1 and not p.is_eliminated and p.linked_card_id == -1:
+			return int(pid)
+	return -1

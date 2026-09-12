@@ -196,6 +196,7 @@ MENU_CONTINUE,Continue,Doorgaan
 HUD_LINK_PROMPT,"Your turn: pick a card, then tap a pawn","Jouw beurt: kies een kaart, tik dan een pion"
 HUD_LINK_PICK_PAWN,Pick a pawn to link,Kies een pion om te koppelen
 HUD_LINK_PICK_CARD_FIRST,Pick a card below first,Kies eerst een kaart onderaan
+HUD_LINK_CARD_READY,"Card ready: tap a pawn as soon as it is your turn","Kaart staat klaar: tik een pion zodra jij aan de beurt bent"
 HUD_ROUND_DONE,Round complete,Ronde afgerond
 HUD_OPPONENT_LINKING,Opponent is linking...,Tegenstander koppelt...
 HUD_OPPONENT_TURN,Opponent is moving...,Tegenstander is aan zet...

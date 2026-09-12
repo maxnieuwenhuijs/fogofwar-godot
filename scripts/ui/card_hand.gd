@@ -242,11 +242,24 @@ func open_for_linking(linked_flags: Array) -> void:
 	_layout_linking(false)
 
 
+## Kies kaart `index` alsof erop getikt is, maar zonder signaal: game.gd zet
+## zo de keuze terug die over de beurt van de tegenstander heen bleef staan
+## (Max, 12 september: "houd mijn kaart geselecteerd").
+func selecteer(index: int) -> void:
+	if phase != Constants.UiPhase.LINKING or index < 0 or index >= _cards.size():
+		return
+	if _cards[index].data.is_linked:
+		return
+	_selected_index = index
+	for i in _cards.size():
+		_cards[i].set_selected_visual(i == index)
+
+
 func _on_card_tapped(card: CardView) -> void:
 	if phase != Constants.UiPhase.LINKING:
 		return
 	var index := _cards.find(card)
-	if index < 0:
+	if index < 0 or card.data.is_linked:
 		return
 	_selected_index = index
 	Audio.play("card_select")

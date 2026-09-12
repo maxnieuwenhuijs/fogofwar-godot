@@ -2289,10 +2289,33 @@ func _continue_after_reveal() -> void:
 # --- Linking (mens interactief, AI automatisch) -----------------------------
 
 func _begin_human_linking() -> void:
-	_selected_link_card_id = -1
+	# Max (12 september): "houd mijn kaart geselecteerd ook al is de AI eerst
+	# aan de beurt, totdat ik gelinkt heb". De keuze uit de beurt van de
+	# tegenstander blijft staan; alleen een kaart die intussen gekoppeld is of
+	# niet van deze ronde is, valt weg.
+	var kaarten: Array = session.state.cards_revealed.get(_human_id, [])
+	var index := _link_kaart_index(kaarten)
+	if index < 0:
+		_selected_link_card_id = -1
 	_clear_highlights()
 	_toon_linking_hand()
 	_set_turn_prompt(tr("HUD_LINK_PROMPT"), _human_id)
+	if index >= 0:
+		_card_hand.selecteer(index)
+		_highlight_own_unlinked_pawns()
+		_update_hud(tr("HUD_LINK_PICK_PAWN"))
+
+
+## Index van de gekozen koppel-kaart in de onthulde kaarten van deze ronde,
+## -1 als er geen keuze staat of die kaart al gekoppeld is.
+func _link_kaart_index(kaarten: Array) -> int:
+	if _selected_link_card_id < 0:
+		return -1
+	for i in kaarten.size():
+		var c: Card = kaarten[i]
+		if c.id == _selected_link_card_id:
+			return -1 if c.is_linked() else i
+	return -1
 
 
 ## F4.3e -- de koppel-waaier vanuit de STAAT: de onthulde kaarten van deze
@@ -2327,9 +2350,11 @@ func _toon_linking_hand() -> void:
 
 func _on_link_card_picked(index: int) -> void:
 	var state: GameState = session.state
-	if not Phase.is_linking(state.phase) or state.current_player != _human_id:
+	# Een kaart kiezen mag de hele koppel-fase, ook terwijl de tegenstander
+	# koppelt (Max, 12 september); de pion volgt zodra jij aan de beurt bent.
+	if not Phase.is_linking(state.phase):
 		return
-	var cards: Array = state.cards_revealed[_human_id]
+	var cards: Array = state.cards_revealed.get(_human_id, [])
 	if index < 0 or index >= cards.size():
 		return
 	var card: Card = cards[index]
@@ -2337,12 +2362,19 @@ func _on_link_card_picked(index: int) -> void:
 		return
 	_selected_link_card_id = card.id
 	_highlight_own_unlinked_pawns()
-	_update_hud(tr("HUD_LINK_PICK_PAWN"))
+	if state.current_player == _human_id:
+		_update_hud(tr("HUD_LINK_PICK_PAWN"))
+	else:
+		_update_hud(tr("HUD_LINK_CARD_READY"))
 
 
 func _on_link_pawn_clicked(pawn_id: int) -> void:
 	if _selected_link_card_id < 0:
 		_update_hud(tr("HUD_LINK_PICK_CARD_FIRST"))
+		return
+	if session.state.current_player != _human_id:
+		# de kaart staat klaar; koppelen kan pas in je eigen beurt
+		_update_hud(tr("HUD_LINK_CARD_READY"))
 		return
 	var pawn: Pawn = session.state.pawns.get(pawn_id)
 	if pawn == null or pawn.owner_id != _human_id or pawn.is_eliminated or pawn.linked_card_id != -1:
@@ -2353,6 +2385,10 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 		(_pawn_views[pawn_id] as PawnView).set_ring_link_state(0)
 	_selected_link_card_id = -1
 	_clear_highlights()
+	# de waaier meteen bijwerken (de gekoppelde kaart dimt), zodat een volgende
+	# keuze tijdens de beurt van de tegenstander op de juiste kaarten valt
+	if Phase.is_linking(session.state.phase):
+		_toon_linking_hand()
 
 
 ## Koppel-fase: donkere ring om de EIGEN nog niet gekoppelde pionnen (F4.3e:
@@ -2483,6 +2519,7 @@ func _pawn_has_room(pawn: Pawn) -> bool:
 
 func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 	_stop_phase_timer()
+	_selected_link_card_id = -1  # een kaartkeuze leeft alleen binnen een koppel-fase
 	if new_phase == Phase.Type.ACTION:
 		_clear_highlights()
 	if Phase.is_define(new_phase):
