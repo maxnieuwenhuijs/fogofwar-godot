@@ -1971,6 +1971,18 @@ func _ready() -> void:
 				if dingers < 3:
 					print("[OMGEVING] FOUT: diorama %d heeft maar %d tik-dingen (minstens 3)" % [di, dingers])
 					og_fouten += 1
+				# welke props komen uit een GELEVERDE glb (12 september, de eerste
+				# Tripo-tent): verwerk_prop.py leest deze regel terug als bewijs
+				var og_glbs: Dictionary = {}
+				for dp in og._props:
+					if dp.has("glb"):
+						var gk := "%s (%s)" % [String((dp.node as Node3D).name).rstrip("0123456789"), String(dp.glb)]
+						og_glbs[gk] = int(og_glbs.get(gk, 0)) + 1
+				if not og_glbs.is_empty():
+					var og_delen: Array = []
+					for gk in og_glbs:
+						og_delen.append("%s x%d" % [gk, og_glbs[gk]])
+					print("[OMGEVING] diorama %d geleverde glb-props: %s" % [di, ", ".join(og_delen)])
 				# elke prop in dit diorama moet op zijn eigen klikpunt raak zijn
 				var mis: Array = []
 				for dp in og._props:

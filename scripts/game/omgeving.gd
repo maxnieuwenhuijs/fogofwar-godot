@@ -458,7 +458,7 @@ func _plaats(spec: Array) -> void:
 			hoogte = float(o.get("maat", 1.2)) * 0.85
 		elif naam == "boom":
 			hoogte = 1.6 * float(o.get("schaal", 1.4))
-		if _glb_prop(naam, pos, draai, _team_op(pos), ["prop_" + naam, "impact_wood"], hoogte):
+		if _glb_prop(naam, pos, draai, _team_op(pos), ["prop_" + naam, "impact_wood"], hoogte) != null:
 			return
 	match naam:
 		"kampvuur":
@@ -647,7 +647,7 @@ func _bouw_glb_prop(naam: String, pos: Vector3, schaal: float, draai: float, rea
 
 
 func _bouw_bijl_stronk(pos: Vector3) -> void:
-	if _glb_prop("hakblok", pos, 0.0, _team_op(pos), ["prop_bijl", "impact_wood"], 0.3):
+	if _glb_prop("hakblok", pos, 0.0, _team_op(pos), ["prop_bijl", "impact_wood"], 0.3) != null:
 		return
 	var root := Node3D.new()
 	root.name = "Stronk"
@@ -673,7 +673,7 @@ func _bouw_bijl_stronk(pos: Vector3) -> void:
 
 
 func _bouw_kogels(pos: Vector3) -> void:
-	if _glb_prop("kogels", pos, 0.0, "", ["prop_kogel", "impact_armor"], 0.3):
+	if _glb_prop("kogels", pos, 0.0, "", ["prop_kogel", "impact_armor"], 0.3) != null:
 		return
 	var root := Node3D.new()
 	root.name = "Kogels"
@@ -699,7 +699,16 @@ func _bouw_kogels(pos: Vector3) -> void:
 
 
 func _bouw_tent(pos: Vector3, draai: float, met_lantaarn: bool) -> void:
-	if _glb_prop("tent", pos, draai, _team_op(pos), ["prop_lantaarn"], 1.0):
+	var glb := _glb_prop("tent", pos, draai, _team_op(pos), ["prop_lantaarn"], 1.0,
+			[_reageer_tent, _reageer_tent_zzz, _reageer_tent_laars], {"tik": TIK_GELUID["Tent"], "lantaarn": null})
+	if glb != null:
+		# de geleverde tent houdt de reacties van de placeholder: het doek is het
+		# model zelf, en de lantaarn hangt aan de voorkant van zijn omhullende doos
+		var gp: Dictionary = _props.back()
+		gp["doek"] = gp.inst
+		if met_lantaarn:
+			var doos: AABB = _aabb_van(glb)
+			gp["lantaarn"] = _hang_lantaarn(glb, Vector3(0.0, doos.end.y * 0.9, doos.end.z + 0.16))
 		return
 	var root := Node3D.new()
 	root.name = "Tent%d" % (_props.size() + 1)
@@ -719,25 +728,33 @@ func _bouw_tent(pos: Vector3, draai: float, met_lantaarn: bool) -> void:
 	(opening.mesh as PrismMesh).size = Vector3(0.5, 0.45, 0.02)
 	var lantaarn: Node3D = null
 	if met_lantaarn:
-		var arm := _mesh(_cilinder(0.012, 0.35), Color(0.36, 0.26, 0.16), root, Vector3(0.0, 0.92, 1.0))
-		arm.rotation.x = deg_to_rad(90.0)
-		lantaarn = Node3D.new()
-		lantaarn.position = Vector3(0.0, 0.92, 1.16)
-		root.add_child(lantaarn)
-		var lamp := _mesh(_bol(0.045), Color(1.0, 0.8, 0.4), lantaarn, Vector3(0.0, -0.12, 0.0))
-		var lm := lamp.material_override as StandardMaterial3D
-		lm.emission_enabled = true
-		lm.emission = Color(1.0, 0.75, 0.35)
-		lm.emission_energy_multiplier = 2.2
-		_mesh(_cilinder(0.006, 0.1), Color(0.2, 0.18, 0.15), lantaarn, Vector3(0.0, -0.05, 0.0))
-		var licht := OmniLight3D.new()
-		licht.light_color = Color(1.0, 0.78, 0.45)
-		licht.light_energy = 0.7
-		licht.omni_range = 2.6
-		licht.position = Vector3(0.0, -0.12, 0.0)
-		lantaarn.add_child(licht)
-		_lantaarns.append(licht)
+		lantaarn = _hang_lantaarn(root, Vector3(0.0, 0.92, 1.16))
 	_registreer(root, 0.95, [_reageer_tent, _reageer_tent_zzz, _reageer_tent_laars], {"lantaarn": lantaarn, "doek": doek})
+
+
+## Een lantaarn aan een armpje op `plek` (in de ruimte van root); het armpje
+## steekt 0,35 naar achteren, de tent in. Geeft de lantaarn-knoop terug (die
+## zwaait in _reageer_tent); zijn licht flakkert mee in _process via _lantaarns.
+func _hang_lantaarn(root: Node3D, plek: Vector3) -> Node3D:
+	var arm := _mesh(_cilinder(0.012, 0.35), Color(0.36, 0.26, 0.16), root, plek + Vector3(0.0, 0.0, -0.16))
+	arm.rotation.x = deg_to_rad(90.0)
+	var lantaarn := Node3D.new()
+	lantaarn.position = plek
+	root.add_child(lantaarn)
+	var lamp := _mesh(_bol(0.045), Color(1.0, 0.8, 0.4), lantaarn, Vector3(0.0, -0.12, 0.0))
+	var lm := lamp.material_override as StandardMaterial3D
+	lm.emission_enabled = true
+	lm.emission = Color(1.0, 0.75, 0.35)
+	lm.emission_energy_multiplier = 2.2
+	_mesh(_cilinder(0.006, 0.1), Color(0.2, 0.18, 0.15), lantaarn, Vector3(0.0, -0.05, 0.0))
+	var licht := OmniLight3D.new()
+	licht.light_color = Color(1.0, 0.78, 0.45)
+	licht.light_energy = 0.7
+	licht.omni_range = 2.6
+	licht.position = Vector3(0.0, -0.12, 0.0)
+	lantaarn.add_child(licht)
+	_lantaarns.append(licht)
+	return lantaarn
 
 
 # ---------------------------------------------------------------- de overkant
@@ -748,7 +765,7 @@ func _bouw_hek_met_kraai(pos: Vector3, kleur_naam: String = "zwart") -> void:
 	root.position = pos
 	_props_root.add_child(root)
 	var hout := Color(0.38, 0.29, 0.19)
-	if not _glb_prop("hek", pos, 0.0, "", ["impact_wood"], 0.4):
+	if _glb_prop("hek", pos, 0.0, "", ["impact_wood"], 0.4) == null:
 		var hek := Node3D.new()
 		hek.name = "Hek"
 		root.add_child(hek)
@@ -781,7 +798,7 @@ func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false) -> void:
 		imat.metallic_specular = 0.8
 		_registreer(root, 0.1, [_reageer_ijs_krak, _reageer_ijs_glij, _reageer_ijs_krak], {"ijs": ijs})
 		return
-	if not _glb_prop("plas", pos, 0.0, "", [], 0.04):
+	if _glb_prop("plas", pos, 0.0, "", [], 0.04) == null:
 		# geen metaal: dat spiegelt de zwarte hemel en wordt een gat in het gras
 		var plas := _mesh(_cilinder(0.6, 0.012), Color(0.46, 0.52, 0.54), root, Vector3(0.0, 0.006, 0.0))
 		plas.scale = Vector3(1.0, 1.0, 0.72)
@@ -806,7 +823,7 @@ func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false) -> void:
 
 
 func _bouw_wegwijzer(pos: Vector3) -> void:
-	if _glb_prop("wegwijzer", pos, deg_to_rad(12.0), "", ["prop_wegwijzer", "impact_wood"], 0.95):
+	if _glb_prop("wegwijzer", pos, deg_to_rad(12.0), "", ["prop_wegwijzer", "impact_wood"], 0.95) != null:
 		return
 	var root := Node3D.new()
 	root.name = "Wegwijzer"
@@ -883,8 +900,13 @@ func _prop_glb(naam: String, team: String) -> String:
 	return ""
 
 
-func _lees_prop_manifest(naam: String) -> Dictionary:
-	var pad := Bestandsindex.vind(PROPS_DIR.trim_suffix("/"), "prop_%s.json" % naam)
+## prop_<naam>_<team>.json als die er ligt, anders prop_<naam>.json, anders {}.
+func _lees_prop_manifest(naam: String, team: String = "") -> Dictionary:
+	var pad := ""
+	if team != "":
+		pad = Bestandsindex.vind(PROPS_DIR.trim_suffix("/"), "prop_%s_%s.json" % [naam, team])
+	if pad == "":
+		pad = Bestandsindex.vind(PROPS_DIR.trim_suffix("/"), "prop_%s.json" % naam)
 	if pad == "":
 		return {}
 	var f := FileAccess.open(pad, FileAccess.READ)
@@ -896,24 +918,31 @@ func _lees_prop_manifest(naam: String) -> Dictionary:
 
 ## Ligt er een glb voor deze prop (per team of gedeeld)? Dan die in plaats van
 ## de primitieven: op zijn ware hoogte geschaald (PROP_HOOGTE of het manifest),
-## voeten op het gras, en een wiebel met het geluid van de prop als klik.
-func _glb_prop(naam: String, pos: Vector3, draai: float, team: String, geluid: Array, hoogte_std: float) -> bool:
+## voeten op het gras, en een wiebel met het geluid van de prop als klik. Geeft
+## de wortel terug, null als er geen glb ligt. Met `reacties` en `extra` houdt
+## een prop zijn EIGEN reacties in plaats van de generieke wiebel (de tent zijn
+## lantaarn, Zzz en laars; 12 september, de eerste Tripo-tent); het geleverde
+## model staat dan in `inst`, de bestandsnaam in `glb` (voor de check).
+func _glb_prop(naam: String, pos: Vector3, draai: float, team: String, geluid: Array, hoogte_std: float,
+		reacties: Array = [], extra: Dictionary = {}) -> Node3D:
 	var pad := _prop_glb(naam, team)
 	if pad == "":
-		return false
+		return null
 	var ps: PackedScene = load(pad)
 	if ps == null:
-		return false
+		return null
 	var inst: Node3D = ps.instantiate() as Node3D
 	if inst == null:
-		return false
+		return null
 	var root := Node3D.new()
-	root.name = "prop_" + naam
+	# uniek per prop, net als Tent1/Tent2: twee gelijke namen onder Props laat
+	# Godot anders zelf hernoemen tot @Node3D@123
+	root.name = "prop_%s%d" % [naam, _props.size() + 1]
 	root.position = pos
 	root.rotation.y = draai
 	_props_root.add_child(root)
 	root.add_child(inst)
-	var m := _lees_prop_manifest(naam)
+	var m := _lees_prop_manifest(naam, team)
 	var hoogte := float(m.get("hoogte", PROP_HOOGTE.get(naam, hoogte_std)))
 	var aabb := _aabb_van(inst)
 	if aabb.size.y > 0.0001:
@@ -923,9 +952,15 @@ func _glb_prop(naam: String, pos: Vector3, draai: float, team: String, geluid: A
 	inst.rotation.y = deg_to_rad(float(m.get("draai", 0.0)))
 	for mi in inst.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	_registreer(root, hoogte, [_reageer_glb, _reageer_glb_hop, _reageer_glb_stof],
-			{"inst": inst, "geluid": geluid, "tik": geluid if not geluid.is_empty() else ["prop_tik", "ui_click"]})
-	return true
+	var e := extra.duplicate()
+	e["inst"] = inst
+	e["geluid"] = geluid
+	e["glb"] = pad.get_file()
+	if not e.has("tik"):
+		e["tik"] = geluid if not geluid.is_empty() else ["prop_tik", "ui_click"]
+	var lijst: Array = reacties if not reacties.is_empty() else [_reageer_glb, _reageer_glb_hop, _reageer_glb_stof]
+	_registreer(root, hoogte, lijst, e)
+	return root
 
 
 func _reageer_glb(p: Dictionary) -> void:

@@ -58,6 +58,40 @@ die wint automatisch van de gedeelde versie hier.
 Ontbreekt een prop, dan draagt die pion gewoon zijn musket — je kunt dus met
 één trommel beginnen. Zie `MODEL-WISHLIST.md` §3d voor de prompts.
 
+## Een Tripo-glb erin zetten (12 september, de eerste: de rode tent)
+
+Tripo levert een `tripo_node_<uuid>.glb`: een mesh, een materiaal, drie
+texturen van 2048 die samen 9 MB wegen. Dat gaat er in EEN commando in:
+
+    python tools/verwerk_prop.py <tripo.glb> tent --team red --draai 90
+
+- `tent` is de naam uit PROP-WISHLIST.md zonder `prop_` en zonder team;
+  `--team red|blue` maakt er de arme of de rijke versie van (zonder team:
+  gedeeld, in beide kampen).
+- `--draai` draait het model om zijn staande as tot de VOORKANT (opening,
+  deur, gezicht) naar +Z wijst, naar de speler toe; de placeholders staan zo.
+  Niet gokken: `blender --background --python tools/blender_prop_preview.py
+  -- --in <glb> --uit results/props/x.png` zet het model vier keer naast
+  elkaar (0, 90, 180, 270 graden, streepjes eronder); de kolom waarin de
+  voorkant naar je toe wijst is de hoek. De rode tent had 90 nodig (Tripo
+  legt de nok langs X).
+- Het script slankt de texturen af (kleur en ruwheid als JPEG, normaal als
+  PNG, hoogstens 1024 px, `--textuur`), decimeert boven `--doel` (1500)
+  driehoeken met Blender, bakt de draai in een wortelknoop, schrijft
+  `prop_<naam>[_team].glb` hierheen (9 MB wordt ruim 1 MB) en draait dan
+  `--import`, zet de `.import` van de uitgepakte texturen op VRAM-compressie
+  met mipmaps (`prop_tent_red_kleur.jpg`, `_normaal.png`, `_ruwheid.jpg`
+  komen naast de glb te liggen: committen), importeert nog een keer en
+  eindigt met `-- omgevingcheck`, die de prop als "geleverde glb-props" moet
+  noemen. Een plaat van het resultaat staat in `results/props/`.
+- `--hoogte 1.2` schrijft een manifest `prop_<naam>[_team].json` als de ware
+  hoogte niet in `PROP_HOOGTE` staat; `--droogloop` vertelt alleen wat er zou
+  gebeuren.
+- Het spel houdt bij een geleverde tent zijn eigen reacties (lantaarn aan de
+  voorkant van de doos, Zzz, de laars); andere geleverde props krijgen de
+  generieke wiebel, hop en stofwolk, tenzij `_bouw_<prop>` in omgeving.gd
+  eigen reacties meegeeft aan `_glb_prop`.
+
 ## Budget voor de diorama-props (12 september, Max: "hoeveel props, hoeveel vertices")
 
 Op deze schaal maakt het weinig uit, zolang elke prop laag blijft. Ter

@@ -68,7 +68,7 @@ with gold trim, polished, wealthy`.
 
 | Bestand | Wat | Team | Klik | Status | Prompt |
 |---|---|---|---|---|---|
-| `prop_tent` | soldatentent: rood gelapt zeil met touwen, blauw paviljoen met goudgalon en wimpel | beide | lantaarn zwaait / doek trilt, `prop_lantaarn` | ⚙ | canvas ridge tent |
+| `prop_tent` | soldatentent: rood gelapt zeil met touwen, blauw paviljoen met goudgalon en wimpel | beide | lantaarn zwaait / doek trilt, `prop_lantaarn` | ½ rood geleverd 12 sept (Tripo, 174 driehoeken), blauw ⚙ | canvas ridge tent |
 | `prop_paviljoen` | het grote officierspaviljoen, rond, blauw met gouden punt | blauw | wimpel wappert | ➕ | round officer pavilion tent with gold finial |
 | `prop_veldbed` | veldbed (rood: strozak op de grond) | beide | deken beweegt | ➕ | folding camp bed with blanket |
 | `prop_kist` | kist: rood kapot en gebonden, blauw met koperbeslag | beide | deksel wipt, `prop_kist` | ⚙ | wooden campaign chest |

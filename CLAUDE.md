@@ -290,7 +290,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `tools/blender_decimate.py --doel 1200`. `-- dioramashots` meldt per
   diorama meshes en driehoeken (nu 70-106 meshes, 4.700-9.500 driehoeken
   uit primitieven; een infanterist is er 2.231). Tabel:
-  `assets/models/props/LEESMIJ.md`.
+  `assets/models/props/LEESMIJ.md`. **Een Tripo-glb erin zetten (12
+  september, de eerste: de rode tent):** `python tools/verwerk_prop.py
+  <tripo.glb> tent --team red --draai 90`. Meet de glb, decimeert boven
+  `--doel` (1500), slankt de texturen af naar 1024 (kleur en ruwheid
+  JPEG, normaal PNG; 9 MB wordt ruim 1 MB), bakt `--draai` in (voorkant
+  naar +Z = naar de speler; aflezen van de plaat van
+  `tools/blender_prop_preview.py`, vier hoeken naast elkaar), schrijft
+  `prop_<naam>[_team].glb`, importeert, zet de `.import` van de
+  uitgepakte texturen (`_kleur.jpg`, `_normaal.png`, `_ruwheid.jpg`, mee
+  committen) op VRAM-compressie + mipmaps en eindigt met
+  `-- omgevingcheck`, die de prop onder "geleverde glb-props" moet
+  noemen. `_glb_prop` geeft sinds die dag de wortel terug en neemt eigen
+  reacties aan: de geleverde tent houdt lantaarn, Zzz en laars.
 - **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
   iets van 12 diorama's... per klikbaar element verschillende dingen die je
   random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama

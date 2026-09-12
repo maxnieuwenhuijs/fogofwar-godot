@@ -1,5 +1,54 @@
 # Fog of War — Work In Progress & Context
 
+## 12 september -- de eerste Tripo-prop: de rode tent, en verwerk_prop.py
+
+Max: "de tent van rood is dit" (een `tripo_node_<uuid>.glb` uit Downloads).
+Geleverd: 174 driehoeken, een mesh, een materiaal, drie texturen van 2048
+die samen 9,3 MB wegen, doos 1,00 x 0,64 x 0,65, de nok langs X (dus de
+open voorkant naar -X). Dat is meteen het recept voor de ~100 die volgen,
+vandaar gereedschap in plaats van handwerk:
+
+- `tools/verwerk_prop.py <glb> <naam> [--team red|blue] [--draai graden]
+  [--textuur 1024] [--doel 1500] [--hoogte] [--droogloop]`: meet de glb
+  (pure python, struct + PIL, geen Blender nodig), decimeert boven `--doel`
+  met blender_decimate.py, slankt de texturen af (kleur en ruwheid JPEG
+  zonder chroma-subsampling, normaal PNG, hoogstens 1024, de ruwheid 512;
+  alfa blijft alleen als het materiaal een alphaMode BLEND/MASK heeft, want
+  Tripo zet in elke kleurtextuur wel ergens wat alfa die niemand rendert),
+  hernoemt ze naar kleur/normaal/ruwheid zodat Godot ze leesbaar naast de
+  glb uitpakt, bakt `--draai` in een wortelknoop `draai_<hoek>` (een tweede
+  keer draaien vervangt de hoek), schrijft `prop_<naam>[_team].glb` (9,3 MB
+  werd 1,11 MB), en controleert: `--import`, de `.import` van de uitgepakte
+  texturen op VRAM-compressie + mipmaps (de normaal als normal map, dus
+  RGTC), nog een `--import`, dan `-- omgevingcheck`, die PASS moet geven en
+  de prop moet noemen in de nieuwe regel "geleverde glb-props" per diorama
+  (capture.gd; `_glb_prop` zet daarvoor `glb` in het prop-dict).
+- `tools/blender_prop_preview.py --in <glb> --uit <png>`: het model vier
+  keer naast elkaar (0, 90, 180, 270 graden om de staande as, streepjes
+  eronder), orthografisch van voren en iets van boven zoals het spel; de
+  kolom waarin de voorkant naar je toe wijst is de `--draai`. Les: de
+  wereldmatrices van de wortels bewaren VOOR het omhangen; na de eerste
+  `primitive_cube_add` draagt `matrix_world` van het origineel al de
+  verplaatsing van kolom 0, en kolom 3 en 4 stonden daardoor scheef.
+- omgeving.gd: `_glb_prop` geeft de wortel terug (was bool) en neemt
+  `reacties` en `extra` aan, zodat een geleverde prop zijn EIGEN reacties
+  houdt; `_lees_prop_manifest` kijkt eerst naar `prop_<naam>_<team>.json`;
+  de wortelnaam is uniek (`prop_tent7`), want twee `prop_tent` onder Props
+  hernoemt Godot stil tot `@Node3D@123`. `_bouw_tent` geeft de Tripo-tent
+  de lantaarn aan de voorkant van zijn omhullende doos (nieuw
+  `_hang_lantaarn`, ook door de placeholder gebruikt), het model als doek
+  voor de Zzz, en de laars; tik blijft `prop_doek`.
+
+De tent had `--draai 90` nodig: de open voorkant naar +Z, naar de speler
+(de placeholder stond ook zo). Stand: `prop_tent_red.glb` + `_kleur.jpg`,
+`_normaal.png`, `_ruwheid.jpg` in `assets/models/props/`; in diorama 1
+staan beide rode tenten uit de glb, de blauwe aan de overkant blijft de
+placeholder tot `prop_tent_blue.glb` er ligt. Checks: omgevingcheck PASS
+(alle twaalf, geleverde glb-props: prop_tent (prop_tent_red.glb) x2),
+uispel 777 d16a14f8, dioramashots. Tracker: ½ voor de tent (rood ligt
+er). Docs: props/LEESMIJ.md sectie "Een Tripo-glb erin zetten", CLAUDE.md,
+PROP-WISHLIST rij. Het origineel blijft in Downloads staan.
+
 ## 12 september -- alleen vaandel en trom dragen een prop; budget voor de Tripo-props
 
 Max: "sommige hebben nu wel een prop vast anders dan de vlag of trom, dat
