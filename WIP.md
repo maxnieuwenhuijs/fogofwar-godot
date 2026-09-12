@@ -1,5 +1,34 @@
 # Fog of War — Work In Progress & Context
 
+## 12 september -- een blauwe cape voor het blauwe team
+
+Max: "kunnen we ook alle blauwe team karakters allemaal een blauw cape
+geven vanuit godot?" Ja, zonder Blender: `PawnView.maak_cape` hangt een
+lap aan het bovenste rugbot (mixamorig:Spine2) met een BoneAttachment3D.
+De lap wordt in de RUST-houding van het bot recht naar beneden gezet
+(wereld-omhoog en de rug van het model, omgerekend naar bot-ruimte) en
+volgt daarna elke animatie; een vertex-shader laat de zoom wapperen
+(bovenaan vast, onderaan los), flared hem uit en neemt de wind van het
+potje mee (per frame de wereldrichting naar cape-ruimte, afgekapt zodat
+hij nooit door de rug naar voren slaat). Blauw is koningsblauw met
+goudgalon en een lichte voering (pompeus en rijk); rood kan via de knop
+`cape_rood` en krijgt dan dof donkerrood zonder galon (arm). Hij hangt na
+elke modelwissel opnieuw (`_apply_team_texture`), niet op artillerie, en
+de bewoners van het blauwe kamp dragen dezelfde lap (`Bewoner.zet_cape`,
+gezet door `Omgeving._bouw_bewoners` met de kampkleur). Knoppen in het
+sfeer-paneel, live op pionnen en bewoners: `cape_blauw`, `cape_rood`,
+`cape_lengte`, `cape_breedte`, `cape_wapper`, `cape_wind`. Bijvangst: de
+eigen shaders (cape, vlaggendoek) hebben een `dim`-uniform dat
+`verduister_later` tweent; tot nu toe bleef een gevallen vaandel fel naast
+een donker lijk. Check `-- capecheck` (PASS; met venster
+`_shot_capecheck.png` van schuin achter: rood zonder, blauw met, bewoner
+met), zweefcheck muis 2 PASS, tunercheck 0 fouten, herstelcheck 777 0
+verschillen, omgevingcheck 1 PASS. Puur visueel, geen RNG.
+
+Max' bericht over het kegelspel ("bowlen zijn 10 stuks toch, kleiner, geen
+onderveld") kwam in beide sessies binnen; de andere sessie (eigenaar van
+`spelletjes.gd`) heeft hem opgepakt, hier niets aan gedaan.
+
 ## 12 september -- vijf mini-games in het diorama
 
 Max: "bedenk 5 spelletjes die je kunt doen, mini games in de dioramas, dus

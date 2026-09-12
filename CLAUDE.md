@@ -389,6 +389,27 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   bij de beurtwissel terug in de waaier (`CardHand.selecteer`). Weg gaat
   hij pas als de kaart aan een pion hangt of de fase voorbij is. Check:
   `-- koppelcheck`.
+- **Cape voor het blauwe team (12 september, Max: "alle blauwe team
+  karakters een blauwe cape, vanuit Godot").** Geen Blender:
+  `PawnView.maak_cape(root, hoogte, blauw, fase)` hangt een lap (PlaneMesh)
+  aan `mixamorig:Spine2` (terugval Spine1/Neck/Spine) via een
+  BoneAttachment3D, in de RUST-houding van het bot recht naar beneden en
+  daarna met elke animatie mee; een vertex-shader (`CAPE_SHADER`) laat de
+  zoom wapperen, flared hem uit en neemt de wind mee (`cape_wind` per frame
+  uit `wind_richting`, nooit door de rug naar voren). Blauw: koningsblauw
+  met goudgalon en lichte voering; rood (knop `cape_rood`, standaard uit)
+  dof donkerrood zonder galon. `_hang_cape` loopt na elke modelwissel
+  (`_apply_team_texture`), niet op artillerie; `zet_team()` wisselt jas en
+  cape samen; de bewoners van het blauwe kamp krijgen dezelfde lap
+  (`Bewoner.zet_cape`, gezet door `Omgeving._bouw_bewoners`). Knoppen in
+  het sfeer-paneel (live, ook op de bewoners): `cape_blauw`, `cape_rood`,
+  `cape_lengte`/`cape_breedte` (x pionhoogte), `cape_wapper`, `cape_wind`.
+  Eigen shaders (cape en vlaggendoek) dragen een `dim`-uniform dat
+  `verduister_later` tweent, zodat een lijk met cape ook donker wordt.
+  Check: `-- capecheck` (rood geen cape, blauw een, achter de rug aan een
+  rugbot; teamwissel, modelwissel, knop cape_rood, bewoner; met venster
+  `_shot_capecheck.png` van schuin achter). Puur visueel: uispel en
+  herstelcheck ongewijzigd.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
