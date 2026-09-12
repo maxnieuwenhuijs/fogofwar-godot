@@ -355,8 +355,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   spelletjes... heel low key, een tap of een klik inhouden"):**
   `scripts/game/spelletjes.gd` (`Spelletjes`, aangemaakt in
   `Omgeving._init`). Twee bedieningen op een vinger: WERPEN (vinger op de
-  spel-prop, na `HOLD_DREMPEL` 0,22 s zwaait een pijl op de grond heen en
-  weer = richting en groeit hij = kracht, loslaten werpt; wegschuiven
+  spel-prop, METEEN zwaait een pijl op de grond heen en weer = richting en
+  groeit hij = kracht (sinds 12 september, Max: "de pijl moet meteen
+  komen"; de pijl wijst sindsdien ook de kant op die de bal gaat, de draai
+  om +Y stond andersom), loslaten werpt, binnen `HOLD_DREMPEL` 0,22 s is
+  het een gewone tik (alleen de cadans wacht op de drempel); wegschuiven
   breekt af) en OP DE MAAT (tikken op het moment). Kegelen (`kegelspel` in
   de DIORAMAS: tien lege flessen uit de kantine in de bowling-driehoek,
   klein en zonder vlak eronder, omgerold met een kanonskogel, Max: "iets
@@ -394,16 +397,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `PawnView.maak_cape(root, hoogte, blauw, fase)` hangt een lap (PlaneMesh)
   aan `mixamorig:Spine2` (terugval Spine1/Neck/Spine) via een
   BoneAttachment3D, in de RUST-houding van het bot recht naar beneden en
-  daarna met elke animatie mee; een vertex-shader (`CAPE_SHADER`) laat de
-  zoom wapperen, flared hem uit en neemt de wind mee (`cape_wind` per frame
-  uit `wind_richting`, nooit door de rug naar voren). Blauw: koningsblauw
+  daarna met elke animatie mee; een vertex-shader (`CAPE_SHADER`) vormt de
+  lap (smalle kraag bij de nek die over de schouders naar volle breedte
+  loopt, plooien vanuit de kraag die naar de zoom dieper worden, zijkanten
+  om de schouders gewikkeld, echte normalen op de plooien; Max: "meer
+  drape, de punten naar de nek toe"), laat de zoom wapperen, flared hem
+  uit en neemt de wind mee (`cape_wind` per frame uit `wind_richting`,
+  nooit door de rug naar voren). Een geleverd plaatje `cape_blue.png` /
+  `cape_red.png` onder assets/models (aanrader props/) wordt de buitenkant
+  (boven = kraag, rand rondom; layout en drie prompts in
+  `assets/models/props/LEESMIJ.md`). Blauw: koningsblauw
   met goudgalon en lichte voering; rood (knop `cape_rood`, standaard uit)
   dof donkerrood zonder galon. `_hang_cape` loopt na elke modelwissel
   (`_apply_team_texture`), niet op artillerie; `zet_team()` wisselt jas en
   cape samen; de bewoners van het blauwe kamp krijgen dezelfde lap
   (`Bewoner.zet_cape`, gezet door `Omgeving._bouw_bewoners`). Knoppen in
   het sfeer-paneel (live, ook op de bewoners): `cape_blauw`, `cape_rood`,
-  `cape_lengte`/`cape_breedte` (x pionhoogte), `cape_wapper`, `cape_wind`.
+  `cape_lengte`/`cape_breedte` (x pionhoogte), `cape_wapper`, `cape_wind`,
+  `cape_drape` (plooien en wikkel).
   Eigen shaders (cape en vlaggendoek) dragen een `dim`-uniform dat
   `verduister_later` tweent, zodat een lijk met cape ook donker wordt.
   Check: `-- capecheck` (rood geen cape, blauw een, achter de rug aan een

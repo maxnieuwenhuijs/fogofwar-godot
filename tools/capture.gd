@@ -904,6 +904,16 @@ func _ready() -> void:
 		var cc_cape: MeshInstance3D = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)[0]
 		var cc_w = (cc_cape.material_override as ShaderMaterial).get_shader_parameter("wind")
 		print("[CAPE] wind in cape-ruimte: %s" % str(cc_w))
+		# de uv-hoek voor wie een cape_blue.png maakt: linksboven van de lap (kraag, linkerkant van de drager)
+		var cc_arr: Array = cc_cape.mesh.surface_get_arrays(0)
+		var cc_vs: PackedVector3Array = cc_arr[Mesh.ARRAY_VERTEX]
+		var cc_uvs: PackedVector2Array = cc_arr[Mesh.ARRAY_TEX_UV]
+		var cc_top := 0
+		for cc_k in cc_vs.size():
+			if cc_vs[cc_k].y > cc_vs[cc_top].y + 0.0001 or (absf(cc_vs[cc_k].y - cc_vs[cc_top].y) <= 0.0001 and cc_vs[cc_k].x < cc_vs[cc_top].x):
+				cc_top = cc_k
+		print("[CAPE] uv linksboven (kraag, links van de drager) = %s; textuur cape_blue.png: %s" % [
+			str(cc_uvs[cc_top]), "geleverd" if PawnView.cape_textuur(true) != null else "geen, de shader kleurt"])
 		if not (cc_w is Vector3) or not (cc_w as Vector3).is_finite() or (cc_w as Vector3).z < -0.0001:
 			print("[CAPE] FOUT: wind-uniform deugt niet: %s" % str(cc_w))
 			cc_fouten += 1

@@ -3290,6 +3290,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "cape_lengte", "label": "cape-lengte (x pionhoogte)", "min": 0.25, "max": 0.9, "step": 0.01, "def": 0.5},
 	{"key": "cape_breedte", "label": "cape-breedte (x pionhoogte)", "min": 0.2, "max": 0.7, "step": 0.01, "def": 0.4},
 	{"key": "cape_wapper", "label": "cape-wapper", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "cape_drape", "label": "cape-drape (plooien, om de schouders)", "min": 0.0, "max": 2.5, "step": 0.01, "def": 1.0},
 	{"key": "cape_wind", "label": "cape-wind", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 ]
 

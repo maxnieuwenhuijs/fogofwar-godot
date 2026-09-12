@@ -2560,8 +2560,11 @@ func _richt_vlag() -> void:
 # --- Cape (Max, 12 september: "alle blauwe team karakters een blauwe cape, -----
 # vanuit Godot") ---------------------------------------------------------------
 # Geen Blender: een lap (PlaneMesh) aan het bovenste rugbot (mixamorig:Spine2)
-# in de teamkleur, met een vertex-shader die de zoom laat wapperen en met de
-# wind meeneemt (PawnView.wind_richting). Hij hangt in de RUST-houding van het
+# in de teamkleur, met een vertex-shader die de lap vormt (smalle kraag bij de
+# nek, over de schouders naar volle breedte, plooien vanuit de kraag die naar
+# de zoom dieper worden, zijkanten om de schouders gewikkeld, echte normalen
+# op de plooien), de zoom laat wapperen en met de wind meeneemt
+# (PawnView.wind_richting). Hij hangt in de RUST-houding van het
 # bot recht naar beneden en volgt daarna elke animatie via het bot; geen
 # cloth-physics (duur, jittert, en op bordafstand zie je het verschil niet).
 # Puur visueel: geen staat, geen RNG. Standaard alleen het blauwe team
@@ -2578,27 +2581,52 @@ uniform vec4 voering : source_color = vec4(0.78, 0.72, 0.55, 1.0);   // binnenka
 uniform vec4 zoom : source_color = vec4(0.88, 0.70, 0.28, 1.0);      // galon langs de rand
 uniform float zoom_breedte = 0.07;   // fractie van de lap (0 = geen galon)
 uniform float hoogte = 0.45;         // laplengte in mesh-eenheden (top = +hoogte/2)
+uniform float halfbreedte = 0.18;    // halve schouderbreedte van de lap (mesh-eenheden)
 uniform float amp = 0.03;            // wapper-uitslag onderaan, mesh-eenheden
-uniform float snelheid = 2.6;
-uniform float golf = 5.0;
+uniform float snelheid = 2.2;
+uniform float golf = 4.0;
 uniform float fase = 0.0;
+uniform float nek = 0.35;            // kraagbreedte t.o.v. de schouders (de punten lopen naar de nek toe)
+uniform float schouder = 0.22;       // na dit deel van de lengte ligt de lap op schouderbreedte
 uniform float flare = 1.45;          // zoom breder dan de schouders
 uniform float bol = 0.05;            // hoe ver de zoom van de rug af staat
+uniform float voor = 0.0;            // kraag naar de nek toe
+uniform float wikkel = 0.05;         // zijkanten bovenaan om de schouders heen
+uniform float plooi = 0.03;          // diepte van de plooien bij de zoom
+uniform float plooien = 2.6;         // aantal plooien over de breedte (x pi)
 uniform vec3 wind = vec3(0.0);       // windverzet onderaan, in mesh-ruimte
 uniform float dim = 1.0;             // 1 = normaal, lager = lijk (verduister_later)
+uniform sampler2D textuur : source_color, hint_default_white;  // geleverd plaatje (cape_blue.png), boven = kraag
+uniform float heeft_textuur = 0.0;   // 1 = het plaatje is de buitenkant (galon zit er dan in)
 
 varying float vouw;
 varying float tv;
 
 void vertex() {
-	float t = clamp(0.5 - VERTEX.y / max(hoogte, 0.0001), 0.0, 1.0);  // 0 schouders, 1 zoom
-	float los = t * t;                       // bovenaan zit de lap vast
-	VERTEX.x *= mix(1.0, flare, t);
+	float W = max(halfbreedte, 0.0001);
+	float L = max(hoogte, 0.0001);
+	float u = clamp(VERTEX.x / W, -1.0, 1.0);
+	float t = clamp(0.5 - VERTEX.y / L, 0.0, 1.0);   // 0 kraag, 1 zoom
+	float los = t * t;                                 // bovenaan zit de lap vast
+	float bo = 1.0 - t;
+	// Breedte: smal om de nek, over de schouders naar volle breedte, dan uitlopend.
+	float w = mix(nek, 1.0, smoothstep(0.0, schouder, t)) * mix(1.0, flare, t);
+	float xn = u * w;
+	VERTEX.x = xn * W;
+	// Plooien vanuit de kraag, dieper naar de zoom; bovenaan om de schouders gewikkeld.
+	float k = plooien * 3.14159;
+	float pl = plooi * t * sin(k * xn + fase);
+	float wik = -wikkel * xn * xn * bo * bo;
 	float g = sin(TIME * snelheid + t * golf + fase);
 	float g2 = sin(TIME * snelheid * 0.73 + t * golf * 0.6 + fase * 1.7);
-	VERTEX.z += bol * t + g * amp * los + wind.z * los;
+	VERTEX.z += bol * t + pl + wik - voor * bo * bo * bo + g * amp * los + wind.z * los;
 	VERTEX.x += g2 * amp * 0.5 * los + wind.x * los;
-	VERTEX.y += wind.y * los - abs(g) * amp * 0.25 * los;
+	// De zoom hangt in het midden iets lager, en wappert mee.
+	VERTEX.y += wind.y * los - abs(g) * amp * 0.25 * los - 0.5 * plooi * los * (0.5 + 0.5 * cos(3.14159 * xn));
+	// Normaal uit de plooien, de wikkel en de bolling, zodat het licht de drape laat zien.
+	float dz_du = (plooi * t * k * cos(k * xn + fase) - 2.0 * wikkel * xn * bo * bo) * w;
+	float dz_dt = plooi * sin(k * xn + fase) + 2.0 * wikkel * xn * xn * bo + bol + 3.0 * voor * bo * bo;
+	NORMAL = normalize(vec3(-dz_du / W, dz_dt / L, 1.0));
 	vouw = g * los;
 	tv = t;
 }
@@ -2606,15 +2634,18 @@ void vertex() {
 void fragment() {
 	float weefsel = 0.95 + 0.05 * sin(UV.y * 380.0) * sin(UV.x * 240.0);
 	vec3 basis = FRONT_FACING ? kleur.rgb : voering.rgb;
-	// Galon langs de zoom en de twee zijranden.
-	float rand = min(min(UV.x, 1.0 - UV.x), 1.0 - tv);
+	// Galon langs de zoom, de twee zijranden en (smaller) de kraag.
+	float rand = min(min(UV.x, 1.0 - UV.x), min(1.0 - tv, tv * 1.6));
 	float galon = 1.0 - smoothstep(zoom_breedte * 0.8, zoom_breedte, rand);
 	if (zoom_breedte <= 0.0001) {
 		galon = 0.0;
 	}
 	vec3 doek = mix(basis, zoom.rgb, galon) * weefsel;
-	// Plooien: bollingen vangen licht, dalen lopen donker weg; schaduw onder de schouders.
-	doek *= 0.82 + 0.3 * (vouw * 0.5 + 0.5);
+	if (heeft_textuur > 0.5 && FRONT_FACING) {
+		doek = texture(textuur, UV).rgb;
+	}
+	// Wapper-plooien vangen licht; schaduw onder de kraag.
+	doek *= 0.9 + 0.15 * (vouw * 0.5 + 0.5);
 	doek *= 0.8 + 0.2 * smoothstep(0.0, 0.25, tv);
 	ALBEDO = doek * dim;
 	ROUGHNESS = 0.9;
@@ -2680,8 +2711,8 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	var vlak := PlaneMesh.new()
 	vlak.orientation = PlaneMesh.FACE_Z
 	vlak.size = Vector2(breedte, lengte)
-	vlak.subdivide_width = 6
-	vlak.subdivide_depth = 10
+	vlak.subdivide_width = 8
+	vlak.subdivide_depth = 14
 	doek.mesh = vlak
 	doek.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	var sh := Shader.new()
@@ -2693,10 +2724,20 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	mat.set_shader_parameter("zoom", Color(0.88, 0.7, 0.28) if blauw else Color(0.5, 0.42, 0.3))
 	mat.set_shader_parameter("zoom_breedte", 0.07 if blauw else 0.0)
 	mat.set_shader_parameter("hoogte", lengte)
-	mat.set_shader_parameter("amp", lengte * 0.07 * fx("cape_wapper", 1.0))
+	mat.set_shader_parameter("halfbreedte", breedte * 0.5)
+	mat.set_shader_parameter("amp", lengte * 0.09 * fx("cape_wapper", 1.0))
 	mat.set_shader_parameter("bol", hoogte_w * 0.1)
+	# Drape (Max, 12 september: "nu is het erg strak"): plooien vanuit de kraag
+	# en de zijkanten om de schouders; knop cape_drape schaalt allebei.
+	var drape: float = fx("cape_drape", 1.0)
+	mat.set_shader_parameter("wikkel", hoogte_w * 0.06 * drape)
+	mat.set_shader_parameter("plooi", hoogte_w * 0.045 * drape)
 	mat.set_shader_parameter("fase", float(absi(fase_bron) % 97) * 0.35)
 	mat.set_shader_parameter("dim", 1.0)
+	var tex: Texture2D = cape_textuur(blauw)
+	if tex != null:
+		mat.set_shader_parameter("textuur", tex)
+		mat.set_shader_parameter("heeft_textuur", 1.0)
 	doek.material_override = mat
 	doek.set_meta("cape_lengte", lengte)
 	# Top van de lap op de schouderlijn (het nekbot als het er is, anders een
@@ -2712,6 +2753,27 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	doek.transform = Transform3D(Basis(rechts_l, op_l, achter_l).scaled(Vector3.ONE / s_ouder), inv * offset_w)
 	att.add_child(doek)
 	return doek
+
+
+static var _cape_tex_cache: Dictionary = {}
+
+
+## Geleverde cape-textuur: `cape_blue.png` / `cape_red.png` ergens onder
+## assets/models (aanrader: assets/models/props/, prompts in de LEESMIJ daar).
+## Rechthoekig plaatje, boven = kraag, onder = zoom, de galon zit in het
+## plaatje; de shader vormt, plooit en belicht hem. Null = de shader kleurt.
+static func cape_textuur(blauw: bool) -> Texture2D:
+	var naam := "cape_blue.png" if blauw else "cape_red.png"
+	if _cape_tex_cache.has(naam):
+		return _cape_tex_cache[naam]
+	var tex: Texture2D = null
+	for map in [MODELS_DIR + "props", MODELS_DIR.trim_suffix("/")]:
+		var pad := Bestandsindex.vind(String(map), naam)
+		if pad != "" and ResourceLoader.exists(pad):
+			tex = load(pad) as Texture2D
+			break
+	_cape_tex_cache[naam] = tex
+	return tex
 
 
 ## Wind op een cape, per frame: de wereldrichting (PawnView.wind_richting)

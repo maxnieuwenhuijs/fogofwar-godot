@@ -29,6 +29,40 @@ Max' bericht over het kegelspel ("bowlen zijn 10 stuks toch, kleiner, geen
 onderveld") kwam in beide sessies binnen; de andere sessie (eigenaar van
 `spelletjes.gd`) heeft hem opgepakt, hier niets aan gedaan.
 
+**Drape (Max: "wat meer drape, nu is het erg strak; laat ze aan de
+bovenkant richting de nek toelopen, de punten").** De shader vormt de lap
+nu zelf: de breedte loopt van een smalle kraag (0,35 van de schouders) in
+de eerste 22% van de lengte naar volle breedte en flared naar de zoom;
+plooien vanuit de kraag (sinus over de breedte, dieper naar de zoom) en de
+zijkanten bovenaan om de schouders gewikkeld; de normaal wordt uit die
+verplaatsingen afgeleid, zodat het licht de plooien laat zien in plaats
+van een vlak. Knop `cape_drape` schaalt plooi en wikkel. Fijnere mesh
+(8 x 14).
+
+**Textuur (Max: "schrijf een texture prompt voor de blauwe cape met gouden
+rand, mogen 3 verschillende zijn").** De shader neemt `cape_blue.png` /
+`cape_red.png` (onder assets/models, aanrader props/) als buitenkant zodra
+het er ligt (`PawnView.cape_textuur`, gecachet); zonder plaatje kleurt hij
+zelf. De uv-hoek is gemeten in capecheck: linksboven van de lap = uv
+(0, 0), dus boven = kraag, links = links van de drager gezien vanaf zijn
+rug; een normaal getekend plaatje staat goed. Layout-regels en drie
+prompts (velours met galon, damast met Napoleon-bijen en lauwerkrans,
+officiersmantel met adelaar en hermelijnkraag) in
+`assets/models/props/LEESMIJ.md`.
+
+**Kegelen en keilen (Max: "de bowling werkt niet goed: je klikt, dan komt
+de pijl, en dan inhouden en de pijl groeit; de pijl moet meteen komen; en
+als die links is rolt de bal naar rechts").** Twee fouten in
+`spelletjes.gd` (van de andere sessie, hier gefixt omdat het bericht hier
+kwam): (1) de pijl kwam pas na `HOLD_DREMPEL` (0,22 s); nu start het
+richten meteen bij het indrukken en telt loslaten binnen de drempel als
+een gewone tik (de cadans wacht nog wel, die begint met tikken); (2) de
+pijl draaide met `+hoek` om +Y, wat lokaal -Z naar -X zet, terwijl de worp
+`(sin(hoek), 0, -cos(hoek))` naar +X gaat: gespiegeld. Nu `-hoek` op de
+pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
+(kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
+omgevingcheck 1 PASS.
+
 ## 12 september -- vijf mini-games in het diorama
 
 Max: "bedenk 5 spelletjes die je kunt doen, mini games in de dioramas, dus

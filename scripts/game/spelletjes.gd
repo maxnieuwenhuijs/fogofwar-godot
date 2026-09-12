@@ -65,8 +65,10 @@ func richt_bezig() -> bool:
 # ---------------------------------------------------------------- bediening
 
 ## Vinger op een spel-prop (na de tik van Omgeving.klik). Wacht er al een
-## spel op deze prop op een tik (dobber, cadans), dan is dit die tik; anders
-## wacht de prop op de hold-drempel.
+## spel op deze prop op een tik (dobber, cadans), dan is dit die tik. Anders
+## komt de richt-pijl METEEN (Max, 12 september: "de pijl moet meteen
+## komen"); loslaten binnen HOLD_DREMPEL telt als een gewone tik, daarna als
+## een worp. Alleen de cadans wacht nog op de drempel (die begint met tikken).
 func druk(p: Dictionary, pos: Vector2) -> void:
 	if not _actief.is_empty():
 		return
@@ -76,14 +78,27 @@ func druk(p: Dictionary, pos: Vector2) -> void:
 		return
 	if bool(p.bezig):
 		return
-	_kandidaat = p
 	_druk_tijd = o._tijd
 	_druk_pos = pos
+	if String(p.get("spel", "")) == "cadans":
+		_kandidaat = p
+		return
+	_kandidaat = {}
+	_start_richten(p)
 
 
 ## Vinger los. Waar = het was een spel-prop (kort getikt of geworpen).
 func laat_los(_pos: Vector2) -> bool:
 	if not _actief.is_empty():
+		var a: Dictionary = _actief
+		if o._tijd - float(a.t0) < HOLD_DREMPEL:
+			# een korte tik: pijl weg, de gewone reactie van de prop
+			var pk: Dictionary = a.p
+			_stop_richten()
+			if is_instance_valid(pk.node) and not bool(pk.bezig) and pk.has("reacties"):
+				pk.bezig = true
+				o._speel_willekeurig(pk)
+			return true
 		_werp()
 		return true
 	if not _kandidaat.is_empty():
@@ -163,7 +178,10 @@ func _richt_process() -> void:
 		a.kracht = clampf(t / float(conf.get("laadtijd", 1.0)), 0.0, 1.0)
 	var kracht: float = float(a.kracht)
 	var pijl: Node3D = a.pijl
-	pijl.rotation.y = float(conf.get("pijl_draai", 0.0)) + float(a.hoek)
+	# Min: een draai om +Y zet de pijl (lokaal -Z) naar -X, terwijl de worp
+	# (sin(hoek), 0, -cos(hoek)) naar +X gaat; met plus wees de pijl naar
+	# links en rolde de bal naar rechts (Max, 12 september).
+	pijl.rotation.y = float(conf.get("pijl_draai", 0.0)) - float(a.hoek)
 	var lengte: float = float(conf.get("pijl_min", 0.4)) + kracht * float(conf.get("pijl_max", 1.8))
 	var schacht: MeshInstance3D = a.schacht
 	var kop: MeshInstance3D = a.kop
