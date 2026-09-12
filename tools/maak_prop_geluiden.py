@@ -312,6 +312,64 @@ def r_ijs(k, rng):
     return band(imp, 1500, 7000) + band(ruis(len(t), rng), 300, 2000) * env(t, 0.06) * 0.6
 
 
+# --- de mini-games (12 september) -------------------------------------------
+
+def r_kegel(k, rng):
+    """Lege flessen die omvallen: een glazen tink en een holle bons, twee of
+    drie kort na elkaar (de "kegels" zijn flessen uit de kantine)."""
+    t = t_as(0.48)
+    uit = np.zeros_like(t)
+    for i, (dt, a) in enumerate([(0.0, 1.0), (0.08, 0.7), (0.17, 0.55), (0.29, 0.4)]):
+        if i > 0 and rng.random() < 0.25:
+            continue
+        n0 = int(dt * SR)
+        tt = t[: len(t) - n0]
+        tink = partialen(tt, [2350 * k * (1 + 0.05 * i), 3600 * k, 5100 * k], [0.05, 0.03, 0.02], [0.5, 0.25, 0.12])
+        bons = sinus(tt, 260 * k) * env(tt, 0.05) * 0.6 + klik(tt, rng, 300, 1400, 0.02) * 0.4
+        uit[n0:] += (tink + bons) * a
+    return uit
+
+
+def r_kegel_rol(k, rng):
+    """Een kanonskogel die over hard gras rolt: laag geruis met een rommel."""
+    t = t_as(0.9)
+    rommel = band(ruis(len(t), rng), 60, 420) * (0.6 + 0.4 * sinus(t, 9 * k)) * np.clip(1.0 - t / 0.9, 0.0, 1.0)
+    return rommel * 0.9
+
+
+def r_kruitvat(k, rng):
+    """Een kruitvat dat ontploft: doffe knal met een knetterende staart."""
+    t = t_as(0.9)
+    knal = band(ruis(len(t), rng), 40, 900) * env(t, 0.12)
+    knetter = band(ruis(len(t), rng), 1500, 6000) * env(t, 0.35) * (rng.random(len(t)) > 0.92)
+    laag = sinus(t, 55 * k) * env(t, 0.2)
+    return knal * 1.0 + knetter * 0.5 + laag * 0.8
+
+
+def r_hengel(k, rng):
+    """Een hengel die uitwerpt: de zoef van de lijn en een tikje van de molen."""
+    t = t_as(0.5)
+    zoef = band(ruis(len(t), rng), 2500, 9000) * np.exp(-((t - 0.12) ** 2) / 0.004)
+    tikjes = np.zeros_like(t)
+    for i in range(6):
+        n0 = int((0.2 + 0.04 * i) * SR)
+        tt = t[: len(t) - n0]
+        tikjes[n0:] += klik(tt, rng, 2000, 6000, 0.004) * 0.35
+    return zoef * 0.9 + tikjes + sinus(t, 900 * k) * env(t, 0.02) * 0.3
+
+
+def r_vis(k, rng):
+    """Een natte vis die op de planken klapt: plets met een spartel."""
+    t = t_as(0.55)
+    plets = band(ruis(len(t), rng), 200, 2200) * env(t, 0.05) * 1.0
+    spartel = np.zeros_like(t)
+    for i in range(3):
+        n0 = int((0.16 + 0.11 * i) * SR)
+        tt = t[: len(t) - n0]
+        spartel[n0:] += band(ruis(len(tt), rng), 300, 1800) * env(tt, 0.03) * (0.6 - 0.15 * i)
+    return plets + spartel + sinus(t, 140 * k) * env(t, 0.06) * 0.5
+
+
 def r_combo(k, rng):
     t = t_as(0.6)
     uit = np.zeros_like(t)
@@ -356,6 +414,9 @@ RECEPTEN = {
     "prop_wc": (r_wc, 2), "prop_uil": (r_uil, 2), "prop_kip": (r_kip, 2), "prop_munt": (r_munt, 2), "prop_kokos": (r_kokos, 2),
     "prop_boot": (r_boot, 2), "prop_ijs": (r_ijs, 2), "prop_combo": (r_combo, 1), "bewoner_snurken": (r_snurken, 2),
     "prop_nies": (r_nies, 2), "prop_geit": (r_geit, 2),
+    # de mini-games (12 september)
+    "prop_kegel": (r_kegel, 3), "prop_kegel_rol": (r_kegel_rol, 2), "prop_kruitvat": (r_kruitvat, 2),
+    "prop_hengel": (r_hengel, 2), "prop_vis": (r_vis, 2),
 }
 
 

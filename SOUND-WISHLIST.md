@@ -522,6 +522,11 @@ toon varieert al per klik.
 | `prop_ijs` | bevroren plas | krak | 2 | synthetisch |
 | `prop_geit` | geit (als de glb er is) | mekker | 2 | synthetisch |
 | `prop_nies` | hooiberg (Hatsjoe) | een nies | 2 | synthetisch |
+| `prop_kegel` | kegelen: een lege fles valt om (mini-game, 12 september) | glazen tink en een holle bons, twee of drie kort na elkaar | 3 | synthetisch |
+| `prop_kegel_rol` | kegelen: de kanonskogel rolt | laag rommelend geruis van ijzer over hard gras | 2 | synthetisch |
+| `prop_kruitvat` | kanon: een kruitvat ontploft | doffe knal met een knetterende staart | 2 | synthetisch |
+| `prop_hengel` | vissen: uitwerpen en binnenhalen | zoef van de lijn en tikjes van de molen | 2 | synthetisch |
+| `prop_vis` | vissen: de vangst klapt op de planken | natte plets met een spartel | 2 | synthetisch |
 | `prop_combo` | elke vijfde klik van een combo | vrolijke chime, vier tonen omhoog | 1 | synthetisch |
 | `bewoner_snurken` | tent, hooiberg (Zzz) | gesnurk | 2 | synthetisch |
 | `prop_schot` | kraai geschoten | musketschot | - | `musket` (bestaat) |

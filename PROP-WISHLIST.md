@@ -298,6 +298,26 @@ houden, lever dan het model in delen of zeg het, dan haak ik ze aan.
 | `prop_glaswerk` | kist met flessen en glazen (rood: kruiken en tinnen bekers, blauw: kristal) | beide | klink bij elke tik, fles valt om, Proost!, `prop_glas` | ⚙ | wooden crate with bottles and glasses |
 | `prop_aambeeld` | aambeeld op een blok met hamer | gedeeld | kleng bij elke tik met vonken, hoefijzer, `prop_aambeeld` | ⚙ | anvil on a stump with a hammer |
 
+## 13. Mini-games (12 september, Max: "5 spelletjes, low key, een tap of een klik inhouden")
+
+Vijf spelletjes op een vinger, in `scripts/game/spelletjes.gd`. Kegelen is
+hier flessen omrollen met een kanonskogel (Max: "iets wat bij de setting
+hoort"): negen lege flessen uit de kantine in een ruit. Werpen:
+vinger op de prop, de pijl zwaait (richting) en groeit (kracht), loslaten.
+Op de maat: tikken op het moment. Alles hieronder staat nu als placeholder
+uit primitieven; een glb met dezelfde naam is welkom, de spelletjes zelf
+blijven werken (ze hangen aan de prop-node, niet aan de mesh).
+
+| Bestand | Wat | Team | Klik | Status | Prompt |
+|---|---|---|---|---|---|
+| `prop_fles` | een lege fles uit de kantine (negen op de baan, in een ruit: de "kegels") | gedeeld | valt om als de kogel raakt, `prop_kegel` | ⚙ | empty dark green glass wine bottle with a cork, 18th century |
+| `prop_kegelkogel` | de kanonskogel op een plankje waarmee je de flessen omrolt | gedeeld | vasthouden = richten en werpen, `prop_kegel_rol` | ⚙ (een ijzeren bol, geen model nodig) | iron cannonball |
+| `prop_stenen` | een stapeltje platte keistenen aan de waterkant | gedeeld | vasthouden = keilen over de plas of de rivier, `prop_plons` | ⚙ | small pile of flat grey skipping stones |
+| `prop_kruitvat` | een kruitvat (vier op een rij, het doel van het kanon) | gedeeld | ontploft als de kogel raakt, `prop_kruitvat` | ⚙ (nu de ton-glb) | small wooden gunpowder keg with iron bands |
+| `prop_hengel` | een hengel in een vorkstok, met molen | gedeeld | vasthouden = uitwerpen, tik als de dobber duikt, `prop_hengel` | ⚙ | simple 18th century fishing rod resting in a forked stick |
+| `prop_vis` | de vangst: een snoek | gedeeld | klapt op de steiger, `prop_vis` | ⚙ | small pike fish, low poly |
+| `prop_soldaatje` | drie speelgoedsoldaatjes achter de trom (rood arm, blauw rijk) | beide | marcheren op de plaats bij elke tik op de maat | ⚙ | tiny toy soldier figurine, napoleonic uniform, shako |
+
 ## 10. Bewoners (poppetjes, `assets/models/bewoners/`)
 
 Per factie en per team, rood arm en blauw rijk. Naam: `<rol>_<factie>_<team>`,
