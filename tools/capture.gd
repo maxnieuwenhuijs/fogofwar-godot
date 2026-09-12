@@ -1933,6 +1933,97 @@ func _ready() -> void:
 		print("[DIORAMA] klaar")
 		get_tree().quit(0)
 		return
+	elif "dragercheck" in args:
+		# 12 september (Max: "soms spawnen er weer soldaten met een trom of een
+		# vlag, dat kan niet, als ze dood zijn zijn ze dood"). Opstelling met
+		# echte dragers (C15), dan sneuvelen alle dragers van speler 1 in de
+		# staat en komt er een verse spawn bij: geen enkele pion zonder echte
+		# rol mag daarna een vaandel of trom tonen, en de dragers van speler 2
+		# houden de hunne.
+		var dc_fouten := 0
+		var dc_hand: CardHand = game.get_node("UI/CardHand")
+		var dc_steps := 0
+		while not Phase.is_define(GameSession.state.phase) and dc_steps < 40:
+			dc_steps += 1
+			var dst: GameState = GameSession.state
+			if dst.phase == Phase.Type.PRE_GAME:
+				game._start_match(1)
+			elif dst.phase == Phase.Type.PLACEMENT:
+				game._confirm_placement()
+			elif Phase.is_reveal(dst.phase):
+				game._continue_after_reveal()
+			await get_tree().create_timer(0.05).timeout
+		var dc_state: GameState = GameSession.state
+		if not dc_state.campaign_actief_rollen():
+			print("[DRAGER] FOUT: dit potje draagt geen echte rollen (campagne-blok ontbreekt)")
+			get_tree().quit(1)
+			return
+		var tel_rol := func(owner: int, levend: bool) -> int:
+			var n := 0
+			for p in GameSession.state.pawns.values():
+				if p.owner_id == owner and String(p.rol) != "" and (not levend or not p.is_eliminated):
+					n += 1
+			return n
+		var dc_voor: int = tel_rol.call(1, true)
+		if dc_voor == 0:
+			print("[DRAGER] FOUT: speler 1 heeft geen dragers na de opstelling")
+			dc_fouten += 1
+		# de weergave VOOR het sneuvelen: de echte dragers tonen hun prop
+		game._refresh_all()
+		var dc_toont := func(owner: int) -> Dictionary:
+			var uit := {"echt": 0, "cosmetisch": 0}
+			for pid in game._pawn_views:
+				var pv: PawnView = game._pawn_views[pid]
+				var p: Pawn = GameSession.state.pawns.get(pid)
+				if p == null or p.owner_id != owner or p.is_eliminated:
+					continue
+				var toont: String = String(pv._rol)
+				if toont != "flag" and toont != "drum":
+					continue
+				if String(p.rol) == toont:
+					uit["echt"] += 1
+				else:
+					uit["cosmetisch"] += 1
+			return uit
+		var dc_t0: Dictionary = dc_toont.call(1)
+		print("[DRAGER] voor: speler 1 toont %d echte dragers, %d cosmetische" % [dc_t0.echt, dc_t0.cosmetisch])
+		if int(dc_t0.cosmetisch) > 0:
+			print("[DRAGER] FOUT: cosmetische vaandels/trommels terwijl het potje echte rollen draagt")
+			dc_fouten += 1
+		# alle dragers van speler 1 sneuvelen (staat), en er komt een verse spawn
+		for p in GameSession.state.pawns.values():
+			if p.owner_id == 1 and String(p.rol) != "" and not p.is_eliminated:
+				GameSession.state.board[p.position.y][p.position.x] = Constants.EMPTY_TILE
+				p.is_eliminated = true
+		var dc_vrij: Array = Validator.vrije_spawn_vakken(GameSession.state, 1)
+		var dc_spawn: Pawn = null
+		if not dc_vrij.is_empty():
+			dc_spawn = GameSession.state._spawn_pawn(1, dc_vrij[0], Constants.UnitType.INFANTRY)
+		game._refresh_all()
+		await get_tree().process_frame
+		game._refresh_all()
+		var dc_t1: Dictionary = dc_toont.call(1)
+		var dc_t2: Dictionary = dc_toont.call(2)
+		print("[DRAGER] na: speler 1 toont %d echte, %d cosmetische; speler 2 %d echte, %d cosmetische; figurant_rollen=%d" % [
+			dc_t1.echt, dc_t1.cosmetisch, dc_t2.echt, dc_t2.cosmetisch, game._figurant_rollen.size()])
+		if int(dc_t1.cosmetisch) > 0 or int(dc_t1.echt) > 0:
+			print("[DRAGER] FOUT: speler 1 toont nog een vaandel of trom terwijl al zijn dragers dood zijn")
+			dc_fouten += 1
+		if int(dc_t2.echt) != tel_rol.call(2, true):
+			print("[DRAGER] FOUT: speler 2 toont %d dragers, in de staat staan er %d" % [dc_t2.echt, tel_rol.call(2, true)])
+			dc_fouten += 1
+		if dc_spawn != null and game._pawn_views.has(dc_spawn.id):
+			var spv: PawnView = game._pawn_views[dc_spawn.id]
+			if String(spv._rol) != "" or String(spv.rol_vast) != "":
+				print("[DRAGER] FOUT: de verse spawn (pion %d) toont rol '%s'/'%s'" % [dc_spawn.id, spv._rol, spv.rol_vast])
+				dc_fouten += 1
+			else:
+				print("[DRAGER] verse spawn (pion %d) is een gewone soldaat" % dc_spawn.id)
+		elif dc_spawn == null:
+			print("[DRAGER] geen vrij spawnvak, spawn-deel overgeslagen")
+		print("[DRAGER] " + ("PASS" if dc_fouten == 0 else "FAIL (%d fouten)" % dc_fouten))
+		get_tree().quit(0 if dc_fouten == 0 else 1)
+		return
 	elif "koppelcheck" in args:
 		# 12 september (Max: "houd mijn kaart geselecteerd ook al is de AI eerst
 		# aan de beurt, totdat ik gelinkt heb"). Speelt tot de koppel-fase, geeft

@@ -351,6 +351,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   daarna elke reactie van elke prop een keer, en klikt zes keer snel op de
   eerste prop (alle zes raak, combo minstens 4); script-fouten vangt de grep
   op `SCRIPT ERROR`.
+- **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
+  mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
+  gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de
+  beurt van de bot of de online tegenstander; een pion-klik in zijn beurt
+  doet niets en laat de keuze staan; `_begin_human_linking` zet de keuze
+  bij de beurtwissel terug in de waaier (`CardHand.selecteer`). Weg gaat
+  hij pas als de kaart aan een pion hangt of de fase voorbij is. Check:
+  `-- koppelcheck`.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
@@ -500,7 +508,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`PawnView.ROL_DICHTHEID` 0; Max: "sommige hebben nu wel een prop vast
   anders dan de vlag of trom, dat niet doen graag"); hoorn, bijl, vat en
   staf bestaan alleen nog in de Model-tuner (rol_override) en als
-  diorama-prop. Bot-geparente wapens uit Blender
+  diorama-prop. **En een dode drager komt niet terug** (12 september,
+  Max: "als ze dood zijn zijn ze dood"): de oude cosmetische verdeling
+  van vaandel en trom (`game._werk_figurant_rollen_bij`, 30 juli) is
+  uit zodra het potje echte rollen draagt (campagne-blok, dus altijd);
+  daarvoor sprong hij pas bij als er geen LEVENDE drager meer was, en
+  dan kreeg een verse spawn een trom of vlag. Check: `-- dragercheck`. Bot-geparente wapens uit Blender
   5.1 zweefden meters naast de hand door een export- en importbug; de
   pijplijn corrigeert dat (`tools/blender_botkind_fix.py`, zie
   MODEL-PIPELINE-CHECKLIST sectie C). Draai dit na elke her-export.

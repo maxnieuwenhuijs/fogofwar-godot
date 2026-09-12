@@ -1,5 +1,39 @@
 # Fog of War — Work In Progress & Context
 
+## 12 september -- kaartkeuze blijft staan in de koppel-fase; dode dragers komen niet terug
+
+Max: "houd mijn kaart geselecteerd ook al is de AI eerst aan de beurt,
+totdat ik gelinkt heb." Twee dingen zaten in de weg: `_on_link_card_picked`
+weigerde een kaart zodra `current_player` niet de mens was, en
+`_begin_human_linking` wiste de keuze bij elke beurtwissel en bouwde de
+waaier kaal op. Nu mag kiezen de hele koppel-fase (ook in de beurt van de
+bot of de online tegenstander), koppelt een pion-klik in zijn beurt niets
+en laat hij de keuze staan (HUD `HUD_LINK_CARD_READY`, nl/en gecompileerd
+met `--import`), en zet `_begin_human_linking` de keuze terug in de waaier
+via het nieuwe `CardHand.selecteer(index)` (visueel, zonder signaal;
+`_on_card_tapped` slaat gekoppelde kaarten over). `_on_phase_changed` wist
+de keuze: die leeft alleen binnen een koppel-fase. Na een eigen koppeling
+wordt de waaier meteen bijgewerkt, zodat de volgende keuze op de juiste
+kaarten valt. Check `-- koppelcheck`: speelt tot de koppel-fase, kiest een
+kaart terwijl de bot denkt, bewijst dat een pion-klik dan niets koppelt,
+dat de keuze de beurtwissel overleeft (ook in de waaier: `_selected_index`
+en de gloed) en pas na het koppelen weg is. Commit f83b130.
+
+Max: "soms spawnen er weer soldaten met een trom of een vlag, dat kan niet,
+als ze dood zijn zijn ze dood." De engine geeft een spawn geen rol; het
+was de weergave. `game._werk_figurant_rollen_bij` (30 juli, cosmetische
+verdeling van vaandel en trom van voor C15) keek per leger alleen of er nog
+een LEVENDE pion met echte rol was; waren de vaandeldrager en de tamboer
+allebei dood, dan verdeelde hij weer cosmetische rollen over ongekoppelde
+infanterie, en een verse spawn op de achterste rij was de verste kandidaat.
+Nu: draagt het potje echte rollen (`campaign_actief_rollen`, sinds C17 elk
+potje), dan wordt er niets verdeeld en is `_figurant_rollen` leeg; alleen
+kaal 4.1 houdt de oude verdeling. Check `-- dragercheck`: opstelling met
+echte dragers, alle dragers van speler 1 sneuvelen in de staat, een verse
+spawn erbij, `_refresh_all`: speler 1 toont geen vaandel of trom meer, de
+spawn is een gewone soldaat, speler 2 houdt zijn dragers. Docs: CLAUDE.md
+(zweefcheck-bullet en een koppel-bullet).
+
 ## 12 september -- de eerste Tripo-prop: de rode tent, en verwerk_prop.py
 
 Max: "de tent van rood is dit" (een `tripo_node_<uuid>.glb` uit Downloads).

@@ -1565,6 +1565,17 @@ func _werk_figurant_rollen_bij() -> void:
 	var state: GameState = session.state
 	if state == null:
 		return
+	# C15: draagt dit potje echte rollen (campagne-blok, en sinds C17 is dat
+	# elk potje), dan is de STAAT de enige waarheid, ook als alle dragers van
+	# een leger al gesneuveld zijn. Tot 12 september keek dit alleen naar de
+	# LEVENDE dragers: waren die allebei dood, dan vulde de oude cosmetische
+	# verdeling de vacatures weer op en kwam een verse spawn met trom of vlag
+	# het bord op (Max: "als ze dood zijn zijn ze dood"). Alleen zonder
+	# campagne-blok (kaal 4.1) verdelen we hier nog iets.
+	if state.campaign_actief_rollen():
+		if not _figurant_rollen.is_empty():
+			_figurant_rollen.clear()
+		return
 	for pid in _figurant_rollen.keys():
 		var p: Pawn = state.pawns.get(pid)
 		if p == null or p.is_eliminated or p.linked_card_id != -1:
