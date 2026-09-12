@@ -319,6 +319,22 @@ blijven werken (ze hangen aan de prop-node, niet aan de mesh).
 | `prop_vis` | de vangst: een snoek | gedeeld | klapt op de steiger, `prop_vis` | ⚙ | small pike fish, low poly |
 | `prop_soldaatje` | drie speelgoedsoldaatjes achter de trom (rood arm, blauw rijk) | beide | marcheren op de plaats bij elke tik op de maat | ⚙ | tiny toy soldier figurine, napoleonic uniform, shako |
 
+## 14. Texturen (plaatjes, geen model; 12 september)
+
+Geen glb maar een png: het spel legt het plaatje op een lap die de code
+zelf bouwt. Zet het bestand onder `assets/models/` (aanrader `props/`) en
+draai `--import`. De prompts hieronder zijn af: geen prop-sjabloon eromheen,
+gewoon kopieren. Meerdere rijen met dezelfde bestandsnaam zijn varianten:
+kies er een. Layout-regels voor de cape (staand 3:4, boven = kraag, rand
+rondom, vlak belicht, embleem onderin): `assets/models/props/LEESMIJ.md`.
+
+| Bestand | Wat | Team | Klik | Status | Prompt |
+|---|---|---|---|---|---|
+| `cape_blue.png` | cape van het blauwe team, variant 1: velours met goudgalon en lelies in de hoeken | blauw | wappert (geen klik) | ➕ | Royal blue velvet cape cloth, flat orthographic texture seen straight on, rectangular, portrait 3:4. A wide gold braid border with fine embroidered scroll-work runs along all four edges, a small gold fleur-de-lis in each lower corner. The center is plain deep royal blue velvet with a soft fabric sheen and subtle nap. Evenly lit, no folds, no creases, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536. |
+| `cape_blue.png` | variant 2: damast met Napoleon-bijen en lauwerkrans | blauw | wappert (geen klik) | ➕ | Napoleonic ceremonial cape cloth texture, flat and orthographic, rectangular, portrait 3:4. Deep royal blue silk damask with a fine tone-on-tone floral pattern, scattered small golden embroidered bees, a gold laurel wreath emblem centered in the lower half, and a gold embroidered border with a Greek-key motif along all four edges. Evenly lit, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536. |
+| `cape_blue.png` | variant 3: officiersmantel met gouden adelaar en hermelijnkraag | blauw | wappert (geen klik) | ➕ | Rich cobalt blue wool officer's cape cloth texture, flat orthographic view, rectangular, portrait 3:4. Slightly brushed wool surface, a broad gold-thread border with metallic braid along all four edges, a white ermine band with black spots along the top edge (the collar), and a golden eagle with spread wings embroidered centered in the lower half. Flat and even, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536. |
+| `cape_red.png` | cape van het rode team (staat standaard uit, knop `cape_rood`): verschoten, gestopte wollen lap zonder galon | rood | wappert (geen klik) | ➕ | Faded, patched dark red wool cape cloth texture, flat orthographic view, rectangular, portrait 3:4. Coarse worn wool with sun-bleached streaks, a few rough patches of different cloth sewn on with visible stitches, a frayed hem along the bottom edge, no gold, no border, no emblem. Flat and even, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536. |
+
 ## 10. Bewoners (poppetjes, `assets/models/bewoners/`)
 
 Per factie en per team, rood arm en blauw rijk. Naam: `<rol>_<factie>_<team>`,

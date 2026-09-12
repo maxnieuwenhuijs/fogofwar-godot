@@ -133,7 +133,10 @@ als buitenkant en laat zijn eigen galon weg. Geen model nodig.
 
 Zo moet het plaatje in elkaar zitten (de uv-hoek staat in `-- capecheck`):
 
-- **Rechthoekig, staand, 4:5** (bv 1024 x 1280). Geen alpha.
+- **Staand; kies 3:4** (bv 1152 x 1536), dat ligt het dichtst bij de lap.
+  De lap neemt de verhouding van het plaatje over (de lengte blijft de
+  knop `cape_lengte`), dus 2:3 (1024 x 1536) geeft een slankere cape, 1:1
+  een bredere, en 9:16 een smalle baan. Geen alpha.
 - **Boven = kraag** (wordt in het spel smal naar de nek toe getrokken),
   **onder = zoom**, links en rechts de zijranden. Links in het plaatje is
   links van de drager, gezien vanaf zijn rug.
@@ -149,11 +152,11 @@ Drie prompts (Engels, voor een plaatjesgenerator; kies er een of laat ze
 alle drie maken en kies op het oog):
 
 1. Velours met galon:
-   `Royal blue velvet cape cloth, flat orthographic texture seen straight on, rectangular, portrait 4:5. A wide gold braid border with fine embroidered scroll-work runs along all four edges, a small gold fleur-de-lis in each lower corner. The center is plain deep royal blue velvet with a soft fabric sheen and subtle nap. Evenly lit, no folds, no creases, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1024x1280.`
+   `Royal blue velvet cape cloth, flat orthographic texture seen straight on, rectangular, portrait 3:4. A wide gold braid border with fine embroidered scroll-work runs along all four edges, a small gold fleur-de-lis in each lower corner. The center is plain deep royal blue velvet with a soft fabric sheen and subtle nap. Evenly lit, no folds, no creases, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536.`
 2. Damast met bijen (Napoleon):
-   `Napoleonic ceremonial cape cloth texture, flat and orthographic, rectangular, portrait 4:5. Deep royal blue silk damask with a fine tone-on-tone floral pattern, scattered small golden embroidered bees, a gold laurel wreath emblem centered in the lower half, and a gold embroidered border with a Greek-key motif along all four edges. Evenly lit, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1024x1280.`
+   `Napoleonic ceremonial cape cloth texture, flat and orthographic, rectangular, portrait 3:4. Deep royal blue silk damask with a fine tone-on-tone floral pattern, scattered small golden embroidered bees, a gold laurel wreath emblem centered in the lower half, and a gold embroidered border with a Greek-key motif along all four edges. Evenly lit, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536.`
 3. Officiersmantel met adelaar en hermelijn:
-   `Rich cobalt blue wool officer's cape cloth texture, flat orthographic view, rectangular, portrait 4:5. Slightly brushed wool surface, a broad gold-thread border with metallic braid along all four edges, a white ermine band with black spots along the top edge (the collar), and a golden eagle with spread wings embroidered centered in the lower half. Flat and even, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1024x1280.`
+   `Rich cobalt blue wool officer's cape cloth texture, flat orthographic view, rectangular, portrait 3:4. Slightly brushed wool surface, a broad gold-thread border with metallic braid along all four edges, a white ermine band with black spots along the top edge (the collar), and a golden eagle with spread wings embroidered centered in the lower half. Flat and even, no folds, no shadows, no perspective, no background, fills the frame edge to edge, game texture, 1152x1536.`
 
 Voor het rode team (arm) zou het een verschoten, gestopte wollen lap
 zonder galon zijn; die staat standaard uit (knop `cape_rood`).

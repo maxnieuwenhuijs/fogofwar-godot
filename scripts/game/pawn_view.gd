@@ -2687,6 +2687,11 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	skel.force_update_all_bone_transforms()
 	var lengte: float = hoogte_w * fx("cape_lengte", 0.5)
 	var breedte: float = hoogte_w * fx("cape_breedte", 0.4)
+	var tex: Texture2D = cape_textuur(blauw)
+	if tex != null and tex.get_height() > 0:
+		# Met een plaatje volgt de lap de verhouding daarvan (3:4, 2:3, 1:1,
+		# ...), zodat de rand overal even dik blijft; de lengte blijft de knop.
+		breedte = clampf(lengte * float(tex.get_width()) / float(tex.get_height()), lengte * 0.4, lengte * 1.3)
 	# Ruimte van het bot in RUST (T-pose): daarin hangt de lap recht naar
 	# beneden, en daarna volgt hij het bot door elke animatie heen. De pose
 	# van dit moment is minder geschikt: die kan midden in een clip staan
@@ -2734,7 +2739,6 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	mat.set_shader_parameter("plooi", hoogte_w * 0.045 * drape)
 	mat.set_shader_parameter("fase", float(absi(fase_bron) % 97) * 0.35)
 	mat.set_shader_parameter("dim", 1.0)
-	var tex: Texture2D = cape_textuur(blauw)
 	if tex != null:
 		mat.set_shader_parameter("textuur", tex)
 		mat.set_shader_parameter("heeft_textuur", 1.0)

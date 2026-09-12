@@ -405,8 +405,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   uit en neemt de wind mee (`cape_wind` per frame uit `wind_richting`,
   nooit door de rug naar voren). Een geleverd plaatje `cape_blue.png` /
   `cape_red.png` onder assets/models (aanrader props/) wordt de buitenkant
-  (boven = kraag, rand rondom; layout en drie prompts in
-  `assets/models/props/LEESMIJ.md`). Blauw: koningsblauw
+  (boven = kraag, rand rondom, de lap neemt de verhouding van het plaatje
+  over, 3:4 ligt het dichtst bij; layout en drie prompts in
+  `assets/models/props/LEESMIJ.md` en in de prop-tracker, PROP-WISHLIST
+  sectie 14: png-rijen, prompts zonder sjabloon, variant-rijen). Blauw: koningsblauw
   met goudgalon en lichte voering; rood (knop `cape_rood`, standaard uit)
   dof donkerrood zonder galon. `_hang_cape` loopt na elke modelwissel
   (`_apply_team_texture`), niet op artillerie; `zet_team()` wisselt jas en

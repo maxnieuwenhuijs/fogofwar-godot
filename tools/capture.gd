@@ -914,6 +914,23 @@ func _ready() -> void:
 				cc_top = cc_k
 		print("[CAPE] uv linksboven (kraag, links van de drager) = %s; textuur cape_blue.png: %s" % [
 			str(cc_uvs[cc_top]), "geleverd" if PawnView.cape_textuur(true) != null else "geen, de shader kleurt"])
+		# een plaatje van 3:4 -> de lap wordt 3:4 (breedte volgt het plaatje, lengte blijft de knop)
+		var cc_img3 := Image.create(3, 4, false, Image.FORMAT_RGB8)
+		cc_img3.fill(Color(0.2, 0.3, 0.8))
+		PawnView._cape_tex_cache["cape_blue.png"] = ImageTexture.create_from_image(cc_img3)
+		(cc_pvs[1] as PawnView).herhang_cape()
+		await get_tree().process_frame
+		var cc_cape3: MeshInstance3D = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)[0]
+		var cc_maat: Vector2 = (cc_cape3.mesh as PlaneMesh).size
+		var cc_ht = (cc_cape3.material_override as ShaderMaterial).get_shader_parameter("heeft_textuur")
+		var cc_ht_f: float = float(cc_ht) if cc_ht != null else 0.0
+		print("[CAPE] met een 3:4-plaatje: lap %.3f x %.3f (%.2f), textuur-uniform %.0f" % [cc_maat.x, cc_maat.y, cc_maat.x / cc_maat.y, cc_ht_f])
+		if absf(cc_maat.x / cc_maat.y - 0.75) > 0.01 or cc_ht_f < 0.5:
+			print("[CAPE] FOUT: de lap volgt de verhouding van het plaatje niet")
+			cc_fouten += 1
+		PawnView._cape_tex_cache.erase("cape_blue.png")
+		(cc_pvs[1] as PawnView).herhang_cape()
+		await get_tree().process_frame
 		if not (cc_w is Vector3) or not (cc_w as Vector3).is_finite() or (cc_w as Vector3).z < -0.0001:
 			print("[CAPE] FOUT: wind-uniform deugt niet: %s" % str(cc_w))
 			cc_fouten += 1

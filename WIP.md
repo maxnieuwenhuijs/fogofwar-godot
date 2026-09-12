@@ -48,7 +48,15 @@ zelf. De uv-hoek is gemeten in capecheck: linksboven van de lap = uv
 rug; een normaal getekend plaatje staat goed. Layout-regels en drie
 prompts (velours met galon, damast met Napoleon-bijen en lauwerkrans,
 officiersmantel met adelaar en hermelijnkraag) in
-`assets/models/props/LEESMIJ.md`.
+`assets/models/props/LEESMIJ.md`. Max' generator kent geen 4:5 (wel 1:1,
+3:2, 2:3, 4:3, 3:4, 16:9, 9:16 en vaste maten): daarom neemt de lap nu de
+verhouding van het plaatje over (breedte = lengte x b/h, lengte blijft de
+knop), en zeggen de prompts 3:4 (1152 x 1536). Capecheck bewijst het met
+een plaatje van 3 x 4. Max: "sla ook deze prompts op een file tracker":
+PROP-WISHLIST sectie 14 (Texturen) draagt ze, en de prop-tracker kent nu
+png-rijen (status = ligt het plaatje ergens onder assets/models), prompts
+zonder prop-sjabloon eromheen, en variant-rijen (zelfde bestandsnaam als
+de rij erboven, een pijltje, tellen niet dubbel).
 
 **Kegelen en keilen (Max: "de bowling werkt niet goed: je klikt, dan komt
 de pijl, en dan inhouden en de pijl groeit; de pijl moet meteen komen; en

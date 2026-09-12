@@ -73,9 +73,15 @@ def lees_wishlist():
     return [s for s in secties if s["rijen"]]
 
 
-def status_van(rij, props, bewoners):
+def status_van(rij, props, bewoners, texturen=frozenset()):
     """Per team (of gedeeld) wat er ligt. Geeft (symbool, uitleg, per_team)."""
     naam = rij["bestand"].lower()
+    if naam.endswith(".png"):
+        # een plaatje, geen model (cape_blue.png, 12 september): ligt het
+        # ergens onder assets/models, dan is het klaar
+        if naam[:-4] in texturen:
+            return "✓", "ligt er (plaatje)", {}
+        return "➕", "nog maken (plaatje, geen model)", {}
     is_bewoner = "<factie>" in naam or naam in bewoners or any(
         b.startswith(naam + "_") or b == naam for b in bewoners)
     per_team = {}
@@ -120,17 +126,25 @@ def status_van(rij, props, bewoners):
 def bouw():
     props = bestanden(PROPS_DIR, ".glb")
     bewoners = bestanden(BEWONERS_DIR, ".glb") | bestanden(BEWONERS_DIR, ".json")
+    texturen = bestanden(os.path.join("assets", "models"), ".png")
     secties = lees_wishlist()
     totaal = collections.Counter()
     for s in secties:
         s["tel"] = collections.Counter()
+        vorige = None
         for rij in s["rijen"]:
-            sym, uitleg, per_team = status_van(rij, props, bewoners)
+            sym, uitleg, per_team = status_van(rij, props, bewoners, texturen)
             rij["sym"] = sym
             rij["uitleg"] = uitleg
             rij["per_team"] = per_team
-            s["tel"][sym] += 1
-            totaal[sym] += 1
+            # dezelfde bestandsnaam als de rij erboven = een prompt-VARIANT
+            # voor hetzelfde bestand (kies er een); telt niet dubbel
+            rij["variant"] = vorige == rij["bestand"].lower()
+            rij["textuur"] = rij["bestand"].lower().endswith(".png")
+            vorige = rij["bestand"].lower()
+            if not rij["variant"]:
+                s["tel"][sym] += 1
+                totaal[sym] += 1
     return secties, totaal, len(props), len(bewoners)
 
 
@@ -218,6 +232,8 @@ Maat: ware grootte, een tegel is 1, een pion 0,62 hoog. Bron: PROP-WISHLIST.md.<
         delen.append("<table><tr><th>Status</th><th>Bestand</th><th>Wat</th><th>Team</th><th>Klik</th><th>Prompt</th></tr>")
         for rij in s["rijen"]:
             sym = rij["sym"]
+            if rij.get("variant"):
+                sym = "↳"   # variant van de rij erboven, zelfde bestand
             klasse = {"✓": "ok", "➕": "nee", "½": "half", "⚙": "proc"}.get(sym, "")
             team = rij["team"]
             teamklasse = team if team in ("rood", "blauw", "beide") else ""
@@ -228,7 +244,10 @@ Maat: ware grootte, een tegel is 1, een pion 0,62 hoog. Bron: PROP-WISHLIST.md.<
                     for k, v in rij["per_team"].items() if (team == "beide" or team == k or k in FACTIES)) + "</div>"
             prompt = rij["prompt"]
             prompts = []
-            if prompt:
+            if prompt and rij.get("textuur"):
+                # een plaatje: de prompt is af, geen prop-sjabloon eromheen
+                prompts.append(("variant" if rij.get("variant") else "", prompt))
+            elif prompt:
                 basis = "low-poly game prop, 18th century military camp, %s, single object, clean silhouette, baked albedo texture, no ground plane, no text" % prompt
                 if team == "beide":
                     for kant in ("rood", "blauw"):
