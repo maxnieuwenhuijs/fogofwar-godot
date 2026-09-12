@@ -19,10 +19,12 @@ bedieningen:
   het loslaten en de beweging door (nieuw, het spel keek alleen naar drukken).
 - OP DE MAAT: een prop met `spel_staat.wacht_op_tik` krijgt elke tik.
 
-De vijf: kegelen (`kegelspel` in DIORAMAS 1, 2, 3, 9: negen lege flessen
-uit de kantine in een ruit, omgerold met een kanonskogel; Max: "maak die
-kegels wel iets wat bij de setting hoort", de eerste versie had
-bowlingkegels; de kogel rolt langs de pijl 1,2-3,5 eenheden, treffers langs de baan en
+De vijf: kegelen (`kegelspel` in DIORAMAS 1, 2, 3, 9: tien lege flessen
+uit de kantine in de driehoek van het bowlen, omgerold met een kanonskogel;
+Max: "maak die kegels wel iets wat bij de setting hoort", "bowlen zijn 10
+stuks toch ... wat kleiner en geen ondervlak"; de eerste versie had negen
+bowlingkegels in een ruit op een donker vlak; de kogel rolt langs de pijl
+0,9-2,6 eenheden, treffers langs de baan en
 een ketting met kans 0,72 naar achteren; "Poedel!", "%d kegels!", "Alle
 negen!" met de chime; na twee tellen staat alles weer), keilen (stenen aan
 elke plas met `{"stenen": true}`, en op de kade van de Rivierhaven: eerste

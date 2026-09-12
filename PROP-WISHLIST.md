@@ -302,7 +302,8 @@ houden, lever dan het model in delen of zeg het, dan haak ik ze aan.
 
 Vijf spelletjes op een vinger, in `scripts/game/spelletjes.gd`. Kegelen is
 hier flessen omrollen met een kanonskogel (Max: "iets wat bij de setting
-hoort"): negen lege flessen uit de kantine in een ruit. Werpen:
+hoort"): tien lege flessen uit de kantine in de driehoek van het bowlen,
+klein en zonder vlak eronder. Werpen:
 vinger op de prop, de pijl zwaait (richting) en groeit (kracht), loslaten.
 Op de maat: tikken op het moment. Alles hieronder staat nu als placeholder
 uit primitieven; een glb met dezelfde naam is welkom, de spelletjes zelf
@@ -310,7 +311,7 @@ blijven werken (ze hangen aan de prop-node, niet aan de mesh).
 
 | Bestand | Wat | Team | Klik | Status | Prompt |
 |---|---|---|---|---|---|
-| `prop_fles` | een lege fles uit de kantine (negen op de baan, in een ruit: de "kegels") | gedeeld | valt om als de kogel raakt, `prop_kegel` | ⚙ | empty dark green glass wine bottle with a cork, 18th century |
+| `prop_fles` | een lege fles uit de kantine (tien op de baan, in de driehoek van het bowlen) | gedeeld | valt om als de kogel raakt, `prop_kegel` | ⚙ | empty dark green glass wine bottle with a cork, 18th century |
 | `prop_kegelkogel` | de kanonskogel op een plankje waarmee je de flessen omrolt | gedeeld | vasthouden = richten en werpen, `prop_kegel_rol` | ⚙ (een ijzeren bol, geen model nodig) | iron cannonball |
 | `prop_stenen` | een stapeltje platte keistenen aan de waterkant | gedeeld | vasthouden = keilen over de plas of de rivier, `prop_plons` | ⚙ | small pile of flat grey skipping stones |
 | `prop_kruitvat` | een kruitvat (vier op een rij, het doel van het kanon) | gedeeld | ontploft als de kogel raakt, `prop_kruitvat` | ⚙ (nu de ton-glb) | small wooden gunpowder keg with iron bands |

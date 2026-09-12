@@ -358,9 +358,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   spel-prop, na `HOLD_DREMPEL` 0,22 s zwaait een pijl op de grond heen en
   weer = richting en groeit hij = kracht, loslaten werpt; wegschuiven
   breekt af) en OP DE MAAT (tikken op het moment). Kegelen (`kegelspel` in
-  de DIORAMAS: negen lege flessen uit de kantine in een ruit, omgerold met
-  een kanonskogel, Max: "iets wat bij de setting hoort"; ketting van
-  omvallers, "Alle negen!"), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
+  de DIORAMAS: tien lege flessen uit de kantine in de bowling-driehoek,
+  klein en zonder vlak eronder, omgerold met een kanonskogel, Max: "iets
+  wat bij de setting hoort", "10 stuks"; ketting van omvallers, "Strike!"), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
   de kade van de Rivierhaven: steeds kortere hupjes met een oplopende
   plons, buiten het water is het klaar, de kikker duikt; op ijs glijdt de
   steen), kanon (`kruitvaten` in het diorama: het kanon draait er bij de

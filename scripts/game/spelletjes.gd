@@ -29,7 +29,7 @@ extends RefCounted
 
 const HOLD_DREMPEL := 0.22     # seconden vasthouden voor het spel begint
 const ANNULEER_PX := 90.0      # zo ver wegschuiven met je vinger = afbreken
-const KEGEL_AFSTAND := 2.3     # van de bal tot het midden van de kegels
+const KEGEL_AFSTAND := 1.5     # van de kogel tot de voorste fles
 const VANGSTEN_MAX := 5        # zoveel vangsten blijven er op de steiger liggen
 
 var o: Omgeving
@@ -245,49 +245,48 @@ func _tekst(ouder: Node3D, pos: Vector3, tekst: String, kleur: Color = Color(1.0
 
 # ---------------------------------------------------------------- 1. kegelen
 
-## Negen lege flessen uit de kantine in een ruit (Max: "iets wat bij de
-## setting hoort"), een kanonskogel op een plankje; de baan loopt langs de
-## lokale -Z van `pos`. De kogel is de klikbare prop.
+## Tien lege flessen uit de kantine in de driehoek van het bowlen (Max:
+## "iets wat bij de setting hoort", "10 stuks", "wat kleiner en geen
+## ondervlak"), een kanonskogel op een plankje; de baan loopt langs de
+## lokale -Z van `pos`, zonder vlak eronder. De kogel is de klikbare prop.
 func bouw_kegelspel(pos: Vector3, draai: float) -> void:
 	var baan := Node3D.new()
 	baan.name = "Kegelbaan"
 	baan.position = pos
 	baan.rotation.y = draai
 	o._props_root.add_child(baan)
-	var strook := o._mesh(o._box(Vector3(0.95, 0.008, 3.3)), Color(0.4, 0.44, 0.27), baan, Vector3(0.0, 0.004, -1.5))
-	strook.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	o._mesh(o._box(Vector3(0.36, 0.03, 0.3)), Color(0.5, 0.4, 0.27), baan, Vector3(0.0, 0.015, 0.0))
+	o._mesh(o._box(Vector3(0.26, 0.02, 0.22)), Color(0.5, 0.4, 0.27), baan, Vector3(0.0, 0.01, 0.0))
 	var kegels: Array = []
-	var s := 0.24
-	for i in [-1, 0, 1]:
-		for j in [-1, 0, 1]:
-			var kx := float(i - j) * s * 0.7071
-			var kz := -KEGEL_AFSTAND + float(i + j) * s * 0.7071
+	var s := 0.19
+	for rij in 4:
+		for i in rij + 1:
+			var kx := (float(i) - float(rij) * 0.5) * s
+			var kz := -KEGEL_AFSTAND - float(rij) * s * 0.866
 			var k := Node3D.new()
 			k.name = "Kegel%d" % kegels.size()
 			k.position = Vector3(kx, 0.0, kz)
 			baan.add_child(k)
 			# een lege wijnfles: donkergroen glas, een hals en een kurk
 			var glas := Color(0.16, 0.36, 0.2)
-			var lijf := o._mesh(o._cilinder(0.036, 0.19), glas, k, Vector3(0.0, 0.095, 0.0))
-			var schouder := o._mesh(o._kegel(0.036, 0.05), glas, k, Vector3(0.0, 0.215, 0.0))
-			var hals := o._mesh(o._cilinder(0.014, 0.08), glas, k, Vector3(0.0, 0.27, 0.0))
+			var lijf := o._mesh(o._cilinder(0.03, 0.16), glas, k, Vector3(0.0, 0.08, 0.0))
+			var schouder := o._mesh(o._kegel(0.03, 0.045), glas, k, Vector3(0.0, 0.1825, 0.0))
+			var hals := o._mesh(o._cilinder(0.012, 0.07), glas, k, Vector3(0.0, 0.23, 0.0))
 			for g in [lijf, schouder, hals]:
 				var gm := (g as MeshInstance3D).material_override as StandardMaterial3D
 				gm.roughness = 0.25
 				gm.metallic_specular = 0.7
-			o._mesh(o._cilinder(0.012, 0.025), Color(0.76, 0.62, 0.42), k, Vector3(0.0, 0.32, 0.0))
+			o._mesh(o._cilinder(0.01, 0.02), Color(0.76, 0.62, 0.42), k, Vector3(0.0, 0.275, 0.0))
 			kegels.append({"node": k, "pos": Vector3(kx, 0.0, kz)})
 	var bal := Node3D.new()
 	bal.name = "Kegelbal"
-	bal.position = Vector3(0.0, 0.03 + 0.09, 0.0)
+	bal.position = Vector3(0.0, 0.02 + 0.075, 0.0)
 	baan.add_child(bal)
-	var kogel := o._mesh(o._bol(0.09), Color(0.16, 0.16, 0.17), bal, Vector3.ZERO)
+	var kogel := o._mesh(o._bol(0.075), Color(0.16, 0.16, 0.17), bal, Vector3.ZERO)
 	(kogel.material_override as StandardMaterial3D).metallic = 0.6
 	(kogel.material_override as StandardMaterial3D).roughness = 0.45
 	o._registreer(bal, 0.2, [_reageer_bal_hop], {"spel": "kegelen", "baan": baan, "kegels": kegels,
 			"bal_thuis": bal.position, "tik": ["prop_kogel", "impact_armor"], "pijl_ouder": baan,
-			"spel_conf": {"zwaai": 30.0, "zwaai_snelheid": 2.4, "laadtijd": 1.0, "pijl_min": 0.4, "pijl_max": 2.0,
+			"spel_conf": {"zwaai": 26.0, "zwaai_snelheid": 2.4, "laadtijd": 1.0, "pijl_min": 0.3, "pijl_max": 1.5,
 				"pijl_pos": Vector3(0.0, 0.03, 0.0)},
 			"spel_score": 0})
 
@@ -306,17 +305,17 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 	var baan: Node3D = p.baan
 	var kegels: Array = p.kegels
 	var d := Vector3(sin(hoek), 0.0, -cos(hoek))
-	var afstand: float = 1.2 + 2.3 * kracht
+	var afstand: float = 0.9 + 1.7 * kracht
 	var start: Vector3 = p.bal_thuis
 	var eind: Vector3 = start + d * afstand
-	var duur: float = 0.5 + afstand / 3.0
+	var duur: float = 0.45 + afstand / 2.8
 	o._geluid(["prop_kegel_rol", "prop_ton"])
 	var draai_as := Vector3.UP.cross(d).normalized()
 	var tw := bal.create_tween()
 	tw.tween_method(func(t: float) -> void:
 		var voortgang := 1.0 - (1.0 - t) * (1.0 - t)
 		bal.position = start + d * afstand * voortgang
-		bal.basis = Basis(draai_as, afstand * voortgang / 0.09), 0.0, 1.0, duur)
+		bal.basis = Basis(draai_as, afstand * voortgang / 0.075), 0.0, 1.0, duur)
 	# welke kegels vallen, en wanneer: directe treffers langs de baan, dan de ketting
 	var geraakt: Dictionary = {}
 	var vallen: Array = []
@@ -326,7 +325,7 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 		rel.y = 0.0
 		var langs := rel.dot(d)
 		var dwars := (rel - d * langs).length()
-		if langs > 0.0 and langs < afstand + 0.06 and dwars < 0.15:
+		if langs > 0.0 and langs < afstand + 0.05 and dwars < 0.12:
 			kandidaten.append([langs, i])
 	kandidaten.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	for kand in kandidaten:
@@ -347,12 +346,12 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 		# een fles rolt nog een stukje door
 		kt.tween_property(k, "rotation:y", k.rotation.y + o._rng.randf_range(-0.6, 0.6), 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var score := vallen.size()
-	var midden := Vector3(0.0, 0.4, -KEGEL_AFSTAND)
+	var midden := Vector3(0.0, 0.35, -KEGEL_AFSTAND - 0.3)
 	tw.tween_interval(0.35)
 	tw.tween_callback(func() -> void:
 		p.spel_score = score
-		if score >= 9:
-			_tekst(baan, midden, "Alle negen!", Color(1.0, 0.85, 0.3))
+		if score >= 10:
+			_tekst(baan, midden, "Strike!", Color(1.0, 0.85, 0.3))
 			_toon(["prop_combo"], 1.0)
 		elif score == 0:
 			_tekst(baan, midden, "Poedel!", Color(0.85, 0.85, 0.9))
@@ -389,7 +388,7 @@ func _kegel_valt(p: Dictionary, i: int, tijd: float, richting: Vector3, geraakt:
 			continue
 		var naar: Vector3 = (kegels[j] as Dictionary).pos - hier
 		var afstand := naar.length()
-		if afstand > 0.36 or afstand < 0.001:
+		if afstand > 0.29 or afstand < 0.001:
 			continue
 		var n := naar / afstand
 		var mee := n.dot(richting)
