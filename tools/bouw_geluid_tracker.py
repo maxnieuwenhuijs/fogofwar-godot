@@ -17,6 +17,7 @@ import re
 import glob
 import json
 import html
+import hashlib
 import collections
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -90,6 +91,122 @@ def gevonden_categorieen():
     return uit
 
 
+# --- de props van het diorama (12 september) -------------------------------------
+# Engelse ElevenLabs-prompts per prop-categorie (recept uit de wishlist: kort,
+# droog, het materiaal benoemen, zes takes achter elkaar). De Nederlandse
+# omschrijving uit SOUND-WISHLIST sectie 11 staat er als toelichting bij.
+PROP_PROMPT_EN = {
+    "prop_tik": "short dry wooden tap, small knock on a wooden game piece, no reverb",
+    "prop_bel": "small brass bell struck once, clear ding with a short ringing tail, 18th century camp bell",
+    "prop_glas": "two glass bottles clinking together, short bright clink, no reverb",
+    "prop_aambeeld": "blacksmith hammer striking an anvil once, sharp metallic clang, short",
+    "prop_kookpot": "iron lid dropped onto an iron cooking pot, dull bong, short",
+    "prop_trom": "single hit on a military snare drum skin, dry and dull, no roll",
+    "prop_ton": "knock on an empty wooden barrel, hollow wooden bonk, short",
+    "prop_hoorn": "short signal blast on a brass hunting horn, one note, half a second",
+    "prop_bijl": "axe blade biting into a wooden chopping block, single thunk",
+    "prop_kogel": "iron cannonball dropped onto another iron ball, dull metallic clank",
+    "prop_klop": "two quick knocks on a plank door, wooden, dry",
+    "prop_wc": "small wooden outhouse door slammed shut with a squeaky hinge",
+    "prop_doek": "canvas tent flap snapping in a gust of wind, short",
+    "prop_kraai": "single harsh crow caw, close, dry",
+    "prop_kikker": "one short frog croak, wet and throaty",
+    "prop_wegwijzer": "old wooden signpost creaking as it wobbles, short creak",
+    "prop_hek": "wooden fence rail knocking against a post, wood creak and tap",
+    "prop_molen": "windmill sails creaking as they turn, slow wooden groan, one second",
+    "prop_kanon_tik": "fingernail tap on an iron cannon barrel, small metallic tick",
+    "prop_kanon": "18th century field cannon firing, deep black powder boom with a short tail",
+    "prop_emmer": "wooden bucket on a rope knocking against a stone well wall",
+    "prop_plons": "small splash of a stone dropped into a pond, water plop with bubbles",
+    "prop_ritsel": "leaves rustling as a branch is shaken, short dry rustle",
+    "prop_zand": "dry sand sliding down a dune, soft hiss, short",
+    "prop_steen": "one stone knocking against another stone, dull, short",
+    "prop_sneeuw": "soft crunch of packed snow, one step, muffled",
+    "prop_hooi": "hay bale rustling as someone falls into it, short",
+    "prop_lantaarn": "small metal oil lantern swinging and tinkling against its hook",
+    "prop_vuur": "campfire crackle, a few sharp pops of burning wood, half a second",
+    "prop_uil": "owl hooting twice, soft, at night",
+    "prop_kip": "chicken clucking three times, startled, close",
+    "prop_munt": "single coin dropped into shallow water, small plink",
+    "prop_kokos": "coconut falling onto packed earth, dull thud",
+    "prop_boot": "hollow knock on the hull of a wooden rowing boat floating on water",
+    "prop_ijs": "thin ice cracking under a step, sharp crack with small splinters",
+    "prop_geit": "goat bleating once, short",
+    "prop_nies": "man sneezing once, comic, short",
+    "prop_combo": "cheerful chime of four ascending notes on a small glockenspiel, short",
+    "bewoner_snurken": "man snoring twice, comic, soft",
+    "prop_schot": "single flintlock musket shot, black powder crack with a short echo",
+}
+
+
+def prop_categorieen_uit_wishlist():
+    """De prop-rijen uit SOUND-WISHLIST (`prop_*`, `bewoner_*`): categorie ->
+    {waarvoor, hoe, gewenst}. Een latere rij (de volledige tabel in sectie 11)
+    overschrijft een eerdere."""
+    uit = {}
+    if not os.path.exists("SOUND-WISHLIST.md"):
+        return uit
+    for regel in io.open("SOUND-WISHLIST.md", encoding="utf-8"):
+        if not regel.startswith("|"):
+            continue
+        cellen = [c.strip() for c in regel.strip().strip("|").split("|")]
+        if len(cellen) < 4:
+            continue
+        m = re.match(r"^`((?:prop|bewoner)_[a-z0-9_]+)`$", cellen[0])
+        if not m:
+            continue
+        cat = m.group(1)
+        if len(cellen) == 5:      # Categorie | Waarvoor | Hoe | Var. | Nu
+            waarvoor, hoe, var_ = cellen[1], cellen[2], cellen[3]
+        else:                     # Categorie | Bestand | Var. | Waarvoor | Terugval | Status
+            waarvoor, hoe, var_ = cellen[3], "", cellen[2]
+        nums = [int(x) for x in re.findall(r"\d+", var_)]
+        uit[cat] = {"waarvoor": waarvoor, "hoe": hoe, "gewenst": max(nums) if nums else 2}
+    return uit
+
+
+def synthetische_hashes():
+    """Bestandsnaam -> sha1 van wat tools/maak_prop_geluiden.py schreef."""
+    pad = os.path.join("sounds", "props", "synthetisch.json")
+    try:
+        return json.load(io.open(pad, encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def prop_stand(cat, synth):
+    """(echt, synthetisch): hoeveel bestanden van deze categorie er liggen,
+    gesplitst in echte opnames en synthetische placeholders."""
+    echt = 0
+    kunst = 0
+    for pad in glob.glob("sounds/**/*.wav", recursive=True):
+        naam = os.path.basename(pad)
+        kaal = os.path.splitext(naam)[0]
+        delen = kaal.rsplit("_", 1)
+        if len(delen) == 2 and delen[1].isdigit():
+            kaal = delen[0]
+        if kaal != cat:
+            continue
+        h = hashlib.sha1(open(pad, "rb").read()).hexdigest()
+        if synth.get(naam) == h:
+            kunst += 1
+        else:
+            echt += 1
+    return echt, kunst
+
+
+def bouw_props():
+    synth = synthetische_hashes()
+    rijen = []
+    for cat, info in prop_categorieen_uit_wishlist().items():
+        echt, kunst = prop_stand(cat, synth)
+        rijen.append({"categorie": cat, "waarvoor": info["waarvoor"], "hoe": info["hoe"],
+                      "gewenst": info["gewenst"], "echt": echt, "synth": kunst,
+                      "prompt": PROP_PROMPT_EN.get(cat, "")})
+    rijen.sort(key=lambda r: (r["echt"] > 0, r["synth"] > 0, r["categorie"]))
+    return rijen
+
+
 def prompts_uit_wishlist():
     """Bestandsnaam -> ElevenLabs-prompt, uit de tabellen in de wishlist."""
     uit = {}
@@ -143,7 +260,8 @@ def bouw():
     return facties, totaal_moet, totaal_heeft
 
 
-def schrijf(facties, moet, heeft):
+def schrijf(facties, moet, heeft, props=None):
+    props = props or []
     def esc(s):
         return html.escape(str(s), quote=True)
 
@@ -199,11 +317,18 @@ def schrijf(facties, moet, heeft):
   <div class="bar"><i style="width:__PCT__%"></i></div>
   <div class="barlabel">__HEEFT__ van __MOET__ factie-geluiden aanwezig (__PCT__%).
     Klik een prompt om hem te kopieren.</div>
+  <div class="barlabel">__PROPS__</div>
 </header>
 <main>
 """
     pct = int(round(100.0 * heeft / max(moet, 1)))
-    uit = [kop.replace("__PCT__", str(pct)).replace("__HEEFT__", str(heeft)).replace("__MOET__", str(moet))]
+    p_echt = sum(1 for r in props if r["echt"])
+    p_synth = sum(1 for r in props if not r["echt"] and r["synth"])
+    p_leeg = len(props) - p_echt - p_synth
+    props_regel = ("Diorama-props: %d categorieen, %d echt opgenomen, %d nog synthetisch (tools/maak_prop_geluiden.py), %d leeg."
+                   % (len(props), p_echt, p_synth, p_leeg)) if props else ""
+    uit = [kop.replace("__PCT__", str(pct)).replace("__HEEFT__", str(heeft)).replace("__MOET__", str(moet))
+           .replace("__PROPS__", esc(props_regel))]
     for f in facties:
         uit.append('<section style="--fc:%s">' % f["kleur"])
         leger = ""
@@ -234,6 +359,31 @@ def schrijf(facties, moet, heeft):
             uit.append("<tr><td>%s</td><td class=\"cat\">%s</td><td>%s</td><td>%s</td></tr>"
                        % (esc(r["label"]), esc(r["categorie"]), status, cel))
         uit.append("</tbody></table></section>")
+    if props:
+        uit.append('<section style="--fc:#8fb36a">')
+        uit.append('<div class="fkop"><h2>Diorama-props</h2><div class="tel">tik-geluiden om het bord &middot; '
+                   '%d echt, %d synthetisch, %d leeg &middot; bestanden in <code>sounds/props/</code>: '
+                   '<code>prop_bel.wav</code>, <code>prop_bel_2.wav</code>, ...</div></div>' % (p_echt, p_synth, p_leeg))
+        uit.append("<table><thead><tr><th>Waarvoor</th><th>Categorie</th><th>Status</th>"
+                   "<th>Prompt (ElevenLabs, zes takes) / hoe het moet klinken</th></tr></thead><tbody>")
+        for r in props:
+            if r["echt"]:
+                status = '<span class="ja">%d echt</span>' % r["echt"]
+                if r["synth"]:
+                    status += ' <span class="uitleg">+ %d synthetisch</span>' % r["synth"]
+            elif r["synth"]:
+                status = '<span style="color:var(--accent);font-weight:600">%d synthetisch</span>' % r["synth"]
+            else:
+                status = '<span class="nee">ontbreekt</span>'
+            status += '<div class="uitleg">gewenst: %d</div>' % r["gewenst"]
+            cel = ""
+            if r["hoe"]:
+                cel += '<div class="uitleg">%s</div>' % esc(r["hoe"])
+            if r["prompt"]:
+                cel += '<code class="prompt" onclick="kopieer(this)">%s</code>' % esc(r["prompt"])
+            uit.append("<tr><td>%s</td><td class=\"cat\">%s</td><td>%s</td><td>%s</td></tr>"
+                       % (esc(r["waarvoor"]), esc(r["categorie"]), status, cel))
+        uit.append("</tbody></table></section>")
     uit.append("""</main>
 <div class="voet">
   <p><b>Terugval:</b> ontbreekt een factie-geluid, dan leent het spel dat van de
@@ -242,6 +392,9 @@ def schrijf(facties, moet, heeft):
   <p><b>Waar zet je ze neer:</b> <code>sounds/factions/&lt;factie&gt;/</code>.
   De mapindeling is vrij; het spel zoekt op bestandsnaam. Meerdere takes:
   <code>inf_die_pig.wav</code>, <code>inf_die_pig_2.wav</code>, ...</p>
+  <p><b>Diorama-props:</b> een echte opname op dezelfde naam in <code>sounds/props/</code>
+  (of waar dan ook onder <code>sounds/</code>) verdringt de synthetische; de tracker
+  herkent synthetisch aan <code>sounds/props/synthetisch.json</code>.</p>
   <p>Opnieuw opbouwen: <code>python tools/bouw_geluid_tracker.py</code></p>
 </div>
 <script>
@@ -260,8 +413,13 @@ function kopieer(el){
 
 if __name__ == "__main__":
     facties, moet, heeft = bouw()
-    schrijf(facties, moet, heeft)
+    props = bouw_props()
+    schrijf(facties, moet, heeft, props)
     print("sound-tracker.html: %d van %d factie-geluiden aanwezig" % (heeft, moet))
+    p_echt = sum(1 for r in props if r["echt"])
+    p_synth = sum(1 for r in props if not r["echt"] and r["synth"])
+    p_leeg = sum(1 for r in props if not r["echt"] and not r["synth"])
+    print("  props: %d categorieen, %d echt opgenomen, %d nog synthetisch, %d leeg" % (len(props), p_echt, p_synth, p_leeg))
     for f in facties:
         ontbreekt = [r["categorie"] for r in f["rijen"] if not r["n"] and not r.get("via_modellen")]
         print("  %-10s %d/%d%s" % (f["naam"], f["heeft"], f["moet"],

@@ -448,7 +448,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `sounds/`-mappen en SOUND-WISHLIST.md, dus hij kan niet verouderen: per factie
   zie je wat er ligt, wat mist, en de ElevenLabs-prompt om te kopieren. Een
   factie telt als gedekt zodra alle vijf de archetype-varianten er zijn (dan
-  wordt de factie-categorie nooit bereikt).
+  wordt de factie-categorie nooit bereikt). **Sinds 12 september ook de
+  diorama-props**: een sectie met de 40 `prop_*`/`bewoner_*`-categorieen uit
+  SOUND-WISHLIST sectie 11, per stuk echt opgenomen / nog synthetisch / leeg
+  (synthetisch herkent hij aan `sounds/props/synthetisch.json`, het manifest
+  met sha1's dat `tools/maak_prop_geluiden.py` schrijft; een echte opname op
+  dezelfde naam heeft een andere hash) en een Engelse ElevenLabs-prompt
+  (`PROP_PROMPT_EN` in het script).
 - **UI-assetpack nakijken: `-- uicheck`** (statusbord van de UI-assets onder
   `assets/ui/`: elk icoon-id uit `docs/design/UI-SPEC-EN.md` met zijn bestand,
   de zes emblemen, de kaartdelen, elke knop- en paneelstijl met 9-patch-marge,

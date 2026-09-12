@@ -1,5 +1,29 @@
 # Fog of War — Work In Progress & Context
 
+## 12 september -- de prop-geluiden in de geluid-tracker
+
+Max: "voeg ook al deze prop geluiden toe aan de geluiden tracker."
+`tools/bouw_geluid_tracker.py` heeft nu een sectie Diorama-props onder de
+facties: de 40 `prop_*`/`bewoner_*`-categorieen uit SOUND-WISHLIST sectie 11,
+per stuk de stand (echt opgenomen, nog synthetisch, leeg), het gewenste
+aantal varianten, de Nederlandse omschrijving en een Engelse
+ElevenLabs-prompt om te kopieren (`PROP_PROMPT_EN`). Synthetisch herkent
+hij aan `sounds/props/synthetisch.json`: `maak_prop_geluiden.py` schrijft
+daar de sha1 van elk bestand dat hij maakt (en zaait nu per bestand vast,
+want python's `hash()` wisselt per proces); een echte opname op dezelfde
+naam heeft een andere hash en telt als echt. Stand: 39 synthetisch, 1 leeg
+(`prop_schot`, dat leent `musket`). Een les: een patch-script dat
+`io.open(pad, "w", newline="\\n")` verkeerd citeert maakt het doelbestand
+LEEG voordat de ValueError komt; twee keer teruggezet uit git, nu een
+binaire schrijfactie.
+
+Max ook: "en deze moeten allen ook een 3d model hebben niet? met tripo maak
+ik alles." Ja: elke ⚙ in de prop-tracker is een placeholder uit primitieven
+die wijkt voor `assets/models/props/prop_<naam>.glb` (of `_red`/`_blue`);
+de prompt per prop staat in de tracker. Tripo levert glb met textuur, dus
+geen Blender-stap: neerzetten, `--import`, en bij een zware mesh
+`tools/blender_decimate.py`.
+
 ## 11 september -- drie trainingsruns, de Beer op 39%, en de factiezoeker gerepareerd
 
 Max: "wat hebben ze geleerd, heb een run gedaan" en daarna "dan moet de

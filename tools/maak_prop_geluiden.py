@@ -15,6 +15,8 @@ Bestandsnaam = categorie (+ `_2`, `_3` voor de varianten), precies zoals
 op dezelfde naam en de synthetische wijkt. 22 kHz mono 16-bit, piek -6 dB.
 """
 import argparse
+import hashlib
+import json
 import os
 import wave
 
@@ -378,15 +380,24 @@ def main():
     args = ap.parse_args()
     os.makedirs(args.uit, exist_ok=True)
     totaal = 0
+    manifest = {}
     for cat, (recept, n) in RECEPTEN.items():
         for i in range(n):
-            rng = np.random.default_rng(args.seed * 1000 + hash(cat) % 997 + i)
+            # vaste seed per bestand (hash() van python wisselt per proces)
+            zaad = args.seed * 1000 + sum(ord(c) for c in cat) * 7 + i
+            rng = np.random.default_rng(zaad)
             k = float(rng.uniform(0.92, 1.08))
             naam = cat + ("" if i == 0 else "_%d" % (i + 1)) + ".wav"
-            schrijf(os.path.join(args.uit, naam), recept(k, rng))
+            pad = os.path.join(args.uit, naam)
+            schrijf(pad, recept(k, rng))
+            manifest[naam] = hashlib.sha1(open(pad, "rb").read()).hexdigest()
             totaal += 1
+    # het manifest laat de geluid-tracker zien welke bestanden nog synthetisch
+    # zijn: een echte opname op dezelfde naam heeft een andere hash
+    with open(os.path.join(args.uit, "synthetisch.json"), "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=1, sort_keys=True)
     grootte = sum(os.path.getsize(os.path.join(args.uit, f)) for f in os.listdir(args.uit) if f.endswith(".wav"))
-    print("%d bestanden in %s (%.1f MB), %d categorieen" % (totaal, args.uit, grootte / 1e6, len(RECEPTEN)))
+    print("%d bestanden in %s (%.1f MB), %d categorieen, manifest synthetisch.json" % (totaal, args.uit, grootte / 1e6, len(RECEPTEN)))
 
 
 if __name__ == "__main__":
