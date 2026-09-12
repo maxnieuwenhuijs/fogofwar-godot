@@ -3842,6 +3842,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_toggle_ambiance_panel()
 		return
 	if event is InputEventMouseMotion:
+		if _omgeving != null:
+			_omgeving.beweeg((event as InputEventMouseMotion).position)   # mini-game: wegschuiven breekt af
 		if _placement_mode:
 			_update_placement_ghost((event as InputEventMouseMotion).position)
 			return
@@ -3851,6 +3853,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	if not mb.pressed:
+		# Vinger los: de mini-games in het diorama (12 september) werpen bij het
+		# loslaten; voor de rest van het spel telt alleen het indrukken.
+		if mb.button_index == MOUSE_BUTTON_LEFT and _omgeving != null:
+			_omgeving.laat_los(mb.position)
 		return
 	# Diorama-props om het bord (Omgeving): klikken mag altijd, juist ook
 	# terwijl je op de tegenstander wacht. Ze liggen buiten het bord, dus

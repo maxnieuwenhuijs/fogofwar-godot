@@ -1,5 +1,65 @@
 # Fog of War — Work In Progress & Context
 
+## 12 september -- vijf mini-games in het diorama
+
+Max: "bedenk 5 spelletjes die je kunt doen, mini games in de dioramas, dus
+kegels bowlen door een bepaalde bal in te drukken met hoek en snelheid ...
+heel low key, simpel te bedienen met een tap of een klik inhouden", en
+daarna "bouw het gelijk". `scripts/game/spelletjes.gd` (`Spelletjes`, een
+RefCounted met een verwijzing naar de Omgeving; de helpers `_mesh`, `_boog`,
+`_fx_*`, `_rimpel`, `_registreer`, `_rng` worden gewoon gebruikt) met twee
+bedieningen:
+
+- WERPEN: `Omgeving.klik` speelt de tik en geeft een spel-prop aan
+  `Spelletjes.druk`; na `HOLD_DREMPEL` (0,22 s) begint het richten: een
+  pijl op de grond zwaait heen en weer (richting, `zwaai` graden) en groeit
+  (kracht, `laadtijd`), van grijs naar goud en rood-pulserend als hij vol
+  is. `laat_los` werpt; een korte tik speelt bij het loslaten de gewone
+  reactie van de prop; `beweeg` verder dan 90 px breekt af. game.gd geeft
+  het loslaten en de beweging door (nieuw, het spel keek alleen naar drukken).
+- OP DE MAAT: een prop met `spel_staat.wacht_op_tik` krijgt elke tik.
+
+De vijf: kegelen (`kegelspel` in DIORAMAS 1, 2, 3, 9: negen lege flessen
+uit de kantine in een ruit, omgerold met een kanonskogel; Max: "maak die
+kegels wel iets wat bij de setting hoort", de eerste versie had
+bowlingkegels; de kogel rolt langs de pijl 1,2-3,5 eenheden, treffers langs de baan en
+een ketting met kans 0,72 naar achteren; "Poedel!", "%d kegels!", "Alle
+negen!" met de chime; na twee tellen staat alles weer), keilen (stenen aan
+elke plas met `{"stenen": true}`, en op de kade van de Rivierhaven: eerste
+worp 1,4x de hup, dan steeds 0,78x korter, elke kets een kring en een
+plons met oplopende toon; buiten het water: "Op de kant!"; de kikker duikt
+als de steen langs komt; op de bevroren plas glijdt en tolt de steen), het
+kanon (`kruitvaten` in 4, 11, 12; `koppel_doelen` draait elk kanon naar de
+dichtstbijzijnde vaten; vasthouden: loop van 10 naar 45 graden en een
+doelring op de dracht 1,6 + 5,4 x kracht; de wind van het potje duwt de
+kogel 0,35 x kracht opzij, dus "Windje!" als het zonder wind raak was;
+vier vaten in een kettingreactie, "Alles de lucht in!"), vissen (`hengel`
+op de kade in 6 en `{"hengel": true}` op de plas van 2: de dobber vliegt
+de lengte van de pijl, blijft binnen het water; na 2-5 s duikt hij 0,5 s,
+tik dan: snoek 55%, laars 25%, musket 15%, kist 5%; te vroeg is "Te
+vroeg!", drie keer gemist is "Niets..."; vangsten blijven op de kant liggen,
+vijf tegelijk) en de tamboer-cadans (`{"cadans": true}` op de trommels in
+1, 4, 7, 10: vasthouden telt vier slagen af met de trom, dan acht gouden
+pulsen op het tempo (0,6 s) waarop je tikt, venster 0,17 s voor en na;
+drie soldaatjes in de teamkleur marcheren op de plaats, het vlaggetje
+stijgt; "Uit de maat!" laat ze struikelen; 8 van 8 is "Perfect!", een
+hoornstoot en 10% sneller de volgende keer).
+
+Geluiden: `prop_kegel` (3), `prop_kegel_rol`, `prop_kruitvat`, `prop_hengel`,
+`prop_vis` in `maak_prop_geluiden.py` (106 bestanden, 44 categorieen; de
+oude blijven byte-gelijk), rijen in SOUND-WISHLIST sectie 11 en prompts in
+de geluid-tracker; PROP-WISHLIST sectie 13 met de Tripo-props (kegel, bal,
+stenen, kruitvat, hengel, vis, soldaatje). Check `-- spelcheck`: per spel
+het diorama, vinger erop, na de drempel `zet_richt(0, kracht)` (kanon: de
+kracht die precies op de vaten landt), loslaten, wachten tot de prop vrij
+is, score minstens 3/1/1/1/8; met venster `_shot_spel_richt.png`. Eerste
+run: kegelen 8, keilen 4, kanon 3, vissen 1, cadans 8 van 8. Lessen: `as`
+is een sleutelwoord (tweede keer, zie 11 september); en `-- omgevingcheck`
+moet sinds vandaag drukken EN loslaten, want een spel-prop reageert pas bij
+het loslaten (kort) of na de drempel (lang). Windows-les: een python-patch
+die een .gd-bestand schrijft terwijl een Godot-proces draait, krijgt
+`OSError 22` (user-mapped file): eerst de checks laten uitlopen.
+
 ## 12 september -- kaartkeuze blijft staan in de koppel-fase; dode dragers komen niet terug
 
 Max: "houd mijn kaart geselecteerd ook al is de AI eerst aan de beurt,

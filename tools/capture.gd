@@ -1933,6 +1933,113 @@ func _ready() -> void:
 		print("[DIORAMA] klaar")
 		get_tree().quit(0)
 		return
+	elif "spelcheck" in args:
+		# 12 september: de vijf mini-games in het diorama (scripts/game/
+		# spelletjes.gd). Per spel: het diorama met die prop, vinger erop, na
+		# de hold-drempel richten, richting en kracht vastzetten, loslaten en
+		# de uitkomst tellen; vissen tikt als de dobber duikt, de cadans tikt
+		# acht keer op de maat. Script-fouten vangt de grep op SCRIPT ERROR.
+		await get_tree().create_timer(1.2).timeout
+		var sp: Node = game._omgeving
+		var sp_cam: Camera3D = game._camera
+		var sp_fouten := 0
+		if sp == null:
+			print("[SPEL] FOUT: geen omgeving")
+			get_tree().quit(1)
+			return
+		# [soort, diorama, minimale score]
+		var sp_doelen: Array = [["kegelen", 1, 3], ["keilen", 1, 1], ["kanon", 4, 1], ["vissen", 6, 1], ["cadans", 1, 8]]
+		for doel in sp_doelen:
+			var soort := String(doel[0])
+			sp.zet_diorama(int(doel[1]))
+			await get_tree().process_frame
+			var p: Dictionary = {}
+			for q in sp._props:
+				if String(q.get("spel", "")) == soort:
+					p = q
+					break
+			if p.is_empty():
+				print("[SPEL] FOUT: geen %s-prop in diorama %d" % [soort, int(doel[1])])
+				sp_fouten += 1
+				continue
+			var n: Node3D = p.node
+			var scherm: Vector2 = sp_cam.unproject_position(n.to_global(p.get("midden", Vector3(0.0, float(p.hoogte) * 0.5, 0.0))))
+			if not sp.klik(scherm):
+				print("[SPEL] FOUT: %s (%s) niet raak" % [soort, n.name])
+				sp_fouten += 1
+				continue
+			await get_tree().create_timer(0.35).timeout   # voorbij de hold-drempel
+			if soort == "cadans":
+				if not p.has("spel_staat"):
+					print("[SPEL] FOUT: de cadans is niet gestart na het vasthouden")
+					sp_fouten += 1
+					continue
+				var getikt := 0
+				var wacht := 0.0
+				while p.has("spel_staat") and wacht < 14.0:
+					var st: Dictionary = p.spel_staat
+					if String(st.fase) == "spel" and not bool(st.getikt_volgende) and float(st.volgende) - sp._tijd < 0.04 and getikt < 8:
+						sp.klik(scherm)
+						getikt += 1
+					await get_tree().process_frame
+					wacht += get_process_delta_time()
+				print("[SPEL] cadans: %d keer getikt, %d in de maat (tempo nu %.2f s)" % [getikt, int(p.get("spel_score", -1)), float(p.get("tempo", 0.0))])
+				if int(p.get("spel_score", -1)) < int(doel[2]):
+					print("[SPEL] FOUT: cadans %d in de maat, verwacht %d" % [int(p.get("spel_score", -1)), int(doel[2])])
+					sp_fouten += 1
+				continue
+			if not sp._spel.richt_bezig():
+				print("[SPEL] FOUT: %s richt niet na het vasthouden" % soort)
+				sp_fouten += 1
+				continue
+			var kracht := 0.5
+			if soort == "kegelen":
+				kracht = 1.0
+			elif soort == "kanon":
+				var d2: Dictionary = p.get("doel", {})
+				if d2.is_empty():
+					print("[SPEL] FOUT: het kanon heeft geen kruitvaten als doel")
+					sp_fouten += 1
+					continue
+				var afst: float = (d2.node as Node3D).position.distance_to(n.position)
+				kracht = clampf((afst - 1.6) / 5.4, 0.0, 1.0)
+			sp._spel.zet_richt(0.0, kracht)
+			if soort == "kegelen":
+				# met venster: de pijl van het richten op de plaat
+				await get_tree().process_frame
+				var rt := get_viewport().get_texture()
+				if rt != null and rt.get_image() != null:
+					rt.get_image().save_png("res://_shot_spel_richt.png")
+			sp.laat_los(scherm)
+			if soort == "vissen":
+				# wachten tot de dobber duikt, dan tikken
+				var w2 := 0.0
+				while w2 < 9.0 and p.has("spel_staat") and String((p.spel_staat as Dictionary).get("fase", "")) != "dip":
+					await get_tree().process_frame
+					w2 += get_process_delta_time()
+				if not p.has("spel_staat"):
+					print("[SPEL] FOUT: de dobber is nooit uitgeworpen of al terug")
+					sp_fouten += 1
+					continue
+				sp.klik(scherm)
+			var w3 := 0.0
+			while bool(p.bezig) and w3 < 12.0:
+				await get_tree().process_frame
+				w3 += get_process_delta_time()
+			var score: int = int(p.get("spel_score", -1))
+			print("[SPEL] %s: score %d (kracht %.2f, klaar na %.1f s)" % [soort, score, kracht, w3])
+			if bool(p.bezig):
+				print("[SPEL] FOUT: %s is na 12 s nog bezig" % soort)
+				sp_fouten += 1
+			if score < int(doel[2]):
+				print("[SPEL] FOUT: %s score %d, verwacht minstens %d" % [soort, score, int(doel[2])])
+				sp_fouten += 1
+		print("[SPEL] " + ("PASS" if sp_fouten == 0 else "FAIL (%d fouten)" % sp_fouten))
+		var sp_tex := get_viewport().get_texture()
+		if sp_tex != null and sp_tex.get_image() != null:
+			sp_tex.get_image().save_png("res://_shot_spel.png")
+		get_tree().quit(0 if sp_fouten == 0 else 1)
+		return
 	elif "dragercheck" in args:
 		# 12 september (Max: "soms spawnen er weer soldaten met een trom of een
 		# vlag, dat kan niet, als ze dood zijn zijn ze dood"). Opstelling met
@@ -2179,6 +2286,7 @@ func _ready() -> void:
 					var dwp: Vector3 = dn.to_global(dp.get("midden", Vector3(0.0, float(dp.hoogte) * 0.5, 0.0)))
 					if not og.klik(og_cam.unproject_position(dwp)):
 						mis.append(dn.name)
+					og.laat_los(og_cam.unproject_position(dwp))
 				if not mis.is_empty():
 					print("[OMGEVING] FOUT: diorama %d, niet raak: %s" % [di, ", ".join(mis)])
 					og_fouten += 1
@@ -2191,6 +2299,7 @@ func _ready() -> void:
 				var wp: Vector3 = pn.to_global(p.get("midden", Vector3(0.0, float(p.hoogte) * 0.5, 0.0)))
 				var sp: Vector2 = og_cam.unproject_position(wp)
 				var raak: bool = og.klik(sp)
+				og.laat_los(sp)   # een tik is drukken en loslaten: de spel-props reageren pas dan
 				og_namen.append("%s@(%d,%d)" % [pn.name, int(sp.x), int(sp.y)])
 				if not raak:
 					print("[OMGEVING] FOUT: klik op %s (scherm %s) raakt niets" % [pn.name, sp])

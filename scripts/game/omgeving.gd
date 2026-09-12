@@ -29,6 +29,10 @@ extends Node3D
 ## Knoppen (sfeer-paneel, toets L): omgeving (aan/uit), omgeving_licht,
 ## wolken, vignet, props. Zie `pas_toe`.
 
+func _init() -> void:
+	_spel = Spelletjes.new(self)
+
+
 const OMGEVING_DIR := "res://assets/models/board/omgeving/"
 const PROPS_DIR := "res://assets/models/props/"
 const GROND_Y := -0.23          # onderkant van het bord in bordruimte (top 0,05 - dikte 0,28)
@@ -63,6 +67,9 @@ var _mat_cache: Dictionary = {}
 # staat tussen seed(777) en de auto-opstelling van -- uispel; elk extra trekje
 # (een boom die willekeurig draait) verschoof de hele partij.
 var _rng := RandomNumberGenerator.new()
+# de mini-games (12 september): kegelen, keilen, kanon, vissen, cadans
+var _spel: Spelletjes
+var _rivier_node: Node3D = null   # ouder voor kringen op de rivier (op GROND_Y)
 # bewoners: de kleine poppetjes uit assets/models/bewoners/ (Bewoner)
 const BEWONER_SLOTS_EIGEN: Array = [Vector3(0.7, GROND_Y, 14.6), Vector3(4.1, GROND_Y, 13.6),
 		Vector3(2.5, GROND_Y, 15.4), Vector3(-1.3, GROND_Y, 12.5)]
@@ -125,6 +132,8 @@ const TIK_GELUID: Dictionary = {
 	"Bel": ["prop_bel", "haven_score"], "Glaswerk": ["prop_glas", "card_stat_up"],
 	"Aambeeld": ["prop_aambeeld", "impact_armor"], "Kookpot": ["prop_kookpot", "impact_armor"],
 	"Hek": ["prop_hek", "impact_wood"], "Plas": ["prop_plons", "small_blood_splash"], "Rots": ["prop_steen", "impact_wood"],
+	"Kegelbal": ["prop_kogel", "impact_armor"], "Stenen": ["prop_steen", "impact_wood"],
+	"Kruitvaten": ["prop_ton", "impact_wood"], "Hengel": ["prop_hengel", "prop_tik"],
 }
 const EXTRA_PROPS: Array = [
 	{"naam": "fakkel", "eigen": [0.6, 16.2], "ander": [8.0, -4.3], "geluid": ["prop_vuur"]},
@@ -243,6 +252,7 @@ func _process(delta: float) -> void:
 	for w in _wieken:
 		if is_instance_valid(w):
 			(w as Node3D).rotation.z += delta * (0.55 + float(_wiek_boost.get(w, 0.0)))
+	_spel.process(delta)
 
 
 ## Klik op een prop? Kiest de dichtstbijzijnde binnen KLIK_STRAAL schermpixels
@@ -267,11 +277,27 @@ func klik(screen_pos: Vector2) -> bool:
 	if beste.is_empty():
 		return false
 	_tik(beste)
+	if beste.has("spel"):
+		# een spel-prop (12 september): de tik is gespeeld, de rest beslist
+		# Spelletjes bij het loslaten (kort = de gewone reactie) of na de
+		# hold-drempel (het spel zelf)
+		_spel.druk(beste, screen_pos)
+		return true
 	if beste.bezig:
 		return true
 	beste.bezig = true
 	_speel_willekeurig(beste)
 	return true
+
+
+## Vinger los (game.gd, elke linker-loslaat). Waar = een spel-prop deed er iets mee.
+func laat_los(screen_pos: Vector2) -> bool:
+	return _spel.laat_los(screen_pos)
+
+
+## Vinger beweegt (game.gd): ver wegschuiven breekt een lopend richten af.
+func beweeg(screen_pos: Vector2) -> void:
+	_spel.beweeg(screen_pos)
 
 
 # ---------------------------------------------------------------- lagen
@@ -363,76 +389,80 @@ void fragment() {
 # marktplein, Egypte 1798, de Alpenpas van 1800 en de hoeve van Waterloo.
 const DIORAMAS: Array = [
 	{"naam": "Weidekamp", "grond": "gras", "sfeer": "het gewone kamp op de wei",
-	 "kamp": [["kampvuur", 2.2, 13.4], ["trommel", 0.4, 12.7, 34], ["ton", 4.3, 12.9, -23], ["hoorn", 4.95, 12.25, 69],
+	 "kamp": [["kampvuur", 2.2, 13.4], ["trommel", 0.4, 12.7, 34, {"cadans": true}], ["ton", 4.3, 12.9, -23], ["hoorn", 4.95, 12.25, 69],
 			  ["hakblok", -0.9, 13.9], ["kogels", 3.5, 14.4], ["tent", -1.9, 15.6, 20, {"lantaarn": true}],
-			  ["tent", 5.9, 15.8, -25], ["toilethuisje", 8.3, 13.6, -35], ["glaswerk", 6.6, 12.6, 0]],
-	 "overkant": [["hek_kraai", 2.2, -2.0], ["plas_kikker", 11.2, -2.4], ["wegwijzer", 7.6, -2.9], ["tent", 5.4, -3.9, 160]]},
+			  ["tent", 5.9, 15.8, -25], ["toilethuisje", 8.3, 13.6, -35], ["glaswerk", 6.6, 12.6, 0],
+			  ["kegelspel", 1.2, 17.0, 0]],
+	 "overkant": [["hek_kraai", 2.2, -2.0], ["plas_kikker", 11.2, -2.4, 0, {"stenen": true}], ["wegwijzer", 7.6, -2.9], ["tent", 5.4, -3.9, 160]]},
 	{"naam": "Boerenerf", "grond": "gras", "sfeer": "een boerderij achter de linies: hooi, kippen, de put",
 	 "kamp": [["hooiberg", 6.6, 15.2], ["put", 2.6, 13.2, 15], ["toilethuisje", -1.2, 14.8, 30], ["hakblok", 0.8, 12.4],
 			  ["kampvuur", 3.8, 13.9], ["kookpot", 3.8, 13.9], ["tent", -2.6, 16.4, 15, {"lantaarn": true}],
-			  ["boom", 8.6, 16.6, 0, {"schaal": 1.2}], ["ton", 5.2, 12.4, 10], ["glaswerk", 4.6, 14.9, 20]],
-	 "overkant": [["hek_kraai", 1.4, -2.0], ["plas_kikker", 10.6, -2.6], ["boom", 6.0, -4.2, 0, {"schaal": 1.4}],
+			  ["boom", 8.6, 16.6, 0, {"schaal": 1.2}], ["ton", 5.2, 12.4, 10], ["glaswerk", 4.6, 14.9, 20],
+			  ["kegelspel", 1.4, 17.2, 0]],
+	 "overkant": [["hek_kraai", 1.4, -2.0], ["plas_kikker", 10.6, -2.6, 0, {"stenen": true, "hengel": true}], ["boom", 6.0, -4.2, 0, {"schaal": 1.4}],
 				  ["kruis", 3.6, -3.4, 10], ["wegwijzer", 8.4, -3.0]]},
 	{"naam": "Dorpsrand met molen", "grond": "gras", "sfeer": "de rand van een dorp: de molen draait, de markt staat",
 	 "kamp": [["molen", 7.2, 15.6, -20], ["marktkraam", 2.0, 13.6, 10], ["lantaarnpaal", 4.8, 12.6], ["put", -1.4, 13.4, 0],
 			  ["kampvuur", 0.6, 15.0], ["tent", -2.8, 16.6, 20], ["toilethuisje", 9.4, 12.8, -60],
-			  ["bel", 6.0, 13.2, 0], ["glaswerk", 2.9, 12.6, -20]],
+			  ["bel", 6.0, 13.2, 0], ["glaswerk", 2.9, 12.6, -20], ["kegelspel", 3.4, 17.4, 0]],
 	 "overkant": [["wegwijzer", 2.4, -2.2], ["hek_kraai", 6.4, -2.0], ["boom", 10.4, -4.0, 0, {"schaal": 1.5}],
-				  ["lantaarnpaal", 4.2, -3.6], ["plas_kikker", 0.2, -3.8]]},
+				  ["lantaarnpaal", 4.2, -3.6], ["plas_kikker", 0.2, -3.8, 0, {"stenen": true}]]},
 	{"naam": "Na de slag", "grond": "modder", "tint": [0.92, 0.9, 0.88], "sfeer": "het veld de ochtend erna: kanonnen, kruisen, kraaien",
 	 "kamp": [["kanon", 2.4, 13.2, -15], ["kampvuur", 5.6, 14.2, 0, {"smeulend": true}], ["kogels", 3.8, 12.4],
 			  ["kruis", -1.0, 14.6, 10], ["kruis", 7.8, 15.4, -8], ["tent", -2.4, 16.4, 25], ["ton", 0.4, 12.6, 20],
-			  ["trommel", 7.0, 13.6, 60]],
+			  ["trommel", 7.0, 13.6, 60, {"cadans": true}], ["kruitvaten", 8.2, 12.3, 0]],
 	 "overkant": [["hek_kraai", 1.8, -2.0], ["kruis", 5.4, -3.2, 0], ["kruis", 8.8, -2.4, 12], ["plas_kikker", 11.0, -2.6],
 				  ["boom", 3.4, -4.4, 0, {"schaal": 1.3, "kaal": true}], ["kanon", 9.6, -4.2, 175]]},
 	{"naam": "Winterkamp", "grond": "sneeuw", "tint": [0.96, 0.98, 1.05], "extra": ["sneeuw"], "sfeer": "de winter van 1812: sneeuw, een klein vuur, een sneeuwpop",
 	 "kamp": [["kampvuur", 2.2, 13.4], ["sneeuwpop", -1.4, 14.4, 15], ["tent", -2.4, 16.0, 20, {"lantaarn": true}],
 			  ["tent", 5.9, 15.8, -25], ["hakblok", 0.2, 12.6], ["boom", 8.4, 16.2, 0, {"schaal": 1.5, "kaal": true}], ["kogels", 4.2, 13.0],
 			  ["kookpot", 2.2, 13.4], ["bel", -2.9, 12.9, 0]],
-	 "overkant": [["plas_kikker", 10.8, -2.6, 0, {"bevroren": true}], ["hek_kraai", 2.0, -2.0], ["wegwijzer", 6.8, -3.0],
+	 "overkant": [["plas_kikker", 10.8, -2.6, 0, {"bevroren": true, "stenen": true}], ["hek_kraai", 2.0, -2.0], ["wegwijzer", 6.8, -3.0],
 				  ["boom", 4.0, -4.6, 0, {"schaal": 1.6, "kaal": true}], ["sneeuwpop", 8.6, -3.8, 160]]},
 	{"naam": "Rivierhaven", "grond": "gras", "extra": ["water"], "sfeer": "een kade aan de rivier: tonnen, een sloep, meeuwen",
 	 "kamp": [["ton", 0.6, 12.6, 0], ["ton", 1.2, 13.2, 40], ["kampvuur", 3.6, 13.8], ["lantaarnpaal", 6.4, 12.4],
 			  ["tent", -2.2, 15.8, 20], ["marktkraam", 7.6, 15.2, -30], ["toilethuisje", -0.6, 15.4, 40],
 			  ["bel", 7.0, 12.9, 0], ["glaswerk", 1.9, 12.3, 30]],
 	 "overkant": [["steiger_boot", 4.2, -2.2, 0], ["hek_kraai", 9.8, -1.9, 0, {"vogel": "wit"}], ["put", 0.2, -3.2, 0],
-				  ["lantaarnpaal", 8.0, -3.4]]},
+				  ["lantaarnpaal", 8.0, -3.4], ["stenen", 2.0, -1.45, 0], ["hengel", 6.6, -1.5, 0]]},
 	{"naam": "Bosrand", "grond": "bos", "tint": [0.9, 0.95, 0.9], "sfeer": "een open plek aan de bosrand, houthakkers en een uil",
 	 "kamp": [["boom", -2.6, 15.8, 0, {"schaal": 1.6}], ["boom", 8.2, 16.4, 0, {"schaal": 1.8}], ["boom", 6.6, 13.2, 0, {"schaal": 1.3}],
 			  ["hakblok", 1.0, 13.4], ["kampvuur", 3.2, 14.2], ["kookpot", 3.2, 14.2], ["tent", -0.4, 15.9, 15, {"lantaarn": true}],
-			  ["rots", 5.2, 12.2, 0, {"maat": 0.35}], ["ton", 4.6, 12.7, 0], ["trommel", 0.2, 12.3, 30]],
+			  ["rots", 5.2, 12.2, 0, {"maat": 0.35}], ["ton", 4.6, 12.7, 0], ["trommel", 0.2, 12.3, 30, {"cadans": true}]],
 	 "overkant": [["boom", 1.4, -3.2, 0, {"schaal": 1.7}], ["boom", 5.2, -4.4, 0, {"schaal": 1.5}], ["boom", 9.6, -3.0, 0, {"schaal": 1.6}],
-				  ["hek_kraai", 3.6, -2.0], ["plas_kikker", 11.2, -2.2], ["kruis", 7.6, -2.6, 0]]},
+				  ["hek_kraai", 3.6, -2.0], ["plas_kikker", 11.2, -2.2, 0, {"stenen": true}], ["kruis", 7.6, -2.6, 0]]},
 	{"naam": "Kapelruine", "grond": "gras", "tint": [0.95, 0.95, 1.0], "sfeer": "een vervallen kapel: muren, een boog, een uil in het donker",
 	 "kamp": [["ruine", 6.4, 15.0, -30], ["kruis", 3.6, 13.2, 0], ["lantaarnpaal", 1.0, 12.6], ["kampvuur", -0.6, 14.4],
 			  ["tent", -2.6, 16.4, 20], ["boom", 9.2, 13.0, 0, {"schaal": 1.4}], ["bel", 5.2, 13.4, 0],
 			  ["glaswerk", 0.2, 13.0, 15], ["ton", 2.0, 12.4, 0]],
-	 "overkant": [["ruine", 2.6, -3.6, 160], ["hek_kraai", 6.8, -2.0], ["plas_kikker", 10.6, -2.6], ["wegwijzer", 9.0, -3.8],
+	 "overkant": [["ruine", 2.6, -3.6, 160], ["hek_kraai", 6.8, -2.0], ["plas_kikker", 10.6, -2.6, 0, {"stenen": true}], ["wegwijzer", 9.0, -3.8],
 				  ["kruis", 0.4, -2.6, 0]]},
 	{"naam": "Marktplein", "grond": "kei", "sfeer": "het plein van een stadje: kramen, een fontein, lantaarns",
 	 "kamp": [["marktkraam", 0.4, 13.4, 15], ["marktkraam", 4.6, 13.0, -10], ["fontein", 2.6, 15.2], ["lantaarnpaal", 7.0, 12.6],
 			  ["put", -2.4, 15.2, 0], ["ton", 6.2, 14.6, 0], ["toilethuisje", 9.0, 15.6, -40],
-			  ["glaswerk", 3.2, 12.4, -10], ["bel", 8.4, 13.6, 0]],
+			  ["glaswerk", 3.2, 12.4, -10], ["bel", 8.4, 13.6, 0], ["kegelspel", 4.4, 17.8, 0]],
 	 "overkant": [["marktkraam", 2.4, -3.2, 170], ["lantaarnpaal", 6.0, -2.4], ["put", 8.8, -3.6, 0], ["hek_kraai", 10.6, -2.0],
 				  ["wegwijzer", 0.2, -3.6]]},
 	{"naam": "Egypte 1798", "grond": "zand", "tint": [1.05, 1.0, 0.92], "sfeer": "de veldtocht naar Egypte: piramiden, een sfinx, palmen",
 	 "kamp": [["piramide", 8.4, 16.2, 0, {"maat": 1.4}], ["palm", -1.8, 15.4, 0], ["palm", 0.2, 13.2, 40], ["kampvuur", 3.2, 13.8],
 			  ["tent", 5.6, 15.6, -25], ["sfinx", -2.8, 12.8, 30], ["ton", 1.8, 12.4, 0],
-			  ["kookpot", 3.2, 13.8], ["trommel", 5.0, 12.4, 40], ["glaswerk", -0.6, 12.2, 0]],
+			  ["kookpot", 3.2, 13.8], ["trommel", 5.0, 12.4, 40, {"cadans": true}], ["glaswerk", -0.6, 12.2, 0]],
 	 "overkant": [["piramide", 3.0, -4.4, 0, {"maat": 2.2}], ["piramide", 7.8, -4.6, 0, {"maat": 1.5}], ["sfinx", 10.4, -2.6, 180],
 				  ["palm", 0.4, -2.4, 0], ["palm", 5.6, -2.2, 20]]},
 	{"naam": "Alpenpas", "grond": "rots", "tint": [0.95, 0.97, 1.0], "sfeer": "over de Alpen in 1800: rotsen, een kanon op de pas, een wegkruis",
 	 "kamp": [["rots", 7.6, 15.8, 0, {"maat": 0.9}], ["rots", -2.6, 14.6, 0, {"maat": 0.7}], ["kampvuur", 2.0, 13.4],
 			  ["tent", 5.4, 15.4, -25], ["kanon", -0.6, 12.6, -20], ["kruis", 4.0, 12.2, 0], ["rots", 9.2, 12.4, 0, {"maat": 0.5}],
-			  ["ton", 6.6, 12.9, 15], ["hakblok", 0.9, 14.7], ["kogels", 3.4, 14.4], ["bel", 8.2, 13.9, 0]],
+			  ["ton", 6.6, 12.9, 15], ["hakblok", 0.9, 14.7], ["kogels", 3.4, 14.4], ["bel", 8.2, 13.9, 0],
+			  ["kruitvaten", 5.4, 11.8, 0]],
 	 "overkant": [["rots", 2.0, -3.6, 0, {"maat": 1.1}], ["rots", 9.4, -4.0, 0, {"maat": 0.8}], ["wegwijzer", 6.2, -2.6],
 				  ["hek_kraai", 0.8, -2.0], ["boom", 10.8, -2.4, 0, {"schaal": 1.2, "kaal": true}]]},
 	{"naam": "Hoeve van Waterloo", "grond": "modder", "tint": [0.95, 0.94, 0.9], "sfeer": "de ommuurde hoeve: muren, een put, hooi en een kanon bij de poort",
 	 "kamp": [["ruine", -1.4, 15.4, 25], ["hooiberg", 6.8, 15.6], ["put", 2.8, 13.0, 0], ["kanon", 4.6, 12.4, -10],
 			  ["kampvuur", 0.4, 13.6], ["kruis", 8.6, 13.2, 0], ["tent", -2.8, 12.4, 50],
-			  ["aambeeld", -0.4, 12.4, 20], ["ton", 6.0, 12.6, 0], ["glaswerk", 2.0, 15.0, 10]],
+			  ["aambeeld", -0.4, 12.4, 20], ["ton", 6.0, 12.6, 0], ["glaswerk", 2.0, 15.0, 10],
+			  ["kruitvaten", 9.8, 11.9, 0]],
 	 "overkant": [["ruine", 5.2, -3.8, 165], ["hek_kraai", 1.6, -2.0], ["boom", 9.8, -3.6, 0, {"schaal": 1.6}],
-				  ["plas_kikker", 11.0, -1.8], ["kruis", 3.2, -2.6, 0]]},
+				  ["plas_kikker", 11.0, -1.8, 0, {"stenen": true}], ["kruis", 3.2, -2.6, 0]]},
 ]
 
 
@@ -464,7 +494,10 @@ func _plaats(spec: Array) -> void:
 		"kampvuur":
 			_bouw_kampvuur(pos, bool(o.get("smeulend", false)))
 		"trommel":
+			var n_voor := _props.size()
 			_bouw_glb_prop("prop_drum", pos, 0.42, draai, [_reageer_trommel, _reageer_trommel_roffel, _reageer_trommel_om])
+			if bool(o.get("cadans", false)) and _props.size() == n_voor + 1:
+				_spel.maak_cadans(_props.back(), _team_op(pos))   # de tamboer-cadans (12 september)
 		"ton":
 			_bouw_glb_prop("prop_barrel", pos, 0.56, draai, [_reageer_ton, _reageer_ton_appel, _reageer_ton_rol])
 		"hoorn":
@@ -478,7 +511,7 @@ func _plaats(spec: Array) -> void:
 		"hek_kraai":
 			_bouw_hek_met_kraai(pos, String(o.get("vogel", "zwart")))
 		"plas_kikker":
-			_bouw_plas_met_kikker(pos, bool(o.get("bevroren", false)))
+			_bouw_plas_met_kikker(pos, bool(o.get("bevroren", false)), o)
 		"wegwijzer":
 			_bouw_wegwijzer(pos)
 		"toilethuisje":
@@ -523,6 +556,15 @@ func _plaats(spec: Array) -> void:
 			_bouw_aambeeld(pos, draai)
 		"kookpot":
 			_bouw_kookpot(pos)
+		# de mini-games (12 september): de bal, de stenen, het doel van het kanon, de hengel
+		"kegelspel":
+			_spel.bouw_kegelspel(pos, draai)
+		"kruitvaten":
+			_spel.bouw_kruitvaten(pos, draai)
+		"stenen":
+			_spel.bouw_stenen(_props_root, pos, draai, _rivier_water())
+		"hengel":
+			_spel.bouw_hengel(_props_root, pos, draai, _rivier_water())
 		_:
 			push_warning("Omgeving: onbekende prop in het diorama: " + naam)
 
@@ -785,11 +827,17 @@ func _bouw_hek_met_kraai(pos: Vector3, kleur_naam: String = "zwart") -> void:
 	_registreer(kraai, 0.16, [_reageer_kraai, _reageer_kraai_liefde, _reageer_kraai_geschoten], {"thuis": kraai.position, "vleugels": vleugels, "kleur": zwart})
 
 
-func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false) -> void:
+func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false, o: Dictionary = {}) -> void:
 	var root := Node3D.new()
 	root.name = "Plas"
 	root.position = pos
 	_props_root.add_child(root)
+	# de mini-games aan de plas (12 september): keilen (op ijs: glijden) en vissen
+	var water := {"soort": "plas", "root": root, "rx": 0.6, "rz": 0.43, "bevroren": bevroren, "ring_ouder": root}
+	if bool(o.get("stenen", false)):
+		_spel.bouw_stenen(root, Vector3(-0.78, 0.0, 0.3), atan2(-0.78, 0.3), water)
+	if bool(o.get("hengel", false)) and not bevroren:
+		_spel.bouw_hengel(root, Vector3(0.55, 0.0, 0.48), atan2(0.55, 0.48), water)
 	if bevroren:
 		var ijs := _mesh(_cilinder(0.6, 0.014), Color(0.78, 0.86, 0.92), root, Vector3(0.0, 0.007, 0.0))
 		ijs.scale = Vector3(1.0, 1.0, 0.72)
@@ -819,6 +867,7 @@ func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false) -> void:
 		_mesh(_bol(0.016), Color(0.1, 0.1, 0.08), kikker, Vector3(kant * 0.03, 0.075, 0.04))
 	var thuis: Vector3 = kikker.position
 	var alt := Vector3(0.32, 0.012, -0.08)
+	water["kikker"] = kikker   # de stenen laten hem wegduiken
 	_registreer(kikker, 0.1, [_reageer_kikker, _reageer_kikker_kwaak, _reageer_kikker_duik], {"thuis": thuis, "alt": alt, "plas": root, "keel": _kikker_keel})
 
 
@@ -851,6 +900,8 @@ func _bouw_props() -> void:
 		_props_root.remove_child(kind)
 		kind.queue_free()
 	_props.clear()
+	_spel.reset()
+	_rivier_node = null
 	_bewoners.clear()
 	_bewoners_root = null
 	_lantaarns.clear()
@@ -879,6 +930,7 @@ func _bouw_props() -> void:
 			"water":
 				_bouw_water()
 	_bouw_extra_props()
+	_spel.koppel_doelen()   # elk kanon kijkt naar zijn kruitvaten
 	_bouw_bewoners()
 
 
@@ -1817,6 +1869,7 @@ func _bouw_kanon(pos: Vector3, draai: float) -> void:
 	(loop.material_override as StandardMaterial3D).roughness = 0.5
 	var mond := Vector3(0.0, 0.33 + sin(deg_to_rad(10.0)) * 0.5, 0.05 + cos(deg_to_rad(10.0)) * 0.5)
 	_registreer(root, 0.5, [_reageer_kanon_schot, _reageer_kanon_wiel, _reageer_kanon_kogel], {"wielen": wielen, "mond": mond})
+	_spel.maak_kanon(_props.back(), loop_node)   # vasthouden = richten op de kruitvaten (12 september)
 
 
 func _reageer_kanon_schot(p: Dictionary) -> void:
@@ -3001,7 +3054,22 @@ func _bouw_sneeuw() -> void:
 
 
 ## Water aan de overkant (rivierhaven): een vlak plus een stenen kade.
+## De rivier als water voor de spelletjes (stenen, hengel): vanaf de kade (z -1,9).
+func _rivier_water() -> Dictionary:
+	return {"soort": "rivier", "z_rand": -1.9, "ring_ouder": _rivier_ouder()}
+
+
+func _rivier_ouder() -> Node3D:
+	if _rivier_node == null or not is_instance_valid(_rivier_node):
+		_rivier_node = Node3D.new()
+		_rivier_node.name = "Rivier"
+		_rivier_node.position = Vector3(0.0, GROND_Y, 0.0)
+		_props_root.add_child(_rivier_node)
+	return _rivier_node
+
+
 func _bouw_water() -> void:
+	_rivier_ouder()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(70.0, 30.0)
 	var w := MeshInstance3D.new()

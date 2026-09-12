@@ -351,6 +351,36 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   daarna elke reactie van elke prop een keer, en klikt zes keer snel op de
   eerste prop (alle zes raak, combo minstens 4); script-fouten vangt de grep
   op `SCRIPT ERROR`.
+- **Vijf mini-games in het diorama (12 september, Max: "bedenk 5
+  spelletjes... heel low key, een tap of een klik inhouden"):**
+  `scripts/game/spelletjes.gd` (`Spelletjes`, aangemaakt in
+  `Omgeving._init`). Twee bedieningen op een vinger: WERPEN (vinger op de
+  spel-prop, na `HOLD_DREMPEL` 0,22 s zwaait een pijl op de grond heen en
+  weer = richting en groeit hij = kracht, loslaten werpt; wegschuiven
+  breekt af) en OP DE MAAT (tikken op het moment). Kegelen (`kegelspel` in
+  de DIORAMAS: negen lege flessen uit de kantine in een ruit, omgerold met
+  een kanonskogel, Max: "iets wat bij de setting hoort"; ketting van
+  omvallers, "Alle negen!"), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
+  de kade van de Rivierhaven: steeds kortere hupjes met een oplopende
+  plons, buiten het water is het klaar, de kikker duikt; op ijs glijdt de
+  steen), kanon (`kruitvaten` in het diorama: het kanon draait er bij de
+  bouw naartoe, vasthouden brengt de loop omhoog en zet een doelring op de
+  dracht 1,6-7,0, de wind van het potje duwt de kogel opzij: "Windje!";
+  vier vaten in een kettingreactie), vissen (`hengel` op de kade of
+  `{"hengel": true}` op een plas: vasthouden werpt de dobber uit, tik als
+  hij duikt: snoek, laars, musket of kist blijven op de kant liggen) en de
+  tamboer-cadans (`{"cadans": true}` op een `trommel`: vasthouden telt vier
+  slagen af, dan acht keer op de maat tikken, drie soldaatjes marcheren op
+  de plaats, "Perfect!" versnelt het tempo). Een korte tik op een spel-prop
+  blijft een gewone tik (ding + reactie bij het loslaten); game.gd geeft
+  daarvoor het loslaten (`Omgeving.laat_los`) en de beweging
+  (`Omgeving.beweeg`) door. Puur visueel: eigen RNG, tweens aan de
+  prop-node, geen spelstaat. Geluiden `prop_kegel`, `prop_kegel_rol`,
+  `prop_kruitvat`, `prop_hengel`, `prop_vis` (synthetisch, in de
+  geluid-tracker). Check: `-- spelcheck` (elk spel: vasthouden, richten
+  vastzetten via `Spelletjes.zet_richt`, loslaten, score; met venster
+  `_shot_spel_richt.png`); `omgevingcheck` klikt sinds die dag met drukken
+  EN loslaten. Tripo-props ervoor: PROP-WISHLIST sectie 13.
 - **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
   mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
   gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de
