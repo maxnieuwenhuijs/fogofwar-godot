@@ -1,5 +1,33 @@
 # Fog of War — Work In Progress & Context
 
+## 12 september -- alleen vaandel en trom dragen een prop; budget voor de Tripo-props
+
+Max: "sommige hebben nu wel een prop vast anders dan de vlag of trom, dat
+niet doen graag." Dat waren de sporadische figuranten uit 28 juli: elke
+vijfde ongekoppelde infanterist kreeg een hoorn, bijl, vat of staf in de
+hand (`PawnView.ROLLEN_EXTRA`, `ROL_DICHTHEID` 5). `ROL_DICHTHEID` staat nu
+op 0 (de ontworpen uit-stand), dus in het spel dragen alleen de
+vaandeldrager en de tamboer een prop. De rollen zelf blijven bestaan: de
+Model-tuner kan ze nog forceren (tab In de hand) en `prop_for`/`PROP_ALIAS`
+zijn ongewijzigd, en het diorama gebruikt prop_drum/prop_barrel/prop_horn/
+prop_axe als klik-props los van de pionnen. Puur visueel: `-- uispel 777`
+blijft d16a14f8, `-- herstelcheck 777` 0 verschillen, `-- zweefcheck muis
+2` toont per pion alleen nog musket, vaandel of trom, `-- tunercheck` PASS.
+Docs: props/LEESMIJ.md (tabel + stap 2), CLAUDE.md. MODEL-WISHLIST §3d
+punt 5 beschrijft de extra's nog als "ongeveer een op de vijf"; dat bestand
+staat open in de andere sessie en is hier niet aangeraakt.
+
+Max: "hoeveel props, hoeveel vertices is dan handig, of maakt dat niet heel
+veel uit?" Gemeten (dioramashots print nu meshes en driehoeken per
+diorama): 14-18 props, 70-106 meshes, 4.700-9.500 driehoeken per diorama
+uit primitieven; een infanterist 2.231 + musket 736, twee legers ruim
+90.000; het bord 196. Advies (tabel in props/LEESMIJ.md, samenvatting in
+CLAUDE.md): klein 300-800, middel 800-1.500, groot decor 1.500-3.000, geen
+prop boven de 3.000, diorama onder de 30.000, 15-25 props; EEN mesh en EEN
+materiaal per prop, want draw calls wegen op een telefoon zwaarder dan
+vertices; Tripo op de low-poly-optie (1.000-2.000 faces) of achteraf
+`blender_decimate.py --doel 1200`; textuur 512, groot decor 1.024.
+
 ## 12 september -- de prop-geluiden in de geluid-tracker
 
 Max: "voeg ook al deze prop geluiden toe aan de geluiden tracker."

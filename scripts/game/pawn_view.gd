@@ -1905,6 +1905,11 @@ func set_unit_type(unit_type: int) -> void:
 ## musket). Puur cosmetisch; de staat verandert niet. Deterministisch op
 ## pion-id (nooit randi), dus replays zien er identiek uit. ROL_DICHTHEID 3 =
 ## ongeveer een op de drie ongekoppelde pionnen (1 = iedereen, 0 = uit).
+## Sinds 12 september staat hij op 0 (Max: "sommige hebben nu wel een prop
+## vast anders dan de vlag of trom, dat niet doen graag"): in het spel dragen
+## ALLEEN de vaandeldrager en de tamboer een prop. De extra rollen blijven
+## bestaan voor de Model-tuner (rol_override) en prop_for; het diorama
+## gebruikt prop_drum/prop_barrel/prop_horn/prop_axe los van de pionnen.
 ## Elk leger heeft ALTIJD een vaandeldrager en een tamboer (besluit Max,
 ## 28 juli): de eerste twee infanteristen krijgen die rol vast. De rest van
 ## de figuranten wordt daarna uitgedund met ROL_DICHTHEID.
@@ -1919,7 +1924,7 @@ const PROP_ALIAS := {"sapper": "prop_axe", "canteen": "prop_barrel", "drummajor"
 ## Kleine legers krijgen maar een vaandel en een tamboer; vanaf dit aantal
 ## infanteristen komt het tweede stel erbij (besluit Max, 28 juli).
 const TWEEDE_STEL_VANAF := 8
-const ROL_DICHTHEID := 5   # hoorn/bijl/vat/staf: sporadisch, na de vaste vier
+const ROL_DICHTHEID := 0   # hoorn/bijl/vat/staf: UIT sinds 12 september (was 5: sporadisch, na de vaste vier)
 
 
 var _doctrine: int = 0  # factie van dit model (voor de factie-geluiden)

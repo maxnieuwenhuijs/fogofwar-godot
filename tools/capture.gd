@@ -1914,7 +1914,22 @@ func _ready() -> void:
 			var dtex := get_viewport().get_texture()
 			if dtex != null and dtex.get_image() != null:
 				dtex.get_image().save_png("res://_shot_diorama_%d.png" % di)
-			print("[DIORAMA] %d %s: %d props" % [di, ds.diorama_naam(), ds._props.size()])
+			# kosten: driehoeken en meshes (= draw calls) van alles onder Props
+			var d_tris := 0
+			var d_meshes := 0
+			for mi in (ds._props_root as Node).find_children("*", "MeshInstance3D", true, false):
+				var m: Mesh = (mi as MeshInstance3D).mesh
+				if m == null:
+					continue
+				d_meshes += 1
+				for si in range(m.get_surface_count()):
+					var arr: Array = m.surface_get_arrays(si)
+					var idx = arr[Mesh.ARRAY_INDEX]
+					if idx != null and idx.size() > 0:
+						d_tris += idx.size() / 3
+					elif arr[Mesh.ARRAY_VERTEX] != null:
+						d_tris += arr[Mesh.ARRAY_VERTEX].size() / 3
+			print("[DIORAMA] %d %s: %d props, %d meshes, %d driehoeken" % [di, ds.diorama_naam(), ds._props.size(), d_meshes, d_tris])
 		print("[DIORAMA] klaar")
 		get_tree().quit(0)
 		return

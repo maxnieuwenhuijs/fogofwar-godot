@@ -283,7 +283,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   ligt (fakkel, wagen, kookpot, musketrek, kanon, boom, troon, ...). Een
   bewoner met teamwoord (`peasant_mouse_red`) staat alleen in het kamp van
   die kleur. De tweens van alle reacties hangen aan hun prop-node, zodat een
-  herbouw ze netjes meeneemt.
+  herbouw ze netjes meeneemt. **Budget (12 september):** klein 300-800
+  driehoeken, middel 800-1.500, groot decor tot 3.000, een diorama onder de
+  30.000 en 15-25 props; een mesh en een materiaal per prop (draw calls
+  tellen op een telefoon zwaarder dan vertices); Tripo-uitvoer door
+  `tools/blender_decimate.py --doel 1200`. `-- dioramashots` meldt per
+  diorama meshes en driehoeken (nu 70-106 meshes, 4.700-9.500 driehoeken
+  uit primitieven; een infanterist is er 2.231). Tabel:
+  `assets/models/props/LEESMIJ.md`.
 - **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
   iets van 12 diorama's... per klikbaar element verschillende dingen die je
   random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama
@@ -476,7 +483,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   bij blauw" boven water: de figuranten sapper/canteen/drummajor heten
   anders dan hun props (prop_axe/prop_barrel/prop_mace) en kregen daardoor
   een onafgestelde losse musket; nu `PawnView.PROP_ALIAS` plus de vangrail
-  dat een rol zonder prop zijn ingebakken musket houdt. Bot-geparente wapens uit Blender
+  dat een rol zonder prop zijn ingebakken musket houdt. **Sinds 12
+  september dragen ALLEEN de vaandeldrager en de tamboer een prop**
+  (`PawnView.ROL_DICHTHEID` 0; Max: "sommige hebben nu wel een prop vast
+  anders dan de vlag of trom, dat niet doen graag"); hoorn, bijl, vat en
+  staf bestaan alleen nog in de Model-tuner (rol_override) en als
+  diorama-prop. Bot-geparente wapens uit Blender
   5.1 zweefden meters naast de hand door een export- en importbug; de
   pijplijn corrigeert dat (`tools/blender_botkind_fix.py`, zie
   MODEL-PIPELINE-CHECKLIST sectie C). Draai dit na elke her-export.
