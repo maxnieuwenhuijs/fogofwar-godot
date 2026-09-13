@@ -134,7 +134,7 @@ with gold trim, polished, wealthy`.
 | `prop_wijnvat` | wijnvat met wapen (blauw) | blauw | klokt, `prop_kruik` | ➕ | wine cask with heraldic crest |
 | `prop_kaarttafel` | tafel met een landkaart en kandelaar (blauw) of een omgekeerde kist met kaart (rood) | beide | kaart wappert | ➕ | table with a map and candles |
 | `prop_kruk` | krukje (blauw: gestoffeerde stoel) | beide | wipt | ➕ | three-legged wooden stool |
-| `prop_appelkist` | kist appels | gedeeld | appel rolt | ➕ | crate of apples |
+| `prop_appelkist` | kist appels: twaalf gefacetteerde appels in een krat met schuine lat en spijkerkoppen | gedeeld | appel wipt eruit en rolt weg / hop / stof, `prop_ton` | ✓ eigen Blender-model, 13 sept (`tools/blender_appelkist.py`, 1.424 driehoeken, een mesh, plaatje 256) | crate of apples |
 | `prop_kaas` | kaas op een plank | gedeeld | wiebelt | ➕ | wheel of cheese on a board |
 | `prop_worst` | worsten aan een haak | gedeeld | zwaait | ➕ | sausages hanging from a hook |
 | `prop_beker` | tinnen bekers (rood) of zilveren bokaal (blauw) | beide | wiebelt | ➕ | pewter cups |

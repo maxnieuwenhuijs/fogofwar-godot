@@ -160,6 +160,28 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 13 september -- de appelkist: eerste eigen low-poly prop uit Blender
+
+Max stuurde een plaatje van een houten krat met gefacetteerde appels: "kan
+jij met blender dit maken, zo low poly mogelijk?" `tools/blender_appelkist.py`
+bouwt hem procedureel: twaalf planken met kieren, vier hoekpalen erachter,
+een bodem, de schuine lat op de voorkant (glTF +Z), spijkerkoppen als
+vierzijdige piramides zonder bodem (4 driehoeken), en appels als icosferen
+met twee subdivisies (80 driehoeken; met een is het een d20) met een scheef
+steeltje, gefacetteerd (geen smooth shading). Een mesh, een materiaal, een
+256-plaatje met vier vakken uit numpy (houtnerf met donkere lijnen, rode en
+groene appel met een verticaal verloop, donker voor stelen en spijkers);
+de appel-uv's projecteren x en hoogte in hun vak, zodat de facetten van
+boven naar onder donkerder worden. 1.424 driehoeken, 874 vertices, 179 kB.
+Daarna `verwerk_prop.py results/appelkist/appelkist.glb appelkist`: 150 kB
+als `prop_appelkist.glb`, omgevingcheck PASS. In omgeving.gd: `appelkist`
+als spec (Boerenerf, Dorpsrand, Rivierhaven, Marktplein), PROP_HOOGTE 0,3,
+eigen reactie `_reageer_appelkist_appel` (een appel wipt eruit, rolt een
+stukje en verdwijnt). Bpy-lessen: `read_factory_settings(use_empty=True)`
+VOOR het bouwen (een reset erna gooit mesh en object weg:
+"StructRNA ... has been removed"), en een verloop met numpy-broadcasting
+eerst met `broadcast_to` op maat brengen voordat je een kanaal bijwerkt.
+
 ## 12 september -- vijf mini-games in het diorama
 
 Max: "bedenk 5 spelletjes die je kunt doen, mini games in de dioramas, dus

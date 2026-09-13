@@ -87,7 +87,7 @@ var _team_ander := "blue"
 # tenzij prop_<naam>.json zelf "hoogte" geeft
 const PROP_HOOGTE: Dictionary = {
 	"tent": 1.0, "fakkel": 0.8, "wagen": 1.0, "kookpot": 0.6, "hakblok": 0.3, "houtblok": 0.15,
-	"kogels": 0.3, "hek": 0.4, "wegwijzer": 0.95, "plas": 0.04, "musketrek": 0.75, "kruitvat": 0.4,
+	"kogels": 0.3, "hek": 0.4, "wegwijzer": 0.95, "plas": 0.04, "musketrek": 0.75, "kruitvat": 0.4, "appelkist": 0.3,
 	"waslijn": 0.85, "kanon": 0.6, "vogelverschrikker": 0.95, "boom": 1.7, "struik": 0.4,
 	"muurtje": 0.35, "rots": 0.35, "bloemen": 0.12, "hooiberg": 0.7, "geit": 0.4, "kip": 0.18,
 	"kaarttafel": 0.5, "kruk": 0.3, "bierton": 0.5, "wijnvat": 0.5, "troon": 0.7, "tapijt": 0.03,
@@ -398,13 +398,13 @@ const DIORAMAS: Array = [
 	 "kamp": [["hooiberg", 6.6, 15.2], ["put", 2.6, 13.2, 15], ["toilethuisje", -1.2, 14.8, 30], ["hakblok", 0.8, 12.4],
 			  ["kampvuur", 3.8, 13.9], ["kookpot", 3.8, 13.9], ["tent", -2.6, 16.4, 15, {"lantaarn": true}],
 			  ["boom", 8.6, 16.6, 0, {"schaal": 1.2}], ["ton", 5.2, 12.4, 10], ["glaswerk", 4.6, 14.9, 20],
-			  ["kegelspel", 1.4, 17.2, 0]],
+			  ["kegelspel", 1.4, 17.2, 0], ["appelkist", 6.4, 13.0, 20]],
 	 "overkant": [["hek_kraai", 1.4, -2.0], ["plas_kikker", 10.6, -2.6, 0, {"stenen": true, "hengel": true}], ["boom", 6.0, -4.2, 0, {"schaal": 1.4}],
 				  ["kruis", 3.6, -3.4, 10], ["wegwijzer", 8.4, -3.0]]},
 	{"naam": "Dorpsrand met molen", "grond": "gras", "sfeer": "de rand van een dorp: de molen draait, de markt staat",
 	 "kamp": [["molen", 7.2, 15.6, -20], ["marktkraam", 2.0, 13.6, 10], ["lantaarnpaal", 4.8, 12.6], ["put", -1.4, 13.4, 0],
 			  ["kampvuur", 0.6, 15.0], ["tent", -2.8, 16.6, 20], ["toilethuisje", 9.4, 12.8, -60],
-			  ["bel", 6.0, 13.2, 0], ["glaswerk", 2.9, 12.6, -20], ["kegelspel", 3.4, 17.4, 0]],
+			  ["bel", 6.0, 13.2, 0], ["glaswerk", 2.9, 12.6, -20], ["kegelspel", 3.4, 17.4, 0], ["appelkist", 0.5, 12.2, -15]],
 	 "overkant": [["wegwijzer", 2.4, -2.2], ["hek_kraai", 6.4, -2.0], ["boom", 10.4, -4.0, 0, {"schaal": 1.5}],
 				  ["lantaarnpaal", 4.2, -3.6], ["plas_kikker", 0.2, -3.8, 0, {"stenen": true}]]},
 	{"naam": "Na de slag", "grond": "modder", "tint": [0.92, 0.9, 0.88], "sfeer": "het veld de ochtend erna: kanonnen, kruisen, kraaien",
@@ -422,7 +422,7 @@ const DIORAMAS: Array = [
 	{"naam": "Rivierhaven", "grond": "gras", "extra": ["water"], "sfeer": "een kade aan de rivier: tonnen, een sloep, meeuwen",
 	 "kamp": [["ton", 0.6, 12.6, 0], ["ton", 1.2, 13.2, 40], ["kampvuur", 3.6, 13.8], ["lantaarnpaal", 6.4, 12.4],
 			  ["tent", -2.2, 15.8, 20], ["marktkraam", 7.6, 15.2, -30], ["toilethuisje", -0.6, 15.4, 40],
-			  ["bel", 7.0, 12.9, 0], ["glaswerk", 1.9, 12.3, 30]],
+			  ["bel", 7.0, 12.9, 0], ["glaswerk", 1.9, 12.3, 30], ["appelkist", 3.0, 12.2, 10]],
 	 "overkant": [["steiger_boot", 4.2, -2.2, 0], ["hek_kraai", 9.8, -1.9, 0, {"vogel": "wit"}], ["put", 0.2, -3.2, 0],
 				  ["lantaarnpaal", 8.0, -3.4], ["stenen", 2.0, -1.45, 0], ["hengel", 6.6, -1.5, 0]]},
 	{"naam": "Bosrand", "grond": "bos", "tint": [0.9, 0.95, 0.9], "sfeer": "een open plek aan de bosrand, houthakkers en een uil",
@@ -440,7 +440,7 @@ const DIORAMAS: Array = [
 	{"naam": "Marktplein", "grond": "kei", "sfeer": "het plein van een stadje: kramen, een fontein, lantaarns",
 	 "kamp": [["marktkraam", 0.4, 13.4, 15], ["marktkraam", 4.6, 13.0, -10], ["fontein", 2.6, 15.2], ["lantaarnpaal", 7.0, 12.6],
 			  ["put", -2.4, 15.2, 0], ["ton", 6.2, 14.6, 0], ["toilethuisje", 9.0, 15.6, -40],
-			  ["glaswerk", 3.2, 12.4, -10], ["bel", 8.4, 13.6, 0], ["kegelspel", 4.4, 17.8, 0]],
+			  ["glaswerk", 3.2, 12.4, -10], ["bel", 8.4, 13.6, 0], ["kegelspel", 4.4, 17.8, 0], ["appelkist", 1.9, 12.3, 25]],
 	 "overkant": [["marktkraam", 2.4, -3.2, 170], ["lantaarnpaal", 6.0, -2.4], ["put", 8.8, -3.6, 0], ["hek_kraai", 10.6, -2.0],
 				  ["wegwijzer", 0.2, -3.6]]},
 	{"naam": "Egypte 1798", "grond": "zand", "tint": [1.05, 1.0, 0.92], "sfeer": "de veldtocht naar Egypte: piramiden, een sfinx, palmen",
@@ -565,6 +565,11 @@ func _plaats(spec: Array) -> void:
 			_spel.bouw_stenen(_props_root, pos, draai, _rivier_water())
 		"hengel":
 			_spel.bouw_hengel(_props_root, pos, draai, _rivier_water())
+		"appelkist":
+			# de eerste eigen low-poly prop uit Blender (tools/blender_appelkist.py,
+			# 13 september); zonder glb staat er niets
+			_glb_prop("appelkist", pos, draai, "", ["prop_ton", "impact_wood"], 0.3,
+					[_reageer_appelkist_appel, _reageer_glb_hop, _reageer_glb_stof])
 		_:
 			push_warning("Omgeving: onbekende prop in het diorama: " + naam)
 
@@ -1525,6 +1530,28 @@ func _reageer_glb_hop(p: Dictionary) -> void:
 	var tw := (p.node as Node3D).create_tween()
 	tw.tween_property(n, "position:y", n.position.y + 0.18, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(n, "position:y", n.position.y, 0.3).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	_klaar(p, tw)
+
+
+## Appelkist: een appel wipt eruit en rolt een stukje weg.
+func _reageer_appelkist_appel(p: Dictionary) -> void:
+	var root: Node3D = p.node
+	_geluid(["prop_ton", "impact_wood"])
+	var rood := _rng.randf() < 0.65
+	var appel := _mesh(_bol(0.045), Color(0.8, 0.22, 0.18) if rood else Color(0.72, 0.75, 0.3), root, Vector3(0.0, float(p.hoogte) * 0.9, 0.0))
+	_mesh(_cilinder(0.006, 0.03), Color(0.26, 0.17, 0.1), appel, Vector3(0.0, 0.05, 0.0))
+	var hoek := _rng.randf_range(0.0, TAU)
+	var doel := Vector3(cos(hoek) * _rng.randf_range(0.45, 0.8), 0.045, sin(hoek) * _rng.randf_range(0.45, 0.8))
+	var tw := appel.create_tween()
+	tw.tween_method(_boog.bind(appel, appel.position, doel, 0.35), 0.0, 1.0, 0.55).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(appel, "rotation", Vector3(_rng.randf_range(-5, 5), 0.0, _rng.randf_range(-5, 5)), 0.55)
+	tw.tween_callback(func() -> void: _geluid(["prop_tik"]))
+	var verder := doel + Vector3(cos(hoek), 0.0, sin(hoek)) * 0.25
+	tw.tween_property(appel, "position", verder, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(appel, "rotation:x", appel.rotation.x + 3.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(2.5)
+	tw.tween_property(appel, "scale", Vector3(0.01, 0.01, 0.01), 0.25)
+	tw.tween_callback(appel.queue_free)
 	_klaar(p, tw)
 
 

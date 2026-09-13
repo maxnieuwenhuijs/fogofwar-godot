@@ -302,7 +302,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   committen) op VRAM-compressie + mipmaps en eindigt met
   `-- omgevingcheck`, die de prop onder "geleverde glb-props" moet
   noemen. `_glb_prop` geeft sinds die dag de wortel terug en neemt eigen
-  reacties aan: de geleverde tent houdt lantaarn, Zzz en laars.
+  reacties aan: de geleverde tent houdt lantaarn, Zzz en laars. **Eigen
+  low-poly props uit Blender (13 september, Max: "kan jij met blender dit
+  maken, zo low poly mogelijk?" bij een plaatje van een appelkrat):**
+  `tools/blender_appelkist.py` bouwt hem met bmesh-primitieven, platte
+  facetten en een 256-plaatje met vier vakken (nerf, rode appel, groene
+  appel, donker), een mesh en een materiaal, 1.424 driehoeken (twaalf
+  appels van 80); dan `verwerk_prop.py results/appelkist/appelkist.glb
+  appelkist` en klaar. Staat als `appelkist` in Boerenerf, Dorpsrand,
+  Rivierhaven en Marktplein met een eigen reactie (een appel wipt eruit).
+  Bpy-les: `read_factory_settings(use_empty=True)` VOOR het bouwen, een
+  reset erna gooit mesh en object weg.
 - **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
   iets van 12 diorama's... per klikbaar element verschillende dingen die je
   random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama
