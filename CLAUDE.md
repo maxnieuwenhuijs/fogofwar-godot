@@ -396,8 +396,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   karakters een blauwe cape, vanuit Godot").** Geen Blender:
   `PawnView.maak_cape(root, hoogte, blauw, fase)` hangt een lap (PlaneMesh)
   aan `mixamorig:Spine2` (terugval Spine1/Neck/Spine) via een
-  BoneAttachment3D, in de RUST-houding van het bot recht naar beneden en
-  daarna met elke animatie mee; een vertex-shader (`CAPE_SHADER`) vormt de
+  BoneAttachment3D. De KRAAG zit aan het bot; de LAP hangt sinds 13
+  september per frame aan de zwaartekracht (`cape_process`: omlaag vanaf
+  de kraag, een gedempte slinger die tegen de beweging in sleept en met de
+  wind meegaat, nooit door de rug; Max: "kan ie niet meer hangen echt"),
+  dus hij kantelt niet stijf mee met een leunend rugbot. Een
+  vertex-shader (`CAPE_SHADER`) vormt de
   lap (smalle kraag bij de nek die over de schouders naar volle breedte
   loopt, plooien vanuit de kraag die naar de zoom dieper worden, zijkanten
   om de schouders gewikkeld, echte normalen op de plooien; Max: "meer
@@ -416,7 +420,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`Bewoner.zet_cape`, gezet door `Omgeving._bouw_bewoners`). Knoppen in
   het sfeer-paneel (live, ook op de bewoners): `cape_blauw`, `cape_rood`,
   `cape_lengte`/`cape_breedte` (x pionhoogte), `cape_wapper`, `cape_wind`,
-  `cape_drape` (plooien en wikkel).
+  `cape_drape` (plooien en wikkel), `cape_slinger` (hoe ver hij sleept).
   Eigen shaders (cape en vlaggendoek) dragen een `dim`-uniform dat
   `verduister_later` tweent, zodat een lijk met cape ook donker wordt.
   Check: `-- capecheck` (rood geen cape, blauw een, achter de rug aan een

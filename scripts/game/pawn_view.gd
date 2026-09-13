@@ -2525,12 +2525,12 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 	_richt_vlag()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _vlagdoek != null:
 		_richt_vlag()
 	if _cape != null:
 		if is_instance_valid(_cape):
-			cape_wind(_cape)
+			cape_process(_cape, delta)
 		else:
 			_cape = null
 
@@ -2564,9 +2564,12 @@ func _richt_vlag() -> void:
 # nek, over de schouders naar volle breedte, plooien vanuit de kraag die naar
 # de zoom dieper worden, zijkanten om de schouders gewikkeld, echte normalen
 # op de plooien), de zoom laat wapperen en met de wind meeneemt
-# (PawnView.wind_richting). Hij hangt in de RUST-houding van het
-# bot recht naar beneden en volgt daarna elke animatie via het bot; geen
-# cloth-physics (duur, jittert, en op bordafstand zie je het verschil niet).
+# (PawnView.wind_richting). De KRAAG zit aan het bot en gaat met elke
+# animatie mee; de LAP hangt per frame aan de zwaartekracht (cape_process:
+# recht naar beneden vanaf de kraag, een gedempte slinger die tegen de
+# beweging in sleept en met de wind meegaat, nooit door de rug naar voren;
+# Max, 13 september: "kan ie niet meer hangen echt"). Geen cloth-physics
+# (duur, jittert, en op bordafstand zie je het verschil niet).
 # Puur visueel: geen staat, geen RNG. Standaard alleen het blauwe team
 # (pompeus en rijk: goudgalon, lichte voering); rood via de knop cape_rood.
 # Knoppen in het sfeer-paneel: cape_blauw, cape_rood (0/1), cape_lengte en
@@ -2731,7 +2734,7 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	mat.set_shader_parameter("hoogte", lengte)
 	mat.set_shader_parameter("halfbreedte", breedte * 0.5)
 	mat.set_shader_parameter("amp", lengte * 0.09 * fx("cape_wapper", 1.0))
-	mat.set_shader_parameter("bol", hoogte_w * 0.1)
+	mat.set_shader_parameter("bol", hoogte_w * 0.06)
 	# Drape (Max, 12 september: "nu is het erg strak"): plooien vanuit de kraag
 	# en de zijkanten om de schouders; knop cape_drape schaalt allebei.
 	var drape: float = fx("cape_drape", 1.0)
@@ -2744,6 +2747,10 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 		mat.set_shader_parameter("heeft_textuur", 1.0)
 	doek.material_override = mat
 	doek.set_meta("cape_lengte", lengte)
+	doek.set_meta("cape_root", root)
+	doek.set_meta("cape_hang", Vector3.DOWN)
+	doek.set_meta("cape_hang_v", Vector3.ZERO)
+	doek.set_meta("cape_anker_w", Vector3.ZERO)
 	# Top van de lap op de schouderlijn (het nekbot als het er is, anders een
 	# tiende pionhoogte boven het rugbot), een stukje achter de rug.
 	var nek_op: float = hoogte_w * 0.1
@@ -2753,8 +2760,10 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	if nek >= 0 and nek != bone:
 		var d_w: Vector3 = skel.global_transform.basis * (skel.get_bone_global_rest(nek).origin - skel.get_bone_global_rest(bone).origin)
 		nek_op = clampf(d_w.y, 0.0, hoogte_w * 0.2)
-	var offset_w: Vector3 = Vector3.UP * (nek_op - lengte * 0.5) + achter_w * (hoogte_w * 0.045)
+	var offset_w: Vector3 = Vector3.UP * (nek_op - lengte * 0.5) + achter_w * (hoogte_w * 0.06)
 	doek.transform = Transform3D(Basis(rechts_l, op_l, achter_l).scaled(Vector3.ONE / s_ouder), inv * offset_w)
+	# het kraagpunt in bot-ruimte: daar hangt cape_process de lap elke frame aan
+	doek.set_meta("cape_anker", inv * (Vector3.UP * nek_op + achter_w * (hoogte_w * 0.06)))
 	att.add_child(doek)
 	return doek
 
@@ -2780,20 +2789,70 @@ static func cape_textuur(blauw: bool) -> Texture2D:
 	return tex
 
 
-## Wind op een cape, per frame: de wereldrichting (PawnView.wind_richting)
-## naar de ruimte van het doek, dat met het bot meebeweegt. De zoom mag niet
-## door de rug heen naar voren (lokale -Z); dat deel wordt afgekapt.
-static func cape_wind(doek: MeshInstance3D) -> void:
+## De cape per frame (13 september): de kraag volgt het bot, de lap hangt aan
+## de zwaartekracht. Doelrichting = omlaag, een beetje van de rug af, tegen
+## de beweging van de kraag in (de lap sleept) en met de wind mee; een
+## gedempte slinger (veer + demping) loopt daar achteraan, zodat hij
+## nazwaait bij een uitval of een draai. Nooit door de rug naar voren. Het
+## doek krijgt zijn wereld-transform; Godot rekent dat terug naar het bot.
+## Puur visueel: geen RNG, niets in de digest. Knoppen: cape_slinger (hoe
+## ver hij sleept), cape_wind.
+static func cape_process(doek: MeshInstance3D, dt: float) -> void:
 	if doek == null or not is_instance_valid(doek) or not doek.is_inside_tree():
 		return
-	var mat := doek.material_override as ShaderMaterial
-	if mat == null:
+	var att: Node3D = doek.get_parent() as Node3D
+	var root: Node3D = doek.get_meta("cape_root", null) as Node3D
+	if att == null or root == null or not is_instance_valid(root):
 		return
 	var lengte: float = float(doek.get_meta("cape_lengte", 0.45))
-	var g: Basis = doek.global_transform.basis.orthonormalized()
-	var w: Vector3 = g.inverse() * (wind_richting * lengte * 0.3 * fx("cape_wind", 1.0))
-	w.z = maxf(w.z, 0.0)
-	mat.set_shader_parameter("wind", w)
+	var anker_l: Vector3 = doek.get_meta("cape_anker", Vector3.ZERO)
+	var anker_w: Vector3 = att.global_transform * anker_l
+	var achter_w: Vector3 = (root.global_transform.basis * Vector3(0.0, 0.0, -1.0)).normalized()
+	# snelheid van de kraag: het lijf beweegt, de lap sleept erachteraan
+	var vorige: Vector3 = doek.get_meta("cape_anker_w", Vector3.ZERO)
+	var v := Vector3.ZERO
+	if vorige != Vector3.ZERO and dt > 0.0001:
+		v = (anker_w - vorige) / dt
+		if v.length() > 6.0:   # een sprong (spawn, herbouw, teleport) is geen beweging
+			v = Vector3.ZERO
+	doek.set_meta("cape_anker_w", anker_w)
+	var slinger: float = fx("cape_slinger", 1.0)
+	# omlaag, een flink stuk van de rug af (het achterwerk steekt achter de
+	# loodlijn vanaf de schouders uit), een vijfde van het bot mee (leunen),
+	# tegen de beweging in, met de wind mee
+	var bot_omlaag: Vector3 = -att.global_transform.basis.y.normalized()
+	var doel: Vector3 = Vector3.DOWN * 0.8 + bot_omlaag * 0.2 + achter_w * 0.28 - v * 0.35 * slinger + wind_richting * 0.12 * fx("cape_wind", 1.0)
+	var voor: Vector3 = -achter_w
+	if doel.dot(voor) > 0.0:
+		doel -= voor * doel.dot(voor)
+	doel = doel.normalized()
+	var hang: Vector3 = doek.get_meta("cape_hang", Vector3.DOWN)
+	var hang_v: Vector3 = doek.get_meta("cape_hang_v", Vector3.ZERO)
+	var stap: float = minf(maxf(dt, 0.0), 0.05)
+	hang_v += (doel - hang) * 60.0 * stap
+	hang_v *= exp(-7.0 * stap)
+	hang = hang + hang_v * stap
+	if hang.dot(voor) > 0.0:
+		hang -= voor * hang.dot(voor)
+	if hang.length() < 0.001:
+		hang = Vector3.DOWN
+	hang = hang.normalized()
+	doek.set_meta("cape_hang", hang)
+	doek.set_meta("cape_hang_v", hang_v)
+	var op: Vector3 = -hang
+	var z: Vector3 = achter_w - op * achter_w.dot(op)
+	if z.length() < 0.01:
+		return
+	z = z.normalized()
+	var x: Vector3 = op.cross(z).normalized()
+	var basis := Basis(x, op, z)
+	doek.global_transform = Transform3D(basis, anker_w - op * (lengte * 0.5))
+	# wind in doek-ruimte voor de zoom-wapper; nooit door de rug (lokale -Z)
+	var mat := doek.material_override as ShaderMaterial
+	if mat != null:
+		var w: Vector3 = basis.inverse() * (wind_richting * lengte * 0.3 * fx("cape_wind", 1.0))
+		w.z = maxf(w.z, 0.0)
+		mat.set_shader_parameter("wind", w)
 
 
 ## De cape van deze pion: bouwen of weghalen volgens team en knoppen.

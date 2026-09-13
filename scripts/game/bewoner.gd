@@ -173,10 +173,10 @@ func zet_cape(team: String) -> void:
 	_cape = PawnView.maak_cape(_model, hoogte, team == "blue", naam.hash())
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _cape != null:
 		if is_instance_valid(_cape):
-			PawnView.cape_wind(_cape)
+			PawnView.cape_process(_cape, delta)
 		else:
 			_cape = null
 

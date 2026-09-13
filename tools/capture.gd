@@ -904,6 +904,20 @@ func _ready() -> void:
 		var cc_cape: MeshInstance3D = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)[0]
 		var cc_w = (cc_cape.material_override as ShaderMaterial).get_shader_parameter("wind")
 		print("[CAPE] wind in cape-ruimte: %s" % str(cc_w))
+		# hangen: de lap staat recht (wereld-omhoog), ook al leunt het rugbot; de kraag zit aan het bot
+		var cc_op: Vector3 = cc_cape.global_transform.basis.y.normalized()
+		var cc_att: Node3D = cc_cape.get_parent() as Node3D
+		var cc_kraag_bot: Vector3 = cc_att.global_transform * (cc_cape.get_meta("cape_anker") as Vector3)
+		var cc_kraag_lap: Vector3 = cc_cape.global_transform * Vector3(0.0, float(cc_cape.get_meta("cape_lengte")) * 0.5, 0.0)
+		var cc_bot_op: Vector3 = cc_att.global_transform.basis.y.normalized()
+		print("[CAPE] hangt: lap-omhoog . wereld-omhoog = %.3f (bot zelf %.3f), kraag %.3f van het bot" % [
+			cc_op.dot(Vector3.UP), cc_bot_op.dot(Vector3.UP), cc_kraag_bot.distance_to(cc_kraag_lap)])
+		if cc_op.dot(Vector3.UP) < 0.85:
+			print("[CAPE] FOUT: de lap hangt niet naar beneden")
+			cc_fouten += 1
+		if cc_kraag_bot.distance_to(cc_kraag_lap) > 0.02:
+			print("[CAPE] FOUT: de kraag zit los van het bot")
+			cc_fouten += 1
 		# de uv-hoek voor wie een cape_blue.png maakt: linksboven van de lap (kraag, linkerkant van de drager)
 		var cc_arr: Array = cc_cape.mesh.surface_get_arrays(0)
 		var cc_vs: PackedVector3Array = cc_arr[Mesh.ARRAY_VERTEX]

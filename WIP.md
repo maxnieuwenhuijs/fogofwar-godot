@@ -39,6 +39,22 @@ verplaatsingen afgeleid, zodat het licht de plooien laat zien in plaats
 van een vlak. Knop `cape_drape` schaalt plooi en wikkel. Fijnere mesh
 (8 x 14).
 
+**Hangen (13 september, Max: "de cape is wel erg sterk, kan ie niet meer
+hangen echt").** De lap stond als een plank: hij kantelde stijf mee met
+het rugbot (dat in de rifle-idle voorover leunt) en stak met een vaste
+bolling naar achteren. Nu zit alleen de KRAAG aan het bot
+(`cape_anker`, het kraagpunt in bot-ruimte) en hangt de lap per frame
+aan de zwaartekracht (`PawnView.cape_process`): doelrichting = omlaag,
+een beetje van de rug af, tegen de snelheid van de kraag in (sleept bij
+lopen en uitvallen) en met de wind mee; een gedempte slinger (veer 60,
+demping 7 per seconde) loopt daar achteraan, zodat hij nazwaait; nooit
+door de rug naar voren; het doek krijgt zijn wereld-transform en Godot
+rekent dat terug naar het bot. Bolling van 0,1 naar 0,04 pionhoogte.
+Knop `cape_slinger`. Capecheck meet nu ook dat de lap recht hangt
+(lap-omhoog . wereld-omhoog boven 0,85, gemeten 1,00 terwijl het bot op
+0,98 leunt) en dat de kraag op het bot zit (0,000). Zweefcheck en
+omgevingcheck 1 opnieuw groen.
+
 **Textuur (Max: "schrijf een texture prompt voor de blauwe cape met gouden
 rand, mogen 3 verschillende zijn").** De shader neemt `cape_blue.png` /
 `cape_red.png` (onder assets/models, aanrader props/) als buitenkant zodra
