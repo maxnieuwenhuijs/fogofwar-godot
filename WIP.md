@@ -85,6 +85,22 @@ cloth via zijn physics-punten (70 punten, kraag 0,000 van het bot, zoom
 0,45 onder de kraag, niets ontploft), zweefcheck idem (de node staat op
 de oorsprong: eerst 16 valse "meer dan 2 van hun pion").
 
+Max daarna: "het heeft geen texture meer en is iets te los en gaat door
+de body heen af en toe." Drie oorzaken, drie fixes: (1) de textuur zat
+alleen op de buitenkant en vanaf de speler zie je bij de vijand vooral
+de binnenkant (voering): in cloth-stand nu het plaatje op beide kanten,
+binnen iets donkerder; (2) stijfheid van 0,85 naar 1, demping 0,06 naar
+0,15, drag 0,08 naar 0,2, vijf iteraties in plaats van drie (knop
+`cape_sim_precisie`); (3) de kraag begon op 0,06 pionhoogte achter de
+rug, binnen de romp-capsule van 0,1: stof die in een capsule start duwt
+de solver naar de dichtstbijzijnde wand, soms de voorkant. Nu `CAPE_RUG`
+0,09 en de romp-capsule 0,085, dus de kraag begint erbuiten; de capsules
+zijn kinematisch (`AnimatableBody3D` met sync_to_physics, Jolt kent dan
+de snelheid van het lijf en drukt de stof weg in plaats van erdoorheen
+te springen) en de bovenarmen doen mee (die zwaaien bij het mikken en
+de bajonetstoot door de lap). Les: `get_meta(sleutel, null)` print een
+fout als de sleutel ontbreekt; eerst `has_meta`.
+
 **Textuur (Max: "schrijf een texture prompt voor de blauwe cape met gouden
 rand, mogen 3 verschillende zijn").** De shader neemt `cape_blue.png` /
 `cape_red.png` (onder assets/models, aanrader props/) als buitenkant zodra

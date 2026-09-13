@@ -2659,8 +2659,13 @@ void fragment() {
 		galon = 0.0;
 	}
 	vec3 doek = mix(basis, zoom.rgb, galon) * weefsel;
-	if (heeft_textuur > 0.5 && FRONT_FACING) {
+	if (heeft_textuur > 0.5 && (FRONT_FACING || sim > 0.5)) {
+		// cloth: het plaatje op beide kanten (vanaf de speler zie je bij de
+		// vijand vooral de binnenkant; met alleen de voering leek de cape kaal)
 		doek = texture(textuur, UV).rgb;
+		if (!FRONT_FACING) {
+			doek *= 0.8;
+		}
 	}
 	// Wapper-plooien vangen licht; schaduw onder de kraag.
 	doek *= 0.9 + 0.15 * (vouw * 0.5 + 0.5);
@@ -2685,6 +2690,7 @@ void fragment() {
 const CAPE_BOTTEN: Array = ["mixamorig:Spine2", "Spine2", "mixamorig:Spine1", "Spine1",
 	"mixamorig:Neck", "Neck", "mixamorig:Spine", "Spine"]
 const CAPE_LAAG := 1 << 19   # physics-laag 20: alleen capes en hun lijf-capsules
+const CAPE_RUG := 0.09       # kraag zo ver achter het rugbot (x pionhoogte), net buiten de romp-capsule
 
 
 ## Cape aan het bovenste rugbot van een geanimeerd model (pion of bewoner).
@@ -2948,18 +2954,23 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 	mat.set_shader_parameter("wind", Vector3.ZERO)
 	soft.material_override = mat
 	soft.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	soft.simulation_precision = clampi(int(fx("cape_sim_precisie", 3.0)), 1, 10)
+	# Stevig doek (Max: "iets te los"): volle stijfheid, flinke demping en
+	# luchtweerstand, vijf iteraties (nog steeds licht: 70 punten).
+	soft.simulation_precision = clampi(int(fx("cape_sim_precisie", 5.0)), 1, 10)
 	soft.total_mass = 0.15
-	soft.linear_stiffness = 0.85
-	soft.damping_coefficient = 0.06
-	soft.drag_coefficient = 0.08
+	soft.linear_stiffness = 1.0
+	soft.damping_coefficient = 0.15
+	soft.drag_coefficient = 0.2
 	soft.collision_layer = CAPE_LAAG
 	soft.collision_mask = CAPE_LAAG
 	# Beginstand: kraag op de schouderlijn achter de rug, lap recht naar
 	# beneden, buitenkant naar achteren. Uit de rusthouding; de eerste frame
 	# zet de kraag op de echte pose.
 	var bot_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(bone).origin
-	var kraag_w: Vector3 = bot_w + Vector3.UP * nek_op + achter_w * (hoogte_w * 0.06)
+	# de kraag net BUITEN de romp-capsule (straal 0,085): begint de stof erin,
+	# dan duwt de solver hem soms naar voren door het lijf (Max: "gaat door
+	# de body heen af en toe")
+	var kraag_w: Vector3 = bot_w + Vector3.UP * nek_op + achter_w * (hoogte_w * CAPE_RUG)
 	var z_w: Vector3 = (achter_w - Vector3.UP * achter_w.dot(Vector3.UP)).normalized()
 	var x_w: Vector3 = Vector3.UP.cross(z_w).normalized()
 	var wereld := Transform3D(Basis(x_w, Vector3.UP, z_w), kraag_w - Vector3.UP * (lengte * 0.5))
@@ -2975,17 +2986,35 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 		soft.set_point_pinned(c, true)
 		kraag_idx.append(c)
 		kraag_x.append(vs[c].x)
-	# Het lijf voor de botsing: twee capsules, maat uit de rusthouding.
+	# Het lijf voor de botsing: capsules tussen botten, maat uit de
+	# rusthouding (botten rekken niet, dus Jolt bouwt de vorm nooit opnieuw):
+	# romp heup-nek, bekken en bovenbenen heup-omlaag, en de bovenarmen
+	# (die zwaaien bij het mikken en de bajonetstoot door de lap).
 	var heup := _cape_bot(skel, ["mixamorig:Hips", "Hips"], "Hips", bone)
 	var nek := _cape_bot(skel, ["mixamorig:Neck", "Neck"], "Neck", bone)
-	var heup_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(heup).origin
-	var nek_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(nek).origin
-	var romp_len: float = maxf(heup_w.distance_to(nek_w) + hoogte_w * 0.04, hoogte_w * 0.2)
-	var lijf := _cape_capsule(ouder, hoogte_w * 0.1, romp_len)
-	lijf.name = "CapeRomp"
-	var benen := _cape_capsule(ouder, hoogte_w * 0.085, hoogte_w * 0.34)
-	benen.name = "CapeBenen"
+	var capsules: Array = []
+	var specs: Array = [
+		{"naam": "CapeRomp", "a": heup, "b": nek, "rek": hoogte_w * 0.04, "r": hoogte_w * 0.085},
+		{"naam": "CapeBenen", "a": heup, "b": -1, "omlaag": hoogte_w * 0.32, "r": hoogte_w * 0.08},
+	]
+	for kant in ["Left", "Right"]:
+		var arm := skel.find_bone("mixamorig:%sArm" % kant)
+		var onderarm := skel.find_bone("mixamorig:%sForeArm" % kant)
+		if arm >= 0 and onderarm >= 0:
+			specs.append({"naam": "CapeArm" + kant, "a": arm, "b": onderarm, "rek": hoogte_w * 0.02, "r": hoogte_w * 0.045})
+	for sp in specs:
+		var a_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(int(sp.a)).origin
+		var b_w: Vector3
+		if int(sp.b) < 0:
+			b_w = a_w + Vector3.DOWN * float(sp.get("omlaag", 0.0))
+		else:
+			b_w = skel.global_transform * skel.get_bone_global_rest(int(sp.b)).origin
+		var lengte_c: float = maxf(a_w.distance_to(b_w) + 2.0 * float(sp.get("rek", 0.0)), hoogte_w * 0.1)
+		var body := _cape_capsule(ouder, float(sp.r), lengte_c)
+		body.name = String(sp.naam)
+		capsules.append({"body": body, "a": int(sp.a), "b": int(sp.b), "omlaag": float(sp.get("omlaag", 0.0)), "rek": float(sp.get("rek", 0.0))})
 	soft.set_meta("cape_sim", true)
+	soft.set_meta("cape_capsules", capsules)
 	soft.set_meta("cape_bot", att)
 	soft.set_meta("cape_bone", bone)
 	soft.set_meta("cape_skel", skel)
@@ -2994,10 +3023,8 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 	soft.set_meta("cape_kraag_idx", kraag_idx)
 	soft.set_meta("cape_kraag_x", kraag_x)
 	soft.set_meta("cape_nek_op", nek_op)
-	soft.set_meta("cape_rug", hoogte_w * 0.06)
+	soft.set_meta("cape_rug", hoogte_w * CAPE_RUG)
 	soft.set_meta("cape_root", root)
-	soft.set_meta("cape_lijf", lijf)
-	soft.set_meta("cape_benen", benen)
 	soft.set_meta("cape_lengte", lengte)
 	soft.set_meta("cape_breedte", breedte)
 	soft.set_meta("cape_hoogte", hoogte_w)
@@ -3018,12 +3045,15 @@ static func _cape_bot(skel: Skeleton3D, namen: Array, deel: String, terugval: in
 	return terugval
 
 
-## Een capsule (StaticBody3D) op de cape-laag; _zet_capsule zet hem per frame
-## tussen twee botten. Hoogte vast (botten rekken niet), dus Jolt hoeft de
-## vorm nooit opnieuw te bouwen.
-static func _cape_capsule(ouder: Node3D, r: float, hoogte: float) -> StaticBody3D:
-	var body := StaticBody3D.new()
+## Een capsule op de cape-laag; _zet_capsule zet hem per frame tussen twee
+## botten. Hoogte vast (botten rekken niet), dus Jolt hoeft de vorm nooit
+## opnieuw te bouwen. AnimatableBody3D met sync_to_physics: dan kent Jolt
+## de snelheid van het lijf en drukt een uitval de stof weg in plaats van
+## erdoorheen te springen.
+static func _cape_capsule(ouder: Node3D, r: float, hoogte: float) -> AnimatableBody3D:
+	var body := AnimatableBody3D.new()
 	body.name = "CapeLijf"
+	body.sync_to_physics = true
 	body.collision_layer = CAPE_LAAG
 	body.collision_mask = 0
 	var vorm := CollisionShape3D.new()
@@ -3036,7 +3066,7 @@ static func _cape_capsule(ouder: Node3D, r: float, hoogte: float) -> StaticBody3
 	return body
 
 
-static func _zet_capsule(body: StaticBody3D, a: Vector3, b: Vector3) -> void:
+static func _zet_capsule(body: PhysicsBody3D, a: Vector3, b: Vector3) -> void:
 	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
 		return
 	var d: Vector3 = b - a
@@ -3067,12 +3097,19 @@ static func _cape_sim_process(doek: MeshInstance3D) -> void:
 	var punten: PackedVector3Array = cape_kraag_punten(doek)
 	for k in mini(kraag_idx.size(), punten.size()):
 		PhysicsServer3D.soft_body_move_point(rid, kraag_idx[k], punten[k])
-	var h: float = float(doek.get_meta("cape_hoogte", 0.9))
-	var heup_w: Vector3 = skel.global_transform * skel.get_bone_global_pose(int(doek.get_meta("cape_heup"))).origin
-	var nek_w: Vector3 = skel.global_transform * skel.get_bone_global_pose(int(doek.get_meta("cape_nek"))).origin
-	var romp: Vector3 = (nek_w - heup_w).normalized()
-	_zet_capsule(doek.get_meta("cape_lijf", null) as StaticBody3D, heup_w, nek_w + romp * h * 0.04)
-	_zet_capsule(doek.get_meta("cape_benen", null) as StaticBody3D, heup_w + Vector3.DOWN * h * 0.32, heup_w + Vector3.UP * h * 0.02)
+	for c in doek.get_meta("cape_capsules", []):
+		var cd: Dictionary = c
+		var a_w: Vector3 = skel.global_transform * skel.get_bone_global_pose(int(cd.a)).origin
+		var b_w: Vector3
+		if int(cd.b) < 0:
+			b_w = a_w + Vector3.DOWN * float(cd.omlaag)
+			a_w += Vector3.UP * float(doek.get_meta("cape_hoogte", 0.9)) * 0.02
+		else:
+			b_w = skel.global_transform * skel.get_bone_global_pose(int(cd.b)).origin
+			var richting: Vector3 = (b_w - a_w).normalized()
+			a_w -= richting * float(cd.rek)
+			b_w += richting * float(cd.rek)
+		_zet_capsule(cd.body as PhysicsBody3D, a_w, b_w)
 
 
 ## Waar de kraagpunten van een cloth-cape NU horen (wereld): op het rugbot
@@ -3104,11 +3141,16 @@ static func cape_kraag_punten(doek: MeshInstance3D) -> PackedVector3Array:
 static func cape_weg(doek: MeshInstance3D) -> void:
 	if doek == null or not is_instance_valid(doek):
 		return
-	for sleutel in ["cape_bot", "cape_lijf", "cape_benen"]:
-		var n = doek.get_meta(sleutel, null)
+	if doek.has_meta("cape_bot"):
+		var n = doek.get_meta("cape_bot")
 		if n is Node and is_instance_valid(n):
 			(n as Node).name = "CapeOud"
 			(n as Node).queue_free()
+	for c in doek.get_meta("cape_capsules", []):
+		var b = (c as Dictionary).get("body", null)
+		if b is Node and is_instance_valid(b):
+			(b as Node).name = "CapeOud"
+			(b as Node).queue_free()
 	var ouder: Node = doek.get_parent()
 	doek.name = "CapeOud"   # de verse lap van deze frame mag weer "Cape" heten
 	if ouder is BoneAttachment3D and ouder.name == "CapeBot":

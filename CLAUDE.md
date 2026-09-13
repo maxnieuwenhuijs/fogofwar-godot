@@ -400,16 +400,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   "je hebt geen cloth iets van simulatie?? lightweight iets"):
   `_maak_cape_sim` bouwt een `SoftBody3D` van 7 x 10 punten op Jolt
   (`physics/3d/physics_engine` = Jolt; de oude Godot-physics ontploft),
-  drie solver-iteraties, onder de PawnView of de Bewoner (schaal 1, een
+  vijf solver-iteraties, stijfheid 1, demping 0,15, drag 0,2 (Max: "iets
+  te los"), onder de PawnView of de Bewoner (schaal 1, een
   soft body onder het geschaalde skelet gaat mis). De kraagrij is
   vastgepind en gaat elke frame via
   `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`: de
   POSITIE van het rugbot uit het skelet, een nekhoogte omhoog, achter de
   rug, de rij dwars op de kijkrichting van het model (niet de draai van
-  het bot: bij de rifle-idle zwaaide de lap anders om de pion heen). Twee
-  StaticBody3D-capsules op physics-laag 20 (romp heup-nek, bekken en
-  bovenbenen) houden de stof van het lijf; `cape_weg` ruimt lap,
-  bot-anker en capsules op. Valkuilen: het attachment-pad van
+  het bot: bij de rifle-idle zwaaide de lap anders om de pion heen), en
+  `CAPE_RUG` 0,09 pionhoogte achter de rug: net BUITEN de romp-capsule,
+  want stof die in een capsule begint duwt de solver soms naar voren door
+  het lijf (Max: "gaat door de body heen"). Vier kinematische capsules
+  (`AnimatableBody3D`, sync_to_physics, dus Jolt kent de snelheid van het
+  lijf) op physics-laag 20: romp heup-nek, bekken en bovenbenen,
+  linker- en rechterbovenarm (`cape_capsules` in de meta), per frame
+  tussen hun botten gezet; `cape_weg` ruimt lap, bot-anker en capsules
+  op. In cloth-stand zit de textuur op BEIDE kanten (de binnenkant iets
+  donkerder; met alleen de voering leek de cape vanaf de speler kaal).
+  Valkuilen: het attachment-pad van
   `set_point_pinned` laat de punten in 4.7 gewoon vallen (vandaar
   move_point); `soft_body_move_point` VOOR de eerste physics-stap
   verminkt de vrije punten (geen directe update bij het bouwen); Jolt
