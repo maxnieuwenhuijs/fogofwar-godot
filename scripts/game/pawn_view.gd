@@ -2610,6 +2610,7 @@ uniform float dim = 1.0;             // 1 = normaal, lager = lijk (verduister_la
 uniform sampler2D textuur : source_color, hint_default_white;  // geleverd plaatje (cape_blue.png), boven = kraag
 uniform float heeft_textuur = 0.0;   // 1 = het plaatje is de buitenkant (galon zit er dan in)
 uniform float sim = 0.0;             // 1 = cloth-simulatie vormt de lap, de shader kleurt alleen
+uniform float voering_goud = 1.0;    // 1 = de binnenkant is goudzijde (Max: "doen we daar vol goud?"), 0 = plaatje/voering
 
 varying float vouw;
 varying float tv;
@@ -2667,12 +2668,17 @@ void fragment() {
 			doek *= 0.8;
 		}
 	}
+	bool goudzijde = !FRONT_FACING && voering_goud > 0.5;
+	if (goudzijde) {
+		// binnenkant: goudzijde, iets donkerder naar de kraag toe
+		doek = zoom.rgb * weefsel * (0.9 + 0.1 * smoothstep(0.0, 0.3, tv));
+	}
 	// Wapper-plooien vangen licht; schaduw onder de kraag.
 	doek *= 0.9 + 0.15 * (vouw * 0.5 + 0.5);
 	doek *= 0.8 + 0.2 * smoothstep(0.0, 0.25, tv);
 	ALBEDO = doek * dim;
-	ROUGHNESS = 0.9;
-	SPECULAR = 0.08;
+	ROUGHNESS = goudzijde ? 0.45 : 0.9;   // zijde glanst, wol niet
+	SPECULAR = goudzijde ? 0.35 : 0.08;
 	if (sim > 0.5) {
 		// cloth: de normaal uit de schermafgeleiden (de soft body levert er
 		// geen bruikbare aan), altijd naar de camera toe, dus voor beide kanten
@@ -2761,6 +2767,7 @@ static func maak_cape(root: Node3D, hoogte_w: float, blauw: bool, fase_bron: int
 	mat.set_shader_parameter("voering", Color(0.78, 0.72, 0.55) if blauw else Color(0.42, 0.3, 0.24))
 	mat.set_shader_parameter("zoom", Color(0.88, 0.7, 0.28) if blauw else Color(0.5, 0.42, 0.3))
 	mat.set_shader_parameter("zoom_breedte", 0.07 if blauw else 0.0)
+	mat.set_shader_parameter("voering_goud", fx("cape_voering_goud", 1.0) if blauw else 0.0)
 	mat.set_shader_parameter("hoogte", lengte)
 	mat.set_shader_parameter("halfbreedte", breedte * 0.5)
 	mat.set_shader_parameter("amp", lengte * 0.09 * fx("cape_wapper", 1.0))

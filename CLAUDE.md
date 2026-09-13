@@ -415,8 +415,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   lijf) op physics-laag 20: romp heup-nek, bekken en bovenbenen,
   linker- en rechterbovenarm (`cape_capsules` in de meta), per frame
   tussen hun botten gezet; `cape_weg` ruimt lap, bot-anker en capsules
-  op. In cloth-stand zit de textuur op BEIDE kanten (de binnenkant iets
-  donkerder; met alleen de voering leek de cape vanaf de speler kaal).
+  op. De binnenkant van de blauwe cape is een glanzende goudzijde (Max:
+  "doen we daar vol goud?"; knop `cape_voering_goud`, 0 = het plaatje
+  aan beide kanten, iets donkerder; met alleen de matte voering leek de
+  cape vanaf de speler kaal).
   Valkuilen: het attachment-pad van
   `set_point_pinned` laat de punten in 4.7 gewoon vallen (vandaar
   move_point); `soft_body_move_point` VOOR de eerste physics-stap

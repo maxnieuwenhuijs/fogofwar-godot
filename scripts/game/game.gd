@@ -3294,6 +3294,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "cape_slinger", "label": "cape-slinger (sleept bij bewegen)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "cape_sim", "label": "cape-cloth (1 = Jolt-simulatie, 0 = vlakke shader-lap)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "cape_sim_precisie", "label": "cape-cloth: solver-iteraties", "min": 1.0, "max": 8.0, "step": 1.0, "def": 5.0},
+	{"key": "cape_voering_goud", "label": "cape: binnenkant goudzijde (1) of het plaatje (0)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "cape_wind", "label": "cape-wind", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 ]
 

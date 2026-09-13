@@ -99,7 +99,11 @@ zijn kinematisch (`AnimatableBody3D` met sync_to_physics, Jolt kent dan
 de snelheid van het lijf en drukt de stof weg in plaats van erdoorheen
 te springen) en de bovenarmen doen mee (die zwaaien bij het mikken en
 de bajonetstoot door de lap). Les: `get_meta(sleutel, null)` print een
-fout als de sleutel ontbreekt; eerst `has_meta`.
+fout als de sleutel ontbreekt; eerst `has_meta`. Max: "ook aan de
+binnenkant, of doen we daar vol goud?" Vol goud: de binnenkant van de
+blauwe cape is een goudzijde (de galonkleur, glanzend, iets donkerder
+naar de kraag), knop `cape_voering_goud` (0 = het plaatje aan beide
+kanten); rood houdt zijn doffe voering.
 
 **Textuur (Max: "schrijf een texture prompt voor de blauwe cape met gouden
 rand, mogen 3 verschillende zijn").** De shader neemt `cape_blue.png` /
