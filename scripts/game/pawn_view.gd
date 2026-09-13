@@ -2696,7 +2696,8 @@ void fragment() {
 const CAPE_BOTTEN: Array = ["mixamorig:Spine2", "Spine2", "mixamorig:Spine1", "Spine1",
 	"mixamorig:Neck", "Neck", "mixamorig:Spine", "Spine"]
 const CAPE_LAAG := 1 << 19   # physics-laag 20: alleen capes en hun lijf-capsules
-const CAPE_RUG := 0.09       # kraag zo ver achter het rugbot (x pionhoogte), net buiten de romp-capsule
+const CAPE_RUG := 0.03       # kraag zo ver achter nek en schouderbotten (x pionhoogte): op de rug van de schouders
+const CAPE_OP := 0.045       # en zo ver erboven: net buiten de schouderbalk, zodat de stof erop ligt en niet erin
 
 
 ## Cape aan het bovenste rugbot van een geanimeerd model (pion of bewoner).
@@ -2921,8 +2922,20 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 	var ouder: Node3D = root.get_parent() as Node3D
 	if ouder == null:
 		return null
-	# De lap: kolommen x rijen, smal bij de kraag, over de schouders naar
-	# volle breedte, uitlopend naar de zoom. Rij 0 is de kraag.
+	# De schouders: de kraagrij loopt van het linkerschouderbot over de nek
+	# naar het rechterschouderbot (Max: "begint niet goed bij de schouders").
+	# Breedte van de lap bovenaan = de schouderspan uit de rusthouding.
+	var nek := _cape_bot(skel, ["mixamorig:Neck", "Neck"], "Neck", bone)
+	var arm_l := _cape_bot(skel, ["mixamorig:LeftArm", "LeftArm"], "LeftArm", -1)
+	var arm_r := _cape_bot(skel, ["mixamorig:RightArm", "RightArm"], "RightArm", -1)
+	var span: float = hoogte_w * 0.3
+	if arm_l >= 0 and arm_r >= 0:
+		var al_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(arm_l).origin
+		var ar_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(arm_r).origin
+		span = clampf(al_w.distance_to(ar_w), hoogte_w * 0.18, hoogte_w * 0.45)
+	breedte = span * 1.06
+	# De lap: kolommen x rijen, bovenaan de schouderspan, uitlopend naar de
+	# zoom. Rij 0 is de kraag, op de schouders.
 	var kol := 7
 	var rij := 10
 	var vs := PackedVector3Array()
@@ -2931,7 +2944,7 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 	var idx := PackedInt32Array()
 	for r in rij:
 		var t: float = float(r) / float(rij - 1)
-		var w: float = lerpf(0.35, 1.0, smoothstep(0.0, 0.22, t)) * lerpf(1.0, 1.45, t)
+		var w: float = lerpf(1.0, 1.5, t)
 		for c in kol:
 			var u: float = float(c) / float(kol - 1)
 			vs.append(Vector3((u - 0.5) * breedte * w, lengte * 0.5 - t * lengte, 0.0))
@@ -2974,41 +2987,46 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 	# beneden, buitenkant naar achteren. Uit de rusthouding; de eerste frame
 	# zet de kraag op de echte pose.
 	var bot_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(bone).origin
-	# de kraag net BUITEN de romp-capsule (straal 0,085): begint de stof erin,
-	# dan duwt de solver hem soms naar voren door het lijf (Max: "gaat door
-	# de body heen af en toe")
-	var kraag_w: Vector3 = bot_w + Vector3.UP * nek_op + achter_w * (hoogte_w * CAPE_RUG)
+	var nek_rust_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(nek).origin
+	var kraag_w: Vector3 = nek_rust_w + Vector3.UP * (hoogte_w * CAPE_OP) + achter_w * (hoogte_w * CAPE_RUG)
 	var z_w: Vector3 = (achter_w - Vector3.UP * achter_w.dot(Vector3.UP)).normalized()
 	var x_w: Vector3 = Vector3.UP.cross(z_w).normalized()
 	var wereld := Transform3D(Basis(x_w, Vector3.UP, z_w), kraag_w - Vector3.UP * (lengte * 0.5))
 	soft.transform = ouder.global_transform.affine_inverse() * wereld
 	ouder.add_child(soft)
-	# Kraagrij vastpinnen. Ze volgen het rugbot alleen in POSITIE; de rij
-	# zelf staat dwars op de kijkrichting van het model (cape_kraag_punten).
-	# Draaide de rij met het bot mee, dan zwaaide de lap bij een gedraaid
-	# bovenlijf (de rifle-idle) om de pion heen en zag je de voering.
+	# Kraagrij vastpinnen. Elke frame zet cape_kraag_punten ze op de
+	# schouders: u = -1 op het linkerschouderbot, 0 op de nek, 1 rechts,
+	# ertussen recht gelerpt, een stukje omhoog en naar achteren. Zo begint
+	# de stof OP de schouders en valt hij eroverheen; de rij draait niet met
+	# het rugbot mee (dan zwaaide de lap bij de rifle-idle om de pion heen).
 	var kraag_idx := PackedInt32Array()
-	var kraag_x := PackedFloat32Array()
+	var kraag_u := PackedFloat32Array()
 	for c in kol:
 		soft.set_point_pinned(c, true)
 		kraag_idx.append(c)
-		kraag_x.append(vs[c].x)
+		kraag_u.append((float(c) / float(kol - 1) - 0.5) * 2.0)
 	# Het lijf voor de botsing: capsules tussen botten, maat uit de
 	# rusthouding (botten rekken niet, dus Jolt bouwt de vorm nooit opnieuw):
 	# romp heup-nek, bekken en bovenbenen heup-omlaag, en de bovenarmen
 	# (die zwaaien bij het mikken en de bajonetstoot door de lap).
 	var heup := _cape_bot(skel, ["mixamorig:Hips", "Hips"], "Hips", bone)
-	var nek := _cape_bot(skel, ["mixamorig:Neck", "Neck"], "Neck", bone)
 	var capsules: Array = []
+	# rek_a/rek_b: zo ver steekt de capsule voorbij bot a / bot b (negatief =
+	# korter). De romp stopt ONDER de schouderlijn: reikte hij tot boven de
+	# nek, dan duwde hij de bovenste rijen van de lap omhoog over de
+	# schouders heen (goudzijde naar buiten, 13 september).
 	var specs: Array = [
-		{"naam": "CapeRomp", "a": heup, "b": nek, "rek": hoogte_w * 0.04, "r": hoogte_w * 0.085},
+		{"naam": "CapeRomp", "a": heup, "b": nek, "rek_a": hoogte_w * 0.02, "rek_b": -hoogte_w * 0.07, "r": hoogte_w * 0.085},
 		{"naam": "CapeBenen", "a": heup, "b": -1, "omlaag": hoogte_w * 0.32, "r": hoogte_w * 0.08},
 	]
+	if arm_l >= 0 and arm_r >= 0:
+		# de schouderbalk: daar ligt de stof op (de kraag hangt er net buiten)
+		specs.append({"naam": "CapeSchouders", "a": arm_l, "b": arm_r, "rek_a": hoogte_w * 0.01, "rek_b": hoogte_w * 0.01, "r": hoogte_w * 0.045})
 	for kant in ["Left", "Right"]:
 		var arm := skel.find_bone("mixamorig:%sArm" % kant)
 		var onderarm := skel.find_bone("mixamorig:%sForeArm" % kant)
 		if arm >= 0 and onderarm >= 0:
-			specs.append({"naam": "CapeArm" + kant, "a": arm, "b": onderarm, "rek": hoogte_w * 0.02, "r": hoogte_w * 0.045})
+			specs.append({"naam": "CapeArm" + kant, "a": arm, "b": onderarm, "rek_a": hoogte_w * 0.02, "rek_b": hoogte_w * 0.02, "r": hoogte_w * 0.045})
 	for sp in specs:
 		var a_w: Vector3 = skel.global_transform * skel.get_bone_global_rest(int(sp.a)).origin
 		var b_w: Vector3
@@ -3016,10 +3034,12 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 			b_w = a_w + Vector3.DOWN * float(sp.get("omlaag", 0.0))
 		else:
 			b_w = skel.global_transform * skel.get_bone_global_rest(int(sp.b)).origin
-		var lengte_c: float = maxf(a_w.distance_to(b_w) + 2.0 * float(sp.get("rek", 0.0)), hoogte_w * 0.1)
+		var rek_a: float = float(sp.get("rek_a", 0.0))
+		var rek_b: float = float(sp.get("rek_b", 0.0))
+		var lengte_c: float = maxf(a_w.distance_to(b_w) + rek_a + rek_b, hoogte_w * 0.1)
 		var body := _cape_capsule(ouder, float(sp.r), lengte_c)
 		body.name = String(sp.naam)
-		capsules.append({"body": body, "a": int(sp.a), "b": int(sp.b), "omlaag": float(sp.get("omlaag", 0.0)), "rek": float(sp.get("rek", 0.0))})
+		capsules.append({"body": body, "a": int(sp.a), "b": int(sp.b), "omlaag": float(sp.get("omlaag", 0.0)), "rek_a": rek_a, "rek_b": rek_b})
 	soft.set_meta("cape_sim", true)
 	soft.set_meta("cape_capsules", capsules)
 	soft.set_meta("cape_bot", att)
@@ -3028,8 +3048,12 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 	soft.set_meta("cape_heup", heup)
 	soft.set_meta("cape_nek", nek)
 	soft.set_meta("cape_kraag_idx", kraag_idx)
-	soft.set_meta("cape_kraag_x", kraag_x)
-	soft.set_meta("cape_nek_op", nek_op)
+	soft.set_meta("cape_kraag_u", kraag_u)
+	soft.set_meta("cape_nek", nek)
+	soft.set_meta("cape_arm_l", arm_l)
+	soft.set_meta("cape_arm_r", arm_r)
+	soft.set_meta("cape_span", span)
+	soft.set_meta("cape_op", hoogte_w * CAPE_OP)
 	soft.set_meta("cape_rug", hoogte_w * CAPE_RUG)
 	soft.set_meta("cape_root", root)
 	soft.set_meta("cape_lengte", lengte)
@@ -3114,33 +3138,61 @@ static func _cape_sim_process(doek: MeshInstance3D) -> void:
 		else:
 			b_w = skel.global_transform * skel.get_bone_global_pose(int(cd.b)).origin
 			var richting: Vector3 = (b_w - a_w).normalized()
-			a_w -= richting * float(cd.rek)
-			b_w += richting * float(cd.rek)
+			a_w -= richting * float(cd.rek_a)
+			b_w += richting * float(cd.rek_b)
 		_zet_capsule(cd.body as PhysicsBody3D, a_w, b_w)
 
 
-## Waar de kraagpunten van een cloth-cape NU horen (wereld): op het rugbot
-## (positie rechtstreeks uit het skelet; het bot-anker loopt een frame
-## achter), een nekhoogte omhoog, een stukje achter de rug, en de rij dwars
-## op de kijkrichting van het model. De check gebruikt dezelfde functie.
+## Waar de kraagpunten van een cloth-cape NU horen (wereld): op de
+## schouders. u = 0 op het nekbot, u = -1 en 1 op de schouderbotten (welk
+## armbot rechts zit wordt gemeten, niet aan de naam afgelezen), ertussen
+## recht gelerpt; alles een stukje omhoog (cape_op) en naar achteren
+## (cape_rug) langs de kijkrichting van het model. Posities rechtstreeks uit
+## het skelet (het bot-anker loopt een frame achter). Zonder armbotten een
+## rechte rij van een halve schouderspan links en rechts van de nek. De
+## check gebruikt dezelfde functie.
 static func cape_kraag_punten(doek: MeshInstance3D) -> PackedVector3Array:
 	var uit := PackedVector3Array()
 	var skel: Skeleton3D = doek.get_meta("cape_skel", null) as Skeleton3D
 	var root: Node3D = doek.get_meta("cape_root", null) as Node3D
 	if skel == null or root == null or not is_instance_valid(skel) or not is_instance_valid(root):
 		return uit
-	var bone: int = int(doek.get_meta("cape_bone", -1))
-	if bone < 0:
+	var nek: int = int(doek.get_meta("cape_nek", -1))
+	if nek < 0:
 		return uit
-	var bot_w: Vector3 = skel.global_transform * skel.get_bone_global_pose(bone).origin
 	var achter_w: Vector3 = root.global_transform.basis * Vector3(0.0, 0.0, -1.0)
 	achter_w.y = 0.0
 	achter_w = achter_w.normalized() if achter_w.length() > 0.001 else Vector3.BACK
 	var rechts_w: Vector3 = Vector3.UP.cross(achter_w).normalized()
-	var midden: Vector3 = bot_w + Vector3.UP * float(doek.get_meta("cape_nek_op", 0.09)) + achter_w * float(doek.get_meta("cape_rug", 0.05))
-	var xs: PackedFloat32Array = doek.get_meta("cape_kraag_x")
-	for x in xs:
-		uit.append(midden + rechts_w * x)
+	var op: Vector3 = Vector3.UP * float(doek.get_meta("cape_op", 0.02))
+	var rug: Vector3 = achter_w * float(doek.get_meta("cape_rug", 0.035))
+	var nek_w: Vector3 = skel.global_transform * skel.get_bone_global_pose(nek).origin
+	var arm_l: int = int(doek.get_meta("cape_arm_l", -1))
+	var arm_r: int = int(doek.get_meta("cape_arm_r", -1))
+	var links_w: Vector3
+	var rechts_pt: Vector3
+	if arm_l >= 0 and arm_r >= 0:
+		var a1: Vector3 = skel.global_transform * skel.get_bone_global_pose(arm_l).origin
+		var a2: Vector3 = skel.global_transform * skel.get_bone_global_pose(arm_r).origin
+		if a1.dot(rechts_w) > a2.dot(rechts_w):
+			rechts_pt = a1
+			links_w = a2
+		else:
+			rechts_pt = a2
+			links_w = a1
+	else:
+		var half: float = float(doek.get_meta("cape_span", 0.27)) * 0.5
+		links_w = nek_w - rechts_w * half
+		rechts_pt = nek_w + rechts_w * half
+	var midden: Vector3 = nek_w + op + rug
+	var re: Vector3 = rechts_pt + op * 0.7 + rug
+	var li: Vector3 = links_w + op * 0.7 + rug
+	var us: PackedFloat32Array = doek.get_meta("cape_kraag_u")
+	for u in us:
+		if u >= 0.0:
+			uit.append(midden.lerp(re, u))
+		else:
+			uit.append(midden.lerp(li, -u))
 	return uit
 
 

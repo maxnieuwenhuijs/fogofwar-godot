@@ -105,6 +105,25 @@ blauwe cape is een goudzijde (de galonkleur, glanzend, iets donkerder
 naar de kraag), knop `cape_voering_goud` (0 = het plaatje aan beide
 kanten); rood houdt zijn doffe voering.
 
+Max: "de hele cape hangt nu in het niets en begint niet goed bij de
+schouders." Klopt: de kraag was een smalle rij op nekhoogte, 0,09
+pionhoogte achter het lijf, dus vanaf de speler (van voren-boven) hing
+er een lap los in de lucht achter de nek. Nu loopt de kraagrij OVER de
+schouders: u = -1 op het ene schouderbot, 0 op het nekbot, 1 op het
+andere (welk armbot rechts zit wordt gemeten aan de kijkrichting, niet
+aan de naam), recht gelerpt, 0,045 omhoog en 0,03 naar achteren; de lap
+is bovenaan zo breed als de schouderspan uit de rusthouding en loopt naar
+de zoom uit (1,5 x). Erbij een schouderbalk-capsule tussen de armbotten.
+Eerste poging klapte bij de bewoner de bovenste rijen omhoog over de
+schouders (goudzijde naar buiten): de romp-capsule reikte tot boven de
+nek en duwde de stof omhoog in plaats van naar achteren. De romp stopt
+nu 0,07 onder de schouderlijn (capsules hebben `rek_a`/`rek_b` per
+kant), de schouderbalk is dunner (0,045) en de kraag hangt er net
+buiten. De check maakt nu ook `_shot_capecheck_voor.png`, van
+voren-boven zoals de speler kijkt: daar is niets zwevends meer te zien.
+De 3:4-regel geldt alleen nog voor de vlakke lap; de cloth-lap volgt de
+schouders en rekt het plaatje iets mee.
+
 **Textuur (Max: "schrijf een texture prompt voor de blauwe cape met gouden
 rand, mogen 3 verschillende zijn").** De shader neemt `cape_blue.png` /
 `cape_red.png` (onder assets/models, aanrader props/) als buitenkant zodra

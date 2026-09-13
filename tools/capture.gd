@@ -1008,7 +1008,12 @@ func _ready() -> void:
 		var cc_ht = (cc_cape3.material_override as ShaderMaterial).get_shader_parameter("heeft_textuur")
 		var cc_ht_f: float = float(cc_ht) if cc_ht != null else 0.0
 		print("[CAPE] met een 3:4-plaatje: lap %.3f x %.3f (%.2f), textuur-uniform %.0f" % [cc_maat.x, cc_maat.y, cc_maat.x / cc_maat.y, cc_ht_f])
-		if absf(cc_maat.x / cc_maat.y - 0.75) > 0.01 or cc_ht_f < 0.5:
+		if cc_ht_f < 0.5:
+			print("[CAPE] FOUT: het plaatje is niet op de lap gezet")
+			cc_fouten += 1
+		# de vlakke lap volgt de verhouding van het plaatje; de cloth-lap is
+		# zo breed als de schouders (het plaatje rekt dan iets mee)
+		if not (cc_cape3 is SoftBody3D) and absf(cc_maat.x / cc_maat.y - 0.75) > 0.01:
 			print("[CAPE] FOUT: de lap volgt de verhouding van het plaatje niet")
 			cc_fouten += 1
 		PawnView._cape_tex_cache.erase("cape_blue.png")
@@ -1057,6 +1062,14 @@ func _ready() -> void:
 			if cc_img != null:
 				cc_img.save_png("res://_shot_capecheck.png")
 				print("[CAPE] screenshot -> _shot_capecheck.png")
+			# en van voren-boven, zoals de speler zijn tegenstander ziet
+			cc_cam.position = Vector3(1.0, 2.4, -2.2)
+			cc_cam.look_at(Vector3(1.0, 0.45, 0.0), Vector3.UP)
+			await get_tree().create_timer(0.4).timeout
+			var cc_img2: Image = cc_tex.get_image()
+			if cc_img2 != null:
+				cc_img2.save_png("res://_shot_capecheck_voor.png")
+				print("[CAPE] screenshot -> _shot_capecheck_voor.png")
 		print("[CAPE] %s: %d fout(en)" % ["PASS" if cc_fouten == 0 else "FAIL", cc_fouten])
 		get_tree().quit(0 if cc_fouten == 0 else 1)
 		return

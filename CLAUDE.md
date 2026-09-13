@@ -404,17 +404,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   te los"), onder de PawnView of de Bewoner (schaal 1, een
   soft body onder het geschaalde skelet gaat mis). De kraagrij is
   vastgepind en gaat elke frame via
-  `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`: de
-  POSITIE van het rugbot uit het skelet, een nekhoogte omhoog, achter de
-  rug, de rij dwars op de kijkrichting van het model (niet de draai van
-  het bot: bij de rifle-idle zwaaide de lap anders om de pion heen), en
-  `CAPE_RUG` 0,09 pionhoogte achter de rug: net BUITEN de romp-capsule,
-  want stof die in een capsule begint duwt de solver soms naar voren door
-  het lijf (Max: "gaat door de body heen"). Vier kinematische capsules
+  `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`: OP DE
+  SCHOUDERS (Max: "begint niet goed bij de schouders"): u = -1 op het ene
+  schouderbot (mixamorig LeftArm/RightArm, welke rechts zit wordt
+  gemeten), 0 op het nekbot, 1 op het andere, recht gelerpt, `CAPE_OP`
+  0,045 pionhoogte omhoog en `CAPE_RUG` 0,03 naar achteren langs de
+  kijkrichting van het model (niet de draai van het bot: bij de
+  rifle-idle zwaaide de lap anders om de pion heen); de lap is bovenaan
+  zo breed als de schouderspan. Vijf kinematische capsules
   (`AnimatableBody3D`, sync_to_physics, dus Jolt kent de snelheid van het
-  lijf) op physics-laag 20: romp heup-nek, bekken en bovenbenen,
-  linker- en rechterbovenarm (`cape_capsules` in de meta), per frame
-  tussen hun botten gezet; `cape_weg` ruimt lap, bot-anker en capsules
+  lijf) op physics-laag 20: romp heup-nek die 0,07 ONDER de schouderlijn
+  stopt (reikte hij tot boven de nek, dan duwde hij de bovenste rijen
+  omhoog over de schouders heen), schouderbalk tussen de armbotten (de
+  kraag hangt er net buiten), bekken en bovenbenen, linker- en
+  rechterbovenarm (`cape_capsules` in de meta, met rek_a/rek_b per kant),
+  per frame tussen hun botten gezet; `cape_weg` ruimt lap, bot-anker en capsules
   op. De binnenkant van de blauwe cape is een glanzende goudzijde (Max:
   "doen we daar vol goud?"; knop `cape_voering_goud`, 0 = het plaatje
   aan beide kanten, iets donkerder; met alleen de matte voering leek de

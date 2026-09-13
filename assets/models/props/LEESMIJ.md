@@ -134,9 +134,10 @@ als buitenkant en laat zijn eigen galon weg. Geen model nodig.
 Zo moet het plaatje in elkaar zitten (de uv-hoek staat in `-- capecheck`):
 
 - **Staand; kies 3:4** (bv 1152 x 1536), dat ligt het dichtst bij de lap.
-  De lap neemt de verhouding van het plaatje over (de lengte blijft de
-  knop `cape_lengte`), dus 2:3 (1024 x 1536) geeft een slankere cape, 1:1
-  een bredere, en 9:16 een smalle baan. Geen alpha.
+  De cloth-cape is bovenaan zo breed als de schouders van het model en
+  loopt naar de zoom uit; het plaatje rekt daar iets mee, wat je bij een
+  rand en een embleem niet ziet. (De vlakke shader-lap, knop `cape_sim`
+  0, neemt wel precies de verhouding van het plaatje over.) Geen alpha.
 - **Boven = kraag** (wordt in het spel smal naar de nek toe getrokken),
   **onder = zoom**, links en rechts de zijranden. Links in het plaatje is
   links van de drager, gezien vanaf zijn rug.
