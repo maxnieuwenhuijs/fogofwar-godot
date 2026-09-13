@@ -322,8 +322,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   results/props_blender` (alles in een keer in het spel, een import en een
   omgevingcheck). Batch 1 (22 stuks hout en ijzer) staat per diorama in
   DIORAMAS; een naam zonder placeholder valt in `_plaats` terug op zijn glb;
-  de "ton" pakt per kamp `prop_barrel_red`/`_blue`. Tabel en werkwijze:
-  `assets/models/props/LEESMIJ.md`.
+  de "ton" pakt per kamp `prop_barrel_red`/`_blue`. Batch 2 en 3 (28: kannen,
+  ketels, kommen, manden, kisten, tapijt, veldbed, waslijn, musketrek,
+  schild, vaandel, het blauwe paviljoen als `tent_blue`, vlagstandaard):
+  team-regel, een spec pakt `prop_<naam>_<team>.glb` van zijn kamp, alleen
+  `_blue` = alleen in het rijke kamp; `-- omgevingcheck 1 blauw` speelt het
+  kamp vooraan als blauw. Tabel en werkwijze: `assets/models/props/LEESMIJ.md`.
 - **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
   iets van 12 diorama's... per klikbaar element verschillende dingen die je
   random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama

@@ -2532,6 +2532,12 @@ func _ready() -> void:
 			if og_props.size() < 8:
 				print("[OMGEVING] FOUT: maar %d props (verwacht minstens 8)" % og_props.size())
 				og_fouten += 1
+			# `-- omgevingcheck [nr] blauw` (13 september): het kamp vooraan als het
+			# BLAUWE team, zodat ook de rijke props (prop_<naam>_blue.glb) laden
+			if "blauw" in args:
+				og.zet_facties(og._factie_eigen, og._factie_ander, "blue")
+				await get_tree().process_frame
+				print("[OMGEVING] kamp vooraan = blauw (de rijke props)")
 			# alle twaalf diorama's een keer opbouwen (elk minstens 8 props) en
 			# eindigen op het diorama uit het argument (`-- omgevingcheck 5`), anders 1
 			var og_i := args.find("omgevingcheck")
