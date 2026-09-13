@@ -55,6 +55,36 @@ Knop `cape_slinger`. Capecheck meet nu ook dat de lap recht hangt
 0,98 leunt) en dat de kraag op het bot zit (0,000). Zweefcheck en
 omgevingcheck 1 opnieuw groen.
 
+**Cloth (13 september, Max: "nee gaat nog steeds niet goed, je hebt geen
+cloth iets van simulatie?? lightweight iets").** De slinger op een vlak
+vlak bleef een plank. Nu een echte cloth: `SoftBody3D` op Jolt (het
+project staat al op "Jolt Physics"), 7 x 10 punten per cape, drie
+solver-iteraties, massa 0,15, stijfheid 0,85, demping 0,06, drag 0,08.
+Eerst headless geproefd met een los script: een lap van 70 punten met de
+bovenste rij vastgepind hangt stabiel en zwaait na als het anker
+springt. Drie valkuilen gevonden: (1) `set_point_pinned(i, true,
+pad_naar_anker)` laat de punten gewoon vallen in 4.7, dus pinnen zonder
+attachment en de kraagrij per frame via
+`PhysicsServer3D.soft_body_move_point` op zijn plek zetten; (2) die
+move_point VOOR de eerste physics-stap (direct bij het bouwen) verminkt
+de vrije punten (zoom twee eenheden weg, gemeten met een debugprint),
+dus de eerste `_process`-frame doet het; (3) de soft body levert de
+shader geen bruikbare normalen (de lap was zwart) en de winding stond
+andersom (je zag de voering): in cloth-stand haalt de shader de normaal
+uit `dFdx`/`dFdy` naar de camera toe, en de driehoeken zijn omgedraaid.
+Vierde les: de kraagrij mag niet met de DRAAI van het rugbot mee, alleen
+met zijn positie; de rij staat dwars op de kijkrichting van het model
+(`cape_kraag_punten`), anders zwaait de lap bij de gedraaide rifle-idle
+om de pion heen. Het lijf zijn twee capsules (romp heup-nek, bekken en
+bovenbenen) op physics-laag 20 die per frame de botten volgen. De lap
+staat onder de PawnView/Bewoner (schaal 1), `cape_weg` ruimt lap,
+bot-anker en capsules op, bij gibs gaat hij mee weg, bij een gewone dood
+wordt hij donker met het lijk. Knoppen `cape_sim` (0 = de vlakke
+shader-lap terug) en `cape_sim_precisie`. Checks: capecheck meet nu de
+cloth via zijn physics-punten (70 punten, kraag 0,000 van het bot, zoom
+0,45 onder de kraag, niets ontploft), zweefcheck idem (de node staat op
+de oorsprong: eerst 16 valse "meer dan 2 van hun pion").
+
 **Textuur (Max: "schrijf een texture prompt voor de blauwe cape met gouden
 rand, mogen 3 verschillende zijn").** De shader neemt `cape_blue.png` /
 `cape_red.png` (onder assets/models, aanrader props/) als buitenkant zodra

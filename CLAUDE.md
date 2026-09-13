@@ -396,12 +396,31 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   karakters een blauwe cape, vanuit Godot").** Geen Blender:
   `PawnView.maak_cape(root, hoogte, blauw, fase)` hangt een lap (PlaneMesh)
   aan `mixamorig:Spine2` (terugval Spine1/Neck/Spine) via een
-  BoneAttachment3D. De KRAAG zit aan het bot; de LAP hangt sinds 13
-  september per frame aan de zwaartekracht (`cape_process`: omlaag vanaf
-  de kraag, een gedempte slinger die tegen de beweging in sleept en met de
-  wind meegaat, nooit door de rug; Max: "kan ie niet meer hangen echt"),
-  dus hij kantelt niet stijf mee met een leunend rugbot. Een
-  vertex-shader (`CAPE_SHADER`) vormt de
+  BoneAttachment3D. **Sinds 13 september is de lap echte cloth** (Max:
+  "je hebt geen cloth iets van simulatie?? lightweight iets"):
+  `_maak_cape_sim` bouwt een `SoftBody3D` van 7 x 10 punten op Jolt
+  (`physics/3d/physics_engine` = Jolt; de oude Godot-physics ontploft),
+  drie solver-iteraties, onder de PawnView of de Bewoner (schaal 1, een
+  soft body onder het geschaalde skelet gaat mis). De kraagrij is
+  vastgepind en gaat elke frame via
+  `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`: de
+  POSITIE van het rugbot uit het skelet, een nekhoogte omhoog, achter de
+  rug, de rij dwars op de kijkrichting van het model (niet de draai van
+  het bot: bij de rifle-idle zwaaide de lap anders om de pion heen). Twee
+  StaticBody3D-capsules op physics-laag 20 (romp heup-nek, bekken en
+  bovenbenen) houden de stof van het lijf; `cape_weg` ruimt lap,
+  bot-anker en capsules op. Valkuilen: het attachment-pad van
+  `set_point_pinned` laat de punten in 4.7 gewoon vallen (vandaar
+  move_point); `soft_body_move_point` VOOR de eerste physics-stap
+  verminkt de vrije punten (geen directe update bij het bouwen); Jolt
+  levert de shader geen bruikbare normalen (in cloth-stand haalt de
+  shader de normaal uit `dFdx`/`dFdy`, altijd naar de camera); zweefcheck
+  en capecheck meten een soft body via `get_point_transform` (de node
+  staat op de oorsprong, headless heeft geen render-AABB). Knop `cape_sim`
+  0 geeft de vlakke shader-lap van 12 september terug: die hangt per
+  frame aan de zwaartekracht (`cape_process`: gedempte slinger, sleept
+  tegen de beweging in, wind, nooit door de rug). Een
+  vertex-shader (`CAPE_SHADER`) vormt in die stand de
   lap (smalle kraag bij de nek die over de schouders naar volle breedte
   loopt, plooien vanuit de kraag die naar de zoom dieper worden, zijkanten
   om de schouders gewikkeld, echte normalen op de plooien; Max: "meer
@@ -420,7 +439,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`Bewoner.zet_cape`, gezet door `Omgeving._bouw_bewoners`). Knoppen in
   het sfeer-paneel (live, ook op de bewoners): `cape_blauw`, `cape_rood`,
   `cape_lengte`/`cape_breedte` (x pionhoogte), `cape_wapper`, `cape_wind`,
-  `cape_drape` (plooien en wikkel), `cape_slinger` (hoe ver hij sleept).
+  `cape_drape` (plooien en wikkel), `cape_slinger` (hoe ver hij sleept),
+  `cape_sim` (cloth aan/uit), `cape_sim_precisie` (solver-iteraties).
   Eigen shaders (cape en vlaggendoek) dragen een `dim`-uniform dat
   `verduister_later` tweent, zodat een lijk met cape ook donker wordt.
   Check: `-- capecheck` (rood geen cape, blauw een, achter de rug aan een

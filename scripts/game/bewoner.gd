@@ -154,12 +154,7 @@ func laad(n: String) -> bool:
 ## knoppen in het sfeer-paneel; standaard alleen blauw.
 func zet_cape(team: String) -> void:
 	kamp_team = team
-	if is_instance_valid(_cape):
-		var oud: Node = _cape.get_parent()
-		if oud is BoneAttachment3D and oud.name == "CapeBot":
-			oud.queue_free()
-		else:
-			_cape.queue_free()
+	PawnView.cape_weg(_cape)
 	_cape = null
 	if _model == null or not is_inside_tree():
 		return

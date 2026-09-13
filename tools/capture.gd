@@ -589,6 +589,14 @@ func _ready() -> void:
 			while pion != null and pion.get_parent() != game._pawns_root:
 				pion = pion.get_parent() as Node3D
 			var centrum: Vector3 = m.global_transform * m.get_aabb().get_center()
+			if m is SoftBody3D and m.has_meta("cape_sim"):
+				# cloth-cape (13 september): de node staat op de oorsprong (de
+				# physics werkt in wereldruimte), dus het midden uit de punten
+				var zs := m as SoftBody3D
+				var zn: int = (zs.mesh as ArrayMesh).surface_get_array_len(0)
+				centrum = Vector3.ZERO
+				for zi in zn:
+					centrum += zs.get_point_transform(zi) / float(zn)
 			if pion == null:
 				# Bordrand-decor (Board/Omgeving/Props: hekjes, boompjes) telt niet mee.
 				var decor: bool = false
@@ -826,16 +834,28 @@ func _ready() -> void:
 		# achter = afstand achter de rug: een PawnView heeft zijn rug op lokaal
 		# +Z (auto-fit draait het model 180 graden), een kale glb (bewoner)
 		# kijkt naar +Z en heeft zijn rug dus op -Z; vandaar het teken.
-		var cc_meet := func(n: Node3D, rug_teken: float = 1.0) -> Dictionary:
+		var cc_meet := func(n: Node3D, rug_teken: float = 1.0, frame: Node3D = null) -> Dictionary:
+			# n = waar de lap onder hangt (PawnView, Bewoner), frame = de ruimte
+			# waarin we meten (bij een bewoner zijn model: rug op -Z)
+			var fr: Node3D = frame if frame != null else n
 			var capes: Array = n.find_children("Cape", "MeshInstance3D", true, false)
 			if capes.is_empty():
 				return {"heeft": false, "aantal": 0}
 			var c: MeshInstance3D = capes[0]
 			var mid_w: Vector3 = c.global_transform * c.get_aabb().get_center()
-			var rel: Vector3 = n.global_transform.affine_inverse() * mid_w
+			if c is SoftBody3D:
+				# cloth: headless heeft geen render-AABB, dus het midden uit de physics-punten
+				var cs := c as SoftBody3D
+				var cn: int = (cs.mesh as ArrayMesh).surface_get_array_len(0)
+				mid_w = Vector3.ZERO
+				for ci in cn:
+					mid_w += cs.get_point_transform(ci) / float(cn)
+			var rel: Vector3 = fr.global_transform.affine_inverse() * mid_w
 			rel.z *= rug_teken
 			var bot: String = "?"
 			var att := c.get_parent() as BoneAttachment3D
+			if c.has_meta("cape_bot"):
+				att = c.get_meta("cape_bot") as BoneAttachment3D
 			if att != null:
 				var sk := att.get_parent() as Skeleton3D
 				if sk != null:
@@ -901,23 +921,67 @@ func _ready() -> void:
 		PawnView.wind_richting = Vector3(0.0, 0.0, -1.0)
 		await get_tree().process_frame
 		await get_tree().process_frame
-		var cc_cape: MeshInstance3D = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)[0]
+		var cc_lijst: Array = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)
+		if cc_lijst.is_empty():
+			print("[CAPE] FOUT: blauw heeft hier geen cape meer; rest van de check overgeslagen")
+			get_tree().quit(1)
+			return
+		var cc_cape: MeshInstance3D = cc_lijst[0]
 		var cc_w = (cc_cape.material_override as ShaderMaterial).get_shader_parameter("wind")
 		print("[CAPE] wind in cape-ruimte: %s" % str(cc_w))
-		# hangen: de lap staat recht (wereld-omhoog), ook al leunt het rugbot; de kraag zit aan het bot
-		var cc_op: Vector3 = cc_cape.global_transform.basis.y.normalized()
-		var cc_att: Node3D = cc_cape.get_parent() as Node3D
-		var cc_kraag_bot: Vector3 = cc_att.global_transform * (cc_cape.get_meta("cape_anker") as Vector3)
-		var cc_kraag_lap: Vector3 = cc_cape.global_transform * Vector3(0.0, float(cc_cape.get_meta("cape_lengte")) * 0.5, 0.0)
-		var cc_bot_op: Vector3 = cc_att.global_transform.basis.y.normalized()
-		print("[CAPE] hangt: lap-omhoog . wereld-omhoog = %.3f (bot zelf %.3f), kraag %.3f van het bot" % [
-			cc_op.dot(Vector3.UP), cc_bot_op.dot(Vector3.UP), cc_kraag_bot.distance_to(cc_kraag_lap)])
-		if cc_op.dot(Vector3.UP) < 0.85:
-			print("[CAPE] FOUT: de lap hangt niet naar beneden")
-			cc_fouten += 1
-		if cc_kraag_bot.distance_to(cc_kraag_lap) > 0.02:
-			print("[CAPE] FOUT: de kraag zit los van het bot")
-			cc_fouten += 1
+		if cc_cape is SoftBody3D:
+			# cloth: na een halve seconde simuleren zit de kraagrij op het bot,
+			# hangt de zoom eronder, en is niets ontploft of weggevlogen
+			for cc_f in 30:
+				await get_tree().process_frame
+			var cc_soft := cc_cape as SoftBody3D
+			var cc_kidx: PackedInt32Array = cc_cape.get_meta("cape_kraag_idx")
+			var cc_kl: PackedVector3Array = PawnView.cape_kraag_punten(cc_cape)
+			var cc_kraag_af := 0.0
+			var cc_kraag_y := 0.0
+			for cc_k in cc_kidx.size():
+				var cc_p: Vector3 = cc_soft.get_point_transform(cc_kidx[cc_k])
+				cc_kraag_af = maxf(cc_kraag_af, cc_p.distance_to(cc_kl[cc_k]))
+				cc_kraag_y += cc_p.y / float(cc_kidx.size())
+			var cc_n: int = (cc_soft.mesh as ArrayMesh).surface_get_array_len(0)
+			var cc_zoom_y := 0.0
+			var cc_ontploft := false
+			var cc_ver := 0.0
+			for cc_i in cc_n:
+				var cc_p2: Vector3 = cc_soft.get_point_transform(cc_i)
+				if not cc_p2.is_finite():
+					cc_ontploft = true
+					continue
+				cc_ver = maxf(cc_ver, cc_p2.distance_to((cc_pvs[1] as PawnView).global_position))
+				if cc_i >= cc_n - cc_kidx.size():
+					cc_zoom_y += cc_p2.y / float(cc_kidx.size())
+			var cc_lengte: float = float(cc_cape.get_meta("cape_lengte"))
+			print("[CAPE] cloth: %d punten, kraag %.3f van het bot, zoom %.3f onder de kraag (lap %.2f), verste punt %.2f van de pion" % [
+				cc_n, cc_kraag_af, cc_kraag_y - cc_zoom_y, cc_lengte, cc_ver])
+			if cc_ontploft or cc_ver > 1.5:
+				print("[CAPE] FOUT: de cloth is ontploft of weggevlogen")
+				cc_fouten += 1
+			if cc_kraag_af > 0.03:
+				print("[CAPE] FOUT: de kraagrij zit los van het bot")
+				cc_fouten += 1
+			if cc_kraag_y - cc_zoom_y < cc_lengte * 0.5:
+				print("[CAPE] FOUT: de zoom hangt niet onder de kraag")
+				cc_fouten += 1
+		else:
+			# vlakke lap: staat recht (wereld-omhoog), ook al leunt het rugbot; de kraag zit aan het bot
+			var cc_op: Vector3 = cc_cape.global_transform.basis.y.normalized()
+			var cc_att2: Node3D = cc_cape.get_parent() as Node3D
+			var cc_kraag_bot: Vector3 = cc_att2.global_transform * (cc_cape.get_meta("cape_anker") as Vector3)
+			var cc_kraag_lap: Vector3 = cc_cape.global_transform * Vector3(0.0, float(cc_cape.get_meta("cape_lengte")) * 0.5, 0.0)
+			var cc_bot_op: Vector3 = cc_att2.global_transform.basis.y.normalized()
+			print("[CAPE] hangt: lap-omhoog . wereld-omhoog = %.3f (bot zelf %.3f), kraag %.3f van het bot" % [
+				cc_op.dot(Vector3.UP), cc_bot_op.dot(Vector3.UP), cc_kraag_bot.distance_to(cc_kraag_lap)])
+			if cc_op.dot(Vector3.UP) < 0.85:
+				print("[CAPE] FOUT: de lap hangt niet naar beneden")
+				cc_fouten += 1
+			if cc_kraag_bot.distance_to(cc_kraag_lap) > 0.02:
+				print("[CAPE] FOUT: de kraag zit los van het bot")
+				cc_fouten += 1
 		# de uv-hoek voor wie een cape_blue.png maakt: linksboven van de lap (kraag, linkerkant van de drager)
 		var cc_arr: Array = cc_cape.mesh.surface_get_arrays(0)
 		var cc_vs: PackedVector3Array = cc_arr[Mesh.ARRAY_VERTEX]
@@ -934,8 +998,13 @@ func _ready() -> void:
 		PawnView._cape_tex_cache["cape_blue.png"] = ImageTexture.create_from_image(cc_img3)
 		(cc_pvs[1] as PawnView).herhang_cape()
 		await get_tree().process_frame
-		var cc_cape3: MeshInstance3D = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)[0]
-		var cc_maat: Vector2 = (cc_cape3.mesh as PlaneMesh).size
+		var cc_lijst3: Array = (cc_pvs[1] as PawnView).find_children("Cape", "MeshInstance3D", true, false)
+		if cc_lijst3.is_empty():
+			print("[CAPE] FOUT: geen cape na het 3:4-plaatje; rest overgeslagen")
+			get_tree().quit(1)
+			return
+		var cc_cape3: MeshInstance3D = cc_lijst3[0]
+		var cc_maat := Vector2(float(cc_cape3.get_meta("cape_breedte")), float(cc_cape3.get_meta("cape_lengte")))
 		var cc_ht = (cc_cape3.material_override as ShaderMaterial).get_shader_parameter("heeft_textuur")
 		var cc_ht_f: float = float(cc_ht) if cc_ht != null else 0.0
 		print("[CAPE] met een 3:4-plaatje: lap %.3f x %.3f (%.2f), textuur-uniform %.0f" % [cc_maat.x, cc_maat.y, cc_maat.x / cc_maat.y, cc_ht_f])
@@ -956,7 +1025,7 @@ func _ready() -> void:
 			cc_bw.rotation.y = PI   # rug naar de camera
 			cc_bw.zet_cape("blue")
 			await get_tree().process_frame
-			var cc_b: Dictionary = cc_meet.call(cc_bw._model, -1.0)
+			var cc_b: Dictionary = cc_meet.call(cc_bw, -1.0, cc_bw._model)
 			print("[CAPE] bewoner soldaat_mouse blauw: %s" % str(cc_b))
 			if not bool(cc_b.heeft) or float(cc_b.achter) <= 0.01:
 				print("[CAPE] FOUT: de bewoner van het blauwe kamp heeft geen cape achter zich")
