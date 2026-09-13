@@ -127,20 +127,12 @@ valt in `_plaats` terug op zijn glb. `prop_barrel` en `prop_axe` (Tripo,
 juli) zijn vervangen; de "ton" pakt per kamp `prop_barrel_red` /
 `_blue` als die er ligt.
 
-Batch 2 (kannen, ketels, kommen, manden, blauw en goud, 14): emmer_blue,
-kist_blue, vergulde_kist_blue, barrel_blue, wijnvat_blue, ketel_red/_blue,
-kruik_red/_blue, kom_red/_blue, broodmand_red/_blue, kandelaar_blue.
-Batch 3 (doek, vaandels, het rijke kamp, 14): tapijt_blue, veldbed_red/
-_blue, waslijn_red/_blue, voddenlijn_red, kaarttafel_red, musketrek_red/
-_blue, schild_blue, vaandel_blue, tent_blue (het paviljoen), vlagstandaard_
-red/_blue (nieuw: de vlag op een driepoot, met doek in teamkleur; NIET
-`prop_pole`, dat is de kale stok in de hand van de vaandeldrager).
-**Team-regel:** een spec `["ketel", x, z]` pakt `prop_ketel_<team>.glb` van
-het kamp waar hij staat; een prop die alleen als `_blue` bestaat (kandelaar,
-tapijt, schild, vaandel, vergulde_kist, wijnvat) staat dus alleen in het
-rijke kamp, en `bierton` (alleen `_red`) en `wijnvat` op dezelfde plek
-geven per team precies een van de twee. `-- omgevingcheck 1 blauw` speelt
-het kamp vooraan als blauw en laadt zo de rijke props.
+Batch 2 en 3 (28: kannen, ketels, kommen, manden, doek, vaandels, het
+rijke kamp) zijn op 13 september gebouwd en dezelfde dag weer verwijderd
+(Max: "ik vind het tegenvallen, verwijder maar"); de recepten staan nog
+in `recepten.py`, maar voor die props geldt weer de Tripo-route hierboven.
+`-- omgevingcheck 1 blauw` speelt het kamp vooraan als blauw, voor props
+die alleen als `_blue` bestaan.
 
 ## Budget voor de diorama-props (12 september, Max: "hoeveel props, hoeveel vertices")
 

@@ -160,38 +160,23 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
-## 13 september -- batch 2 en 3: nog 28 props uit Blender (28 + 22 + appelkist = 51 van de 56)
+## 13 september -- batch 2 en 3 (28 props uit Blender): gebouwd en weer verwijderd
 
-Batch 2, kannen en het rijke kamp: emmer_blue (goudbanden, gouden beugel,
-fleur), kist_blue en vergulde_kist_blue (goudbeslag, fleur- en wapen-decal),
-barrel_blue en wijnvat_blue (kraan, wapen op de kop, op een bok), ketel_red
-(koper, lap) en ketel_blue (blauw email, goud, drie pootjes), kruik_red
-(klei, touw om de hals, jute lap) en kruik_blue, kom_red (touw om de rand)
-en kom_blue (goudrand, blauw doekje), broodmand_red/_blue (vlechtwerk-stofje,
-doek, broden als afgeplatte bollen), kandelaar_blue (zilver, drie kaarsen).
-Batch 3, doek en vaandels: tapijt_blue (een plat doek met het tapijt-stofje;
-PROP_HOOGTE 0,01, want _glb_prop schaalt op hoogte en een plat ding zou
-drie keer zo groot worden), veldbed_red/_blue (kruispoten, canvas met
-doorhang, opgerolde deken, afhangende lap), waslijn_red/_blue en
-voddenlijn_red (lijn met doorhang, lapjes met buik en golvende zoom),
-kaarttafel_red (kaart, kaars, inktpot, beker), musketrek_red/_blue (drie
-musketten in een driepoot, riem), schild_blue en vaandel_blue (het
-wapen-stofje op een lap, gordijnen, speerpunten), tent_blue (rond paviljoen,
-gouden rand en koord, scheerlijnen, fleur-decals, donkere ingang; op de
-tent-plek van het rijke kamp, met dezelfde lantaarn/Zzz/laars-reacties) en
-vlagstandaard_red/_blue (nieuw, de vlag op een driepoot; niet prop_pole).
-Decals zijn `doek`-lapjes van een vlak net voor het oppervlak. Lessen:
-`doek` bouwt omhoog vanaf pos.z, een afhangende lap begint dus op
-railhoogte MIN zijn hoogte; en `rot_x(-90)` legt een lap plat naar +y, dus
-het midden staat op -hoogte/2.
-
-Plaatsing per diorama met de team-regel (een spec pakt de variant van het
-kamp; alleen-blauw bestaat alleen als _blue en staat dus alleen bij de
-rijke), musketrek/waslijn/kaarttafel/tapijt uit EXTRA_PROPS gehaald, de
-Weidekamp-lantaarn naar (-3,2, 11,9) voor de waslijn. `-- omgevingcheck 1
-blauw` (nieuw) speelt het kamp vooraan als blauw: alle rijke props laden.
-Checks: omgevingcheck PASS rood (19 van 28 gezien) en blauw, uispel 777
-d16a14f8, herstelcheck 777 0 verschillen.
+Batch 2 (kannen, ketels, kommen, manden, blauw en goud) en batch 3 (doek,
+vaandels, het rijke kamp met het paviljoen als tent_blue en een
+vlagstandaard op een driepoot) hebben een uur in het spel gestaan (commit
+77cf5d0: 28 glb's, plaatsing per diorama met de team-regel, PROP_HOOGTE op
+ware maat, `-- omgevingcheck [nr] blauw`). Max bij de twee platen: "ik vind
+het tegenvallen, verwijder maar". Weer eruit: de 28 glb's met texturen en
+.import, omgeving.gd terug naar de stand van batch 1 (specs, PROP_HOOGTE en
+de EXTRA_PROPS-regels van musketrek, waslijn, kaarttafel en tapijt zoals ze
+waren), tracker herbouwd. Gebleven: batch 1 (22, hout en ijzer) en de
+appelkist, de recepten in `tools/blender_props/recepten.py` (`bouw_props.py
+--batch 2` bouwt ze nog, maar niet opnieuw in het spel zetten in deze
+stijl) en de check-optie `blauw` in capture.gd. Les: doek, email en
+goudbeslag uit primitieven en een noise-atlas halen de voorbeelden niet;
+hout en ijzer komen er dichterbij. Voor die 28 geldt weer de Tripo-route.
+Checks na het verwijderen: omgevingcheck PASS, uispel 777 d16a14f8.
 
 ## 13 september -- 56 voorbeelden, batch 1: 22 props uit Blender
 
