@@ -312,7 +312,18 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   appelkist` en klaar. Staat als `appelkist` in Boerenerf, Dorpsrand,
   Rivierhaven en Marktplein met een eigen reactie (een appel wipt eruit).
   Bpy-les: `read_factory_settings(use_empty=True)` VOOR het bouwen, een
-  reset erna gooit mesh en object weg.
+  reset erna gooit mesh en object weg. **De 56 voorbeelden van Max (13
+  september, "exact zo moeten ze in Blender")** staan in
+  `assets/models/props/previews/` (hernoemd naar de prop, `.gdignore`);
+  `tools/blender_props/` bouwt ze: `bouwstenen.py` (stenen + een atlas van
+  8 x 8 stofjes uit numpy, een plaatje per prop), `recepten.py` (per prop
+  een functie, met batchnummer), `bouw_props.py --batch N` (glb's +
+  plaat in `results/props_blender/`), dan `tools/verwerk_props_bulk.py
+  results/props_blender` (alles in een keer in het spel, een import en een
+  omgevingcheck). Batch 1 (22 stuks hout en ijzer) staat per diorama in
+  DIORAMAS; een naam zonder placeholder valt in `_plaats` terug op zijn glb;
+  de "ton" pakt per kamp `prop_barrel_red`/`_blue`. Tabel en werkwijze:
+  `assets/models/props/LEESMIJ.md`.
 - **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
   iets van 12 diorama's... per klikbaar element verschillende dingen die je
   random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama

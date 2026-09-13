@@ -92,6 +92,41 @@ texturen van 2048 die samen 9 MB wegen. Dat gaat er in EEN commando in:
   generieke wiebel, hop en stofwolk, tenzij `_bouw_<prop>` in omgeving.gd
   eigen reacties meegeeft aan `_glb_prop`.
 
+## Eigen low-poly props uit Blender (13 september, Max: "56 voorbeelden, exact zo moeten ze in Blender")
+
+De voorbeelden staan in `previews/` (hernoemd naar de prop, `.gdignore`
+erbij). De props worden procedureel gebouwd door `tools/blender_props/`:
+
+- `bouwstenen.py`: de stenen (`box`, `lathe` = draaivorm voor tonnen, emmers,
+  kannen; `cil`, `bol`, `piramide` = spijkerkop, `touw` = een zeshoek langs
+  een lijn, `doek` = een lap) en de atlas: EEN plaatje van 1024 px met een
+  raster van 8 x 8 stofjes van 128 px uit numpy (hout licht/donker/verweerd/
+  blauw, duigen, schors, kopse kant, ijzer, roest, goud, koper, leer, touw,
+  jute, linnen, blauw fluweel met goudrand, steen, klei, lei, fleur-de-lis,
+  kroon, wapen, tapijt, ...). Per vlak past de uv in een stofje; rondom een
+  draaivorm loopt u een keer rond. Platte facetten, `glad=True` voor kannen.
+- `recepten.py`: per prop een functie op een `Bouwer` (maten in
+  bord-eenheden, voeten op z = 0, voorkant naar -y = naar de speler), met
+  een batchnummer in `RECEPTEN`.
+- `bouw_props.py`: `blender --background --python tools/blender_props/bouw_props.py
+  -- --batch 1` (of `--alleen kruitvat,kist_red`) schrijft
+  `results/props_blender/prop_<naam>.glb` per prop (atlas ingebakken) en een
+  plaat `plaat_batch1.png` met alles naast elkaar (van hoog naar laag).
+- `python tools/verwerk_props_bulk.py results/props_blender` zet ze allemaal
+  in een keer in het spel (per stuk verwerk_prop.py zonder controles, dan
+  een keer importeren, de texturen op VRAM-compressie, nog een keer
+  importeren, omgevingcheck).
+
+Batch 1 (hout en ijzer, 22 stuks): kruitvat, kogels, houtstapel, houtblok,
+takkenbos, hakblok, zaag, axe, touwrol, barrel, barrel_red, bierton_red,
+emmer, emmer_red, kist, kist_red, lantaarn, fakkel, aambeeld, blaasbalg,
+werkbank, put. Tussen 40 (houtblok) en 1.120 (kogels) driehoeken, 130-240 kB
+per glb. Ze staan per diorama in `Omgeving.DIORAMAS` (niet meer in
+EXTRA_PROPS: dat zette alles overal neer); een naam zonder placeholder
+valt in `_plaats` terug op zijn glb. `prop_barrel` en `prop_axe` (Tripo,
+juli) zijn vervangen; de "ton" pakt per kamp `prop_barrel_red` /
+`_blue` als die er ligt.
+
 ## Budget voor de diorama-props (12 september, Max: "hoeveel props, hoeveel vertices")
 
 Op deze schaal maakt het weinig uit, zolang elke prop laag blijft. Ter

@@ -160,6 +160,48 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 13 september -- 56 voorbeelden, batch 1: 22 props uit Blender
+
+Max: "in assets/models/props/previews staan 56 voorbeelden, exact zo moeten
+ze in Blender." De plaatjes heetten `tmp<hash>.jpg`; ze zijn hernoemd naar
+de prop uit de wishlist (`_red`/`_blue`, `_alt` voor een tweede kandidaat;
+tabel in `previews/LEESMIJ.md`, `.gdignore` zodat Godot ze niet importeert).
+Omdat het er 56 zijn, is er nu een fabriek in plaats van een script per
+prop: `tools/blender_props/bouwstenen.py` (box, lathe/draaivorm met
+binnenwand voor open vormen, cil, bol, piramide voor spijkerkoppen, touw
+langs een lijn, doek; per vlak een platte uv in een stofje, rondom een
+draaivorm loopt u een keer rond zodat de naad op een facetrand valt) plus
+EEN atlas van 1024 px met 8 x 8 tileerbare stofjes uit numpy (periodieke
+value-noise; hout in vier smaken, duigen met een naad per duig, schors,
+kopse kant met jaarringen, ijzer, roest, goud, koper, zilver, leer, touw,
+jute, linnen, blauw fluweel, goudrand, steen, klei, lei, en decals:
+fleur-de-lis, kroon, wapen, tapijt), `recepten.py` (per prop een functie,
+maten in bord-eenheden, voorkant -y) en `bouw_props.py` (glb per prop +
+een plaat van alles, van hoog naar laag zodat een ton het houtblok niet
+verbergt). `tools/verwerk_props_bulk.py` zet een hele map in het spel met
+een import en een omgevingcheck (22 props in vijf minuten).
+
+Batch 1, hout en ijzer: kruitvat (met lont), kogels (14 in een piramide),
+houtstapel (kruisstapel), houtblok, takkenbos, hakblok, zaag (leunt tegen
+een blok), axe, touwrol, barrel (staat op 1,0 hoog: de "ton" schaalt met
+0,56 zoals de Tripo-ton), barrel_red (roest, touw, gat), bierton_red (op
+een bok met kraan), emmer en emmer_red (open, met binnenwand en touwgreep),
+kist en kist_red (beslag, touw, lap), lantaarn aan een paal, fakkel
+(vuurkorf op een driepoot), aambeeld op een blok met hamer, blaasbalg,
+werkbank met gereedschap, put met leien dak en emmer. 40-1.120 driehoeken,
+130-240 kB per glb. In omgeving.gd: PROP_HOOGTE op de ware maat van de
+doos (schaal 1), de acht die in EXTRA_PROPS stonden daaruit gehaald (dat
+zette ze in alle twaalf diorama's, met botsingen) en per diorama geplaatst
+(smid in Dorpsrand en Waterloo, houthakkers in Bosrand en Boerenerf, kade
+met touwrol en kist in de Rivierhaven, lantaarn in Weidekamp, Winterkamp en
+Kapelruine, fakkels in Na de slag, Kapelruine en Egypte); `_plaats` valt
+voor een naam zonder placeholder terug op zijn glb; de "ton" pakt per kamp
+`prop_barrel_red`/`_blue`. De Tripo-bijl en -ton van juli zijn vervangen
+(hun losse Color/NormalGL/ORM-jpg's weg). Checks: omgevingcheck PASS met
+17 van de 22 als "geleverde glb-props" (axe en barrel gaan via de
+placeholders, emmer en kist gedeeld staan nog nergens), uispel 777 en
+herstelcheck 777 ongewijzigd.
+
 ## 13 september -- de appelkist: eerste eigen low-poly prop uit Blender
 
 Max stuurde een plaatje van een houten krat met gefacetteerde appels: "kan
