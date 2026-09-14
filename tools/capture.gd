@@ -2180,6 +2180,86 @@ func _ready() -> void:
 		print("[BEWONER] " + ("PASS" if bw_fouten == 0 else "FAIL (%d fouten)" % bw_fouten))
 		get_tree().quit(0 if bw_fouten == 0 else 1)
 		return
+	elif "propshot" in args:
+		# 14 september: een prop uit assets/models/props/ op de foto met het
+		# licht van het spel, om een levering (Tripo of Blender) te beoordelen
+		# zoals de speler hem ziet: `-- propshot axe [red|blue]`. Met venster
+		# `_shot_prop_<naam>.png` (schuin van voren, de kant die naar de
+		# speler wijst) en `_shot_prop_<naam>_achter.png`; headless meldt hij
+		# alleen maat, meshes en driehoeken.
+		await get_tree().create_timer(1.0).timeout
+		var pj := args.find("propshot")
+		var p_naam: String = String(args[pj + 1]) if pj + 1 < args.size() else "axe"
+		var p_team := ""
+		if pj + 2 < args.size() and String(args[pj + 2]) in ["red", "blue"]:
+			p_team = String(args[pj + 2])
+		var p_bestand := "prop_%s%s.glb" % [p_naam, ("_" + p_team) if p_team != "" else ""]
+		var p_pad := Bestandsindex.vind(Omgeving.PROPS_DIR, p_bestand)
+		if p_pad == "" or not ResourceLoader.exists(p_pad):
+			print("[PROPSHOT] FOUT: %s niet gevonden onder %s" % [p_bestand, Omgeving.PROPS_DIR])
+			get_tree().quit(1)
+			return
+		var p_scene: PackedScene = load(p_pad)
+		var p_inst: Node3D = p_scene.instantiate() as Node3D
+		if p_inst == null:
+			print("[PROPSHOT] FOUT: %s laadt niet als Node3D" % p_bestand)
+			get_tree().quit(1)
+			return
+		# hoog boven het bord, weg van het diorama, in het gewone licht
+		var p_root := Node3D.new()
+		p_root.position = Vector3(5.0, 12.0, 5.0)
+		add_child(p_root)
+		p_root.add_child(p_inst)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var p_doos := AABB()
+		var p_eerste := true
+		var p_tris := 0
+		var p_meshes := 0
+		for mi in p_inst.find_children("*", "MeshInstance3D", true, false):
+			var m: Mesh = (mi as MeshInstance3D).mesh
+			if m == null:
+				continue
+			p_meshes += 1
+			var lokaal: AABB = (mi as MeshInstance3D).get_aabb()
+			var xf: Transform3D = p_root.global_transform.affine_inverse() * (mi as Node3D).global_transform
+			var wereld: AABB = xf * lokaal
+			p_doos = wereld if p_eerste else p_doos.merge(wereld)
+			p_eerste = false
+			for si in range(m.get_surface_count()):
+				var arr: Array = m.surface_get_arrays(si)
+				var idx = arr[Mesh.ARRAY_INDEX]
+				if idx != null and idx.size() > 0:
+					p_tris += idx.size() / 3
+				elif arr[Mesh.ARRAY_VERTEX] != null:
+					p_tris += arr[Mesh.ARRAY_VERTEX].size() / 3
+		print("[PROPSHOT] %s: doos %.2f x %.2f x %.2f (b x h x d), %d mesh(es), %d driehoeken" % [
+			p_bestand, p_doos.size.x, p_doos.size.y, p_doos.size.z, p_meshes, p_tris])
+		var p_tex := get_viewport().get_texture()
+		if p_tex != null and p_tex.get_image() != null and p_meshes > 0:
+			game._overlay.hide()
+			game._card_hand.visible = false
+			var p_ui := game.get_node_or_null("UI")
+			if p_ui != null:
+				p_ui.visible = false
+			var p_mid: Vector3 = p_root.position + p_doos.get_center()
+			var p_afstand: float = maxf(p_doos.size.x, maxf(p_doos.size.y, p_doos.size.z)) * 1.9 + 0.2
+			var p_cam := Camera3D.new()
+			add_child(p_cam)
+			p_cam.fov = 40.0
+			p_cam.current = true
+			for p_hoek in [["", Vector3(0.45, 0.35, 1.0)], ["_achter", Vector3(-0.7, 0.4, -0.75)]]:
+				p_cam.position = p_mid + (p_hoek[1] as Vector3).normalized() * p_afstand
+				p_cam.look_at(p_mid, Vector3.UP)
+				await get_tree().create_timer(0.5).timeout
+				var p_img: Image = p_tex.get_image()
+				if p_img != null:
+					var p_uit := "res://_shot_prop_%s%s.png" % [p_naam, p_hoek[0]]
+					p_img.save_png(p_uit)
+					print("[PROPSHOT] screenshot -> %s" % p_uit.trim_prefix("res://"))
+		print("[PROPSHOT] %s" % ("PASS" if p_meshes > 0 else "FAIL"))
+		get_tree().quit(0 if p_meshes > 0 else 1)
+		return
 	elif "dioramashots" in args:
 		# 11 september: alle diorama's een voor een op de foto, in het menu
 		# (`_shot_diorama_<nr>.png`), om ze naast elkaar te bekijken. Alleen

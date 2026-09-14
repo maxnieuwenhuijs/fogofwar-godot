@@ -334,6 +334,15 @@ def controleer(godot, bestandsnaam, naam, textuur_max):
         for r in regels[-8:]:
             print("    " + r)
         problemen += 1
+    # 14 september: een .blend ergens in het project (bv. de bron-kopie van een
+    # Blender-prop in results/) breekt de hele import-run af, ZONDER foutcode;
+    # de glb blijft dan op zijn oude import staan en de texturen worden niet
+    # uitgepakt. Herkenbaar aan deze regel; oplossing: een .gdignore in die map.
+    blend_fout = [r for r in regels if "Blender path is invalid" in r]
+    if blend_fout:
+        print("  FOUT: Godot wil een .blend importeren en heeft geen Blender-pad; de import-run is afgebroken.")
+        print("        Zet een .gdignore in de map met die .blend (of haal hem uit het project) en draai opnieuw.")
+        problemen += 1
     # de texturen die Godot naast de glb heeft gezet
     stam = os.path.splitext(bestandsnaam)[0] + "_"
     uitgepakt = sorted(f for f in os.listdir(PROPS_DIR)
@@ -352,7 +361,9 @@ def controleer(godot, bestandsnaam, naam, textuur_max):
             problemen += 1
     print("  omgevingcheck...")
     code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "omgevingcheck"], timeout=1200)
-    gezien = [r for r in regels if "geleverde glb-props" in r and ("prop_%s " % naam) in r and bestandsnaam in r]
+    # op de bestandsnaam tussen haakjes: een prop die aan een placeholder hangt
+    # (de bijl op de stronk) heet als node anders dan zijn glb
+    gezien = [r for r in regels if "geleverde glb-props" in r and bestandsnaam in r]
     fouten = [r for r in regels if "SCRIPT ERROR" in r or "[OMGEVING] FOUT" in r]
     uitslag = [r for r in regels if r.startswith("[OMGEVING] PASS") or r.startswith("[OMGEVING] FAIL")]
     for r in fouten[:6]:

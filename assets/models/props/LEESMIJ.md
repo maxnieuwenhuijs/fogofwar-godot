@@ -134,6 +134,21 @@ in `recepten.py`, maar voor die props geldt weer de Tripo-route hierboven.
 `-- omgevingcheck 1 blauw` speelt het kamp vooraan als blauw, voor props
 die alleen als `_blue` bestaan.
 
+## Via de Blender-MCP-connector (14 september)
+
+De hakbijl (`prop_axe.glb`, naar `previews/prop_axe.jpg`) is gebouwd in
+de draaiende Blender via de MCP-connector: script
+`tools/blender_props/hakbijl_mcp.py` (bmesh, kop als loft van
+dwarsdoorsneden, steel met 8 facetten), renderen met Eevee naast het
+plaatje, exporteren met `export_scene.gltf` (export_yup) naar
+`results/props_blender/<naam>/`, dan `python tools/verwerk_prop.py
+results/props_blender/hakbijl/hakbijl.glb axe`. Zonder texturen: vier
+platte kleuren in een 64x64-palet (vier blokken, UV per vlak op het
+blokmidden, sRGB-waarden), een mesh en een materiaal, 316 driehoeken.
+Bekijken in het spel-licht: `-- propshot axe` (met venster:
+`_shot_prop_axe.png` en `_achter.png`). Let op: een .blend in `results/`
+breekt de Godot-import af; `results/props_blender/.gdignore` staat er nu.
+
 ## Budget voor de diorama-props (12 september, Max: "hoeveel props, hoeveel vertices")
 
 Op deze schaal maakt het weinig uit, zolang elke prop laag blijft. Ter

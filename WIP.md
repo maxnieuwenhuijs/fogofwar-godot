@@ -160,6 +160,40 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 14 september -- de hakbijl via de Blender-MCP-connector
+
+Max: "gebruik de blender mcp connector", "maak de hakbijl voor me", bij de
+platen van batch 2/3: "ik vind het tegenvallen, verwijder maar" (gedaan,
+17ffdc0). De bijl is gebouwd in de draaiende Blender 5.1.2 via
+`mcp__Blender__execute_blender_code` (script `tools/blender_props/
+hakbijl_mcp.py`, uitgevoerd met exec, gerenderd met Eevee en naast Max'
+plaatje gelegd). Eerste versie: kop uit een profiel met twee bmesh-insets en
+een uitdrijving; Max: "is dit mooi glad ja?" bij zwarte driehoeken op de kop:
+omgeklapte en overlappende vlakken. Tweede versie: "dit lijkt niet echt op
+mijn plaatje", te dun en te veel een waaier met baard. Nu: de kop als loft van
+zes dwarsdoorsneden (afgeschuind poll-vlak, dik blokkig lijf 0,11, wang,
+slijpvouw 0,03, snede 0,004 met een bolle snede), kop 0,44 breed op een steel
+van 1,07 (ruim de helft, zoals op het plaatje), steel 8 facetten met een bocht
+naar de poll-kant en een zwelling naar de bladkant, de steeltop met wig boven
+de kop uit. Manifold, 316 driehoeken. Zonder texturen (Max: "textures kan je
+achterwege laten"): vier platte kleuren in een 64x64-palet, UV per vlak op
+het blokmidden, een materiaal (eerst waren het er vier: vier draw calls).
+Les: `image.pixels` van een 8-bits sRGB-plaatje zijn de sRGB-bytes, lineaire
+waarden erin maakten het staal in Godot bijna zwart.
+
+Pijplijn: `verwerk_prop.py ... axe` werkte eerst stilletjes niet: de
+.blend-kopie in `results/props_blender/hakbijl/` liet Godot de hele
+import-run afbreken ("Blender path is invalid", geen foutcode), zodat de
+oude batch-1-textuur bleef staan. Nu `results/props_blender/.gdignore`, en
+verwerk_prop meldt die regel als FOUT. En de bijl hing sinds batch 1 nergens
+meer: `_bouw_bijl_stronk` stopte bij de hakblok-glb, zonder bijl en zonder de
+bijl-reacties. Nu staat hij met de snede in het hakblok, steel schuin omhoog,
+de klikdoos opnieuw gemeten, gemeld als `prop_hakblok (prop_hakblok.glb +
+prop_axe.glb)`; de check matcht op de glb-naam. Nieuw: `-- propshot <naam>
+[red|blue]` zet een prop-glb hoog boven het bord in het spel-licht en
+schrijft `_shot_prop_<naam>.png` en `_achter.png` (met venster).
+Checks: omgevingcheck PASS, propshot PASS, uispel 777 d16a14f8.
+
 ## 13 september -- batch 2 en 3 (28 props uit Blender): gebouwd en weer verwijderd
 
 Batch 2 (kannen, ketels, kommen, manden, blauw en goud) en batch 3 (doek,

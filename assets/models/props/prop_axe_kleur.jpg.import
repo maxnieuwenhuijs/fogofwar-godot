@@ -2,14 +2,14 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://0unj4vbnruar"
+uid="uid://p1cb5hwvyr4g"
 path.s3tc="res://.godot/imported/prop_axe_kleur.jpg-2de54607df82ae865fbd53705df2a147.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "17d1113dfa7bc13d2d700bf94241fd1a"
+"md5": "862b13c9db462a64d84fdbc39d079044"
 }
 
 [deps]

@@ -709,29 +709,55 @@ func _bouw_glb_prop(naam: String, pos: Vector3, schaal: float, draai: float, rea
 
 
 func _bouw_bijl_stronk(pos: Vector3) -> void:
-	if _glb_prop("hakblok", pos, 0.0, _team_op(pos), ["prop_bijl", "impact_wood"], 0.3) != null:
-		return
-	var root := Node3D.new()
-	root.name = "Stronk"
-	root.position = pos
-	_props_root.add_child(root)
-	var stronk := _mesh(_cilinder(0.19, 0.26), Color(0.40, 0.29, 0.18), root, Vector3(0.0, 0.13, 0.0))
-	stronk.rotation.y = 0.4
-	_mesh(_cilinder(0.165, 0.012), Color(0.62, 0.50, 0.33), root, Vector3(0.0, 0.265, 0.0))
+	# de bijl (prop_axe.glb, 14 september uit Blender via de MCP-connector: de
+	# hakbijl van Max' plaatje) staat met de snede in het hakblok en de steel
+	# schuin omhoog; het hakblok zelf komt uit prop_hakblok.glb als die er ligt,
+	# anders uit primitieven. De bijl-reacties (zwaai, hak, valt) blijven.
 	var pad := Bestandsindex.vind(PROPS_DIR, "prop_axe.glb")
 	var bijl: Node3D = null
 	if pad != "" and ResourceLoader.exists(pad):
 		var ps: PackedScene = load(pad)
 		if ps != null:
 			bijl = ps.instantiate() as Node3D
+	var reacties: Array = [_reageer_bijl, _reageer_bijl_hak, _reageer_bijl_valt]
+	var extra := {"bijl": bijl}
+	var root: Node3D = _glb_prop("hakblok", pos, 0.0, _team_op(pos), ["prop_bijl", "impact_wood"], 0.3, reacties, extra)
+	var top := 0.0
+	if root != null:
+		top = _aabb_van(root).end.y
+	else:
+		root = Node3D.new()
+		root.name = "Stronk"
+		root.position = pos
+		_props_root.add_child(root)
+		var stronk := _mesh(_cilinder(0.19, 0.26), Color(0.40, 0.29, 0.18), root, Vector3(0.0, 0.13, 0.0))
+		stronk.rotation.y = 0.4
+		_mesh(_cilinder(0.165, 0.012), Color(0.62, 0.50, 0.33), root, Vector3(0.0, 0.265, 0.0))
+		top = 0.271
 	if bijl != null:
-		var s := 0.46
+		# glb: steel langs +Y (midden op de oorsprong, 1,07 lang), kop bovenaan,
+		# snede naar -X. Gedraaid 150 graden om Z ligt de kop onder en wijst de
+		# snede omlaag; de kop zakt een paar centimeter in het blok
+		var s := 0.42
 		bijl.scale = Vector3(s, s, s)
-		# op zijn kant op de stronk, steel naar buiten
-		bijl.position = Vector3(0.06, 0.27 + 0.07 * s, 0.0)
-		bijl.rotation = Vector3(0.0, deg_to_rad(35.0), deg_to_rad(-90.0))
+		bijl.rotation = Vector3(0.0, deg_to_rad(35.0), deg_to_rad(150.0))
+		bijl.position = Vector3(0.08, top + 0.13, 0.03)
 		root.add_child(bijl)
-	_registreer(root, 0.42, [_reageer_bijl, _reageer_bijl_hak, _reageer_bijl_valt], {"bijl": bijl})
+		if root.name == "Stronk":
+			extra["glb"] = pad.get_file()
+	if root.name == "Stronk":
+		_registreer(root, 0.42, reacties, extra)
+	else:
+		# de glb-stronk is al geregistreerd; de bijl erin zetten en de
+		# klikdoos opnieuw meten (de steel steekt boven het blok uit)
+		var p: Dictionary = _props[_props.size() - 1]
+		p["bijl"] = bijl
+		if bijl != null:
+			p["glb"] = "%s + %s" % [String(p.get("glb", "")), pad.get_file()]
+		var aabb := _aabb_van(root)
+		if aabb.size.length() > 0.0001:
+			p["midden"] = aabb.get_center()
+			p["omvang"] = aabb.size.length() * 0.5
 
 
 func _bouw_kogels(pos: Vector3) -> void:

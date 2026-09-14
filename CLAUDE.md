@@ -332,6 +332,25 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   geldt weer de Tripo-route (`verwerk_prop.py`). Gebleven: `-- omgevingcheck
   [nr] blauw` speelt het kamp vooraan als blauw (voor props die alleen als
   `_blue` bestaan). Tabel en werkwijze: `assets/models/props/LEESMIJ.md`.
+  **Via de Blender-MCP-connector (14 september, Max: "gebruik de blender
+  mcp connector", eerste prop: de hakbijl):** bouwen in de DRAAIENDE
+  Blender (`mcp__Blender__execute_blender_code`, script per prop in
+  `tools/blender_props/<naam>_mcp.py`, uitvoeren met `exec`), renderen met
+  Eevee naast Max' plaatje (`assets/models/props/previews/`), dan glb naar
+  `results/props_blender/<naam>/` en `verwerk_prop.py`. Zonder texturen
+  (Max: "textures kan je achterwege laten"): platte kleuren via een
+  64x64-palet met vier blokken, UV per vlak op het blokmidden, sRGB-
+  waarden in `image.pixels` (lineair erin = bijna zwart in Godot). Lessen:
+  bmesh `inset_region` op een los vlak gaf omgeklapte vlakken (Max: "is
+  dit mooi glad?" bij zwarte driehoeken), dus de kop is een loft van
+  dwarsdoorsneden; een .blend-kopie in `results/` breekt de Godot-import
+  af zonder foutcode (`results/props_blender/.gdignore`, en verwerk_prop
+  meldt het nu). `-- propshot <naam> [red|blue]` (capture.tscn, met
+  venster) zet een prop-glb hoog boven het bord in het spel-licht en
+  schrijft `_shot_prop_<naam>.png` en `_achter.png`. De bijl hangt weer
+  in het hakblok (sinds batch 1 stopte `_bouw_bijl_stronk` bij de
+  hakblok-glb zonder bijl en zonder bijl-reacties): snede in het blok,
+  steel schuin omhoog, gemeld als `prop_hakblok.glb + prop_axe.glb`.
 - **Twaalf diorama's en willekeurige reacties (11 september, Max: "bedenk
   iets van 12 diorama's... per klikbaar element verschillende dingen die je
   random krijgt te zien").** `Omgeving.DIORAMAS` is de bron: per diorama
