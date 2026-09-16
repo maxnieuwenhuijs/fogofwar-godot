@@ -510,8 +510,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `verduister_later` tweent, zodat een lijk met cape ook donker wordt.
   Check: `-- capecheck` (rood geen cape, blauw een, achter de rug aan een
   rugbot; teamwissel, modelwissel, knop cape_rood, bewoner; met venster
-  `_shot_capecheck.png` van schuin achter). Puur visueel: uispel en
-  herstelcheck ongewijzigd.
+  `_shot_capecheck.png` van schuin achter). **De vlaag van een schot (16
+  september, Max: "alle capes reageren nu op een schot, dat moet niet,
+  alleen binnen een bepaalde straal, bij kanon een grotere"):** de
+  boosdoener was de HITSTOP (`Engine.time_scale` 0,05 bij een treffer):
+  daar vlogen alle cloth-capes van, ook zeven vakken verder, en zo'n
+  weggeblazen lap hangt daarna over het hele poppetje. `_hitstop` zet nu
+  ook `PhysicsServer3D.set_active(false)` zolang hij duurt. Daarnaast
+  een echte vlaag: `game._cape_vlaag` duwt bij het afvuren
+  (`_fire_projectile`) elke cape binnen `cape_vlaag_straal` (musket, 2
+  vakken) of `cape_vlaag_straal_kanon` (3,5) van de vuurmond af
+  (`PawnView.cape_vlaag`: impuls op de cloth, stoot op de slinger van de
+  vlakke lap; sterkte lineair af naar de rand, kanon harder; knop
+  `cape_vlaag`, 0 = uit). Check: `-- capeschot` (drie blauwe muizen op
+  1, 3 en 7 vakken van de vuurmond; musket met shake en hitstop: alleen
+  de eerste beweegt; kanon: ook de tweede, nooit de derde). Puur
+  visueel: uispel en herstelcheck ongewijzigd.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een

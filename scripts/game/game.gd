@@ -3033,6 +3033,8 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	_muzzle_flash(muzzle, is_cannon)
 	# vuur-schok: korte terugslag-shake bij het afvuren (kanon harder).
 	_shake((0.55 if is_cannon else 0.3) * PawnView.fx("fire_shake", 1.0))
+	# de windvlaag van het schot op de capes in de buurt (alleen binnen een straal)
+	_cape_vlaag(_board.to_global(muzzle), is_cannon)
 	# Rook drift met de schot-richting mee, van de loop af.
 	var shot_dir := Vector3.ZERO
 	if muzzle.distance_to(target) > 0.01:
@@ -3296,6 +3298,9 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "cape_sim_precisie", "label": "cape-cloth: solver-iteraties", "min": 1.0, "max": 8.0, "step": 1.0, "def": 5.0},
 	{"key": "cape_voering_goud", "label": "cape: binnenkant goudzijde (1) of het plaatje (0)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "cape_wind", "label": "cape-wind", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "cape_vlaag", "label": "cape-vlaag van een schot (0 = uit)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "cape_vlaag_straal", "label": "cape-vlaag: straal musket (vakken)", "min": 0.0, "max": 6.0, "step": 0.1, "def": 2.0},
+	{"key": "cape_vlaag_straal_kanon", "label": "cape-vlaag: straal kanon (vakken)", "min": 0.0, "max": 8.0, "step": 0.1, "def": 3.5},
 ]
 
 
@@ -3694,6 +3699,31 @@ func _spawn_sparks(pos: Vector3, strength: float) -> void:
 		tw.chain().tween_callback(spark.queue_free)
 
 
+## De windvlaag van een schot op de capes in de buurt (16 september, Max:
+## "alle capes reageren nu op een schot, dat moet niet: alleen binnen een
+## bepaalde straal rondom het schot, en bij kanon nog iets grotere straal").
+## Straal in vakken: knoppen cape_vlaag_straal (musket, 2) en
+## cape_vlaag_straal_kanon (3,5); de sterkte loopt lineair af naar de rand,
+## het kanon duwt harder. Een cape buiten de straal krijgt NIETS. Puur
+## visueel. Check: `-- capeschot`.
+func _cape_vlaag(bron_w: Vector3, is_cannon: bool) -> void:
+	var straal: float = PawnView.fx("cape_vlaag_straal_kanon", 3.5) if is_cannon else PawnView.fx("cape_vlaag_straal", 2.0)
+	if straal <= 0.0:
+		return
+	for pv in _pawn_views.values():
+		var v := pv as PawnView
+		if v == null or not is_instance_valid(v) or v._cape == null:
+			continue
+		var d: Vector3 = v.global_position - bron_w
+		d.y = 0.0
+		var afstand: float = d.length()
+		if afstand > straal:
+			continue
+		var richting: Vector3 = d.normalized() if afstand > 0.05 else -v.global_transform.basis.z
+		var sterkte: float = (1.0 - afstand / straal) * (1.0 if is_cannon else 0.6)
+		v.vlaag(richting, sterkte)
+
+
 ## Screen shake aanzwengelen (schaalt met impact). Uitzetbaar (motion sickness).
 func _shake(strength: float) -> void:
 	if not _combat_feel or not _screen_shake:
@@ -3719,9 +3749,15 @@ func _hitstop(secs: float) -> void:
 	if not _combat_feel or _in_hitstop or secs <= 0.0:
 		return
 	_in_hitstop = true
+	# de physics helemaal stil (16 september): met alleen time_scale 0,05
+	# vlogen ALLE cloth-capes (SoftBody3D op Jolt) na de hitstop van de rug,
+	# ook zeven vakken van het schot; Max: "alle capes reageren nu op een
+	# schot, dat moet niet". Gemeten met `-- capeschot`.
+	PhysicsServer3D.set_active(false)
 	Engine.time_scale = 0.05
 	await get_tree().create_timer(secs, true, false, true).timeout
 	Engine.time_scale = 1.0
+	PhysicsServer3D.set_active(true)
 	_in_hitstop = false
 
 

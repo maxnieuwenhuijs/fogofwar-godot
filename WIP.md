@@ -160,6 +160,27 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- capes reageren alleen op een schot in de buurt; de hitstop blies ze weg
+
+Max: "alle capes reageren nu op een schot, dat moet niet, alleen binnen een
+bepaalde straal rondom het schot, en bij kanon nog iets grotere straal", en
+eerder: "de cape hangt over het hele poppetje". Nieuwe check `-- capeschot`
+(drie blauwe muizen met cape op 1, 3 en 7 vakken van de vuurmond, grootste
+verplaatsing van een lap-punt over 0,8 s tegen de rust) bewees het: op een
+musketschot met vuur-shake en treffer-hitstop bewoog de cape op 7 vakken
+0,92 (rust 0,03). Losse proeven: alleen de shake doet niets, alleen de
+hitstop (Engine.time_scale 0,05 gedurende 0,12 s) gooit ALLE cloth-capes
+(SoftBody3D op Jolt) van de rug, en zo'n weggeblazen lap hangt daarna over
+het hele poppetje. Fix: `_hitstop` zet ook `PhysicsServer3D.set_active(false)`
+zolang hij duurt. Daarnaast een echte vlaag: `game._cape_vlaag` bij het
+afvuren duwt elke cape binnen cape_vlaag_straal (musket 2 vakken) of
+cape_vlaag_straal_kanon (3,5) van de vuurmond af, sterkte lineair af naar de
+rand, kanon harder (`PawnView.cape_vlaag`: `apply_central_impulse` op de
+cloth, een stoot op de slinger van de vlakke lap; knop `cape_vlaag`). Na de
+fix: musket dichtbij 0,54, op 3 en 7 vakken 0,02; kanon dichtbij 0,84, op 3
+vakken 0,38, op 7 vakken 0,02. capeschot PASS, capecheck PASS, uispel 777
+d16a14f8.
+
 ## 16 september -- geen cape op de cavalerie
 
 Max: "verwijder de cape ook voor cav". `PawnView._hang_cape` hangt de lap

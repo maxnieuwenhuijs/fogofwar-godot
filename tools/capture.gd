@@ -1091,6 +1091,100 @@ func _ready() -> void:
 		print("[CAPE] %s: %d fout(en)" % ["PASS" if cc_fouten == 0 else "FAIL", cc_fouten])
 		get_tree().quit(0 if cc_fouten == 0 else 1)
 		return
+	elif "capeschot" in args:
+		# 16 september (Max: "alle capes reageren nu op een schot, dat moet niet:
+		# alleen binnen een bepaalde straal rondom het schot, bij kanon een
+		# grotere"). Twee blauwe muizen met cape op het bord: een dichtbij de
+		# vuurmond, een ver weg. Een musketschot (met de vuur-shake) en een
+		# treffer-hitstop: de cape dichtbij moet bewegen, de verre NIET. Daarna
+		# een kanonschot: op 3 vakken (buiten de musket-straal, binnen die van het
+		# kanon) moet de cape nu wel bewegen.
+		var cs_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var cs_fouten := 0
+		var cs_pvs: Array = []
+		# vuurmond op (5,5) richting (5,9): dichtbij op (5,6), ver op (0,0), midden op (5,8)
+		for cs_c in [Vector2i(5, 6), Vector2i(0, 0), Vector2i(5, 8)]:
+			var cs_pv: PawnView = cs_scene.instantiate()
+			cs_pv.team = Constants.Team.BLUE
+			cs_pv.pawn_id = 900 + cs_pvs.size()
+			game._pawns_root.add_child(cs_pv)
+			cs_pv.position = game.tile_position(cs_c.x, cs_c.y)
+			cs_pv.face_dir(Vector2i(0, -1))
+			cs_pv.set_unit_type(0)
+			cs_pv.set_character(Constants.Doctrine.MUIS, 0, null)
+			game._pawn_views[cs_pv.pawn_id] = cs_pv
+			cs_pvs.append(cs_pv)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		for cs_pv in cs_pvs:
+			if (cs_pv as PawnView)._cape == null:
+				print("[CAPESCHOT] FOUT: pion %d heeft geen cape (model %s)" % [(cs_pv as PawnView).pawn_id, String((cs_pv as PawnView)._model_path)])
+				cs_fouten += 1
+		if cs_fouten > 0:
+			print("[CAPESCHOT] FAIL: %d fout(en)" % cs_fouten)
+			get_tree().quit(1)
+			return
+		# laten uithangen tot rust
+		await get_tree().create_timer(1.5).timeout
+		var cs_punten := func(pv: PawnView) -> PackedVector3Array:
+			var uit := PackedVector3Array()
+			var soft := pv._cape as SoftBody3D
+			if soft != null:
+				for i in 70:
+					uit.append(soft.get_point_transform(i))
+			else:
+				uit.append(pv._cape.global_position)
+				uit.append(pv._cape.get_meta("cape_hang", Vector3.DOWN))
+			return uit
+		var cs_ruis := func(pvs: Array, seconden: float) -> Array:
+			# per pion de grootste verplaatsing van een lap-punt in die tijd
+			var begin: Array = []
+			var beste: Array = []
+			for pv in pvs:
+				begin.append(cs_punten.call(pv))
+				beste.append(0.0)
+			var t := 0.0
+			while t < seconden:
+				await get_tree().process_frame
+				t += get_process_delta_time()
+				for j in pvs.size():
+					var nu: PackedVector3Array = cs_punten.call(pvs[j])
+					var b: PackedVector3Array = begin[j]
+					for i in mini(b.size(), nu.size()):
+						beste[j] = maxf(float(beste[j]), b[i].distance_to(nu[i]))
+			return beste
+		# nulmeting: hoeveel beweegt een rustende cape uit zichzelf (idle-animatie)
+		var cs_rust: Array = await cs_ruis.call(cs_pvs, 0.6)
+		print("[CAPESCHOT] rust: dichtbij %.3f, ver %.3f, 3 vakken %.3f" % [cs_rust[0], cs_rust[1], cs_rust[2]])
+		# musketschot + vuur-shake + een treffer-hitstop, alles wat het spel bij een schot doet
+		game._fire_projectile(Vector2i(5, 5), Vector2i(5, 9), Constants.UnitType.INFANTRY)
+		game._shake(1.0)
+		game._hitstop(0.12)
+		var cs_m: Array = await cs_ruis.call(cs_pvs, 0.8)
+		print("[CAPESCHOT] musket: dichtbij %.3f, ver %.3f, 3 vakken %.3f" % [cs_m[0], cs_m[1], cs_m[2]])
+		if float(cs_m[0]) < float(cs_rust[0]) * 1.5 + 0.02:
+			print("[CAPESCHOT] FOUT: de cape naast de vuurmond beweegt niet op het musketschot")
+			cs_fouten += 1
+		if float(cs_m[1]) > float(cs_rust[1]) * 1.5 + 0.01:
+			print("[CAPESCHOT] FOUT: de cape ver weg (7 vakken) reageert op het musketschot")
+			cs_fouten += 1
+		if float(cs_m[2]) > float(cs_rust[2]) * 1.5 + 0.01:
+			print("[CAPESCHOT] FOUT: op 3 vakken reageert de cape op een musket (straal 2)")
+			cs_fouten += 1
+		# het kanon: op 3 vakken (buiten de musket-straal, binnen die van het kanon) nu wel
+		await get_tree().create_timer(1.2).timeout
+		game._fire_projectile(Vector2i(5, 5), Vector2i(5, 9), Constants.UnitType.ARTILLERY)
+		var cs_k: Array = await cs_ruis.call(cs_pvs, 0.8)
+		print("[CAPESCHOT] kanon: dichtbij %.3f, ver %.3f, 3 vakken %.3f" % [cs_k[0], cs_k[1], cs_k[2]])
+		if float(cs_k[2]) < float(cs_rust[2]) * 1.5 + 0.02:
+			print("[CAPESCHOT] FOUT: op 3 vakken reageert de cape niet op het kanon (straal 3,5)")
+			cs_fouten += 1
+		if float(cs_k[1]) > float(cs_rust[1]) * 1.5 + 0.01:
+			print("[CAPESCHOT] FOUT: de cape ver weg (7 vakken) reageert op het kanon")
+			cs_fouten += 1
+		print("[CAPESCHOT] %s: %d fout(en)" % ["PASS" if cs_fouten == 0 else "FAIL", cs_fouten])
+		get_tree().quit(0 if cs_fouten == 0 else 1)
+		return
 	elif "wapenroute" in args:
 		# Diagnose (7 september): welke wapen-route neemt het spel per model?
 		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt

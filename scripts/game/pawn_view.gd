@@ -2900,6 +2900,35 @@ static func cape_process(doek: MeshInstance3D, dt: float) -> void:
 		mat.set_shader_parameter("wind", w)
 
 
+## De windvlaag van een schot op EEN lap (16 september, Max: "alle capes
+## reageren nu op een schot, dat moet niet: alleen binnen een bepaalde straal
+## rondom het schot, bij het kanon een grotere"). `richting` = wereld, van de
+## vuurmond af; `sterkte` 0..1 (game._cape_vlaag rekent de straal en de
+## afval uit). Cloth: een impuls op alle punten (de kraag wordt toch elke
+## frame teruggezet); de vlakke shader-lap: een stoot op de gedempte slinger
+## van cape_process. Knop cape_vlaag (0 = uit).
+static func cape_vlaag(doek: MeshInstance3D, richting: Vector3, sterkte: float) -> void:
+	if doek == null or not is_instance_valid(doek) or not doek.is_inside_tree() or sterkte <= 0.0:
+		return
+	var k: float = sterkte * fx("cape_vlaag", 1.0)
+	if k <= 0.0 or richting.length() < 0.001:
+		return
+	var duw: Vector3 = (richting.normalized() + Vector3.UP * 0.35).normalized() * k
+	if bool(doek.get_meta("cape_sim", false)):
+		var soft := doek as SoftBody3D
+		if soft != null:
+			soft.apply_central_impulse(duw * 0.9)
+		return
+	var hang_v: Vector3 = doek.get_meta("cape_hang_v", Vector3.ZERO)
+	doek.set_meta("cape_hang_v", hang_v + duw * 6.0)
+
+
+## Deze pion: de vlaag op zijn eigen cape (niets zonder cape).
+func vlaag(richting: Vector3, sterkte: float) -> void:
+	if _cape != null and is_instance_valid(_cape):
+		cape_vlaag(_cape, richting, sterkte)
+
+
 ## Is de cloth-cape mogelijk? Knop cape_sim (1) en Jolt als physics-engine:
 ## de oude Godot-physics laat soft bodies ontploffen.
 static func _cape_sim_beschikbaar() -> bool:
