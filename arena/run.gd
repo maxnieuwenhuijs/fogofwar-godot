@@ -90,6 +90,9 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		if (rules.stat_minimum as Dictionary).is_empty() and not (echt.stat_minimum as Dictionary).is_empty():
 			rules.stat_minimum = echt.stat_minimum.duplicate(true)
 			print("[ARENA] stat_minimum uit %s (het regels-bestand droeg er geen)" % CRules.REGELS_BESTAND)
+		if (rules.stat_bonus as Dictionary).is_empty() and not (echt.stat_bonus as Dictionary).is_empty():
+			rules.stat_bonus = echt.stat_bonus.duplicate(true)
+			print("[ARENA] stat_bonus uit %s (het regels-bestand droeg er geen)" % CRules.REGELS_BESTAND)
 	var max_steps := int(config.get("max_steps", 1500))
 	var per := int(config.get("games_per_matchup", 5))
 	var base_seed := int(config.get("base_seed", 1000))
@@ -111,6 +114,7 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		"doctrines": (rules.doctrines if rules != null else {}),
 		"basis_hp": (rules.basis_hp if rules != null else {}),
 		"stat_minimum": (rules.stat_minimum if rules != null else {}),
+		"stat_bonus": (rules.stat_bonus if rules != null else {}),
 	}))
 	var matrix: Dictionary = {}
 	var games := 0

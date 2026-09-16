@@ -409,7 +409,7 @@ func duel_rules_voor(a: int, b: int, p_honger_vanaf: int = -1) -> RulesConfig:
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
 	return RulesConfig.from_dict({"honger_vanaf_cyclus": duel_honger_vanaf if p_honger_vanaf < 0 else p_honger_vanaf,
 		"basis_hp": {"cav": 2},  # C12: bigbro altijd minstens 2 HP, kaart erbovenop
-		"stat_minimum": {"cav": {"stamina": 2, "attack": 2}},  # 4.3.5: bigbro altijd minstens 2 stamina en 2 attack
+		"stat_bonus": {"cav": {"stamina": 2, "attack": 2}},  # 4.3.6: bigbro +2 stamina en +2 attack bovenop de kaart (was 4.3.5: minstens 2)
 		# C17: de facties van DEZE campagne mee het bord op. Zonder dit blok
 		# vielen kaarten, budget en perks in elk campagne-duel terug op de
 		# kale tabel, terwijl de trainer en de arena wel de override maten.

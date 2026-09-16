@@ -6,7 +6,7 @@
  "basis_hp": {
   "cav": 2
  },
- "stat_minimum": {
+ "stat_bonus": {
   "cav": {
    "stamina": 2,
    "attack": 2

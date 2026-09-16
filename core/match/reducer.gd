@@ -280,6 +280,24 @@ static func _do_link(state: GameState, action: Dictionary, player_id: int, event
 	# {"cav": {"stamina": 2, "attack": 2}}), NA de kaart en de factie-
 	# bonussen; gelezen als "minstens 2": een sterkere kaart telt gewoon.
 	# {} = 4.1-gedrag. Zelfde plek als de basis-HP van C12.
+	# 4.3.6 (besluit Max, 16 september): "het is plus: een cavalry met een
+	# 1-attack-kaart heeft 3 attack, niet 2". Bonus per type BOVENOP de kaart
+	# en de factie-bonussen (`stat_bonus`, bv {"cav": {"stamina": 2, "attack":
+	# 2}}); de ondergrens van 4.3.5 (`stat_minimum`) bestaat nog als knop maar
+	# staat in de configs niet meer. {} = niets erbij.
+	var bonus_type = state.rules.stat_bonus.get(["inf", "cav", "art"][pawn.unit_type], {})
+	if bonus_type is Dictionary and not (bonus_type as Dictionary).is_empty():
+		var b_spd: int = int(bonus_type.get("stamina", 0))
+		if b_spd > 0:
+			pawn.max_stamina += b_spd
+			pawn.remaining_stamina += b_spd
+		var b_atk: int = int(bonus_type.get("attack", 0))
+		if b_atk > 0:
+			pawn.attack_value += b_atk
+		var b_hp: int = int(bonus_type.get("hp", 0))
+		if b_hp > 0:
+			pawn.max_hp += b_hp
+			pawn.current_hp += b_hp
 	var minima = state.rules.stat_minimum.get(["inf", "cav", "art"][pawn.unit_type], {})
 	if minima is Dictionary and not (minima as Dictionary).is_empty():
 		var min_spd: int = int(minima.get("stamina", 0))

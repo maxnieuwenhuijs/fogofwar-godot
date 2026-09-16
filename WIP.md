@@ -308,6 +308,28 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- 4.3.6: de ruiter krijgt +2 stamina en +2 attack (was: minstens 2)
+
+Max: "en het is plus, dus als ik een cavalry een 1 atk kaart geef dan
+heeft ie 3 atk, niet 2". C22 was in 4.3.5 als ondergrens gelezen
+(`stat_minimum`); nu `stat_bonus` per type bovenop kaart en
+factie-bonussen (`RulesConfig.stat_bonus`, to_dict/from_dict,
+`Reducer._do_link` na de factie-bonussen en voor de lege ondergrens), in
+alle configs op cav 2/2 (rules_v42_campaign, v42_default, de zes
+duur/rules_pt*, duel_rules_voor); `arena/run.gd` legt hem over configs
+zonder. rules_version 4.3.6. Nieuwe test
+`test_ruiter_krijgt_2_stamina_en_2_attack_erbij` (1-kaart -> 3, 4-kaart ->
+6, infanterie ongemoeid, de echte config draagt de bonus en geen
+ondergrens meer); de 4.3.5-test blijft (de knop bestaat nog). Goldens
+opnieuw gegenereerd (15 hash-mismatches op seq 0, want de regels zitten in
+de hash), golden_sims.json opnieuw geijkt (tabel in de CHANGELOG),
+testsuite 2490/0. Regressie: uispel 777 nu `a6677ac8…` (220 acties, cyclus
+7; was d16a14f8, 246, 6), herstelcheck 777 0 verschillen, resumecheck 777 1
+0 verschillen, naadcheck PASS. Core-hash veranderd: server opnieuw
+uitrollen en een nieuwe client-build. Balans: de cavalerie wordt sterker
+(Wolf met acht ruiters het meest); dat meet de nachtrun na het hertrainen,
+die start Max zelf.
+
 ## 16 september -- blokjes tot 9, de factie-bonus op de kaart, kleiner embleem, de duo-emblemen
 
 Max: "zorg dat de blokjes ook kloppen, je kan ook met CP en bonus 6 of 7

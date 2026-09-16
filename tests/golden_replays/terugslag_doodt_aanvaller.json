@@ -63,13 +63,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8cfc771113ea0669425df3b95c941a9dd9a976ff774eb9bb0c1932f90f9a0088",
+			"hash": "db14e7473b75e3941774d7341a42c287e86c2f91bc606e1dab21f01f7b2fc315",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788858480.216
+			"ts": 1789560612.249
 		}
 	],
-	"final_hash": "8cfc771113ea0669425df3b95c941a9dd9a976ff774eb9bb0c1932f90f9a0088",
+	"final_hash": "db14e7473b75e3941774d7341a42c287e86c2f91bc606e1dab21f01f7b2fc315",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -230,6 +230,7 @@
 			"rules_version": "4.3.0",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
+			"stat_bonus": {},
 			"stat_minimum": {},
 			"statue_threshold": 0
 		},
@@ -249,7 +250,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-08T11:08:00",
+		"created": "2026-09-16T14:10:12",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -411,6 +412,7 @@
 				"rules_version": "4.3.0",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
+				"stat_bonus": {},
 				"stat_minimum": {},
 				"statue_threshold": 0
 			},

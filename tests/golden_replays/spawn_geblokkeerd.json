@@ -77,10 +77,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "2c7f46788c4385c96ac5e82ebc323d8b3efe97eda2245df6697ff342ab0e1b93",
+			"hash": "dd357867812d14ad444520c7f83d69bc629f8313aa159ce0d428962650b2b885",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1788858480.308
+			"ts": 1789560612.343
 		},
 		{
 			"action": {
@@ -116,10 +116,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "7ed1d06d4a46fca2f11e85eb325b3258708b394e70bfe44be728f0d6f6b42e66",
+			"hash": "b787a229c854fa0cd62fe8af0762091814c813d50e51e970575b7762dea4e2fe",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1788858480.309
+			"ts": 1789560612.343
 		},
 		{
 			"action": {
@@ -196,13 +196,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "4f0f9c6b16f210ba1aeb231e165c77dd53015c29120ec95223125583a8ba1ff2",
+			"hash": "c62428508891be0c935b498b29c99740b986e46c32d3cad7ebccd2b28aa174ed",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1788858480.309
+			"ts": 1789560612.344
 		}
 	],
-	"final_hash": "4f0f9c6b16f210ba1aeb231e165c77dd53015c29120ec95223125583a8ba1ff2",
+	"final_hash": "c62428508891be0c935b498b29c99740b986e46c32d3cad7ebccd2b28aa174ed",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -429,9 +429,10 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.5",
+			"rules_version": "4.3.6",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
+			"stat_bonus": {},
 			"stat_minimum": {},
 			"statue_threshold": 0
 		},
@@ -466,7 +467,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-08T11:08:00",
+		"created": "2026-09-16T14:10:12",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -674,9 +675,10 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.5",
+				"rules_version": "4.3.6",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
+				"stat_bonus": {},
 				"stat_minimum": {},
 				"statue_threshold": 0
 			},
@@ -695,6 +697,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.5"
+		"rules_version": "4.3.6"
 	}
 }

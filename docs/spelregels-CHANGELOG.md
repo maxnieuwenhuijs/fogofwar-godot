@@ -1,5 +1,37 @@
 # Spelregels — CHANGELOG
 
+## 4.3.6 — 16 september 2026 (de ruiter krijgt +2 stamina en +2 attack, in plaats van minstens 2)
+
+*Besluit Max: "het is plus, dus als ik een cavalry een 1 atk kaart geef dan
+heeft ie 3 atk, niet 2."*
+
+**C22 als bonus.** In 4.3.5 was "een bigbro heeft altijd 2 stamina en 2
+attack" gelezen als ondergrens (`stat_minimum`): een 1-kaart gaf 2, een
+4-kaart bleef 4. Max bedoelde een plus. Nieuwe knop `stat_bonus` naast
+`basis_hp`, in alle configs op `{"cav": {"stamina": 2, "attack": 2}}`
+(`rules_v42_campaign.json`, `v42_default.json`, de zes `duur/rules_pt*.json`,
+`duel_rules_voor` in de campagne); toegepast in `Reducer._do_link` na kaart
+en factie-bonussen. Een 1-attack-kaart op een ruiter geeft 3, een 3-kaart 5;
+infanterie en artillerie krijgen niets. `stat_minimum` blijft bestaan als
+knop maar staat nergens meer aan. `arena/run.gd` legt `stat_bonus` net als
+`basis_hp` over elk regels-bestand dat het niet draagt.
+
+`rules_version` 4.3.5 -> **4.3.6**. Goldens opnieuw gegenereerd en
+`golden_sims.json` opnieuw geijkt; `-- uispel 777` geeft nu een nieuwe
+digest (zie CLAUDE.md). De core-hash verandert: server opnieuw uitrollen en
+een nieuwe client-build.
+
+| sim | was | wordt |
+|---|---|---|
+| muis-wolf seed 777 | winner 2, cyclus 12, 409 acties | winner 2, cyclus 3, 90 acties |
+| mens-vos seed 101 | winner 1, cyclus 15, 421 acties | winner 1, cyclus 13, 358 acties |
+| leeuw-beer seed 202 | winner 2, cyclus 18, 499 acties | winner 2, cyclus 16, 441 acties |
+| beer-muis seed 303 | winner 1, cyclus 12, 455 acties | winner 1, cyclus 5, 181 acties |
+| wolf-leeuw seed 404 | winner 1, cyclus 4, 85 acties | winner 1, cyclus 6, 135 acties |
+
+Vijf sims zeggen niets over balans; de cavalerie wordt hier sterker (Wolf
+met acht ruiters het meest), dus dat meet de nachtrun na het hertrainen.
+
 ## Client — 8 september 2026 (aura in teamkleur; figuranten-props; geen regelwijziging)
 
 *Max: "geef de teams ook hun eigen kleur invloed-area, dus de drummer een

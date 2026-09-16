@@ -39,6 +39,11 @@ var basis_hp: Dictionary = {}         # C12: basis-HP per type BOVENOP de kaart 
 ## {"cav": {"stamina": 2, "attack": 2}}: "een bigbro heeft altijd 2 stamina en
 ## 2 attack". Sleutels stamina/attack/hp. {} = 4.1-gedrag.
 var stat_minimum: Dictionary = {}
+## 4.3.6 (Max, 16 september): "het is plus: een cavalry met een 1-attack-kaart
+## heeft 3 attack, niet 2". Bonus per type BOVENOP kaart en factie-bonussen,
+## bv {"cav": {"stamina": 2, "attack": 2}}; sleutels stamina/attack/hp.
+## Vervangt in de configs de ondergrens van 4.3.5. {} = niets erbij.
+var stat_bonus: Dictionary = {}
 
 # --- Schotparameters ---
 var inf_shot_range: int = 2           # afstand exact N (min = max)
@@ -214,6 +219,7 @@ func to_dict() -> Dictionary:
 		"per_stat_cap": per_stat_cap,
 		"basis_hp": basis_hp,
 		"stat_minimum": stat_minimum,
+		"stat_bonus": stat_bonus,
 		"schutkleur_onthul_nabij": schutkleur_onthul_nabij,
 		"inf_shot_range": inf_shot_range,
 		"inf_shot_cost": inf_shot_cost,
@@ -255,6 +261,14 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 				for stat in smin[k]:
 					per_type[String(stat)] = int(smin[k][stat])
 				c.stat_minimum[String(k)] = per_type
+	var sbon = d.get("stat_bonus", {})
+	if sbon is Dictionary:
+		for k in sbon:
+			if sbon[k] is Dictionary:
+				var per_type2: Dictionary = {}
+				for stat in sbon[k]:
+					per_type2[String(stat)] = int(sbon[k][stat])
+				c.stat_bonus[String(k)] = per_type2
 	c.inf_shot_range = int(d.get("inf_shot_range", c.inf_shot_range))
 	c.inf_shot_cost = int(d.get("inf_shot_cost", c.inf_shot_cost))
 	c.inf_shot_full_attack = bool(d.get("inf_shot_full_attack", c.inf_shot_full_attack))
@@ -338,8 +352,8 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
-		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3" or c.rules_version == "4.3.4":
-			c.rules_version = "4.3.5"
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3" or c.rules_version == "4.3.4" or c.rules_version == "4.3.5":
+			c.rules_version = "4.3.6"
 	else:
 		c.campaign = null
 	return c

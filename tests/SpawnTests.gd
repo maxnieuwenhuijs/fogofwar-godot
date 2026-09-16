@@ -41,7 +41,7 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.3.5", "campaign-activering = 4.3.5 (dynamische trom, ruiter minstens 2/2)")
+	assert_eq(met.rules_version, "4.3.6", "campaign-activering = 4.3.6 (ruiter +2/+2 bovenop de kaart)")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
@@ -586,7 +586,7 @@ func _c21_actief(s: GameState, owner: int, pos: Vector2i, hp: int, spd: int, atk
 
 func test_c21_vaandel_aura_geeft_attack() -> void:
 	var s := _c21_staat()
-	assert_eq(s.rules.rules_version, "4.3.5", "de aura is een regelwijziging (4.3.3); 4.3.4 en 4.3.5 kwamen erachteraan")
+	assert_eq(s.rules.rules_version, "4.3.6", "de aura is een regelwijziging (4.3.3); 4.3.4, 4.3.5 en 4.3.6 kwamen erachteraan")
 	var aanvaller: Pawn = _c21_actief(s, 1, Vector2i(5, 5), 3, 3, 1)
 	var vaandel: Pawn = s._spawn_pawn(1, Vector2i(4, 4), Constants.UnitType.INFANTRY)
 	vaandel.rol = "flag"   # diagonaal: hoort bij het blok van acht
@@ -771,6 +771,50 @@ func test_ruiter_heeft_minstens_2_stamina_en_2_attack() -> void:
 	var r41: Pawn = kaal._spawn_pawn(1, Vector2i(5, 10), Constants.UnitType.CAVALRY)
 	r41.link_card(Card.new(kaal.next_card_id(), 1, 0, 5, 1, 1))
 	assert_eq(r41.remaining_stamina, 1, "zonder stat_minimum geen ondergrens")
+
+
+func test_ruiter_krijgt_2_stamina_en_2_attack_erbij() -> void:
+	# 4.3.6 (Max, 16 september): "het is plus: als ik een cavalry een 1-attack-
+	# kaart geef heeft hij 3 attack, niet 2". stat_bonus per type bovenop de
+	# kaart en de factie-bonussen; de infanterie krijgt niets.
+	var regels := RulesConfig.from_dict({"campaign": {}, "basis_hp": {"cav": 2},
+		"stat_bonus": {"cav": {"stamina": 2, "attack": 2}}})
+	assert_eq(int(regels.stat_bonus["cav"]["attack"]), 2, "knop gelezen")
+	var rond: RulesConfig = RulesConfig.from_dict(regels.to_dict())
+	assert_eq(int(rond.stat_bonus["cav"]["stamina"]), 2, "knop overleeft to_dict/from_dict")
+	assert_true((rond.stat_minimum as Dictionary).is_empty(), "de ondergrens staat niet meer in de configs")
+	var s := GameState.new()
+	s.rules = regels
+	s.doctrines[1] = Constants.Doctrine.MENS
+	s.doctrines[2] = Constants.Doctrine.MENS
+	s.phase = Phase.linking_for_round(1)
+	s.current_player = 1
+	s.initiative_player = 1
+	var ruiter: Pawn = s._spawn_pawn(1, Vector2i(5, 10), Constants.UnitType.CAVALRY)
+	var soldaat: Pawn = s._spawn_pawn(1, Vector2i(6, 10), Constants.UnitType.INFANTRY)
+	var sterke: Pawn = s._spawn_pawn(1, Vector2i(7, 10), Constants.UnitType.CAVALRY)
+	s._spawn_pawn(2, Vector2i(5, 0), Constants.UnitType.INFANTRY)
+	var zwak1 := Card.new(s.next_card_id(), 1, 1, 5, 1, 1)
+	var zwak2 := Card.new(s.next_card_id(), 1, 1, 5, 1, 1)
+	var sterk := Card.new(s.next_card_id(), 1, 1, 1, 4, 3)
+	for k in [zwak1, zwak2, sterk]:
+		s.all_cards[k.id] = k
+	s.cards_revealed[1] = [zwak1, zwak2, sterk]
+	assert_true(bool(Reducer.apply(s, Actions.make_link(zwak1.id, ruiter.id), 1).ok))
+	assert_eq(ruiter.remaining_stamina, 3, "ruiter met een 1-stamina-kaart: 1 + 2")
+	assert_eq(ruiter.max_stamina, 3)
+	assert_eq(ruiter.attack_value, 3, "en 1 + 2 attack")
+	assert_eq(ruiter.current_hp, 7, "C12 blijft: 5 van de kaart + 2 basis")
+	assert_true(bool(Reducer.apply(s, Actions.make_link(zwak2.id, soldaat.id), 1).ok))
+	assert_eq(soldaat.remaining_stamina, 1, "infanterie houdt gewoon de kaart")
+	assert_eq(soldaat.attack_value, 1)
+	assert_true(bool(Reducer.apply(s, Actions.make_link(sterk.id, sterke.id), 1).ok))
+	assert_eq(sterke.remaining_stamina, 6, "een sterke kaart krijgt er ook 2 bij: 4 + 2")
+	assert_eq(sterke.attack_value, 5, "3 + 2")
+	# de echte campagne-regels dragen de bonus, niet meer de ondergrens
+	var echt: RulesConfig = RulesConfig.load_from_file(CRules.REGELS_BESTAND)
+	assert_eq(int(echt.stat_bonus["cav"]["attack"]), 2, "rules_v42_campaign.json: stat_bonus cav 2/2")
+	assert_true((echt.stat_minimum as Dictionary).is_empty(), "rules_v42_campaign.json: geen stat_minimum meer")
 
 
 func test_c21_aura_bereik_is_een_knop() -> void:
