@@ -883,24 +883,36 @@ func _bouw_plas_met_kikker(pos: Vector3, bevroren: bool = false, o: Dictionary =
 	root.name = "Plas"
 	root.position = pos
 	_props_root.add_child(root)
-	# de mini-games aan de plas (12 september): keilen (op ijs: glijden) en vissen
-	var water := {"soort": "plas", "root": root, "rx": 0.6, "rz": 0.43, "bevroren": bevroren, "ring_ouder": root}
-	if bool(o.get("stenen", false)):
-		_spel.bouw_stenen(root, Vector3(-0.78, 0.0, 0.3), atan2(-0.78, 0.3), water)
+	# de mini-games aan de plas (12 september): keilen (op ijs: glijden) en vissen.
+	# Met stenen is de plas een lange geul (16 september, Max: "bij het ketsen
+	# van de steen ook een grotere plas of een soort geul met water"): 2,9 bij
+	# 1,4, de lange as van het bord af gedraaid, de stenen aan de bordkant, met
+	# een modderige rand; de hupjes en de pijl zijn er langer op (`groot`).
+	var groot: bool = bool(o.get("stenen", false))
+	var rx: float = 1.45 if groot else 0.6
+	var rz: float = 0.7 if groot else 0.43
+	if groot:
+		root.rotation.y = 0.6
+	var water := {"soort": "plas", "root": root, "rx": rx, "rz": rz, "bevroren": bevroren, "ring_ouder": root, "groot": groot}
+	if groot:
+		_spel.bouw_stenen(root, Vector3(-1.62, 0.0, 0.22), atan2(-1.62, 0.22), water)
 	if bool(o.get("hengel", false)) and not bevroren:
-		_spel.bouw_hengel(root, Vector3(0.55, 0.0, 0.48), atan2(0.55, 0.48), water)
+		_spel.bouw_hengel(root, Vector3(0.55, 0.0, rz + 0.05), atan2(0.55, rz + 0.05), water)
+	if groot:
+		var rand := _mesh(_cilinder(0.6, 0.008), Color(0.30, 0.25, 0.17), root, Vector3(0.0, 0.004, 0.0))
+		rand.scale = Vector3((rx + 0.12) / 0.6, 1.0, (rz + 0.1) / 0.6)
 	if bevroren:
 		var ijs := _mesh(_cilinder(0.6, 0.014), Color(0.78, 0.86, 0.92), root, Vector3(0.0, 0.007, 0.0))
-		ijs.scale = Vector3(1.0, 1.0, 0.72)
+		ijs.scale = Vector3(rx / 0.6, 1.0, rz / 0.6)
 		var imat := ijs.material_override as StandardMaterial3D
 		imat.roughness = 0.2
 		imat.metallic_specular = 0.8
 		_registreer(root, 0.1, [_reageer_ijs_krak, _reageer_ijs_glij, _reageer_ijs_krak], {"ijs": ijs})
 		return
-	if _glb_prop("plas", pos, 0.0, "", [], 0.04) == null:
+	if groot or _glb_prop("plas", pos, 0.0, "", [], 0.04) == null:
 		# geen metaal: dat spiegelt de zwarte hemel en wordt een gat in het gras
 		var plas := _mesh(_cilinder(0.6, 0.012), Color(0.46, 0.52, 0.54), root, Vector3(0.0, 0.006, 0.0))
-		plas.scale = Vector3(1.0, 1.0, 0.72)
+		plas.scale = Vector3(rx / 0.6, 1.0, rz / 0.6)
 		var pmat := plas.material_override as StandardMaterial3D
 		pmat.metallic = 0.0
 		pmat.roughness = 0.35

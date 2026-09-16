@@ -160,6 +160,17 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- een geul voor het keilen
+
+Max: "bij het ketsen van de steen ook een grotere plas maken of een soort
+geul met water". `_bouw_plas_met_kikker` maakt de plas met `stenen` nu een
+geul: ellips 1,45 bij 0,7 (was 0,6 bij 0,43), de wortel 0,6 rad gedraaid
+zodat de lange as van het bord af wijst, een modderrand eronder, de stenen
+aan de bordkant op (-1,62, 0,22) en de hengel op de rand; ijs en water
+schalen mee; het glb-plasje wordt dan niet gebruikt. `water.groot` laat de
+hupjes (0,25 + 0,9 x kracht, als op de rivier), het glijden op ijs en de
+pijl langer zijn. Spelcheck en omgevingcheck PASS.
+
 ## 16 september -- werpen en schieten in drie tikken
 
 Max: "maak alle bowl- en schietspelletjes zo: je klikt, je ziet de

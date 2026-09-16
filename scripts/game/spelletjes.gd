@@ -488,7 +488,8 @@ func bouw_stenen(ouder: Node3D, lokaal: Vector3, draai: float, water: Dictionary
 	var bevroren: bool = bool(water.get("bevroren", false))
 	o._registreer(stapel, 0.06, [_reageer_stenen_tik], {"spel": "keilen", "water": water, "tik": ["prop_steen", "impact_wood"],
 			"spel_conf": {"zwaai": 28.0, "zwaai_snelheid": 2.2, "laadtijd": 0.9, "pijl_min": 0.3,
-				"pijl_max": 1.4 if String(water.get("soort", "plas")) == "rivier" else 0.9, "pijl_pos": Vector3(0.0, 0.03, 0.0)},
+				"pijl_max": 1.4 if (String(water.get("soort", "plas")) == "rivier" or bool(water.get("groot", false))) else 0.9,
+				"pijl_pos": Vector3(0.0, 0.03, 0.0)},
 			"spel_score": 0, "bevroren": bevroren})
 
 
@@ -524,7 +525,7 @@ func _keilen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 	var vlucht := steen.create_tween()
 	if bool(p.get("bevroren", false)):
 		# op het ijs glijdt en tolt de steen; van de plas af belandt hij in de sneeuw
-		var glij: float = 0.5 + 1.3 * kracht
+		var glij: float = (0.7 + 2.2 * kracht) if bool(water.get("groot", false)) else (0.5 + 1.3 * kracht)
 		var eind: Vector3 = start + d * glij
 		var op_ijs := true
 		var stap := 0.0
@@ -552,7 +553,7 @@ func _keilen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 		o._klaar(p, vlucht)
 		return
 	# ketsen: de eerste worp, dan steeds kortere hupjes; buiten het water is het klaar
-	var l0: float = (0.25 + 0.9 * kracht) if rivier else (0.14 + 0.42 * kracht)
+	var l0: float = (0.25 + 0.9 * kracht) if (rivier or bool(water.get("groot", false))) else (0.14 + 0.42 * kracht)
 	var n_max: int = clampi(1 + roundi(kracht * 4.0) + o._rng.randi_range(-1, 1), 1, 7)
 	var landingen: Array = []
 	var pos: Vector3 = start

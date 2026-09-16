@@ -423,7 +423,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   wat bij de setting hoort", "10 stuks"; ketting van omvallers, "Strike!"), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
   de kade van de Rivierhaven: steeds kortere hupjes met een oplopende
   plons, buiten het water is het klaar, de kikker duikt; op ijs glijdt de
-  steen), kanon (`kruitvaten` in het diorama: het kanon draait er bij de
+  steen; met stenen is de plas sinds 16 september een lange geul van 2,9
+  bij 1,4 met een modderrand, de lange as van het bord af gedraaid en de
+  stenen aan de bordkant, Max: "bij het ketsen ook een grotere plas of
+  een soort geul"; `water.groot` maakt de hupjes en de pijl zo lang als
+  op de rivier), kanon (`kruitvaten` in het diorama: het kanon draait er bij de
   bouw naartoe, vasthouden brengt de loop omhoog en zet een doelring op de
   dracht 1,6-7,0, de wind van het potje duwt de kogel opzij: "Windje!";
   vier vaten in een kettingreactie), vissen (`hengel` op de kade of
