@@ -804,6 +804,23 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `debris_doorzicht`, `debris_zak`. Plaatje: `-- gibshot musket laat`
   (ModelTuner.tscn, met venster) schrijft naast `_shot_gibs.png` ook
   `_shot_gibs_laat.png` na het verloop.
+- **Bloedstraaltje bij een overleefde klap (16 september, Max: "bij een hit
+  ook een klein spits bloedstraaltje met de beweging mee van het model"):**
+  `PawnView._bloedstraaltje` hangt bij `play_wound` een dunne kegel
+  (CylinderMesh, top 0) aan een `BoneAttachment3D` op het rompbot
+  (`WOND_BOTTEN`: Spine1 > Spine2 > Spine > Hips, gezocht op NAAMDEEL want de
+  exports schrijven `mixamorig:Spine1` of `mixamorig_Spine1`), dus hij volgt
+  de incasseer-clip en de stagger. Node-ketting `Bloedstraal` (attachment) >
+  `Richting` (gedraaid: eerst met de klap mee en iets omhoog, dan doorzakkend)
+  > `Maat` (geschaald vanaf de voet) > `Straal` (de kegel, een halve hoogte
+  erboven). Schiet in `wound_straal_op` (0,07 s) uit tot `wound_straal` (0,22,
+  0 = uit), trekt zich in `wound_straal_duur` (0,3 s) terug en vervaagt;
+  dikte `wound_straal_dikte` (0,022). De druppels van `_spawn_blood_spurt`
+  vertrekken sinds die dag uit hetzelfde wondpunt (`_wond_op_romp`). Geen
+  globale RNG. Knoppen in de Model-tuner tab Bloed. Check: `-- wondshot`
+  (ModelTuner.tscn, headless of met venster: klap van opzij, meet of het
+  straaltje op het hoogtepunt aan het rompbot hangt en uit staat, en of het
+  zich daarna opruimt; met venster `_shot_wond.png`).
 - Kijken zonder te spelen: `-- cliplengtes` (elke animatie met lengte EN de
   naam die het spel ervan maakt) en `-- geluidcheck` (elke geluidscategorie met
   aantal varianten, mix-dB, tuner-dB en vertraging; meldt categorieen zonder

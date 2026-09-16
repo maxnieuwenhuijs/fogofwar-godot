@@ -1,5 +1,46 @@
 # Fog of War — Work In Progress & Context
 
+## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
+
+Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van
+het model."
+
+- `PawnView._bloedstraaltje` (aangeroepen uit `_do_wound`, dus bij elke
+  overleefde klap of schot op infanterie/cavalerie): een dunne kegel
+  (CylinderMesh met top 0) aan een `BoneAttachment3D` op het rompbot, zodat
+  hij de incasseer-clip (hit1/hit2) en de stagger volgt in plaats van in de
+  lucht te blijven hangen waar de romp WAS.
+- Rompbot via `_wond_op_romp`: `WOND_BOTTEN` Spine1 > Spine2 > Spine > Hips,
+  gezocht op naamdeel (de muis-export heeft `mixamorig_Spine1` met een
+  underscore, andere exports `mixamorig:Spine1`; `find_bone` op de volle
+  naam vond niets, dat was de eerste FAIL van `-- wondshot`). Het wondpunt
+  ligt 0,07 buiten het bot, met de klap mee; de druppels van
+  `_spawn_blood_spurt` vertrekken nu uit datzelfde punt (was een vast punt
+  0,55 boven de tegel).
+- Ketting `Bloedstraal` > `Richting` > `Maat` > `Straal`: richting en maat op
+  aparte nodes, want twee tweens op een basis (draai en schaal) overschrijven
+  elkaar; de kegel staat een halve hoogte boven `Maat` zodat de schaal vanaf
+  de voet werkt (`CylinderMesh` heeft geen `center_offset`, dat gaf de tweede
+  FAIL). Verloop: uitschieten in `wound_straal_op` (0,07 s) tot
+  `wound_straal` (0,22), dan in `wound_straal_duur` (0,3 s) doorzakken
+  (richting van +0,35 omhoog naar 0,45 omlaag), dunner worden en vervagen
+  (alpha vanaf de helft), daarna `queue_free` van de attachment. Dikte
+  `wound_straal_dikte` (0,022; niet aan `drop_size` gehangen, die staat in
+  `effects_tuning.json` op 0,4 en maakte hem onzichtbaar dun).
+- Geen globale RNG, geen spelstaat.
+
+**Checks:** `-- wondshot` (ModelTuner.tscn) PASS: "straaltje aan bot
+mixamorig_Spine1: voet y=0,54, punt op 0,22 eenheden, schaal y=0,99", ruimt
+zich op; met venster `_shot_wond.png` (klap van opzij, straaltje rechts uit
+de romp, druppels erboven); `-- uispel 777` zobrist `a6677ac8…` (220 acties,
+cyclus 7): dat is de referentie van 4.3.6 (andere sessie, dezelfde middag,
+ruiter +2/+2), dus met het straaltje erin ongewijzigd.
+
+Ongelukje bij het committen: de andere sessie had intussen haar hele
+`pawn_view.gd` (cape-sim-hunks, werk in uitvoering) in de index gezet, en
+die zijn met de bloedstraaltje-hunks meegegaan in de emblemen-commit
+`a627191`. Niets kwijt, alleen een commit-bericht dat niet alles noemt.
+
 ## 16 september -- charge: de sprong begint twee vakken voor de aankomst, de klap valt tegen het einde
 
 Max: "start de jump attack animatie 2 blokjes eerder afstand, dan komt ie
