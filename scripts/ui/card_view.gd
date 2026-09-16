@@ -44,11 +44,11 @@ const KNOP_MAAT := Vector2(96, 96)
 const STAT_ICOON := 66.0
 # Plaatsing binnen een stat-kolom (contract par. 4).
 const KOLOM_NAAM_Y := 10.0
-const KOLOM_ICOON_Y := 56.0
-const KOLOM_LIJN_Y := 122.0
-const KOLOM_CIJFER_Y := 130.0
-const KOLOM_CIJFER_HOOGTE := 76.0
-const KOLOM_KNOP_Y := 208.0
+const KOLOM_ICOON_Y := 48.0
+const KOLOM_LIJN_Y := 112.0
+const KOLOM_CIJFER_Y := 108.0
+const KOLOM_CIJFER_HOOGTE := 104.0   # 16 september: cijfer 96, boven de plus
+const KOLOM_KNOP_Y := 212.0
 # Selectie en koppeling.
 const GESELECTEERD_SCHAAL := 1.04
 const GEKOPPELD_DIM := 0.72
@@ -77,6 +77,13 @@ var _hp_value: Label
 var _sta_value: Label
 var _atk_value: Label
 var _stat_namen: Array[Label] = []
+# De vaste factie-bonus per stat (16 september, Max: "bij het definieren per
+# factie al duidelijk op de kaart wat de +1 is, bijv muis stamina heeft al
+# +1"): een klein goudkleurig "+1" naast het cijfer. Alleen wat voor ELKE pion
+# geldt (Beer +1 HP, Muis +1 Speed); de cavalerie-bonus van de Wolf en de
+# ondergrenzen per type hangen van de pion af en staan er niet op.
+var _bonus: Array = [0, 0, 0]
+var _bonus_labels: Array[Label] = []
 var _cp_zegel: TextureRect
 var _cp_tekst: Label
 var _onthuld_rect: TextureRect
@@ -160,6 +167,12 @@ func set_doctrine(doctrine: int) -> void:
 
 ## Aantal kaarten per ronde (bewaard voor wie het wil tonen; de kaart zelf
 ## heeft sinds 3 september geen ondertitel meer).
+## De vaste factie-bonus per stat (hp, speed, attack), getoond als "+n".
+func set_bonus(hp: int, stamina: int, attack: int) -> void:
+	_bonus = [hp, stamina, attack]
+	_refresh()
+
+
 func set_kaart_aantal(aantal: int) -> void:
 	_kaart_aantal = aantal
 
@@ -193,6 +206,10 @@ func _refresh() -> void:
 	var sleutels := ["CARD_STAT_HP", "CARD_STAT_SPEED", "CARD_STAT_ATTACK"]
 	for i in _stat_namen.size():
 		_stat_namen[i].text = tr(sleutels[i]).to_upper()
+	for i in _bonus_labels.size():
+		var b: int = int(_bonus[i]) if i < _bonus.size() else 0
+		_bonus_labels[i].text = "+%d" % b
+		_bonus_labels[i].visible = b > 0
 	_cp_tekst.text = tr("CARD_CP_SEAL")
 	_update_staat()
 
@@ -247,9 +264,13 @@ func _bouw() -> void:
 	_factie_label = _label("Titel", "LabelKopInkt", 48, Vector2(0, UiAssets.KAART_TITEL_Y), Vector2(maat.x, 60))
 	_kaartlaag.add_child(_factie_label)
 	# Drie stat-kolommen: HP links, SPEED midden, ATTACK rechts.
-	var hp := _bouw_kolom("Hp", "stat-hp", float(UiAssets.KAART_SPECS_X[0]))
-	var sta := _bouw_kolom("Sta", "stat-speed", float(UiAssets.KAART_SPECS_X[1]))
-	var atk := _bouw_kolom("Atk", "stat-attack", float(UiAssets.KAART_SPECS_X[2]))
+	# drie geschaalde kolommen, gecentreerd op de kaart
+	var ks: float = UiAssets.KAART_KOLOM_SCHAAL
+	var kolom_b: float = KOLOM_MAAT.x * ks
+	var links: float = (maat.x - (3.0 * kolom_b + 2.0 * UiAssets.KAART_KOLOM_TUSSEN)) * 0.5
+	var hp := _bouw_kolom("Hp", "stat-hp", links)
+	var sta := _bouw_kolom("Sta", "stat-speed", links + kolom_b + UiAssets.KAART_KOLOM_TUSSEN)
+	var atk := _bouw_kolom("Atk", "stat-attack", links + 2.0 * (kolom_b + UiAssets.KAART_KOLOM_TUSSEN))
 	_hp_value = hp.waarde
 	_sta_value = sta.waarde
 	_atk_value = atk.waarde
@@ -304,6 +325,7 @@ func _bouw() -> void:
 ## voor de tools). Geeft {waarde, naam, plus} terug.
 func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	var kolom := _rect(voorvoegsel + "Kolom", UiAssets.kaart("specs"), Vector2(x, UiAssets.KAART_SPECS_Y), KOLOM_MAAT)
+	kolom.scale = Vector2(UiAssets.KAART_KOLOM_SCHAAL, UiAssets.KAART_KOLOM_SCHAAL)   # alles erin schaalt mee
 	_kaartlaag.add_child(kolom)
 	var naam := _rect("Naam", UiAssets.kaart("specs_naam"),
 		Vector2((KOLOM_MAAT.x - SPECS_NAAM_MAAT.x) * 0.5, KOLOM_NAAM_Y), SPECS_NAAM_MAAT)
@@ -317,7 +339,7 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	kolom.add_child(icoon)
 	kolom.add_child(_rect("Lijn", UiAssets.kaart("specs_sierlijn"),
 		Vector2((KOLOM_MAAT.x - SPECS_LIJN_MAAT.x) * 0.5, KOLOM_LIJN_Y), SPECS_LIJN_MAAT))
-	var waarde := _label(voorvoegsel + "Value", "LabelCijfer", 84,
+	var waarde := _label(voorvoegsel + "Value", "LabelCijfer", 96,
 		Vector2(0, KOLOM_CIJFER_Y), Vector2(KOLOM_MAAT.x, KOLOM_CIJFER_HOOGTE))
 	kolom.add_child(waarde)
 	_uniek(waarde)
@@ -325,6 +347,15 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 		Vector2((KOLOM_MAAT.x - KNOP_MAAT.x) * 0.5, KOLOM_KNOP_Y))
 	kolom.add_child(plus_knop)
 	_uniek(plus_knop)
+	# de factie-bonus: klein en goud, rechtsboven naast het cijfer
+	var bonus := _label(voorvoegsel + "Bonus", "LabelCijfer", 34,
+		Vector2(KOLOM_MAAT.x * 0.5 + 34.0, KOLOM_CIJFER_Y - 4.0), Vector2(56, 40))
+	bonus.add_theme_color_override("font_color", UiAssets.SELECTIE_GOUD)
+	bonus.add_theme_color_override("font_outline_color", Color(UiAssets.INKT, 0.9))
+	bonus.add_theme_constant_override("outline_size", 6)
+	bonus.visible = false
+	kolom.add_child(bonus)
+	_bonus_labels.append(bonus)
 	return {"waarde": waarde, "naam": naam_label, "plus": plus_knop}
 
 

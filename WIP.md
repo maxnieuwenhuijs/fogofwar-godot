@@ -270,6 +270,33 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- blokjes tot 9, de factie-bonus op de kaart, kleiner embleem, de duo-emblemen
+
+Max: "zorg dat de blokjes ook kloppen, je kan ook met CP en bonus 6 of 7
+krijgen toch?" De stat-blokjes onder een pion waren een vast raster van 5;
+alles daarboven viel weg. Nu bouwt `_build_health_bars` 9 kolommen per rij
+(HP_COLS_MAX) en toont `_update_health_bars` per pion zoveel kolommen als hij
+nodig heeft (minstens 5, tot 9: max_hp, stamina met trom, attack met
+vaandel), gecentreerd onder de voeten; rol-icoon en vraagteken schuiven
+mee; de render-digest telt alleen zichtbare blokjes. Max: "fix dat bij het
+definieren per factie al duidelijk is op de kaart wat de +1 is, bijv muis
+stamina heeft al +1": `CardView.set_bonus` zet een goudkleurig "+n" naast
+het cijfer, `CardHand.configure` krijgt `factie_bonus` en game.gd geeft
+`[hp_bonus, speed_bonus, 0]` uit de doctrine mee (`_factie_bonus_van`;
+alleen wat voor elke pion geldt, de cavalerie-bonus van de Wolf en de
+ondergrenzen per type niet). Max: "het embleem op de kaarten mag een stuk
+kleiner en de stats wat groter": krans 0,94 -> 0,58, factienaam, sierlijn
+en kolommen omhoog, de drie kolommen 1,14 x (`KAART_KOLOM_SCHAAL`, de
+kolom-node schaalt met alles erin), cijfer 96 en boven de plus gezet
+(KOLOM_CIJFER_Y 108, KNOP_Y 212). Max: "gebruik deze emblemen" (de zes
+duo-gravures, big bro met zijn kleine broertje, uit
+`fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`):
+`tools/verwerk_emblemen.py` knipt ze op de doorzichtige inhoud, maakt ze
+vierkant en schrijft `assets/ui/emblems/<Naam>.png` op 500 x 500 (de oude
+enkelvoudige koppen zijn vervangen). Checks: uispel 777 d16a14f8,
+herstelcheck 777 0 verschillen, koppelcheck PASS, uicheck PASS, `-- define`
+met venster: kaart met klein duo-embleem, grote stats, cijfer boven de plus.
+
 ## 16 september -- spelletjes nooit op het bord, hooguit twee per diorama, de kogel rolt door
 
 Max: "de spelletjes mogen nooit op het bord komen en doe er nooit meer dan

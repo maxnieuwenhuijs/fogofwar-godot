@@ -161,12 +161,17 @@ const KAART_MAAT := Vector2(645, 989)
 const KAART_LINT_X := 78.0          # het losse lint (72 breed) staat hier
 const KAART_GEKOPPELD_X := 21.0     # het lint-met-zegel (187 breed): strook op dezelfde plek
 const KAART_NAAMPLAAT_Y := 22.0
-const KAART_KRANS_Y := 98.0
-const KAART_KRANS_SCHAAL := 0.94
-const KAART_SIERLIJN_Y := 440.0
-const KAART_TITEL_Y := 366.0
-const KAART_SPECS_Y := 492.0
-const KAART_SPECS_X := [54.0, 238.0, 422.0]
+# 16 september (Max: "het embleem op de kaarten mag een stuk kleiner en de
+# stats wat groter"): krans van 0,94 naar 0,58, alles eronder omhoog, de
+# drie stat-kolommen 1,14 x zo groot (KAART_KOLOM_SCHAAL) en het cijfer 96.
+const KAART_KRANS_Y := 92.0
+const KAART_KRANS_SCHAAL := 0.58
+const KAART_SIERLIJN_Y := 318.0
+const KAART_TITEL_Y := 250.0
+const KAART_SPECS_Y := 352.0
+const KAART_KOLOM_SCHAAL := 1.14
+const KAART_KOLOM_TUSSEN := 12.0
+const KAART_SPECS_X := [54.0, 238.0, 422.0]   # ongeschaald (oud); card_view rekent de geschaalde plekken zelf uit
 const KAART_CP_MIDDEN := Vector2(322.0, 871.0)
 const KAART_CP_SCHAAL := 0.43
 const KAART_ONTHULD_POS := Vector2(415.0, 830.0)

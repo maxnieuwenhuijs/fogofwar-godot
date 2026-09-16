@@ -1429,6 +1429,8 @@ func render_digest() -> Dictionary:
 		var bar = _hp_bars.get(pid, null)
 		if bar != null and bar.holder.visible:
 			for b in bar.blocks:
+				if not (b as ColorRect).visible:
+					continue
 				blokjes += "1" if (b as ColorRect).color != HP_COLOR_EMPTY else "0"
 			vraagteken = bar.has("qlabel") and bar.qlabel.visible
 		pawns[str(pid)] = {
@@ -1736,7 +1738,8 @@ func _poef_reveal(views: Array) -> void:
 		tw.tween_property(pv, "scale", doel, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-const HP_COLS := 5
+const HP_COLS := 5        # minste kolommen (het gewone raster)
+const HP_COLS_MAX := 9    # met CP-inzet en bonussen kan een stat tot 6, 7 gaan (16 september, Max)
 const HP_ROWS := 3
 const HP_BLOCK_SIZE := 5.5
 const HP_BLOCK_GAP := 1.0
@@ -1912,6 +1915,14 @@ func _wis_aura() -> void:
 	_aura_sleutel = ""
 
 
+## De vaste factie-bonus per stat voor op de kaart (16 september): wat elke
+## pion van deze factie bij het koppelen krijgt bovenop de kaart (Beer +1 HP,
+## Muis +1 Speed). Type-afhankelijke dingen (cavalerie-bonus, basis-HP,
+## ondergrenzen) horen niet op een kaart die nog aan niemand hangt.
+func _factie_bonus_van(doctrine: Dictionary) -> Array:
+	return [int(doctrine.get("hp_bonus", 0)), int(doctrine.get("speed_bonus", 0)), 0]
+
+
 func _build_health_bars() -> void:
 	if _hp_layer == null:
 		return
@@ -1925,7 +1936,7 @@ func _build_health_bars() -> void:
 		var blocks: Array = []
 		var randen: Array = []
 		for r in HP_ROWS:
-			for c in HP_COLS:
+			for c in HP_COLS_MAX:
 				var block := ColorRect.new()
 				block.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				block.size = Vector2(HP_BLOCK_SIZE, HP_BLOCK_SIZE)
@@ -1956,7 +1967,7 @@ func _build_health_bars() -> void:
 		qlabel.add_theme_color_override("font_color", UiAssets.WARM_IVOOR)
 		qlabel.add_theme_color_override("font_outline_color", Color(UiAssets.INKT, 0.9))
 		qlabel.add_theme_constant_override("outline_size", 5)
-		qlabel.position = Vector2(HP_COLS * (HP_BLOCK_SIZE + HP_BLOCK_GAP) * 0.5 - 6.0, -4.0)
+		qlabel.position = Vector2(HP_COLS * (HP_BLOCK_SIZE + HP_BLOCK_GAP) * 0.5 - 6.0, -4.0)   # x volgt per frame de breedte
 		holder.add_child(qlabel)
 		# Rol-icoon (C15 / 4.3.2): vaandeldrager of tamboer, net onder de
 		# HP-blokjes. Ook op VIJANDELIJKE pionnen -- sinds 4.3.2 levert elke
@@ -1990,15 +2001,32 @@ func _update_health_bars() -> void:
 				or _camera.is_position_behind(pv.global_position):
 			entry.holder.visible = false
 			continue
+		var blocks: Array = entry.blocks
+		# Zoveel kolommen als deze pion nodig heeft (16 september, Max: "je kan
+		# ook met CP en bonus 6 of 7 krijgen"): het gewone raster is 5 breed,
+		# een pion met een hogere stat krijgt er kolommen bij, gecentreerd
+		# onder de voeten; wat erbuiten valt blijft verborgen.
+		var covered: bool = session.pion_gedekt(pawn.id)
+		var attack_nu: int = Rules.effectieve_attack(state, pawn)
+		var stamina_nu: int = Rules.stamina_beschikbaar(state, pawn)
+		var kolommen: int = HP_COLS
+		if not covered:
+			kolommen = clampi(maxi(maxi(HP_COLS, pawn.max_hp), maxi(maxi(stamina_nu, pawn.max_stamina), attack_nu)), HP_COLS, HP_COLS_MAX)
+		var breedte: float = kolommen * HP_BLOCK_SIZE + (kolommen - 1) * HP_BLOCK_GAP
+		for r in HP_ROWS:
+			for c in HP_COLS_MAX:
+				(blocks[r * HP_COLS_MAX + c] as ColorRect).visible = c < kolommen
 		# Onderaan het poppetje: anker op de voeten, blokjes er net onder.
 		var screen := _camera.unproject_position(pv.global_position)
 		entry.holder.visible = true
-		entry.holder.position = screen - Vector2(total_w * 0.5, 0.0) + Vector2(0.0, 3.0)
-		var blocks: Array = entry.blocks
+		entry.holder.position = screen - Vector2(breedte * 0.5, 0.0) + Vector2(0.0, 3.0)
+		if entry.has("rol"):
+			(entry.rol as Label).position.x = breedte * 0.5 - 5.0
+		if entry.has("qlabel"):
+			(entry.qlabel as Label).position.x = breedte * 0.5 - 6.0
 		# F0.6: gedekte vijandelijke pion (Krokodil) → "?"-staat, geen echte stats.
 		# F4.3c: één gate voor alle vijandelijke stat-uitlezingen; online komt
 		# het antwoord uit het '?'-sentinel van de view.
-		var covered: bool = session.pion_gedekt(pawn.id)
 		if entry.has("qlabel"):
 			entry.qlabel.visible = covered
 		var randen: Array = entry.get("randen", [])
@@ -2013,22 +2041,20 @@ func _update_health_bars() -> void:
 		# de attack boven de kaart komt van het vaandel, zolang hij in die vorm
 		# staat. Die extra blokjes krijgen een rand in de aura-kleur, zodat je ziet
 		# wat je aan de drager te danken hebt.
-		var attack_nu: int = Rules.effectieve_attack(state, pawn)
-		var stamina_nu: int = Rules.stamina_beschikbaar(state, pawn)
-		for c in HP_COLS:
+		for c in HP_COLS_MAX:
 			blocks[c].color = HP_COLOR_HEALTH if c < pawn.current_hp else HP_COLOR_EMPTY
-			blocks[HP_COLS + c].color = HP_COLOR_STAMINA if c < stamina_nu else HP_COLOR_EMPTY
-			blocks[2 * HP_COLS + c].color = HP_COLOR_ATTACK if c < attack_nu else HP_COLOR_EMPTY
+			blocks[HP_COLS_MAX + c].color = HP_COLOR_STAMINA if c < stamina_nu else HP_COLOR_EMPTY
+			blocks[2 * HP_COLS_MAX + c].color = HP_COLOR_ATTACK if c < attack_nu else HP_COLOR_EMPTY
 			if randen.size() == blocks.size():
 				randen[c].visible = false
-				var trom: bool = c >= pawn.remaining_stamina and c < stamina_nu
-				randen[HP_COLS + c].visible = trom
+				var trom: bool = c >= pawn.remaining_stamina and c < stamina_nu and c < kolommen
+				randen[HP_COLS_MAX + c].visible = trom
 				if trom:
-					randen[HP_COLS + c].border_color = rol_kleur("drum", pawn.owner_id)
-				var vaandel: bool = c >= pawn.attack_value and c < attack_nu
-				randen[2 * HP_COLS + c].visible = vaandel
+					randen[HP_COLS_MAX + c].border_color = rol_kleur("drum", pawn.owner_id)
+				var vaandel: bool = c >= pawn.attack_value and c < attack_nu and c < kolommen
+				randen[2 * HP_COLS_MAX + c].visible = vaandel
 				if vaandel:
-					randen[2 * HP_COLS + c].border_color = rol_kleur("flag", pawn.owner_id)
+					randen[2 * HP_COLS_MAX + c].border_color = rol_kleur("flag", pawn.owner_id)
 
 
 # --- State-sync --------------------------------------------------------------
@@ -2130,7 +2156,8 @@ func _open_define_hand(bonus: int) -> void:
 	# 4.1.10-hr: hoogstens zoveel kaarten als vrije pionnen (bij 0 slaat de
 	# engine deze ronde zelf over en schuift de fase vanzelf door).
 	var kaart_aantal: int = Validator.expected_define_count(session.state, _human_id)
-	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus, _human_id, _human_doctrine)
+	_card_hand.configure(kaart_aantal, int(doctrine.budget), int(doctrine.speed_max), bonus, _human_id, _human_doctrine,
+		_factie_bonus_van(doctrine))
 	_card_hand.open_for_define()
 	var uitleg := tr("HUD_DEFINE_PROMPT") % [kaart_aantal, int(doctrine.budget)]
 	if bonus > 0:
@@ -2348,7 +2375,7 @@ func _toon_linking_hand() -> void:
 	# UI-assetpack: de kaart draagt embleem en teamkleur; het CP-zegel volgt
 	# uit de stats zelf (som boven het budget = de blinde inzet van die ronde).
 	_card_hand.configure(kaarten.size(), int(doctrine.budget), int(doctrine.speed_max), 0,
-		_human_id, _human_doctrine)
+		_human_id, _human_doctrine, _factie_bonus_van(doctrine))
 	var views: Array = _card_hand.get_card_views()
 	var flags: Array = []
 	for i in kaarten.size():

@@ -28,6 +28,7 @@ var _selected_index: int = -1
 # v4.1: aantal kaarten, budget en Speed-limiet volgen uit de doctrine.
 var _card_count: int = Constants.CARDS_PER_ROUND
 var _budget: int = Constants.STAT_TOTAL
+var _factie_bonus: Array = []   # [hp, speed, attack] van de factie (16 september)
 var _speed_max: int = 0
 # Eigenaar van de hand (teamkleur en embleem op de kaarten); -1 = onbekend.
 var _speler_id: int = -1
@@ -58,9 +59,11 @@ func _ready() -> void:
 ## D1) - de eerste kaarten in de waaier dragen het extra punt en het CP-zegel.
 ## speler_id/doctrine: eigenaar voor teamkleur en embleem (-1 = laat staan).
 func configure(card_count: int, budget: int, speed_max: int = 0, bonus_kaarten: int = 0,
-		speler_id: int = -1, doctrine: int = -1) -> void:
+		speler_id: int = -1, doctrine: int = -1, factie_bonus: Array = []) -> void:
 	_budget = budget
 	_speed_max = speed_max
+	if not factie_bonus.is_empty():
+		_factie_bonus = factie_bonus
 	if speler_id != -1:
 		_speler_id = speler_id
 	if doctrine != -1:
@@ -80,6 +83,8 @@ func configure(card_count: int, budget: int, speed_max: int = 0, bonus_kaarten: 
 			_cards[i].set_doctrine(_doctrine)
 		_cards[i].set_cp_inzet(i < bonus_kaarten)
 		_cards[i].set_kaart_aantal(card_count)
+		if _factie_bonus.size() == 3:
+			_cards[i].set_bonus(int(_factie_bonus[0]), int(_factie_bonus[1]), int(_factie_bonus[2]))
 
 
 func _build_cards() -> void:

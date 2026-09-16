@@ -685,6 +685,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met sha1's dat `tools/maak_prop_geluiden.py` schrijft; een echte opname op
   dezelfde naam heeft een andere hash) en een Engelse ElevenLabs-prompt
   (`PROP_PROMPT_EN` in het script).
+- **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
+  "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
+  het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het
+  raster onder een pion is 5 kolommen, maar `_build_health_bars` bouwt er
+  `HP_COLS_MAX` 9 en `_update_health_bars` toont per pion zoveel als hij
+  nodig heeft, gecentreerd. `CardView.set_bonus` toont de vaste
+  factie-bonus als goud "+n" naast het cijfer (`CardHand.configure(...,
+  factie_bonus)`, `game._factie_bonus_van`: hp_bonus en speed_bonus; niet
+  de cavalerie-bonus of de ondergrenzen, die hangen van de pion af). De
+  kaart heeft sinds die dag een klein embleem (krans 0,58) en grotere
+  stat-kolommen (`KAART_KOLOM_SCHAAL` 1,14, cijfer 96). **De emblemen zijn
+  de duo-gravures** (big bro met kleine broertje) uit
+  `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
+  `python tools/verwerk_emblemen.py` knipt en schaalt ze naar
+  `assets/ui/emblems/<Naam>.png` (500 px), daarna `--import` en `-- uicheck`.
 - **UI-assetpack nakijken: `-- uicheck`** (statusbord van de UI-assets onder
   `assets/ui/`: elk icoon-id uit `docs/design/UI-SPEC-EN.md` met zijn bestand,
   de zes emblemen, de kaartdelen, elke knop- en paneelstijl met 9-patch-marge,
