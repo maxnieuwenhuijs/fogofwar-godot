@@ -702,6 +702,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   5.1 zweefden meters naast de hand door een export- en importbug; de
   pijplijn corrigeert dat (`tools/blender_botkind_fix.py`, zie
   MODEL-PIPELINE-CHECKLIST sectie C). Draai dit na elke her-export.
+- **Idles: iedereen stil, af en toe een die rondkijkt (16 september, Max:
+  "geef alle idles de standaard meest stilstaande idle en maximaal af en
+  toe doet 1 a 3 poppetjes een andere idle").** `PawnView._play_variant`
+  kiest voor de idle bij IEDEREEN de stilste variant (`_stilste_idle_variant`,
+  gemeten op de kop/nek-tracks, per model gecached; daarvoor alleen de
+  vaandeldrager). `_idle_process` (per frame) loot per pion elke 6-16 s uit
+  een EIGEN RNG (seed model + pion-id, nooit de globale: uispel) met 30%
+  kans of hij een clip lang een andere variant doet, zolang er minder dan
+  `idle_afwijkers` (knop in het sfeer-paneel, 2) tegelijk bezig zijn; de
+  vaandeldrager nooit; de terugkeer naar de stille variant gaat rechtstreeks
+  via `_anim.play` (niet `_play_variant`, die trekt uit de globale RNG op
+  een framerate-afhankelijk moment). Check: `-- idlecheck` (twaalf muizen,
+  twintig seconden: nooit meer dan de knop tegelijk afwijkend, wel ooit een).
 - **Wapperen de vlaggen met de wind mee? `-- windcheck [factie]`** (capture.tscn:
   opstelling met beide kanten dezelfde factie, default muis; zet de wind op
   drie richtingen en meet per vlagdoek of zijn vrije zijde in wereldruimte met

@@ -1091,6 +1091,57 @@ func _ready() -> void:
 		print("[CAPE] %s: %d fout(en)" % ["PASS" if cc_fouten == 0 else "FAIL", cc_fouten])
 		get_tree().quit(0 if cc_fouten == 0 else 1)
 		return
+	elif "idlecheck" in args:
+		# 16 september (Max: "alle idles de standaard meest stilstaande idle en
+		# maximaal af en toe doen 1 a 3 poppetjes een andere idle"). Twaalf
+		# muizen; twintig seconden lang elk frame tellen hoeveel er NIET in de
+		# stilste idle-variant staan: nooit meer dan de knop idle_afwijkers, en
+		# minstens een keer wel iemand (anders doet niemand ooit iets).
+		var ic_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var ic_pvs: Array = []
+		for ic_i in 12:
+			var ic_pv: PawnView = ic_scene.instantiate()
+			ic_pv.team = Constants.Team.RED if ic_i % 2 == 0 else Constants.Team.BLUE
+			ic_pv.pawn_id = 700 + ic_i
+			ic_pv.position = Vector3(float(ic_i % 4) * 1.2, 0.0, float(ic_i / 4) * 1.2)
+			add_child(ic_pv)
+			ic_pv.set_unit_type(0)
+			ic_pv.set_character(Constants.Doctrine.MUIS, 0, null)
+			ic_pvs.append(ic_pv)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var ic_idles: Array = (ic_pvs[0] as PawnView)._variants_of("idle")
+		if ic_idles.size() < 2:
+			print("[IDLE] model heeft maar %d idle-variant(en); check overgeslagen" % ic_idles.size())
+			get_tree().quit(0)
+			return
+		var ic_stil: String = (ic_pvs[0] as PawnView)._stilste_idle_variant(ic_idles)
+		var ic_max: int = int(PawnView.fx("idle_afwijkers", 2.0))
+		var ic_piek := 0
+		var ic_ooit := 0
+		var ic_t := 0.0
+		var ic_fouten := 0
+		while ic_t < 20.0:
+			await get_tree().process_frame
+			ic_t += get_process_delta_time()
+			var n := 0
+			for pv in ic_pvs:
+				var clip := String((pv as PawnView)._anim.current_animation) if (pv as PawnView)._anim != null else ""
+				if ic_idles.has(clip) and clip != ic_stil:
+					n += 1
+			ic_piek = maxi(ic_piek, n)
+			if n > 0:
+				ic_ooit += 1
+		print("[IDLE] stilste variant: %s van %d; piek tegelijk afwijkend %d (knop %d), frames met een afwijker %d" % [ic_stil.get_file(), ic_idles.size(), ic_piek, ic_max, ic_ooit])
+		if ic_piek > ic_max:
+			print("[IDLE] FOUT: %d pionnen tegelijk in een andere idle, knop staat op %d" % [ic_piek, ic_max])
+			ic_fouten += 1
+		if ic_ooit == 0:
+			print("[IDLE] FOUT: in twintig seconden deed niemand ooit een andere idle")
+			ic_fouten += 1
+		print("[IDLE] %s: %d fout(en)" % ["PASS" if ic_fouten == 0 else "FAIL", ic_fouten])
+		get_tree().quit(0 if ic_fouten == 0 else 1)
+		return
 	elif "capeschot" in args:
 		# 16 september (Max: "alle capes reageren nu op een schot, dat moet niet:
 		# alleen binnen een bepaalde straal rondom het schot, bij kanon een

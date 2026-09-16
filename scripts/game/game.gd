@@ -3299,6 +3299,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "cape_voering_goud", "label": "cape: binnenkant goudzijde (1) of het plaatje (0)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "cape_wind", "label": "cape-wind", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "cape_vlaag", "label": "cape-vlaag van een schot (0 = uit)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "idle_afwijkers", "label": "idle: hoeveel pionnen tegelijk een andere idle doen (0 = niemand)", "min": 0.0, "max": 6.0, "step": 1.0, "def": 2.0},
 	{"key": "cape_vlaag_straal", "label": "cape-vlaag: straal musket (vakken)", "min": 0.0, "max": 6.0, "step": 0.1, "def": 2.0},
 	{"key": "cape_vlaag_straal_kanon", "label": "cape-vlaag: straal kanon (vakken)", "min": 0.0, "max": 8.0, "step": 0.1, "def": 3.5},
 ]

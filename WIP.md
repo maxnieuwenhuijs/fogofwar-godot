@@ -160,6 +160,21 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- idles: iedereen stil, af en toe een die rondkijkt
+
+Max: "geef alle idles ook de standaard meest stilstaande idle en maximaal
+af en toe doet 1 a 3 poppetjes een andere idle zoals dat rondkijken".
+`_play_variant` gaf elke pion een willekeurige idle-variant (en de
+vaandeldrager de stilste). Nu krijgt iedereen de stilste (dezelfde meting
+op de kop/nek-tracks, per model gecached) en loot `_idle_process` per pion
+elke 6-16 s met 30% kans een andere variant voor een clip lang, hooguit
+`idle_afwijkers` (knop, 2) tegelijk; de vaandeldrager nooit. Eigen RNG per
+pion (seed model + pion-id); de terugkeer naar stil gaat rechtstreeks via
+`_anim.play`, want `_play_variant` trekt uit de globale RNG en dat moment
+hangt van de framerate af. Nieuwe check `-- idlecheck`: twaalf muizen,
+twintig seconden, piek tegelijk afwijkend 2 bij knop 2, PASS. uispel 777
+d16a14f8, zweefcheck muis 2 PASS, meleecheck PASS.
+
 ## 16 september -- de flessen vliegen mee met de bal
 
 Max: "alle objecten draaien om hun laagste as, bijvoorbeeld bij het

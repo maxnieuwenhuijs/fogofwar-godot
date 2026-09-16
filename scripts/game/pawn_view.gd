@@ -82,6 +82,18 @@ var last_fit: Dictionary = {}  # laatste auto-fit meting (Model-tuner toont dit)
 var _team_ring: CSGTorus3D = null  # plat gloeiend voetringetje in teamkleur
 var _ring_mat_team: StandardMaterial3D = null  # gloeiende teamkleur (actief)
 var _ring_mat_idle: StandardMaterial3D = null  # donkere ring (koppel-fase, nog niet gekoppeld)
+# Idles (16 september, Max: "geef alle idles de standaard meest stilstaande
+# idle en maximaal af en toe doet 1 a 3 poppetjes een andere idle zoals dat
+# rondkijken"): iedereen staat in de stilste variant; hooguit
+# `idle_afwijkers` (knop, 2) pionnen tegelijk doen even een andere variant
+# (rondkijken, wiebelen), een clip lang, en dan weer stil. De loting gaat
+# per pion uit een EIGEN RNG (nooit de globale: -- uispel).
+static var _idle_afwijkers: int = 0
+var _idle_afwijkend: bool = false
+var _idle_tijd: float = 0.0
+var _idle_afwijk_tot: float = -1.0
+var _idle_volgende_loting: float = 0.0
+var _idle_rng: RandomNumberGenerator = null
 var _last_clip_len: float = 0.0  # duur (sec, al gedeeld door speed) van de laatst gestarte clip
 
 ## Handmatige maat-correcties per model, ingemeten met de Model-tuner (hoofdmenu):
@@ -574,7 +586,60 @@ func _find_anim_player(node: Node) -> AnimationPlayer:
 
 
 func play_idle() -> void:
+	_idle_afwijk_stop()
 	_play_variant(anim_idle, true)
+
+
+## De afwijkende idle van deze pion is klaar (of hij gaat iets anders doen):
+## het plekje in de telling vrijgeven.
+func _idle_afwijk_stop() -> void:
+	if _idle_afwijkend:
+		_idle_afwijkend = false
+		_idle_afwijkers = maxi(0, _idle_afwijkers - 1)
+	_idle_afwijk_tot = -1.0
+
+
+## Per frame: staat deze pion in zijn idle, dan af en toe loten of hij even
+## een andere variant mag doen (als er nog een plekje is), en na een clip
+## weer terug naar de stille.
+func _idle_process(delta: float) -> void:
+	if _anim == null:
+		return
+	_idle_tijd += delta
+	var huidig := String(_anim.current_animation)
+	var idles := _variants_of(anim_idle)
+	if idles.size() < 2 or not idles.has(huidig):
+		if _idle_afwijkend and not idles.has(huidig):
+			_idle_afwijk_stop()
+		return
+	if _idle_afwijkend:
+		if _idle_tijd >= _idle_afwijk_tot:
+			_idle_afwijk_stop()
+			# rechtstreeks, niet via _play_variant: die trekt uit de globale RNG
+			# en dit moment hangt van de framerate af (-- uispel)
+			var stil_terug := _stilste_idle_variant(idles)
+			if stil_terug != "":
+				_anim.play(stil_terug, 0.35, 1.0)
+		return
+	if _idle_tijd < _idle_volgende_loting:
+		return
+	if _idle_rng == null:
+		_idle_rng = RandomNumberGenerator.new()
+		_idle_rng.seed = hash("%s|%d" % [_model_path, pawn_id])
+	_idle_volgende_loting = _idle_tijd + _idle_rng.randf_range(6.0, 16.0)
+	if _idle_afwijkers >= int(fx("idle_afwijkers", 2.0)) or _rol == "flag":
+		return
+	if _idle_rng.randf() > 0.3:
+		return
+	var stil := _stilste_idle_variant(idles)
+	var anders: Array = idles.filter(func(v) -> bool: return String(v) != stil)
+	if anders.is_empty():
+		return
+	var keuze := String(anders[_idle_rng.randi() % anders.size()])
+	_idle_afwijkend = true
+	_idle_afwijkers += 1
+	_anim.play(keuze, 0.35, 1.0)
+	_idle_afwijk_tot = _idle_tijd + _anim.get_animation(keuze).length
 
 
 func play_walk() -> void:
@@ -654,12 +719,13 @@ func _play_variant(base: String, desync: bool = false, speed: float = 1.0,
 	if variants.is_empty():
 		return
 	var full: String = variants[randi() % variants.size()]
-	# Vaandeldrager staat RECHTOP en kijkt niet rond (besluit Max, 30 juli).
-	# NIET op index kiezen: de exports zetten de idles per model in een andere
-	# volgorde (gemeten 30 juli: bij atk zwiept "Idle 1" 123 graden met de kop,
-	# bij spd is juist "Idle 1" de rustige). We meten dus welke variant de kop
-	# het minst beweegt en pakken die.
-	if _rol == "flag" and base == anim_idle:
+	# Idle: IEDEREEN in de stilste variant (16 september, Max; daarvoor alleen
+	# de vaandeldrager, besluit 30 juli). NIET op index kiezen: de exports
+	# zetten de idles per model in een andere volgorde (gemeten 30 juli: bij
+	# atk zwiept "Idle 1" 123 graden met de kop, bij spd is juist "Idle 1" de
+	# rustige). We meten dus welke variant de kop het minst beweegt en pakken
+	# die; de afwijkers regelt _idle_process.
+	if base == anim_idle:
 		var stil := _stilste_idle_variant(variants)
 		if stil != "":
 			full = stil
@@ -2534,6 +2600,7 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 
 
 func _process(delta: float) -> void:
+	_idle_process(delta)
 	if _vlagdoek != null:
 		_richt_vlag()
 	if _cape != null:
