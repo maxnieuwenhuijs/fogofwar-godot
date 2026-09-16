@@ -420,7 +420,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   wegschuiven breekt af). En OP DE MAAT (tikken op het moment). Kegelen (`kegelspel` in
   de DIORAMAS: tien lege flessen uit de kantine in de bowling-driehoek,
   klein en zonder vlak eronder, omgerold met een kanonskogel, Max: "iets
-  wat bij de setting hoort", "10 stuks"; ketting van omvallers, "Strike!"), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
+  wat bij de setting hoort", "10 stuks"; ketting van omvallers, "Strike!"; sinds 16 september
+  vliegen de flessen echt mee met de bal, Max: "alle objecten draaien om
+  hun laagste as, laat ze echt meevliegen": een boog in de richting van de
+  klap, tuimelend om een schuine dwars-as, plat neerkomen met een stuiter;
+  een directe treffer verder en hoger dan een fles uit de ketting), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
   de kade van de Rivierhaven: steeds kortere hupjes met een oplopende
   plons, buiten het water is het klaar, de kikker duikt; op ijs glijdt de
   steen; met stenen is de plas sinds 16 september een lange geul van 2,9

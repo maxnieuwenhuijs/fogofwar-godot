@@ -160,6 +160,17 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- de flessen vliegen mee met de bal
+
+Max: "alle objecten draaien om hun laagste as, bijvoorbeeld bij het
+bowlen: laat ze echt met de bal mee vliegen". De flessen kantelden om hun
+voet (rotation.x naar 1,45). Nu per fles een boog (`_boog`) in de richting
+van de klap met wat zijwaartse spreiding, tuimelend om een schuine
+dwars-as, dan plat neerkomen met een stuiter en even doorrollen;
+`sterkte` 1 voor een directe treffer en steeds 0,65 x voor de ketting
+(minstens 0,35) bepaalt afstand, hoogte en tuimel. Het terugzetten zet ook
+de positie terug. Spelcheck PASS (strike).
+
 ## 16 september -- een geul voor het keilen
 
 Max: "bij het ketsen van de steen ook een grotere plas maken of een soort

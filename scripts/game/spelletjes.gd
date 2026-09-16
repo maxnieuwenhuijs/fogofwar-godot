@@ -403,20 +403,42 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 	for kand in kandidaten:
 		var langs: float = float(kand[0])
 		var t_raak: float = duur * (1.0 - sqrt(maxf(0.0, 1.0 - langs / afstand)))
-		_kegel_valt(p, int(kand[1]), t_raak, d, geraakt, vallen)
+		_kegel_valt(p, int(kand[1]), t_raak, d, geraakt, vallen, 1.0)
+	# de flessen vliegen echt mee met de bal (16 september, Max: "alle objecten
+	# draaien om hun laagste as; bij het bowlen laat ze echt met de bal mee
+	# vliegen"): een boog in de richting van de klap, tuimelend om een
+	# willekeurige as, dan liggend neerkomen met een stuiter; een directe
+	# treffer vliegt verder en hoger dan een fles uit de ketting (`sterkte`)
 	for v in vallen:
 		var k: Node3D = (kegels[int(v.i)] as Dictionary).node
+		var thuis: Vector3 = (kegels[int(v.i)] as Dictionary).pos
 		var f: Vector3 = v.richting
+		var st: float = float(v.sterkte)
+		var zij: Vector3 = Vector3.UP.cross(f).normalized() * o._rng.randf_range(-0.16, 0.16)
+		var vlucht: float = (0.22 + 0.6 * kracht) * st * o._rng.randf_range(0.75, 1.2)
+		var land: Vector3 = thuis + f * vlucht + zij
+		land.y = 0.03
+		var piek: float = 0.12 + 0.38 * kracht * st
+		var vlucht_duur: float = 0.32 + 0.22 * st + 0.1 * kracht
+		# tuimelen: vooral om de dwars-as (over de kop), met wat scheefheid
+		var tol_as: Vector3 = (Vector3.UP.cross(f) + Vector3(o._rng.randf_range(-0.4, 0.4), o._rng.randf_range(-0.5, 0.5), o._rng.randf_range(-0.4, 0.4))).normalized()
+		var tol: float = o._rng.randf_range(2.2, 4.5) * (0.6 + kracht) * st
+		var lig_y: float = atan2(f.x, f.z) + o._rng.randf_range(-0.7, 0.7)
 		var kt := k.create_tween()
 		kt.tween_interval(float(v.tijd))
 		kt.tween_callback(func() -> void:
-			k.rotation.y = atan2(f.x, f.z)
 			_toon(["prop_kegel", "impact_wood"], o._rng.randf_range(0.9, 1.15)))
-		kt.tween_property(k, "rotation:x", 1.45, 0.26).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		kt.tween_property(k, "rotation:x", 1.38, 0.08)
-		kt.tween_property(k, "rotation:x", 1.45, 0.08)
-		# een fles rolt nog een stukje door
-		kt.tween_property(k, "rotation:y", k.rotation.y + o._rng.randf_range(-0.6, 0.6), 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		kt.tween_method(func(t: float) -> void:
+			o._boog(t, k, thuis, land, piek)
+			k.basis = Basis(tol_as, tol * t), 0.0, 1.0, vlucht_duur)
+		# neerkomen: plat, een kleine stuiter, dan even doorrollen
+		kt.tween_callback(func() -> void:
+			k.rotation = Vector3(1.5, lig_y, 0.0)
+			_toon(["prop_kegel", "impact_wood"], o._rng.randf_range(0.8, 1.0)))
+		kt.tween_property(k, "position:y", 0.09 * st, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		kt.tween_property(k, "position:y", 0.03, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		kt.parallel().tween_property(k, "position", land + f * 0.08 * st, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		kt.tween_property(k, "rotation:y", lig_y + o._rng.randf_range(-0.5, 0.5), 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var score := vallen.size()
 	var midden := Vector3(0.0, 0.35, -KEGEL_AFSTAND - 0.3)
 	tw.tween_interval(0.35)
@@ -434,9 +456,11 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 	tw.tween_callback(func() -> void:
 		for v in vallen:
 			var k2: Node3D = (kegels[int(v.i)] as Dictionary).node
+			var thuis2: Vector3 = (kegels[int(v.i)] as Dictionary).pos
 			var rt := k2.create_tween()
 			rt.tween_interval(o._rng.randf_range(0.0, 0.3))
 			rt.tween_property(k2, "rotation", Vector3.ZERO, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			rt.parallel().tween_property(k2, "position", thuis2, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 			rt.tween_callback(func() -> void: _toon(["prop_tik"], 1.2)))
 	tw.tween_property(bal, "scale", Vector3(0.01, 0.01, 0.01), 0.15)
 	tw.tween_callback(func() -> void:
@@ -447,12 +471,13 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 	o._klaar(p, tw)
 
 
-## Kegel i valt op `tijd` in `richting`, en sleept met wat kans zijn buren mee.
-func _kegel_valt(p: Dictionary, i: int, tijd: float, richting: Vector3, geraakt: Dictionary, vallen: Array) -> void:
+## Kegel i valt op `tijd` in `richting` met `sterkte` (1 = directe treffer,
+## de ketting steeds zwakker), en sleept met wat kans zijn buren mee.
+func _kegel_valt(p: Dictionary, i: int, tijd: float, richting: Vector3, geraakt: Dictionary, vallen: Array, sterkte: float = 1.0) -> void:
 	if geraakt.has(i):
 		return
 	geraakt[i] = true
-	vallen.append({"i": i, "tijd": tijd, "richting": richting})
+	vallen.append({"i": i, "tijd": tijd, "richting": richting, "sterkte": sterkte})
 	var kegels: Array = p.kegels
 	var hier: Vector3 = (kegels[i] as Dictionary).pos
 	for j in kegels.size():
@@ -466,7 +491,7 @@ func _kegel_valt(p: Dictionary, i: int, tijd: float, richting: Vector3, geraakt:
 		var mee := n.dot(richting)
 		var kans := 0.72 if mee > 0.3 else (0.3 if mee > -0.3 else 0.0)
 		if o._rng.randf() < kans:
-			_kegel_valt(p, j, tijd + 0.07 + o._rng.randf_range(0.0, 0.06), n.lerp(richting, 0.5).normalized(), geraakt, vallen)
+			_kegel_valt(p, j, tijd + 0.07 + o._rng.randf_range(0.0, 0.06), n.lerp(richting, 0.5).normalized(), geraakt, vallen, maxf(0.35, sterkte * 0.65))
 
 
 # ---------------------------------------------------------------- 2. keilen
