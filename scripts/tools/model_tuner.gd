@@ -119,6 +119,8 @@ var _team_btn: OptionButton = null      # rood / blauw / rood vs blauw
 var _alles_btn: Button = null           # alle facties naast elkaar
 var _bord_btn: Button = null            # het echte bord eronder
 var _bord: Node3D = null                # de Board.tscn-instantie, als hij aan staat
+var _tuner_vloer: Node3D = null         # de eigen 5x3 tegels + hulpkruis (uit als het bord aan is)
+var _legers_btn: Button = null          # bord + beide legers in de spel-opstelling
 var _alles_modus: bool = false          # staat de alle-facties-opstelling aan?
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
@@ -195,6 +197,12 @@ func _ready() -> void:
 			_view_btn.select(1)
 		if "formatie" in shot_args:
 			_formation_btn.set_pressed(true)
+		if "legers" in shot_args:
+			_legers_btn.set_pressed(true)
+			_type_btn.select(Constants.UnitType.CAVALRY)
+			_fac_btn.select(_my_fac_btn.selected)
+		if "charge" in shot_args:
+			_on_charge_test(true)
 		if "rook" in shot_args:
 			_on_smoke_test(4, 0.16)
 		if "melee" in shot_args:
@@ -204,7 +212,7 @@ func _ready() -> void:
 		if "vuur" in shot_args:
 			_on_fire_test()
 		_apply_camera()
-		await get_tree().create_timer(1.4).timeout
+		await get_tree().create_timer(2.6 if "charge" in shot_args else 1.4).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_tuner.png")
 		get_tree().quit()
 
@@ -228,6 +236,11 @@ func _process(_dt: float) -> void:
 
 
 func _build_world() -> void:
+	# De eigen tegels en het hulpkruis onder een node, zodat het bord ze kan
+	# verbergen (ze lagen op dezelfde hoogte als het bordoppervlak en
+	# flikkerden er dwars doorheen, 16 september).
+	_tuner_vloer = Node3D.new()
+	add_child(_tuner_vloer)
 	for x in range(-2, 3):
 		for z in range(-1, 2):
 			var tile := MeshInstance3D.new()
@@ -240,7 +253,7 @@ func _build_world() -> void:
 			# Zelfde plaatsing als het echte bord: tegel gecentreerd op y=0
 			# (top op +0.05), zodat de pion-origin exact op de tegel-top staat.
 			tile.position = Vector3(float(x), 0.0, float(z))
-			add_child(tile)
+			_tuner_vloer.add_child(tile)
 	# Debug-hulplijnen: rand + middenkruis van de modeltegel, net boven het
 	# oppervlak — zo zie je direct of het model echt gecentreerd staat.
 	var dbg := MeshInstance3D.new()
@@ -261,7 +274,7 @@ func _build_world() -> void:
 	im.surface_add_vertex(Vector3(0.0, ly, 0.12))
 	im.surface_end()
 	dbg.mesh = im
-	add_child(dbg)
+	_tuner_vloer.add_child(dbg)
 	# Vuurmond-gizmo: oranje bolletje + richtingspijltje op de plek waar
 	# vuur + rook ontstaan; volgt live de Vuurmond-spinboxen (Model-tab).
 	_muzzle_gizmo = Node3D.new()
@@ -317,9 +330,18 @@ func _apply_camera() -> void:
 	if _cam == null:
 		return
 	var view := 0 if _view_btn == null else _view_btn.selected
+	# "bord": de camera uit Board.tscn zelf, dus precies wat de speler ziet.
+	# Zonder bord valt hij terug op de spel-hoek van de tuner.
+	var bord_cam: Camera3D = _bord_camera()
+	if view == 3 and bord_cam != null:
+		bord_cam.current = true
+		return
+	if bord_cam != null:
+		bord_cam.current = false
+	_cam.current = true
 	# Zes rijen facties passen niet in het formatie-kader, dus die krijgen meer.
 	var big := not _formation_pawns.is_empty()
-	var alles := _alles_modus
+	var alles := _alles_modus or _legers_modus()
 	match view:
 		1:  # close-up: zelfde spel-hoek, strak op het model
 			_cam.size = (19.0 if alles else 8.5) if big else 1.5
@@ -394,7 +416,10 @@ func _build_ui() -> void:
 	panel.add_child(box)
 
 	# --- Bovenbalk: model-selectie · camera · vergelijk-formatie -------------
-	var row1 := HBoxContainer.new()
+	# HFlowContainer (16 september, Max: "alle knoppen beter in beeld"): de
+	# rijen breken af naar een volgende regel in plaats van rechts buiten
+	# beeld te lopen op een smal of staand venster.
+	var row1 := HFlowContainer.new()
 	box.add_child(row1)
 	_fac_btn = OptionButton.new()
 	for d in Constants.DOCTRINE_DATA.keys():
@@ -413,7 +438,7 @@ func _build_ui() -> void:
 		(b as OptionButton).item_selected.connect(_on_model_select_changed)
 	row1.add_child(_make_label("  Cam:"))
 	_view_btn = OptionButton.new()
-	for v in ["spel", "close-up", "voorkant"]:
+	for v in ["spel", "close-up", "voorkant", "bord"]:
 		_view_btn.add_item(v)
 	_view_btn.item_selected.connect(func(_i: int) -> void: _apply_camera())
 	row1.add_child(_view_btn)
@@ -460,14 +485,23 @@ func _build_ui() -> void:
 	_bord_btn.toggle_mode = true
 	_bord_btn.toggled.connect(_zet_bord)
 	row1.add_child(_bord_btn)
+	# Het bord MET beide legers in de spel-opstelling (16 september, Max:
+	# "voeg gewoon een bord toe met alle pionnen net als in het spel zelf").
+	_legers_btn = Button.new()
+	_legers_btn.text = "bord + legers"
+	_legers_btn.toggle_mode = true
+	_legers_btn.toggled.connect(_on_legers_toggled)
+	row1.add_child(_legers_btn)
 	for fb in [_my_fac_btn, _opp_fac_btn]:
 		(fb as OptionButton).item_selected.connect(func(_i: int) -> void:
 			if _formation_btn.button_pressed:
-				_build_formation())
+				_build_formation()
+			elif _legers_btn.button_pressed:
+				_bouw_legers())
 
 	# --- Preview-strip: altijd zichtbaar, welke tab je ook open hebt ----------
 	# Elke druk onderbreekt de vorige preview direct (zie _interrupt_previews).
-	var rowp := HBoxContainer.new()
+	var rowp := HFlowContainer.new()
 	box.add_child(rowp)
 	rowp.add_child(_make_label("Clip: "))
 	for clip in ["idle", "walk", "attack", "melee", "hit", "ready", "die"]:
@@ -479,7 +513,7 @@ func _build_ui() -> void:
 	freeze_btn.text = "stilzetten"
 	freeze_btn.pressed.connect(_freeze_pose)
 	rowp.add_child(freeze_btn)
-	var rowt := HBoxContainer.new()
+	var rowt := HFlowContainer.new()
 	box.add_child(rowt)
 	rowt.add_child(_make_label("Test: "))
 	var fire_btn := Button.new()
@@ -518,6 +552,14 @@ func _build_ui() -> void:
 	duel_btn2.text = "duel (overleeft)"
 	duel_btn2.pressed.connect(_on_duel_test.bind(false))
 	rowt.add_child(duel_btn2)
+	var charge_btn := Button.new()
+	charge_btn.text = "charge (dood)"
+	charge_btn.pressed.connect(_on_charge_test.bind(true))
+	rowt.add_child(charge_btn)
+	var charge_btn2 := Button.new()
+	charge_btn2.text = "charge (overleeft)"
+	charge_btn2.pressed.connect(_on_charge_test.bind(false))
+	rowt.add_child(charge_btn2)
 
 	# --- Tabs per categorie ---------------------------------------------------
 	var tabs := TabContainer.new()
@@ -725,6 +767,8 @@ func _team_voor(kant: int) -> int:
 func _herbouw_huidige() -> void:
 	if _alles_btn != null and _alles_btn.button_pressed:
 		_bouw_alle_modellen()
+	elif _legers_modus():
+		_bouw_legers()
 	elif _formation_btn != null and _formation_btn.button_pressed:
 		_build_formation()
 	else:
@@ -734,6 +778,8 @@ func _herbouw_huidige() -> void:
 func _on_alles_toggled(aan: bool) -> void:
 	if aan and _formation_btn != null and _formation_btn.button_pressed:
 		_formation_btn.set_pressed_no_signal(false)
+	if aan and _legers_btn != null and _legers_btn.button_pressed:
+		_legers_btn.set_pressed_no_signal(false)
 	if aan:
 		_bouw_alle_modellen()
 	else:
@@ -821,6 +867,8 @@ func _zet_bord(aan: bool) -> void:
 	if _bord != null and is_instance_valid(_bord):
 		_bord.queue_free()
 		_bord = null
+	if _tuner_vloer != null:
+		_tuner_vloer.visible = not aan
 	if not aan:
 		if _tuner_light != null:
 			_tuner_light.light_energy = 1.2
@@ -837,6 +885,146 @@ func _zet_bord(aan: bool) -> void:
 		(cam as Camera3D).current = false
 	if _tuner_light != null:
 		_tuner_light.light_energy = 0.55
+
+
+func _bord_camera() -> Camera3D:
+	if _bord == null or not is_instance_valid(_bord):
+		return null
+	for cam in _bord.find_children("*", "Camera3D", true, false):
+		return cam as Camera3D
+	return null
+
+
+func _legers_modus() -> bool:
+	return _legers_btn != null and _legers_btn.button_pressed
+
+
+## Bord-tegel (x, z) naar tuner-wereld: Board.tscn staat op (-5, 0, -5), dus
+## tegel (5, 5) is de oorsprong en het tegeloppervlak ligt op y = 0,05.
+func _tegel_positie(x: int, z: int) -> Vector3:
+	return Vector3(float(x) - 5.0, 0.05, float(z) - 5.0)
+
+
+## Bord + legers (16 september, Max: "voeg gewoon een bord toe met alle
+## pionnen net als in het spel zelf... ik moet in het spel op het bord zien
+## en tunen net als normaal in het spel"). Het echte Board.tscn eronder en
+## beide legers in de standaard-opstelling van het spel: dezelfde regels
+## (v42_default.json + het doctrines-blok), dezelfde
+## GameState.default_placement, dezelfde tegels, rood (Vergelijk links,
+## speler 1) op de rijen 9-10 kijkend naar -z, blauw op 0-1. De eerste
+## infanterist per leger draagt het vaandel, de tweede de trom, zoals de
+## opstelfase ze standaard aanwijst. De sliders tunen het model uit de
+## dropdowns (factie + type; archetype base, want niemand is gekoppeld) en
+## de duel-/charge-knoppen spelen op de ruiter of infanterist van die
+## factie op het bord.
+func _bouw_legers() -> void:
+	_clear_formation()
+	if _pawn != null and is_instance_valid(_pawn):
+		_pawn.queue_free()
+		_pawn = null
+	if _ref != null and is_instance_valid(_ref):
+		_ref.queue_free()
+		_ref = null
+	_alles_modus = false
+	if not _bord_btn.button_pressed:
+		_bord_btn.set_pressed(true)  # roept _zet_bord aan
+	var regels := RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
+	var facties := CRules.facties_uit_bestand()
+	if not facties.is_empty():
+		regels.doctrines = facties
+	var st := GameState.new()
+	st.rules = regels
+	st.doctrines[Constants.PLAYER_1] = _my_fac_btn.get_selected_id()
+	st.doctrines[Constants.PLAYER_2] = _opp_fac_btn.get_selected_id()
+	var totaal := 0
+	for kant in 2:
+		var speler: int = Constants.PLAYER_1 if kant == 0 else Constants.PLAYER_2
+		var fac: int = st.doctrines[speler]
+		var richting := Vector2i(0, -1) if kant == 0 else Vector2i(0, 1)
+		var inf_nr := 0
+		var inf_totaal := 0
+		for pl in st.default_placement(speler):
+			if int(pl.type) == Constants.UnitType.INFANTRY:
+				inf_totaal += 1
+		for pl in st.default_placement(speler):
+			var tp: int = int(pl.type)
+			var pos: Vector2i = pl.pos
+			var pv: PawnView = PAWN_SCENE.instantiate()
+			pv.team = _team_voor(kant)
+			pv.position = _tegel_positie(pos.x, pos.y)
+			if tp == Constants.UnitType.INFANTRY:
+				pv.figurant_index = inf_nr
+				pv.figurant_totaal = inf_totaal
+				pv.rol_echt = "flag" if inf_nr == 0 else ("drum" if inf_nr == 1 else "")
+				inf_nr += 1
+			add_child(pv)
+			pv.face_dir(richting)
+			pv.set_unit_type(tp)
+			pv.set_character(fac, tp, null)
+			_formation_pawns.append({"pv": pv, "fac": fac, "tp": tp, "arch": "base",
+				"kant": kant, "thuis": pv.position, "richting": richting})
+			totaal += 1
+	if _view_btn != null and _view_btn.selected != 3:
+		_view_btn.select(3)
+	_info.text = "Bord + legers: %s (rood, onder) tegen %s (blauw, boven), %d pionnen in de standaard-opstelling van het spel. Sliders tunen het model uit de dropdowns; duel/charge spelen op het bord." % [
+		Constants.doctrine_name(st.doctrines[Constants.PLAYER_1]),
+		Constants.doctrine_name(st.doctrines[Constants.PLAYER_2]), totaal]
+	_sync_sliders_from_tuning()
+	_apply_camera()
+
+
+func _on_legers_toggled(aan: bool) -> void:
+	if aan:
+		if _formation_btn != null and _formation_btn.button_pressed:
+			_formation_btn.set_pressed_no_signal(false)
+		if _alles_btn != null and _alles_btn.button_pressed:
+			_alles_btn.set_pressed_no_signal(false)
+			_alles_modus = false
+		_bouw_legers()
+	else:
+		_clear_formation()
+		if _view_btn != null and _view_btn.selected == 3:
+			_view_btn.select(0)
+		_reload_pawns()
+		_apply_camera()
+
+
+## De aanvaller voor een duel-/charge-test: het losse tuning-model, of op
+## het bord (en in een formatie) de pion die bij de dropdowns hoort (factie
+## + type), liefst aan de rode kant. Retour {} als er geen is.
+func _test_aanvaller() -> Dictionary:
+	if _pawn != null and is_instance_valid(_pawn):
+		return {"pv": _pawn, "thuis": Vector3(0.0, 0.05, 0.0), "richting": Vector2i(0, 1)}
+	var fac := _fac_btn.get_selected_id()
+	var tp := _type_btn.get_selected_id()
+	var beste: Dictionary = {}
+	for e in _formation_pawns:
+		if not is_instance_valid(e.pv) or int(e.fac) != fac or int(e.tp) != tp:
+			continue
+		if beste.is_empty() or int(e.get("kant", 0)) < int(beste.get("kant", 0)):
+			beste = e
+	if beste.is_empty():
+		return {}
+	var pv: PawnView = beste.pv
+	var thuis: Vector3 = beste.get("thuis", pv.position)
+	# Formatie (geen bord): rood staat op +z en kijkt naar -z.
+	var richting: Vector2i = beste.get("richting", Vector2i(0, -1) if pv.position.z > 0.0 else Vector2i(0, 1))
+	return {"pv": pv, "thuis": thuis, "richting": richting}
+
+
+## Een verse vijand op een plek, kijkend naar de aanvaller; hangt onder
+## _duel_root en verdwijnt bij de volgende test.
+func _test_verdediger(pos: Vector3, richting: Vector2i, aanv_team: int) -> PawnView:
+	_duel_root = Node3D.new()
+	add_child(_duel_root)
+	var def_pv: PawnView = PAWN_SCENE.instantiate()
+	def_pv.team = Constants.Team.RED if aanv_team == Constants.Team.BLUE else Constants.Team.BLUE
+	def_pv.position = pos
+	_duel_root.add_child(def_pv)
+	def_pv.set_unit_type(_type_btn.get_selected_id())
+	def_pv.set_character(_opp_fac_btn.get_selected_id(), _type_btn.get_selected_id(), null)
+	def_pv.face_dir(-richting)
+	return def_pv
 
 
 # --- Sleepbare paneelhoogte -------------------------------------------------
@@ -1041,7 +1229,7 @@ func _sync_sliders_from_tuning() -> void:
 ## Pas tuning toe op wat er staat: formatie herbouwen of het losse model.
 func _retune_target() -> void:
 	if not _formation_pawns.is_empty():
-		_build_formation()
+		_herbouw_huidige()  # formatie, alle modellen of bord + legers
 	else:
 		_respawn_model()
 
@@ -1088,6 +1276,8 @@ func _current_card() -> Card:
 ## Formatie aan: vervang het tuning-model door 3 vs 3 (inf/cav/art) van de
 ## twee gekozen facties, tegenover elkaar op tegels — net als in het spel.
 func _on_formation_toggled(on: bool) -> void:
+	if on and _legers_btn != null and _legers_btn.button_pressed:
+		_legers_btn.set_pressed_no_signal(false)
 	if on:
 		_build_formation()
 	else:
@@ -1553,52 +1743,105 @@ var _duel_root: Node3D = null
 ## een kill rukt de aanvaller na de opruk-vertraging op - exact dezelfde
 ## timing-route als in het spel.
 func _on_duel_test(kill: bool) -> void:
-	_interrupt_previews(true, true)
-	if _pawn == null or not is_instance_valid(_pawn):
+	_interrupt_previews(true, _formation_pawns.is_empty())
+	var a := _test_aanvaller()
+	if a.is_empty():
+		_info.text = "Duel: geen %s van %s op het bord; kies links een factie die meespeelt." % [
+			Constants.unit_type_name(_type_btn.get_selected_id()), _fac_name()]
 		return
-	if _pawn._anim != null:
-		_pawn._anim.stop()
-	_pawn.position = Vector3(0.0, 0.05, 0.0)
-	_duel_root = Node3D.new()
-	add_child(_duel_root)
-	var def_pv: PawnView = PAWN_SCENE.instantiate()
-	def_pv.team = Constants.Team.RED
-	def_pv.position = Vector3(0.0, 0.05, 1.0)
-	_duel_root.add_child(def_pv)
-	def_pv.set_unit_type(_type_btn.get_selected_id())
-	def_pv.set_character(_opp_fac_btn.get_selected_id(), _type_btn.get_selected_id(), null)
-	def_pv.face_dir(Vector2i(0, -1))
+	var aanv: PawnView = a.pv
+	var richting: Vector2i = a.richting
+	var stap := Vector3(float(richting.x), 0.0, float(richting.y))
+	if aanv._anim != null:
+		aanv._anim.stop()
+	aanv.position = a.thuis
+	var def_pv := _test_verdediger(aanv.position + stap, richting, aanv.team)
 	# Aanvaller: exact dezelfde route als in het spel.
-	_pawn.face_dir(Vector2i(0, 1))
-	_pawn.rotate_y(deg_to_rad(_pawn.melee_fx("yaw", "melee_yaw", 0.0)))
-	_pawn.play_melee()
+	aanv.face_dir(richting)
+	aanv.rotate_y(deg_to_rad(aanv.melee_fx("yaw", "melee_yaw", 0.0)))
+	aanv.play_melee()
 	var gen := _preview_gen
-	var hd: float = _pawn.melee_fx("hit_delay", "melee_hit_delay", 0.55)
+	var hd: float = aanv.melee_fx("hit_delay", "melee_hit_delay", 0.55)
 	get_tree().create_timer(hd).timeout.connect(func() -> void:
 		if gen != _preview_gen or def_pv == null or not is_instance_valid(def_pv):
 			return
 		if kill:
-			def_pv.play_death(Vector3(0.0, 0.0, 1.0), 0.7, "melee")
+			def_pv.play_death(stap, 0.7, "melee")
 		else:
 			def_pv.play_hit()
-			def_pv.play_wound(Vector3(0.0, 0.0, 1.0)))
+			def_pv.play_wound(stap))
 	if kill:
-		var move_del: float = maxf(hd + 0.12, _pawn.last_clip_duration())
-		var dsp2: float = def_pv.melee_fx("death_speed", "death_speed", 1.0)
-		var death_dur2: float = def_pv.clip_duration("die") / maxf(dsp2, 0.01)
 		# Zelfde vaste timing als in het spel (Max, 30 juli): stoot-frame plus
 		# opruk-vertraging, niet de lengte van de dood-clip.
-		move_del = hd + _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35)
-		move_del += _pawn.melee_fx("advance_delay", "melee_advance_delay", 0.35)
+		var move_del: float = hd + 2.0 * aanv.melee_fx("advance_delay", "melee_advance_delay", 0.35)
 		get_tree().create_timer(move_del).timeout.connect(func() -> void:
-			if gen != _preview_gen or _pawn == null or not is_instance_valid(_pawn):
+			if gen != _preview_gen or aanv == null or not is_instance_valid(aanv):
 				return
-			_pawn.play_walk()
+			aanv.play_walk()
 			var tw := create_tween()
-			tw.tween_property(_pawn, "position", Vector3(0.0, 0.05, 1.0), 0.3)
+			tw.tween_property(aanv, "position", a.thuis + stap, 0.3)
 			tw.tween_callback(func() -> void:
-				if _pawn != null and is_instance_valid(_pawn):
-					_pawn.play_idle()))
+				if aanv != null and is_instance_valid(aanv):
+					aanv.play_idle()))
+
+
+## Charge-test (16 september, Max: "laat dan wel in de tuner een enemy zien
+## en dan de aanval op gepaste afstand starten"): de verdediger staat recht
+## voor het model, het model rijdt CHARGE_RIT vakken aan op de rush-clip
+## (zelfde tween als game._animate_move), de sprong-clip begint
+## charge_aanloop_vakken voor de aankomst en de klap valt
+## charge_raak_voor_einde voor het einde van de sprong: exact de tijdlijn
+## van het spel (PawnView.charge_tijdlijn). De info-regel meldt de tijden.
+const CHARGE_RIT: int = 3
+
+func _on_charge_test(kill: bool) -> void:
+	_interrupt_previews(true, _formation_pawns.is_empty())
+	var a := _test_aanvaller()
+	if a.is_empty():
+		_info.text = "Charge: geen %s van %s op het bord; kies links een factie die meespeelt." % [
+			Constants.unit_type_name(_type_btn.get_selected_id()), _fac_name()]
+		return
+	var aanv: PawnView = a.pv
+	var richting: Vector2i = a.richting
+	var stap := Vector3(float(richting.x), 0.0, float(richting.y))
+	if aanv._anim != null:
+		aanv._anim.stop()
+	# Los model: de rit eindigt op de thuistegel (zodat hij in beeld blijft);
+	# op het bord vertrekt hij van zijn eigen vak en rijdt hij het veld in.
+	var start: Vector3 = a.thuis - stap * float(CHARGE_RIT) if _formation_pawns.is_empty() else a.thuis
+	var aankomst: Vector3 = start + stap * float(CHARGE_RIT)
+	var def_pv := _test_verdediger(aankomst + stap, richting, aanv.team)
+	aanv.position = start
+	aanv.face_dir(richting)
+	var tl: Dictionary = aanv.charge_tijdlijn(CHARGE_RIT)
+	var gen := _preview_gen
+	# De rit: rush-clip en dezelfde sine-tween als in het spel; aan het eind
+	# geen idle, de sprong loopt dan nog en keert zelf terug.
+	aanv.play_rush()
+	var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(aanv, "position", aankomst, float(tl.rij_dur))
+	var start_sprong := func() -> void:
+		if gen != _preview_gen or aanv == null or not is_instance_valid(aanv):
+			return
+		aanv.face_dir(richting)
+		aanv.play_charge()
+	if float(tl.sprong_start) <= 0.0:
+		start_sprong.call()
+	else:
+		get_tree().create_timer(float(tl.sprong_start)).timeout.connect(start_sprong)
+	get_tree().create_timer(float(tl.klap_del)).timeout.connect(func() -> void:
+		if gen != _preview_gen or def_pv == null or not is_instance_valid(def_pv):
+			return
+		if kill:
+			def_pv.play_death(stap, 0.85 + 0.4, "melee")
+		else:
+			def_pv.flash_hit()
+			def_pv.stagger(stap)
+			def_pv.play_hit()
+			def_pv.play_wound(stap))
+	var sprong_txt := "%.2f s" % float(tl.sprong_duur) if float(tl.sprong_duur) > 0.0 else "geen sprong-clip, melee-stoot"
+	_info.text = "charge: rit %d vakken in %.2f s, sprong start op %.2f s (%s), klap op %.2f s" % [
+		CHARGE_RIT, float(tl.rij_dur), float(tl.sprong_start), sprong_txt, float(tl.klap_del)]
 
 
 func _clear_duel() -> void:

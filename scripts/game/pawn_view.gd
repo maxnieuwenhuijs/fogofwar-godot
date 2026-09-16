@@ -710,6 +710,33 @@ func charge_duur() -> float:
 	return kortste / maxf(melee_fx("charge_speed", "charge_speed", 1.2), 0.01)
 
 
+## Tijdlijn van een charge over `rij_dist` vakken (0 = staand aanvallen),
+## gedeeld door game.gd en de Model-tuner, zodat de knop "charge" in de
+## tuner precies laat zien wat het spel doet. rij_dur = de rit-tween (zelfde
+## formule als game._animate_move), sprong_start = wanneer de sprong-clip
+## begint (charge_aanloop_vakken voor de aankomst; zonder sprong-clip net na
+## de rit), klap_del = het raakmoment (charge_raak_voor_einde voor het einde
+## van de sprong; zonder sprong-clip charge_hit_delay na de stoot).
+func charge_tijdlijn(rij_dist: int) -> Dictionary:
+	var sprong_duur := charge_duur()
+	var rij_dur := 0.0
+	var sprong_start := 0.0
+	if rij_dist > 0:
+		rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
+		if sprong_duur > 0.0:
+			var aanloop: float = melee_fx("charge_aanloop_vakken", "charge_aanloop_vakken", 2.0)
+			sprong_start = maxf(rij_dur - aanloop * rij_dur / float(rij_dist), 0.0)
+		else:
+			sprong_start = rij_dur + 0.02
+	var klap_del: float
+	if sprong_duur > 0.0:
+		var voor_einde: float = melee_fx("charge_raak_voor_einde", "charge_raak_voor_einde", 0.5)
+		klap_del = sprong_start + maxf(sprong_duur - voor_einde, 0.1)
+	else:
+		klap_del = sprong_start + melee_fx("charge_hit_delay", "charge_hit_delay", 0.35)
+	return {"rij_dur": rij_dur, "sprong_start": sprong_start, "sprong_duur": sprong_duur, "klap_del": klap_del}
+
+
 func play_die() -> void:
 	_play_variant(anim_die, false, 1.0, true)
 

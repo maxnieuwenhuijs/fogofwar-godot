@@ -3012,20 +3012,16 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# melee-stoot bij aankomst met charge_hit_delay.
 			var heeft_doel: bool = action.get("defender_id", -1) != -1
 			var cav: PawnView = _pawn_views.get(action.pawn_id)
-			var sprong_duur: float = cav.charge_duur() if cav != null else -1.0
-			var rij_dur := 0.0
-			var sprong_start := 0.0
+			var rij_dist := 0
 			if result.get("moved", false) or result.get("forced_move", false):
 				# Met een doel zet de rit-tween aan het eind geen idle: de
 				# sprong loopt dan nog en keert zelf naar idle terug.
 				_animate_move(action.pawn_id, result.charge_from, end_pos, true, not heeft_doel)
-				var rij_dist: int = absi(end_pos.x - result.charge_from.x) + absi(end_pos.y - result.charge_from.y)
-				rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
-				if sprong_duur > 0.0 and rij_dist > 0:
-					var aanloop: float = cav.melee_fx("charge_aanloop_vakken", "charge_aanloop_vakken", 2.0)
-					sprong_start = maxf(rij_dur - aanloop * rij_dur / float(rij_dist), 0.0)
-				else:
-					sprong_start = rij_dur + 0.02
+				rij_dist = absi(end_pos.x - result.charge_from.x) + absi(end_pos.y - result.charge_from.y)
+			# Dezelfde tijdlijn als de knop "charge" in de Model-tuner.
+			var tijdlijn: Dictionary = cav.charge_tijdlijn(rij_dist) if cav != null \
+				else {"sprong_start": 0.0, "klap_del": 0.35}
+			var sprong_start: float = tijdlijn.sprong_start
 			_check_haven_score(action.pawn_id, end_pos)
 			if cav != null and heeft_doel:
 				var richting: Vector2i = result.defender_pos - end_pos
@@ -3039,12 +3035,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				else:
 					get_tree().create_timer(sprong_start).timeout.connect(start_sprong)
 			if heeft_doel:
-				var klap_del: float
-				if sprong_duur > 0.0:
-					var voor_einde: float = cav.melee_fx("charge_raak_voor_einde", "charge_raak_voor_einde", 0.5)
-					klap_del = sprong_start + maxf(sprong_duur - voor_einde, 0.1)
-				else:
-					klap_del = sprong_start + (cav.melee_fx("charge_hit_delay", "charge_hit_delay", 0.35) if cav != null else 0.35)
+				var klap_del: float = tijdlijn.klap_del
 				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", klap_del)
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
 					result.get("eliminated", false), klap_del, true)

@@ -1649,6 +1649,72 @@ func _ready() -> void:
 					if camaan > 0:
 						print("[TUNER] FOUT: de bord-camera neemt het beeld over van de tuner")
 						tuner_fouten += 1
+					# "bord + legers" (16 september): beide legers in de
+					# spel-opstelling op het bord, met de bord-camera aan,
+					# en de charge-knop moet erop spelen (ruiter rijdt weg).
+					if not knoppen.has("bord + legers") or not knoppen.has("charge (dood)"):
+						print("[TUNER] FOUT: knop 'bord + legers' of 'charge (dood)' ontbreekt")
+						tuner_fouten += 1
+					else:
+						(knoppen["bord + legers"] as Button).button_pressed = true
+						await get_tree().process_frame
+						await get_tree().process_frame
+						var leger: Array = t.find_children("*", "Node3D", true, false).filter(
+							func(n): return n is PawnView)
+						var st_proef := GameState.new()
+						st_proef.rules = RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
+						var fac_proef := CRules.facties_uit_bestand()
+						if not fac_proef.is_empty():
+							st_proef.rules.doctrines = fac_proef
+						st_proef.doctrines[Constants.PLAYER_1] = int(t._my_fac_btn.get_selected_id())
+						st_proef.doctrines[Constants.PLAYER_2] = int(t._opp_fac_btn.get_selected_id())
+						var verwacht_leger: int = st_proef.default_placement(Constants.PLAYER_1).size() \
+							+ st_proef.default_placement(Constants.PLAYER_2).size()
+						var camaan2 := 0
+						for b in t.find_children("Board", "Node3D", true, false):
+							for c in (b as Node3D).find_children("*", "Camera3D", true, false):
+								if (c as Camera3D).current:
+									camaan2 += 1
+						var vlaggen := 0
+						var op_bord := 0
+						for p in leger:
+							if String((p as PawnView).rol_echt) == "flag":
+								vlaggen += 1
+							var pp: Vector3 = (p as Node3D).position
+							if absf(pp.x) <= 5.01 and absf(pp.z) <= 5.01:
+								op_bord += 1
+						print("[TUNER] bord + legers: %d pionnen (verwacht %d), %d op het bord, %d vaandels, bord-camera aan=%d" % [
+							leger.size(), verwacht_leger, op_bord, vlaggen, camaan2])
+						if leger.size() != verwacht_leger or op_bord != leger.size():
+							print("[TUNER] FOUT: de spel-opstelling staat niet compleet op het bord")
+							tuner_fouten += 1
+						if vlaggen != 2:
+							print("[TUNER] FOUT: elk leger hoort een vaandeldrager te hebben")
+							tuner_fouten += 1
+						if camaan2 != 1:
+							print("[TUNER] FOUT: bord + legers hoort de bord-camera aan te zetten")
+							tuner_fouten += 1
+						# Charge op het bord: de ruiter van de rode factie moet
+						# van zijn vak vertrekken en er staat een verse vijand.
+						t._type_btn.select(Constants.UnitType.CAVALRY)
+						t._fac_btn.select(t._my_fac_btn.selected)
+						var ruiter_voor: PawnView = null
+						for p in leger:
+							if (p as PawnView).team == Constants.Team.RED and (p as PawnView)._unit_type == Constants.UnitType.CAVALRY:
+								ruiter_voor = p
+								break
+						var ruiter_thuis: Vector3 = ruiter_voor.position if ruiter_voor != null else Vector3.ZERO
+						(knoppen["charge (dood)"] as Button).pressed.emit()
+						await get_tree().create_timer(0.6).timeout
+						var na: Array = t.find_children("*", "Node3D", true, false).filter(
+							func(n): return n is PawnView)
+						var verplaatst: bool = ruiter_voor != null and is_instance_valid(ruiter_voor) \
+							and ruiter_voor.position.distance_to(ruiter_thuis) > 1.5
+						print("[TUNER] charge op het bord: ruiter %s, %d pionnen na de knop (%d + verdediger), info: %s" % [
+							"rijdt" if verplaatst else "STAAT STIL", na.size(), leger.size(), t._info.text])
+						if not verplaatst or na.size() != leger.size() + 1:
+							print("[TUNER] FOUT: de charge-knop speelt niet op het bord")
+							tuner_fouten += 1
 				t.queue_free()
 				await get_tree().process_frame
 		# 3. Opslaan en teruglezen.
