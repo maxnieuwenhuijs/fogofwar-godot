@@ -1,5 +1,38 @@
 # Fog of War — Work In Progress & Context
 
+## 16 september -- charge: de sprong begint twee vakken voor de aankomst, de klap valt tegen het einde
+
+Max: "start de jump attack animatie 2 blokjes eerder afstand, dan komt ie
+mooi uit. en dan pas ook de bloed walk en alles afspelen op bijna het einde
+van die jump attack". Tot nu toe begon de sprong-clip ("Standing Melee Run
+Jump Attack", 3,71 s, op tempo 1,2 dus 3,09 s) pas na de rit en viel de klap
+0,35 s later: 0,33 s in een clip van drie seconden, midden in de aanloop.
+
+- `game.gd` "charge": `sprong_start = rij_dur - charge_aanloop_vakken *
+  (rij_dur / rij_dist)`, geklemd op 0 (bij een rit van een of twee vakken
+  begint de sprong dus meteen); de rit-tween zet daarna GEEN idle meer
+  (`_animate_move(..., idle_na = false)`), anders kapte hij de sprong af.
+  De klap: `klap_del = sprong_start + sprong_duur - charge_raak_voor_einde`
+  (0,5 s, minimaal 0,1 s na de start). Geluid, impact-laag, bloed, ragdoll
+  en terugslag hangen daar allemaal aan, net als eerst.
+- `PawnView.charge_duur()`: de duur van de sprong-clip die play_charge()
+  straks speelt (kortste variant, gedeeld door charge_speed); -1 zonder
+  sprong-clip, en dan geldt de oude weg (melee-stoot bij aankomst,
+  charge_hit_delay 0,35). Alleen de muis-cavalerie heeft een sprong-clip.
+- "charge" staat nu in de oneshot-lijst van `_on_anim_finished`: daarvoor
+  bleef de ruiter na de sprong op het laatste frame hangen zodra niemand
+  play_idle riep.
+- Model-tuner, Melee-tab: `charge_speed` (sprong-tempo), `charge_aanloop_vakken`
+  (2, stap 0,5) en `charge_raak_voor_einde` (0,5 s). Per model ook als
+  korte sleutel in `model_tuning.json` onder "melee".
+- `-- meleecheck` charge-scenario rijdt nu drie vakken (5,8 -> 5,5; bij een
+  vak zou de sprong meteen beginnen en de rush-clip nooit te zien zijn) en
+  eist bij een echte sprong-clip dat hij na 1,2 s nog loopt en het doel nog
+  staat (`_pawn_views` heeft hem nog: `_kill_view` haalt hem pas bij de
+  klap weg). Uitslag: `rush1, charge1 (sprong-clip 3.09 s; na 1,2 s: sprong
+  loopt nog=true, doel staat nog=true)`, PASS.
+- `-- uispel 777`: d16a14f8, 246 acties, cyclus 6 (puur visueel).
+
 ## 16 september -- Lijken en gibs worden doorzichtig en zakken in het bord
 
 Max: "alle stukken lijk en gibs moeten echt ook lichtdoorzichtig worden na
