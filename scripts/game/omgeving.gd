@@ -388,7 +388,7 @@ void fragment() {
 # marktplein, Egypte 1798, de Alpenpas van 1800 en de hoeve van Waterloo.
 const DIORAMAS: Array = [
 	{"naam": "Weidekamp", "grond": "gras", "sfeer": "het gewone kamp op de wei",
-	 "kamp": [["kampvuur", 2.2, 13.4], ["trommel", 0.4, 12.7, 34, {"cadans": true}], ["ton", 4.3, 12.9, -23], ["hoorn", 4.95, 12.25, 69],
+	 "kamp": [["kampvuur", 2.2, 13.4], ["trommel", 0.4, 12.7, 34], ["ton", 4.3, 12.9, -23], ["hoorn", 4.95, 12.25, 69],
 			  ["hakblok", -0.9, 13.9], ["kogels", 3.5, 14.4], ["tent", -1.9, 15.6, 20, {"lantaarn": true}],
 			  ["tent", 5.9, 15.8, -25], ["toilethuisje", 8.3, 13.6, -35], ["glaswerk", 6.6, 12.6, 0],
 			  ["kegelspel", 1.2, 17.0, 0], ["lantaarn", -3.0, 13.2, 0], ["emmer", 3.0, 12.2, 0], ["kist", 7.6, 15.0, 20],

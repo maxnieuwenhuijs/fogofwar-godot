@@ -434,7 +434,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   op de rivier), kanon (`kruitvaten` in het diorama: het kanon draait er bij de
   bouw naartoe, vasthouden brengt de loop omhoog en zet een doelring op de
   dracht 1,6-7,0, de wind van het potje duwt de kogel opzij: "Windje!";
-  vier vaten in een kettingreactie), vissen (`hengel` op de kade of
+  vier vaten in een kettingreactie; sinds 16 september rolt de kogel na de
+  inslag door, uitrollend, en neemt hij de vaten op zijn pad ook mee, Max:
+  "laat de bal ook doorrollen op de tonnen"), vissen (`hengel` op de kade of
   `{"hengel": true}` op een plas: vasthouden werpt de dobber uit, tik als
   hij duikt: snoek, laars, musket of kist blijven op de kant liggen) en de
   tamboer-cadans (`{"cadans": true}` op een `trommel`: vasthouden telt vier
@@ -443,7 +445,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   blijft een gewone tik (ding + reactie bij het loslaten); game.gd geeft
   daarvoor het loslaten (`Omgeving.laat_los`) en de beweging
   (`Omgeving.beweeg`) door. Puur visueel: eigen RNG, tweens aan de
-  prop-node, geen spelstaat. Geluiden `prop_kegel`, `prop_kegel_rol`,
+  prop-node, geen spelstaat. **Nooit op het bord en hooguit twee per
+  diorama** (16 september, Max): `Spelletjes._tot_buiten_bord` kort elke
+  baan (kegelbal, kanonskogel met dracht en rol) in tot voor het bord met
+  `BORD_MARGE` 0,9 in Props-ruimte; de doelring van het kanon toont die
+  begrensde dracht. Weidekamp verloor daarvoor zijn cadans (nu alleen in
+  Bosrand, Egypte). Geluiden `prop_kegel`, `prop_kegel_rol`,
   `prop_kruitvat`, `prop_hengel`, `prop_vis` (synthetisch, in de
   geluid-tracker). Check: `-- spelcheck` (elk spel: vasthouden, richten
   vastzetten via `Spelletjes.zet_richt`, tikken, score; sinds 16 september

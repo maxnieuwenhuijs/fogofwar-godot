@@ -302,6 +302,33 @@ func _staat_process(p: Dictionary, delta: float) -> void:
 			_cadans_process(p, delta)
 
 
+## Nooit op het bord (16 september, Max: "de spelletjes mogen nooit op het
+## bord komen"): het bord ligt in Props-ruimte op 0..10 bij 0..10 met een
+## rand; BORD_MARGE erbuiten is verboden terrein voor ballen, kogels en
+## flessen. `_tot_buiten_bord` geeft de langste lengte (hooguit `lengte`)
+## waarover een baan vanaf `van` in `richting` (beide in de ruimte van
+## `root`, een kind van Props) buiten het bord blijft.
+const BORD_MARGE := 0.9
+
+
+func _op_bord(root: Node3D, lokaal: Vector3) -> bool:
+	var q: Vector3 = o._props_root.to_local(root.to_global(lokaal))
+	return q.x > -BORD_MARGE and q.x < 10.0 + BORD_MARGE and q.z > -BORD_MARGE and q.z < 10.0 + BORD_MARGE
+
+
+func _tot_buiten_bord(root: Node3D, van: Vector3, richting: Vector3, lengte: float) -> float:
+	if not is_instance_valid(root) or richting.length() < 0.001:
+		return lengte
+	var r: Vector3 = richting.normalized()
+	var t := 0.0
+	while t < lengte:
+		var volgende: float = minf(t + 0.1, lengte)
+		if _op_bord(root, van + r * volgende):
+			return t
+		t = volgende
+	return lengte
+
+
 ## Een geluid met een toonhoogte (als de categorie er ligt), anders de terugval.
 func _toon(categorieen: Array, toon: float) -> void:
 	for cat in categorieen:
@@ -379,6 +406,7 @@ func _kegelen_werp(p: Dictionary, hoek: float, kracht: float) -> void:
 	var d := Vector3(sin(hoek), 0.0, -cos(hoek))
 	var afstand: float = 0.9 + 1.7 * kracht
 	var start: Vector3 = p.bal_thuis
+	afstand = minf(afstand, _tot_buiten_bord(baan, start, d, afstand))
 	var eind: Vector3 = start + d * afstand
 	var duur: float = 0.45 + afstand / 2.8
 	o._geluid(["prop_kegel_rol", "prop_ton"])
@@ -734,9 +762,12 @@ func koppel_doelen() -> void:
 		root.rotation.y = atan2(naar.x, naar.z)
 
 
-func _kanon_dracht(p: Dictionary, kracht: float) -> float:
+func _kanon_dracht(p: Dictionary, hoek: float, kracht: float) -> float:
 	var conf: Dictionary = p.get("spel_conf", {})
-	return float(conf.get("pijl_min", 1.6)) + kracht * float(conf.get("pijl_max", 5.4))
+	var dracht: float = float(conf.get("pijl_min", 1.6)) + kracht * float(conf.get("pijl_max", 5.4))
+	# nooit op het bord: de kogel (met wat wind en het doorrollen) blijft ervoor
+	var vrij: float = _tot_buiten_bord(p.node, Vector3.ZERO, _kanon_richting(hoek), dracht + 1.2) - 1.2
+	return maxf(minf(dracht, vrij), 0.6)
 
 
 func _kanon_richt_start(p: Dictionary) -> void:
@@ -772,7 +803,7 @@ func _kanon_richt(p: Dictionary, hoek: float, kracht: float) -> void:
 		loop_node.rotation.y = -hoek
 	var ring: Node3D = p.get("doelring", null)
 	if ring != null and is_instance_valid(ring):
-		ring.position = _kanon_richting(hoek) * _kanon_dracht(p, kracht) + Vector3(0.0, 0.03, 0.0)
+		ring.position = _kanon_richting(hoek) * _kanon_dracht(p, hoek, kracht) + Vector3(0.0, 0.03, 0.0)
 
 
 func _kanon_richt_stop(p: Dictionary) -> void:
@@ -790,7 +821,7 @@ func _kanon_richt_stop(p: Dictionary) -> void:
 func _kanon_schiet(p: Dictionary, hoek: float, kracht: float) -> void:
 	var root: Node3D = p.node
 	var mond: Vector3 = p.mond
-	var dracht := _kanon_dracht(p, kracht)
+	var dracht := _kanon_dracht(p, hoek, kracht)
 	var richting := _kanon_richting(hoek)
 	# de wind van het potje (dezelfde die de vlaggen laat wapperen) duwt de
 	# kogel een stukje opzij; de pijl toonde de dracht zonder wind
@@ -811,11 +842,30 @@ func _kanon_schiet(p: Dictionary, hoek: float, kracht: float) -> void:
 	var kogel := o._mesh(o._bol(0.07), Color(0.16, 0.16, 0.17), root, mond)
 	(kogel.material_override as StandardMaterial3D).metallic = 0.6
 	var duur := 0.65 + 0.55 * kracht
+	# na de inslag rolt de kogel door (16 september, Max: "laat de bal ook
+	# doorrollen op de tonnen"): een stuk verder in dezelfde richting,
+	# uitrollend, nooit het bord op; vaten op dat pad gaan ook
+	var rol_richting: Vector3 = (landing - mond)
+	rol_richting.y = 0.0
+	rol_richting = rol_richting.normalized() if rol_richting.length() > 0.01 else richting
+	var rol: float = (0.5 + 1.1 * kracht)
+	rol = minf(rol, _tot_buiten_bord(root, landing, rol_richting, rol))
+	var rol_eind: Vector3 = landing + rol_richting * rol
+	rol_eind.y = 0.07
+	var rol_duur: float = 0.5 + 0.6 * kracht
+	var rol_as: Vector3 = Vector3.UP.cross(rol_richting).normalized()
 	var tw := kogel.create_tween()
 	tw.tween_method(o._boog.bind(kogel, mond, landing, 0.4 + 1.3 * kracht), 0.0, 1.0, duur)
 	tw.tween_callback(func() -> void:
-		_kanon_inslag(p, root.to_global(landing), root.to_global(zonder_wind))
-		kogel.queue_free())
+		_kanon_inslag(p, root.to_global(landing), root.to_global(zonder_wind), root.to_global(rol_eind), rol_duur))
+	var rol_start := Vector3(landing.x, 0.07, landing.z)
+	tw.tween_method(func(t: float) -> void:
+		var v := 1.0 - (1.0 - t) * (1.0 - t)
+		kogel.position = rol_start.lerp(rol_eind, v)
+		kogel.basis = Basis(rol_as, rol * v / 0.07), 0.0, 1.0, rol_duur)
+	tw.tween_interval(2.4)
+	tw.tween_property(kogel, "scale", Vector3(0.01, 0.01, 0.01), 0.2)
+	tw.tween_callback(kogel.queue_free)
 	# de loop zakt weer
 	var loop_node: Node3D = p.get("loop", null)
 	if loop_node != null and is_instance_valid(loop_node):
@@ -825,7 +875,8 @@ func _kanon_schiet(p: Dictionary, hoek: float, kracht: float) -> void:
 		lt.parallel().tween_property(loop_node, "rotation:y", 0.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-func _kanon_inslag(p: Dictionary, waar_globaal: Vector3, zonder_wind_globaal: Vector3) -> void:
+func _kanon_inslag(p: Dictionary, waar_globaal: Vector3, zonder_wind_globaal: Vector3,
+		rol_eind_globaal: Vector3 = Vector3.INF, rol_duur: float = 0.0) -> void:
 	var root: Node3D = p.node
 	var doel: Dictionary = p.get("doel", {})
 	var ontploft: Array = []
@@ -845,6 +896,29 @@ func _kanon_inslag(p: Dictionary, waar_globaal: Vector3, zonder_wind_globaal: Ve
 				raak_zonder = true
 		if raak >= 0:
 			_vat_ontploft(doel, raak, 0.0, ontploft)
+		# de rol na de inslag: elk vat dat de kogel onderweg passeert gaat ook,
+		# op het moment dat hij er langs komt
+		if rol_eind_globaal != Vector3.INF and rol_duur > 0.0:
+			var rol_l: Vector3 = vroot.to_local(rol_eind_globaal)
+			var pad: Vector3 = rol_l - lokaal
+			pad.y = 0.0
+			var pad_len := pad.length()
+			if pad_len > 0.05:
+				var pr: Vector3 = pad / pad_len
+				for i in vaten.size():
+					var v2: Dictionary = vaten[i]
+					if bool(v2.om) or i == raak:
+						continue
+					var rel: Vector3 = (v2.pos as Vector3) - lokaal
+					rel.y = 0.0
+					var langs: float = rel.dot(pr)
+					if langs <= 0.0 or langs > pad_len:
+						continue
+					if (rel - pr * langs).length() < 0.42:
+						# uitrollend: v = 1 - (1 - t)^2, dus t = 1 - sqrt(1 - v)
+						var u: float = langs / pad_len
+						var t_raak: float = rol_duur * (1.0 - sqrt(maxf(0.0, 1.0 - u)))
+						_vat_ontploft(doel, i, t_raak, ontploft)
 		var schot_root: Node3D = root
 		var inslag := root.to_local(waar_globaal)
 		if ontploft.is_empty():

@@ -2473,7 +2473,8 @@ func _ready() -> void:
 			get_tree().quit(1)
 			return
 		# [soort, diorama, minimale score]
-		var sp_doelen: Array = [["kegelen", 1, 3], ["keilen", 1, 1], ["kanon", 4, 1], ["vissen", 6, 1], ["cadans", 1, 8]]
+		# (16 september: hooguit twee spellen per diorama, de cadans staat sindsdien in Bosrand (7) en niet meer in Weidekamp)
+		var sp_doelen: Array = [["kegelen", 1, 3], ["keilen", 1, 1], ["kanon", 4, 1], ["vissen", 6, 1], ["cadans", 7, 8]]
 		for doel in sp_doelen:
 			var soort := String(doel[0])
 			sp.zet_diorama(int(doel[1]))

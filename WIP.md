@@ -160,6 +160,22 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- spelletjes nooit op het bord, hooguit twee per diorama, de kogel rolt door
+
+Max: "de spelletjes mogen nooit op het bord komen en doe er nooit meer dan
+2 per diorama", en "laat het kanon dat schiet de bal ook doorrollen op de
+tonnen". Het kanon in Na de slag richt langs het bord; met de nieuwe zwaai
+van 14 graden en dracht 7 landde de kogel op de verre rand van het bord.
+Nu `_op_bord`/`_tot_buiten_bord` in Spelletjes (het bord is 0..10 in
+Props-ruimte, marge 0,9): de kegelbal en de kanonskogel (dracht en rol)
+stoppen ervoor; `_kanon_dracht` neemt de hoek mee en de doelring toont de
+begrensde dracht. De kogel rolt na de inslag door (0,5 + 1,1 x kracht,
+uitrollend, tollend om de dwars-as) en elk vat binnen 0,42 van dat pad
+ontploft op het moment dat hij er langs komt (`_kanon_inslag` met rol_eind
+en rol_duur); daarna blijft hij nog 2,4 s liggen. Per diorama telde alleen
+Weidekamp drie spellen (cadans, kegelen, keilen): de cadans is daar weg
+(spelcheck meet de cadans nu in Bosrand). Spelcheck en omgevingcheck PASS.
+
 ## 16 september -- idles: iedereen stil, af en toe een die rondkijkt
 
 Max: "geef alle idles ook de standaard meest stilstaande idle en maximaal
