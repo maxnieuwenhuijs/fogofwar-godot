@@ -160,6 +160,20 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- cavalerie-prompts zonder hoed
+
+Max: "in de model tracker hebben alle cav prompts nog hoedjes op die ze
+allemaal niet echt hebben, fix de prompts". Sinds 16 augustus droeg elke big
+bro in de prompt de factie-hoed als `battered`; de cavalerie is blootshoofds.
+Uit alle dertig cavalerie-prompts (zes facties x vijf archetypen) is de hoed
+gehaald, in `model-tracker.html` en in `MODEL-WISHLIST.md`; de spd-pluim
+staat op de schouder van het harnas. `heeftHoed` in de tracker geeft voor een
+cavalerie-model dat er nog niet ligt nu `false`, zodat ook de team-prompts
+(rood/blauw) er geen noemen; de infanterie houdt zijn hoed. De twee
+uitlegzinnen in de wishlist (factie-herkenning cavalerie, hoofddeksel per
+factie) zijn bijgewerkt. Gestaged als index-blob uit HEAD, want de werkboom
+draagt ook de artillerie-prompts van de andere sessie.
+
 ## 14 september -- de hakbijl via de Blender-MCP-connector
 
 Max: "gebruik de blender mcp connector", "maak de hakbijl voor me", bij de
