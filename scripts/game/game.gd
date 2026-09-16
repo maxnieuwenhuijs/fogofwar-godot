@@ -3108,14 +3108,19 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			var heeft_doel: bool = action.get("defender_id", -1) != -1
 			var cav: PawnView = _pawn_views.get(action.pawn_id)
 			var rij_dist := 0
-			if result.get("moved", false) or result.get("forced_move", false):
+			var rijdt: bool = result.get("moved", false) or result.get("forced_move", false)
+			if rijdt:
+				rij_dist = absi(end_pos.x - result.charge_from.x) + absi(end_pos.y - result.charge_from.y)
+			# Dezelfde tijdlijn als de knop "charge" in de Model-tuner. De rit
+			# duurt tl.rij_dur: sinds 16 september eindigt hij op de landing
+			# van de sprong (de sprong zelf loopt op zijn plaats, root motion
+			# weggecompenseerd), dus de pion springt op het doelvak.
+			var tijdlijn: Dictionary = cav.charge_tijdlijn(rij_dist) if cav != null \
+				else {"rij_dur": -1.0, "sprong_start": 0.0, "klap_del": 0.35}
+			if rijdt:
 				# Met een doel zet de rit-tween aan het eind geen idle: de
 				# sprong loopt dan nog en keert zelf naar idle terug.
-				_animate_move(action.pawn_id, result.charge_from, end_pos, true, not heeft_doel)
-				rij_dist = absi(end_pos.x - result.charge_from.x) + absi(end_pos.y - result.charge_from.y)
-			# Dezelfde tijdlijn als de knop "charge" in de Model-tuner.
-			var tijdlijn: Dictionary = cav.charge_tijdlijn(rij_dist) if cav != null \
-				else {"sprong_start": 0.0, "klap_del": 0.35}
+				_animate_move(action.pawn_id, result.charge_from, end_pos, true, not heeft_doel, float(tijdlijn.get("rij_dur", -1.0)))
 			var sprong_start: float = tijdlijn.sprong_start
 			_check_haven_score(action.pawn_id, end_pos)
 			if cav != null and heeft_doel:
@@ -3965,7 +3970,7 @@ func _begin_advance(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> v
 ## zelf naar idle terugkeert (de sprong-stoot van de charge begint al voor
 ## de aankomst; een play_idle aan het eind van de tween kapte hem af).
 func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush: bool = false,
-		idle_na: bool = true) -> void:
+		idle_na: bool = true, dur_override: float = -1.0) -> void:
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
@@ -3981,6 +3986,8 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush:
 	_tweening_pawns[pawn_id] = true
 	var dist: int = absi(to_coord.x - from_coord.x) + absi(to_coord.y - from_coord.y)
 	var dur := clampf(0.13 * float(dist), 0.13, 0.45)
+	if dur_override > 0.0:
+		dur = dur_override   # de charge: de rit eindigt op de landing van de sprong
 	# Beweeggeluid afhankelijk van het eenheidstype. Cavalerie: één galop-clip
 	# per beweging (bevat zelf al meerdere hoefslagen). Infanterie/artillerie:
 	# één klap per gelopen vakje (losse voetstappen / wielrollen).

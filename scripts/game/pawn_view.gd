@@ -687,10 +687,123 @@ func play_rush() -> void:
 ## `charge_raak_voor_einde` seconden voor het einde van de clip (game.gd,
 ## via charge_duur()); zonder sprong-clip geldt nog charge_hit_delay.
 func play_charge() -> void:
-	if _anim != null and not _variants_of("charge").is_empty():
-		_play_variant("charge", false, melee_fx("charge_speed", "charge_speed", 1.2), true)
-	else:
+	var varianten := _variants_of("charge") if _anim != null else []
+	if varianten.is_empty():
 		play_melee()
+		return
+	# altijd de EERSTE variant (geen loting): de tijdlijn (charge_tijdlijn) en
+	# het root-motion-profiel zijn op die clip gemeten, en een andere variant
+	# springt op een ander moment
+	var clip := String(varianten[0])
+	var speed: float = melee_fx("charge_speed", "charge_speed", 1.2)
+	_anim.play(clip, 0.2, speed)
+	_anim.seek(0.0, true)
+	_last_clip_len = _anim.get_animation(clip).length / maxf(speed, 0.01)
+	_charge_compensatie_start(clip)
+
+
+## Root motion van de sprong-clip wegcompenseren (16 september, Max: "het
+## poppetje vliegt gemiddeld 2 velden eroverheen"): de heupen van de
+## Mixamo-sprong lopen 1,3 vak vooruit en glijden aan het eind terug, en dat
+## kwam bovenop de rit-tween. Zolang de clip speelt schuift het stuk
+## (`_piece`) per frame precies tegen die verplaatsing in (alleen x/z, de
+## hoogte van de sprong blijft), zodat het model op zijn node blijft en de
+## tween de hele vlucht is. Aangehaakt op `mixer_applied` (na de pose van dit
+## frame), losgelaten zodra de clip niet meer speelt.
+var _charge_comp: Dictionary = {}
+static var _charge_profiel_cache: Dictionary = {}
+
+
+func _charge_compensatie_start(clip: String) -> void:
+	_charge_compensatie_stop()
+	if _piece == null or _anim == null:
+		return
+	var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return
+	var skel: Skeleton3D = skels[0]
+	var hips := skel.find_bone("mixamorig_Hips")
+	if hips < 0:
+		hips = skel.find_bone("mixamorig:Hips")
+	if hips < 0:
+		return
+	var rust: Vector3 = to_local(skel.global_transform * skel.get_bone_global_pose(hips).origin)
+	_charge_comp = {"clip": clip, "skel": skel, "hips": hips, "rust": rust, "basis": _piece.position}
+	if not _anim.mixer_applied.is_connected(_charge_compensatie_frame):
+		_anim.mixer_applied.connect(_charge_compensatie_frame)
+
+
+func _charge_compensatie_frame() -> void:
+	if _charge_comp.is_empty():
+		return
+	var skel: Skeleton3D = _charge_comp.skel
+	if _anim == null or not is_instance_valid(skel) or not is_instance_valid(_piece) or String(_anim.current_animation) != String(_charge_comp.clip):
+		_charge_compensatie_stop()
+		return
+	var basis_pos: Vector3 = _charge_comp.basis
+	var gemeten: Vector3 = to_local(skel.global_transform * skel.get_bone_global_pose(int(_charge_comp.hips)).origin) - (_charge_comp.rust as Vector3)
+	# de meting bevat de compensatie van het vorige frame: eruit halen
+	var comp_nu: Vector3 = _piece.position - basis_pos
+	var ruw: Vector3 = gemeten - comp_nu
+	_piece.position = basis_pos - Vector3(ruw.x, 0.0, ruw.z)
+
+
+func _charge_compensatie_stop() -> void:
+	if _charge_comp.is_empty():
+		return
+	if is_instance_valid(_piece):
+		_piece.position = _charge_comp.basis
+	_charge_comp = {}
+
+
+## Het root-motion-profiel van de sprong-clip (uit de heup-track, per model
+## gecached, in clip-tijd): `t_land` = wanneer de heupen na de top weer op
+## de grond zijn, `vooruit` = hoe ver ze maximaal vooruit lopen (vakken).
+## Leeg zonder sprong-clip of skelet.
+func charge_profiel() -> Dictionary:
+	if _anim == null or _piece == null:
+		return {}
+	var varianten := _variants_of("charge")
+	if varianten.is_empty():
+		return {}
+	var clip := String(varianten[0])
+	var sleutel := "%s|%s" % [_model_path, clip]
+	if _charge_profiel_cache.has(sleutel):
+		return _charge_profiel_cache[sleutel]
+	var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return {}
+	var skel: Skeleton3D = skels[0]
+	var a: Animation = _anim.get_animation(clip)
+	var uit: Dictionary = {}
+	for t in a.get_track_count():
+		if a.track_get_type(t) != Animation.TYPE_POSITION_3D or not String(a.track_get_path(t)).to_lower().contains("hips"):
+			continue
+		var n := a.track_get_key_count(t)
+		if n < 2:
+			continue
+		var v0: Vector3 = a.track_get_key_value(t, 0)
+		var hoogste := 0.0
+		var t_top := 0.0
+		var vooruit := 0.0
+		var lokalen: Array = []
+		for k in n:
+			var w: Vector3 = skel.global_transform.basis * (a.track_get_key_value(t, k) - v0)
+			var lok: Vector3 = global_transform.basis.inverse() * w
+			lokalen.append([a.track_get_key_time(t, k), lok])
+			vooruit = maxf(vooruit, -lok.z)
+			if lok.y > hoogste:
+				hoogste = lok.y
+				t_top = a.track_get_key_time(t, k)
+		var t_land: float = a.length * 0.6
+		for paar in lokalen:
+			if float(paar[0]) > t_top and (paar[1] as Vector3).y <= hoogste * 0.15:
+				t_land = float(paar[0])
+				break
+		uit = {"t_land_clip": t_land, "vooruit": vooruit, "clip": clip}
+		break
+	_charge_profiel_cache[sleutel] = uit
+	return uit
 
 
 ## Hoe lang duurt de sprong-clip die play_charge() straks speelt (al gedeeld
@@ -721,18 +834,27 @@ func charge_tijdlijn(rij_dist: int) -> Dictionary:
 	var sprong_duur := charge_duur()
 	var rij_dur := 0.0
 	var sprong_start := 0.0
-	if rij_dist > 0:
-		rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
-		if sprong_duur > 0.0:
-			var aanloop: float = melee_fx("charge_aanloop_vakken", "charge_aanloop_vakken", 2.0)
-			sprong_start = maxf(rij_dur - aanloop * rij_dur / float(rij_dist), 0.0)
-		else:
-			sprong_start = rij_dur + 0.02
 	var klap_del: float
 	if sprong_duur > 0.0:
-		var voor_einde: float = melee_fx("charge_raak_voor_einde", "charge_raak_voor_einde", 0.5)
-		klap_del = sprong_start + maxf(sprong_duur - voor_einde, 0.1)
+		# 16 september (Max: "de sprong moet echt eerder starten, het poppetje
+		# vliegt er twee velden overheen; of geen walk, alleen de aanloop met
+		# de sprong op de target"): de rit-tween is de vlucht en eindigt op
+		# de LANDING van de sprong (t_land uit het heup-profiel), dus de
+		# sprong begint t_land voor de aankomst; een korte rit wordt zo lang
+		# als de sprong nodig heeft. De root motion van de clip is
+		# weggecompenseerd, dus het model komt precies op het doelvak neer.
+		var prof := charge_profiel()
+		var speed: float = maxf(melee_fx("charge_speed", "charge_speed", 1.2), 0.01)
+		var t_land: float = (float(prof.get("t_land_clip", 0.0)) / speed) if not prof.is_empty() else sprong_duur * 0.6
+		t_land = clampf(t_land, 0.1, sprong_duur)
+		if rij_dist > 0:
+			rij_dur = maxf(clampf(0.13 * float(rij_dist), 0.13, 0.45), t_land)
+			sprong_start = maxf(rij_dur - t_land, 0.0)
+		klap_del = sprong_start + t_land + melee_fx("charge_klap_na_landing", "charge_klap_na_landing", 0.12)
 	else:
+		if rij_dist > 0:
+			rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
+			sprong_start = rij_dur + 0.02
 		klap_del = sprong_start + melee_fx("charge_hit_delay", "charge_hit_delay", 0.35)
 	return {"rij_dur": rij_dur, "sprong_start": sprong_start, "sprong_duur": sprong_duur, "klap_del": klap_del}
 
