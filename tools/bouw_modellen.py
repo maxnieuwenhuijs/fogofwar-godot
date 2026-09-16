@@ -42,6 +42,8 @@ FACTIES = {"mouse": "mouse", "muis": "mouse", "pig": "pig", "varken": "pig",
            "krokodil": "crocodile"}
 TYPES = {"infantry": "infantry", "infanterie": "infantry", "inf": "infantry",
          "cavalry": "cavalry", "cavalerie": "cavalry", "cav": "cavalry",
+         # spelfouten die in mapnamen voorkomen (16 september: "cavarly_spd")
+         "cavarly": "cavalry", "calvary": "cavalry", "cavalery": "cavalry", "cavallery": "cavalry",
          "artillery": "artillery", "artillerie": "artillery", "art": "artillery",
          "cannon": "artillery", "kanon": "artillery"}
 ARCHETYPEN = {"base": "base", "basis": "base", "spd": "spd", "speed": "spd",

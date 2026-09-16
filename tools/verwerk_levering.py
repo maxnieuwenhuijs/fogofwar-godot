@@ -174,6 +174,14 @@ def verzamel(wortel):
     """Per submap: wat er te doen valt. (factie, soort, arch, team, blend, kleuren)
     Een bewoner komt terug als ("bewoners", "bewoner", <naam>, ...)."""
     posten = []
+    # 16 september (Max: "hij pakt nu niet het onderscheid in cav en
+    # infantry"): een map met alleen jassen (red/, blue/, weapon/red/) hoort
+    # bij het MODEL in de map erboven. Die map kent haar plaats via de
+    # .blend-naam (mouse_cavalry_spd.blend), maar de submappen zelf zagen
+    # alleen "cavarly_spd/blue" en vielen zonder type-woord terug op
+    # infanterie. Dus: de plaats van de dichtstbijzijnde bovenmap met een
+    # .blend erven (os.walk is top-down, de bovenmap komt altijd eerst).
+    erf = {}
     for r, _, fs in os.walk(wortel):
         blends = sorted(os.path.join(r, f) for f in fs if f.lower().endswith(".blend"))
         kleuren = sorted(os.path.join(r, f) for f in fs if is_kleur(f))
@@ -188,6 +196,21 @@ def verzamel(wortel):
                            blends[0], kleuren, r, False))
             continue
         pl = plaats_uit_woorden(w)
+        if blends and pl is not None:
+            erf[os.path.abspath(r)] = pl
+        elif not blends:
+            boven = os.path.dirname(os.path.abspath(r))
+            wortel_abs = os.path.abspath(wortel)
+            geerfd = None
+            while boven.startswith(wortel_abs):
+                if boven in erf:
+                    geerfd = erf[boven]
+                    break
+                if boven == wortel_abs:
+                    break
+                boven = os.path.dirname(boven)
+            if geerfd is not None:
+                pl = geerfd
         if pl is None:
             posten.append((None, None, None, None, blends[0] if blends else None, kleuren, r, False))
             continue
