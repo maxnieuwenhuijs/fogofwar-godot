@@ -727,6 +727,27 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `.\tools\deploy\deploy-server.ps1 -Droplet <domein> -Nettest`. De
   server bouwt met `npm run build` naar `dist/`; env in `server/.env.voorbeeld`.
   Engine gewijzigd = server uitrollen én een nieuwe client-build.
+- **Charge: de sprong landt op het doelvak (16 september, Max: "de sprong
+  moet echt eerder starten, het poppetje vliegt gemiddeld 2 velden
+  eroverheen; of geen walk en alleen die aanloop met sprong op de
+  target").** De Mixamo-sprong ("Standing Melee Run Jump Attack") draagt
+  root motion in de heupen: 1,3 vak vooruit en aan het eind glijdt hij
+  terug, en dat kwam bovenop de rit-tween. Nu compenseert `PawnView` die
+  root motion per frame weg (`_charge_compensatie_*`, aangehaakt op
+  `mixer_applied`, alleen x/z: het model blijft op zijn node, de hoogte van
+  de sprong blijft) en is de rit-tween de vlucht: `charge_tijdlijn` laat de
+  rit eindigen op de LANDING van de sprong (`t_land` uit het heup-profiel,
+  `charge_profiel`, per model gecached), dus de sprong begint `t_land` voor
+  de aankomst en een korte rit wordt zo lang als de sprong nodig heeft
+  (geen aparte rush meer bij ritten korter dan de sprong). `play_charge`
+  neemt altijd de eerste variant (geen loting). De klap valt
+  `charge_klap_na_landing` (0,12 s, Model-tuner) na de landing; de knoppen
+  `charge_aanloop_vakken` en `charge_raak_voor_einde` zijn weg. Checks:
+  `-- chargemeet` (meet het model tijdens de sprong: hooguit 0,2 vak van
+  zijn node, profiel en tijdlijn geprint) en `-- meleecheck` (charge:
+  sprong op tl.sprong_start, pion op tl.rij_dur op zijn eindvak, doel
+  staat vlak voor de klap en is weg erna; de check-ruiter krijgt attack 3
+  en 4 HP, een ongekoppelde ruiter sloeg met 0 en stierf aan de terugslag).
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).

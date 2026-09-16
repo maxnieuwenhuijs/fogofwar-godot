@@ -161,6 +161,29 @@ Ongelukje bij het committen: de andere sessie had intussen haar hele
 die zijn met de bloedstraaltje-hunks meegegaan in de emblemen-commit
 `a627191`. Niets kwijt, alleen een commit-bericht dat niet alles noemt.
 
+## 16 september -- charge: het model bleef 1,3 vak over het doel heen vliegen; nu landt hij erop
+
+Max: "de sprong van de cav attack moet echt eerder starten want het
+poppetje vliegt gemiddeld 2 velden eroverheen, of doe geen walk en alleen
+die aanloop met sprong op de target". Nieuwe meting `-- chargemeet`: de
+sprong-clip van de muis-cavalerie draagt root motion in de heupen, 1,3 vak
+vooruit (piek op 0,7 s bij tempo 2,3) en daarna glijdt hij terug naar 0;
+dat kwam bovenop de rit-tween die al op het doelvak stond, dus het model
+schoot door het slachtoffer heen en kwam terug. Fix in twee delen: (1)
+`PawnView._charge_compensatie_start/_frame/_stop` schuift het stuk per
+frame precies tegen de heup-verplaatsing in (op `mixer_applied`, alleen
+x/z), gemeten: hooguit 0,06 vak van de node; (2) `charge_tijdlijn` laat
+de rit-tween eindigen op de landing (`t_land` uit `charge_profiel`, per
+model gecached uit de heup-track: hoogste punt, dan weer op de grond),
+`game._animate_move` kreeg `dur_override`; sprong_start = rij_dur - t_land,
+een korte rit wordt zo lang als de sprong (bij tempo 2,3: 0,72 s), en de
+klap valt `charge_klap_na_landing` 0,12 s na de landing. `play_charge`
+speelt altijd de eerste variant. Meleecheck-charge herschreven op de
+nieuwe tijdlijn (en de check-ruiter heeft nu attack 3 en 4 HP: hij sloeg
+met 0 en stierf, de check zag dat nooit). Checks: chargemeet PASS,
+meleecheck PASS, tunercheck PASS, uispel 777 a6677ac8, herstelcheck 777 0
+verschillen.
+
 ## 16 september -- charge: de sprong begint twee vakken voor de aankomst, de klap valt tegen het einde
 
 Max: "start de jump attack animatie 2 blokjes eerder afstand, dan komt ie

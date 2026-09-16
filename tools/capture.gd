@@ -1091,6 +1091,60 @@ func _ready() -> void:
 		print("[CAPE] %s: %d fout(en)" % ["PASS" if cc_fouten == 0 else "FAIL", cc_fouten])
 		get_tree().quit(0 if cc_fouten == 0 else 1)
 		return
+	elif "chargemeet" in args:
+		# 16 september: hoe ver loopt het model bij de sprong-clip van de charge
+		# visueel WEG van zijn node (root motion in de hips)? Muis-cavalerie,
+		# play_charge, per 0,1 s de heup-positie relatief aan de PawnView.
+		var cm_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var cm_pv: PawnView = cm_scene.instantiate()
+		cm_pv.team = Constants.Team.RED
+		cm_pv.pawn_id = 800
+		add_child(cm_pv)
+		cm_pv.set_unit_type(Constants.UnitType.CAVALRY)
+		cm_pv.set_character(Constants.Doctrine.MUIS, Constants.UnitType.CAVALRY, null)
+		cm_pv.face_dir(Vector2i(0, -1))
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var cm_skels: Array = cm_pv.find_children("*", "Skeleton3D", true, false)
+		if cm_skels.is_empty():
+			print("[CHARGEMEET] geen skelet (model %s)" % String(cm_pv._model_path))
+			get_tree().quit(1)
+			return
+		var cm_skel: Skeleton3D = cm_skels[0]
+		var cm_hips := cm_skel.find_bone("mixamorig_Hips")
+		if cm_hips < 0:
+			cm_hips = cm_skel.find_bone("mixamorig:Hips")
+		var cm_rust: Vector3 = cm_pv.to_local(cm_skel.global_transform * cm_skel.get_bone_global_pose(cm_hips).origin)
+		print("[CHARGEMEET] model %s, schaal %.3f, sprong_duur %.2f s, heup in rust %s" % [String(cm_pv._model_path).get_file(), cm_pv.scale.x, cm_pv.charge_duur(), str(cm_rust)])
+		cm_pv.play_charge()
+		var cm_t := 0.0
+		var cm_lijn: Array = []
+		var cm_max := 0.0
+		while cm_t < cm_pv.charge_duur() + 0.2:
+			await get_tree().process_frame
+			cm_t += get_process_delta_time()
+			var q: Vector3 = cm_pv.to_local(cm_skel.global_transform * cm_skel.get_bone_global_pose(cm_hips).origin) - cm_rust
+			cm_max = maxf(cm_max, -q.z)
+			if cm_lijn.size() < 60 and fmod(cm_t, 0.1) < get_process_delta_time():
+				cm_lijn.append("%.1f:%.2f/%.2f" % [cm_t, -q.z, q.y])
+		print("[CHARGEMEET] vooruit(-z)/omhoog per 0,1 s: " + " ".join(cm_lijn))
+		print("[CHARGEMEET] max vooruit %.2f wereld-eenheden (vakken) MET compensatie (moet onder 0,2 blijven)" % cm_max)
+		var cm_prof: Dictionary = cm_pv.charge_profiel()
+		var cm_tl: Dictionary = cm_pv.charge_tijdlijn(4)
+		print("[CHARGEMEET] profiel: %s; tijdlijn over 4 vakken: %s" % [str(cm_prof), str(cm_tl)])
+		var cm_fouten := 0
+		if cm_max > 0.2:
+			print("[CHARGEMEET] FOUT: het model loopt tijdens de sprong %.2f vak van zijn node weg" % cm_max)
+			cm_fouten += 1
+		if cm_prof.is_empty() or float(cm_prof.get("vooruit", 0.0)) < 0.5:
+			print("[CHARGEMEET] FOUT: geen bruikbaar root-motion-profiel")
+			cm_fouten += 1
+		if float(cm_tl.sprong_start) + 0.05 > float(cm_tl.rij_dur):
+			print("[CHARGEMEET] FOUT: de sprong begint niet voor de aankomst")
+			cm_fouten += 1
+		print("[CHARGEMEET] %s: %d fout(en)" % ["PASS" if cm_fouten == 0 else "FAIL", cm_fouten])
+		get_tree().quit(0 if cm_fouten == 0 else 1)
+		return
 	elif "idlecheck" in args:
 		# 16 september (Max: "alle idles de standaard meest stilstaande idle en
 		# maximaal af en toe doen 1 a 3 poppetjes een andere idle"). Twaalf
@@ -4853,6 +4907,11 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 		print("[MELEE][charge] geen bruikbaar paar gevonden")
 		return false
 	ruiter.remaining_stamina = maxi(ruiter.remaining_stamina, 6)
+	# een ongekoppelde ruiter slaat met 0 en sterft aan de terugslag; de check
+	# gaat over de choreografie, dus geef hem een klap en wat leven
+	ruiter.attack_value = maxi(ruiter.attack_value, 3)
+	ruiter.max_hp = maxi(ruiter.max_hp, 4)
+	ruiter.current_hp = maxi(ruiter.current_hp, 4)
 	var start := Vector2i(5, 8)
 	var tussen := Vector2i(5, 5)
 	var doelvak := Vector2i(5, 4)
@@ -4874,45 +4933,58 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 		print("[MELEE][charge] charge geweigerd: %s (stamina=%d posities=%s->%s doel=%s)" % [
 			JSON.stringify(res), ruiter.remaining_stamina, str(start), str(tussen), str(doelvak)])
 		return false
-	# Clip-verloop bemonsteren: eerst hoort er een rush/walk te spelen,
-	# daarna de charge/melee-stoot.
+	# 16 september (Max: "de sprong moet echt eerder starten, het poppetje
+	# vliegt er twee velden overheen"): de rit-tween is nu de vlucht en
+	# eindigt op de landing van de sprong (root motion weggecompenseerd).
+	# Meten: de sprong-clip begint op tl.sprong_start, de pion staat op
+	# tl.rij_dur op het tussenvak, en het doel staat nog vlak voor tl.klap_del
+	# en is weg kort erna (1 HP, dus de klap doodt hem).
+	var rij_dist: int = absi(tussen.x - start.x) + absi(tussen.y - start.y)
+	var tl: Dictionary = rv.charge_tijdlijn(rij_dist) if rv != null else {}
+	var sprong_duur: float = rv.charge_duur() if rv != null else -1.0
 	var gezien: Array = []
 	var t := 0.0
-	var sprong_duur: float = rv.charge_duur() if rv != null else -1.0
-	while t < 1.2:
+	var t_sprong := -1.0
+	var pos_bij_landing := Vector3.INF
+	var doel_voor_klap := false
+	var doel_na_klap := true
+	var klap_del: float = float(tl.get("klap_del", 0.35))
+	var rij_dur: float = float(tl.get("rij_dur", 0.0))
+	var eind: float = maxf(klap_del + 0.6, 1.2)
+	while t < eind:
 		if rv != null and is_instance_valid(rv):
 			var clip := String(rv.huidige_clip())
 			if clip != "" and (gezien.is_empty() or gezien[gezien.size() - 1] != clip):
 				gezien.append(clip)
+			if t_sprong < 0.0 and clip.begins_with("charge"):
+				t_sprong = t
+			if pos_bij_landing == Vector3.INF and t >= rij_dur + 0.06:
+				pos_bij_landing = (rv as Node3D).position
+		if t >= klap_del - 0.15 and t < klap_del - 0.1:
+			doel_voor_klap = game._pawn_views.has(slachtoffer.id)
+		if t >= klap_del + 0.45 and t < klap_del + 0.5:
+			doel_na_klap = game._pawn_views.has(slachtoffer.id)
 		await get_tree().create_timer(0.03).timeout
 		t += 0.03
-	var sprong_loopt_nog: bool = rv != null and is_instance_valid(rv) \
-		and String(rv.huidige_clip()).begins_with("charge")
-	# De klap valt pas tegen het einde van de sprong: na 1,2 s staat het
-	# slachtoffer nog (_kill_view haalt hem pas bij de klap uit _pawn_views),
-	# want de muis-sprong duurt ruim 3 s.
-	var doel_staat_nog: bool = game._pawn_views.has(slachtoffer.id)
-	print("[MELEE][charge] clip-verloop: %s (sprong-clip %.2f s; na 1,2 s: sprong loopt nog=%s, doel staat nog=%s)" % [
-		", ".join(gezien), sprong_duur, sprong_loopt_nog, doel_staat_nog])
-	var reed := false
+	print("[MELEE][charge] staat na de actie: ruiter dood=%s (hp %d, atk %d) slachtoffer dood=%s (hp %d) ruiter op %s" % [
+		ruiter.is_eliminated, ruiter.current_hp, ruiter.attack_value, slachtoffer.is_eliminated, slachtoffer.current_hp, str(ruiter.position)])
+	# waar de rit eindigt volgens de staat (bij een kill schuift de ruiter
+	# door naar het vak van het slachtoffer)
+	var doel_tegel: Vector3 = game.tile_position(ruiter.position.x, ruiter.position.y)
+	var afstand_landing: float = Vector2(pos_bij_landing.x - doel_tegel.x, pos_bij_landing.z - doel_tegel.z).length() if pos_bij_landing != Vector3.INF else 99.0
+	print("[MELEE][charge] clip-verloop: %s (sprong-clip %.2f s; tijdlijn %s; sprong gezien op %.2f s; op %.2f s %.2f vak van zijn eindvak; doel voor de klap=%s, na de klap=%s)" % [
+		", ".join(gezien), sprong_duur, str(tl), t_sprong, rij_dur + 0.06, afstand_landing, doel_voor_klap, doel_na_klap])
 	var stootte := false
-	var stoot_na_rit := false
 	for clip in gezien:
 		var c := String(clip)
-		if c.begins_with("rush") or c.begins_with("walk"):
-			reed = true
-		elif c.begins_with("charge") or c.begins_with("melee"):
+		if c.begins_with("charge") or c.begins_with("melee"):
 			stootte = true
-			if reed:
-				stoot_na_rit = true
-	var ok := reed and stootte and stoot_na_rit
-	# Met een echte sprong-clip (langer dan 1,5 s) hoort hij na 1,2 s nog te
-	# lopen en het doel nog te staan; korte clips of de melee-terugval niet.
-	if sprong_duur > 1.5:
-		ok = ok and sprong_loopt_nog and doel_staat_nog
+	var ok := stootte and afstand_landing < 0.25 and doel_voor_klap and not doel_na_klap
+	if sprong_duur > 0.0:
+		ok = ok and t_sprong >= 0.0 and absf(t_sprong - float(tl.get("sprong_start", 0.0))) < 0.15
 	if not ok:
-		print("[MELEE][charge] FAIL: aanrijden=%s stoot=%s volgorde-goed=%s sprong-loopt-nog=%s doel-staat-nog=%s" % [
-			reed, stootte, stoot_na_rit, sprong_loopt_nog, doel_staat_nog])
+		print("[MELEE][charge] FAIL: stoot=%s sprong-op-tijd=%s landing-op-eindvak=%s doel-voor-klap=%s doel-weg-na-klap=%s" % [
+			stootte, t_sprong >= 0.0 and absf(t_sprong - float(tl.get("sprong_start", 0.0))) < 0.15, afstand_landing < 0.25, doel_voor_klap, not doel_na_klap])
 	return ok
 
 
