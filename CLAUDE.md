@@ -476,6 +476,41 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   bij de beurtwissel terug in de waaier (`CardHand.selecteer`). Weg gaat
   hij pas als de kaart aan een pion hangt of de fase voorbij is. Check:
   `-- koppelcheck`.
+- **De kaarten als een hand, en slepen naar een pion (16 september, Max:
+  "plaats de kaarten meer in een waaier alsof je die in je hand hebt";
+  "als je op een klikt schuift hij naar boven en kan je makkelijker de
+  knoppen indrukken"; "een drag-en-drop-link die highlight op welk poppetje
+  je hem dropt, met een gebogen pijl"; "ook na het definieren als
+  waaier").** `CardHand._layout_waaier` legt beide fasen als een hand
+  neer: draai `fan_rotation_deg` (5,5) per kaart vanaf het midden, een boog
+  om een spil onder het scherm, overlap `fan_overlap` (0,72 van de
+  breedte, rechts bovenop); door de overlap passen vijf muizenkaarten op
+  0,78 in plaats van 0,63, en de maat rekent de draai mee (een gedraaide
+  kaart steekt verder uit). Definieren: `fan_max_scale` 1,0 op
+  `fan_base_y_factor` 0,78, uitdelen van onderaf op de klap van
+  `card_deal`; koppelen: `link_max_scale` 0,84 op `link_y_factor` 0,86.
+  De kaart onder muis of vinger komt iets naar voren (`FOCUS_LIFT`); een
+  KLIK in de definieerfase schuift hem `ACTIEF_LIFT` (0,22 hoogte) omhoog
+  en laat hem staan; de gekozen kaart in de koppel-fase staat `LINK_LIFT`
+  omhoog. Volgorde via `move_child`, niet z_index: de GUI kiest wie de
+  klik krijgt op de boomvolgorde, dus wat je ziet is wat je raakt.
+  **Slepen:** in de koppel-fase begint een druk op een vrije kaart een
+  sleep zodra je `DRAG_DREMPEL` (18 px) beweegt (signalen `drag_moved`/
+  `drag_dropped`/`drag_cancelled`); game.gd tekent `KoppelPijl`
+  (`scripts/ui/koppel_pijl.gd`, bovenop de UI-laag, vangt geen invoer):
+  een gebogen boog (`KoppelPijl.boogpunt`) met lopende streepjes in de
+  lichte teamkleur, boven een eigen vrije pion goud met een pulserende
+  ring om de kop en de pion zelf fel via `_update_hover`; loslaten koppelt
+  langs `_on_link_pawn_clicked` (dus dezelfde checks als tik-tik) en een
+  spookkaart vliegt langs de boog naar de pion (`_vlieg_kaart_naar`);
+  loslaten naast een pion laat de kaart gekozen. Tik-tik blijft werken;
+  op Android komen de vingers als muis-events binnen. Checks (MET
+  venster, headless bereiken de muis-events de GUI niet): `-- define
+  [muis] [focus] [klik]` (plekken, draai, volgorde; hover-lift; klik-lift
+  van 109 px; `_shot_define.png`) en `-- sleepcheck [muis]` (echte
+  muis-events: pijl raak boven de pion, koppeling na het loslaten, boven
+  een leeg vak geen raak en geen koppeling; `_shot_sleepcheck.png`).
+  Puur beeld: uispel, herstelcheck en koppelcheck ongewijzigd.
 - **Cape voor het blauwe team (12 september, Max: "alle blauwe team
   karakters een blauwe cape, vanuit Godot").** Geen Blender:
   `PawnView.maak_cape(root, hoogte, blauw, fase)` hangt een lap (PlaneMesh)

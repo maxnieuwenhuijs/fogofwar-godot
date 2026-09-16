@@ -2212,6 +2212,38 @@ func _ready() -> void:
 			await get_tree().create_timer(0.9).timeout
 		print("[DEFINE] fase=%s waaier=%s kaarten=%d" % [Phase.to_string_phase(GameSession.state.phase),
 			str(game._card_hand.visible), game._card_hand.get_card_views().size()])
+		# Waaier (16 september): plekken, draai en volgorde; met `focus` een
+		# muisbeweging over de tweede kaart, die dan naar voren en omhoog moet.
+		var dh: CardHand = game._card_hand
+		var dviews: Array = dh.get_card_views()
+		for i in dviews.size():
+			var cv: CardView = dviews[i]
+			print("[DEFINE] kaart %d: midden=(%.0f, %.0f) draai=%.1f graden schaal=%.2f volgorde=%d" % [
+				i, cv.position.x + UiAssets.KAART_MAAT.x * 0.5 * cv.scale.x, cv.position.y + UiAssets.KAART_MAAT.y * 0.5 * cv.scale.y,
+				rad_to_deg(cv.rotation), cv.scale.x / CardHand.KAART_SCHAAL, cv.get_index()])
+		if "klik" in args and dviews.size() >= 1:
+			var kdoel: CardView = dviews[0]
+			var ky_voor: float = kdoel.position.y
+			var kpunt: Vector2 = kdoel.get_global_transform() * Vector2(UiAssets.KAART_MAAT.x * 0.5, UiAssets.KAART_MAAT.y * 0.3)
+			await _sc_muis(kpunt, true)
+			await _sc_muis(kpunt, false)
+			await get_tree().create_timer(0.4).timeout
+			var kboven: bool = kdoel.get_index() == dviews.size() - 1
+			print("[DEFINE] klik op kaart 0: bovenop=%s omhoog=%.0f px schaal=%.2f (%s)" % [
+				str(kboven), ky_voor - kdoel.position.y, kdoel.scale.x / CardHand.KAART_SCHAAL,
+				"PASS" if kboven and kdoel.position.y < ky_voor - 60.0 else "FAIL"])
+		if "focus" in args and dviews.size() >= 2:
+			var doel: CardView = dviews[1]
+			var y_voor: float = doel.position.y
+			var ev := InputEventMouseMotion.new()
+			ev.position = doel.get_global_transform() * (UiAssets.KAART_MAAT * 0.5)
+			ev.global_position = ev.position
+			Input.parse_input_event(ev)
+			await get_tree().create_timer(0.4).timeout
+			var bovenop: bool = doel.get_index() == dviews.size() - 1
+			print("[DEFINE] focus op kaart 1: bovenop=%s omhoog=%.0f px schaal=%.2f (%s)" % [
+				str(bovenop), y_voor - doel.position.y, doel.scale.x / CardHand.KAART_SCHAAL,
+				"PASS" if bovenop and doel.position.y < y_voor - 5.0 else "FAIL"])
 		out = "res://_shot_define.png"
 	elif "reveal" in args:
 		var hand: CardHand = game.get_node("UI/CardHand")
@@ -2778,6 +2810,108 @@ func _ready() -> void:
 			print("[DRAGER] geen vrij spawnvak, spawn-deel overgeslagen")
 		print("[DRAGER] " + ("PASS" if dc_fouten == 0 else "FAIL (%d fouten)" % dc_fouten))
 		get_tree().quit(0 if dc_fouten == 0 else 1)
+		return
+	elif "sleepcheck" in args:
+		# 16 september (Max: "een drag-en-drop-link die highlight op welk
+		# poppetje je hem dropt, met een gebogen pijl"): tot de koppel-fase zoals
+		# koppelcheck, dan kaart 0 met echte muis-events van de hand naar een
+		# eigen pion slepen: onderweg moet de pijl staan en boven de pion "raak"
+		# zijn, na het loslaten moet de pion die kaart dragen. Daarna kaart 1 naar
+		# een leeg vak: geen koppeling, kaart blijft gekozen. Met venster een
+		# screenshot midden in de sleep.
+		var sc_fouten := 0
+		if "muis" in args:
+			game._human_doctrine = Constants.Doctrine.MUIS  # vijf kaarten in de koppel-waaier
+		var sc_hand: CardHand = game.get_node("UI/CardHand")
+		var sc_steps := 0
+		while not Phase.is_linking(GameSession.state.phase) and sc_steps < 80:
+			sc_steps += 1
+			var sst: GameState = GameSession.state
+			if sst.phase == Phase.Type.PRE_GAME:
+				game._start_match(1)
+			elif sst.phase == Phase.Type.PLACEMENT:
+				game._confirm_placement()
+			elif Phase.is_reveal(sst.phase):
+				game._continue_after_reveal()
+			elif Phase.is_define(sst.phase) and sst.cards_defined[1].size() == 0 and not sc_hand.visible:
+				if game._overlay.visible:
+					game._on_cp_choice(0)
+			elif Phase.is_define(sst.phase) and sst.cards_defined[1].size() == 0:
+				var sbud: int = int(sst.doctrine_data_of(1).budget)
+				for c in sc_hand.get_card_views():
+					c.data.hp = 1
+					c.data.stamina = mini(sbud - 2, 3)
+					c.data.attack = sbud - 1 - mini(sbud - 2, 3)
+					c._refresh()
+				sc_hand._on_confirm_pressed()
+			await get_tree().create_timer(0.05).timeout
+		if not Phase.is_linking(GameSession.state.phase):
+			print("[SLEEP] FOUT: koppel-fase niet bereikt (fase %s)" % Phase.to_string_phase(GameSession.state.phase))
+			get_tree().quit(1)
+			return
+		if not await _sc_wacht_op_beurt():
+			print("[SLEEP] FOUT: de mens komt niet aan de beurt in de koppel-fase")
+			get_tree().quit(1)
+			return
+		await get_tree().create_timer(0.3).timeout
+		var sc_views: Array = sc_hand.get_card_views()
+		var sc_pion: int = _kc_vrije_pion()
+		var sc_start: Vector2 = (sc_views[0] as CardView).get_global_transform() * (UiAssets.KAART_MAAT * 0.5)
+		var sc_doel: Vector2 = game._pion_schermpunt(sc_pion, 0.3)
+		var sc_pijl: KoppelPijl = game._koppel_pijl
+		await _sc_muis(sc_start, true)
+		await _sc_beweeg(sc_start, sc_doel, 14)
+		print("[SLEEP] onderweg: pijl zichtbaar=%s raak=%s (kaart 0 -> pion %d)" % [str(sc_pijl.visible), str(sc_pijl.is_raak()), sc_pion])
+		if not sc_pijl.visible or not sc_pijl.is_raak():
+			print("[SLEEP] FOUT: de pijl staat niet of is niet raak boven de pion")
+			sc_fouten += 1
+		if game._selected_link_card_id < 0:
+			print("[SLEEP] FOUT: de sleep koos de kaart niet")
+			sc_fouten += 1
+		var sc_tex := get_viewport().get_texture()
+		if sc_tex != null and sc_tex.get_image() != null:
+			var sc_img: Image = sc_tex.get_image()
+			if sc_img != null:
+				sc_img.save_png("res://_shot_sleepcheck.png")
+				print("[SLEEP] screenshot -> _shot_sleepcheck.png")
+		var sc_kaart0: int = (GameSession.state.cards_revealed[1][0] as Card).id
+		await _sc_muis(sc_doel, false)
+		await get_tree().create_timer(0.5).timeout
+		var sc_gekoppeld: int = (GameSession.state.pawns[sc_pion] as Pawn).linked_card_id
+		print("[SLEEP] losgelaten: pion %d draagt kaart %d (verwacht %d), pijl weg=%s" % [sc_pion, sc_gekoppeld, sc_kaart0, str(not sc_pijl.visible)])
+		if sc_gekoppeld != sc_kaart0:
+			print("[SLEEP] FOUT: de pion is niet aan kaart 0 gekoppeld")
+			sc_fouten += 1
+		if sc_pijl.visible:
+			print("[SLEEP] FOUT: de pijl blijft staan na het loslaten")
+			sc_fouten += 1
+		# Tweede sleep: kaart 1 naar een leeg vak midden op het bord.
+		if await _sc_wacht_op_beurt():
+			await get_tree().create_timer(0.3).timeout
+			var sc_kaart1: int = (GameSession.state.cards_revealed[1][1] as Card).id
+			var sc_start1: Vector2 = (sc_views[1] as CardView).get_global_transform() * (UiAssets.KAART_MAAT * 0.5)
+			var sc_leeg: Vector2 = game._camera.unproject_position(game._board.to_global(game.tile_position(5, 5) + Vector3(0.0, 0.3, 0.0)))
+			await _sc_muis(sc_start1, true)
+			await _sc_beweeg(sc_start1, sc_leeg, 14)
+			print("[SLEEP] naar een leeg vak: pijl zichtbaar=%s raak=%s" % [str(sc_pijl.visible), str(sc_pijl.is_raak())])
+			if not sc_pijl.visible or sc_pijl.is_raak():
+				print("[SLEEP] FOUT: boven een leeg vak hoort de pijl te staan zonder raak")
+				sc_fouten += 1
+			await _sc_muis(sc_leeg, false)
+			await get_tree().create_timer(0.3).timeout
+			var sc_k1: Card = GameSession.state.cards_revealed[1][1]
+			print("[SLEEP] losgelaten naast een pion: kaart 1 gekoppeld=%s gekozen=%s" % [str(sc_k1.is_linked()), str(game._selected_link_card_id == sc_kaart1)])
+			if sc_k1.is_linked():
+				print("[SLEEP] FOUT: loslaten naast een pion koppelde toch")
+				sc_fouten += 1
+			if game._selected_link_card_id != sc_kaart1:
+				print("[SLEEP] FOUT: de kaart bleef niet gekozen na een mislukte sleep")
+				sc_fouten += 1
+		else:
+			print("[SLEEP] FOUT: geen tweede beurt voor de mens")
+			sc_fouten += 1
+		print("[SLEEP] %s: %d fout(en)" % ["PASS" if sc_fouten == 0 else "FAIL", sc_fouten])
+		get_tree().quit(0 if sc_fouten == 0 else 1)
 		return
 	elif "koppelcheck" in args:
 		# 12 september (Max: "houd mijn kaart geselecteerd ook al is de AI eerst
@@ -4182,6 +4316,45 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 		return 0.5
 	var kant: int = Constants.PLAYER_1 if nieuw_is_p1 else Constants.PLAYER_2
 	return 1.0 if winner == kant else 0.0
+
+
+## Sleepcheck: een muisknop indrukken of loslaten op een schermpunt, als echt event.
+func _sc_muis(pos: Vector2, ingedrukt: bool) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = ingedrukt
+	ev.position = pos
+	ev.global_position = pos
+	Input.parse_input_event(ev)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+## Sleepcheck: de muis in stappen van a naar b bewegen (elke stap een frame).
+func _sc_beweeg(van: Vector2, naar: Vector2, stappen: int) -> void:
+	for i in range(1, stappen + 1):
+		var ev := InputEventMouseMotion.new()
+		ev.position = van.lerp(naar, float(i) / float(stappen))
+		ev.global_position = ev.position
+		ev.relative = (naar - van) / float(stappen)
+		Input.parse_input_event(ev)
+		await get_tree().process_frame
+	await get_tree().process_frame
+
+
+## Sleepcheck: wachten tot de mens aan de beurt is in de koppel-fase (de bot
+## koppelt tussendoor); false als dat binnen 6 s niet gebeurt.
+func _sc_wacht_op_beurt() -> bool:
+	var wacht := 0.0
+	while wacht < 6.0:
+		var st: GameState = GameSession.state
+		if Phase.is_linking(st.phase) and st.current_player == 1:
+			return true
+		if not Phase.is_linking(st.phase):
+			return false
+		await get_tree().create_timer(0.05).timeout
+		wacht += 0.05
+	return false
 
 
 ## Ouderketen van een node tot aan de wereld, voor de zweefcheck.

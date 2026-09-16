@@ -20,6 +20,7 @@ const PAWN_Y := 0.05
 @onready var _world: Node3D = $World
 @onready var _pawns_root: Node3D = $World/Pawns
 @onready var _card_hand: CardHand = $UI/CardHand
+var _koppel_pijl: KoppelPijl = null   # 16 september: gebogen pijl bij het slepen van een kaart naar een pion
 @onready var _top_label: Label = $UI/TopLabel
 @onready var _prompt_label: Label = $UI/PromptLabel
 @onready var _count_label: RichTextLabel = $UI/CountLabel
@@ -141,9 +142,16 @@ func _ready() -> void:
 	_connect_session_signals()
 	_card_hand.define_confirmed.connect(_on_define_confirmed)
 	_card_hand.card_picked.connect(_on_link_card_picked)
+	_card_hand.drag_moved.connect(_on_koppel_sleep)
+	_card_hand.drag_dropped.connect(_on_koppel_drop)
+	_card_hand.drag_cancelled.connect(_on_koppel_annuleer)
 	_overlay = OVERLAY_SCENE.instantiate()
 	$UI.add_child(_overlay)
 	_overlay.hide()
+	# De sleep-pijl bovenop alles in de UI-laag (vangt nooit invoer).
+	_koppel_pijl = KoppelPijl.new()
+	_koppel_pijl.name = "KoppelPijl"
+	$UI.add_child(_koppel_pijl)
 	_factie_keuze = FACTIE_KEUZE_SCRIPT.new()  # direct boven de overlay, onder uitleg en knoppen
 	$UI.add_child(_factie_keuze)
 	_instructions = INSTRUCTIONS_SCRIPT.new()
@@ -2432,6 +2440,93 @@ func _on_link_pawn_clicked(pawn_id: int) -> void:
 	# keuze tijdens de beurt van de tegenstander op de juiste kaarten valt
 	if Phase.is_linking(session.state.phase):
 		_toon_linking_hand()
+
+
+# --- Slepen: kaart naar pion (16 september) ----------------------------------
+
+## Eigen, levende, nog ongekoppelde pion onder dit schermpunt; anders -1.
+func _koppel_doel(pos: Vector2) -> int:
+	var pid: int = _raycast_pawn(pos)
+	if pid < 0:
+		return -1
+	var pawn: Pawn = session.state.pawns.get(pid)
+	if pawn == null or pawn.owner_id != _human_id or pawn.is_eliminated or pawn.linked_card_id != -1:
+		return -1
+	return pid
+
+
+## Schermpunt boven een pion (kop van de pijl, doel van de vliegende kaart).
+func _pion_schermpunt(pid: int, hoogte: float) -> Vector2:
+	if _camera == null or not _pawn_views.has(pid):
+		return Vector2.ZERO
+	return _camera.unproject_position((_pawn_views[pid] as Node3D).global_position + Vector3(0.0, hoogte, 0.0))
+
+
+## Elke sleepbeweging: pijl van de kaart naar de vinger, of vastgeklikt op
+## de pion eronder (goud, pulserende ring); de pion zelf licht op via
+## dezelfde hover als een muisbeweging over het bord.
+func _on_koppel_sleep(index: int, pos: Vector2) -> void:
+	if _koppel_pijl == null:
+		return
+	var pid: int = _koppel_doel(pos)
+	var eind: Vector2 = pos
+	if pid >= 0:
+		eind = _pion_schermpunt(pid, 0.55)
+	_update_hover(pos)
+	_koppel_pijl.toon(_card_hand.kaart_punt(index), eind, pid >= 0, UiAssets.team_kleur(_human_id, true))
+
+
+## Losgelaten: boven een koppelbare pion vliegt de kaart ernaartoe en koppelt
+## hij (zelfde weg als tik-tik, dus dezelfde checks en meldingen); ernaast
+## blijft de kaart gekozen, zodat een tik op een pion alsnog koppelt.
+func _on_koppel_drop(index: int, pos: Vector2) -> void:
+	if _koppel_pijl != null:
+		_koppel_pijl.verberg()
+	var pid: int = _koppel_doel(pos)
+	if pid < 0:
+		_update_hover(pos)
+		return
+	if _selected_link_card_id >= 0 and session.state.current_player == _human_id:
+		_vlieg_kaart_naar(index, pid)
+	_on_link_pawn_clicked(pid)
+
+
+func _on_koppel_annuleer(_index: int) -> void:
+	if _koppel_pijl != null:
+		_koppel_pijl.verberg()
+
+
+## Een spookkaart (zelfde stats en teamkleur) vliegt langs de boog van de
+## hand naar de pion, krimpt en vervaagt; daaronder speelt _animate_link.
+func _vlieg_kaart_naar(index: int, pid: int) -> void:
+	var views: Array = _card_hand.get_card_views()
+	if index < 0 or index >= views.size() or _camera == null or not _pawn_views.has(pid):
+		return
+	var bron: CardView = views[index]
+	var doctrine: Dictionary = session.state.doctrine_data_of(_human_id)
+	var spook: CardView = CardView.maak(bron.data.hp, bron.data.stamina, bron.data.attack,
+		_human_id, _human_doctrine, int(doctrine.get("budget", bron.data.budget)))
+	spook.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UI.add_child(spook)
+	spook.pivot_offset = UiAssets.KAART_MAAT * 0.5
+	var van: Vector2 = bron.global_position + UiAssets.KAART_MAAT * 0.5
+	var naar: Vector2 = _pion_schermpunt(pid, 0.35)
+	var schaal_van: Vector2 = bron.scale
+	var draai_van: float = bron.rotation
+	spook.global_position = van - UiAssets.KAART_MAAT * 0.5
+	spook.rotation = draai_van
+	spook.scale = schaal_van
+	var tween := create_tween().set_parallel()
+	tween.tween_method(func(t: float) -> void:
+		if not is_instance_valid(spook):
+			return
+		spook.global_position = KoppelPijl.boogpunt(van, naar, t) - UiAssets.KAART_MAAT * 0.5
+		spook.scale = schaal_van.lerp(Vector2.ONE * 0.10, t)
+		spook.rotation = lerpf(draai_van, 0.0, t), 0.0, 1.0, 0.38).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(spook, "modulate:a", 0.0, 0.14).set_delay(0.26)
+	tween.chain().tween_callback(func() -> void:
+		if is_instance_valid(spook):
+			spook.queue_free())
 
 
 ## Koppel-fase: donkere ring om de EIGEN nog niet gekoppelde pionnen (F4.3e:

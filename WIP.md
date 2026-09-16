@@ -1,5 +1,68 @@
 # Fog of War — Work In Progress & Context
 
+## 16 september -- de kaarten als een hand: waaier, klik-lift, slepen naar een pion
+
+Max: "plaats de kaarten die je definieert meer in een waaier alsof je die in
+je hand hebt"; "als je op een klikt dan schuift hij naar boven en kan je
+makkelijker de knoppen indrukken"; "een drag-en-drop-link die highlight op
+welk poppetje je hem dropt, zeker op mobiel met swipen moet het goed
+zichtbaar zijn welke je koppelt, met een soort gebogen arc van een pijl";
+"ook als ik de kaarten heb gedefinieerd moeten ze mooi als waaier staan".
+
+**Waaier (`CardHand._layout_waaier`, beide fasen).** Draai 5,5 graden per
+kaart vanaf het midden, een boog alsof de kaarten om een spil onder het
+scherm draaien (straal uit tussenruimte en draaistap, dus een hand van vijf
+buigt meer dan drie), overlap 0,72 van de breedte met rechts bovenop. De
+maat volgt uit de schermbreedte met de draai erin (een gedraaide kaart
+steekt verder uit dan zijn breedte; de eerste versie liet de linker
+muizenkaart van het scherm vallen): drie kaarten op 1,0 (zoals voorheen),
+vijf op 0,78 (was 0,63 plat naast elkaar). Definieren op 0,78 van de hoogte
+met de bevestigknop eronder, uitdelen van onderaf op de klap van
+`card_deal`; koppelen kleiner (0,84) en lager (0,86), geen knoppen nodig.
+Twee kleine valkuilen: `get_meta(naam, null)` geeft in 4.7 alsnog de fout
+"does not have any meta values" (eerst `has_meta`), en een kaart die
+1,1 mocht worden bedekte de achterste rij van het bord.
+
+**Naar voren en omhoog.** De kaart onder muis of vinger komt 34 px naar
+voren (hover); een klik in de definieerfase schuift hem 0,22 van zijn hoogte
+omhoog (109 px) en 8% groter en laat hem staan tot je een andere kiest, met
+de plus-knoppen vrij; de gekozen kaart in de koppel-fase staat 0,14 omhoog.
+De klik telt bij het LOSLATEN, zodat een plus-knop zijn klik nog krijgt
+voordat de kaart onder de muis vandaan schuift. Volgorde via `move_child`
+en niet z_index: de GUI kiest op boomvolgorde wie de klik krijgt, en een
+kaartwortel vangt zijn hele vlak, dus wat je ziet is wat je raakt; een
+halfbedekte plus-knop vuurt niet per ongeluk.
+
+**Slepen (`KoppelPijl`, `scripts/ui/koppel_pijl.gd`).** In de koppel-fase
+begint een druk op een vrije kaart een sleep zodra je 18 px beweegt; de
+sleep kiest de kaart langs dezelfde weg als een tik (`card_picked`), tilt
+hem op en meldt elke beweging (`drag_moved`). game.gd tekent een gebogen
+pijl (kwadratische bezier met de buik omhoog) van de bovenkant van de kaart
+naar de vinger, met streepjes die naar de punt lopen en een zachte gloed
+eronder; boven een eigen vrije pion klikt de kop op de pion vast, wordt de
+pijl goud met een pulserende ring en licht de pion op via dezelfde hover
+als een muisbeweging. Loslaten boven de pion: een spookkaart vliegt langs
+de boog naar de pion, krimpt en vervaagt, en de koppeling gaat langs
+`_on_link_pawn_clicked` (dus dezelfde checks en meldingen als tik-tik,
+ook in de beurt van de ander: dan blijft de kaart klaarstaan). Loslaten
+naast een pion: de kaart blijft gekozen. Op Android komen vingers als
+muis-events binnen (emulate_mouse_from_touch), dus swipen is hetzelfde
+pad. De GUI houdt tijdens de sleep de muis-focus op de kaart, dus
+`_unhandled_input` ziet die beweging niet; de hover komt uit
+`_on_koppel_sleep`.
+
+**Checks.** `-- define klik` (met venster): klik op kaart 0 bovenop, 109 px
+omhoog, schaal 1,08, PASS; `-- define focus`: hover 34 px, PASS;
+`-- define muis`: vijf kaarten binnen het scherm (-18 tot 703 px midden,
+draai -11 tot 11). `-- sleepcheck` en `-- sleepcheck muis` (met venster;
+headless bereiken muis-events de GUI niet): pijl raak boven pion 19,
+gekoppeld na het loslaten, boven vak (5,5) geen raak en geen koppeling,
+kaart blijft gekozen; PASS. Een eerste versie van de check rekende het lege
+vak zonder `_board.to_global` en landde op een pion. `-- koppelcheck` PASS,
+`-- uispel 777` a6677ac8 (220 acties, cyclus 7, ongewijzigd),
+`-- herstelcheck 777` 142 momenten, 0 verschillen. Screenshots bekeken:
+drie varkenskaarten, vijf muizenkaarten, de sleep met de gouden boog.
+
 ## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
 
 Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van
