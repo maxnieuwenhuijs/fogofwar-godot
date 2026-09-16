@@ -172,7 +172,11 @@ Tik 1 op de prop start, tik 2 zet de richting vast (`_volgende_tik`, met
 een tikje), tik 3 werpt. Tik 2 en 3 mogen overal: `Omgeving.klik` geeft
 een tik naast alle props door aan `tik_elders`; een tik op een andere prop
 breekt af (`breek_af`) en geeft die prop zijn gewone tik. Kanon en vissen
-hebben geen richting (zwaai 0) en beginnen met de meter. Loslaten en
+heeft geen richting (zwaai 0) en begint met de meter; het kanon kreeg er
+even later wel een (Max: "geef het kanon ook een richting, alleen dan
+gaat hij sneller en het aantal graden minder"): zwaai 14 graden bij
+snelheid 4,6, de loop draait mee (rotation.y) en de kogel landt op
+`_kanon_richting(hoek)` maal de dracht. Loslaten en
 wegschuiven doen niets meer voor het werpen (met een muis beweeg je tussen
 de tikken), alleen nog voor de cadans; RICHT_TIMEOUT 12 s ruimt een
 vergeten pijl op. `zet_richt` (check) zet beide vast en de volgende tik

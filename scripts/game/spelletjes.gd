@@ -201,8 +201,8 @@ func _start_richten(p: Dictionary) -> void:
 		var mat := mi.material_override as StandardMaterial3D
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# zonder zwaai (kanon: de loop staat al op de vaten; vissen) is er geen
-	# richting te kiezen: meteen de krachtmeter (twee tikken)
+	# zonder zwaai (vissen) is er geen richting te kiezen: meteen de
+	# krachtmeter (twee tikken)
 	var fase := "kracht" if float(conf.get("zwaai", 35.0)) <= 0.0 else "richting"
 	_actief = {"p": p, "t0": o._tijd, "t_fase": o._tijd, "fase": fase, "hoek": 0.0, "kracht": 0.0,
 			"pijl": pijl, "schacht": schacht, "kop": kop, "vast": false}
@@ -248,7 +248,7 @@ func _richt_process() -> void:
 	(schacht.material_override as StandardMaterial3D).albedo_color = kleur
 	(kop.material_override as StandardMaterial3D).albedo_color = kleur
 	if String(p.get("spel", "")) == "kanon":
-		_kanon_richt(p, kracht)
+		_kanon_richt(p, float(a.hoek), kracht)
 
 
 func _stop_richten() -> void:
@@ -278,7 +278,7 @@ func _werp() -> void:
 		"keilen":
 			_keilen_werp(p, hoek, kracht)
 		"kanon":
-			_kanon_schiet(p, kracht)
+			_kanon_schiet(p, hoek, kracht)
 		"vissen":
 			_vissen_werp(p, kracht)
 		_:
@@ -678,7 +678,10 @@ func maak_kanon(p: Dictionary, loop_node: Node3D) -> void:
 	p["spel"] = "kanon"
 	p["loop"] = loop_node
 	p["pijl_ouder"] = p.node
-	p["spel_conf"] = {"zwaai": 0.0, "laadtijd": 1.5, "pijl_min": 1.6, "pijl_max": 5.4,
+	# ook een richting (16 september, Max: "geef het kanon ook een richting,
+	# alleen dan gaat hij sneller en het aantal graden minder"): een smalle,
+	# snelle zwaai om de lijn naar de vaten; de loop draait mee
+	p["spel_conf"] = {"zwaai": 14.0, "zwaai_snelheid": 4.6, "laadtijd": 1.5, "pijl_min": 1.6, "pijl_max": 5.4,
 		"pijl_pos": Vector3(0.0, 0.03, 0.0), "pijl_draai": PI}
 	p["spel_score"] = 0
 
@@ -730,13 +733,20 @@ func _kanon_richt_start(p: Dictionary) -> void:
 	p["doelring"] = ring
 
 
-func _kanon_richt(p: Dictionary, kracht: float) -> void:
+## De richting van het kanon in zijn eigen ruimte: de pijl (pijl_draai PI,
+## min de hoek) wijst naar (-sin hoek, 0, cos hoek), de kogel gaat dezelfde kant op.
+func _kanon_richting(hoek: float) -> Vector3:
+	return Vector3(-sin(hoek), 0.0, cos(hoek))
+
+
+func _kanon_richt(p: Dictionary, hoek: float, kracht: float) -> void:
 	var loop_node: Node3D = p.get("loop", null)
 	if loop_node != null and is_instance_valid(loop_node):
 		loop_node.rotation.x = deg_to_rad(-10.0 - 35.0 * kracht)
+		loop_node.rotation.y = -hoek
 	var ring: Node3D = p.get("doelring", null)
 	if ring != null and is_instance_valid(ring):
-		ring.position = Vector3(0.0, 0.03, _kanon_dracht(p, kracht))
+		ring.position = _kanon_richting(hoek) * _kanon_dracht(p, kracht) + Vector3(0.0, 0.03, 0.0)
 
 
 func _kanon_richt_stop(p: Dictionary) -> void:
@@ -748,20 +758,22 @@ func _kanon_richt_stop(p: Dictionary) -> void:
 	if loop_node != null and is_instance_valid(loop_node):
 		var tw := loop_node.create_tween()
 		tw.tween_property(loop_node, "rotation:x", deg_to_rad(-10.0), 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(loop_node, "rotation:y", 0.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-func _kanon_schiet(p: Dictionary, kracht: float) -> void:
+func _kanon_schiet(p: Dictionary, hoek: float, kracht: float) -> void:
 	var root: Node3D = p.node
 	var mond: Vector3 = p.mond
 	var dracht := _kanon_dracht(p, kracht)
+	var richting := _kanon_richting(hoek)
 	# de wind van het potje (dezelfde die de vlaggen laat wapperen) duwt de
 	# kogel een stukje opzij; de pijl toonde de dracht zonder wind
 	var wind_lokaal: Vector3 = o.global_transform.basis.inverse() * PawnView.wind_richting
 	var wind_kanon: Vector3 = root.basis.inverse() * wind_lokaal
 	wind_kanon.y = 0.0
 	var drift: Vector3 = wind_kanon * 0.35 * kracht
-	var landing := Vector3(0.0, 0.05, dracht) + drift
-	var zonder_wind := Vector3(0.0, 0.05, dracht)
+	var landing := richting * dracht + Vector3(0.0, 0.05, 0.0) + drift
+	var zonder_wind := richting * dracht + Vector3(0.0, 0.05, 0.0)
 	o._geluid(["prop_kanon", "cannon_heavy"])
 	o._fx_knal(root, mond, 1.3)
 	o._fx_wolk(root, mond + Vector3(0.0, 0.05, 0.15), Color(0.8, 0.78, 0.72), 1.6)
@@ -784,6 +796,7 @@ func _kanon_schiet(p: Dictionary, kracht: float) -> void:
 		var lt := loop_node.create_tween()
 		lt.tween_interval(0.6)
 		lt.tween_property(loop_node, "rotation:x", deg_to_rad(-10.0), 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		lt.parallel().tween_property(loop_node, "rotation:y", 0.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _kanon_inslag(p: Dictionary, waar_globaal: Vector3, zonder_wind_globaal: Vector3) -> void:

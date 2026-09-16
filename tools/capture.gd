@@ -2481,7 +2481,7 @@ func _ready() -> void:
 			# richting-fase moet zwaaien (behalve kanon en vissen, die beginnen
 			# met de meter), tik 2 zet de richting vast en start de meter
 			var sp_fase: String = sp._spel.richt_fase()
-			var sp_verwacht: String = "kracht" if soort in ["kanon", "vissen"] else "richting"
+			var sp_verwacht: String = "kracht" if soort == "vissen" else "richting"
 			if sp_fase != sp_verwacht:
 				print("[SPEL] FOUT: %s begint in fase '%s', verwacht '%s'" % [soort, sp_fase, sp_verwacht])
 				sp_fouten += 1

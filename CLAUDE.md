@@ -410,8 +410,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   zwaait (richting; de pijl wijst de kant op die de bal gaat), tik 2 waar
   dan ook zet de richting vast en maakt de pijl de krachtmeter (groeit en
   krimpt in `meter_tijd` 0,45 s per kant), tik 3 zet de kracht vast en
-  werpt. Kanon en vissen hebben geen richting (`zwaai` 0) en beginnen met
-  de meter (twee tikken). Afbreken: een tik op een andere prop, of
+  werpt. Het kanon zwaait smal en snel (`zwaai` 14 graden, snelheid 4,6;
+  Max: "geef het kanon ook een richting, alleen sneller en minder
+  graden"), de loop draait mee en de kogel gaat die kant op; vissen heeft
+  geen richting (`zwaai` 0) en begint met de meter (twee tikken). Afbreken: een tik op een andere prop, of
   `RICHT_TIMEOUT` 12 s niets doen; `Omgeving.klik` stuurt een tik naast
   alle props naar `Spelletjes.tik_elders`. Het vasthouden-en-loslaten van
   12 september bestaat alleen nog voor de cadans (`HOLD_DREMPEL` 0,22 s,
