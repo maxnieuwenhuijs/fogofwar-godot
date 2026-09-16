@@ -160,6 +160,14 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- geen cape op de cavalerie
+
+Max: "verwijder de cape ook voor cav". `PawnView._hang_cape` hangt de lap
+nu alleen op INFANTRY (was: alles behalve artillerie). Capecheck zet het
+type van de blauwe muis op cavalerie en terug (rechtstreeks op `_unit_type`,
+want `set_unit_type` wisselt een karaktermodel voor het geometrische stuk):
+cavalerie geen cape, infanterie weer wel. PASS. Puur visueel.
+
 ## 16 september -- cavalerie-prompts zonder hoed
 
 Max: "in de model tracker hebben alle cav prompts nog hoedjes op die ze

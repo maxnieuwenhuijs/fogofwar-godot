@@ -904,6 +904,24 @@ func _ready() -> void:
 		if not bool(cc_spd.heeft) or int(cc_spd.aantal) != 1 or float(cc_spd.achter) <= 0.02:
 			print("[CAPE] FOUT: na de modelwissel klopt de cape niet")
 			cc_fouten += 1
+		# cavalerie: geen cape, ook niet blauw (16 september, Max: "verwijder de
+		# cape ook voor cav"). Het type rechtstreeks omzetten op de blauwe muis
+		# met zijn echte model (set_unit_type zou het karaktermodel voor het
+		# geometrische stuk wisselen), daarna terug naar infanterie
+		(cc_pvs[1] as PawnView)._unit_type = Constants.UnitType.CAVALRY
+		(cc_pvs[1] as PawnView).herhang_cape()
+		await get_tree().process_frame
+		if bool(cc_meet.call(cc_pvs[1]).heeft):
+			print("[CAPE] FOUT: blauwe cavalerie draagt een cape")
+			cc_fouten += 1
+		else:
+			print("[CAPE] cavalerie blauw: geen cape (goed)")
+		(cc_pvs[1] as PawnView)._unit_type = Constants.UnitType.INFANTRY
+		(cc_pvs[1] as PawnView).herhang_cape()
+		await get_tree().process_frame
+		if not bool(cc_meet.call(cc_pvs[1]).heeft):
+			print("[CAPE] FOUT: terug naar infanterie geeft blauw geen cape")
+			cc_fouten += 1
 		# knop cape_rood
 		PawnView.set_fx("cape_rood", 1.0)
 		(cc_pvs[0] as PawnView).herhang_cape()

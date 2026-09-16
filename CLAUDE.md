@@ -493,7 +493,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (boven = kraag, rand rondom, de lap neemt de verhouding van het plaatje
   over, 3:4 ligt het dichtst bij; layout en drie prompts in
   `assets/models/props/LEESMIJ.md` en in de prop-tracker, PROP-WISHLIST
-  sectie 14: png-rijen, prompts zonder sjabloon, variant-rijen). Blauw: koningsblauw
+  sectie 14: png-rijen, prompts zonder sjabloon, variant-rijen). **Alleen de
+  infanterie draagt hem** (16 september, Max: "verwijder de cape ook voor
+  cav"; `_hang_cape` stopt op alles wat geen INFANTRY is, capecheck meet
+  het). Blauw: koningsblauw
   met goudgalon en lichte voering; rood (knop `cape_rood`, standaard uit)
   dof donkerrood zonder galon. `_hang_cape` loopt na elke modelwissel
   (`_apply_team_texture`), niet op artillerie; `zet_team()` wisselt jas en

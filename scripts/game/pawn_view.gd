@@ -3225,7 +3225,10 @@ static func cape_weg(doek: MeshInstance3D) -> void:
 func _hang_cape() -> void:
 	cape_weg(_cape)
 	_cape = null
-	if _piece == null or _unit_type == Constants.UnitType.ARTILLERY or not is_inside_tree():
+	# alleen de infanterie draagt een cape: niet de artillerie (een kanon), en
+	# sinds 16 september ook niet de cavalerie (Max: "verwijder de cape ook
+	# voor cav"; de big bro draagt een harnas, geen jas)
+	if _piece == null or _unit_type != Constants.UnitType.INFANTRY or not is_inside_tree():
 		return
 	var aan: bool = (fx("cape_blauw", 1.0) > 0.5) if team == Constants.Team.BLUE else (fx("cape_rood", 0.0) > 0.5)
 	if not aan:
