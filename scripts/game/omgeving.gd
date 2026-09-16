@@ -269,12 +269,17 @@ func klik(screen_pos: Vector2) -> bool:
 			beste = p
 			beste_d = d
 	if beste.is_empty():
-		return false
+		# geen prop onder de vinger: loopt er een richten (16 september, drie
+		# tikken), dan is dit tik 2 (richting vast) of tik 3 (kracht vast, werp)
+		return _spel.tik_elders()
+	if _spel.richt_bezig() and not _spel.is_richt_prop(beste):
+		# een andere prop terwijl er gericht wordt: het richten stopt, de prop
+		# krijgt zijn gewone tik
+		_spel.breek_af()
 	_tik(beste)
 	if beste.has("spel"):
-		# een spel-prop (12 september): de tik is gespeeld, de rest beslist
-		# Spelletjes bij het loslaten (kort = de gewone reactie) of na de
-		# hold-drempel (het spel zelf)
+		# een spel-prop: tik 1 start het richten, tik 2 en 3 zetten richting en
+		# kracht vast (Spelletjes.druk); de cadans wacht op vasthouden
 		_spel.druk(beste, screen_pos)
 		return true
 	if beste.bezig:

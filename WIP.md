@@ -160,6 +160,26 @@ pijl, zodat kegelen en keilen allebei kloppen. `-- spelcheck` PASS
 (kegelen 10, keilen 2, kanon 2, vissen 1, cadans 8 van 8), capecheck PASS,
 omgevingcheck 1 PASS.
 
+## 16 september -- werpen en schieten in drie tikken
+
+Max: "maak alle bowl- en schietspelletjes zo: je klikt, je ziet de
+richting-pijl die heen en weer gaat; dan klik je, dan staat de richting
+vast, dan gaat een pijl of krachtmeter snel omhoog en naar beneden; dan
+klik je weer, dan heb je je kracht." `Spelletjes` heeft nu een fase in
+`_actief`: "richting" (pijl zwaait, vaste halve lengte) en "kracht" (de
+pijl is de meter: driehoeksgolf, 0,45 s per kant, oranje geknipper op vol).
+Tik 1 op de prop start, tik 2 zet de richting vast (`_volgende_tik`, met
+een tikje), tik 3 werpt. Tik 2 en 3 mogen overal: `Omgeving.klik` geeft
+een tik naast alle props door aan `tik_elders`; een tik op een andere prop
+breekt af (`breek_af`) en geeft die prop zijn gewone tik. Kanon en vissen
+hebben geen richting (zwaai 0) en beginnen met de meter. Loslaten en
+wegschuiven doen niets meer voor het werpen (met een muis beweeg je tussen
+de tikken), alleen nog voor de cadans; RICHT_TIMEOUT 12 s ruimt een
+vergeten pijl op. `zet_richt` (check) zet beide vast en de volgende tik
+werpt. Spelcheck controleert de fasen per spel (PASS: kegelen 8, keilen 4,
+kanon 2, vissen 1, cadans 8/8); omgevingcheck telt bij een werp-prop de
+neergezette pijl als reactie (PASS).
+
 ## 16 september -- capes reageren alleen op een schot in de buurt; de hitstop blies ze weg
 
 Max: "alle capes reageren nu op een schot, dat moet niet, alleen binnen een

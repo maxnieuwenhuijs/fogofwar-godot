@@ -402,13 +402,20 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - **Vijf mini-games in het diorama (12 september, Max: "bedenk 5
   spelletjes... heel low key, een tap of een klik inhouden"):**
   `scripts/game/spelletjes.gd` (`Spelletjes`, aangemaakt in
-  `Omgeving._init`). Twee bedieningen op een vinger: WERPEN (vinger op de
-  spel-prop, METEEN zwaait een pijl op de grond heen en weer = richting en
-  groeit hij = kracht (sinds 12 september, Max: "de pijl moet meteen
-  komen"; de pijl wijst sindsdien ook de kant op die de bal gaat, de draai
-  om +Y stond andersom), loslaten werpt, binnen `HOLD_DREMPEL` 0,22 s is
-  het een gewone tik (alleen de cadans wacht op de drempel); wegschuiven
-  breekt af) en OP DE MAAT (tikken op het moment). Kegelen (`kegelspel` in
+  `Omgeving._init`). Twee bedieningen op een vinger: WERPEN in DRIE TIKKEN
+  (sinds 16 september, Max: "je klikt, je ziet de richting-pijl die heen
+  en weer gaat; dan klik je, dan staat de richting vast, dan gaat een pijl
+  of krachtmeter snel omhoog en naar beneden; dan klik je weer, dan heb je
+  je kracht"): tik 1 op de spel-prop zet de pijl neer die heen en weer
+  zwaait (richting; de pijl wijst de kant op die de bal gaat), tik 2 waar
+  dan ook zet de richting vast en maakt de pijl de krachtmeter (groeit en
+  krimpt in `meter_tijd` 0,45 s per kant), tik 3 zet de kracht vast en
+  werpt. Kanon en vissen hebben geen richting (`zwaai` 0) en beginnen met
+  de meter (twee tikken). Afbreken: een tik op een andere prop, of
+  `RICHT_TIMEOUT` 12 s niets doen; `Omgeving.klik` stuurt een tik naast
+  alle props naar `Spelletjes.tik_elders`. Het vasthouden-en-loslaten van
+  12 september bestaat alleen nog voor de cadans (`HOLD_DREMPEL` 0,22 s,
+  wegschuiven breekt af). En OP DE MAAT (tikken op het moment). Kegelen (`kegelspel` in
   de DIORAMAS: tien lege flessen uit de kantine in de bowling-driehoek,
   klein en zonder vlak eronder, omgerold met een kanonskogel, Max: "iets
   wat bij de setting hoort", "10 stuks"; ketting van omvallers, "Strike!"), keilen (`{"stenen": true}` op een `plas_kikker`, of `stenen` op
@@ -429,9 +436,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   prop-node, geen spelstaat. Geluiden `prop_kegel`, `prop_kegel_rol`,
   `prop_kruitvat`, `prop_hengel`, `prop_vis` (synthetisch, in de
   geluid-tracker). Check: `-- spelcheck` (elk spel: vasthouden, richten
-  vastzetten via `Spelletjes.zet_richt`, loslaten, score; met venster
-  `_shot_spel_richt.png`); `omgevingcheck` klikt sinds die dag met drukken
-  EN loslaten. Tripo-props ervoor: PROP-WISHLIST sectie 13.
+  vastzetten via `Spelletjes.zet_richt`, tikken, score; sinds 16 september
+  ook de fasen: richting-fase na tik 1, meter na tik 2, klaar na tik 3; met
+  venster `_shot_spel_richt.png`); `omgevingcheck` klikt met drukken EN
+  loslaten en telt bij een werp-prop de neergezette pijl als reactie. Tripo-props ervoor: PROP-WISHLIST sectie 13.
 - **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
   mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
   gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de

@@ -2477,6 +2477,20 @@ func _ready() -> void:
 					continue
 				var afst: float = (d2.node as Node3D).position.distance_to(n.position)
 				kracht = clampf((afst - 1.6) / 5.4, 0.0, 1.0)
+			# drie tikken (16 september): tik 1 heeft het richten gestart; de
+			# richting-fase moet zwaaien (behalve kanon en vissen, die beginnen
+			# met de meter), tik 2 zet de richting vast en start de meter
+			var sp_fase: String = sp._spel.richt_fase()
+			var sp_verwacht: String = "kracht" if soort in ["kanon", "vissen"] else "richting"
+			if sp_fase != sp_verwacht:
+				print("[SPEL] FOUT: %s begint in fase '%s', verwacht '%s'" % [soort, sp_fase, sp_verwacht])
+				sp_fouten += 1
+			if sp_fase == "richting":
+				sp.klik(scherm)   # tik 2: richting vast
+				await get_tree().process_frame
+				if sp._spel.richt_fase() != "kracht":
+					print("[SPEL] FOUT: %s: na tik 2 geen krachtmeter (fase '%s')" % [soort, sp._spel.richt_fase()])
+					sp_fouten += 1
 			sp._spel.zet_richt(0.0, kracht)
 			if soort == "kegelen":
 				# met venster: de pijl van het richten op de plaat
@@ -2485,6 +2499,12 @@ func _ready() -> void:
 				if rt != null and rt.get_image() != null:
 					rt.get_image().save_png("res://_shot_spel_richt.png")
 			sp.laat_los(scherm)
+			# tik 3: kracht vast, werpen (een tik naast de prop telt ook)
+			sp.klik(scherm + Vector2(400.0, 300.0))
+			await get_tree().process_frame
+			if sp._spel.richt_bezig():
+				print("[SPEL] FOUT: %s: na tik 3 loopt het richten nog" % soort)
+				sp_fouten += 1
 			if soort == "vissen":
 				# wachten tot de dobber duikt, dan tikken
 				var w2 := 0.0
@@ -2784,6 +2804,10 @@ func _ready() -> void:
 				if not raak:
 					print("[OMGEVING] FOUT: klik op %s (scherm %s) raakt niets" % [pn.name, sp])
 					og_fouten += 1
+				elif og._spel.richt_bezig():
+					# een werp-prop (16 september, drie tikken): tik 1 zet de pijl
+					# neer, dat IS de reactie; afbreken voor de volgende prop
+					og._spel.breek_af()
 				elif not p.bezig:
 					print("[OMGEVING] FOUT: %s pakt de klik maar reageert niet" % pn.name)
 					og_fouten += 1

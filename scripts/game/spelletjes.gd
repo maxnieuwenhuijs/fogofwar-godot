@@ -5,16 +5,21 @@ extends RefCounted
 ## ... heel low key, simpel te bedienen met een tap of een klik inhouden").
 ##
 ## Twee bedieningen, allebei met een vinger:
-##   - WERPEN: vinger op de spel-prop en vasthouden. Een pijl op de grond
-##     zwaait heen en weer (de richting) en groeit (de kracht); loslaten werpt.
-##     Kegelen (de bal), keilen (de stenen), het kanon (de loop komt omhoog,
-##     de pijl is de dracht), vissen (de pijl is de worp van de dobber).
+##   - WERPEN, in drie tikken (16 september, Max: "je klikt, je ziet de
+##     richting-pijl die heen en weer gaat; dan klik je, dan staat de richting
+##     vast, dan gaat een pijl of krachtmeter snel omhoog en naar beneden; dan
+##     klik je weer, dan heb je je kracht"). Tik 1 op de spel-prop: een pijl
+##     op de grond zwaait heen en weer (de richting). Tik 2, waar dan ook: de
+##     richting staat vast en de pijl wordt de krachtmeter, hij groeit en
+##     krimpt snel. Tik 3: de kracht staat vast, de worp gaat. Kegelen (de
+##     bal), keilen (de stenen), het kanon (de loop komt omhoog, de pijl is
+##     de dracht); vissen heeft geen richting en begint meteen met de meter
+##     (twee tikken). Afbreken: een tik op een ANDERE prop, of RICHT_TIMEOUT
+##     seconden niets doen. Daarvoor (12 september) was het vasthouden en
+##     loslaten; die bediening bestaat alleen nog voor de cadans.
 ##   - OP DE MAAT: tikken op het juiste moment. Vissen (tik als de dobber
 ##     duikt), de tamboer-cadans (vasthouden op de trom start de ronde, dan
-##     op de maat tikken).
-## Een korte tik op een spel-prop blijft gewoon een tik (ding + de gewone
-## reactie); pas na HOLD_DREMPEL seconden vasthouden begint het spel, en
-## wegschuiven met je vinger breekt af.
+##     op de maat tikken; loslaten binnen HOLD_DREMPEL is een gewone tik).
 ##
 ## Puur visueel: alles hangt als tween aan zijn prop-node (een herbouw van
 ## het diorama ruimt het op), de willekeur komt uit de RNG van de omgeving
@@ -27,8 +32,9 @@ extends RefCounted
 ## maak_kanon, maak_cadans) zetten de spel-props neer en registreren ze bij
 ## de omgeving met `spel` = de soort.
 
-const HOLD_DREMPEL := 0.22     # seconden vasthouden voor het spel begint
-const ANNULEER_PX := 90.0      # zo ver wegschuiven met je vinger = afbreken
+const HOLD_DREMPEL := 0.22     # seconden vasthouden voor de cadans begint
+const ANNULEER_PX := 90.0      # zo ver wegschuiven met je vinger = de cadans afbreken
+const RICHT_TIMEOUT := 12.0    # seconden zonder tik: het richten stopt vanzelf
 const KEGEL_AFSTAND := 1.5     # van de kogel tot de voorste fles
 const VANGSTEN_MAX := 5        # zoveel vangsten blijven er op de steiger liggen
 
@@ -36,7 +42,8 @@ var o: Omgeving
 var _kandidaat: Dictionary = {}    # ingedrukte spel-prop die op de hold-drempel wacht
 var _druk_tijd := 0.0
 var _druk_pos := Vector2.ZERO
-var _actief: Dictionary = {}       # het richten: {p, t0, hoek, kracht, pijl, schacht, kop, vast}
+var _actief: Dictionary = {}       # het richten: {p, t0, t_fase, fase, hoek, kracht, pijl, schacht, kop, vast}
+                                   # fase: "richting" (pijl zwaait) of "kracht" (meter op en neer)
 
 
 func _init(omgeving: Omgeving) -> void:
@@ -48,14 +55,42 @@ func reset() -> void:
 	_actief = {}
 
 
-## Alleen voor de check: richten vastzetten op een hoek (rad) en kracht (0..1).
+## Alleen voor de check: richting en kracht vastzetten (hoek in rad, kracht
+## 0..1); de eerstvolgende tik (Omgeving.klik) werpt dan met die waarden.
 func zet_richt(hoek: float, kracht: float) -> void:
 	if _actief.is_empty():
 		return
 	_actief.vast = true
+	_actief.fase = "kracht"
 	_actief.hoek = hoek
 	_actief.kracht = kracht
 	_richt_process()
+
+
+## Waar het richten nu staat (check en Omgeving): "" (niets), "richting" of "kracht".
+func richt_fase() -> String:
+	return String(_actief.get("fase", "")) if not _actief.is_empty() else ""
+
+
+## Een tik ergens anders dan op een prop terwijl er gericht wordt (Omgeving.klik):
+## tik 2 of 3 van het werpen. Waar = verwerkt.
+func tik_elders() -> bool:
+	if _actief.is_empty():
+		return false
+	_volgende_tik()
+	return true
+
+
+## Is dit de prop waar het richten op loopt?
+func is_richt_prop(p: Dictionary) -> bool:
+	return not _actief.is_empty() and (_actief.p as Dictionary).node == p.node
+
+
+## Een tik op een ANDERE prop dan die waar het richten op loopt: afbreken.
+func breek_af() -> void:
+	_kandidaat = {}
+	if not _actief.is_empty():
+		_stop_richten()
 
 
 func richt_bezig() -> bool:
@@ -64,13 +99,14 @@ func richt_bezig() -> bool:
 
 # ---------------------------------------------------------------- bediening
 
-## Vinger op een spel-prop (na de tik van Omgeving.klik). Wacht er al een
-## spel op deze prop op een tik (dobber, cadans), dan is dit die tik. Anders
-## komt de richt-pijl METEEN (Max, 12 september: "de pijl moet meteen
-## komen"); loslaten binnen HOLD_DREMPEL telt als een gewone tik, daarna als
-## een worp. Alleen de cadans wacht nog op de drempel (die begint met tikken).
+## Vinger op een spel-prop (na de tik van Omgeving.klik). Loopt er al een
+## richten op DEZE prop, dan is dit tik 2 of 3 (op een andere prop heeft
+## Omgeving.klik al afgebroken). Wacht er een spel op deze prop op een tik
+## (dobber, cadans), dan is dit die tik. Anders begint het richten meteen
+## (tik 1); alleen de cadans wacht op de hold-drempel.
 func druk(p: Dictionary, pos: Vector2) -> void:
 	if not _actief.is_empty():
+		_volgende_tik()
 		return
 	var staat: Dictionary = p.get("spel_staat", {})
 	if not staat.is_empty() and bool(staat.get("wacht_op_tik", false)):
@@ -87,24 +123,27 @@ func druk(p: Dictionary, pos: Vector2) -> void:
 	_start_richten(p)
 
 
-## Vinger los. Waar = het was een spel-prop (kort getikt of geworpen).
+## Tik 2 of 3 van het werpen: richting vast, dan kracht vast en werpen.
+func _volgende_tik() -> void:
+	var a: Dictionary = _actief
+	if String(a.fase) == "richting" and not bool(a.vast):
+		a.fase = "kracht"
+		a.t_fase = o._tijd
+		a.kracht = 0.0
+		_toon(["prop_tik", "ui_click"], 1.15)
+		_richt_process()
+		return
+	_werp()
+
+
+## Vinger los: alleen de cadans doet hier nog iets (kort = de gewone tik).
+## Waar = het was een spel-prop.
 func laat_los(_pos: Vector2) -> bool:
 	if not _actief.is_empty():
-		var a: Dictionary = _actief
-		if o._tijd - float(a.t0) < HOLD_DREMPEL:
-			# een korte tik: pijl weg, de gewone reactie van de prop
-			var pk: Dictionary = a.p
-			_stop_richten()
-			if is_instance_valid(pk.node) and not bool(pk.bezig) and pk.has("reacties"):
-				pk.bezig = true
-				o._speel_willekeurig(pk)
-			return true
-		_werp()
 		return true
 	if not _kandidaat.is_empty():
 		var p: Dictionary = _kandidaat
 		_kandidaat = {}
-		# een korte tik: de gewone reactie van de prop, zoals bij elke prop
 		if is_instance_valid(p.node) and not bool(p.bezig) and p.has("reacties"):
 			p.bezig = true
 			o._speel_willekeurig(p)
@@ -112,13 +151,13 @@ func laat_los(_pos: Vector2) -> bool:
 	return false
 
 
+## Vinger beweegt: alleen de cadans-kandidaat breekt af bij wegschuiven (het
+## richten in tikken niet: met een muis beweeg je nu eenmaal tussen de tikken).
 func beweeg(pos: Vector2) -> void:
-	if _actief.is_empty() and _kandidaat.is_empty():
+	if _kandidaat.is_empty():
 		return
 	if pos.distance_to(_druk_pos) > ANNULEER_PX:
 		_kandidaat = {}
-		if not _actief.is_empty():
-			_stop_richten()
 
 
 func process(delta: float) -> void:
@@ -128,7 +167,10 @@ func process(delta: float) -> void:
 		if is_instance_valid(p.node) and not bool(p.bezig):
 			_start_richten(p)
 	if not _actief.is_empty():
-		_richt_process()
+		if o._tijd - float(_actief.t_fase) > RICHT_TIMEOUT:
+			_stop_richten()
+		else:
+			_richt_process()
 	for p in o._props:
 		if p.has("spel_staat") and is_instance_valid(p.node):
 			_staat_process(p, delta)
@@ -159,7 +201,11 @@ func _start_richten(p: Dictionary) -> void:
 		var mat := mi.material_override as StandardMaterial3D
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_actief = {"p": p, "t0": o._tijd, "hoek": 0.0, "kracht": 0.0, "pijl": pijl, "schacht": schacht, "kop": kop, "vast": false}
+	# zonder zwaai (kanon: de loop staat al op de vaten; vissen) is er geen
+	# richting te kiezen: meteen de krachtmeter (twee tikken)
+	var fase := "kracht" if float(conf.get("zwaai", 35.0)) <= 0.0 else "richting"
+	_actief = {"p": p, "t0": o._tijd, "t_fase": o._tijd, "fase": fase, "hoek": 0.0, "kracht": 0.0,
+			"pijl": pijl, "schacht": schacht, "kop": kop, "vast": false}
 	if soort == "kanon":
 		_kanon_richt_start(p)
 	_richt_process()
@@ -173,9 +219,15 @@ func _richt_process() -> void:
 		return
 	var conf: Dictionary = p.get("spel_conf", {})
 	var t: float = o._tijd - float(a.t0)
+	var tf: float = o._tijd - float(a.t_fase)
 	if not bool(a.vast):
-		a.hoek = deg_to_rad(float(conf.get("zwaai", 35.0))) * sin(t * float(conf.get("zwaai_snelheid", 2.4)))
-		a.kracht = clampf(t / float(conf.get("laadtijd", 1.0)), 0.0, 1.0)
+		if String(a.fase) == "richting":
+			a.hoek = deg_to_rad(float(conf.get("zwaai", 35.0))) * sin(tf * float(conf.get("zwaai_snelheid", 2.4)))
+			a.kracht = 0.45   # de pijl is tijdens het richten een vaste, halve lengte
+		else:
+			# de krachtmeter: snel op en neer (meter_tijd seconden van 0 naar 1)
+			var u: float = tf / float(conf.get("meter_tijd", 0.45))
+			a.kracht = 1.0 - absf(fmod(u, 2.0) - 1.0)
 	var kracht: float = float(a.kracht)
 	var pijl: Node3D = a.pijl
 	# Min: een draai om +Y zet de pijl (lokaal -Z) naar -X, terwijl de worp
@@ -188,9 +240,11 @@ func _richt_process() -> void:
 	schacht.scale = Vector3(1.0, 1.0, lengte)
 	schacht.position.z = -lengte * 0.5
 	kop.position.z = -lengte - 0.08
-	var kleur := Color(0.8, 0.78, 0.7).lerp(Color(1.0, 0.85, 0.3), kracht)
-	if kracht >= 1.0:
-		kleur = kleur.lerp(Color(1.0, 0.5, 0.2), 0.5 + 0.5 * sin(t * 12.0))
+	var kleur := Color(0.8, 0.78, 0.7)
+	if String(a.fase) == "kracht":
+		kleur = kleur.lerp(Color(1.0, 0.85, 0.3), kracht)
+		if kracht >= 0.97:
+			kleur = kleur.lerp(Color(1.0, 0.5, 0.2), 0.5 + 0.5 * sin(t * 12.0))
 	(schacht.material_override as StandardMaterial3D).albedo_color = kleur
 	(kop.material_override as StandardMaterial3D).albedo_color = kleur
 	if String(p.get("spel", "")) == "kanon":
