@@ -33,6 +33,44 @@ Jump Attack", 3,71 s, op tempo 1,2 dus 3,09 s) pas na de rit en viel de klap
   loopt nog=true, doel staat nog=true)`, PASS.
 - `-- uispel 777`: d16a14f8, 246 acties, cyclus 6 (puur visueel).
 
+**Vervolg dezelfde middag (Max: "laat dan wel in de tuner een enemy zien en
+dan de aanval op gepaste afstand starten", "en een knop", "sowieso alle
+knoppen beter in beeld", "voeg gewoon een bord toe met alle pionnen net als
+in het spel zelf... ik moet in het spel op het bord zien en tunen net als
+normaal in het spel"):**
+
+- `PawnView.charge_tijdlijn(rij_dist)` geeft rit, sprong-start, sprong-duur
+  en klap; game.gd en de tuner lezen dezelfde tijdlijn.
+- Test-rij: `charge (dood)` / `charge (overleeft)`: vijand recht voor het
+  model, rit van drie vakken (`CHARGE_RIT`) op de rush-clip met dezelfde
+  sine-tween als `_animate_move`, sprong en klap op de tijdlijn. Het
+  info-regeltje meldt: "rit 3 vakken in 0.39 s, sprong start op 0.13 s
+  (3.09 s), klap op 2.72 s".
+- `bord + legers` (bovenbalk): Board.tscn met beide legers in de
+  standaard-opstelling van het spel: `v42_default.json` + het
+  doctrines-blok, `GameState.default_placement` per speler, rood (Vergelijk
+  links = speler 1) op de rijen 9-10 kijkend naar -z, blauw op 0-1; de
+  eerste infanterist draagt het vaandel, de tweede de trom. Cam-keuze
+  `bord` = de camera uit Board.tscn zelf (WYSIWYG), wordt automatisch
+  gekozen. De sliders tunen het model uit de dropdowns (archetype base);
+  `duel`/`charge` spelen op het bord op de pion van die factie
+  (`_test_aanvaller`), met een verse vijand ervoor (`_test_verdediger`,
+  altijd de andere teamkleur). Formatie / alle modellen / bord + legers
+  sluiten elkaar uit; `_retune_target` herbouwt via `_herbouw_huidige`
+  (daarvoor klapte "alle modellen" bij een slider-tik terug naar de
+  formatie).
+- De eigen 5x3 tegels en het hulpkruis staan onder `_tuner_vloer` en gaan
+  uit zodra het bord aan is: ze lagen op dezelfde hoogte als het
+  bordoppervlak en flikkerden erdoorheen (witte strepen midden op het
+  bord in de eerste shot).
+- Bovenbalk, clip-rij en test-rij zijn `HFlowContainer`s: op het staande
+  venster (1080 breed) vielen `charge (...)` en `bord` rechts buiten beeld.
+- `-- tunercheck` drukt nu ook `bord + legers` (39 pionnen, allemaal op het
+  bord, 2 vaandels, bord-camera aan) en `charge (dood)` in (de rode ruiter
+  rijdt weg, er staat een verdediger bij): 0 fouten. Shot met venster:
+  `ModelTuner.tscn -- shot legers charge` (argumenten `legers` en `charge`
+  zijn nieuw) -> `_shot_tuner.png`.
+
 ## 16 september -- Lijken en gibs worden doorzichtig en zakken in het bord
 
 Max: "alle stukken lijk en gibs moeten echt ook lichtdoorzichtig worden na
