@@ -3503,19 +3503,39 @@ func _zet_wapenjas() -> void:
 ## wit naar donkergrijs tweenen dimt het hele stuk. Dat werkt ook bovenop de
 ## gore-textures die er dan al op liggen.
 ##
+## Sinds 16 september (Max: "alle stukken lijk en gibs moeten echt ook
+## lichtdoorzichtig worden na korte tijd om het bord beter te kunnen zien en
+## laat ze iets zakken") wordt het stuk in dezelfde beweging ook DOORZICHTIG
+## (albedo-alpha, met een depth-prepass zodat je niet de binnenkant van het
+## lijk door zijn eigen rug ziet) en ZAKT het een stukje in het bord (position:y
+## van de wortel: het stuk, de gibs-wortel of het losse wapen; relatief, want
+## het musket is op het moment van aanroepen nog onderweg). Een SoftBody3D
+## (cloth-cape) laat zich niet verschuiven: zijn kraag volgt de schouderbotten,
+## die zakken mee.
+##
 ## Knoppen (effects_tuning.json, Model-tuner tab Gore):
 ##   debris_donker_na    seconden voordat het begint
 ##   debris_donker_duur  hoe lang het verlopen duurt
 ##   debris_donker       hoe donker (0 = onveranderd, 1 = zwart)
+##   debris_doorzicht    hoe doorzichtig (0 = dicht, 1 = onzichtbaar)
+##   debris_zak          hoe diep het in het bord zakt (wereld-eenheden; een pion is ~0,9)
 static func verduister_later(root: Node) -> void:
 	if root == null or not is_instance_valid(root):
 		return
 	var kracht: float = clampf(fx("debris_donker", 0.7), 0.0, 1.0)
-	if kracht <= 0.001:
+	var doorzicht: float = clampf(fx("debris_doorzicht", 0.55), 0.0, 1.0)
+	var zak: float = maxf(fx("debris_zak", 0.08), 0.0)
+	if kracht <= 0.001 and doorzicht <= 0.001 and zak <= 0.0001:
 		return
 	var na: float = maxf(fx("debris_donker_na", 4.0), 0.0)
 	var duur: float = maxf(fx("debris_donker_duur", 2.5), 0.05)
-	var doel := Color(1.0 - kracht, 1.0 - kracht, 1.0 - kracht, 1.0)
+	var doel := Color(1.0 - kracht, 1.0 - kracht, 1.0 - kracht, 1.0 - doorzicht)
+	if zak > 0.0001 and root is Node3D and not (root is SoftBody3D):
+		var r3 := root as Node3D
+		var tz := r3.create_tween()
+		tz.tween_interval(na)
+		tz.tween_property(r3, "position:y", -zak, duur).as_relative() \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	var meshes: Array = []
 	if root is MeshInstance3D:
 		meshes.append(root)
@@ -3527,11 +3547,22 @@ static func verduister_later(root: Node) -> void:
 		var mat: Material = m3.material_override
 		if mat is ShaderMaterial:
 			# Eigen shader (cape, vlaggendoek): die draagt een dim-uniform en
-			# is al per instantie, dus gewoon die tweenen.
+			# is al per instantie, dus gewoon die tweenen. Voor de doorzichtigheid
+			# wisselt hij op dat moment naar de alpha-variant van zijn shader
+			# (een shader die ALPHA schrijft is altijd transparant, dus de
+			# levende vlaggen en capes houden hun eigen, ondoorzichtige shader).
 			var sm := mat as ShaderMaterial
 			if sm.get_shader_parameter("dim") != null:
+				# De wissel meteen (niet in de tween): tween_property wil de
+				# uniform al zien bestaan. Met doorzicht 0 rendert de variant
+				# hetzelfde als het origineel.
+				if doorzicht > 0.001:
+					_shader_naar_doorzicht(sm)
 				var tws := m3.create_tween()
 				tws.tween_interval(na)
+				if doorzicht > 0.001 and sm.get_shader_parameter("doorzicht") != null:
+					tws.tween_property(sm, "shader_parameter/doorzicht", doorzicht, duur).from(0.0)
+					tws.parallel()
 				tws.tween_property(sm, "shader_parameter/dim", 1.0 - kracht, duur).from(1.0)
 			continue
 		if not (mat is BaseMaterial3D):
@@ -3543,7 +3574,52 @@ static func verduister_later(root: Node) -> void:
 		var bm := mat as BaseMaterial3D
 		var tw := m3.create_tween()
 		tw.tween_interval(na)
+		if doorzicht > 0.001:
+			tw.tween_callback(_materiaal_naar_doorzicht.bind(bm))
+			tw.parallel()
 		tw.tween_property(bm, "albedo_color", doel, duur).from(bm.albedo_color)
+
+
+## Zet een (al per instantie gedupliceerd) materiaal op alpha-rendering met een
+## depth-prepass: eerst de diepte van het hele stuk, dan alleen het voorste vlak
+## blenden. Zonder die prepass schemeren de ledematen aan de achterkant door de
+## romp heen en leest het lijk als een röntgenfoto. Al-transparante materialen
+## (bloed, ringen) blijven wat ze zijn.
+static func _materiaal_naar_doorzicht(bm: BaseMaterial3D) -> void:
+	if bm == null or not is_instance_valid(bm):
+		return
+	if bm.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED \
+			or bm.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR \
+			or bm.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_HASH:
+		bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+
+
+## Doorzicht-varianten van de eigen shaders (vlaggendoek, cape), per bron-shader
+## een keer gebouwd: dezelfde code met een `doorzicht`-uniform, `ALPHA` en een
+## depth-prepass. De uniform-waarden van het materiaal blijven staan bij de
+## wissel (ShaderMaterial bewaart ze op naam).
+static var _doorzicht_shaders: Dictionary = {}
+
+static func _shader_naar_doorzicht(sm: ShaderMaterial) -> void:
+	if sm == null or not is_instance_valid(sm) or sm.shader == null:
+		return
+	var bron: Shader = sm.shader
+	if bron.get_meta("doorzicht_variant", false):
+		return
+	var sleutel: int = bron.get_instance_id()
+	var variant: Shader = _doorzicht_shaders.get(sleutel)
+	if variant == null:
+		var code: String = bron.code
+		if not code.contains("uniform float dim") or not code.contains("ALBEDO = doek * dim;"):
+			return
+		code = code.replace("render_mode cull_disabled;", "render_mode cull_disabled, depth_prepass_alpha;")
+		code = code.replace("uniform float dim", "uniform float doorzicht = 0.0;\nuniform float dim")
+		code = code.replace("ALBEDO = doek * dim;", "ALBEDO = doek * dim;\n\tALPHA = 1.0 - doorzicht;")
+		variant = Shader.new()
+		variant.code = code
+		variant.set_meta("doorzicht_variant", true)
+		_doorzicht_shaders[sleutel] = variant
+	sm.shader = variant
 
 
 ## Meet het skelet met kennis van botnamen (in root-lokale ruimte):

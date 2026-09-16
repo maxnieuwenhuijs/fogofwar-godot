@@ -1350,13 +1350,29 @@ func _ready() -> void:
 				if m is BaseMaterial3D:
 					return (m as BaseMaterial3D).albedo_color
 			return Color.WHITE
+		# Sinds 16 september ook: wordt het lijk doorzichtig (albedo-alpha met
+		# depth-prepass) en zakt het stuk een stukje in het bord, terwijl de
+		# levende pion dicht blijft en op zijn plek staat?
+		var db_transp := func(pv: PawnView) -> int:
+			for mi in pv.find_children("*", "MeshInstance3D", true, false):
+				var m: Material = (mi as MeshInstance3D).material_override
+				if m == null:
+					m = (mi as MeshInstance3D).get_active_material(0)
+				if m is BaseMaterial3D:
+					return (m as BaseMaterial3D).transparency
+			return -1
 		var db_voor: Color = db_meet.call(db_dood)
 		var db_levend_voor: Color = db_meet.call(db_levend)
+		var db_levend_transp_voor: int = db_transp.call(db_levend)
+		var db_y_voor: float = (db_dood._piece as Node3D).position.y
+		var db_levend_y_voor: float = (db_levend._piece as Node3D).position.y
 		db_dood._become_debris()
 		var db_na: float = PawnView.fx("debris_donker_na", 4.0)
 		var db_duur: float = PawnView.fx("debris_donker_duur", 2.5)
 		var db_kracht: float = PawnView.fx("debris_donker", 0.7)
-		print("[DEBRIS] instelling: na %.1f s, verloop %.1f s, kracht %.2f" % [db_na, db_duur, db_kracht])
+		var db_doorzicht: float = PawnView.fx("debris_doorzicht", 0.55)
+		var db_zak: float = PawnView.fx("debris_zak", 0.08)
+		print("[DEBRIS] instelling: na %.1f s, verloop %.1f s, kracht %.2f, doorzicht %.2f, zak %.2f" % [db_na, db_duur, db_kracht, db_doorzicht, db_zak])
 		await get_tree().create_timer(db_na + db_duur + 0.4).timeout
 		var db_daarna: Color = db_meet.call(db_dood)
 		var db_levend_na: Color = db_meet.call(db_levend)
@@ -1366,9 +1382,29 @@ func _ready() -> void:
 		if absf(db_daarna.r - db_verwacht) > 0.05:
 			print("[DEBRIS] FOUT: het lijk is niet donker geworden")
 			db_fouten += 1
+		var db_alpha_verwacht: float = 1.0 - clampf(db_doorzicht, 0.0, 1.0)
+		print("[DEBRIS] lijk : alpha %.2f -> %.2f (verwacht ~%.2f), transparency %d (verwacht %d = alpha met depth-prepass)" % [
+			db_voor.a, db_daarna.a, db_alpha_verwacht, db_transp.call(db_dood), BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS])
+		if db_doorzicht > 0.001 and absf(db_daarna.a - db_alpha_verwacht) > 0.05:
+			print("[DEBRIS] FOUT: het lijk is niet doorzichtig geworden")
+			db_fouten += 1
+		if db_doorzicht > 0.001 and db_transp.call(db_dood) != BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS:
+			print("[DEBRIS] FOUT: het materiaal van het lijk staat niet op alpha met depth-prepass")
+			db_fouten += 1
+		var db_y_na: float = (db_dood._piece as Node3D).position.y
+		print("[DEBRIS] lijk : y %.3f -> %.3f (verwacht ~%.3f)" % [db_y_voor, db_y_na, db_y_voor - db_zak])
+		if absf((db_y_voor - db_y_na) - db_zak) > 0.005:
+			print("[DEBRIS] FOUT: het lijk is niet (of niet ver genoeg) in het bord gezakt")
+			db_fouten += 1
 		print("[DEBRIS] levend: albedo %.2f -> %.2f (moet gelijk blijven)" % [db_levend_voor.r, db_levend_na.r])
 		if absf(db_levend_na.r - db_levend_voor.r) > 0.01:
 			print("[DEBRIS] FOUT: een LEVENDE pion verkleurde mee -- gedeeld materiaal aangeraakt")
+			db_fouten += 1
+		if absf(db_levend_na.a - db_levend_voor.a) > 0.01 or db_transp.call(db_levend) != db_levend_transp_voor:
+			print("[DEBRIS] FOUT: een LEVENDE pion werd doorzichtig -- gedeeld materiaal aangeraakt")
+			db_fouten += 1
+		if absf((db_levend._piece as Node3D).position.y - db_levend_y_voor) > 0.001:
+			print("[DEBRIS] FOUT: een LEVENDE pion zakte mee")
 			db_fouten += 1
 		print("[DEBRIS] %s: %d fout(en)" % ["PASS" if db_fouten == 0 else "FAIL", db_fouten])
 		get_tree().quit(1 if db_fouten > 0 else 0)

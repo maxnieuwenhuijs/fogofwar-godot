@@ -1,5 +1,52 @@
 # Fog of War — Work In Progress & Context
 
+## 16 september -- Lijken en gibs worden doorzichtig en zakken in het bord
+
+Max: "alle stukken lijk en gibs moeten echt ook lichtdoorzichtig worden na
+korte tijd om het bord beter te kunnen zien en laat ze iets zakken op de z as
+dat ze wel zichtbaar zijn maar wel verborgen in de grond deels ook."
+
+- `PawnView.verduister_later` (de ene plek waar alles wat blijft liggen
+  doorheen gaat: lijk, gibs, afgebroken ledematen, weggegooid musket of
+  vaandel, cloth-cape) doet na `debris_donker_na` (4 s) in hetzelfde verloop
+  (`debris_donker_duur`, 2,5 s) nu drie dingen: donker (was er al),
+  doorzichtig (nieuwe knop `debris_doorzicht`, 0,55: alpha 0,45) en wegzakken
+  (nieuwe knop `debris_zak`, 0,08 wereld-eenheden op een pion van ~0,9).
+- Doorzicht op een BaseMaterial3D: de per-instantie kopie gaat op het moment
+  van het verloop op `TRANSPARENCY_ALPHA_DEPTH_PRE_PASS` (eerst de diepte van
+  het hele stuk, dan alleen het voorste vlak blenden; zonder die prepass
+  schemeren de achterste ledematen door de romp en leest het lijk als een
+  rontgenfoto) en `albedo_color.a` tweent mee. Al-transparante materialen
+  (bloed, ringen) blijven wat ze zijn.
+- Doorzicht op de eigen shaders (vlaggendoek `VLAG_SHADER`, cape
+  `CAPE_SHADER`): een shader die `ALPHA` schrijft rendert ALTIJD in de
+  transparante pass, dus de bron-shaders blijven onaangeroerd (de levende
+  vlaggen en capes blijven dicht en schrijven diepte). `_shader_naar_doorzicht`
+  bouwt per bron-shader een keer een alpha-variant uit de code (`uniform float
+  doorzicht`, `ALPHA = 1.0 - doorzicht`, `render_mode ..., depth_prepass_alpha`)
+  en zet die meteen op het materiaal van het lijk (tween_property wil de
+  uniform al zien bestaan; met doorzicht 0 rendert de variant hetzelfde).
+  De uniform-waarden blijven bij de wissel staan (ShaderMaterial bewaart ze
+  op naam).
+- Wegzakken: `position:y` van de wortel, relatief (`as_relative`), want het
+  musket is op het moment van aanroepen nog onderweg in zijn worp-boog. Een
+  SoftBody3D (cloth-cape) laat zich niet verschuiven: zijn kraag volgt de
+  schouderbotten van het lijk, die zakken mee. `game._clear_debris` zakt
+  daarna gewoon verder vanaf de nieuwe y.
+- Geen globale RNG, geen spelstaat: puur visueel.
+
+**Checks:** `-- debrischeck muis` PASS (albedo 1,00 -> 0,30; alpha 1,00 ->
+0,45; transparency 4 = alpha met depth-prepass; y -0,006 -> -0,086; de levende
+pion ongewijzigd in kleur, alpha, modus en y); `-- gibshot musket laat`
+(ModelTuner.tscn, venster): `_shot_gibs.png` de val, `_shot_gibs_laat.png` het
+donkere, doorzichtige, half weggezakte lijk met de bloedpoel erbovenop; `--
+uispel 777` zobrist `d16a14f8…` (246 acties, cyclus 6, ongewijzigd).
+
+Losse waarneming (niet aangeraakt): `card_hand.gd:192`
+`card.get_meta("hand_tween", null)` gilt in de log "does not have any 'meta'
+values with the key 'hand_tween'" (een null-default telt in 4.7 niet als
+default); `has_meta` ervoor zou het stil maken.
+
 ## 16 september -- Versterkingen eerst zien landen, dan pas het CP-bod
 
 Max: "het moet zijn: kiezen om te spawnen welke soldaten na een ronde. dan

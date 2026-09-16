@@ -764,12 +764,30 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   en `bord` (het echte Board.tscn eronder met zijn textures en licht, zodat je
   ziet wat de speler ziet). Het onderste paneel is sleepbaar aan de greep
   bovenin; de hoogte wordt onthouden in `user://tuner_ui.cfg`.
-- Worden lijken en gibs donker? `-- debrischeck [factie]` (bouwt een pion, maakt
-  hem debris, wacht de ingestelde tijd uit en vergelijkt de albedo voor en na;
-  controleert ook dat een LEVENDE pion met hetzelfde model NIET meeverkleurt --
-  de klassieke fout is het gedeelde glb-materiaal aanraken in plaats van een
-  per-instantie kopie). Knoppen in `effects_tuning.json` / Model-tuner tab Gore:
-  `debris_donker_na`, `debris_donker_duur`, `debris_donker`.
+- Worden lijken en gibs donker, doorzichtig en zakken ze weg? `-- debrischeck
+  [factie]` (bouwt een pion, maakt hem debris, wacht de ingestelde tijd uit en
+  vergelijkt albedo, alpha, transparency-modus en de y van het stuk voor en na;
+  controleert ook dat een LEVENDE pion met hetzelfde model NIET meeverkleurt,
+  niet doorzichtig wordt en niet zakt -- de klassieke fout is het gedeelde
+  glb-materiaal aanraken in plaats van een per-instantie kopie). **Sinds 16
+  september** (Max: "alle stukken lijk en gibs moeten echt ook lichtdoorzichtig
+  worden na korte tijd om het bord beter te kunnen zien en laat ze iets
+  zakken") doet `PawnView.verduister_later` drie dingen tegelijk na
+  `debris_donker_na`: donker (albedo), doorzichtig (`debris_doorzicht` 0,55;
+  BaseMaterial3D op `TRANSPARENCY_ALPHA_DEPTH_PRE_PASS`, anders zie je de
+  achterste ledematen door de romp; de eigen shaders van cape en vlaggendoek
+  wisselen naar een per bron-shader gebouwde alpha-variant met een
+  `doorzicht`-uniform en `depth_prepass_alpha`, want een shader die ALPHA
+  schrijft is altijd transparant en de levende vlaggen moeten dicht blijven)
+  en wegzakken (`debris_zak` 0,08 wereld-eenheden, relatief op `position:y`
+  van het stuk, de gibs-wortel of het losse musket; een SoftBody3D-cape zakt
+  niet zelf, zijn kraag volgt de schouderbotten). Geldt voor lijken, gibs,
+  afgebroken ledematen en het weggegooide musket/vaandel; bloedpoelen blijven
+  plat liggen. Knoppen in `effects_tuning.json` / Model-tuner tab Gore:
+  `debris_donker_na`, `debris_donker_duur`, `debris_donker`,
+  `debris_doorzicht`, `debris_zak`. Plaatje: `-- gibshot musket laat`
+  (ModelTuner.tscn, met venster) schrijft naast `_shot_gibs.png` ook
+  `_shot_gibs_laat.png` na het verloop.
 - Kijken zonder te spelen: `-- cliplengtes` (elke animatie met lengte EN de
   naam die het spel ervan maakt) en `-- geluidcheck` (elke geluidscategorie met
   aantal varianten, mix-dB, tuner-dB en vertraging; meldt categorieen zonder

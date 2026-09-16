@@ -22,9 +22,16 @@ const FX_DEFS: Array = [
 	{"cat": "bajonet", "key": "hit_speed", "label": "hit-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bajonet", "key": "death_speed", "label": "sterf-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bajonet", "key": "melee_retaliation_delay", "label": "terugslag-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.1},
+	# Cavalerie-charge (16 september): de sprong begint zoveel vakken voor de
+	# aankomst en de klap valt zoveel seconden voor het einde van de sprong-clip.
+	{"cat": "bajonet", "key": "charge_speed", "label": "sprong-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.2},
+	{"cat": "bajonet", "key": "charge_aanloop_vakken", "label": "sprong-aanloop (vakken)", "min": 0.0, "max": 6.0, "step": 0.5, "def": 2.0},
+	{"cat": "bajonet", "key": "charge_raak_voor_einde", "label": "sprong-klap voor einde (s)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.5},
 	{"cat": "gore", "key": "debris_donker_na", "label": "donker na (s)", "min": 0.0, "max": 30.0, "step": 0.5, "def": 4.0},
 	{"cat": "gore", "key": "debris_donker_duur", "label": "donker duur (s)", "min": 0.1, "max": 15.0, "step": 0.1, "def": 2.5},
 	{"cat": "gore", "key": "debris_donker", "label": "hoe donker", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.7},
+	{"cat": "gore", "key": "debris_doorzicht", "label": "hoe doorzichtig", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
+	{"cat": "gore", "key": "debris_zak", "label": "zakt in bord", "min": 0.0, "max": 0.5, "step": 0.01, "def": 0.08},
 	{"cat": "gore", "key": "hat_fling_power", "label": "hoed-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.5},
 	{"cat": "gore", "key": "hat_fling_time", "label": "hoed-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
 	{"cat": "gore", "key": "hat_pop_chance", "label": "hoed-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
@@ -170,6 +177,10 @@ func _ready() -> void:
 			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), gs_strength, gs_kind)
 		await get_tree().create_timer(1.0 if gs_strength < 1.2 else 0.32).timeout
 		get_viewport().get_texture().get_image().save_png("res://_shot_gibs.png")
+		if "laat" in gs_args:
+			# Het lijk na het verduisteren/doorzichtig worden/wegzakken (16 september).
+			await get_tree().create_timer(PawnView.fx("debris_donker_na", 4.0) + PawnView.fx("debris_donker_duur", 2.5) + 0.5).timeout
+			get_viewport().get_texture().get_image().save_png("res://_shot_gibs_laat.png")
 		get_tree().quit()
 	if "shot" in OS.get_cmdline_user_args():
 		var shot_args := OS.get_cmdline_user_args()
