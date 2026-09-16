@@ -3135,7 +3135,7 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
 					result.get("eliminated", false), klap_del, true)
 				_hit_feedback(action.defender_id, result.defender_pos, result.damage, klap_del,
-					result.charge_from, result.get("eliminated", false), 0.85)
+					result.charge_from, result.get("eliminated", false), 0.85, "charge")  # sabel: doormidden (16 september)
 				if result.get("eliminated", false):
 					_death_sound(action.defender_id, klap_del + 0.1)
 				if result.get("retaliation", false):

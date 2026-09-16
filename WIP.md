@@ -1,5 +1,62 @@
 # Fog of War — Work In Progress & Context
 
+## 16 september -- Doormidden: de sabelhouw snijdt het poppetje in tweeën
+
+Max: "en een gibs wolkje en doormidden gesliced het poppetje kan dat?
+bloederig net als bij kanon inslag" (bij de charge). Kon. De charge-kill
+kreeg tot nu toe de volledige gib-explosie van het kanon (0,85 + 0,4 = 1,25
+zit boven de 1,2-drempel), dus alle delen vlogen los; nu snijdt de sabel.
+
+**Hoe.** `PawnView._spawn_slice` (in `play_death`, vóór de kanon-route,
+kind `"charge"` uit game.gd en met kleinere kans ook de bajonet). De
+gibs-delen worden langs een vlak verdeeld dat door de romp gaat op
+`slice_hoogte` (0,55 van de pionhoogte), gekanteld om de slagrichting
+(`slice_hoek` 35 graden; van schouder naar de andere heup). Een echte snede
+zonder mesh-werk: de romp wordt verdubbeld en elke kopie krijgt
+`SNIJ_SHADER`, die met `discard` alleen haar eigen kant van het vlak tekent
+(in mesh-ruimte: n' = Bᵀn, d' = n·o + d) en de achtervlakken als vlees
+kleurt, zodat je in de snede de binnenkant ziet. Armen, benen, kop en hoed
+worden niet gesneden: die gaan heel mee met de kant waar ze aanzitten (het
+hoogste punt van het deel; een onderarm volgt zijn bovenarm, een onderbeen
+zijn bovenbeen). De eerste versie sneed ook armen door en liet een halve arm
+bij de benen liggen; de tweede stuurde een hangende onderarm op zijn midden
+naar de benen. Vandaar de aanhecht-regel.
+
+Twee groepen: `Body_boven` (romp-top, kop, armen) scharniert op de snede en
+gaat als een stuk met de klap mee de lucht in, een salto om de dwars-as
+(`slice_tuimel`), landt met het hoofd van de aanvaller af, grote poel.
+`Benen_onder` (romp-onder, bekken, benen) scharniert op de voeten, staat
+nog `slice_sta` (0,35 s), wankelt en kiept dan om met de klap mee (± 40
+graden), met een stuiter; hangen de voeten in de lucht (de ruiter: de gibs
+zijn alleen de ruiter) dan zakt hij mee naar het bord. Hoed en een onderarm
+vliegen los (`slice_los` 2), plus de kanon-bloedmist, druppels en twee
+spuiten op de snede: het gibs-wolkje. De shader draagt dezelfde haakjes als
+de cape (`render_mode cull_disabled;`, `uniform float dim`, `ALBEDO = doek *
+dim;`), dus `verduister_later` bouwt er zonder wijziging de doorzicht-
+variant van: de helften worden donker, doorzichtig en zakken.
+
+Knoppen in de Model-tuner (tab Gore): `slice_kans_sabel` 0,85,
+`slice_kans_bajonet` 0,35, `slice_hoogte`, `slice_hoek`,
+`slice_hoek_bajonet` 10, `slice_sta`, `slice_los`, `slice_kracht`,
+`slice_tuimel`. Testknop "doormidden (sabel)" naast de gibs-knoppen; de
+knop "charge (dood)" gebruikt nu ook kind `"charge"`. `-- gibshot sabel`.
+Les uit het bouwen: een meerregelige lambda als eerste argument van
+`tween_method` parst niet als er argumenten na de body komen; een gebonden
+methode (`_draai_helft.bind(...)`) wel.
+
+**Checks:** `-- snijcheck` (ModelTuner.tscn): 12 delen, boven 5, onder 5,
+los 2, snijvlakken 2, bovenste helft 1,0 vak weg, onderste 88 graden
+gekiept, 55 debris-nodes bij, PASS; met venster `_shot_snij.png` (halverwege
+de vlucht: romp met kop tuimelt boven de nog staande benen, hoed en onderarm
+los, bloedmist) en `_shot_snij_laat.png`. `-- uispel 777` zobrist
+`a6677ac8…` (220 acties, cyclus 7, gelijk); `-- debrischeck` PASS;
+`-- capecheck` PASS; `-- tunercheck` PASS. `-- meleecheck` faalt op de
+charge-landing ("1,00 vak van het tussenvak"): dat is de root-motion-
+compensatie van de charge waar de andere sessie op dit moment aan werkt
+(ongecommit in game.gd, pawn_view.gd, capture.gd), niet de snede; het doel
+sterft en verdwijnt wel. Alleen de eigen blokken zijn gecommit (eigen
+index), de charge-wijzigingen van die sessie staan nog in de werkmap.
+
 ## 16 september -- de kaarten als een hand: waaier, klik-lift, slepen naar een pion
 
 Max: "plaats de kaarten die je definieert meer in een waaier alsof je die in

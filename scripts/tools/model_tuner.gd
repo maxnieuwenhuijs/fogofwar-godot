@@ -40,6 +40,16 @@ const FX_DEFS: Array = [
 	{"cat": "gore", "key": "limb_fling_time", "label": "ledemaat-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "gore", "key": "gib_fling_power", "label": "gib-worpkracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "gore", "key": "gib_spin", "label": "gib-tolling", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	# Doormidden (16 september): de sabelhouw snijdt het lijf in twee helften.
+	{"cat": "gore", "key": "slice_kans_sabel", "label": "doormidden-kans (sabel)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.85},
+	{"cat": "gore", "key": "slice_kans_bajonet", "label": "doormidden-kans (bajonet)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
+	{"cat": "gore", "key": "slice_hoogte", "label": "snijhoogte (deel van de pion)", "min": 0.15, "max": 0.85, "step": 0.01, "def": 0.55},
+	{"cat": "gore", "key": "slice_hoek", "label": "snijhoek sabel (graden)", "min": 0.0, "max": 70.0, "step": 1.0, "def": 35.0},
+	{"cat": "gore", "key": "slice_hoek_bajonet", "label": "snijhoek bajonet (graden)", "min": 0.0, "max": 70.0, "step": 1.0, "def": 10.0},
+	{"cat": "gore", "key": "slice_sta", "label": "benen staan nog (s)", "min": 0.0, "max": 2.0, "step": 0.01, "def": 0.35},
+	{"cat": "gore", "key": "slice_los", "label": "losse stukjes (wolkje)", "min": 0.0, "max": 4.0, "step": 1.0, "def": 2.0},
+	{"cat": "gore", "key": "slice_kracht", "label": "helft-worpkracht", "min": 0.0, "max": 5.0, "step": 0.01, "def": 1.0},
+	{"cat": "gore", "key": "slice_tuimel", "label": "salto's van de romp", "min": 0.0, "max": 3.0, "step": 0.5, "def": 1.0},
 	{"cat": "bloed", "key": "blood_burst", "label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
@@ -213,6 +223,96 @@ func _ready() -> void:
 		print("[WOND] %s: %d fout(en)" % ["PASS" if ws_fouten == 0 else "FAIL", ws_fouten])
 		get_tree().quit(1 if ws_fouten > 0 else 0)
 		return
+	if "snijcheck" in OS.get_cmdline_user_args():
+		# Doormidden (16 september): de sabelhouw snijdt het lijf in twee
+		# helften. Controleert dat de gibs in Body_boven / Benen_onder zijn
+		# verdeeld, dat de romp door het vlak is verdubbeld (twee snij-
+		# materialen), dat de losse stukjes en het bloed er zijn, dat de
+		# bovenste helft wegvliegt en de onderste omkiept, en dat alles in de
+		# debris-groep zit. Met venster: _shot_snij.png halverwege de vlucht.
+		# Headless bruikbaar (geen plaatje). Default model: muis-infanterie.
+		if "closeup" in OS.get_cmdline_user_args():
+			_view_btn.select(1)
+			_apply_camera()
+		await get_tree().create_timer(1.0).timeout
+		var sn_fouten := 0
+		if _pawn == null or not is_instance_valid(_pawn):
+			print("[SNIJ] FOUT: geen pion")
+			sn_fouten += 1
+		elif not ResourceLoader.exists(_pawn._gibs_pad()):
+			print("[SNIJ] FOUT: dit model heeft geen gibs-bestand (%s)" % _pawn._gibs_pad())
+			sn_fouten += 1
+		else:
+			PawnView.set_fx("slice_kans_sabel", 1.0)
+			var sn_dir := Vector3(0.3, 0.0, 1.0).normalized()
+			var sn_bloed_voor: int = get_tree().get_nodes_in_group("battlefield_debris").size()
+			_pawn.play_death(sn_dir, 1.25, "charge")
+			await get_tree().process_frame
+			var sn_boven: Array = find_children("Body_boven", "Node3D", true, false)
+			var sn_onder: Array = find_children("Benen_onder", "Node3D", true, false)
+			if sn_boven.is_empty() or sn_onder.is_empty():
+				print("[SNIJ] FOUT: geen twee helften (boven %d, onder %d)" % [sn_boven.size(), sn_onder.size()])
+				sn_fouten += 1
+			else:
+				var sn_b: Node3D = sn_boven[0]
+				var sn_o: Node3D = sn_onder[0]
+				var sn_root: Node3D = sn_b.get_parent()
+				var sn_snedes := 0
+				var sn_meshes := 0
+				for mi in sn_root.find_children("*", "MeshInstance3D", true, false):
+					sn_meshes += 1
+					var sm := (mi as MeshInstance3D).material_override as ShaderMaterial
+					if sm != null and sm.get_shader_parameter("snij_n") != null:
+						sn_snedes += 1
+				var sn_los := 0
+				for kind in sn_root.get_children():
+					if kind is MeshInstance3D:
+						sn_los += 1
+				print("[SNIJ] delen %d (boven %d, onder %d, los %d), snijvlakken %d" % [
+					sn_meshes, sn_b.get_child_count(), sn_o.get_child_count(), sn_los, sn_snedes])
+				if sn_snedes < 2:
+					print("[SNIJ] FOUT: de romp is niet door het vlak verdubbeld (snijvlakken %d, verwacht minstens 2)" % sn_snedes)
+					sn_fouten += 1
+				if sn_b.get_child_count() < 2 or sn_o.get_child_count() < 2:
+					print("[SNIJ] FOUT: een helft is te leeg (boven %d, onder %d delen)" % [sn_b.get_child_count(), sn_o.get_child_count()])
+					sn_fouten += 1
+				if sn_los < 1:
+					print("[SNIJ] FOUT: geen los stukje (het gibs-wolkje)")
+					sn_fouten += 1
+				if not sn_root.is_in_group("battlefield_debris"):
+					print("[SNIJ] FOUT: de helften zitten niet in battlefield_debris")
+					sn_fouten += 1
+				if not _pawn.is_in_group("battlefield_debris") or (_pawn._piece != null and _pawn._piece.visible):
+					print("[SNIJ] FOUT: het originele lijf is niet weg")
+					sn_fouten += 1
+				var sn_start_b: Vector3 = sn_b.global_position
+				var sn_start_o: Basis = sn_o.global_basis
+				await get_tree().create_timer(0.22).timeout
+				if not OS.has_feature("headless") and DisplayServer.get_name() != "headless":
+					get_viewport().get_texture().get_image().save_png("res://_shot_snij.png")
+				await get_tree().create_timer(0.5).timeout
+				var sn_verplaatst: float = sn_b.global_position.distance_to(sn_start_b)
+				print("[SNIJ] bovenste helft verplaatst %.2f, y nu %.2f" % [sn_verplaatst, sn_b.global_position.y])
+				if sn_verplaatst < 0.15:
+					print("[SNIJ] FOUT: de bovenste helft vliegt niet weg")
+					sn_fouten += 1
+				await get_tree().create_timer(PawnView.fx("slice_sta", 0.35) + 0.6).timeout
+				var sn_kiep: float = rad_to_deg((sn_start_o * Vector3.UP).angle_to(sn_o.global_basis * Vector3.UP))
+				print("[SNIJ] onderste helft gekiept %.0f graden" % sn_kiep)
+				if sn_kiep < 60.0:
+					print("[SNIJ] FOUT: de onderste helft kiept niet om (%.0f graden)" % sn_kiep)
+					sn_fouten += 1
+				if not OS.has_feature("headless") and DisplayServer.get_name() != "headless":
+					await get_tree().create_timer(0.4).timeout
+					get_viewport().get_texture().get_image().save_png("res://_shot_snij_laat.png")
+				var sn_bloed_na: int = get_tree().get_nodes_in_group("battlefield_debris").size()
+				print("[SNIJ] debris-nodes: %d -> %d (bloed, helften, stukjes)" % [sn_bloed_voor, sn_bloed_na])
+				if sn_bloed_na - sn_bloed_voor < 4:
+					print("[SNIJ] FOUT: nauwelijks bloed of debris bijgekomen")
+					sn_fouten += 1
+		print("[SNIJ] %s: %d fout(en)" % ["PASS" if sn_fouten == 0 else "FAIL", sn_fouten])
+		get_tree().quit(1 if sn_fouten > 0 else 0)
+		return
 	if "gibshot" in OS.get_cmdline_user_args():
 		var gs_args := OS.get_cmdline_user_args()
 		for a in gs_args:
@@ -227,6 +327,12 @@ func _ready() -> void:
 		elif "melee" in gs_args:
 			gs_strength = 0.7
 			gs_kind = "melee"
+		elif "sabel" in gs_args:
+			# De charge-kill (16 september): 0,85 + 0,4 voor de kill, kind "charge"
+			# -> doormidden (kans op 1 gezet voor een reproduceerbaar plaatje).
+			gs_strength = 1.25
+			gs_kind = "charge"
+			PawnView.set_fx("slice_kans_sabel", 1.0)
 		await get_tree().create_timer(1.0).timeout
 		if _pawn != null and is_instance_valid(_pawn):
 			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), gs_strength, gs_kind)
@@ -589,6 +695,11 @@ func _build_ui() -> void:
 	gib_btn3.text = "gibs (melee)"
 	gib_btn3.pressed.connect(_on_gib_test.bind(0.7, "melee"))
 	rowt.add_child(gib_btn3)
+	# Doormidden (16 september): de sabel-kill zoals in het spel (0,85 + 0,4).
+	var gib_btn4 := Button.new()
+	gib_btn4.text = "doormidden (sabel)"
+	gib_btn4.pressed.connect(_on_gib_test.bind(1.25, "charge"))
+	rowt.add_child(gib_btn4)
 	var smoke_btn := Button.new()
 	smoke_btn.text = "rook (musket)"
 	smoke_btn.pressed.connect(_on_smoke_test.bind(2, 0.09))
@@ -1886,7 +1997,7 @@ func _on_charge_test(kill: bool) -> void:
 		if gen != _preview_gen or def_pv == null or not is_instance_valid(def_pv):
 			return
 		if kill:
-			def_pv.play_death(stap, 0.85 + 0.4, "melee")
+			def_pv.play_death(stap, 0.85 + 0.4, "charge")  # sabel: doormidden (16 september)
 		else:
 			def_pv.flash_hit()
 			def_pv.stagger(stap)

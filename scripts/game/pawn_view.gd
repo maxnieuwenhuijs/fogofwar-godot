@@ -1032,6 +1032,18 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		dir = Vector3(0, 0, 1)
 	dir = dir.normalized()
 	_fling_weapon(dir)  # musket vliegt uit de handen
+	# Doormidden (16 september, Max: "een gibs wolkje en doormidden gesliced
+	# het poppetje, bloederig net als bij kanon inslag"): de sabelhouw van de
+	# charge, en met een kleinere kans de bajonet. VOOR de kanon-route, want
+	# de charge-kill (0,85 + 0,4) zit boven de 1,2 en kreeg anders altijd de
+	# volledige explosie. Zonder gibs-bestand gaat het gewoon verder.
+	if kind == "charge" or kind == "melee":
+		var snij_kans: float = fx("slice_kans_sabel", 0.85) if kind == "charge" else fx("slice_kans_bajonet", 0.35)
+		if snij_kans > 0.0 and randf() < snij_kans and _spawn_slice(dir, strength, kind):
+			if _piece != null:
+				_piece.visible = false  # de twee helften zijn het lijk
+			_become_debris()
+			return
 	# Kanon-kracht: ALTIJD grove bloedmist + druppel-fontein op het moment van
 	# de knal - ook zonder gibs-bestand, zodat een nieuw model dat nog geen
 	# _gibs.glb heeft tóch de kanon-gore toont. Mét gibs-bestand klapt het lijf
@@ -1756,6 +1768,300 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 		_cape = null
 	verduister_later(parts_root)
 	return true
+
+
+# --- Doormidden (16 september) ---------------------------------------------
+
+## Het snijvlak-materiaal: een gib-mesh tekent alleen aan EEN kant van een vlak
+## (in mesh-ruimte) en kleurt zijn achtervlakken als vlees, zodat je in de
+## snede de binnenkant van de romp ziet. Draagt dezelfde haakjes als de
+## cape-shader (`render_mode cull_disabled;`, `uniform float dim`,
+## `ALBEDO = doek * dim;`), zodat verduister_later er zonder meer de
+## doorzicht-variant van bouwt en het lijk donker en doorzichtig wordt.
+const SNIJ_SHADER := """
+shader_type spatial;
+render_mode cull_disabled;
+
+uniform sampler2D textuur : source_color, hint_default_white;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform vec3 snij_n = vec3(0.0, 1.0, 0.0);   // vlaknormaal in mesh-ruimte
+uniform float snij_d = 0.0;                   // n . p + d = 0
+uniform float kant = 1.0;                     // 1 = de kant waar n heen wijst blijft, -1 = de andere
+uniform vec4 vlees : source_color = vec4(0.45, 0.04, 0.04, 1.0);
+uniform float dim = 1.0;                      // 1 = normaal, lager = lijk (verduister_later)
+
+varying vec3 lpos;
+
+void vertex() {
+	lpos = VERTEX;
+}
+
+void fragment() {
+	if ((dot(snij_n, lpos) + snij_d) * kant < 0.0) {
+		discard;
+	}
+	vec3 doek = texture(textuur, UV).rgb * tint.rgb;
+	if (!FRONT_FACING) {
+		// In de snede kijk je op de binnenkant van de mesh: vlees, met wat korrel.
+		float korrel = fract(sin(dot(floor(lpos.xz * 40.0), vec2(12.9898, 78.233))) * 43758.5453);
+		doek = vlees.rgb * (0.75 + 0.35 * korrel);
+		NORMAL = -NORMAL;
+	}
+	ALBEDO = doek * dim;
+	ROUGHNESS = 0.85;
+}
+"""
+
+static var _snij_shader_res: Shader = null
+
+
+static func _snij_shader() -> Shader:
+	if _snij_shader_res == null:
+		_snij_shader_res = Shader.new()
+		_snij_shader_res.code = SNIJ_SHADER
+	return _snij_shader_res
+
+
+## Doormidden (16 september, Max: "een gibs wolkje en doormidden gesliced het
+## poppetje, bloederig net als bij kanon inslag"): de sabelhouw snijdt het
+## lijf in twee helften. De gibs-delen worden langs een vlak verdeeld: alles
+## erboven (romp, kop, armen) gaat als EEN stuk met de klap mee de lucht in en
+## tuimelt neer; alles eronder (bekken, benen) blijft een tel staan en kiept
+## dan om. Een deel dat het vlak snijdt (de romp, soms een arm) wordt
+## verdubbeld en elke helft tekent met SNIJ_SHADER alleen haar eigen kant,
+## met vlees in de snede. Het hoedje en een onderarm vliegen los weg: het
+## gibs-wolkje, met de kanon-bloedmist en druppels op de snede.
+##
+## Sabel (kind "charge"): het vlak staat schuin, gekanteld OM de slagrichting
+## (van schouder naar de andere heup). Bajonet: bijna vlak. Knoppen
+## (effects_tuning.json, Model-tuner tab Gore): slice_kans_sabel,
+## slice_kans_bajonet, slice_hoogte (fractie van de pionhoogte), slice_hoek
+## (graden, sabel), slice_hoek_bajonet, slice_sta (s dat de benen nog staan),
+## slice_los (losse stukjes), slice_kracht, slice_tuimel (salto's).
+## false zonder gibs-bestand of zonder delen: dan de gewone route.
+func _spawn_slice(dir: Vector3, strength: float, kind: String) -> bool:
+	if _model_path == "" or _piece == null:
+		return false
+	var gibs_path := _gibs_pad()
+	if not ResourceLoader.exists(gibs_path):
+		return false
+	var scene_parent := get_parent()
+	if scene_parent == null:
+		return false
+	var parts_root: Node3D = (load(gibs_path) as PackedScene).instantiate()
+	parts_root.name = "Doormidden"
+	scene_parent.add_child(parts_root)
+	parts_root.global_transform = (_piece as Node3D).global_transform
+	var maat := _gib_maat_correctie(parts_root)
+	if not is_equal_approx(maat, 1.0):
+		parts_root.scale *= maat   # gibs stonden op een andere schaal
+	apply_albedo_to(parts_root, team_texture(_model_path, team, true))  # bloederige team-texture
+	# Omhullende doos van alle delen, in root-ruimte (daar leeft het vlak).
+	var inv: Transform3D = parts_root.global_transform.affine_inverse()
+	var naar_root: Dictionary = {}   # MeshInstance3D -> Transform3D (deel-lokaal -> root-lokaal)
+	var doos := AABB()
+	var eerste := true
+	for p in parts_root.find_children("*", "MeshInstance3D", true, false):
+		var mi := p as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var t: Transform3D = inv * mi.global_transform
+		naar_root[mi] = t
+		var ab: AABB = t * mi.get_aabb()
+		doos = ab if eerste else doos.merge(ab)
+		eerste = false
+	if eerste:
+		parts_root.queue_free()
+		return false
+	# Het snijvlak: door de romp op snijhoogte, gekanteld om de slagrichting.
+	var hoogte_f: float = clampf(fx("slice_hoogte", 0.55), 0.15, 0.85)
+	var c: Vector3 = doos.get_center()
+	c.y = doos.position.y + doos.size.y * hoogte_f
+	var dir_root: Vector3 = inv.basis * dir
+	dir_root.y = 0.0
+	dir_root = dir_root.normalized() if dir_root.length() > 0.01 else Vector3(0.0, 0.0, 1.0)
+	var hoek: float = fx("slice_hoek", 35.0) if kind == "charge" else fx("slice_hoek_bajonet", 10.0)
+	var kanteling: float = deg_to_rad(clampf(hoek, 0.0, 70.0)) * (1.0 if randf() < 0.5 else -1.0)
+	var n: Vector3 = Vector3.UP.rotated(dir_root, kanteling).normalized()
+	var d: float = -n.dot(c)
+	# Twee helften: boven scharniert op de snede, onder op de voeten.
+	var boven := Node3D.new()
+	boven.name = "Body_boven"
+	var onder := Node3D.new()
+	onder.name = "Benen_onder"
+	parts_root.add_child(boven)
+	parts_root.add_child(onder)
+	boven.position = c
+	onder.position = Vector3(c.x, doos.position.y, c.z)
+	var los: Array = []
+	var los_max: int = maxi(int(round(fx("slice_los", 2.0))), 0)
+	# Waar zit elk deel AAN? Zijn hoogste punt in root-ruimte (schouder, heup,
+	# hals), op kale naam; een onderarm hangt aan zijn bovenarm en een
+	# onderbeen aan zijn bovenbeen, die volgen dus dat segment.
+	var toppen: Dictionary = {}
+	for mi in naar_root:
+		var tt: Transform3D = naar_root[mi]
+		var abt: AABB = (mi as MeshInstance3D).get_aabb()
+		var top: Vector3 = tt * abt.get_endpoint(0)
+		for i in range(1, 8):
+			var hoekpunt: Vector3 = tt * abt.get_endpoint(i)
+			if hoekpunt.y > top.y:
+				top = hoekpunt
+		toppen[_kale_deelnaam(String((mi as Node).name))] = top
+	for mi in naar_root:
+		var t: Transform3D = naar_root[mi]
+		var ab: AABB = (mi as MeshInstance3D).get_aabb()
+		var boven_n := 0
+		var onder_n := 0
+		for i in 8:
+			if n.dot(t * ab.get_endpoint(i)) + d >= 0.0:
+				boven_n += 1
+			else:
+				onder_n += 1
+		var naam := _kale_deelnaam(String((mi as Node).name))
+		var romp: bool = naam.contains("body") or naam.contains("torso")
+		if not romp:
+			# Alleen de romp wordt echt gesneden. Een arm, been, kop of hoed
+			# gaat HEEL mee met de kant waar hij AANZIT. Zo blijven bij een
+			# schuine houw beide armen aan de schouders en beide benen aan het
+			# bekken; een halve arm bij de benen leest als een fout, niet als
+			# een wond.
+			var anker: String = naam
+			if naam.begins_with("forarm"):
+				anker = "arm" + naam.trim_prefix("forarm")
+			elif naam.begins_with("leg"):
+				anker = "upleg" + naam.trim_prefix("leg")
+			var top: Vector3 = toppen.get(anker, toppen[naam])
+			if n.dot(top) + d >= 0.0:
+				onder_n = 0
+				boven_n = 1
+			else:
+				boven_n = 0
+				onder_n = 1
+		if boven_n > 0 and onder_n > 0:
+			# Door het vlak: verdubbelen, elke helft tekent haar eigen kant.
+			var kopie := (mi as MeshInstance3D).duplicate() as MeshInstance3D
+			(mi as Node).get_parent().add_child(kopie)
+			kopie.global_transform = (mi as MeshInstance3D).global_transform
+			_zet_snij(mi as MeshInstance3D, t, n, d, 1.0)
+			_zet_snij(kopie, t, n, d, -1.0)
+			(mi as Node3D).reparent(boven, true)
+			kopie.reparent(onder, true)
+		elif boven_n > 0:
+			# Het hoedje en een onderarm gaan los: het gibs-wolkje.
+			if los.size() < los_max and (_is_hat(mi) or naam.begins_with("forarm")):
+				los.append(mi)
+			else:
+				(mi as Node3D).reparent(boven, true)
+		else:
+			(mi as Node3D).reparent(onder, true)
+	if boven.get_child_count() == 0 or onder.get_child_count() == 0:
+		parts_root.queue_free()
+		return false   # vlak raakte niets: geen halve dood
+	# Bloed op de snede: de kanon-mist en druppels, en een spuit uit beide helften.
+	var c_w: Vector3 = parts_root.global_transform * c
+	var mist: float = fx("blood_mist", 1.0)
+	if mist > 0.0:
+		_spawn_blood_mist(c_w, dir, mist)
+		_spawn_blood_burst(c_w, int(14.0 * mist), dir)
+	_spawn_blood_burst(c_w, int(12.0 * fx("blood_burst", 1.0)))
+	_spawn_blood_spurt(c_w, (Vector3.UP + dir * 0.6).normalized(), int(8.0 * fx("blood_spurt", 1.0)))
+	_spawn_blood_spurt(c_w, (Vector3.UP * 0.4 + dir).normalized(), int(6.0 * fx("blood_spurt", 1.0)))
+	var violence: float = clampf(strength / 1.4, 0.5, 1.2) * fx("slice_kracht", 1.0)
+	for mi in los:
+		_fling_part(mi as Node3D, dir, violence, 1.6 if _is_hat(mi) else 1.0)
+	_werp_helft(boven, dir, violence)
+	_kiep_helft(onder, dir, c.y - doos.position.y)
+	parts_root.add_to_group("battlefield_debris")
+	if _cape != null:
+		cape_weg(_cape)
+		_cape = null
+	verduister_later(parts_root)
+	return true
+
+
+## Zet het snijvlak-materiaal op een gib-mesh: het vlak (root-ruimte) naar de
+## mesh-ruimte van dit deel (n' = Bᵀn, d' = n·o + d), de teamjas als textuur.
+func _zet_snij(mi: MeshInstance3D, naar_root: Transform3D, n: Vector3, d: float, kant: float) -> void:
+	var sm := ShaderMaterial.new()
+	sm.shader = _snij_shader()
+	var bm := mi.get_active_material(0) as BaseMaterial3D
+	if bm != null:
+		if bm.albedo_texture != null:
+			sm.set_shader_parameter("textuur", bm.albedo_texture)
+		sm.set_shader_parameter("tint", bm.albedo_color)
+	sm.set_shader_parameter("snij_n", naar_root.basis.transposed() * n)
+	sm.set_shader_parameter("snij_d", n.dot(naar_root.origin) + d)
+	sm.set_shader_parameter("kant", kant)
+	mi.material_override = sm
+
+
+## Tween-doel voor de helften: draai om een wereld-as door de groep-oorsprong
+## (de snede of de voeten), vanaf de beginstand b0.
+func _draai_helft(a: float, groep: Node3D, dwars: Vector3, b0: Basis) -> void:
+	if is_instance_valid(groep):
+		groep.global_basis = Basis(dwars, a) * b0
+
+
+## De bovenste helft (romp, kop, armen) als EEN stuk met de klap mee: een boog
+## de lucht in, een salto om de dwars-as, en hij landt languit met het hoofd
+## van de aanvaller af. Scharnier = de snede (de groep-oorsprong).
+func _werp_helft(groep: Node3D, dir: Vector3, violence: float) -> void:
+	violence *= randf_range(0.9, 1.15)
+	var power: float = (0.5 + 0.85 * violence) * fx("gib_fling_power", 1.0)
+	var fling: Vector3 = (dir * 1.1 + Vector3(randf() - 0.5, 0.0, randf() - 0.5) * 0.25) * power * 0.8
+	fling.y = 0.0
+	var from: Vector3 = groep.global_position
+	var land := Vector3(from.x, global_position.y + 0.06, from.z) + fling
+	var peak: Vector3 = from.lerp(land, 0.5) + Vector3.UP * randf_range(0.3, 0.55) * power
+	var t_up: float = randf_range(0.18, 0.26)
+	var t_down: float = randf_range(0.2, 0.28)
+	var dwars: Vector3 = Vector3.UP.cross(dir).normalized()
+	if dwars.length() < 0.5:
+		dwars = Vector3(1.0, 0.0, 0.0)
+	var b0: Basis = groep.global_basis
+	# +90 graden om de dwars-as legt de romp met het hoofd in de slagrichting;
+	# daarvoor nog slice_tuimel hele salto's (Max wil het spectaculair).
+	var salto: float = TAU * maxf(fx("slice_tuimel", 1.0), 0.0) * (1.0 if randf() < 0.7 else -1.0)
+	var eind: float = PI * 0.5 * randf_range(0.92, 1.08) + salto
+	var draai := groep.create_tween()
+	draai.tween_method(_draai_helft.bind(groep, dwars, b0), 0.0, eind, t_up + t_down) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var arc := groep.create_tween()
+	arc.tween_property(groep, "global_position", peak, t_up).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	arc.tween_property(groep, "global_position", land, t_down).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	arc.tween_callback(func() -> void: Audio.play_getuned("body_hit_floor"))
+	# Een grote poel onder de romp, iets voorbij de snede (daar ligt het lijf).
+	_spawn_blood(land + dir * 0.18, 1, 0.02, t_up + t_down + fx("gib_pool_delay", 0.1),
+		fx("gib_pool_grow", 0.45), 2.2, "blood_pool")
+
+
+## De onderste helft (bekken, benen) staat nog even (slice_sta) en kiept dan
+## om, met de klap mee en een tikje opzij. Scharnier = de voeten.
+func _kiep_helft(groep: Node3D, dir: Vector3, hoogte: float) -> void:
+	var sta: float = maxf(fx("slice_sta", 0.35), 0.0)
+	var val: Vector3 = dir.rotated(Vector3.UP, deg_to_rad(randf_range(-40.0, 40.0)))
+	var dwars: Vector3 = Vector3.UP.cross(val).normalized()
+	if dwars.length() < 0.5:
+		dwars = Vector3(1.0, 0.0, 0.0)
+	var b0: Basis = groep.global_basis
+	var eind: float = PI * 0.5 * randf_range(0.98, 1.04)
+	var tw := groep.create_tween()
+	tw.tween_interval(sta)
+	# Eerst een klein wankeltje de andere kant op, dan vallen.
+	tw.tween_method(_draai_helft.bind(groep, dwars, b0), 0.0, -0.08, 0.12) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_method(_draai_helft.bind(groep, dwars, b0), -0.08, eind, 0.42) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func() -> void: Audio.play_getuned("body_hit_floor"))
+	# Kleine stuiter terug.
+	tw.tween_method(_draai_helft.bind(groep, dwars, b0), eind, eind - 0.05, 0.1) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# De poel onder de snede zodra de benen liggen: die ligt dan `hoogte` verderop.
+	var plek: Vector3 = groep.global_position + val * hoogte * 0.8
+	plek.y = global_position.y
+	_spawn_blood(plek, 1, 0.02, sta + 0.54 + fx("gib_pool_delay", 0.1),
+		fx("gib_pool_grow", 0.45), 1.6, "blood_pool")
 
 
 ## Deelnaam zonder punten, streepjes, spaties of cijfers: "Arm.L" -> "arml".

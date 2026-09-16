@@ -597,6 +597,32 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   1, 3 en 7 vakken van de vuurmond; musket met shake en hitstop: alleen
   de eerste beweegt; kanon: ook de tweede, nooit de derde). Puur
   visueel: uispel en herstelcheck ongewijzigd.
+- **Doormidden: de sabelhouw snijdt het lijf in twee helften (16 september,
+  Max: "een gibs wolkje en doormidden gesliced het poppetje, bloederig net
+  als bij kanon inslag").** `PawnView._spawn_slice`, in `play_death` vóór de
+  kanon-route: de charge-kill (kind `"charge"`, 0,85 + 0,4 = 1,25) kreeg
+  daarvoor altijd de volledige gib-explosie. De gibs-delen worden langs een
+  vlak verdeeld: de romp wordt echt gesneden (verdubbeld, elke helft tekent
+  met `SNIJ_SHADER` alleen haar kant, `discard` op een vlak in mesh-ruimte,
+  de achtervlakken als vlees zodat je in de snede kijkt); armen, benen, kop
+  en hoed gaan HEEL mee met de kant waar ze aanzitten (hoogste punt;
+  onderarm volgt bovenarm, onderbeen bovenbeen). `Body_boven` (romp, kop,
+  armen) vliegt als een stuk met de klap mee en maakt een salto
+  (`_werp_helft`); `Benen_onder` staat nog `slice_sta` en kiept dan om
+  (`_kiep_helft`, zakt naar het bord als de voeten in de lucht hangen, de
+  ruiter). Hoed en een onderarm los, plus de kanon-bloedmist en spuiten op
+  de snede: het gibs-wolkje. Sabel: vlak gekanteld om de slagrichting
+  (`slice_hoek` 35 graden); bajonet met kleinere kans en bijna vlak. De
+  shader draagt dezelfde `dim`/`doek`-haakjes als de cape, dus
+  `verduister_later` maakt de helften gewoon donker en doorzichtig.
+  Knoppen (Model-tuner tab Gore): `slice_kans_sabel` (0,85),
+  `slice_kans_bajonet` (0,35), `slice_hoogte`, `slice_hoek`,
+  `slice_hoek_bajonet`, `slice_sta`, `slice_los`, `slice_kracht`,
+  `slice_tuimel`. Tuner-knop "doormidden (sabel)" en `-- gibshot sabel`.
+  Check: `-- snijcheck [closeup]` (ModelTuner.tscn, headless of met venster:
+  twee helften, romp verdubbeld, los stukje, bovenste helft vliegt, onderste
+  kiept, alles in de debris-groep; plaatjes `_shot_snij.png` halverwege de
+  vlucht en `_shot_snij_laat.png` erna). Puur visueel: uispel gelijk.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
