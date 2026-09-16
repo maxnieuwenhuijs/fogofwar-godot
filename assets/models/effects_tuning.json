@@ -84,6 +84,7 @@
 	"limb_fling_time": 1.0,
 	"limb_shed_chance": 0.4,
 	"link_puff": 1.0,
+	"spawn_kijk_pauze": 0.8,
 	"melee_advance_delay": 0.5,
 	"melee_hit_delay": 1.0,
 	"melee_retaliation_delay": 0.1,

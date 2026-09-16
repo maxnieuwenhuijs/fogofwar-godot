@@ -457,6 +457,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   ook de fasen: richting-fase na tik 1, meter na tik 2, klaar na tik 3; met
   venster `_shot_spel_richt.png`); `omgevingcheck` klikt met drukken EN
   loslaten en telt bij een werp-prop de neergezette pijl als reactie. Tripo-props ervoor: PROP-WISHLIST sectie 13.
+- **Eerst het bord, dan het scherm (16 september, Max: "je ziet het bord
+  de soldaten spawnen bij beide teams, dan daarna kies je CP en definieer
+  je de kaarten").** De engine deed het al in die volgorde (CYCLE_SPAWN,
+  spawns_revealed, dan de define); het scherm niet: het CP-bod opende in
+  dezelfde tel als de fase-wissel, over de landende versterkingen heen.
+  Nu wachten het CP-bod (`_open_define_fase`) en het spawn-keuzescherm
+  (`_open_spawn_fase`) via `_animaties_bezig`/`_wacht_op_animaties` op de
+  poef-reveal, de ontkoppel-golf en nalopende sterftes, met een kijkpauze
+  na de laatste poef (knop `spawn_kijk_pauze` in effects_tuning.json,
+  0,8 s) en HUD_SPAWN_LANDING in de balk. Headless wacht niet, dus
+  uispel, herstelcheck en resumecheck blijven gelijk.
 - **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
   mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
   gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de

@@ -1403,7 +1403,9 @@ func is_rustig() -> bool:
 
 
 ## F4.3e -- waar tijdens de 0,9 s "ronde klaar"-pauze (koppelen -> define),
-## en zolang de kaartwaaier op de poef-reveal van verse spawns wacht.
+## en zolang een scherm (spawn-keuze, CP-bod, kaartwaaier) op het bord wacht:
+## de poef-reveal van verse spawns met zijn kijkpauze, of een nalopende
+## animatie (16 september).
 var _fase_overgang_bezig: bool = false
 var _define_open_bezig: bool = false
 
@@ -1719,7 +1721,10 @@ var _spawn_reveal_tot_ms: int = 0
 ## _open_define_hand). Schaal-pop met een place-tik per poppetje.
 func _poef_reveal(views: Array) -> void:
 	var stagger := 0.18
-	_spawn_reveal_tot_ms = Time.get_ticks_msec() + int((0.45 + stagger * views.size() + 0.25) * 1000.0)
+	# Na de laatste poef nog even naar het bord met beide legers kijken
+	# voordat het CP-bod opent (knop spawn_kijk_pauze in effects_tuning.json).
+	var kijk: float = PawnView.fx("spawn_kijk_pauze", 0.8)
+	_spawn_reveal_tot_ms = Time.get_ticks_msec() + int((0.45 + stagger * views.size() + 0.25 + kijk) * 1000.0)
 	_card_hand.visible = false  # eerst het bord laten zien
 	for i in views.size():
 		var pv: Node3D = views[i]
@@ -2582,6 +2587,25 @@ func _open_define_fase() -> void:
 		else:
 			_update_hud(tr("HUD_WAIT_OPPONENT"))
 		return
+	# Eerst het bord, dan pas een scherm (Max, 16 september: "je ziet het bord
+	# de soldaten spawnen bij beide teams, dan daarna kies je CP en definieer
+	# je de kaarten"). De poef-reveal van de versterkingen (plus de kijkpauze
+	# erna), de ontkoppel-golf en een nalopende sterfte spelen uit vóórdat het
+	# CP-bod opent. Daarvoor wachtte alleen de kaartwaaier (na het bod) en
+	# schoof het bod-scherm over de landende versterkingen heen. Headless
+	# wacht niet (zie _wacht_op_animaties), dus uispel blijft gelijk.
+	if _animaties_bezig():
+		_card_hand.visible = false
+		_define_open_bezig = true
+		if st_def.round_number <= 1:
+			_update_hud(tr("HUD_SPAWN_LANDING"))
+		await _wacht_op_animaties()
+		_define_open_bezig = false
+		st_def = session.state
+		if st_def == null or not Phase.is_define(st_def.phase) \
+				or st_def.cards_defined.get(_human_id, []).size() > 0:
+			return  # intussen doorgeschoven (timeout, herstel): niets openen
+		_update_hud()
 	if st_def.rules.campaign_actief() and not st_def.cp_bet_done.get(_human_id, false) \
 			and int(st_def.cp.get(_human_id, 0)) > 0 \
 			and Validator.expected_define_count(st_def, _human_id) > 0:
@@ -2601,6 +2625,15 @@ func _open_spawn_fase() -> void:
 	_update_hud(tr("PHASE_SPAWN_TITLE"))
 	if _ai != null and not session.state.spawn_done.get(_ai_id, false):
 		session.submit_spawn(_ai_id, _ai.choose_spawn(session.state))
+	# Ook hier eerst het bord (de laatste sterfte van de ronde, een lijk dat
+	# wegzakt), dan pas het keuzescherm (Max, 7 september: "speel altijd eerst
+	# alle animaties af voordat de nieuwe kaarten of schermen in beeld komen").
+	if _animaties_bezig():
+		_define_open_bezig = true
+		await _wacht_op_animaties()
+		_define_open_bezig = false
+		if session.state == null or session.state.phase != Phase.Type.CYCLE_SPAWN:
+			return  # intussen doorgeschoven (timeout, herstel)
 	if session.state.phase == Phase.Type.CYCLE_SPAWN \
 			and not session.state.spawn_done.get(_human_id, false):
 		_show_spawn_overlay()

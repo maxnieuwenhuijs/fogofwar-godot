@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## 16 september -- Versterkingen eerst zien landen, dan pas het CP-bod
+
+Max: "het moet zijn: kiezen om te spawnen welke soldaten na een ronde. dan
+zie je het bord de soldaten spawnen bij beide teams, dan daarna kies je CP
+en definieer je de kaarten." De engine doet dat al precies zo (CYCLE_SPAWN,
+beide inzetten blind, `spawns_revealed`, dan SETUP_1_DEFINE), maar het
+scherm niet: `_on_phase_changed` opende het CP-bod in dezelfde tel als de
+fase-wissel, dus het bod-scherm schoof over de poef-reveal van de
+versterkingen heen; alleen de kaartwaaier (na het bod) wachtte op het bord
+(`_open_define_hand`, sinds 7 september).
+
+- `_open_define_fase`: wacht eerst op `_animaties_bezig` (poef-reveal,
+  ontkoppel-golf, nalopende sterfte) en opent dan pas het CP-bod of de
+  waaier; de fase-timer start daarna. Intussen zegt de balk
+  `HUD_SPAWN_LANDING` ("De versterkingen komen aan..."); schuift de fase
+  onder het wachten door (timeout, herstel), dan opent er niets.
+- `_open_spawn_fase`: hetzelfde voor het spawn-keuzescherm (de laatste
+  sterfte van de ronde eerst laten uitlopen; Max' regel van 7 september).
+- `_poef_reveal`: na de laatste poef een kijkpauze (knop `spawn_kijk_pauze`
+  in `effects_tuning.json`, 0,8 s) zodat je beide legers ziet staan.
+- Beide wachten via `_define_open_bezig`, dus `is_rustig` (herstelcheck,
+  resumecheck) wacht mee. Headless wacht niet: de acties en hun volgorde
+  veranderen niet.
+
+**Checks:** `-- uispel 777` zobrist `d16a14f8…` (246 acties, cyclus 6, ongewijzigd); `-- herstelcheck 777` 141 momenten, 0 verschillen; `-- herstelcheck 4242 wolf` 155 momenten, 0 verschillen; `-- resumecheck 777 1` 46 momenten, 0 verschillen over alle veertien fasen; `-- naadcheck` PASS; `-- koppelcheck` PASS; `--import` zonder scriptfouten (vertalingen opnieuw gecompileerd).
+
+Tegelijk werkte de andere sessie in game.gd aan de HP-blokjes (6 en 7
+kolommen); alleen de eigen hunks zijn gecommit (index-blob), de rest staat
+in de werkmap van die sessie.
+
 ## 12 september -- een blauwe cape voor het blauwe team
 
 Max: "kunnen we ook alle blauwe team karakters allemaal een blauw cape
