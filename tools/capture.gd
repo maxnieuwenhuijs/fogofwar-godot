@@ -4585,10 +4585,14 @@ func _meleecheck_scenario(game, st3: GameState, unit_type: int, naam: String) ->
 
 
 ## Charge-scenario voor `-- meleecheck` (26 aug, Max: "jump en dan melee, dat
-## is voor de charge"): een cavalerist rijdt een vak aan en velt de
+## is voor de charge"): een cavalerist rijdt DRIE vakken aan en velt de
 ## aangrenzende infanterist. Eis: tijdens het aanrijden speelt een
-## rush-clip, bij aankomst de charge-sprongstoot (terugval walk/melee telt
-## ook, voor facties zonder die clips -- maar de muis heeft ze).
+## rush-clip, daarna de charge-sprongstoot (terugval walk/melee telt
+## ook, voor facties zonder die clips -- maar de muis heeft ze). Sinds 16
+## september begint de sprong twee vakken voor de aankomst (bij een rit van
+## een vak dus meteen, vandaar drie vakken hier) en valt de klap pas tegen
+## het einde van de sprong-clip: de sprong moet na 1,2 s dus nog lopen en
+## het slachtoffer mag dan nog niet gevallen zijn.
 func _meleecheck_charge(game, st3: GameState) -> bool:
 	st3.current_player = 1
 	if st3.phase != Phase.Type.ACTION:
@@ -4609,13 +4613,14 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 	if ruiter == null or slachtoffer == null:
 		print("[MELEE][charge] geen bruikbaar paar gevonden")
 		return false
-	ruiter.remaining_stamina = maxi(ruiter.remaining_stamina, 3)
-	var start := Vector2i(5, 6)
+	ruiter.remaining_stamina = maxi(ruiter.remaining_stamina, 6)
+	var start := Vector2i(5, 8)
 	var tussen := Vector2i(5, 5)
 	var doelvak := Vector2i(5, 4)
+	var vrij: Array = [start, Vector2i(5, 7), Vector2i(5, 6), tussen, doelvak]
 	for bezet in st3.pawns.values():
 		if bezet != ruiter and bezet != slachtoffer and not bezet.is_eliminated \
-				and (bezet.position == start or bezet.position == tussen or bezet.position == doelvak):
+				and bezet.position in vrij:
 			st3.set_pawn_position(bezet, Vector2i(0, 0) if bezet.position != Vector2i(0, 0) else Vector2i(10, 9))
 	st3.set_pawn_position(ruiter, start)
 	st3.set_pawn_position(slachtoffer, doelvak)
@@ -4634,6 +4639,7 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 	# daarna de charge/melee-stoot.
 	var gezien: Array = []
 	var t := 0.0
+	var sprong_duur: float = rv.charge_duur() if rv != null else -1.0
 	while t < 1.2:
 		if rv != null and is_instance_valid(rv):
 			var clip := String(rv.huidige_clip())
@@ -4641,7 +4647,14 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 				gezien.append(clip)
 		await get_tree().create_timer(0.03).timeout
 		t += 0.03
-	print("[MELEE][charge] clip-verloop: %s" % ", ".join(gezien))
+	var sprong_loopt_nog: bool = rv != null and is_instance_valid(rv) \
+		and String(rv.huidige_clip()).begins_with("charge")
+	# De klap valt pas tegen het einde van de sprong: na 1,2 s staat het
+	# slachtoffer nog (_kill_view haalt hem pas bij de klap uit _pawn_views),
+	# want de muis-sprong duurt ruim 3 s.
+	var doel_staat_nog: bool = game._pawn_views.has(slachtoffer.id)
+	print("[MELEE][charge] clip-verloop: %s (sprong-clip %.2f s; na 1,2 s: sprong loopt nog=%s, doel staat nog=%s)" % [
+		", ".join(gezien), sprong_duur, sprong_loopt_nog, doel_staat_nog])
 	var reed := false
 	var stootte := false
 	var stoot_na_rit := false
@@ -4654,8 +4667,13 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 			if reed:
 				stoot_na_rit = true
 	var ok := reed and stootte and stoot_na_rit
+	# Met een echte sprong-clip (langer dan 1,5 s) hoort hij na 1,2 s nog te
+	# lopen en het doel nog te staan; korte clips of de melee-terugval niet.
+	if sprong_duur > 1.5:
+		ok = ok and sprong_loopt_nog and doel_staat_nog
 	if not ok:
-		print("[MELEE][charge] FAIL: aanrijden=%s stoot=%s volgorde-goed=%s" % [reed, stootte, stoot_na_rit])
+		print("[MELEE][charge] FAIL: aanrijden=%s stoot=%s volgorde-goed=%s sprong-loopt-nog=%s doel-staat-nog=%s" % [
+			reed, stootte, stoot_na_rit, sprong_loopt_nog, doel_staat_nog])
 	return ok
 
 

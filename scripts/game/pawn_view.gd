@@ -682,12 +682,32 @@ func play_rush() -> void:
 
 ## Charge-stoot (26 aug, Max: "jump en dan melee"): de sprong-aanval
 ## ("Standing Melee Run Jump Attack" -> "charge") als het model die heeft,
-## anders de gewone melee-stoot. Raakmoment stem je af met charge_hit_delay.
+## anders de gewone melee-stoot. Sinds 16 september begint de sprong al
+## `charge_aanloop_vakken` voor de aankomst en valt de klap
+## `charge_raak_voor_einde` seconden voor het einde van de clip (game.gd,
+## via charge_duur()); zonder sprong-clip geldt nog charge_hit_delay.
 func play_charge() -> void:
 	if _anim != null and not _variants_of("charge").is_empty():
 		_play_variant("charge", false, melee_fx("charge_speed", "charge_speed", 1.2), true)
 	else:
 		play_melee()
+
+
+## Hoe lang duurt de sprong-clip die play_charge() straks speelt (al gedeeld
+## door charge_speed)? -1 als het model geen sprong-clip heeft en dus op de
+## gewone melee-stoot terugvalt (die kiest willekeurig een variant, dus daar
+## valt vooraf niets over te zeggen). Bij meer varianten de kortste, zodat de
+## klap nooit na het einde van de clip valt.
+func charge_duur() -> float:
+	if _anim == null:
+		return -1.0
+	var varianten := _variants_of("charge")
+	if varianten.is_empty():
+		return -1.0
+	var kortste := INF
+	for v in varianten:
+		kortste = minf(kortste, _anim.get_animation(String(v)).length)
+	return kortste / maxf(melee_fx("charge_speed", "charge_speed", 1.2), 0.01)
 
 
 func play_die() -> void:
@@ -1862,6 +1882,10 @@ func _on_anim_finished(anim_name: String) -> void:
 	oneshots.append_array(ANIM_ALIASES.get("hit", []))
 	oneshots.append("ready")
 	oneshots.append_array(ANIM_ALIASES.get("ready", []))
+	# De sprong-stoot van de charge ook (16 september): die begint nu voor
+	# de aankomst en de rit-tween zet dan geen idle meer; zonder deze regel
+	# bleef de ruiter op het laatste frame van de sprong hangen.
+	oneshots.append("charge")
 	if n in oneshots:
 		play_idle()
 

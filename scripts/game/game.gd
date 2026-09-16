@@ -2972,25 +2972,52 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			Audio.play("charge_yell")  # strijdkreet bij het aanrijden
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
 			# Choreografie in fasen (26 aug, Max: "jump en dan melee, dat is
-			# voor de charge"): eerst aanrijden op de rush-clip, dan bij
-			# aankomst de sprong-stoot ("charge"-clip), en de klap op het
-			# stoot-frame -- niet meer de vaste 0.4s dwars door het rijden.
+			# voor de charge"): eerst aanrijden op de rush-clip, dan de
+			# sprong-stoot ("charge"-clip), en de klap op het stoot-frame --
+			# niet meer de vaste 0.4s dwars door het rijden. Sinds 16
+			# september (Max: "start de jump attack animatie 2 blokjes eerder
+			# afstand, dan komt ie mooi uit, en dan pas de bloed walk en alles
+			# afspelen op bijna het einde van die jump attack") begint de
+			# sprong al `charge_aanloop_vakken` (2) voor de aankomst, zodat
+			# hij op het doelvak neerkomt, en valt de klap
+			# `charge_raak_voor_einde` (0,5 s) voor het einde van de clip.
+			# Zonder sprong-clip (alleen de muis heeft er een) blijft het de
+			# melee-stoot bij aankomst met charge_hit_delay.
+			var heeft_doel: bool = action.get("defender_id", -1) != -1
+			var cav: PawnView = _pawn_views.get(action.pawn_id)
+			var sprong_duur: float = cav.charge_duur() if cav != null else -1.0
 			var rij_dur := 0.0
+			var sprong_start := 0.0
 			if result.get("moved", false) or result.get("forced_move", false):
-				_animate_move(action.pawn_id, result.charge_from, end_pos, true)
+				# Met een doel zet de rit-tween aan het eind geen idle: de
+				# sprong loopt dan nog en keert zelf naar idle terug.
+				_animate_move(action.pawn_id, result.charge_from, end_pos, true, not heeft_doel)
 				var rij_dist: int = absi(end_pos.x - result.charge_from.x) + absi(end_pos.y - result.charge_from.y)
 				rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
+				if sprong_duur > 0.0 and rij_dist > 0:
+					var aanloop: float = cav.melee_fx("charge_aanloop_vakken", "charge_aanloop_vakken", 2.0)
+					sprong_start = maxf(rij_dur - aanloop * rij_dur / float(rij_dist), 0.0)
+				else:
+					sprong_start = rij_dur + 0.02
 			_check_haven_score(action.pawn_id, end_pos)
-			var cav: PawnView = _pawn_views.get(action.pawn_id)
-			if cav != null and action.get("defender_id", -1) != -1:
+			if cav != null and heeft_doel:
 				var richting: Vector2i = result.defender_pos - end_pos
-				get_tree().create_timer(rij_dur + 0.02).timeout.connect(func() -> void:
+				var start_sprong := func() -> void:
 					if is_instance_valid(cav):
 						if richting != Vector2i.ZERO:
 							cav.face_dir(richting)
-						cav.play_charge())
-			if action.get("defender_id", -1) != -1:
-				var klap_del: float = rij_dur + (cav.melee_fx("charge_hit_delay", "charge_hit_delay", 0.35) if cav != null else 0.35)
+						cav.play_charge()
+				if sprong_start <= 0.0:
+					start_sprong.call()
+				else:
+					get_tree().create_timer(sprong_start).timeout.connect(start_sprong)
+			if heeft_doel:
+				var klap_del: float
+				if sprong_duur > 0.0:
+					var voor_einde: float = cav.melee_fx("charge_raak_voor_einde", "charge_raak_voor_einde", 0.5)
+					klap_del = sprong_start + maxf(sprong_duur - voor_einde, 0.1)
+				else:
+					klap_del = sprong_start + (cav.melee_fx("charge_hit_delay", "charge_hit_delay", 0.35) if cav != null else 0.35)
 				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", klap_del)
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
 					result.get("eliminated", false), klap_del, true)
@@ -3821,7 +3848,11 @@ func _begin_advance(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i) -> v
 	_animate_move(pawn_id, from_coord, to_coord)
 
 
-func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush: bool = false) -> void:
+## idle_na (16 september): false als er na de rit nog een clip loopt die
+## zelf naar idle terugkeert (de sprong-stoot van de charge begint al voor
+## de aankomst; een play_idle aan het eind van de tween kapte hem af).
+func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush: bool = false,
+		idle_na: bool = true) -> void:
 	var pv: PawnView = _pawn_views.get(pawn_id)
 	if pv == null:
 		return
@@ -3852,7 +3883,8 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush:
 	tween.tween_callback(func() -> void:
 		_tweening_pawns.erase(pawn_id)
 		pv.position = end
-		pv.play_idle())
+		if idle_na:
+			pv.play_idle())
 
 
 func _on_game_over(winner_id: int) -> void:
