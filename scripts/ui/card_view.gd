@@ -33,7 +33,12 @@ signal tapped(card: CardView)
 const NAAMPLAAT_MAAT := Vector2(273, 94)
 const KRANS_MAAT := Vector2(283, 266)
 const SIERLIJN_MAAT := Vector2(295, 24)
-const KOLOM_MAAT := Vector2(169, 310)
+## De stat-kolom (16 september, Max: "het cijfer-ding mag wat langer en
+## ietsje smaller, want nu vallen de hokjes er net buiten"): een 9-patch
+## van Card_specs_holder.png op eigen maat, niet meer de plaat op 1,14.
+## Drie kolommen van 170 met 12 ertussen = 534, binnen het kaartframe
+## (de lijst loopt tot x 47 en vanaf 599).
+const KOLOM_MAAT := Vector2(170, 392)
 const SPECS_NAAM_MAAT := Vector2(154, 44)
 const SPECS_LIJN_MAAT := Vector2(152, 17)
 const CP_MAAT := Vector2(318, 339)
@@ -41,14 +46,16 @@ const ONTHULD_MAAT := Vector2(210, 63)
 const LINT_MAAT := Vector2(72, 247)
 const GEKOPPELD_MAAT := Vector2(187, 247)
 const KNOP_MAAT := Vector2(96, 96)
-const STAT_ICOON := 66.0
-# Plaatsing binnen een stat-kolom (contract par. 4).
+const STAT_ICOON := 74.0
+# Plaatsing binnen een stat-kolom (contract par. 4). Het icoon staat sinds
+# 16 september ruim boven het cijfer (Max: "geef de icon meer ruimte").
 const KOLOM_NAAM_Y := 10.0
-const KOLOM_ICOON_Y := 48.0
-const KOLOM_LIJN_Y := 112.0
-const KOLOM_CIJFER_Y := 108.0
-const KOLOM_CIJFER_HOOGTE := 104.0   # 16 september: cijfer 96, boven de plus
-const KOLOM_KNOP_Y := 212.0
+const KOLOM_ICOON_Y := 64.0
+const KOLOM_LIJN_Y := 150.0
+const KOLOM_CIJFER_Y := 158.0
+const KOLOM_CIJFER_HOOGTE := 116.0
+const KOLOM_CIJFER_GROOTTE := 104
+const KOLOM_KNOP_Y := 284.0
 # Selectie en koppeling.
 const GESELECTEERD_SCHAAL := 1.04
 const GEKOPPELD_DIM := 0.72
@@ -264,9 +271,8 @@ func _bouw() -> void:
 	_factie_label = _label("Titel", "LabelKopInkt", 48, Vector2(0, UiAssets.KAART_TITEL_Y), Vector2(maat.x, 60))
 	_kaartlaag.add_child(_factie_label)
 	# Drie stat-kolommen: HP links, SPEED midden, ATTACK rechts.
-	# drie geschaalde kolommen, gecentreerd op de kaart
-	var ks: float = UiAssets.KAART_KOLOM_SCHAAL
-	var kolom_b: float = KOLOM_MAAT.x * ks
+	# drie kolommen op eigen maat, gecentreerd op de kaart
+	var kolom_b: float = KOLOM_MAAT.x
 	var links: float = (maat.x - (3.0 * kolom_b + 2.0 * UiAssets.KAART_KOLOM_TUSSEN)) * 0.5
 	var hp := _bouw_kolom("Hp", "stat-hp", links)
 	var sta := _bouw_kolom("Sta", "stat-speed", links + kolom_b + UiAssets.KAART_KOLOM_TUSSEN)
@@ -324,8 +330,16 @@ func _bouw() -> void:
 ## plus onderaan (besluit Max, 3 september: geen min; de min-functies blijven
 ## voor de tools). Geeft {waarde, naam, plus} terug.
 func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
-	var kolom := _rect(voorvoegsel + "Kolom", UiAssets.kaart("specs"), Vector2(x, UiAssets.KAART_SPECS_Y), KOLOM_MAAT)
-	kolom.scale = Vector2(UiAssets.KAART_KOLOM_SCHAAL, UiAssets.KAART_KOLOM_SCHAAL)   # alles erin schaalt mee
+	# 9-patch (randen 16 px) in plaats van een geschaalde plaat: zo kan de
+	# kolom smaller en langer zonder dat de getekende lijst vervormt.
+	var kolom := Panel.new()
+	kolom.name = voorvoegsel + "Kolom"
+	kolom.position = Vector2(x, UiAssets.KAART_SPECS_Y)
+	kolom.size = KOLOM_MAAT
+	kolom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var kolom_stijl: StyleBox = UiAssets.paneel_stijl("specs")
+	if kolom_stijl != null:
+		kolom.add_theme_stylebox_override("panel", kolom_stijl)
 	_kaartlaag.add_child(kolom)
 	var naam := _rect("Naam", UiAssets.kaart("specs_naam"),
 		Vector2((KOLOM_MAAT.x - SPECS_NAAM_MAAT.x) * 0.5, KOLOM_NAAM_Y), SPECS_NAAM_MAAT)
@@ -339,7 +353,7 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	kolom.add_child(icoon)
 	kolom.add_child(_rect("Lijn", UiAssets.kaart("specs_sierlijn"),
 		Vector2((KOLOM_MAAT.x - SPECS_LIJN_MAAT.x) * 0.5, KOLOM_LIJN_Y), SPECS_LIJN_MAAT))
-	var waarde := _label(voorvoegsel + "Value", "LabelCijfer", 96,
+	var waarde := _label(voorvoegsel + "Value", "LabelCijfer", KOLOM_CIJFER_GROOTTE,
 		Vector2(0, KOLOM_CIJFER_Y), Vector2(KOLOM_MAAT.x, KOLOM_CIJFER_HOOGTE))
 	kolom.add_child(waarde)
 	_uniek(waarde)

@@ -2275,6 +2275,17 @@ func _ready() -> void:
 			print("[DEFINE] kaart %d: midden=(%.0f, %.0f) draai=%.1f graden schaal=%.2f volgorde=%d" % [
 				i, cv.position.x + UiAssets.KAART_MAAT.x * 0.5 * cv.scale.x, cv.position.y + UiAssets.KAART_MAAT.y * 0.5 * cv.scale.y,
 				rad_to_deg(cv.rotation), cv.scale.x / CardHand.KAART_SCHAAL, cv.get_index()])
+		# Kolommen binnen het kaartframe (de lijst loopt tot x 47 en vanaf 599).
+		if dviews.size() >= 1:
+			var k_links := 9999.0
+			var k_rechts := -9999.0
+			for knaam in ["HpKolom", "StaKolom", "AtkKolom"]:
+				var kn: Control = (dviews[0] as CardView).find_child(knaam, true, false)
+				if kn != null:
+					k_links = minf(k_links, kn.position.x)
+					k_rechts = maxf(k_rechts, kn.position.x + kn.size.x * kn.scale.x)
+			print("[DEFINE] kolommen van %.0f tot %.0f op de kaart, kader 47..599 (%s)" % [
+				k_links, k_rechts, "PASS" if k_links >= 47.0 and k_rechts <= 599.0 else "FAIL"])
 		if "klik" in args and dviews.size() >= 1:
 			var kdoel: CardView = dviews[0]
 			var ky_voor: float = kdoel.position.y
@@ -2929,8 +2940,42 @@ func _ready() -> void:
 				sc_img.save_png("res://_shot_sleepcheck.png")
 				print("[SLEEP] screenshot -> _shot_sleepcheck.png")
 		var sc_kaart0: int = (GameSession.state.cards_revealed[1][0] as Card).id
+		var sc_boog_van: Vector2 = sc_pijl._van
+		var sc_boog_naar: Vector2 = sc_pijl._naar
 		await _sc_muis(sc_doel, false)
-		await get_tree().create_timer(0.5).timeout
+		# Halverwege de vlucht: de spookkaart hangt met zijn anker OP de boog
+		# van de pijl, de pijl begint bij dat anker, de echte kaart is weg.
+		await get_tree().create_timer(0.12).timeout
+		var sc_spook: Control = game.get_node("UI").find_child("Spookkaart", false, false)
+		if sc_spook == null:
+			print("[SLEEP] FOUT: geen spookkaart tijdens de vlucht")
+			sc_fouten += 1
+		else:
+			var anker: Vector2 = sc_spook.position + sc_spook.pivot_offset
+			var dichtst := 1.0e9
+			for si in 201:
+				dichtst = minf(dichtst, anker.distance_to(KoppelPijl.boogpunt(sc_boog_van, sc_boog_naar, float(si) / 200.0)))
+			var bron_weg: bool = (sc_views[0] as CardView).modulate.a < 0.05
+			print("[SLEEP] vlucht-detail: anker=(%.0f, %.0f) schaal=%.2f pijl_van=(%.0f, %.0f) boog_van=(%.0f, %.0f) boog_naar=(%.0f, %.0f)" % [
+				anker.x, anker.y, sc_spook.scale.x, sc_pijl._van.x, sc_pijl._van.y, sc_boog_van.x, sc_boog_van.y, sc_boog_naar.x, sc_boog_naar.y])
+			print("[SLEEP] vlucht: anker %.1f px van de boog, pijl zichtbaar=%s begint bij het anker=%s, kaart uit de hand=%s" % [
+				dichtst, str(sc_pijl.visible), str(sc_pijl._van.distance_to(anker) < 1.5), str(bron_weg)])
+			if dichtst > 4.0 or not sc_pijl.visible or sc_pijl._van.distance_to(anker) >= 1.5 or not bron_weg:
+				print("[SLEEP] FOUT: de kaart volgt de pijl niet (of de pijl volgt de kaart niet)")
+				sc_fouten += 1
+			var sc_vtex := get_viewport().get_texture()
+			if sc_vtex != null and sc_vtex.get_image() != null:
+				var sc_vimg: Image = sc_vtex.get_image()
+				if sc_vimg != null:
+					sc_vimg.save_png("res://_shot_sleepvlucht.png")
+					print("[SLEEP] screenshot -> _shot_sleepvlucht.png")
+		await get_tree().create_timer(0.6).timeout
+		if game.get_node("UI").find_child("Spookkaart", false, false) != null:
+			print("[SLEEP] FOUT: de spookkaart is na de vlucht niet opgeruimd")
+			sc_fouten += 1
+		if is_instance_valid(sc_views[0]) and (sc_views[0] as CardView).modulate.a < 0.95:
+			print("[SLEEP] FOUT: de kaart kwam na de vlucht niet terug in de hand")
+			sc_fouten += 1
 		var sc_gekoppeld: int = (GameSession.state.pawns[sc_pion] as Pawn).linked_card_id
 		print("[SLEEP] losgelaten: pion %d draagt kaart %d (verwacht %d), pijl weg=%s" % [sc_pion, sc_gekoppeld, sc_kaart0, str(not sc_pijl.visible)])
 		if sc_gekoppeld != sc_kaart0:

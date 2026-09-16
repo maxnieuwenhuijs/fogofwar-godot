@@ -163,13 +163,14 @@ const KAART_GEKOPPELD_X := 21.0     # het lint-met-zegel (187 breed): strook op 
 const KAART_NAAMPLAAT_Y := 22.0
 # 16 september (Max: "het embleem op de kaarten mag een stuk kleiner en de
 # stats wat groter"): krans van 0,94 naar 0,58, alles eronder omhoog, de
-# drie stat-kolommen 1,14 x zo groot (KAART_KOLOM_SCHAAL) en het cijfer 96.
+# drie stat-kolommen groter. Later die dag (Max: "de hokjes vallen er net
+# buiten"): de kolom is een 9-patch op eigen maat (CardView.KOLOM_MAAT,
+# 170 x 392, cijfer 104), dus geen schaalfactor meer.
 const KAART_KRANS_Y := 92.0
 const KAART_KRANS_SCHAAL := 0.58
 const KAART_SIERLIJN_Y := 318.0
 const KAART_TITEL_Y := 250.0
 const KAART_SPECS_Y := 352.0
-const KAART_KOLOM_SCHAAL := 1.14
 const KAART_KOLOM_TUSSEN := 12.0
 const KAART_SPECS_X := [54.0, 238.0, 422.0]   # ongeschaald (oud); card_view rekent de geschaalde plekken zelf uit
 const KAART_CP_MIDDEN := Vector2(322.0, 871.0)

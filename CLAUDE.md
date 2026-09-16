@@ -501,15 +501,28 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   een gebogen boog (`KoppelPijl.boogpunt`) met lopende streepjes in de
   lichte teamkleur, boven een eigen vrije pion goud met een pulserende
   ring om de kop en de pion zelf fel via `_update_hover`; loslaten koppelt
-  langs `_on_link_pawn_clicked` (dus dezelfde checks als tik-tik) en een
-  spookkaart vliegt langs de boog naar de pion (`_vlieg_kaart_naar`);
-  loslaten naast een pion laat de kaart gekozen. Tik-tik blijft werken;
+  langs `_on_link_pawn_clicked` (dus dezelfde checks als tik-tik) en de
+  kaart gaat langs de pijl naar de pion (`_vlieg_kaart_naar`, Max: "laat
+  de kaart verdwijnen na slepen, niet zo omhoog animeren, of het pad van
+  de arrow volgen"): een spookkaart hangt met zijn bovenkant, het
+  beginpunt van de pijl, precies op de boog en volgt die naar de kop,
+  met de neus langs de raaklijn en snel krimpend; de pijl wordt
+  ingehaald (zijn begin schuift mee) en verdwijnt aan het eind
+  (`VLUCHT_DUUR` 0,34 s); de echte kaart is uit de hand zolang de vlucht
+  duurt en komt daarna gedimd terug. Valkuil: de setter van
+  `Control.global_position` zet in 4.7 de OORSPRONG van de transform,
+  die bij een draai om een spil verschuift; een spil op een pad zet je
+  via `position` (de UI-laag verschuift niet). Loslaten naast een pion
+  laat de kaart gekozen. Tik-tik blijft werken;
   op Android komen de vingers als muis-events binnen. Checks (MET
   venster, headless bereiken de muis-events de GUI niet): `-- define
   [muis] [focus] [klik]` (plekken, draai, volgorde; hover-lift; klik-lift
   van 109 px; `_shot_define.png`) en `-- sleepcheck [muis]` (echte
   muis-events: pijl raak boven de pion, koppeling na het loslaten, boven
-  een leeg vak geen raak en geen koppeling; `_shot_sleepcheck.png`).
+  een leeg vak geen raak en geen koppeling; tijdens de vlucht hangt het
+  anker van de spookkaart op de boog en begint de pijl daar, de kaart is
+  uit de hand en komt terug; `_shot_sleepcheck.png` en
+  `_shot_sleepvlucht.png`).
   Puur beeld: uispel, herstelcheck en koppelcheck ongewijzigd.
 - **Cape voor het blauwe team (12 september, Max: "alle blauwe team
   karakters een blauwe cape, vanuit Godot").** Geen Blender:
@@ -778,7 +791,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   factie_bonus)`, `game._factie_bonus_van`: hp_bonus en speed_bonus; niet
   de cavalerie-bonus of de ondergrenzen, die hangen van de pion af). De
   kaart heeft sinds die dag een klein embleem (krans 0,58) en grotere
-  stat-kolommen (`KAART_KOLOM_SCHAAL` 1,14, cijfer 96). **De emblemen zijn
+  stat-kolommen. **Later die dag** (Max: "het cijfer-ding mag wat langer
+  en ietsje smaller, want nu vallen de hokjes er net buiten") is de kolom
+  een 9-patch van `Card_specs_holder.png` op eigen maat
+  (`CardView.KOLOM_MAAT` 170 x 392, cijfer 104, icoon 74 ruim boven het
+  cijfer) in plaats van de plaat op 1,14: drie kolommen van 56 tot 590
+  binnen het kaartframe (de lijst loopt tot 47 en vanaf 599); `-- define`
+  meet dat ("kolommen ... kader 47..599"). **De emblemen zijn
   de duo-gravures** (big bro met kleine broertje) uit
   `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
   `python tools/verwerk_emblemen.py` knipt en schaalt ze naar

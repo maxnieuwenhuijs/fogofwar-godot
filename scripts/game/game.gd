@@ -21,6 +21,7 @@ const PAWN_Y := 0.05
 @onready var _pawns_root: Node3D = $World/Pawns
 @onready var _card_hand: CardHand = $UI/CardHand
 var _koppel_pijl: KoppelPijl = null   # 16 september: gebogen pijl bij het slepen van een kaart naar een pion
+const VLUCHT_DUUR := 0.34   # de kaart die na het loslaten langs de pijl naar de pion gaat
 @onready var _top_label: Label = $UI/TopLabel
 @onready var _prompt_label: Label = $UI/PromptLabel
 @onready var _count_label: RichTextLabel = $UI/CountLabel
@@ -2480,14 +2481,15 @@ func _on_koppel_sleep(index: int, pos: Vector2) -> void:
 ## hij (zelfde weg als tik-tik, dus dezelfde checks en meldingen); ernaast
 ## blijft de kaart gekozen, zodat een tik op een pion alsnog koppelt.
 func _on_koppel_drop(index: int, pos: Vector2) -> void:
-	if _koppel_pijl != null:
-		_koppel_pijl.verberg()
 	var pid: int = _koppel_doel(pos)
+	var vliegt: bool = pid >= 0 and _selected_link_card_id >= 0 and session.state.current_player == _human_id
+	if vliegt:
+		_vlieg_kaart_naar(index, pid)   # haalt de pijl in en verbergt hem aan het eind
+	elif _koppel_pijl != null:
+		_koppel_pijl.verberg()
 	if pid < 0:
 		_update_hover(pos)
 		return
-	if _selected_link_card_id >= 0 and session.state.current_player == _human_id:
-		_vlieg_kaart_naar(index, pid)
 	_on_link_pawn_clicked(pid)
 
 
@@ -2496,8 +2498,14 @@ func _on_koppel_annuleer(_index: int) -> void:
 		_koppel_pijl.verberg()
 
 
-## Een spookkaart (zelfde stats en teamkleur) vliegt langs de boog van de
-## hand naar de pion, krimpt en vervaagt; daaronder speelt _animate_link.
+## De kaart gaat langs de pijl naar de pion (Max, 16 september: "laat de
+## kaart verdwijnen na slepen, niet zo omhoog animeren, of het pad van de
+## arrow volgen"): een spookkaart met dezelfde stats hangt met zijn
+## bovenkant (het beginpunt van de pijl) precies op de boog en volgt die
+## naar de kop, met de neus langs de raaklijn, krimpend; de pijl wordt
+## ingehaald (zijn begin schuift met de kaart mee) en verdwijnt aan het
+## eind. De echte kaart is uit de hand zolang de vlucht duurt en komt
+## daarna gedimd (gekoppeld) terug. Daaronder speelt _animate_link.
 func _vlieg_kaart_naar(index: int, pid: int) -> void:
 	var views: Array = _card_hand.get_card_views()
 	if index < 0 or index >= views.size() or _camera == null or not _pawn_views.has(pid):
@@ -2506,27 +2514,47 @@ func _vlieg_kaart_naar(index: int, pid: int) -> void:
 	var doctrine: Dictionary = session.state.doctrine_data_of(_human_id)
 	var spook: CardView = CardView.maak(bron.data.hp, bron.data.stamina, bron.data.attack,
 		_human_id, _human_doctrine, int(doctrine.get("budget", bron.data.budget)))
+	spook.name = "Spookkaart"
 	spook.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$UI.add_child(spook)
-	spook.pivot_offset = UiAssets.KAART_MAAT * 0.5
-	var van: Vector2 = bron.global_position + UiAssets.KAART_MAAT * 0.5
-	var naar: Vector2 = _pion_schermpunt(pid, 0.35)
+	# Anker bovenaan in het midden: dat is het beginpunt van de pijl, en dat
+	# punt blijft op de boog; de kaart hangt eronder en krimpt weg.
+	var anker := Vector2(UiAssets.KAART_MAAT.x * 0.5, 0.0)
+	spook.pivot_offset = anker
+	var van: Vector2 = _card_hand.kaart_punt(index)
+	var naar: Vector2 = _pion_schermpunt(pid, 0.55)
 	var schaal_van: Vector2 = bron.scale
 	var draai_van: float = bron.rotation
-	spook.global_position = van - UiAssets.KAART_MAAT * 0.5
+	# `position`, niet `global_position`: die setter zet in 4.7 de OORSPRONG van
+	# de transform (die bij een draai om een spil verschuift), en de spil hoort
+	# op het pad. De UI-laag heeft geen eigen verschuiving.
+	spook.position = van - anker
 	spook.rotation = draai_van
 	spook.scale = schaal_van
+	bron.modulate.a = 0.0
+	var kleur: Color = UiAssets.team_kleur(_human_id, true)
 	var tween := create_tween().set_parallel()
 	tween.tween_method(func(t: float) -> void:
 		if not is_instance_valid(spook):
 			return
-		spook.global_position = KoppelPijl.boogpunt(van, naar, t) - UiAssets.KAART_MAAT * 0.5
-		spook.scale = schaal_van.lerp(Vector2.ONE * 0.10, t)
-		spook.rotation = lerpf(draai_van, 0.0, t), 0.0, 1.0, 0.38).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_property(spook, "modulate:a", 0.0, 0.14).set_delay(0.26)
+		var p: Vector2 = KoppelPijl.boogpunt(van, naar, t)
+		spook.position = p - anker
+		spook.scale = schaal_van.lerp(Vector2.ONE * 0.12, sqrt(t))   # snel klein, dan de laatste meters als een stip
+		var raaklijn: Vector2 = KoppelPijl.boogpunt(van, naar, minf(t + 0.03, 1.0)) \
+			- KoppelPijl.boogpunt(van, naar, maxf(t - 0.03, 0.0))
+		if raaklijn.length() > 0.5:
+			spook.rotation = lerp_angle(draai_van, raaklijn.angle() + PI * 0.5, clampf(t * 3.0, 0.0, 1.0))
+		if _koppel_pijl != null:
+			_koppel_pijl.toon(p, naar, true, kleur), 0.0, 1.0, VLUCHT_DUUR).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(spook, "modulate:a", 0.0, 0.12).set_delay(VLUCHT_DUUR - 0.12)
 	tween.chain().tween_callback(func() -> void:
 		if is_instance_valid(spook):
-			spook.queue_free())
+			spook.queue_free()
+		if _koppel_pijl != null:
+			_koppel_pijl.verberg()
+		if is_instance_valid(bron):
+			var terug := create_tween()
+			terug.tween_property(bron, "modulate:a", 1.0, 0.25))
 
 
 ## Koppel-fase: donkere ring om de EIGEN nog niet gekoppelde pionnen (F4.3e:

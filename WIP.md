@@ -120,6 +120,32 @@ vak zonder `_board.to_global` en landde op een pion. `-- koppelcheck` PASS,
 `-- herstelcheck 777` 142 momenten, 0 verschillen. Screenshots bekeken:
 drie varkenskaarten, vijf muizenkaarten, de sleep met de gouden boog.
 
+**Later die avond, Max: "laat de kaart verdwijnen na slepen, niet zo omhoog
+animeren, of dus het pad van de arrow volgen."** De spookkaart vloog vanuit
+zijn midden langs een eigen, hogere boog (andere begin- en eindpunten dan
+de pijl). Nu hangt hij met zijn bovenkant, het beginpunt van de pijl,
+precies op de boog van de pijl en volgt die naar de kop, met de neus langs
+de raaklijn en snel krimpend (sqrt-verloop); de pijl wordt ingehaald (zijn
+begin schuift met de kaart mee) en verdwijnt aan het eind; de echte kaart
+is uit de hand zolang de vlucht duurt (0,34 s) en komt daarna gedimd
+terug. Valkuil onderweg: `Control.global_position = ...` zet in 4.7 de
+oorsprong van de transform, en die verschuift bij een draai om een spil;
+het anker stond daardoor 230 px naast de boog. Via `position` (de UI-laag
+verschuift niet) zit hij er op 0,4 px op. De sleepcheck meet het:
+halverwege de vlucht anker op de boog, pijl begint bij het anker, kaart
+uit de hand; erna spookkaart opgeruimd en kaart terug (`_shot_sleepvlucht.png`).
+
+**En: "geef de icon een beetje meer ruimte van de stats, het cijfer-ding
+mag wat langer en ietsje smaller, want nu vallen de hokjes er net
+buiten."** De drie stat-kolommen (169 x 310 op 1,14 sinds vanmiddag) liepen
+van 21 tot 623 op een kaart waarvan de lijst tot 47 en vanaf 599 loopt. De
+kolom is nu een 9-patch-paneel van `Card_specs_holder.png` (randen 16 px,
+`UiAssets.paneel_stijl("specs")`) op eigen maat `KOLOM_MAAT` 170 x 392,
+dus smaller en langer zonder dat de getekende lijst vervormt: drie
+kolommen van 56 tot 590, het icoon (74) op y 64 en het cijfer (104) vanaf
+158, met de sierlijn ertussen; de plus op 284. `KAART_KOLOM_SCHAAL` is
+weg. `-- define` meet de kolommen tegen het kader (PASS), klik-lift 109 px.
+
 ## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
 
 Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van
