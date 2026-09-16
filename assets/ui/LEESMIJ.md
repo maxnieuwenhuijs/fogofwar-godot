@@ -14,6 +14,11 @@ assets/ui/
   buttons/    button_1..7 (+ _pressed, _blocked) en de lakzegel-vinkjes
   cards/      kaartframe, ruggen, linten, zegels, stempels, kransen, panelen (Frame_1..3), Texture_1
   emblems/    de zes gravures (Pig, Mouse, Lion, Bear, Wolf, Croccodile)
+              Sinds 16 september zonder wit: helderheid = dekking (wit
+              doorzichtig, zwart dicht, arcering half), kleur zwart; het
+              origineel staat in emblems/bron/ (.gdignore). Een nieuwe
+              levering gaat door `python tools/emblem_wit_transparant.py`,
+              dan `--import` en `-- uicheck`.
   icons/      30 witte iconen (kleur je in met modulate)
   fonts/      Roboto Slab Regular + Bold (van deze machine); zie hieronder
   texture/    Texture_1.png (perkament)

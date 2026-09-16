@@ -48,6 +48,10 @@ const FX_DEFS: Array = [
 	{"cat": "bloed", "key": "drop_size", "label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "wound_blood", "label": "wond-bloed (overleven)", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "wound_delay", "label": "wond-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.0},
+	{"cat": "bloed", "key": "wound_straal", "label": "wond-straaltje (lengte)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.22},
+	{"cat": "bloed", "key": "wound_straal_dikte", "label": "straaltje dikte (voet)", "min": 0.005, "max": 0.1, "step": 0.001, "def": 0.022},
+	{"cat": "bloed", "key": "wound_straal_op", "label": "straaltje op (s)", "min": 0.01, "max": 0.5, "step": 0.01, "def": 0.07},
+	{"cat": "bloed", "key": "wound_straal_duur", "label": "straaltje terug (s)", "min": 0.05, "max": 2.0, "step": 0.01, "def": 0.3},
 	{"cat": "bloed", "key": "drop_stain_chance", "label": "druppel-vlekkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
 	{"cat": "bloed", "key": "drop_stain_delay", "label": "vlek-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.05},
 	{"cat": "bloed", "key": "drop_stain_grow", "label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},
@@ -160,6 +164,55 @@ func _ready() -> void:
 	_build_world()
 	_build_ui()
 	_reload_pawns()
+	if "wondshot" in OS.get_cmdline_user_args():
+		# Overleefde klap (16 september): incasseer-clip + wond met het spitse
+		# bloedstraaltje aan het rompbot. Print of het straaltje er hangt en
+		# aan welk bot, schrijft _shot_wond.png op het hoogtepunt en meet of
+		# hij zich daarna weer opruimt. Headless bruikbaar (dan geen plaatje).
+		await get_tree().create_timer(1.0).timeout
+		var ws_fouten := 0
+		if _pawn == null or not is_instance_valid(_pawn):
+			print("[WOND] FOUT: geen pion")
+			ws_fouten += 1
+		else:
+			_pawn.flash_hit()
+			# Zijwaarts, zodat het straaltje op het plaatje niet naar de camera wijst.
+			_pawn.stagger(Vector3(1.0, 0.0, 0.2).normalized())
+			_pawn.play_hit()
+			_pawn.play_wound(Vector3(1.0, 0.0, 0.2).normalized())
+			await get_tree().create_timer(PawnView.fx("wound_straal_op", 0.07) + 0.02).timeout
+			var ws_att: Array = _pawn.find_children("Bloedstraal", "BoneAttachment3D", true, false)
+			if ws_att.is_empty():
+				var ws_skels: Array = _pawn.find_children("*", "Skeleton3D", true, false)
+				var ws_namen := PackedStringArray()
+				if not ws_skels.is_empty():
+					for bi in (ws_skels[0] as Skeleton3D).get_bone_count():
+						ws_namen.append((ws_skels[0] as Skeleton3D).get_bone_name(bi))
+				print("[WOND] FOUT: geen Bloedstraal-attachment aan het skelet (skeletten %d, botten: %s)" % [ws_skels.size(), ", ".join(ws_namen)])
+				ws_fouten += 1
+			else:
+				var ws_a: BoneAttachment3D = ws_att[0]
+				var ws_skel := ws_a.get_parent() as Skeleton3D
+				var ws_straal: MeshInstance3D = ws_a.find_children("Straal", "MeshInstance3D", true, false)[0]
+				var ws_maat: Node3D = ws_straal.get_parent()
+				var ws_bot := ws_skel.get_bone_name(ws_a.bone_idx) if ws_skel != null else "?"
+				var ws_h: float = (ws_straal.mesh as CylinderMesh).height
+				var ws_top: Vector3 = ws_straal.global_transform * Vector3(0.0, ws_h * 0.5, 0.0)
+				var ws_voet: Vector3 = ws_maat.global_position
+				print("[WOND] straaltje aan bot %s: voet y=%.2f, punt op %.2f eenheden, schaal y=%.2f" % [
+					ws_bot, ws_voet.y, ws_voet.distance_to(ws_top), ws_maat.scale.y])
+				if ws_maat.scale.y < 0.8:
+					print("[WOND] FOUT: het straaltje staat op het hoogtepunt niet uit (schaal %.2f)" % ws_maat.scale.y)
+					ws_fouten += 1
+			if not OS.has_feature("headless") and DisplayServer.get_name() != "headless":
+				get_viewport().get_texture().get_image().save_png("res://_shot_wond.png")
+			await get_tree().create_timer(PawnView.fx("wound_straal_duur", 0.3) + 0.3).timeout
+			if not _pawn.find_children("Bloedstraal", "BoneAttachment3D", true, false).is_empty():
+				print("[WOND] FOUT: het straaltje ruimt zich niet op")
+				ws_fouten += 1
+		print("[WOND] %s: %d fout(en)" % ["PASS" if ws_fouten == 0 else "FAIL", ws_fouten])
+		get_tree().quit(1 if ws_fouten > 0 else 0)
+		return
 	if "gibshot" in OS.get_cmdline_user_args():
 		var gs_args := OS.get_cmdline_user_args()
 		for a in gs_args:
