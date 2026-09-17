@@ -1,5 +1,22 @@
 # Fog of War — Work In Progress & Context
 
+## 17 september -- de capes zijn eruit
+
+Max: "verwijder de capes, alles eromheen, alles." Weg: de cape-code in
+pawn_view.gd (shader-lap, cloth op Jolt, lijf-meting, romp-segmenten,
+rugplaat, kraagpunten, vlaag, cape_weg), de bewoner-cape, de knoppen in het
+sfeer-paneel (alle `cape_*`), de windvlaag van een schot en de
+physics-stop in de hitstop, de checks `-- capecheck`, `-- capeschot` en
+`-- capebench`, de tab Cape in de Model-tuner met `-- capetuner` (was nog
+niet gecommit), de cloth-tak in zweefcheck, `cape_blue.png` met zijn
+import, PROP-WISHLIST sectie 14 (de textuur-prompts; de prop-tracker houdt
+zijn png-rijen-logica, die is generiek) en de cape-sectie in
+props/LEESMIJ.md. Gebleven: het `dim`-uniform en de doorzicht-variant van
+de eigen shaders, want het vlaggendoek en de snede gebruiken die. De
+secties hieronder over de cape zijn geschiedenis. Checks na het weghalen:
+tunercheck, zweefcheck muis 2, omgevingcheck 1, bewonercheck, windcheck,
+debrischeck, herstelcheck 777, uispel 777.
+
 ## 17 september -- Bloedwolk bij de melee kleiner dan bij het kanon
 
 Max: "maak de bloedwolk bij de melee iets kleiner dan de kanon-bloedwolk."

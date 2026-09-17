@@ -3282,8 +3282,6 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	_muzzle_flash(muzzle, is_cannon)
 	# vuur-schok: korte terugslag-shake bij het afvuren (kanon harder).
 	_shake((0.55 if is_cannon else 0.3) * PawnView.fx("fire_shake", 1.0))
-	# de windvlaag van het schot op de capes in de buurt (alleen binnen een straal)
-	_cape_vlaag(_board.to_global(muzzle), is_cannon)
 	# Rook drift met de schot-richting mee, van de loop af.
 	var shot_dir := Vector3.ZERO
 	if muzzle.distance_to(target) > 0.01:
@@ -3542,21 +3540,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "diorama", "label": "diorama (0 = loten per potje, 1-12 vast)", "min": 0.0, "max": 12.0, "step": 1.0, "def": 0.0},
 	{"key": "tik_pauze", "label": "tik-combo: pauze tot herstart (s)", "min": 0.15, "max": 1.5, "step": 0.05, "def": 0.6},
 	{"key": "tik_toon", "label": "tik-combo: toon omhoog per klik", "min": 0.0, "max": 0.15, "step": 0.005, "def": 0.07},
-	{"key": "cape_blauw", "label": "cape blauw team (0/1)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
-	{"key": "cape_rood", "label": "cape rood team (0/1)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 0.0},
-	{"key": "cape_lengte", "label": "cape-lengte (x pionhoogte)", "min": 0.25, "max": 0.9, "step": 0.01, "def": 0.5},
-	{"key": "cape_breedte", "label": "cape-breedte (x pionhoogte)", "min": 0.2, "max": 0.7, "step": 0.01, "def": 0.4},
-	{"key": "cape_wapper", "label": "cape-wapper", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
-	{"key": "cape_drape", "label": "cape-drape (plooien, om de schouders)", "min": 0.0, "max": 2.5, "step": 0.01, "def": 1.0},
-	{"key": "cape_slinger", "label": "cape-slinger (sleept bij bewegen)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
-	{"key": "cape_sim", "label": "cape-cloth (1 = Jolt-simulatie, 0 = vlakke shader-lap)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
-	{"key": "cape_sim_precisie", "label": "cape-cloth: solver-iteraties", "min": 1.0, "max": 8.0, "step": 1.0, "def": 5.0},
-	{"key": "cape_voering_goud", "label": "cape: binnenkant goudzijde (1) of het plaatje (0)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
-	{"key": "cape_wind", "label": "cape-wind", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
-	{"key": "cape_vlaag", "label": "cape-vlaag van een schot (0 = uit)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "idle_afwijkers", "label": "idle: hoeveel pionnen tegelijk een andere idle doen (0 = niemand)", "min": 0.0, "max": 6.0, "step": 1.0, "def": 2.0},
-	{"key": "cape_vlaag_straal", "label": "cape-vlaag: straal musket (vakken)", "min": 0.0, "max": 6.0, "step": 0.1, "def": 2.0},
-	{"key": "cape_vlaag_straal_kanon", "label": "cape-vlaag: straal kanon (vakken)", "min": 0.0, "max": 8.0, "step": 0.1, "def": 3.5},
 ]
 
 
@@ -3637,11 +3621,6 @@ func _on_ambiance_slider(value: float, key: String, val_label: Label) -> void:
 	_apply_ambiance()
 	if key == "dust":
 		_refresh_dust()
-	if key.begins_with("cape_"):
-		for pv in _pawn_views.values():
-			(pv as PawnView).herhang_cape()
-		if _omgeving != null:
-			_omgeving.herhang_capes()
 
 
 ## Schrijft alle knoppen (sfeer + effecten) terug naar effects_tuning.json:
@@ -3955,31 +3934,6 @@ func _spawn_sparks(pos: Vector3, strength: float) -> void:
 		tw.chain().tween_callback(spark.queue_free)
 
 
-## De windvlaag van een schot op de capes in de buurt (16 september, Max:
-## "alle capes reageren nu op een schot, dat moet niet: alleen binnen een
-## bepaalde straal rondom het schot, en bij kanon nog iets grotere straal").
-## Straal in vakken: knoppen cape_vlaag_straal (musket, 2) en
-## cape_vlaag_straal_kanon (3,5); de sterkte loopt lineair af naar de rand,
-## het kanon duwt harder. Een cape buiten de straal krijgt NIETS. Puur
-## visueel. Check: `-- capeschot`.
-func _cape_vlaag(bron_w: Vector3, is_cannon: bool) -> void:
-	var straal: float = PawnView.fx("cape_vlaag_straal_kanon", 3.5) if is_cannon else PawnView.fx("cape_vlaag_straal", 2.0)
-	if straal <= 0.0:
-		return
-	for pv in _pawn_views.values():
-		var v := pv as PawnView
-		if v == null or not is_instance_valid(v) or v._cape == null:
-			continue
-		var d: Vector3 = v.global_position - bron_w
-		d.y = 0.0
-		var afstand: float = d.length()
-		if afstand > straal:
-			continue
-		var richting: Vector3 = d.normalized() if afstand > 0.05 else -v.global_transform.basis.z
-		var sterkte: float = (1.0 - afstand / straal) * (1.0 if is_cannon else 0.6)
-		v.vlaag(richting, sterkte)
-
-
 ## Screen shake aanzwengelen (schaalt met impact). Uitzetbaar (motion sickness).
 func _shake(strength: float) -> void:
 	if not _combat_feel or not _screen_shake:
@@ -4005,15 +3959,9 @@ func _hitstop(secs: float) -> void:
 	if not _combat_feel or _in_hitstop or secs <= 0.0:
 		return
 	_in_hitstop = true
-	# de physics helemaal stil (16 september): met alleen time_scale 0,05
-	# vlogen ALLE cloth-capes (SoftBody3D op Jolt) na de hitstop van de rug,
-	# ook zeven vakken van het schot; Max: "alle capes reageren nu op een
-	# schot, dat moet niet". Gemeten met `-- capeschot`.
-	PhysicsServer3D.set_active(false)
 	Engine.time_scale = 0.05
 	await get_tree().create_timer(secs, true, false, true).timeout
 	Engine.time_scale = 1.0
-	PhysicsServer3D.set_active(true)
 	_in_hitstop = false
 
 

@@ -550,102 +550,6 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   uit de hand en komt terug; `_shot_sleepcheck.png` en
   `_shot_sleepvlucht.png`).
   Puur beeld: uispel, herstelcheck en koppelcheck ongewijzigd.
-- **Cape voor het blauwe team (12 september, Max: "alle blauwe team
-  karakters een blauwe cape, vanuit Godot").** Geen Blender:
-  `PawnView.maak_cape(root, hoogte, blauw, fase)` hangt een lap (PlaneMesh)
-  aan `mixamorig:Spine2` (terugval Spine1/Neck/Spine) via een
-  BoneAttachment3D. **Sinds 13 september is de lap echte cloth** (Max:
-  "je hebt geen cloth iets van simulatie?? lightweight iets"):
-  `_maak_cape_sim` bouwt een `SoftBody3D` van 7 x 10 punten op Jolt
-  (`physics/3d/physics_engine` = Jolt; de oude Godot-physics ontploft),
-  vijf solver-iteraties, stijfheid 1, demping 0,15, drag 0,2 (Max: "iets
-  te los"), onder de PawnView of de Bewoner (schaal 1, een
-  soft body onder het geschaalde skelet gaat mis). De kraagrij is
-  vastgepind en gaat elke frame via
-  `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`. **Sinds
-  17 september is de lap een MANTEL om de rug** (Max: "de cape werkt niet
-  goed en is slecht zichtbaar, kunnen we die beter om de rug heen doen, nu
-  zit het echt in het model"): de kraag is een BOOG rond het nekbot van 140
-  graden, van boven de ene schouder over de rug naar boven de andere, met
-  een straal net buiten de gemeten rug en flanken (`cape_kraag_rx`/`_rz`),
-  `CAPE_OP` 0,045 pionhoogte boven de schouderlijn (hoogte van de
-  armbotten) en dwars op de kijkrichting van het model (niet de draai van
-  het bot); de 9 x 10 punten hangen daar als een halve koker omheen (170
-  graden aan de zoom, uitlopend 1,35 x), buitenkant = voorkant, mesh in
-  wereldruimte. **Het lijf wordt per model GEMETEN** (`_cape_meet_lijf`,
-  gecached op mesh-pad + hoogte): elke vertex van een geskinde mesh gaat
-  via de bind-pose van zijn zwaarste bot (skelet x botrust x inverse-bind
-  x v; de vertexdata staat NIET in de ruimte van zijn node, die hangt
-  onder het skelet met schaal 0,01 terwijl de data in meters staat, dus
-  via de node leken alle lijfvertices op een punt te staan en vulde de
-  musket de flanken), en alleen vertices van romp-botten tellen
-  (`CAPE_ROMP_BOTTEN`: hips, spine, neck, shoulder; niet arm, hand, leg,
-  tail, head), per band langs de as heup-nek de grootste afstand naar
-  achteren, opzij en naar voren. Daaruit: drie convexe romp-segmenten en
-  een been-segment (`_cape_romp`, elliptische hull; een ronde capsule zo
-  breed als de schouders duwde de rug-stof te ver naar achteren) plus de
-  bovenarmen als capsules, allemaal kinematisch (`AnimatableBody3D`,
-  sync_to_physics) op physics-laag 20, per frame tussen hun botten gezet
-  (`_zet_romp`/`_zet_capsule`); `cape_weg` ruimt lap, bot-anker en segmenten
-  op. De binnenkant van de blauwe cape is een glanzende goudzijde (Max:
-  "doen we daar vol goud?"; knop `cape_voering_goud`, 0 = het plaatje
-  aan beide kanten, iets donkerder; met alleen de matte voering leek de
-  cape vanaf de speler kaal).
-  Valkuilen: het attachment-pad van
-  `set_point_pinned` laat de punten in 4.7 gewoon vallen (vandaar
-  move_point); `soft_body_move_point` VOOR de eerste physics-stap
-  verminkt de vrije punten (geen directe update bij het bouwen); Jolt
-  levert de shader geen bruikbare normalen (in cloth-stand haalt de
-  shader de normaal uit `dFdx`/`dFdy`, altijd naar de camera); zweefcheck
-  en capecheck meten een soft body via `get_point_transform` (de node
-  staat op de oorsprong, headless heeft geen render-AABB). Knop `cape_sim`
-  0 geeft de vlakke shader-lap van 12 september terug: die hangt per
-  frame aan de zwaartekracht (`cape_process`: gedempte slinger, sleept
-  tegen de beweging in, wind, nooit door de rug). Een
-  vertex-shader (`CAPE_SHADER`) vormt in die stand de
-  lap (smalle kraag bij de nek die over de schouders naar volle breedte
-  loopt, plooien vanuit de kraag die naar de zoom dieper worden, zijkanten
-  om de schouders gewikkeld, echte normalen op de plooien; Max: "meer
-  drape, de punten naar de nek toe"), laat de zoom wapperen, flared hem
-  uit en neemt de wind mee (`cape_wind` per frame uit `wind_richting`,
-  nooit door de rug naar voren). Een geleverd plaatje `cape_blue.png` /
-  `cape_red.png` onder assets/models (aanrader props/) wordt de buitenkant
-  (boven = kraag, rand rondom, de lap neemt de verhouding van het plaatje
-  over, 3:4 ligt het dichtst bij; layout en drie prompts in
-  `assets/models/props/LEESMIJ.md` en in de prop-tracker, PROP-WISHLIST
-  sectie 14: png-rijen, prompts zonder sjabloon, variant-rijen). **Alleen de
-  infanterie draagt hem** (16 september, Max: "verwijder de cape ook voor
-  cav"; `_hang_cape` stopt op alles wat geen INFANTRY is, capecheck meet
-  het). Blauw: koningsblauw
-  met goudgalon en lichte voering; rood (knop `cape_rood`, standaard uit)
-  dof donkerrood zonder galon. `_hang_cape` loopt na elke modelwissel
-  (`_apply_team_texture`), niet op artillerie; `zet_team()` wisselt jas en
-  cape samen; de bewoners van het blauwe kamp krijgen dezelfde lap
-  (`Bewoner.zet_cape`, gezet door `Omgeving._bouw_bewoners`). Knoppen in
-  het sfeer-paneel (live, ook op de bewoners): `cape_blauw`, `cape_rood`,
-  `cape_lengte`/`cape_breedte` (x pionhoogte), `cape_wapper`, `cape_wind`,
-  `cape_drape` (plooien en wikkel), `cape_slinger` (hoe ver hij sleept),
-  `cape_sim` (cloth aan/uit), `cape_sim_precisie` (solver-iteraties).
-  Eigen shaders (cape en vlaggendoek) dragen een `dim`-uniform dat
-  `verduister_later` tweent, zodat een lijk met cape ook donker wordt.
-  Check: `-- capecheck` (rood geen cape, blauw een, achter de rug aan een
-  rugbot; teamwissel, modelwissel, knop cape_rood, bewoner; met venster
-  `_shot_capecheck.png` van schuin achter). **De vlaag van een schot (16
-  september, Max: "alle capes reageren nu op een schot, dat moet niet,
-  alleen binnen een bepaalde straal, bij kanon een grotere"):** de
-  boosdoener was de HITSTOP (`Engine.time_scale` 0,05 bij een treffer):
-  daar vlogen alle cloth-capes van, ook zeven vakken verder, en zo'n
-  weggeblazen lap hangt daarna over het hele poppetje. `_hitstop` zet nu
-  ook `PhysicsServer3D.set_active(false)` zolang hij duurt. Daarnaast
-  een echte vlaag: `game._cape_vlaag` duwt bij het afvuren
-  (`_fire_projectile`) elke cape binnen `cape_vlaag_straal` (musket, 2
-  vakken) of `cape_vlaag_straal_kanon` (3,5) van de vuurmond af
-  (`PawnView.cape_vlaag`: impuls op de cloth, stoot op de slinger van de
-  vlakke lap; sterkte lineair af naar de rand, kanon harder; knop
-  `cape_vlaag`, 0 = uit). Check: `-- capeschot` (drie blauwe muizen op
-  1, 3 en 7 vakken van de vuurmond; musket met shake en hitstop: alleen
-  de eerste beweegt; kanon: ook de tweede, nooit de derde). Puur
-  visueel: uispel en herstelcheck ongewijzigd.
 - **Doormidden: de sabelhouw snijdt het lijf in twee helften (16 september,
   Max: "een gibs wolkje en doormidden gesliced het poppetje, bloederig net
   als bij kanon inslag").** `PawnView._spawn_slice`, in `play_death` vóór de
@@ -667,7 +571,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   heeft daarvoor een `schaal`-argument, 1 = de kanon-wolk). Sabel: vlak
   gekanteld om de slagrichting
   (`slice_hoek` 35 graden); bajonet met kleinere kans en bijna vlak. De
-  shader draagt dezelfde `dim`/`doek`-haakjes als de cape, dus
+  shader draagt dezelfde `dim`/`doek`-haakjes als het vlaggendoek, dus
   `verduister_later` maakt de helften gewoon donker en doorzichtig.
   Knoppen (Model-tuner tab Gore): `slice_kans_sabel` (0,85),
   `slice_kans_bajonet` (0,35), `slice_hoogte`, `slice_hoek`,
@@ -987,13 +891,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   zakken") doet `PawnView.verduister_later` drie dingen tegelijk na
   `debris_donker_na`: donker (albedo), doorzichtig (`debris_doorzicht` 0,55;
   BaseMaterial3D op `TRANSPARENCY_ALPHA_DEPTH_PRE_PASS`, anders zie je de
-  achterste ledematen door de romp; de eigen shaders van cape en vlaggendoek
+  achterste ledematen door de romp; de eigen shaders van vlaggendoek en snede
   wisselen naar een per bron-shader gebouwde alpha-variant met een
   `doorzicht`-uniform en `depth_prepass_alpha`, want een shader die ALPHA
   schrijft is altijd transparant en de levende vlaggen moeten dicht blijven)
   en wegzakken (`debris_zak` 0,08 wereld-eenheden, relatief op `position:y`
-  van het stuk, de gibs-wortel of het losse musket; een SoftBody3D-cape zakt
-  niet zelf, zijn kraag volgt de schouderbotten). Geldt voor lijken, gibs,
+  van het stuk, de gibs-wortel of het losse musket). Geldt voor lijken, gibs,
   afgebroken ledematen en het weggegooide musket/vaandel; bloedpoelen blijven
   plat liggen. Knoppen in `effects_tuning.json` / Model-tuner tab Gore:
   `debris_donker_na`, `debris_donker_duur`, `debris_donker`,
