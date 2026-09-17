@@ -2922,6 +2922,25 @@ func _check_haven_score(pawn_id: int, coord: Vector2i) -> void:
 
 ## Terugslag-geluid: als de terugslaande verdediger een paard is, hoor je het
 ## paard (hoefgetrappel/hinnik). Bij infanterie-terugslag dekt de melee-klap het al.
+## De zwaai en de klap van een melee-aanval, per WAPEN en factie (17
+## september, Max: "slashing sounds en zwaard-impactgeluiden per factie of
+## type wapen"). De zwaai (`slash_<wapen>`) klinkt `melee_slash_voor` (0,18 s,
+## Model-tuner) voor de klap; de klap is `melee_kill_<wapen>` of
+## `melee_survive_<wapen>`, met een factie-opname erboven als die er ligt
+## (Audio.melee_keten), en anders het oude algemene melee_kill/melee_survive.
+func _melee_geluid(attacker_id: int, attacker: PawnView, gedood: bool, klap_delay: float) -> void:
+	var pawn: Pawn = session.state.pawns.get(attacker_id)
+	if pawn == null:
+		return
+	var doc: int = session.state.doctrine_of(pawn.owner_id)
+	var arch: String = attacker.archetype() if attacker != null else ""
+	var wapen: String = PawnView.melee_wapen(pawn.unit_type, arch, doc)
+	var voor: float = (attacker.melee_fx("slash_voor", "melee_slash_voor", 0.18)
+			if attacker != null else PawnView.fx("melee_slash_voor", 0.18))
+	Audio.play_melee("slash", wapen, doc, maxf(klap_delay - voor, 0.0))
+	Audio.play_melee("melee_kill" if gedood else "melee_survive", wapen, doc, klap_delay)
+
+
 func _retaliation_sound(defender_id: int, delay: float) -> void:
 	var def: Pawn = session.state.pawns.get(defender_id)
 	if def == null:
@@ -3058,7 +3077,9 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 						+ Vector3(0.0, PAWN_Y, 0.0)
 				get_tree().create_timer(move_del).timeout.connect(
 					_begin_advance.bind(action.attacker_id, result.attacker_from_pos, result.defender_pos))
-			Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive",
+			# Zwaai en klap per wapen (17 september): de bajonet van deze
+			# aanvaller, met zijn factie erbij als die een eigen opname heeft.
+			_melee_geluid(action.attacker_id, attacker, result.get("eliminated", false),
 				maxf(hit_del - 0.12, 0.0))
 			_impact_laag(action.defender_id, int(result.get("damage", 0)),
 				result.get("eliminated", false), maxf(hit_del - 0.12, 0.0), true)
@@ -3164,7 +3185,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 					get_tree().create_timer(sprong_start).timeout.connect(start_sprong)
 			if heeft_doel:
 				var klap_del: float = tijdlijn.klap_del
-				Audio.play("melee_kill" if result.get("eliminated", false) else "melee_survive", klap_del)
+				# sabel, lans of bijl van deze ruiter (17 september)
+				_melee_geluid(action.pawn_id, cav, result.get("eliminated", false), klap_del)
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
 					result.get("eliminated", false), klap_del, true)
 				_hit_feedback(action.defender_id, result.defender_pos, result.damage, klap_del,

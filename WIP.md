@@ -1,5 +1,27 @@
 # Fog of War — Work In Progress & Context
 
+## 17 september -- Zwaai en klap per wapen
+
+Max: "update de sounds ook voor slashing sounds en zwaard-impactgeluiden per
+factie of type wapen."
+
+- `PawnView.melee_wapen(unit_type, arch, doctrine)`: infanterie bajonet;
+  ruiter base/mix sabel, spd lans, hp bijl, atk per factie (MODEL-WISHLIST
+  3c-2: briquet/pallasch = sabel, broadaxe/enterbijl = bijl, uhlanenlans =
+  lans). `Audio.melee_keten` / `effectieve_melee_categorie` / `play_melee`:
+  `<cat>_<wapen>_<factie>` → `<cat>_<wapen>` → `<cat>`. `game._melee_geluid`
+  op de bajonet- en de charge-klap: `slash_<wapen>` `melee_slash_voor`
+  (0,18 s, tuner-knop) voor de klap, dan `melee_kill_<wapen>` /
+  `melee_survive_<wapen>`; de materiaal-laag blijft eronder.
+- `tools/maak_wapen_geluiden.py`: 12 categorieen x 3 varianten synthetisch
+  in `sounds/melee/` (whoosh met glijdende band per wapen, natte hak met
+  botkraak, staalklank, schraap), manifest `synthetisch.json`. Mix-dB in
+  `CATEGORY_DB`. Geluid-tracker: sectie "Wapens" met prompts, alle
+  manifesten onder `sounds/` tellen als synthetisch. SOUND-WISHLIST 6b.
+- Checks: `-- wapengeluidcheck` PASS (60 combinaties, vier wapens),
+  `-- meleecheck` PASS, `-- geluidcheck` (130 categorieen, niets stil,
+  niets ongebruikt), `-- uispel 777` a6677ac8 (220, 7) ongewijzigd.
+
 ## 17 september -- Bots trainen op 4.3.6 (ruiter +2/+2)
 
 Max: "staan de nieuwe regels nu ook in de trainer? dat kaarten toevoegen" en

@@ -143,8 +143,27 @@ PROP_PROMPT_EN = {
     "prop_schot": "single flintlock musket shot, black powder crack with a short echo",
 }
 
+# De zwaai en de klap per WAPEN (17 september, Max: "slashing sounds en
+# zwaard-impactgeluiden per factie of type wapen"). Zelfde recept: zes takes,
+# droog, dichtbij. Een factie-versie erbij: `<categorie>_<factie>.wav`.
+WAPEN_PROMPT_EN = {
+    "slash_sabel": "6 short cavalry sabre swings through the air in a row, each about 0.3 seconds, sharp thin steel whoosh, silence between each, dry close mono, no reverb, no music",
+    "slash_bijl": "6 short heavy battle axe swings through the air in a row, each about 0.4 seconds, deep wide whoosh with the weight of the head, silence between each, dry close mono, no reverb, no music",
+    "slash_lans": "6 short lance thrusts through the air in a row, each about 0.25 seconds, quick thin whistle of a long pole, silence between each, dry close mono, no reverb, no music",
+    "slash_bajonet": "6 short bayonet thrusts through the air in a row, each about 0.2 seconds, quick stab whoosh with a hint of cloth, silence between each, dry close mono, no reverb, no music",
+    "melee_kill_sabel": "6 short sabre slashes cutting into a body in a row, each about 0.5 seconds, wet slicing cut with a bright steel ring, silence between each, dry close mono, no reverb, no music",
+    "melee_kill_bijl": "6 short heavy axe chops into a body in a row, each about 0.6 seconds, deep wet chop with a bone crack, silence between each, dry close mono, no reverb, no music",
+    "melee_kill_lans": "6 short lance impalements in a row, each about 0.5 seconds, sharp puncture with a wet squelch and a wooden shaft thump, silence between each, dry close mono, no reverb, no music",
+    "melee_kill_bajonet": "6 short bayonet stabs into a body in a row, each about 0.4 seconds, wet punch with a steel scrape, silence between each, dry close mono, no reverb, no music",
+    "melee_survive_sabel": "6 short sabre-on-sabre parry clangs in a row, each about 0.4 seconds, bright ringing steel, blocked, silence between each, dry close mono, no reverb, no music",
+    "melee_survive_bijl": "6 short axe blows blocked on a steel cuirass in a row, each about 0.4 seconds, dull heavy clank with a wooden handle rattle, silence between each, dry close mono, no reverb, no music",
+    "melee_survive_lans": "6 short lance points glancing off armor in a row, each about 0.35 seconds, scraping steel slide with a tick, silence between each, dry close mono, no reverb, no music",
+    "melee_survive_bajonet": "6 short bayonet parry clangs in a row, each about 0.35 seconds, small blocked steel clink with a grunt of effort, silence between each, dry close mono, no reverb, no music",
+}
+PROP_PROMPT_EN.update(WAPEN_PROMPT_EN)
 
-def prop_categorieen_uit_wishlist():
+
+def prop_categorieen_uit_wishlist(soort="props"):
     """De prop-rijen uit SOUND-WISHLIST (`prop_*`, `bewoner_*`): categorie ->
     {waarvoor, hoe, gewenst}. Een latere rij (de volledige tabel in sectie 11)
     overschrijft een eerdere."""
@@ -157,10 +176,14 @@ def prop_categorieen_uit_wishlist():
         cellen = [c.strip() for c in regel.strip().strip("|").split("|")]
         if len(cellen) < 4:
             continue
-        m = re.match(r"^`((?:prop|bewoner)_[a-z0-9_]+)`$", cellen[0])
+        m = re.match(r"^`((?:prop|bewoner)_[a-z0-9_]+|(?:slash|melee_kill|melee_survive)_[a-z]+)`$", cellen[0])
         if not m:
             continue
         cat = m.group(1)
+        if soort == "props" and not cat.startswith(("prop_", "bewoner_")):
+            continue
+        if soort == "wapens" and cat.startswith(("prop_", "bewoner_")):
+            continue
         if len(cellen) == 5:      # Categorie | Waarvoor | Hoe | Var. | Nu
             waarvoor, hoe, var_ = cellen[1], cellen[2], cellen[3]
         else:                     # Categorie | Bestand | Var. | Waarvoor | Terugval | Status
@@ -172,11 +195,13 @@ def prop_categorieen_uit_wishlist():
 
 def synthetische_hashes():
     """Bestandsnaam -> sha1 van wat tools/maak_prop_geluiden.py schreef."""
-    pad = os.path.join("sounds", "props", "synthetisch.json")
-    try:
-        return json.load(io.open(pad, encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
+    uit = {}
+    for pad in glob.glob("sounds/**/synthetisch.json", recursive=True):
+        try:
+            uit.update(json.load(io.open(pad, encoding="utf-8")))
+        except (OSError, ValueError):
+            pass
+    return uit
 
 
 def prop_stand(cat, synth):
@@ -200,10 +225,10 @@ def prop_stand(cat, synth):
     return echt, kunst
 
 
-def bouw_props():
+def bouw_props(soort="props"):
     synth = synthetische_hashes()
     rijen = []
-    for cat, info in prop_categorieen_uit_wishlist().items():
+    for cat, info in prop_categorieen_uit_wishlist(soort).items():
         echt, kunst = prop_stand(cat, synth)
         rijen.append({"categorie": cat, "waarvoor": info["waarvoor"], "hoe": info["hoe"],
                       "gewenst": info["gewenst"], "echt": echt, "synth": kunst,
@@ -265,8 +290,9 @@ def bouw():
     return facties, totaal_moet, totaal_heeft
 
 
-def schrijf(facties, moet, heeft, props=None):
+def schrijf(facties, moet, heeft, props=None, wapens=None):
     props = props or []
+    wapens = wapens or []
     def esc(s):
         return html.escape(str(s), quote=True)
 
@@ -364,14 +390,18 @@ def schrijf(facties, moet, heeft, props=None):
             uit.append("<tr><td>%s</td><td class=\"cat\">%s</td><td>%s</td><td>%s</td></tr>"
                        % (esc(r["label"]), esc(r["categorie"]), status, cel))
         uit.append("</tbody></table></section>")
-    if props:
-        uit.append('<section style="--fc:#8fb36a">')
-        uit.append('<div class="fkop"><h2>Diorama-props</h2><div class="tel">tik-geluiden om het bord &middot; '
-                   '%d echt, %d synthetisch, %d leeg &middot; bestanden in <code>sounds/props/</code>: '
-                   '<code>prop_bel.wav</code>, <code>prop_bel_2.wav</code>, ...</div></div>' % (p_echt, p_synth, p_leeg))
+    def sectie(rijen, kleur, titel, sub, voorbeeld):
+        if not rijen:
+            return
+        s_echt = sum(1 for r in rijen if r["echt"])
+        s_synth = sum(1 for r in rijen if not r["echt"] and r["synth"])
+        s_leeg = len(rijen) - s_echt - s_synth
+        uit.append('<section style="--fc:%s">' % kleur)
+        uit.append('<div class="fkop"><h2>%s</h2><div class="tel">%s &middot; '
+                   '%d echt, %d synthetisch, %d leeg &middot; %s</div></div>' % (titel, sub, s_echt, s_synth, s_leeg, voorbeeld))
         uit.append("<table><thead><tr><th>Waarvoor</th><th>Categorie</th><th>Status</th>"
                    "<th>Prompt (ElevenLabs, zes takes) / hoe het moet klinken</th></tr></thead><tbody>")
-        for r in props:
+        for r in rijen:
             if r["echt"]:
                 status = '<span class="ja">%d echt</span>' % r["echt"]
                 if r["synth"]:
@@ -389,6 +419,11 @@ def schrijf(facties, moet, heeft, props=None):
             uit.append("<tr><td>%s</td><td class=\"cat\">%s</td><td>%s</td><td>%s</td></tr>"
                        % (esc(r["waarvoor"]), esc(r["categorie"]), status, cel))
         uit.append("</tbody></table></section>")
+
+    sectie(props, "#8fb36a", "Diorama-props", "tik-geluiden om het bord",
+           'bestanden in <code>sounds/props/</code>: <code>prop_bel.wav</code>, <code>prop_bel_2.wav</code>, ...')
+    sectie(wapens, "#b3866a", "Wapens: zwaai en klap", "per wapen (sabel, bijl, lans, bajonet), een factie-opname erbij als <code>&lt;categorie&gt;_&lt;factie&gt;.wav</code>",
+           'bestanden in <code>sounds/melee/</code>: <code>slash_sabel.wav</code>, <code>melee_kill_bijl_pig.wav</code>, ...')
     uit.append("""</main>
 <div class="voet">
   <p><b>Terugval:</b> ontbreekt een factie-geluid, dan leent het spel dat van de
@@ -399,7 +434,8 @@ def schrijf(facties, moet, heeft, props=None):
   <code>inf_die_pig.wav</code>, <code>inf_die_pig_2.wav</code>, ...</p>
   <p><b>Diorama-props:</b> een echte opname op dezelfde naam in <code>sounds/props/</code>
   (of waar dan ook onder <code>sounds/</code>) verdringt de synthetische; de tracker
-  herkent synthetisch aan <code>sounds/props/synthetisch.json</code>.</p>
+  herkent synthetisch aan <code>synthetisch.json</code> naast de bestanden
+  (<code>sounds/props/</code> en <code>sounds/melee/</code>).</p>
   <p>Opnieuw opbouwen: <code>python tools/bouw_geluid_tracker.py</code></p>
 </div>
 <script>
@@ -419,12 +455,16 @@ function kopieer(el){
 if __name__ == "__main__":
     facties, moet, heeft = bouw()
     props = bouw_props()
-    schrijf(facties, moet, heeft, props)
+    wapens = bouw_props("wapens")
+    schrijf(facties, moet, heeft, props, wapens)
     print("sound-tracker.html: %d van %d factie-geluiden aanwezig" % (heeft, moet))
     p_echt = sum(1 for r in props if r["echt"])
     p_synth = sum(1 for r in props if not r["echt"] and r["synth"])
     p_leeg = sum(1 for r in props if not r["echt"] and not r["synth"])
     print("  props: %d categorieen, %d echt opgenomen, %d nog synthetisch, %d leeg" % (len(props), p_echt, p_synth, p_leeg))
+    w_echt = sum(1 for r in wapens if r["echt"])
+    w_synth = sum(1 for r in wapens if not r["echt"] and r["synth"])
+    print("  wapens: %d categorieen, %d echt opgenomen, %d nog synthetisch, %d leeg" % (len(wapens), w_echt, w_synth, len(wapens) - w_echt - w_synth))
     for f in facties:
         ontbreekt = [r["categorie"] for r in f["rijen"] if not r["n"] and not r.get("via_modellen")]
         print("  %-10s %d/%d%s" % (f["naam"], f["heeft"], f["moet"],

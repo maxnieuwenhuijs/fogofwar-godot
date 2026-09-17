@@ -110,6 +110,21 @@ const CATEGORY_DB := {
 	"musket_cock": -5.0,
 	"melee_kill": -1.0,
 	"melee_survive": -3.0,
+	# Per wapen (17 september): de zwaai zit onder de klap, de klap zelf op
+	# het niveau van melee_kill/melee_survive. Een factie-opname
+	# (melee_kill_bijl_pig) erft niets: zet hem hier of in sound_tuning.json.
+	"slash_sabel": -7.0,
+	"slash_bijl": -6.0,
+	"slash_lans": -8.0,
+	"slash_bajonet": -8.0,
+	"melee_kill_sabel": -1.0,
+	"melee_kill_bijl": 0.0,
+	"melee_kill_lans": -1.5,
+	"melee_kill_bajonet": -1.0,
+	"melee_survive_sabel": -3.0,
+	"melee_survive_bijl": -2.5,
+	"melee_survive_lans": -4.0,
+	"melee_survive_bajonet": -3.0,
 	"step": -7.0,
 	"horse_move": -6.0,
 	"cannon_move": -6.0,
@@ -388,6 +403,37 @@ func play_factie(category: String, doctrine: int, delay: float = 0.0, pitch: flo
 	var cat := effectieve_categorie(category, doctrine, terugval, archetype)
 	if cat != "":
 		play(cat, delay, -1, pitch)
+
+
+## Zwaai en klap per WAPEN (17 september, Max: "slashing sounds en
+## zwaard-impactgeluiden per factie of type wapen"). Zoekvolgorde:
+##   <cat>_<wapen>_<factie>   bv. melee_kill_bijl_pig   -- deze factie, dit wapen
+##   <cat>_<wapen>            bv. melee_kill_bijl       -- het wapen
+##   <cat>                    bv. melee_kill            -- algemeen
+## `cat` is "slash" (de zwaai, net voor de klap), "melee_kill" of
+## "melee_survive"; `wapen` komt uit PawnView.melee_wapen (sabel, bijl, lans,
+## bajonet). De synthetische placeholders per wapen staan in sounds/melee/
+## (tools/maak_wapen_geluiden.py); een echte opname op dezelfde naam wint.
+func melee_keten(category: String, wapen: String, doctrine: int) -> Array:
+	var keten: Array = []
+	if wapen != "":
+		keten.append("%s_%s_%s" % [category, wapen, Constants.doctrine_folder(doctrine)])
+		keten.append("%s_%s" % [category, wapen])
+	keten.append(category)
+	return keten
+
+
+func effectieve_melee_categorie(category: String, wapen: String, doctrine: int) -> String:
+	for kandidaat in melee_keten(category, wapen, doctrine):
+		if not (_streams.get(kandidaat, []) as Array).is_empty():
+			return kandidaat
+	return ""
+
+
+func play_melee(category: String, wapen: String, doctrine: int, delay: float = 0.0) -> void:
+	var cat := effectieve_melee_categorie(category, wapen, doctrine)
+	if cat != "":
+		play_getuned(cat, delay)
 
 
 ## GELUID-AFSTELLING (sounds/sound_tuning.json, besluit Max 28 juli): per

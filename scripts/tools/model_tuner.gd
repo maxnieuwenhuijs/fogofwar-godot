@@ -26,6 +26,7 @@ const FX_DEFS: Array = [
 	# aankomst en de klap valt zoveel seconden voor het einde van de sprong-clip.
 	{"cat": "bajonet", "key": "charge_speed", "label": "sprong-tempo", "min": 0.2, "max": 10.0, "step": 0.01, "def": 1.2},
 	{"cat": "bajonet", "key": "charge_klap_na_landing", "label": "sprong-klap na de landing (s)", "min": 0.0, "max": 1.5, "step": 0.01, "def": 0.12},
+	{"cat": "bajonet", "key": "melee_slash_voor", "label": "zwaai-geluid voor de klap (s)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.18},
 	{"cat": "gore", "key": "debris_donker_na", "label": "donker na (s)", "min": 0.0, "max": 30.0, "step": 0.5, "def": 4.0},
 	{"cat": "gore", "key": "debris_donker_duur", "label": "donker duur (s)", "min": 0.1, "max": 15.0, "step": 0.1, "def": 2.5},
 	{"cat": "gore", "key": "debris_donker", "label": "hoe donker", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.7},

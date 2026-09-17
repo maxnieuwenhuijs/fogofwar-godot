@@ -778,6 +778,26 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   sprong op tl.sprong_start, pion op tl.rij_dur op zijn eindvak, doel
   staat vlak voor de klap en is weg erna; de check-ruiter krijgt attack 3
   en 4 HP, een ongekoppelde ruiter sloeg met 0 en stierf aan de terugslag).
+- **Zwaai en klap per wapen (17 september, Max: "update de sounds ook voor
+  slashing sounds en zwaard-impactgeluiden per factie of type wapen").**
+  Elke melee-aanval (bajonetstoot en charge) speelt drie lagen:
+  `slash_<wapen>` (de zwaai, `melee_slash_voor` 0,18 s voor de klap, knop in
+  de Model-tuner tab bajonet), `melee_kill_<wapen>` of
+  `melee_survive_<wapen>` (de klap) en daaronder de materiaal-laag
+  (`_impact_laag`). Welk wapen: `PawnView.melee_wapen(unit_type, arch,
+  doctrine)`, EEN plek: infanterie = bajonet; ruiter base/mix = sabel,
+  spd = lans, hp = bijl, atk per factie uit MODEL-WISHLIST 3c-2 (muis,
+  leeuw, wolf = sabel; varken, krokodil = bijl; beer = lans). Zoekvolgorde
+  `Audio.melee_keten`: `<cat>_<wapen>_<factie>` → `<cat>_<wapen>` →
+  `<cat>`, dus een factie-opname (`melee_kill_bijl_pig.wav`) wint zodra
+  hij ergens onder `sounds/` ligt. Tot dan: 36 synthetische placeholders in
+  `sounds/melee/` uit `tools/maak_wapen_geluiden.py` (drie per categorie,
+  manifest `synthetisch.json`; de geluid-tracker heeft er een sectie
+  "Wapens" voor met ElevenLabs-prompts, SOUND-WISHLIST 6b). game.gd:
+  `_melee_geluid` op de twee klap-plekken. Check: `-- wapengeluidcheck`
+  (per factie x type x archetype het wapen en de drie effectieve
+  categorieen; FAIL als er iets stil is, terugvalt op het algemene geluid
+  of de bajonet buiten de infanterie komt). Puur geluid: uispel gelijk.
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).

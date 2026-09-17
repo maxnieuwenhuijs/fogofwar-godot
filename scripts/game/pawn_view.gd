@@ -1279,6 +1279,30 @@ static func impact_categorie(unit_type: int, arch: String) -> String:
 	return "impact_flesh"
 
 
+## Welk handwapen slaat er? EEN plek voor spel, tuner en check (17 september,
+## Max: "slashing sounds en zwaard-impactgeluiden per factie of type wapen").
+## De namen zijn de wapen-families uit MODEL-WISHLIST 3c-2: infanterie steekt
+## met de bajonet; de ruiter draagt per archetype een sabel (base, mix), een
+## lans (spd) of een bijl (hp), en het atk-stuk is per factie een ander
+## oversized ding: briquet en pallasch zijn sabels, de broadaxe en de
+## enterbijl bijlen, de uhlanenlans een lans. Geluid: `slash_<wapen>`,
+## `melee_kill_<wapen>`, `melee_survive_<wapen>`, eventueel `_<factie>` erachter
+## (Audio.melee_keten).
+const MELEE_WAPEN_ATK := {"mouse": "sabel", "pig": "bijl", "lion": "sabel", "bear": "lans",
+	"wolf": "sabel", "crocodile": "bijl"}
+
+
+static func melee_wapen(unit_type: int, arch: String, doctrine: int) -> String:
+	if unit_type == Constants.UnitType.INFANTRY:
+		return "bajonet"
+	if unit_type == Constants.UnitType.CAVALRY:
+		match arch:
+			"spd": return "lans"
+			"hp": return "bijl"
+			"atk": return String(MELEE_WAPEN_ATK.get(Constants.doctrine_folder(doctrine), "sabel"))
+	return "sabel"
+
+
 ## Val-categorie van het handwapen/attribuut. STATISCH zodat de Model-tuner
 ## exact dezelfde regel gebruikt als het spel — nooit twee kopieen van een
 ## categorie-keuze (dat was precies de tuner/spel-divergentie die de audit

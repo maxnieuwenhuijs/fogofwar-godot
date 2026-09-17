@@ -131,6 +131,41 @@ tabel onderaan, dan heb je alle varianten in een generatie.
 | `charge_yell` | `charge_yell.wav` | 1 | Cavalerie begint een charge (strijdkreet) | 3 short male battle shouts in a row, each about 0.6 seconds, hoarse and forward, silence between each, a few men only, dry close mono, no reverb, no music |
 | `pawn_block` | `pawn_block.wav` | 2 | Schot geblokkeerd (bank klaar; nog geen event) | 3 short musket ball thuds into thick wood in a row, each about 0.3 seconds, blocked and dull, silence between each, dry close mono, no reverb, no music |
 
+## 6b. Zwaai en klap per WAPEN (17 september)
+
+Max: "update de sounds ook voor slashing sounds en zwaard-impactgeluiden per
+factie of type wapen". Elke melee-aanval speelt nu drie lagen: de ZWAAI
+(`slash_<wapen>`, `melee_slash_voor` 0,18 s voor de klap), de KLAP
+(`melee_kill_<wapen>` of `melee_survive_<wapen>`) en daaronder de materiaal-
+laag uit 7c. Welk wapen: `PawnView.melee_wapen` (een plek): infanterie =
+bajonet; ruiter base/mix = sabel, spd = lans, hp = bijl, atk per factie
+(muis briquet en leeuw/wolf pallasch = sabel, varken broadaxe en krokodil
+enterbijl = bijl, beer uhlanenlans = lans). Zoekvolgorde
+(`Audio.melee_keten`): `<cat>_<wapen>_<factie>` (bv `melee_kill_bijl_pig`)
+→ `<cat>_<wapen>` → `<cat>`. Tot de opnames er zijn liggen er synthetische
+placeholders in `sounds/melee/` (`tools/maak_wapen_geluiden.py`, drie per
+categorie, manifest `synthetisch.json`); een echte opname op dezelfde naam
+wint. Check: `-- wapengeluidcheck`.
+
+| Categorie | Waarvoor | Hoe | Var. | Nu |
+|---|---|---|---|---|
+| `slash_sabel` | Zwaai van sabel, pallasch, briquet | dun, scherp, hoog staal-whoosh | 3 | synthetisch |
+| `slash_bijl` | Zwaai van broadaxe, enterbijl, de hp-bijl | breed en zwaar, laag whoosh | 3 | synthetisch |
+| `slash_lans` | Stoot van de lans/piek | kort dun fluitje van een lange stok | 3 | synthetisch |
+| `slash_bajonet` | Bajonetstoot van de infanterie | heel kort, met een vleugje doek | 3 | synthetisch |
+| `melee_kill_sabel` | Sabelhouw die doodt | natte snede met een heldere staalklank | 3 | synthetisch |
+| `melee_kill_bijl` | Bijlslag die doodt | diepe natte hak met een botkraak | 3 | synthetisch |
+| `melee_kill_lans` | Lansstoot die doodt | scherpe prik, nat, de schacht bonkt | 3 | synthetisch |
+| `melee_kill_bajonet` | Bajonetstoot die doodt | natte stomp met een staalschraap | 3 | synthetisch |
+| `melee_survive_sabel` | Sabel geblokkeerd | helder staal-op-staal | 3 | synthetisch |
+| `melee_survive_bijl` | Bijl op kuras/schild | doffe zware klank, steel ratelt na | 3 | synthetisch |
+| `melee_survive_lans` | Lans schampt af | glijdende schraap met een tik | 3 | synthetisch |
+| `melee_survive_bajonet` | Bajonet gepareerd | kleine geblokkeerde klink | 3 | synthetisch |
+
+Per factie erbij (optioneel, naam `<categorie>_<factie>`, bv
+`melee_kill_bijl_pig.wav`, `slash_sabel_lion_2.wav`): dan wint die van de
+wapen-versie. De prompts staan in de geluid-tracker (sectie "Wapens").
+
 ## 7. Sterven per type
 
 | Categorie | Bestanden | # var | Wanneer | Status |

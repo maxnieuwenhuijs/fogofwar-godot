@@ -1870,6 +1870,57 @@ func _ready() -> void:
 			(duel.doctrines as Dictionary).size(), str(duel.campaign.comp_override["1"])])
 		get_tree().quit()
 		return
+	elif "wapengeluidcheck" in args:
+		# Welke zwaai en klap hoort elke pion? (17 september, Max: "slashing
+		# sounds en zwaard-impactgeluiden per factie of type wapen"). Per
+		# factie x type x archetype: het wapen uit PawnView.melee_wapen en de
+		# categorie die Audio werkelijk speelt voor slash / melee_kill /
+		# melee_survive. FAIL als er iets stil blijft of als de bajonet ergens
+		# anders dan bij de infanterie terechtkomt.
+		print("[WAPEN] factie | type | arch | wapen | slash | kill | survive")
+		var fouten: Array = []
+		var wapens: Dictionary = {}
+		for doc in Constants.Doctrine.values():
+			var fac: String = Constants.doctrine_folder(doc)
+			for ut in [Constants.UnitType.INFANTRY, Constants.UnitType.CAVALRY]:
+				for arch in ["base", "spd", "hp", "atk", "mix"]:
+					var wapen: String = PawnView.melee_wapen(ut, arch, doc)
+					wapens[wapen] = true
+					var cats: Array = []
+					for cat in ["slash", "melee_kill", "melee_survive"]:
+						var eff: String = Audio.effectieve_melee_categorie(cat, wapen, doc)
+						cats.append(eff)
+						if eff == "":
+							fouten.append("%s %s %s: %s stil" % [fac, Constants.unit_type_file(ut), arch, cat])
+						elif not eff.contains("_" + wapen):
+							fouten.append("%s %s %s: %s valt terug op %s" % [fac, Constants.unit_type_file(ut), arch, cat, eff])
+					if (ut == Constants.UnitType.INFANTRY) != (wapen == "bajonet"):
+						fouten.append("%s %s %s: bajonet hoort bij de infanterie, dit is %s" % [fac, Constants.unit_type_file(ut), arch, wapen])
+					print("[WAPEN] %-9s | %-8s | %-4s | %-7s | %s | %s | %s" % [fac, Constants.unit_type_file(ut), arch, wapen, cats[0], cats[1], cats[2]])
+		# per wapen minstens twee varianten per categorie (anders klinkt elke klap hetzelfde)
+		for w in wapens:
+			for cat in ["slash", "melee_kill", "melee_survive"]:
+				var n: int = Audio.variant_aantal("%s_%s" % [cat, w])
+				if n < 2:
+					fouten.append("%s_%s: %d variant(en), minstens 2 gewenst" % [cat, w, n])
+		# de vier families moeten allemaal voorkomen
+		for w in ["sabel", "bijl", "lans", "bajonet"]:
+			if not wapens.has(w):
+				fouten.append("wapen %s komt bij geen enkel model voor" % w)
+		# een factie-opname wint van de wapen-versie (de keten), zonder dat er
+		# een hoeft te liggen: de keten zelf moet kloppen
+		var keten: Array = Audio.melee_keten("melee_kill", "bijl", Constants.Doctrine.MENS)
+		if keten != ["melee_kill_bijl_pig", "melee_kill_bijl", "melee_kill"]:
+			fouten.append("keten klopt niet: %s" % [keten])
+		print("[WAPEN] wapens: %s" % [", ".join(wapens.keys())])
+		if fouten.is_empty():
+			print("[WAPEN] PASS")
+		else:
+			for f in fouten:
+				print("[WAPEN] FOUT: %s" % f)
+			print("[WAPEN] FAIL (%d)" % fouten.size())
+		get_tree().quit(0 if fouten.is_empty() else 1)
+		return
 	elif "geluidcheck" in args:
 		# Doet elk wav-bestand ook echt mee? (Max, 30 juli: "importeer de nieuwe
 		# sounds"). Per categorie: hoeveel varianten geladen zijn, de mix-stand
