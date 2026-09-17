@@ -77,7 +77,7 @@ def status_van(rij, props, bewoners, texturen=frozenset()):
     """Per team (of gedeeld) wat er ligt. Geeft (symbool, uitleg, per_team)."""
     naam = rij["bestand"].lower()
     if naam.endswith(".png"):
-        # een plaatje, geen model (cape_blue.png, 12 september): ligt het
+        # een plaatje, geen model (12 september): ligt het
         # ergens onder assets/models, dan is het klaar
         if naam[:-4] in texturen:
             return "✓", "ligt er (plaatje)", {}
