@@ -660,7 +660,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`_werp_helft`); `Benen_onder` staat nog `slice_sta` en kiept dan om
   (`_kiep_helft`, zakt naar het bord als de voeten in de lucht hangen, de
   ruiter). Hoed en een onderarm los, plus de kanon-bloedmist en spuiten op
-  de snede: het gibs-wolkje. Sabel: vlak gekanteld om de slagrichting
+  de snede: het gibs-wolkje, sinds 17 september KLEINER dan bij het kanon
+  (Max: "de bloedwolk bij de melee iets kleiner dan de kanon-bloedwolk";
+  knop `blood_mist_melee` 0,55 in tab Bloed = de schaal van de wolk:
+  minder flarden, kleiner, minder ver, minder groei; `_spawn_blood_mist`
+  heeft daarvoor een `schaal`-argument, 1 = de kanon-wolk). Sabel: vlak
+  gekanteld om de slagrichting
   (`slice_hoek` 35 graden); bajonet met kleinere kans en bijna vlak. De
   shader draagt dezelfde `dim`/`doek`-haakjes als de cape, dus
   `verduister_later` maakt de helften gewoon donker en doorzichtig.

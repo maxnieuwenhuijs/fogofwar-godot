@@ -1,5 +1,18 @@
 # Fog of War — Work In Progress & Context
 
+## 17 september -- Bloedwolk bij de melee kleiner dan bij het kanon
+
+Max: "maak de bloedwolk bij de melee iets kleiner dan de kanon-bloedwolk."
+De snede (`_spawn_blood_mist` in `_spawn_slice`) leende de kanon-mist op
+volle sterkte. Nu `_spawn_blood_mist(..., schaal)`: minder flarden,
+kleiner, minder ver, minder groei; de snede geeft `blood_mist_melee`
+(0,55, Model-tuner tab Bloed) mee en schaalt de druppel-burst mee.
+`-- snijcheck` PASS. Opgemerkt: `-- meleecheck` faalt sinds de
+cape-mantel-commit (4c0b8b8) op "te vroeg overgestoken": headless duren de
+frames 100-200 ms, de check telt zijn 0,05-timers als tijd en de echte
+1,5 s-timer van de opruk valt dan op "0,7 s". Niet de geluiden (getest
+met de zwaai uit); de frametijd hoort bij de cape-meting.
+
 ## 17 september -- de cape als mantel om de rug, het lijf gemeten
 
 Max: "de cape van de blauwen werkt niet goed en is slecht zichtbaar,
