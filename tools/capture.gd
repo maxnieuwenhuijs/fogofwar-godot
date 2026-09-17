@@ -2939,6 +2939,103 @@ func _ready() -> void:
 		print("[DRAGER] " + ("PASS" if dc_fouten == 0 else "FAIL (%d fouten)" % dc_fouten))
 		get_tree().quit(0 if dc_fouten == 0 else 1)
 		return
+	elif "beurtlicht" in args:
+		# 17 september (Max: "een highlight als het de laatste of bijna laatste
+		# pawns zijn, dat je ziet welke je nog kan bewegen"). Speelt tot je eigen
+		# actiebeurt en meet: de straal staat precies op de pionnen die nog
+		# kunnen (Rules.can_pawn_act) zodra dat er hooguit `beurt_licht_vanaf`
+		# zijn; met de drempel op 1 pas bij de laatste; met de sterkte op 0 nooit.
+		# Met venster een screenshot met de stralen aan.
+		var bl_fouten := 0
+		var bl_hand: CardHand = game.get_node("UI/CardHand")
+		var bl_steps := 0
+		while not (GameSession.state.phase == Phase.Type.ACTION and GameSession.state.current_player == 1) and bl_steps < 400:
+			bl_steps += 1
+			var bst: GameState = GameSession.state
+			if bst.phase == Phase.Type.PRE_GAME:
+				game._start_match(1)
+			elif bst.phase == Phase.Type.PLACEMENT:
+				game._confirm_placement()
+			elif Phase.is_reveal(bst.phase):
+				game._continue_after_reveal()
+			elif Phase.is_define(bst.phase) and bst.cards_defined[1].size() == 0 and not bl_hand.visible:
+				if game._overlay.visible:
+					game._on_cp_choice(0)
+			elif Phase.is_define(bst.phase) and bst.cards_defined[1].size() == 0:
+				var bbud: int = int(bst.doctrine_data_of(1).budget)
+				for c in bl_hand.get_card_views():
+					c.data.hp = 1
+					c.data.stamina = mini(bbud - 2, 3)
+					c.data.attack = bbud - 1 - mini(bbud - 2, 3)
+					c._refresh()
+				bl_hand._on_confirm_pressed()
+			elif Phase.is_linking(bst.phase) and bst.current_player == 1:
+				game._on_phase_timeout()   # auto-koppelen
+			await get_tree().create_timer(0.05).timeout
+		var bl_st: GameState = GameSession.state
+		if not (bl_st.phase == Phase.Type.ACTION and bl_st.current_player == 1):
+			print("[LICHT] FOUT: eigen actiebeurt niet bereikt (fase %s, beurt %d)" % [Phase.to_string_phase(bl_st.phase), bl_st.current_player])
+			get_tree().quit(1)
+			return
+		await get_tree().process_frame
+		game._refresh_all()
+		var bl_uit: Array = _bl_meet(game)
+		print("[LICHT] start actiebeurt: %d pionnen kunnen nog, %d stralen aan, drempel %d" % [bl_uit[0], bl_uit[1], int(round(PawnView.fx("beurt_licht_vanaf", 3.0)))])
+		if bl_uit[2] > 0:
+			print("[LICHT] FOUT: %d pion(nen) met een straal die niet klopt" % bl_uit[2])
+			bl_fouten += 1
+		# Zetten doen (beurtelings: de bot speelt tussendoor zelf) tot er hooguit
+		# `drempel` eigen pionnen over zijn die nog kunnen, in de eigen beurt.
+		var bl_drempel: int = int(round(PawnView.fx("beurt_licht_vanaf", 3.0)))
+		var bl_ok: bool = await _bl_speel_tot(game, bl_drempel, 60.0)
+		if bl_ok:
+			bl_uit = _bl_meet(game)
+			print("[LICHT] onder de drempel: %d kunnen nog, %d stralen, %d fout (%s)" % [
+				bl_uit[0], bl_uit[1], bl_uit[2], "PASS" if bl_uit[1] == bl_uit[0] and bl_uit[2] == 0 and bl_uit[0] > 0 else "FAIL"])
+			if bl_uit[1] != bl_uit[0] or bl_uit[2] > 0 or bl_uit[0] == 0:
+				print("[LICHT] FOUT: onder de drempel hoort precies elke pion die nog kan een straal te hebben")
+				bl_fouten += 1
+			var bl_tex := get_viewport().get_texture()
+			if bl_tex != null and bl_tex.get_image() != null:
+				game._overlay.hide()
+				await get_tree().create_timer(0.6).timeout
+				var bl_img: Image = bl_tex.get_image()
+				if bl_img != null:
+					bl_img.save_png("res://_shot_beurtlicht.png")
+					print("[LICHT] screenshot -> _shot_beurtlicht.png")
+		else:
+			print("[LICHT] FOUT: kwam niet in een eigen beurt met hooguit %d pionnen die nog kunnen" % bl_drempel)
+			bl_fouten += 1
+		# Drempel 1: alleen de laatste pion krijgt de straal.
+		PawnView.set_fx("beurt_licht_vanaf", 1.0)
+		game._refresh_all()
+		bl_uit = _bl_meet(game)
+		var bl_verwacht: int = bl_uit[0] if bl_uit[0] <= 1 else 0
+		print("[LICHT] drempel 1: %d kunnen nog, %d stralen (verwacht %d)" % [bl_uit[0], bl_uit[1], bl_verwacht])
+		if bl_uit[1] != bl_verwacht:
+			print("[LICHT] FOUT: met drempel 1 hoort alleen de laatste pion een straal te krijgen")
+			bl_fouten += 1
+		if await _bl_speel_tot(game, 1, 60.0):
+			bl_uit = _bl_meet(game)
+			print("[LICHT] de laatste: %d kan nog, %d straal, %d fout (%s)" % [
+				bl_uit[0], bl_uit[1], bl_uit[2], "PASS" if bl_uit[1] == 1 and bl_uit[2] == 0 else "FAIL"])
+			if bl_uit[1] != 1 or bl_uit[2] > 0:
+				print("[LICHT] FOUT: de laatste pion die nog kan heeft geen straal (of een andere wel)")
+				bl_fouten += 1
+		else:
+			print("[LICHT] (geen eigen beurt met precies een pion over; laatste-pion-meting overgeslagen)")
+		# Sterkte 0: nooit een straal.
+		PawnView.set_fx("beurt_licht", 0.0)
+		PawnView.set_fx("beurt_licht_vanaf", 30.0)
+		game._refresh_all()
+		bl_uit = _bl_meet(game)
+		print("[LICHT] sterkte 0: %d stralen (verwacht 0)" % bl_uit[1])
+		if bl_uit[1] != 0:
+			print("[LICHT] FOUT: met sterkte 0 hoort er geen straal te staan")
+			bl_fouten += 1
+		print("[LICHT] %s: %d fout(en)" % ["PASS" if bl_fouten == 0 else "FAIL", bl_fouten])
+		get_tree().quit(0 if bl_fouten == 0 else 1)
+		return
 	elif "sleepcheck" in args:
 		# 16 september (Max: "een drag-en-drop-link die highlight op welk
 		# poppetje je hem dropt, met een gebogen pijl"): tot de koppel-fase zoals
@@ -4478,6 +4575,53 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 		return 0.5
 	var kant: int = Constants.PLAYER_1 if nieuw_is_p1 else Constants.PLAYER_2
 	return 1.0 if winner == kant else 0.0
+
+
+## Beurtlicht: zetten doen (de bot speelt zijn beurten zelf) tot de mens aan
+## de beurt is met hooguit `doel` pionnen die nog kunnen; false als de
+## actiefase eerder afloopt of de tijd op is.
+func _bl_speel_tot(g, doel: int, budget_s: float) -> bool:
+	var t0 := Time.get_ticks_msec()
+	var zetten := 0
+	while Time.get_ticks_msec() - t0 < budget_s * 1000.0:
+		var st: GameState = GameSession.state
+		if st.phase != Phase.Type.ACTION:
+			return false
+		if st.current_player == 1:
+			g._refresh_all()
+			if _bl_meet(g)[0] <= doel:
+				return true
+			zetten += 1
+			if zetten > 80:
+				return false
+			g._auto_action_human()
+		await get_tree().create_timer(0.1).timeout
+	return false
+
+
+## Beurtlicht: [pionnen van de mens die nog kunnen, stralen aan, stralen die niet kloppen].
+func _bl_meet(g) -> Array:
+	var st: GameState = GameSession.state
+	var kunnen := 0
+	var aan := 0
+	var fout := 0
+	var drempel: int = int(round(PawnView.fx("beurt_licht_vanaf", 3.0)))
+	var eigen_kunnen: Array = []
+	for pid in st.pawns:
+		var p: Pawn = st.pawns[pid]
+		if p.owner_id == 1 and not p.is_eliminated and p.is_active and Rules.can_pawn_act(st, int(pid)):
+			eigen_kunnen.append(int(pid))
+	kunnen = eigen_kunnen.size()
+	var hoort: bool = PawnView.fx("beurt_licht", 1.0) > 0.0 and drempel > 0 and kunnen <= drempel \
+			and st.phase == Phase.Type.ACTION and st.current_player == 1
+	for pid in g._pawn_views:
+		var pv: PawnView = g._pawn_views[pid]
+		if pv._beurt_licht_aan:
+			aan += 1
+		var verwacht: bool = hoort and eigen_kunnen.has(int(pid))
+		if pv._beurt_licht_aan != verwacht:
+			fout += 1
+	return [kunnen, aan, fout]
 
 
 ## Sleepcheck: een muisknop indrukken of loslaten op een schermpunt, als echt event.

@@ -241,6 +241,30 @@ versie de onderlijst van het frame op 941. Geen nieuwe assets. Check:
 breed, alpha 1), kaart 2 en 3 de afdruk (137 breed, alpha 0,25), PASS;
 screenshot bekeken. Koppelcheck en uicheck PASS.
 
+## 17 september -- lichtstraal op de laatste pionnen die nog kunnen
+
+Max: "voeg een highlight toe als het de laatste of bijna laatste pawns zijn,
+dat je ziet welke je nog kan bewegen: een soort lichtstraal of een
+highlight om het model heen."
+
+Wie niet meer kan werd al gedimd, maar een donker poppetje op een donker
+bord valt niet op. Nu andersom: in je eigen actiebeurt telt `_refresh_all`
+je pionnen die nog kunnen (`Rules.can_pawn_act`, een keer per pion, ook
+voor het dimmen); zijn dat er hooguit `beurt_licht_vanaf` (3), dan krijgen
+die een lichtkegel van boven (CylinderMesh zonder kappen, eigen shader:
+additief, onderaan fel en naar boven weg, de zijkanten zacht via de hoek
+met de camera) en een lichtvlek op de vloer, warm goud en zacht pulserend
+(tween, geen RNG). Knoppen `beurt_licht` en `beurt_licht_vanaf` in het
+sfeer-paneel, live. `render_digest` telt het mee.
+
+**Check `-- beurtlicht`.** Speelt tot de eigen actiebeurt (negen pionnen
+kunnen, geen straal), zet door (de bot speelt zijn beurten zelf) tot er
+drie over zijn: drie stralen, nul fout; drempel 1: nul stralen bij drie;
+doorspelen tot de laatste: een straal; sterkte 0: geen. PASS, headless en
+met venster (`_shot_beurtlicht.png` bekeken: drie warme kegels op de
+pionnen met stamina over, de rest donker). uispel 777 a6677ac8
+ongewijzigd, herstelcheck 777 en resumecheck 777 1 nul verschillen.
+
 ## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
 
 Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van

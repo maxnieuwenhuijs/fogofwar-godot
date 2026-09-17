@@ -468,6 +468,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   na de laatste poef (knop `spawn_kijk_pauze` in effects_tuning.json,
   0,8 s) en HUD_SPAWN_LANDING in de balk. Headless wacht niet, dus
   uispel, herstelcheck en resumecheck blijven gelijk.
+- **Lichtstraal op de laatste pionnen die nog kunnen (17 september, Max:
+  "een highlight als het de laatste of bijna laatste pawns zijn, dat je
+  ziet welke je nog kan bewegen: een soort lichtstraal of een highlight om
+  het model heen").** In je eigen actiebeurt telt `game._refresh_all` je
+  pionnen die nog kunnen handelen (`Rules.can_pawn_act`, dezelfde regel
+  als het dimmen van wie niet meer kan); zijn dat er hooguit
+  `beurt_licht_vanaf` (3), dan krijgen die `PawnView.set_beurt_licht`: een
+  lichtkegel van boven (CylinderMesh zonder kappen, eigen shader
+  `BEURT_LICHT_SHADER`: additief, onderaan fel en naar boven weg, zijkanten
+  zacht) plus een lichtvlek op de vloer (radiaal verloop), warm goud, zacht
+  pulserend. Knoppen in het sfeer-paneel: `beurt_licht` (sterkte, 0 = uit)
+  en `beurt_licht_vanaf` (aantal, 0 = uit, 30 = altijd). Puur beeld, geen
+  RNG; `render_digest` telt `licht` per pion mee (herstelcheck en
+  resumecheck 0 verschillen). Check: `-- beurtlicht` (headless of met
+  venster: speelt tot je eigen actiebeurt, zet door tot er hooguit drie
+  pionnen over zijn die nog kunnen en meet dat precies die de straal
+  hebben, dan met drempel 1 alleen de laatste, en met sterkte 0 geen; met
+  venster `_shot_beurtlicht.png`).
 - **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
   mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
   gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de

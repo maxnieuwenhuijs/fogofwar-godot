@@ -1449,6 +1449,7 @@ func render_digest() -> Dictionary:
 			"ring": pv._ring_active,
 			"ring_link": pv._ring_link_state,
 			"gedimd": pv._dimmed,
+			"licht": pv._beurt_licht_aan,
 			"geselecteerd": pv._selected,
 			"blokjes": blokjes,
 			"vraagteken": vraagteken,
@@ -2073,6 +2074,25 @@ func _refresh_all() -> void:
 	_werk_figurant_rollen_bij()   # vaandels/trommels ruimtelijk verdelen
 	_sync_new_pawn_views()  # F2.6: verse spawns direct zichtbaar en klikbaar
 	_update_piece_counts()
+	# Lichtstraal op de laatste pionnen die nog kunnen (17 september, Max: "dat
+	# je ziet welke je nog kan bewegen"). In je eigen actiebeurt: wie kan er
+	# nog (dezelfde regel als het dimmen)? Zijn dat er hooguit
+	# `beurt_licht_vanaf`, dan krijgen die de straal. Een keer gerekend per
+	# pion, ook voor het dimmen hieronder.
+	var kan_handelen: Dictionary = {}
+	var beurt_licht: Dictionary = {}
+	if state.phase == Phase.Type.ACTION and state.current_player == _human_id:
+		var nog: Array = []
+		for pid in _pawn_views:
+			var p: Pawn = state.pawns.get(pid)
+			if p != null and not p.is_eliminated and p.owner_id == _human_id and p.is_active:
+				kan_handelen[pid] = Rules.can_pawn_act(state, pid)
+				if kan_handelen[pid]:
+					nog.append(pid)
+		var vanaf: int = int(round(PawnView.fx("beurt_licht_vanaf", 3.0)))
+		if vanaf > 0 and nog.size() <= vanaf:
+			for pid in nog:
+				beurt_licht[pid] = true
 	for pid in _pawn_views:
 		var pv: PawnView = _pawn_views[pid]
 		var pawn: Pawn = state.pawns.get(pid)
@@ -2115,7 +2135,8 @@ func _refresh_all() -> void:
 			pv.set_ring_link_state(0)
 		var human_action := state.phase == Phase.Type.ACTION and state.current_player == _human_id \
 				and pawn.owner_id == _human_id and pawn.is_active
-		pv.set_dimmed(human_action and not Rules.can_pawn_act(state, pid))
+		pv.set_dimmed(human_action and not bool(kan_handelen.get(pid, false)))
+		pv.set_beurt_licht(beurt_licht.has(pid))
 		pv.set_selected(pid == _selected_pawn_id)
 
 
@@ -3471,6 +3492,10 @@ func _apply_ambiance() -> void:
 	for pv in _pawn_views.values():
 		if is_instance_valid(pv):
 			(pv as PawnView).set_ring_glow(PawnView.fx("ring_glow", 1.0))
+			(pv as PawnView).zet_beurt_licht_sterkte()
+	# De drempel van de lichtstraal kan veranderd zijn: opnieuw tellen.
+	if session != null and session.state != null and session.state.phase == Phase.Type.ACTION:
+		_refresh_all()
 	for e in _aura_gloed:
 		if is_instance_valid(e.node):
 			(e.mat as StandardMaterial3D).albedo_color.a = float(e.basis) * PawnView.fx("aura_gloed", 1.0)
@@ -3502,6 +3527,8 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "haven_alpha", "label": "haven-zichtbaarheid", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.45},
 	{"key": "ring_glow", "label": "ring-gloed", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "aura_gloed", "label": "aura-gloed (trom en vaandel)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "beurt_licht", "label": "lichtstraal laatste pionnen (sterkte)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "beurt_licht_vanaf", "label": "lichtstraal vanaf (pionnen die nog kunnen)", "min": 0.0, "max": 30.0, "step": 1.0, "def": 3.0},
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "footprint_dark", "label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},

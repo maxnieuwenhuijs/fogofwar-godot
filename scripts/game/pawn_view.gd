@@ -542,6 +542,131 @@ func _refresh_ring() -> void:
 	_team_ring.scale = Vector3(1.15, 0.35, 1.15) if _ring_link_state == 2 else Vector3(1.0, 0.35, 1.0)
 
 
+# --- Lichtstraal: de laatste pionnen die nog kunnen (17 september) --------------
+
+## Max: "een highlight als het de laatste of bijna laatste pawns zijn, dat je
+## ziet welke je nog kan bewegen: een soort lichtstraal of een highlight om
+## het model heen". Een lichtkegel van boven (onderaan fel, naar boven weg,
+## zijkanten zacht) plus een lichtvlek op de vloer, warm goud, zacht
+## pulserend. game._refresh_all zet hem aan zodra er hooguit
+## `beurt_licht_vanaf` eigen pionnen zijn die nog kunnen handelen. Sterkte:
+## knop `beurt_licht` (0 = uit). Puur beeld, geen RNG.
+const BEURT_LICHT_HOOGTE := 1.9
+const BEURT_LICHT_KLEUR := Color(1.0, 0.86, 0.5)
+const BEURT_LICHT_ALPHA := 0.5
+const BEURT_LICHT_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never;
+uniform vec4 kleur : source_color = vec4(1.0, 0.86, 0.5, 0.42);
+uniform float hoogte = 1.9;
+varying float h;
+void vertex() {
+	h = clamp((VERTEX.y + hoogte * 0.5) / hoogte, 0.0, 1.0);
+}
+void fragment() {
+	float val = 1.0 - h;
+	val *= val;
+	float zij = abs(dot(normalize(NORMAL), normalize(VIEW)));
+	ALBEDO = kleur.rgb;
+	ALPHA = kleur.a * val * mix(0.2, 1.0, zij);
+}
+"""
+var _beurt_licht: Node3D = null
+var _beurt_licht_aan: bool = false
+var _beurt_licht_mat: ShaderMaterial = null
+var _beurt_vlek_mat: StandardMaterial3D = null
+var _beurt_tween: Tween = null
+
+
+func set_beurt_licht(aan: bool) -> void:
+	if aan and fx("beurt_licht", 1.0) <= 0.0:
+		aan = false
+	if aan == _beurt_licht_aan:
+		return
+	_beurt_licht_aan = aan
+	if aan and _beurt_licht == null:
+		_bouw_beurt_licht()
+	if _beurt_licht != null:
+		_beurt_licht.visible = aan
+	if _beurt_tween != null and _beurt_tween.is_valid():
+		_beurt_tween.kill()
+		_beurt_tween = null
+	if aan:
+		zet_beurt_licht_sterkte()
+		# Zachte puls: 0,8 .. 1,0 van de sterkte, heen en weer.
+		_beurt_tween = create_tween().set_loops()
+		_beurt_tween.tween_method(_beurt_puls, 1.0, 0.8, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_beurt_tween.tween_method(_beurt_puls, 0.8, 1.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _bouw_beurt_licht() -> void:
+	_beurt_licht = Node3D.new()
+	_beurt_licht.name = "BeurtLicht"
+	# De kegel: smal boven, breed op de voet; geen kappen, alleen de mantel.
+	var kegel := CylinderMesh.new()
+	kegel.top_radius = 0.10
+	kegel.bottom_radius = 0.40
+	kegel.height = BEURT_LICHT_HOOGTE
+	kegel.cap_top = false
+	kegel.cap_bottom = false
+	kegel.radial_segments = 24
+	kegel.rings = 1
+	var sh := Shader.new()
+	sh.code = BEURT_LICHT_SHADER
+	_beurt_licht_mat = ShaderMaterial.new()
+	_beurt_licht_mat.shader = sh
+	_beurt_licht_mat.set_shader_parameter("hoogte", BEURT_LICHT_HOOGTE)
+	var mi := MeshInstance3D.new()
+	mi.name = "Kegel"
+	mi.mesh = kegel
+	mi.material_override = _beurt_licht_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = Vector3(0.0, BEURT_LICHT_HOOGTE * 0.5, 0.0)
+	_beurt_licht.add_child(mi)
+	# De lichtvlek op de vloer: radiaal verloop, additief.
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
+	grad.colors = PackedColorArray([Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.35), Color(1, 1, 1, 0.0)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 64
+	tex.height = 64
+	_beurt_vlek_mat = StandardMaterial3D.new()
+	_beurt_vlek_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_beurt_vlek_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_beurt_vlek_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	_beurt_vlek_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_beurt_vlek_mat.albedo_texture = tex
+	var vlek := MeshInstance3D.new()
+	vlek.name = "Vlek"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.05, 1.05)
+	vlek.mesh = quad
+	vlek.material_override = _beurt_vlek_mat
+	vlek.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	vlek.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	vlek.position = Vector3(0.0, 0.03, 0.0)
+	_beurt_licht.add_child(vlek)
+	add_child(_beurt_licht)
+
+
+## Sterkte uit de knop `beurt_licht` (sfeer-paneel), live.
+func zet_beurt_licht_sterkte() -> void:
+	_beurt_puls(1.0)
+
+
+func _beurt_puls(f: float) -> void:
+	if _beurt_licht_mat == null or _beurt_vlek_mat == null:
+		return
+	var sterkte: float = fx("beurt_licht", 1.0) * f
+	var k := BEURT_LICHT_KLEUR
+	_beurt_licht_mat.set_shader_parameter("kleur", Color(k.r, k.g, k.b, BEURT_LICHT_ALPHA * sterkte))
+	_beurt_vlek_mat.albedo_color = Color(k.r, k.g, k.b, 0.55 * sterkte)
+
+
 ## Klein "neusje" aan de voorkant (-Z) zodat de kijkrichting zichtbaar is
 ## zolang er geen model is.
 func _build_front_marker() -> void:
