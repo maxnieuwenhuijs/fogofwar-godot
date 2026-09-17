@@ -92,6 +92,7 @@ var _stat_namen: Array[Label] = []
 var _bonus: Array = [0, 0, 0]
 var _bonus_labels: Array[Label] = []
 var _cp_zegel: TextureRect
+var _cp_zegel_2: TextureRect   # tweede laag bij inzet: de plaat is half doorzichtig, twee lagen dekken
 var _cp_tekst: Label
 var _onthuld_rect: TextureRect
 var _lint: TextureRect
@@ -285,11 +286,18 @@ func _bouw() -> void:
 	(hp.plus as Button).pressed.connect(_on_hp_plus_pressed)
 	(sta.plus as Button).pressed.connect(_on_sta_plus_pressed)
 	(atk.plus as Button).pressed.connect(_on_atk_plus_pressed)
-	# CP-zegel (leeg, of in teamkleur met "CP" erop).
+	# CP-zegel: leeg een vage grijze afdruk, met inzet het teamzegel dubbel
+	# (dekkend), iets groter en met een grote "CP" (17 september; maat en
+	# plaat wisselen in _update_staat).
 	var cp_maat := CP_MAAT * UiAssets.KAART_CP_SCHAAL
 	_cp_zegel = _rect("CpZegel", UiAssets.kaart("cp_leeg"), UiAssets.KAART_CP_MIDDEN - cp_maat * 0.5, cp_maat)
 	_kaartlaag.add_child(_cp_zegel)
-	_cp_tekst = _label("CpTekst", "LabelKop", 34, Vector2.ZERO, cp_maat)
+	_cp_zegel_2 = _rect("CpZegel2", null, Vector2.ZERO, cp_maat)
+	_cp_zegel_2.visible = false
+	_cp_zegel.add_child(_cp_zegel_2)
+	_cp_tekst = _label("CpTekst", "LabelKop", UiAssets.KAART_CP_TEKST, Vector2.ZERO, cp_maat)
+	_cp_tekst.add_theme_color_override("font_outline_color", Color(UiAssets.INKT, 0.85))
+	_cp_tekst.add_theme_constant_override("outline_size", 8)
 	_cp_tekst.visible = false
 	_cp_zegel.add_child(_cp_tekst)
 	# REVEALED-stempel, schuin rechtsonder.
@@ -469,10 +477,22 @@ func _update_staat() -> void:
 	_tap_area.visible = _selectable and not gekoppeld and open
 	_onthuld_rect.visible = _onthuld and open
 	_rug.visible = _verborgen
+	var cp_maat: Vector2 = CP_MAAT * (UiAssets.KAART_CP_SCHAAL_INZET if _cp_inzet else UiAssets.KAART_CP_SCHAAL)
+	_cp_zegel.size = cp_maat
+	_cp_zegel.position = UiAssets.KAART_CP_MIDDEN - cp_maat * 0.5
+	_cp_zegel_2.size = cp_maat
+	_cp_tekst.size = cp_maat
 	if _cp_inzet:
-		_cp_zegel.texture = UiAssets.kaart("cp_" + UiAssets.team_naam(_speler_id))
+		var cp_tex: Texture2D = UiAssets.kaart("cp_" + UiAssets.team_naam(_speler_id))
+		_cp_zegel.texture = cp_tex
+		_cp_zegel_2.texture = cp_tex
+		_cp_zegel.modulate = Color.WHITE
 	else:
 		_cp_zegel.texture = UiAssets.kaart("cp_leeg")
+		_cp_zegel_2.texture = null
+		# Bijna de kleur van de kaart: een vage afdruk, geen stempel.
+		_cp_zegel.modulate = Color(1.0, 1.0, 1.0, UiAssets.KAART_CP_LEEG_ALPHA)
+	_cp_zegel_2.visible = _cp_inzet
 	_cp_tekst.visible = _cp_inzet
 
 

@@ -2262,7 +2262,8 @@ func _ready() -> void:
 		# v4.2: eerst het CP-bod; klik "geen CP" weg zodat de waaier zelf in
 		# beeld komt (UI-assetpack, 3 september: de kaarten zijn nu het scherm).
 		if Phase.is_define(GameSession.state.phase) and not game._card_hand.visible:
-			game._on_cp_choice(0)
+			# `cp`: een CP-punt inzetten, dan draagt kaart 1 het zegel (17 september).
+			game._on_cp_choice(1 if "cp" in args else 0)
 			await get_tree().create_timer(0.9).timeout
 		print("[DEFINE] fase=%s waaier=%s kaarten=%d" % [Phase.to_string_phase(GameSession.state.phase),
 			str(game._card_hand.visible), game._card_hand.get_card_views().size()])
@@ -2275,6 +2276,17 @@ func _ready() -> void:
 			print("[DEFINE] kaart %d: midden=(%.0f, %.0f) draai=%.1f graden schaal=%.2f volgorde=%d" % [
 				i, cv.position.x + UiAssets.KAART_MAAT.x * 0.5 * cv.scale.x, cv.position.y + UiAssets.KAART_MAAT.y * 0.5 * cv.scale.y,
 				rad_to_deg(cv.rotation), cv.scale.x / CardHand.KAART_SCHAAL, cv.get_index()])
+		# CP-zegel per kaart: met inzet dubbel en groter, leeg een vage afdruk.
+		for i in dviews.size():
+			var zcv: CardView = dviews[i]
+			var zz: TextureRect = zcv.find_child("CpZegel", true, false)
+			var zz2: TextureRect = zcv.find_child("CpZegel2", true, false)
+			if zz != null and zz2 != null:
+				var inzet: bool = zz2.visible
+				var zok: bool = (inzet and zz.modulate.a >= 0.99 and zz.size.x > CardView.CP_MAAT.x * 0.45) \
+					or (not inzet and zz.modulate.a <= 0.3 and zz.texture == UiAssets.kaart("cp_leeg"))
+				print("[DEFINE] kaart %d zegel: %s, breed %.0f, alpha %.2f (%s)" % [
+					i, "CP-inzet (dubbel)" if inzet else "leeg (vaag)", zz.size.x, zz.modulate.a, "PASS" if zok else "FAIL"])
 		# Kolommen binnen het kaartframe (de lijst loopt tot x 47 en vanaf 599).
 		if dviews.size() >= 1:
 			var k_links := 9999.0

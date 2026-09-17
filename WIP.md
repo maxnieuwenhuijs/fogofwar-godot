@@ -146,6 +146,23 @@ kolommen van 56 tot 590, het icoon (74) op y 64 en het cijfer (104) vanaf
 158, met de sierlijn ertussen; de plus op 284. `KAART_KOLOM_SCHAAL` is
 weg. `-- define` meet de kolommen tegen het kader (PASS), klik-lift 109 px.
 
+## 17 september -- het CP-zegel: duidelijk als het er is, bijna weg als het er niet is
+
+Max: "maak de CP-stamp duidelijker, en als het er niet is nog lichter grijs,
+bijna de kleur van de kaart, om verwarring te voorkomen."
+
+Elke kaart droeg hetzelfde half doorzichtige grijze zegel onderaan, en een
+kaart met inzet hetzelfde zegel in teamkleur met een kleine "CP": op
+bord-afstand zag je twee grijze rondjes. Nu: leeg is de grijze plaat op
+alpha 0,25 (van een plaat die zelf al op 0,53 staat), dus een vage afdruk
+in het perkament; met inzet ligt het teamzegel twee keer over elkaar
+(`CpZegel2`, dekkend), iets groter (0,47) en met "CP" op 44 met een
+donkere rand. Het midden staat op 858 (was 871), anders raakte de grote
+versie de onderlijst van het frame op 941. Geen nieuwe assets. Check:
+`-- define cp` zet een CP-punt in; kaart 1 draagt het zegel (dubbel, 149
+breed, alpha 1), kaart 2 en 3 de afdruk (137 breed, alpha 0,25), PASS;
+screenshot bekeken. Koppelcheck en uicheck PASS.
+
 ## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
 
 Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van

@@ -797,7 +797,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`CardView.KOLOM_MAAT` 170 x 392, cijfer 104, icoon 74 ruim boven het
   cijfer) in plaats van de plaat op 1,14: drie kolommen van 56 tot 590
   binnen het kaartframe (de lijst loopt tot 47 en vanaf 599); `-- define`
-  meet dat ("kolommen ... kader 47..599"). **De emblemen zijn
+  meet dat ("kolommen ... kader 47..599"). **Het CP-zegel (17 september,
+  Max: "maak de CP-stamp duidelijker, en als het er niet is nog lichter
+  grijs, bijna de kleur van de kaart"):** leeg is de grijze plaat
+  (`CP_blocked.png`) op `KAART_CP_LEEG_ALPHA` 0,25, een vage afdruk in het
+  perkament; met inzet het teamzegel DUBBEL (de plaat is half doorzichtig,
+  twee lagen dekken: `CpZegel2`), op 0,47 in plaats van 0,43 en met een
+  grote "CP" (44, donkere rand). Midden 858 (was 871), zodat de grote
+  versie boven de onderlijst van het frame (941) blijft. `-- define cp`
+  zet een CP-punt in en meet per kaart zegel-staat, maat en alpha. **De emblemen zijn
   de duo-gravures** (big bro met kleine broertje) uit
   `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
   `python tools/verwerk_emblemen.py` knipt en schaalt ze naar

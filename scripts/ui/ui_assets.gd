@@ -173,8 +173,16 @@ const KAART_TITEL_Y := 250.0
 const KAART_SPECS_Y := 352.0
 const KAART_KOLOM_TUSSEN := 12.0
 const KAART_SPECS_X := [54.0, 238.0, 422.0]   # ongeschaald (oud); card_view rekent de geschaalde plekken zelf uit
-const KAART_CP_MIDDEN := Vector2(322.0, 871.0)
-const KAART_CP_SCHAAL := 0.43
+# CP-zegel (17 september, Max: "maak de CP-stamp duidelijker, en als het er
+# niet is nog lichter grijs, bijna de kleur van de kaart"): leeg = de grijze
+# plaat op KAART_CP_LEEG_ALPHA, inzet = het teamzegel dubbel (dekkend) en
+# iets groter met een grote "CP". Midden 858: de grote versie blijft zo
+# boven de onderlijst van het frame (941).
+const KAART_CP_MIDDEN := Vector2(322.0, 858.0)
+const KAART_CP_SCHAAL := 0.43          # leeg
+const KAART_CP_SCHAAL_INZET := 0.47    # met inzet
+const KAART_CP_LEEG_ALPHA := 0.25
+const KAART_CP_TEKST := 44
 const KAART_ONTHULD_POS := Vector2(415.0, 830.0)
 const KAART_ONTHULD_SCHAAL := 0.85
 const KAART_ONTHULD_HOEK_GRADEN := -12.0
