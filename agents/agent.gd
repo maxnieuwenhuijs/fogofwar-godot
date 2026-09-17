@@ -101,6 +101,17 @@ static func reconstruct_state(view: Dictionary) -> GameState:
 		var pd: Dictionary = (view.pawns[key] as Dictionary).duplicate()
 		if pd.get("current_hp") is String:  # "?"-sentinel → puntschatting
 			var est: Vector3i = schatting[int(pd.owner_id)]
+			# Wat de regels er per type bovenop leggen (C12 basis_hp, 4.3.6
+			# stat_bonus: de ruiter krijgt +2 stamina en +2 attack bovenop de
+			# kaart) telt ook voor een gedekte pion: zonder dit schatte de bot
+			# een verborgen Krokodil-ruiter 2/2/2 te laag in.
+			var type_sleutel: String = ["inf", "cav", "art"][int(pd.get("unit_type", 0))]
+			est.x += int(s.rules.basis_hp.get(type_sleutel, 0))
+			var bonus = s.rules.stat_bonus.get(type_sleutel, {})
+			if bonus is Dictionary:
+				est.x += int(bonus.get("hp", 0))
+				est.y += int(bonus.get("stamina", 0))
+				est.z += int(bonus.get("attack", 0))
 			pd.current_hp = est.x
 			pd.max_hp = est.x
 			pd.remaining_stamina = est.y
