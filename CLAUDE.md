@@ -562,21 +562,31 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   te los"), onder de PawnView of de Bewoner (schaal 1, een
   soft body onder het geschaalde skelet gaat mis). De kraagrij is
   vastgepind en gaat elke frame via
-  `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`: OP DE
-  SCHOUDERS (Max: "begint niet goed bij de schouders"): u = -1 op het ene
-  schouderbot (mixamorig LeftArm/RightArm, welke rechts zit wordt
-  gemeten), 0 op het nekbot, 1 op het andere, recht gelerpt, `CAPE_OP`
-  0,045 pionhoogte omhoog en `CAPE_RUG` 0,03 naar achteren langs de
-  kijkrichting van het model (niet de draai van het bot: bij de
-  rifle-idle zwaaide de lap anders om de pion heen); de lap is bovenaan
-  zo breed als de schouderspan. Vijf kinematische capsules
-  (`AnimatableBody3D`, sync_to_physics, dus Jolt kent de snelheid van het
-  lijf) op physics-laag 20: romp heup-nek die 0,07 ONDER de schouderlijn
-  stopt (reikte hij tot boven de nek, dan duwde hij de bovenste rijen
-  omhoog over de schouders heen), schouderbalk tussen de armbotten (de
-  kraag hangt er net buiten), bekken en bovenbenen, linker- en
-  rechterbovenarm (`cape_capsules` in de meta, met rek_a/rek_b per kant),
-  per frame tussen hun botten gezet; `cape_weg` ruimt lap, bot-anker en capsules
+  `PhysicsServer3D.soft_body_move_point` naar `cape_kraag_punten`. **Sinds
+  17 september is de lap een MANTEL om de rug** (Max: "de cape werkt niet
+  goed en is slecht zichtbaar, kunnen we die beter om de rug heen doen, nu
+  zit het echt in het model"): de kraag is een BOOG rond het nekbot van 140
+  graden, van boven de ene schouder over de rug naar boven de andere, met
+  een straal net buiten de gemeten rug en flanken (`cape_kraag_rx`/`_rz`),
+  `CAPE_OP` 0,045 pionhoogte boven de schouderlijn (hoogte van de
+  armbotten) en dwars op de kijkrichting van het model (niet de draai van
+  het bot); de 9 x 10 punten hangen daar als een halve koker omheen (170
+  graden aan de zoom, uitlopend 1,35 x), buitenkant = voorkant, mesh in
+  wereldruimte. **Het lijf wordt per model GEMETEN** (`_cape_meet_lijf`,
+  gecached op mesh-pad + hoogte): elke vertex van een geskinde mesh gaat
+  via de bind-pose van zijn zwaarste bot (skelet x botrust x inverse-bind
+  x v; de vertexdata staat NIET in de ruimte van zijn node, die hangt
+  onder het skelet met schaal 0,01 terwijl de data in meters staat, dus
+  via de node leken alle lijfvertices op een punt te staan en vulde de
+  musket de flanken), en alleen vertices van romp-botten tellen
+  (`CAPE_ROMP_BOTTEN`: hips, spine, neck, shoulder; niet arm, hand, leg,
+  tail, head), per band langs de as heup-nek de grootste afstand naar
+  achteren, opzij en naar voren. Daaruit: drie convexe romp-segmenten en
+  een been-segment (`_cape_romp`, elliptische hull; een ronde capsule zo
+  breed als de schouders duwde de rug-stof te ver naar achteren) plus de
+  bovenarmen als capsules, allemaal kinematisch (`AnimatableBody3D`,
+  sync_to_physics) op physics-laag 20, per frame tussen hun botten gezet
+  (`_zet_romp`/`_zet_capsule`); `cape_weg` ruimt lap, bot-anker en segmenten
   op. De binnenkant van de blauwe cape is een glanzende goudzijde (Max:
   "doen we daar vol goud?"; knop `cape_voering_goud`, 0 = het plaatje
   aan beide kanten, iets donkerder; met alleen de matte voering leek de

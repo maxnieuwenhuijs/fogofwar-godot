@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## 17 september -- de cape als mantel om de rug, het lijf gemeten
+
+Max: "de cape van de blauwen werkt niet goed en is slecht zichtbaar,
+kunnen we die beter om de rug heen doen, nu zit het echt in het model."
+De lap was een baan achter de rug aan een rechte kraagrij, en vanaf de
+speler (van voren-boven) zag je er weinig van. Nu een MANTEL: de kraag is
+een boog van 140 graden rond het nekbot, van boven de ene schouder over de
+rug naar boven de andere, en de 9 x 10 punten hangen daar als een halve
+koker omheen (over de schouders, langs de flanken, 170 graden aan de zoom,
+uitlopend). De straal van de boog komt uit het GEMETEN lijf
+(`_cape_meet_lijf`): per band langs de as heup-nek hoe ver rug, flanken
+en borst van de as liggen. Eerste versie las de vertices via de
+node-transform van de mesh: dan staan alle lijfvertices op een punt (de
+geskinde mesh hangt onder het skelet met schaal 0,01, maar zijn data
+staat in meters; de bind-matrices slikken die factor 100), en de
+musket, star aan de hand, vulde de flanken tot de afkapgrens. Nu gaat
+elke vertex via de bind-pose van zijn zwaarste bot (skelet x botrust x
+inverse-bind x v) en tellen alleen romp-botten (hips, spine, neck,
+shoulder). Gemeten muis-infanterist op 0,9: schouders 0,12 halve
+breedte, rug 0,03-0,05 diep, borst 0,10, heupband 0,17 (jaspanden). Het
+lijf voor de botsing zijn nu drie convexe romp-segmenten en een
+been-segment uit die doorsneden (`_cape_romp`, elliptische hull) plus de
+bovenarmen; een ronde capsule zo breed als de schouders duwde de rug-stof
+te ver naar achteren. Van achteren hangt de mantel om de rug, ook bij de
+bewoner; van voren-boven zie je de flanken met goudrand naast het lijf.
+Checks: capecheck (beide plaatjes), zweefcheck muis 2, omgevingcheck 1,
+capeschot, herstelcheck 777. Let op: de mantel-code van vanochtend zat al
+in HEAD via het emblemen-commit a627191 van de andere sessie (die nam
+pawn_view.gd in zijn geheel mee); dit commit draagt de meting-fix.
+
 ## 17 september -- Zwaai en klap per wapen
 
 Max: "update de sounds ook voor slashing sounds en zwaard-impactgeluiden per

@@ -3995,21 +3995,32 @@ static func _maak_cape_sim(root: Node3D, skel: Skeleton3D, bone: int, att: BoneA
 
 static var _cape_lijf_cache: Dictionary = {}
 
+## Botten waarvan de vertices tot de ROMP horen (voor de lijf-meting):
+## heupen, rug, nek en de schouders (Mixamo LeftShoulder/RightShoulder zijn
+## de sleutelbeenderen); armen, handen, benen, staart en kop doen niet mee.
+const CAPE_ROMP_BOTTEN: Array = ["hips", "spine", "neck", "shoulder"]
+const CAPE_GEEN_ROMP: Array = ["arm", "hand", "leg", "foot", "toe", "tail", "head"]
 
-## Meet het lijf van een model in de bind-pose: de vertices van het
-## geskinde model staan in skeletruimte, dus via de mesh-transform in de
-## wereld. Per band langs de romp-as (heup -> nek, zes banden) de grootste
-## afstand van de as: rug (achter), flanken (opzij) en borst (voor). Wat
-## verder opzij ligt dan 0,22 pionhoogte is een arm (T-pose), verder achter
-## dan 0,18 de staart. Lege banden lenen van de buren; ondergrenzen zodat
-## een kaal model niet in een spriet eindigt. Gecached op mesh-pad plus
-## hoogte (dezelfde muis staat als pion op 0,9 en als bewoner op 0,62).
+
+## Meet het lijf van een model in de BIND-pose. De vertexdata van een
+## geskinde mesh staat niet in de ruimte van zijn node (die hangt onder het
+## skelet met schaal 0,01, de data staat in meters: gemeten 16 september,
+## alle lijfvertices leken op een punt te staan), dus elke vertex gaat via
+## de bind-pose van zijn zwaarste bot: wereld = skelet x botrust x
+## inverse-bind x v. Alleen vertices van romp-botten tellen (CAPE_ROMP_BOTTEN),
+## zodat de armen in T-pose, de staart en de musket de maten niet opblazen.
+## Per band langs de romp-as (heup -> nek, zes banden) de grootste afstand
+## van de as: rug (achter), flanken (opzij) en borst (voor). Lege banden
+## lenen van de buren; ondergrenzen zodat een kaal model niet in een
+## spriet eindigt. Gecached op mesh-pad plus hoogte (dezelfde muis staat
+## als pion op 0,9 en als bewoner op 0,62).
 static func _cape_meet_lijf(root: Node3D, heup_w: Vector3, nek_w: Vector3, achter_w: Vector3, rechts_w: Vector3, hoogte_w: float) -> Dictionary:
 	var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)
 	var sleutel := ""
 	for mi in meshes:
-		if (mi as MeshInstance3D).mesh != null and (mi as MeshInstance3D).mesh.resource_path != "":
-			sleutel = (mi as MeshInstance3D).mesh.resource_path + "|%.2f" % hoogte_w
+		var m0 := mi as MeshInstance3D
+		if m0.skin != null and m0.mesh != null and m0.mesh.resource_path != "":
+			sleutel = m0.mesh.resource_path + "|%.2f" % hoogte_w
 			break
 	if sleutel != "" and _cape_lijf_cache.has(sleutel):
 		return _cape_lijf_cache[sleutel]
@@ -4026,32 +4037,73 @@ static func _cape_meet_lijf(root: Node3D, heup_w: Vector3, nek_w: Vector3, achte
 	var as_v: Vector3 = nek_w - heup_w
 	var as_len: float = maxf(as_v.length(), 0.001)
 	var as_n: Vector3 = as_v / as_len
-	var grens_zij: float = hoogte_w * 0.22
-	var grens_achter: float = hoogte_w * 0.18
+	var geteld := 0
 	for mi in meshes:
 		var m: MeshInstance3D = mi
-		if m.mesh == null or not m.visible:
+		if m.mesh == null or not m.visible or m.skin == null:
 			continue
-		var xf: Transform3D = m.global_transform
+		var skel: Skeleton3D = m.get_node_or_null(m.skeleton) as Skeleton3D
+		if skel == null:
+			skel = m.get_parent() as Skeleton3D
+		if skel == null:
+			continue
+		# per bind: de wereld-transform van mesh-ruimte naar de bind-pose, en
+		# of dat bot bij de romp hoort
+		var skin: Skin = m.skin
+		var bind_xf: Array = []
+		var bind_romp: PackedByteArray = PackedByteArray()
+		for bi in skin.get_bind_count():
+			var bone: int = skin.get_bind_bone(bi)
+			if bone < 0:
+				bone = skel.find_bone(skin.get_bind_name(bi))
+			if bone < 0:
+				bind_xf.append(Transform3D.IDENTITY)
+				bind_romp.append(0)
+				continue
+			bind_xf.append(skel.global_transform * skel.get_bone_global_rest(bone) * skin.get_bind_pose(bi))
+			var bn := String(skel.get_bone_name(bone)).to_lower()
+			var romp := false
+			for w in CAPE_ROMP_BOTTEN:
+				if bn.contains(String(w)):
+					romp = true
+			for w in CAPE_GEEN_ROMP:
+				if bn.contains(String(w)):
+					romp = false
+			bind_romp.append(1 if romp else 0)
 		for sidx in m.mesh.get_surface_count():
 			var arr: Array = m.mesh.surface_get_arrays(sidx)
 			var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-			for v in vs:
-				var rel: Vector3 = xf * v - heup_w
-				var t: float = rel.dot(as_n) / as_len
-				if t < 0.0 or t > 1.0:
+			var bones = arr[Mesh.ARRAY_BONES]
+			var gewichten = arr[Mesh.ARRAY_WEIGHTS]
+			if bones == null or gewichten == null or vs.is_empty():
+				continue
+			var per: int = int(bones.size() / vs.size())
+			if per <= 0:
+				continue
+			for vi in vs.size():
+				# zwaarste bot van deze vertex
+				var beste := -1
+				var beste_w := 0.0
+				for k in per:
+					var w: float = float(gewichten[vi * per + k])
+					if w > beste_w:
+						beste_w = w
+						beste = int(bones[vi * per + k])
+				if beste < 0 or beste >= bind_xf.size() or bind_romp[beste] == 0:
 					continue
+				var p_w: Vector3 = (bind_xf[beste] as Transform3D) * vs[vi]
+				var rel: Vector3 = p_w - heup_w
+				var t: float = clampf(rel.dot(as_n) / as_len, 0.0, 1.0)
 				var lat: Vector3 = rel - as_n * rel.dot(as_n)
 				var a: float = lat.dot(achter_w)
 				var z: float = absf(lat.dot(rechts_w))
-				if z > grens_zij or a > grens_achter:
-					continue
 				var b: int = clampi(int(t * float(banden)), 0, banden - 1)
 				if a > 0.0:
 					achter[b] = maxf(achter[b], a)
 				else:
 					voor[b] = maxf(voor[b], -a)
 				zij[b] = maxf(zij[b], z)
+				geteld += 1
 	for lijst in [achter, zij, voor]:
 		var l: PackedFloat32Array = lijst
 		for b in banden:
@@ -4063,11 +4115,10 @@ static func _cape_meet_lijf(root: Node3D, heup_w: Vector3, nek_w: Vector3, achte
 					buur = maxf(buur, l[b + 1])
 				l[b] = buur
 	for b in banden:
-		achter[b] = maxf(achter[b], hoogte_w * 0.035)
-		voor[b] = maxf(voor[b], hoogte_w * 0.035)
-		zij[b] = maxf(zij[b], hoogte_w * 0.06)
-	var uit := {"banden": banden, "achter": achter, "zij": zij, "voor": voor, "as_len": as_len}
-	print("[CAPE-MEET] %s as=%.3f achter=%s zij=%s voor=%s" % [sleutel, as_len, str(achter), str(zij), str(voor)])
+		achter[b] = clampf(achter[b], hoogte_w * 0.035, hoogte_w * 0.16)
+		voor[b] = clampf(voor[b], hoogte_w * 0.035, hoogte_w * 0.2)
+		zij[b] = clampf(zij[b], hoogte_w * 0.06, hoogte_w * 0.22)
+	var uit := {"banden": banden, "achter": achter, "zij": zij, "voor": voor, "as_len": as_len, "geteld": geteld}
 	if sleutel != "":
 		_cape_lijf_cache[sleutel] = uit
 	return uit
