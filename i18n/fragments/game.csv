@@ -65,19 +65,19 @@ MENU_CP_NONE,Bet no CP,Geen CP inzetten
 MENU_CP_OPTION,%d CP (+%d card budget),%d CP (+%d kaartbudget)
 HUD_DEFINE_PROMPT,Define your cards (%d× budget %d),Definieer je kaarten (%d× budget %d)
 HUD_DEFINE_CP_SUFFIX," · %d card(s) with +1 CP point"," · %d kaart(en) met +1 CP-punt"
-HUD_DEFINE_LEGEND," — HP = life · Speed = steps/actions · Attack = damage"," — HP = leven · Speed = stappen/acties · Aanval = schade"
+HUD_DEFINE_LEGEND," — HP = life · Stamina = steps/actions · Attack = damage"," — HP = leven · Stamina = stappen/acties · Aanval = schade"
 PHASE_SPAWN_TITLE,Reinforcements,Versterkingen
 PHASE_SPAWN_RESERVE,Reserve: %d soldiers · %d cavalry · %d cannons.,Reserve: %d soldaten · %d cavalerie · %d kanonnen.
 PHASE_SPAWN_INFO,"Spawns land as statues on your back row (max %d per cycle, %d left this match).","Spawns landen als standbeelden op je achterste rij (max %d per cyclus, nog %d dit potje)."
 PHASE_SPAWN_BLIND,The AI picks blind at the same time; then comes the reveal.,De AI kiest blind tegelijk; daarna volgt de onthulling.
 PHASE_SPAWN_NONE,Spawn nothing,Niets spawnen
 PHASE_SPAWN_REFILL,Replace losses (%d),Verliezen aanvullen (%d)
-PHASE_REVEAL_BODY,"You (red): bid %d%% · attack %d · speed %d
-AI (blue): bid %d%% · attack %d · speed %d
+PHASE_REVEAL_BODY,"You (red): bid %d%% · attack %d · stamina %d
+AI (blue): bid %d%% · attack %d · stamina %d
 
 The highest attack bid takes the initiative:
-that player links and acts first.","Jij (rood): bod %d%% · aanval %d · speed %d
-AI (blauw): bod %d%% · aanval %d · speed %d
+that player links and acts first.","Jij (rood): bod %d%% · aanval %d · stamina %d
+AI (blauw): bod %d%% · aanval %d · stamina %d
 
 Het hoogste aanval-bod krijgt het initiatief:
 die speler koppelt én handelt straks als eerste."
@@ -142,7 +142,7 @@ PHASE_SPAWN_RESET,"Start over","Opnieuw kiezen"
 HUD_COLOR_RED,Red,Rood
 HUD_COLOR_BLUE,Blue,Blauw
 HUD_PLAYER_OPP,%s,%s
-PHASE_REVEAL_LINE,%s: bid %d%% · attack %d · speed %d,%s: bod %d%% · aanval %d · speed %d
+PHASE_REVEAL_LINE,%s: bid %d%% · attack %d · stamina %d,%s: bod %d%% · aanval %d · stamina %d
 PHASE_REVEAL_FOOT,"The highest attack bid takes the initiative:
 that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief:
 die speler koppelt én handelt straks als eerste."

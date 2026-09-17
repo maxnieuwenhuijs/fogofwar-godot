@@ -38,24 +38,29 @@ const SIERLIJN_MAAT := Vector2(295, 24)
 ## van Card_specs_holder.png op eigen maat, niet meer de plaat op 1,14.
 ## Drie kolommen van 170 met 12 ertussen = 534, binnen het kaartframe
 ## (de lijst loopt tot x 47 en vanaf 599).
-const KOLOM_MAAT := Vector2(170, 392)
+## 17 september: de min-knop is terug (Max: "plaats die onder het plusje met
+## wat afstand en kleiner"), dus de kolom is 408 hoog: plus 88 op 248, min 56
+## op 344.
+const KOLOM_MAAT := Vector2(170, 408)
 const SPECS_NAAM_MAAT := Vector2(154, 44)
 const SPECS_LIJN_MAAT := Vector2(152, 17)
 const CP_MAAT := Vector2(318, 339)
 const ONTHULD_MAAT := Vector2(210, 63)
 const LINT_MAAT := Vector2(72, 247)
 const GEKOPPELD_MAAT := Vector2(187, 247)
-const KNOP_MAAT := Vector2(96, 96)
-const STAT_ICOON := 74.0
+const KNOP_MAAT := Vector2(88, 88)
+const MIN_KNOP_MAAT := Vector2(56, 56)
+const STAT_ICOON := 70.0
 # Plaatsing binnen een stat-kolom (contract par. 4). Het icoon staat sinds
 # 16 september ruim boven het cijfer (Max: "geef de icon meer ruimte").
-const KOLOM_NAAM_Y := 10.0
-const KOLOM_ICOON_Y := 64.0
-const KOLOM_LIJN_Y := 150.0
-const KOLOM_CIJFER_Y := 158.0
-const KOLOM_CIJFER_HOOGTE := 116.0
-const KOLOM_CIJFER_GROOTTE := 104
-const KOLOM_KNOP_Y := 284.0
+const KOLOM_NAAM_Y := 8.0
+const KOLOM_ICOON_Y := 54.0
+const KOLOM_LIJN_Y := 130.0
+const KOLOM_CIJFER_Y := 142.0
+const KOLOM_CIJFER_HOOGTE := 100.0
+const KOLOM_CIJFER_GROOTTE := 96
+const KOLOM_KNOP_Y := 248.0
+const KOLOM_MIN_Y := 344.0
 # Selectie en koppeling.
 const GESELECTEERD_SCHAAL := 1.04
 const GEKOPPELD_DIM := 0.72
@@ -282,10 +287,13 @@ func _bouw() -> void:
 	_sta_value = sta.waarde
 	_atk_value = atk.waarde
 	_stat_namen = [hp.naam, sta.naam, atk.naam]
-	_buttons = [hp.plus, sta.plus, atk.plus]
+	_buttons = [hp.plus, sta.plus, atk.plus, hp.min, sta.min, atk.min]
 	(hp.plus as Button).pressed.connect(_on_hp_plus_pressed)
 	(sta.plus as Button).pressed.connect(_on_sta_plus_pressed)
 	(atk.plus as Button).pressed.connect(_on_atk_plus_pressed)
+	(hp.min as Button).pressed.connect(_on_hp_minus_pressed)
+	(sta.min as Button).pressed.connect(_on_sta_minus_pressed)
+	(atk.min as Button).pressed.connect(_on_atk_minus_pressed)
 	# CP-zegel: leeg een vage grijze afdruk, met inzet het teamzegel dubbel
 	# (dekkend), iets groter en met een grote "CP" (17 september; maat en
 	# plaat wisselen in _update_staat).
@@ -369,6 +377,12 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 		Vector2((KOLOM_MAAT.x - KNOP_MAAT.x) * 0.5, KOLOM_KNOP_Y))
 	kolom.add_child(plus_knop)
 	_uniek(plus_knop)
+	# De min: kleiner, onder de plus met wat afstand (17 september). Geeft het
+	# punt aan de kleinste andere stat (_adjust_stat, delta -1).
+	var min_knop := _knop(voorvoegsel + "Minus", "KnopMin",
+		Vector2((KOLOM_MAAT.x - MIN_KNOP_MAAT.x) * 0.5, KOLOM_MIN_Y), MIN_KNOP_MAAT)
+	kolom.add_child(min_knop)
+	_uniek(min_knop)
 	# de factie-bonus: klein en goud, rechtsboven naast het cijfer
 	var bonus := _label(voorvoegsel + "Bonus", "LabelCijfer", 34,
 		Vector2(KOLOM_MAAT.x * 0.5 + 34.0, KOLOM_CIJFER_Y - 4.0), Vector2(56, 40))
@@ -378,7 +392,7 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	bonus.visible = false
 	kolom.add_child(bonus)
 	_bonus_labels.append(bonus)
-	return {"waarde": waarde, "naam": naam_label, "plus": plus_knop}
+	return {"waarde": waarde, "naam": naam_label, "plus": plus_knop, "min": min_knop}
 
 
 func _control(naam: String, pos: Vector2, maat: Vector2) -> Control:
@@ -416,15 +430,15 @@ func _label(naam: String, variant: String, grootte: int, pos: Vector2, maat: Vec
 	return l
 
 
-func _knop(naam: String, variant: String, pos: Vector2) -> Button:
+func _knop(naam: String, variant: String, pos: Vector2, maat: Vector2 = KNOP_MAAT) -> Button:
 	var b := Button.new()
 	b.name = naam
 	b.theme_type_variation = variant
 	b.text = ""
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = KNOP_MAAT
+	b.custom_minimum_size = maat
 	b.position = pos
-	b.size = KNOP_MAAT
+	b.size = maat
 	return b
 
 
@@ -530,7 +544,7 @@ func _adjust_stat(field: StringName, delta: int) -> void:
 		# +stat: haal een punt weg bij de grootste andere stat (>1).
 		var donor := _biggest_other(field, 1)
 		var cap: int = data.budget - 2 * Constants.MIN_STAT
-		# Beer: Speed-limiet bij definitie.
+		# Beer: stamina-limiet bij definitie (knop heet nog speed_max).
 		if field == &"stamina" and data.speed_max > 0:
 			cap = mini(cap, data.speed_max)
 		if donor != &"" and int(data.get(field)) < cap:

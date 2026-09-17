@@ -2360,6 +2360,24 @@ func _ready() -> void:
 			print("[DEFINE] klik op kaart 0: bovenop=%s omhoog=%.0f px schaal=%.2f (%s)" % [
 				str(kboven), ky_voor - kdoel.position.y, kdoel.scale.x / CardHand.KAART_SCHAAL,
 				"PASS" if kboven and kdoel.position.y < ky_voor - 60.0 else "FAIL"])
+			# De min-knop (17 september): een echte klik erop haalt een punt van HP af
+			# (het gaat naar de kleinste andere stat), daarna zet de plus het terug.
+			var kmin: Button = kdoel.find_child("HpMinus", true, false)
+			var kplus: Button = kdoel.find_child("HpPlus", true, false)
+			if kmin != null and kplus != null:
+				var hp_voor: int = kdoel.data.hp
+				var kmin_punt: Vector2 = kmin.get_global_transform() * (kmin.size * 0.5)
+				await _sc_muis(kmin_punt, true)
+				await _sc_muis(kmin_punt, false)
+				var hp_na_min: int = kdoel.data.hp
+				var kplus_punt: Vector2 = kplus.get_global_transform() * (kplus.size * 0.5)
+				await _sc_muis(kplus_punt, true)
+				await _sc_muis(kplus_punt, false)
+				print("[DEFINE] min-knop: hp %d -> %d -> %d (min %.0f px onder de plus, %.0f breed) (%s)" % [
+					hp_voor, hp_na_min, kdoel.data.hp, kmin.position.y - (kplus.position.y + kplus.size.y), kmin.size.x,
+					"PASS" if hp_na_min == hp_voor - 1 and kdoel.data.hp == hp_voor and kmin.size.x < kplus.size.x else "FAIL"])
+			else:
+				print("[DEFINE] FOUT: geen min- of plus-knop gevonden op kaart 0")
 		if "focus" in args and dviews.size() >= 2:
 			var doel: CardView = dviews[1]
 			var y_voor: float = doel.position.y

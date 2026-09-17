@@ -1,5 +1,20 @@
 # Spelregels — CHANGELOG
 
+## Terminologie — 17 september 2026 (stamina, geen speed; geen regelwijziging)
+
+*Max: "het is belangrijk, de term is stamina niet speed. Dat moet overal
+ook goed worden meegenomen."*
+
+De tweede kaartstat heet **stamina**. Alle teksten in het spel (kaart,
+HUD, onthulscherm, uitleg, factie-pro/con) en de docs die het spel
+beschrijven (spelregels-v4.2.md, README, CLAUDE.md, UI-SPEC,
+CARD-DESIGN-BRIEF, MASTERBOUWPLAN) zeggen dat nu. Oudere entries in dit
+bestand en spelregels-v4.1.md blijven "Speed" zeggen: historie. In code
+blijven de knoppen `speed_max`, `cav_speed_bonus` en `speed_bonus` heten
+(regels-bestanden en saves). Op de kaart is de min-knop terug (onder de
+plus, kleiner): plus haalt een punt bij de grootste andere stat weg, min
+geeft het aan de kleinste.
+
 ## 4.3.6 — 16 september 2026 (de ruiter krijgt +2 stamina en +2 attack, in plaats van minstens 2)
 
 *Besluit Max: "het is plus, dus als ik een cavalry een 1 atk kaart geef dan

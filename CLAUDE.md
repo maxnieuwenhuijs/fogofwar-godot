@@ -27,10 +27,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   | factie | kaarten | budget | leger [inf,cav,art] | perk |
   |---|---|---|---|---|
   | Varken (enum MENS) | 3 | 7 | [11,5,3] | - allrounder |
-  | Muis | 5 | 5 | [16,4,0] | +1 Speed op elke pion, loopt door eigen pionnen |
+  | Muis | 5 | 5 | [16,4,0] | +1 stamina op elke pion, loopt door eigen pionnen |
   | Leeuw | 2 | 8 | [12,4,2] | artilleriedracht 7 |
-  | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-Speed max 4 |
-  | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 Speed en springt over vijanden |
+  | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-stamina max 4 |
+  | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 stamina en springt over vijanden |
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
 
   **Startcompensatie (C11-`budget_bonus`, geen kaartbudget):** Muis +4 punten,
@@ -111,6 +111,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   op, ook die van de vijand (`PawnView.wind_richting`, geloot in
   `game._loot_wind`; online uit het match-id zodat beide stoelen dezelfde
   wind zien; puur visueel, geen staat). Controle: `-- windcheck [factie]`.
+- **De stat heet STAMINA, niet speed (Max, 17 september: "het is belangrijk,
+  de term is stamina niet speed, dat moet overal goed worden meegenomen").**
+  Elke tekst die de speler ziet (kaart, HUD, onthulscherm, uitleg,
+  factie-pro/con) en elke doc die het spel beschrijft zegt stamina. In CODE
+  heten de knoppen nog `speed_max`, `cav_speed_bonus`, `speed_bonus` en het
+  icoon `stat-speed`/`speed.png`: die zitten in regels-bestanden en saves,
+  dus die blijven; schrijf in commentaar en teksten toch stamina. De
+  CHANGELOG en spelregels-v4.1.md zijn historie en blijven zoals ze waren.
 - **Regelversies zijn heilig.** 4.1.10-hr = het huidige spel; 4.2.0 = de
   campagne-economie, config-gated door het `campaign`-blok (zonder blok speelt
   álles byte-identiek 4.1.x). Spec: `docs/spelregels-v4.2.md` (Deel A = 4.1,
@@ -860,7 +868,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   twee lagen dekken: `CpZegel2`), op 0,47 in plaats van 0,43 en met een
   grote "CP" (44, donkere rand). Midden 858 (was 871), zodat de grote
   versie boven de onderlijst van het frame (941) blijft. `-- define cp`
-  zet een CP-punt in en meet per kaart zegel-staat, maat en alpha. **De emblemen zijn
+  zet een CP-punt in en meet per kaart zegel-staat, maat en alpha. **De
+  min-knop is terug (17 september, Max: "plaats die onder het plusje met
+  wat afstand en kleiner"):** `KnopMin` 56 px op `KOLOM_MIN_Y` 344, de plus
+  88 px op 248, kolom 170 x 408; de min geeft het punt aan de kleinste
+  andere stat (`_adjust_stat`, delta -1; het besluit van 3 september
+  "alleen plus" is hiermee terug gedraaid). `-- define klik` klikt echt op
+  de min en de plus van kaart 0 (hp 3 -> 2 -> 3). **De emblemen zijn
   de duo-gravures** (big bro met kleine broertje) uit
   `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
   `python tools/verwerk_emblemen.py` knipt en schaalt ze naar

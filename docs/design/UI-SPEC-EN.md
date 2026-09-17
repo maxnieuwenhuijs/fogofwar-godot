@@ -257,7 +257,7 @@ The 6 faction emblems and the ~12 quick-chat chips are separate deliverables
 | # | id | Icon | Suggestion | Used in |
 |---|---|---|---|---|
 | 1 | `stat-hp` | HP | heart or small shield | cards, stat chips, tuner |
-| 2 | `stat-speed` | Speed | boot or winged spur | cards, stat chips |
+| 2 | `stat-speed` | Stamina (the id and file keep the old name) | boot or winged spur | cards, stat chips |
 | 3 | `stat-attack` | Attack | sabre or clenched fist | cards, stat chips |
 
 ### B. Resources & status

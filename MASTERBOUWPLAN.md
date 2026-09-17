@@ -176,7 +176,7 @@ Elke stap laat de volledige bestaande testsuite + de UI groen.
      doc): opmaakbare stamina (stap 1 / melee 1 / schot 1 / charge stappen+1; terugslag & Wolf-stap
      gratis), artillerie 1 actie/beurt met vaste dracht 6 (+1 Leeuw) en dode zone 1, infanterieschot
      afstand exact 2 met **volle** Attack, terugslag {inf 1, cav 2, art 0}, cav springt over eigen
-     pionnen (Wolf-cav ook over vijandelijke inf), Muis +1 Speed doctrine-breed, Wolf-cav +1 Speed
+     pionnen (Wolf-cav ook over vijandelijke inf), Muis +1 stamina doctrine-breed, Wolf-cav +1 stamina
      (die perk zat oorspronkelijk op Vos; sinds C19 staat hij op +2 bij Wolf),
      doctrine-comps zoals `DOCTRINE_DATA` (**besluit Max juli 2026: Muis wordt [18,4,0]** — het BIG
      BRO-besluit van 6 juli wordt in F0.0 doorgevoerd, arena-hermeting in F1.6; zie §15.1;

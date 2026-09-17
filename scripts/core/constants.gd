@@ -76,7 +76,7 @@ const DOCTRINE_DATA: Dictionary = {
 		"move_through_own": true, "hp_bonus": 0, "speed_max": 0, "speed_bonus": 1,
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
-		"pro": "De meeste kaarten van het spel, +1 Speed op elke muis, beweegt door eigen pionnen (zwerm)",
+		"pro": "De meeste kaarten van het spel, +1 stamina op elke muis, beweegt door eigen pionnen (zwerm)",
 		"con": "Het laagste kaartbudget: zwakke stats, en geen kanonnen",
 	},
 	Doctrine.LEEUW: {
@@ -93,7 +93,7 @@ const DOCTRINE_DATA: Dictionary = {
 		"wolf_step": false, "hidden_link": false,
 		"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
 		"pro": "Elke koppeling gratis +1 HP: pionnen waar niets doorheen komt",
-		"con": "Kaart-Speed gaat nooit boven 4: traag over het bord",
+		"con": "Kaart-stamina gaat nooit boven 4: traag over het bord",
 	},
 	Doctrine.WOLF: {
 		"name": "Wolf", "cards": 3, "budget": 7, "comp": [11, 8, 3],

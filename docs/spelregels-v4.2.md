@@ -91,8 +91,9 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
   ronde overslaan; de tegenstander gaat alleen door. Eénmalig, simultaan en
   blind (commit-gate: pas door als iedereen die moet, binnen is).
   `Validator.expected_define_count, Reducer._check_define_gate`
-- Een kaart heeft **HP / Speed / Aanval**: elke stat ≥ 1 en de som **exact** het
-  doctrine-budget (5 t/m 8, zie §11). Beer: Speed ≤ 4 (`speed_max`, constants.gd:92 —
+- Een kaart heeft **HP / Stamina / Aanval** (de stat heet stamina, niet speed;
+  Max, 17 september): elke stat ≥ 1 en de som **exact** het
+  doctrine-budget (5 t/m 8, zie §11). Beer: stamina ≤ 4 (`speed_max`, constants.gd:92 —
   het stond hier als 3, maar C13 heeft het op 29 juli op 4 gezet). Eén ongeldige kaart verwerpt de hele
   indiening. Hoogst mogelijke losse stat = budget − 2. `Card.gd:22-27`
 - Kaarten zijn **typeloos**: elke kaart mag op elk eigen pion-type gekoppeld
@@ -111,7 +112,7 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
   kaarten (n = aantal). 0 kaarten of budget ≤ 3 → bod 0. Genormaliseerd over
   doctrines: alles-op-max geeft 1.0. `Rules.gd:442-449`
 - **Initiatief:** hoogste Aanval-bod wint (ε = 0.000001). Gelijk → hoogste
-  Speed-bod. Ook gelijk → in cyclus 1/ronde 1 Speler 1, anders de vorige
+  stamina-bod. Ook gelijk → in cyclus 1/ronde 1 Speler 1, anders de vorige
   initiatiefhouder. Volledig deterministisch; er is geen loting en geen
   steen-papier-schaar. `Rules.gd:453-485`
 - Initiatief wordt elke ronde opnieuw berekend; de houder van ronde 3 begint de
@@ -126,7 +127,7 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
   van jou + levend + zonder kaart. Een pion draagt maximaal 1 kaart per cyclus.
   `GameSession.gd:147-161`
 - **Effect:** pion wordt actief; HP = kaart-HP (+1 Beer), stamina-voorraad =
-  kaart-Speed (+1 Muis; +2 Wolf-cavalerie), Aanval = kaart-Aanval. Bonussen
+  kaart-stamina (+1 Muis; +2 Wolf-cavalerie), Aanval = kaart-Aanval. Bonussen
   vallen buiten het budget. `Pawn.gd:28-36, GameSession.gd:162-168`
 - **Staartkoppelen:** de beurt wisselt alleen naar een speler mét koppelwerk
   (ongekoppelde kaart uit deze ronde + vrije pion); anders koppel je door.
@@ -178,7 +179,7 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
   en er een vrij buurvak is. Zolang de stap openstaat is elke andere actie
   geblokkeerd (zetten of expliciet overslaan). Vervalt bij cyclus-reset. Nooit na
   schoten. `Rules.gd:230-245, GameSession.gd:322-360`
-- **Charge (alleen cavalerie):** 0..Speed stappen + optionele melee; minimaal
+- **Charge (alleen cavalerie):** 0..stamina stappen + optionele melee; minimaal
   1 stap óf een aanval. Kosten = stappen (+1 bij aanval), vooraf volledig te
   betalen; de actie is atomair (ongeldig = er gebeurt niets). De melee-resolutie
   is identiek aan een gewone melee. `Rules.gd:150-190`
@@ -190,7 +191,7 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
   schiet, voor 1). Kost 1 stamina. `Rules.gd:260-263,284-308, constants.gd:18-19`
 - **Artillerie:** rechte lijn, afstand **2 t/m 6** (Leeuw: t/m 7). Dode zone:
   afstand 1 nooit beschietbaar én een pion op afstand 1 blokkeert de hele lijn.
-  Schade = volle Aanval, kost 1 stamina. Speed telt níet mee voor de dracht.
+  Schade = volle Aanval, kost 1 stamina. Stamina telt níet mee voor de dracht.
   `Rules.gd:288-291, constants.gd:20-22,74`
 - Cavalerie schiet nooit. `Rules.gd:260-266`
 - **Vuurlijn:** alleen de eerste pion in de lijn is raakbaar; alles (ook eigen
@@ -208,10 +209,10 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 | Doctrine (display) | Kaarten/ronde | Budget | Leger [inf,cav,art] | Perks |
 |---|---|---|---|---|
 | **Varken** (enum MENS) | 3 | 7 | [11,5,3] = 19 | geen — allrounder |
-| **Muis** | **5** | 5 | [16,4,0] = 20 | +1 Speed op elke koppeling; beweegt door eigen pionnen (zwerm) |
+| **Muis** | **5** | 5 | [16,4,0] = 20 | +1 stamina op elke koppeling; beweegt door eigen pionnen (zwerm) |
 | **Leeuw** | 2 | **8** | [12,4,2] = 18 | artilleriedracht +1 (7) |
-| **Beer** | 3 | 7 | [19,3,0] = 22 | +1 HP op elke koppeling; kaart-Speed max 4 |
-| **Wolf** | 3 | 7 | [11,8,3] = 22 | gratis stap na elke melee; **cavalerie +2 Speed**; cav springt over vijandelijke infanterie |
+| **Beer** | 3 | 7 | [19,3,0] = 22 | +1 HP op elke koppeling; kaart-stamina max 4 |
+| **Wolf** | 3 | 7 | [11,8,3] = 22 | gratis stap na elke melee; **cavalerie +2 stamina**; cav springt over vijandelijke infanterie |
 | **Krokodil** (enum VOS) | 3 | 6 | [13,5,3] = 21 | verborgen koppeling |
 
 Krokodil krijgt sinds C20 (9 augustus) **+3 startpunten** compensatie via

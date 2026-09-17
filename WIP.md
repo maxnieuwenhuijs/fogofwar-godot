@@ -265,6 +265,35 @@ met venster (`_shot_beurtlicht.png` bekeken: drie warme kegels op de
 pionnen met stamina over, de rest donker). uispel 777 a6677ac8
 ongewijzigd, herstelcheck 777 en resumecheck 777 1 nul verschillen.
 
+## 17 september -- de min-knop terug, en de stat heet stamina
+
+Max: "voeg ook het minnetje weer terug, plaats die onder het plusje met wat
+afstand en kleiner. En het is belangrijk: de term is stamina, niet speed.
+Dat moet overal ook goed worden meegenomen."
+
+**Min-knop.** `KnopMin` (56 px) onder de plus (88 px) met 8 px ertussen; de
+kolom is 408 hoog (was 392) en alles erin schuift iets op (icoon 70 op 54,
+lijn 130, cijfer 96 vanaf 142, plus 248, min 344); de CP-zegel past er nog
+onder (778). De min-functies bestonden nog (het punt gaat naar de
+kleinste andere stat); `_buttons` kent nu zes knoppen, dus ze verdwijnen
+samen met de plus zodra de kaart niet meer bewerkbaar is. Het besluit van
+3 september ("alleen plus") is hiermee teruggedraaid.
+
+**Stamina.** Alle teksten die de speler ziet: `i18n/strings.csv` en de
+fragmenten (STAMINA, CARD_STAT_SPEED = "STAMINA", DOCTRINE_1_PRO,
+DOCTRINE_3_CON, HUD_DEFINE_LEGEND, PHASE_REVEAL_BODY/LINE, REVEAL_UI_BOD,
+vier HELP-teksten), de pro/con-regels in `constants.gd`, en de docs die
+het spel beschrijven (spelregels-v4.2.md, README, CLAUDE.md, UI-SPEC,
+CARD-DESIGN-BRIEF, MASTERBOUWPLAN). De vertalingen opnieuw gebouwd
+(`--import`, beide `.translation` mee). Code-sleutels blijven (`speed_max`,
+`cav_speed_bonus`, `speed_bonus`, `stat-speed`, `speed.png`): die zitten in
+regels-bestanden en saves. CHANGELOG en spelregels-v4.1.md zijn historie.
+
+**Checks.** `-- define klik cp`: kolommen 56..590 binnen het kader, klik-lift
+109 px, min-knop klik hp 3 -> 2 -> 3 (8 px onder de plus, 56 breed), CP-zegel
+PASS; `-- carddist` ongewijzigd; `-- uicheck` PASS; UiAssetsTests groen.
+Screenshot bekeken: STAMINA op de kaart, min klein onder de plus.
+
 ## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
 
 Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van

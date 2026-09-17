@@ -10,7 +10,7 @@ bewust maar één regelset (besluit C17).
 ## Kern van het spel
 
 - **Kaart-gedreven activatie**: per cyclus definieer je blind kaarten
-  (HP / Speed / Aanval, som = je budget) en koppel je ze aan pionnen.
+  (HP / Stamina / Aanval, som = je budget) en koppel je ze aan pionnen.
   Pionnen zonder kaart "slapen" en sterven aan één treffer.
 - **Drie eenheidstypes**: infanterie (melee + schot op afstand 2), cavalerie
   (charge: lopen + slaan in één beurt, springt over eigen pionnen) en artillerie
@@ -25,10 +25,10 @@ bewust maar één regelset (besluit C17).
   | Factie | Kaarten | Budget | Leger [inf,cav,art] | Perk |
   |---|---|---|---|---|
   | Varken | 3 | 7 | 11/5/3 | allrounder, geen zwaktes |
-  | Muis | 5 | 5 | 16/4/0 | +1 Speed op elke pion, loopt door eigen pionnen |
+  | Muis | 5 | 5 | 16/4/0 | +1 stamina op elke pion, loopt door eigen pionnen |
   | Leeuw | 2 | 8 | 12/4/2 | artilleriedracht 7 |
-  | Beer | 3 | 7 | 19/3/0 | +1 HP per koppeling, maar kaart-Speed max 4 |
-  | Wolf | 3 | 7 | 11/8/3 | gratis stap na elke melee, cavalerie +2 Speed |
+  | Beer | 3 | 7 | 19/3/0 | +1 HP per koppeling, maar kaart-stamina max 4 |
+  | Wolf | 3 | 7 | 11/8/3 | gratis stap na elke melee, cavalerie +2 stamina |
   | Krokodil | 3 | 6 | 13/5/3 | koppeling blijft geheim tot de eerste schade |
 
   Deze getallen staan in het `doctrines`-blok van
