@@ -1850,10 +1850,13 @@ func _spawn_blood_spurt(origin: Vector3, dir: Vector3, amount: int) -> void:
 
 ## Grove bloedmist (kanon): halfdoorzichtige donkerrode flarden die uitzetten,
 ## opzij/omhoog driften en in ~0.7s vervagen. Puur visueel, ruimt zichzelf op.
-## power = de "bloedmist"-knop (0 = uit).
-func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
+## power = de "bloedmist"-knop (0 = uit). `schaal` (17 september, Max: "de
+## bloedwolk bij de melee iets kleiner dan die van het kanon") krimpt de
+## wolk als geheel: minder flarden, kleiner, ze reiken minder ver en groeien
+## minder; 1 = de kanon-wolk.
+func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float, schaal: float = 1.0) -> void:
 	var parent := get_parent()
-	if parent == null or power <= 0.0:
+	if parent == null or power <= 0.0 or schaal <= 0.0:
 		return
 	var blast := dir
 	blast.y = 0.0
@@ -1865,6 +1868,7 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 	var mist_tex := _blood_texture("blood_mist")
 	var count := int(clampf(2.0 + 1.5 * power, 2.0, 6.0)) if mist_tex != null \
 		else int(clampf(4.0 + 3.0 * power, 3.0, 12.0))
+	count = maxi(2, int(round(count * schaal)))
 	for i in count:
 		var puff := MeshInstance3D.new()
 		var mat := StandardMaterial3D.new()
@@ -1872,7 +1876,7 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		if mist_tex != null:
 			var q := QuadMesh.new()
-			var qs := randf_range(0.5, 0.85) * (0.7 + 0.3 * power)
+			var qs := randf_range(0.5, 0.85) * (0.7 + 0.3 * power) * schaal
 			q.size = Vector2(qs, qs)
 			puff.mesh = q
 			mat.albedo_texture = _blood_texture("blood_mist")
@@ -1883,7 +1887,7 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 				mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)  # gespiegeld = extra variatie
 		else:
 			var m := SphereMesh.new()
-			var r := randf_range(0.10, 0.22) * (0.7 + 0.3 * power)
+			var r := randf_range(0.10, 0.22) * (0.7 + 0.3 * power) * schaal
 			m.radius = r
 			m.height = r * 2.0
 			m.radial_segments = 12
@@ -1900,8 +1904,8 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 		var t := float(i) / maxf(float(count - 1), 1.0)
 		puff.global_position = center - blast * 0.25 + blast * (0.5 * t) \
 			+ Vector3(randf() - 0.5, randf() * 0.5, randf() - 0.5) * 0.15
-		var reach: float = fx("mist_travel", 1.6)
-		var dist := (0.3 + reach * t) * randf_range(0.85, 1.15)
+		var reach: float = fx("mist_travel", 1.6) * schaal
+		var dist := (0.3 * schaal + reach * t) * randf_range(0.85, 1.15)
 		var drift := blast * dist \
 			+ Vector3((randf() - 0.5) * (0.15 + 0.5 * t), randf_range(0.1, 0.35), (randf() - 0.5) * (0.15 + 0.5 * t))
 		var life := randf_range(0.45, 0.7) + 0.3 * t
@@ -1911,6 +1915,7 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float) -> void:
 		tw.tween_property(puff, "global_position", puff.global_position + drift, life) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		var groei := (randf_range(1.7, 2.4) if mist_tex != null else randf_range(2.2, 3.2)) * (1.0 + 0.5 * t)
+		groei = 1.0 + (groei - 1.0) * (0.6 + 0.4 * schaal)
 		tw.tween_property(puff, "scale", Vector3.ONE * groei, life) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life) \
@@ -2270,12 +2275,16 @@ func _spawn_slice(dir: Vector3, strength: float, kind: String) -> bool:
 		parts_root.queue_free()
 		return false   # vlak raakte niets: geen halve dood
 	_zet_vlees_alle(parts_root)  # de ongesneden delen: rood door hun open uiteinden, spatten
-	# Bloed op de snede: de kanon-mist en druppels, en een spuit uit beide helften.
+	# Bloed op de snede: de kanon-mist en druppels, en een spuit uit beide
+	# helften. De wolk is kleiner dan bij het kanon (17 september, Max: "de
+	# bloedwolk bij de melee iets kleiner dan de kanon-bloedwolk"): knop
+	# `blood_mist_melee` (0,55 x de kanon-wolk, tab Bloed).
 	var c_w: Vector3 = parts_root.global_transform * c
 	var mist: float = fx("blood_mist", 1.0)
-	if mist > 0.0:
-		_spawn_blood_mist(c_w, dir, mist)
-		_spawn_blood_burst(c_w, int(14.0 * mist), dir)
+	var melee_schaal: float = clampf(fx("blood_mist_melee", 0.55), 0.0, 2.0)
+	if mist > 0.0 and melee_schaal > 0.0:
+		_spawn_blood_mist(c_w, dir, mist, melee_schaal)
+		_spawn_blood_burst(c_w, int(14.0 * mist * melee_schaal), dir)
 	_spawn_blood_burst(c_w, int(12.0 * fx("blood_burst", 1.0)))
 	_spawn_blood_spurt(c_w, (Vector3.UP + dir * 0.6).normalized(), int(8.0 * fx("blood_spurt", 1.0)))
 	_spawn_blood_spurt(c_w, (Vector3.UP * 0.4 + dir).normalized(), int(6.0 * fx("blood_spurt", 1.0)))

@@ -55,6 +55,7 @@ const FX_DEFS: Array = [
 	{"cat": "bloed", "key": "blood_burst", "label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_spurt", "label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "blood_mist", "label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	{"cat": "bloed", "key": "blood_mist_melee", "label": "melee-wolk (x kanon)", "min": 0.0, "max": 2.0, "step": 0.01, "def": 0.55},
 	{"cat": "bloed", "key": "mist_travel", "label": "mist-dracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
 	{"cat": "bloed", "key": "drop_fall_time", "label": "druppel-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "bloed", "key": "drop_size", "label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
