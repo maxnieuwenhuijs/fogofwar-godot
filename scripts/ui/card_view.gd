@@ -38,29 +38,30 @@ const SIERLIJN_MAAT := Vector2(295, 24)
 ## van Card_specs_holder.png op eigen maat, niet meer de plaat op 1,14.
 ## Drie kolommen van 170 met 12 ertussen = 534, binnen het kaartframe
 ## (de lijst loopt tot x 47 en vanaf 599).
-## 17 september: de min-knop is terug (Max: "plaats die onder het plusje met
-## wat afstand en kleiner"), dus de kolom is 408 hoog: plus 88 op 248, min 56
-## op 344.
-const KOLOM_MAAT := Vector2(170, 408)
+## 17 september: de min-knop is terug, en (Max, later die dag) "het plusje
+## weer boven het getal en het minnetje eronder, zelfde grootte knoppen":
+## plus 72 op 144, cijfer (88, regelhoogte ~117) vanaf 218, min 72 op 340;
+## kolom 420 hoog (onderkant 772), de CP-zegel begint op 778.
+const KOLOM_MAAT := Vector2(170, 420)
 const SPECS_NAAM_MAAT := Vector2(154, 44)
 const SPECS_LIJN_MAAT := Vector2(152, 17)
 const CP_MAAT := Vector2(318, 339)
 const ONTHULD_MAAT := Vector2(210, 63)
 const LINT_MAAT := Vector2(72, 247)
 const GEKOPPELD_MAAT := Vector2(187, 247)
-const KNOP_MAAT := Vector2(88, 88)
-const MIN_KNOP_MAAT := Vector2(56, 56)
-const STAT_ICOON := 70.0
+const KNOP_MAAT := Vector2(72, 72)   # plus en min even groot
+const STAT_ICOON := 64.0
+const KOLOM_NAAM_GROOTTE := 24       # HP / STAMINA / ATTACK (Max: "mag kleiner")
 # Plaatsing binnen een stat-kolom (contract par. 4). Het icoon staat sinds
 # 16 september ruim boven het cijfer (Max: "geef de icon meer ruimte").
-const KOLOM_NAAM_Y := 8.0
+const KOLOM_NAAM_Y := 6.0
 const KOLOM_ICOON_Y := 54.0
-const KOLOM_LIJN_Y := 130.0
-const KOLOM_CIJFER_Y := 142.0
-const KOLOM_CIJFER_HOOGTE := 100.0
-const KOLOM_CIJFER_GROOTTE := 96
-const KOLOM_KNOP_Y := 248.0
-const KOLOM_MIN_Y := 344.0
+const KOLOM_LIJN_Y := 124.0
+const KOLOM_KNOP_Y := 144.0      # de plus, boven het cijfer
+const KOLOM_CIJFER_Y := 218.0
+const KOLOM_CIJFER_HOOGTE := 118.0   # een Label groeit toch tot zijn regelhoogte (~117 bij 88)
+const KOLOM_CIJFER_GROOTTE := 88
+const KOLOM_MIN_Y := 340.0       # de min, onder het cijfer
 # Selectie en koppeling.
 const GESELECTEERD_SCHAAL := 1.04
 const GEKOPPELD_DIM := 0.72
@@ -360,7 +361,7 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 	var naam := _rect("Naam", UiAssets.kaart("specs_naam"),
 		Vector2((KOLOM_MAAT.x - SPECS_NAAM_MAAT.x) * 0.5, KOLOM_NAAM_Y), SPECS_NAAM_MAAT)
 	kolom.add_child(naam)
-	var naam_label := _label("NaamTekst", "", 30, Vector2.ZERO, SPECS_NAAM_MAAT)  # standaard Label = ivoor
+	var naam_label := _label("NaamTekst", "", KOLOM_NAAM_GROOTTE, Vector2.ZERO, SPECS_NAAM_MAAT)  # standaard Label = ivoor
 	naam.add_child(naam_label)
 	var icoon := UiAssets.icoon_rect(icoon_id, STAT_ICOON, UiAssets.INKT)
 	icoon.name = "Icoon"
@@ -377,10 +378,10 @@ func _bouw_kolom(voorvoegsel: String, icoon_id: String, x: float) -> Dictionary:
 		Vector2((KOLOM_MAAT.x - KNOP_MAAT.x) * 0.5, KOLOM_KNOP_Y))
 	kolom.add_child(plus_knop)
 	_uniek(plus_knop)
-	# De min: kleiner, onder de plus met wat afstand (17 september). Geeft het
-	# punt aan de kleinste andere stat (_adjust_stat, delta -1).
+	# De min: even groot, onder het cijfer (17 september). Geeft het punt aan
+	# de kleinste andere stat (_adjust_stat, delta -1).
 	var min_knop := _knop(voorvoegsel + "Minus", "KnopMin",
-		Vector2((KOLOM_MAAT.x - MIN_KNOP_MAAT.x) * 0.5, KOLOM_MIN_Y), MIN_KNOP_MAAT)
+		Vector2((KOLOM_MAAT.x - KNOP_MAAT.x) * 0.5, KOLOM_MIN_Y))
 	kolom.add_child(min_knop)
 	_uniek(min_knop)
 	# de factie-bonus: klein en goud, rechtsboven naast het cijfer

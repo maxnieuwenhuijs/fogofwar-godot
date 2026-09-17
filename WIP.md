@@ -294,6 +294,15 @@ regels-bestanden en saves. CHANGELOG en spelregels-v4.1.md zijn historie.
 PASS; `-- carddist` ongewijzigd; `-- uicheck` PASS; UiAssetsTests groen.
 Screenshot bekeken: STAMINA op de kaart, min klein onder de plus.
 
+**Even later, Max: "doe het plusje weer boven het getal en het minnetje
+eronder, zelfde grootte knoppen; font hp/stamina/attack mag kleiner."**
+Kolom 170 x 420: naamplaat op 6 (font 30 -> 24), icoon 64 op 54, sierlijn
+124, plus 72 op 144, cijfer 88 vanaf 218, min 72 op 340; onderkant 772, de
+CP-zegel begint op 778. Les: een Label groeit tot zijn regelhoogte (~117 px
+bij font 88), ook als je hem 92 hoog zet; de eerste versie zette de min
+daardoor over het cijferblok heen (de check meet nu de volgorde
+plus/cijfer/min). `-- define klik cp` PASS, uicheck PASS.
+
 ## 16 september -- Spits bloedstraaltje bij een overleefde klap, met het model mee
 
 Max: "bij een hit ook een klein spits bloedstraaltje met de beweging mee van

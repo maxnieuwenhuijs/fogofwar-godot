@@ -869,12 +869,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   grote "CP" (44, donkere rand). Midden 858 (was 871), zodat de grote
   versie boven de onderlijst van het frame (941) blijft. `-- define cp`
   zet een CP-punt in en meet per kaart zegel-staat, maat en alpha. **De
-  min-knop is terug (17 september, Max: "plaats die onder het plusje met
-  wat afstand en kleiner"):** `KnopMin` 56 px op `KOLOM_MIN_Y` 344, de plus
-  88 px op 248, kolom 170 x 408; de min geeft het punt aan de kleinste
-  andere stat (`_adjust_stat`, delta -1; het besluit van 3 september
-  "alleen plus" is hiermee terug gedraaid). `-- define klik` klikt echt op
-  de min en de plus van kaart 0 (hp 3 -> 2 -> 3). **De emblemen zijn
+  min-knop is terug (17 september, Max: "het plusje weer boven het getal
+  en het minnetje eronder, zelfde grootte knoppen; font hp/stamina/attack
+  mag kleiner"):** in de kolom (170 x 420) naamplaat (font 24), icoon 64,
+  sierlijn, PLUS 72 op `KOLOM_KNOP_Y` 144, cijfer (88) vanaf 218, MIN 72 op
+  `KOLOM_MIN_Y` 340; een Label groeit tot zijn regelhoogte (~117 bij 88),
+  reken daarmee. De min geeft het punt aan de kleinste andere stat
+  (`_adjust_stat`, delta -1; het besluit van 3 september "alleen plus" is
+  hiermee teruggedraaid). `-- define klik` klikt echt op de min en de plus
+  van kaart 0 (hp 3 -> 2 -> 3) en meet de volgorde plus/cijfer/min. **De emblemen zijn
   de duo-gravures** (big bro met kleine broertje) uit
   `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
   `python tools/verwerk_emblemen.py` knipt en schaalt ze naar

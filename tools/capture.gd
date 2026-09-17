@@ -2373,9 +2373,15 @@ func _ready() -> void:
 				var kplus_punt: Vector2 = kplus.get_global_transform() * (kplus.size * 0.5)
 				await _sc_muis(kplus_punt, true)
 				await _sc_muis(kplus_punt, false)
-				print("[DEFINE] min-knop: hp %d -> %d -> %d (min %.0f px onder de plus, %.0f breed) (%s)" % [
-					hp_voor, hp_na_min, kdoel.data.hp, kmin.position.y - (kplus.position.y + kplus.size.y), kmin.size.x,
-					"PASS" if hp_na_min == hp_voor - 1 and kdoel.data.hp == hp_voor and kmin.size.x < kplus.size.x else "FAIL"])
+				# Volgorde in de kolom: plus boven het cijfer, min eronder, even groot.
+				var kcijfer: Control = kdoel.find_child("HpValue", true, false)
+				var volgorde_ok: bool = kcijfer != null and kplus.position.y + kplus.size.y <= kcijfer.position.y \
+					and kcijfer.position.y + kcijfer.size.y <= kmin.position.y and kmin.size == kplus.size
+				print("[DEFINE] min-knop: hp %d -> %d -> %d; plus op %.0f, cijfer %.0f..%.0f, min op %.0f, knoppen %.0f px (%s)" % [
+					hp_voor, hp_na_min, kdoel.data.hp, kplus.position.y,
+					kcijfer.position.y if kcijfer != null else -1.0, (kcijfer.position.y + kcijfer.size.y) if kcijfer != null else -1.0,
+					kmin.position.y, kmin.size.x,
+					"PASS" if hp_na_min == hp_voor - 1 and kdoel.data.hp == hp_voor and volgorde_ok else "FAIL"])
 			else:
 				print("[DEFINE] FOUT: geen min- of plus-knop gevonden op kaart 0")
 		if "focus" in args and dviews.size() >= 2:
