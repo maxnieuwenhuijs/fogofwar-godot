@@ -1,5 +1,29 @@
 # Fog of War — Work In Progress & Context
 
+## 17 september -- Bots trainen op 4.3.6 (ruiter +2/+2)
+
+Max: "staan de nieuwe regels nu ook in de trainer? dat kaarten toevoegen" en
+"de bots moeten hierop getraind worden."
+
+- De regel zelf zat er al in: de trainer speelt op `rules_v42_campaign.json`
+  (draagt `stat_bonus` sinds 3550b3e) en de reducer telt het bij elke
+  koppeling op. Wat er niet in zat: de gewichten (`data/ai_weights_f*.json`,
+  geleerd onder 4.3.5) en de schatting van een GEDEKTE pion in
+  `Agent.reconstruct_state`: die middelde de zichtbare kaarten en telde er
+  niets bij op, dus een verborgen Krokodil-ruiter stond 2 HP (C12
+  `basis_hp`, al sinds juli) en nu ook 2 stamina en 2 attack te laag.
+  Gerepareerd (`f3686cd`): de schatting leest `basis_hp` en `stat_bonus`
+  per type uit de regels mee. Testsuite 2490/0, `-- simcheck` 0
+  afwijkingen (ook mens-vos seed 101).
+- Training gestart (17 september, door Claude op Max' verzoek, geen
+  automatische job): zes trainers, `train 240 6 6 <factie> 0
+  arena/arena_configs/rules_v42_campaign.json`, geminimaliseerde vensters
+  zoals `train_ai.bat`, standby op netstroom uit. Gewichten verversen bij
+  elke adoptie, rapporten in `data/matchup_*.txt` aan het einde van het
+  budget. Daarna: gewichten apart committen ("Trainingsdata: ..."),
+  `golden_sims.json` opnieuw ijken als de bots veranderd zijn, en de
+  `-- uispel`-digest opnieuw meten.
+
 ## 17 september -- Vlees en bloedspatten op alle gibs
 
 Max: "kun je dat rode bloederige bij alle gibs doen, ook bij melee of musket
