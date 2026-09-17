@@ -39,6 +39,8 @@ const FX_DEFS: Array = [
 	{"cat": "gore", "key": "limb_fling_time", "label": "ledemaat-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "gore", "key": "gib_fling_power", "label": "gib-worpkracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	{"cat": "gore", "key": "gib_spin", "label": "gib-tolling", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	# Vlees en spatten op elk brokstuk (17 september, Max: "dat rode bloederige bij alle gibs").
+	{"cat": "gore", "key": "gib_bloed", "label": "bloedspatten op gibs", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.45},
 	# Doormidden (16 september): de sabelhouw snijdt het lijf in twee helften.
 	{"cat": "gore", "key": "slice_kans_sabel", "label": "doormidden-kans (sabel)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.85},
 	{"cat": "gore", "key": "slice_kans_bajonet", "label": "doormidden-kans (bajonet)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
@@ -222,6 +224,69 @@ func _ready() -> void:
 		print("[WOND] %s: %d fout(en)" % ["PASS" if ws_fouten == 0 else "FAIL", ws_fouten])
 		get_tree().quit(1 if ws_fouten > 0 else 0)
 		return
+	if "stompcheck" in OS.get_cmdline_user_args():
+		# Vlees op alle gibs (17 september): een musketdood met een afgerukt
+		# ledemaat (kans op 1 gezet, hoed op 0). Controleert dat het
+		# weggeslingerde ledemaat het vlees-materiaal draagt, dat het lijf
+		# zijn stomp ook rood heeft (de zichtbare lijf-delen dragen vlees) en
+		# dat het levende deel verborgen is. Met venster: _shot_stomp.png.
+		if "closeup" in OS.get_cmdline_user_args():
+			_view_btn.select(1)
+			_apply_camera()
+		await get_tree().create_timer(1.0).timeout
+		var st_fouten := 0
+		if _pawn == null or not is_instance_valid(_pawn) or not ResourceLoader.exists(_pawn._gibs_pad()):
+			print("[STOMP] FOUT: geen pion met gibs-bestand")
+			st_fouten += 1
+		else:
+			PawnView.set_fx("hat_pop_chance", 0.0)
+			PawnView.set_fx("limb_shed_chance", 1.0)
+			PawnView.set_fx("slice_kans_bajonet", 0.0)
+			var st_live_voor: int = 0
+			for mi in _pawn._piece.find_children("*", "MeshInstance3D", true, false):
+				if (mi as MeshInstance3D).visible:
+					st_live_voor += 1
+					if "maten" in OS.get_cmdline_user_args():
+						var m3 := mi as MeshInstance3D
+						print("[STOMP] %s: instantie-aabb %s mesh-aabb %s skelet %s" % [m3.name, str(m3.get_aabb().size), str(m3.mesh.get_aabb().size), str(m3.skeleton)])
+			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), 0.75, "shot")
+			await get_tree().create_timer(0.55).timeout  # het ledemaat laat na 0,1-0,4 s los
+			if not OS.has_feature("headless") and DisplayServer.get_name() != "headless":
+				get_viewport().get_texture().get_image().save_png("res://_shot_stomp.png")
+			var st_live_na := 0
+			var st_live_vlees := 0
+			for mi in _pawn._piece.find_children("*", "MeshInstance3D", true, false):
+				if not (mi as MeshInstance3D).visible:
+					continue
+				st_live_na += 1
+				var sm := (mi as MeshInstance3D).material_override as ShaderMaterial
+				if sm != null and sm.get_shader_parameter("vlees") != null:
+					st_live_vlees += 1
+			var st_gib := 0
+			var st_gib_vlees := 0
+			for n in get_tree().get_nodes_in_group("battlefield_debris"):
+				if n == _pawn or not (n is Node3D) or n is MeshInstance3D:
+					continue
+				for mi in (n as Node).find_children("*", "MeshInstance3D", true, false):
+					if (mi as MeshInstance3D).visible:
+						st_gib += 1
+						var sm2 := (mi as MeshInstance3D).material_override as ShaderMaterial
+						if sm2 != null and sm2.get_shader_parameter("vlees") != null:
+							st_gib_vlees += 1
+			print("[STOMP] lijf-delen zichtbaar %d -> %d (met vlees %d); weggeslingerde gib-delen %d (met vlees %d)" % [
+				st_live_voor, st_live_na, st_live_vlees, st_gib, st_gib_vlees])
+			if st_live_na >= st_live_voor:
+				print("[STOMP] FOUT: er is geen ledemaat van het lijf af")
+				st_fouten += 1
+			if st_live_vlees < st_live_na:
+				print("[STOMP] FOUT: het lijf draagt geen vlees op de stomp (%d van %d delen)" % [st_live_vlees, st_live_na])
+				st_fouten += 1
+			if st_gib < 1 or st_gib_vlees < st_gib:
+				print("[STOMP] FOUT: het weggeslingerde ledemaat draagt geen vlees (%d van %d)" % [st_gib_vlees, st_gib])
+				st_fouten += 1
+		print("[STOMP] %s: %d fout(en)" % ["PASS" if st_fouten == 0 else "FAIL", st_fouten])
+		get_tree().quit(1 if st_fouten > 0 else 0)
+		return
 	if "snijcheck" in OS.get_cmdline_user_args():
 		# Doormidden (16 september): de sabelhouw snijdt het lijf in twee
 		# helften. Controleert dat de gibs in Body_boven / Benen_onder zijn
@@ -258,11 +323,17 @@ func _ready() -> void:
 				var sn_root: Node3D = sn_b.get_parent()
 				var sn_snedes := 0
 				var sn_meshes := 0
+				var sn_vlees := 0
 				for mi in sn_root.find_children("*", "MeshInstance3D", true, false):
 					sn_meshes += 1
 					var sm := (mi as MeshInstance3D).material_override as ShaderMaterial
-					if sm != null and sm.get_shader_parameter("snij_n") != null:
-						sn_snedes += 1
+					if sm != null and sm.get_shader_parameter("vlees") != null:
+						sn_vlees += 1
+						if float(sm.get_shader_parameter("kant")) != 0.0:
+							sn_snedes += 1
+				if sn_vlees != sn_meshes:
+					print("[SNIJ] FOUT: niet elk brokstuk draagt het vlees-materiaal (%d van %d)" % [sn_vlees, sn_meshes])
+					sn_fouten += 1
 				var sn_los := 0
 				for kind in sn_root.get_children():
 					if kind is MeshInstance3D:

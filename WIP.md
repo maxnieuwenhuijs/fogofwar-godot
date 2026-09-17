@@ -1,5 +1,37 @@
 # Fog of War — Work In Progress & Context
 
+## 17 september -- Vlees en bloedspatten op alle gibs
+
+Max: "kun je dat rode bloederige bij alle gibs doen, ook bij melee of musket
+(of kanon wel goed)" en "de kleur heb ik het over". De vlees-binnenkant van
+de snede (16 september) zat alleen op de doorgesneden romp; de andere
+brokstukken droegen de schone teamjas, want een `_gore.png` bestaat voor de
+muis niet. Nu draagt ELK brokstuk het vlees-materiaal (`_zet_vlees`,
+`_zet_vlees_alle`): de kanon-explosie, het afgerukte ledemaat van musket en
+bajonet, de ongesneden delen van de snede, en wat er van het lijf overblijft
+als er een ledemaat af is (`_shed_one`). De gibs zijn niet dichtgemaakt
+(gemeten: romp 542 open randen, elke arm en elk been tientallen), dus door
+elk open uiteinde en door het gat in de schouder kijk je op rood vlees met
+korrel. Daarbovenop bloedspatten op de buitenkant: gladde ruis op twee maten
+(blobs, geen blokjes), drempel via knop `gib_bloed` (0,45; tab Gore), het
+bloed glimt (ruwheid 0,45). `kant` 0 in de shader = niet snijden.
+
+Twee lessen. (1) `get_shader_parameter` geeft null voor een uniform die
+nooit expliciet gezet is: de check zag "0 van 12 met vlees" en, erger,
+`verduister_later` had de gibs nooit donker gemaakt omdat hij op `dim`
+kijkt; `_zet_vlees` zet `vlees` en `dim` nu expliciet. (2) Ruis op de
+VERTEX-positie werd op het geskinde lijf stof: een geskinde mesh rekent zijn
+VERTEX in een andere ruimte dan zijn AABB (instantie en mesh meten allebei
+0,66 hoog, de ruis liep toch honderd keer te fijn). De ruis loopt nu over de
+UV, die is op elk deel 0..1, dus gib en lijf zijn even grof.
+
+Checks: `-- stompcheck` (nieuw, ModelTuner.tscn: musketdood met gedwongen
+ledemaat: 12 -> 9 zichtbare lijf-delen, alle 9 met vlees, 2 weggeslingerde
+gib-delen met vlees, PASS; met venster `_shot_stomp.png`), `-- snijcheck`
+PASS (elk van de 12 delen draagt vlees, 2 snijvlakken), `-- debrischeck`
+PASS, `-- gibshot` (kanon, met venster: rode blobs op hoed en delen, rood
+door de open uiteinden), `-- uispel 777` gelijk.
+
 ## 16 september -- Doormidden: de sabelhouw snijdt het poppetje in tweeën
 
 Max: "en een gibs wolkje en doormidden gesliced het poppetje kan dat?

@@ -1879,6 +1879,7 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	if parts.is_empty():
 		parts_root.queue_free()
 		return false
+	_zet_vlees_alle(parts_root)  # rood door elk open uiteinde, spatten erop (17 september)
 	for part in parts:
 		if randf() < 0.15:
 			_drop_part(part as Node3D)
@@ -1894,12 +1895,20 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 
 # --- Doormidden (16 september) ---------------------------------------------
 
-## Het snijvlak-materiaal: een gib-mesh tekent alleen aan EEN kant van een vlak
-## (in mesh-ruimte) en kleurt zijn achtervlakken als vlees, zodat je in de
-## snede de binnenkant van de romp ziet. Draagt dezelfde haakjes als de
-## cape-shader (`render_mode cull_disabled;`, `uniform float dim`,
-## `ALBEDO = doek * dim;`), zodat verduister_later er zonder meer de
-## doorzicht-variant van bouwt en het lijk donker en doorzichtig wordt.
+## Het vlees-materiaal van de brokstukken (17 september, Max: "dat rode
+## bloederige bij alle gibs, ook bij melee of musket"): een gib-mesh (of de
+## romp van het lijk waar een ledemaat af is) tekent zijn ACHTERVLAKKEN als
+## vlees. De gibs zijn niet dichtgemaakt (de romp heeft 542 open randen, elke
+## arm en elk been tientallen), dus door elk open uiteinde kijk je op de
+## binnenkant en die is rood. Daarbovenop bloedspatten op de buitenkant
+## (`bloed`, knop gib_bloed). Met `kant` 1 of -1 tekent hij bovendien alleen
+## aan EEN kant van een vlak in mesh-ruimte: de snede (doormidden). Draagt
+## dezelfde haakjes als de cape-shader (`render_mode cull_disabled;`,
+## `uniform float dim`, `ALBEDO = doek * dim;`), zodat verduister_later er
+## zonder meer de doorzicht-variant van bouwt en het lijk donker en
+## doorzichtig wordt. De ruis loopt over de UV (0..1 op elk deel), niet over
+## de positie: de gibs staan per bestand op een andere schaal en een
+## geskinde mesh rekent zijn VERTEX in een andere ruimte dan zijn AABB.
 const SNIJ_SHADER := """
 shader_type spatial;
 render_mode cull_disabled;
@@ -1908,29 +1917,60 @@ uniform sampler2D textuur : source_color, hint_default_white;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform vec3 snij_n = vec3(0.0, 1.0, 0.0);   // vlaknormaal in mesh-ruimte
 uniform float snij_d = 0.0;                   // n . p + d = 0
-uniform float kant = 1.0;                     // 1 = de kant waar n heen wijst blijft, -1 = de andere
+uniform float kant = 0.0;                     // 0 = niet snijden; 1 = de kant waar n heen wijst blijft, -1 = de andere
 uniform vec4 vlees : source_color = vec4(0.45, 0.04, 0.04, 1.0);
+uniform float bloed = 0.0;                    // deel van de buitenkant onder bloedspatten (0..1)
 uniform float dim = 1.0;                      // 1 = normaal, lager = lijk (verduister_later)
 
 varying vec3 lpos;
+
+float hash3(vec3 p) {
+	return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}
+
+// Gladde ruis (trilineair tussen de hoekpunten): blobs in plaats van blokjes.
+float ruis(vec3 p) {
+	vec3 i = floor(p);
+	vec3 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = mix(hash3(i), hash3(i + vec3(1.0, 0.0, 0.0)), f.x);
+	float b = mix(hash3(i + vec3(0.0, 1.0, 0.0)), hash3(i + vec3(1.0, 1.0, 0.0)), f.x);
+	float c = mix(hash3(i + vec3(0.0, 0.0, 1.0)), hash3(i + vec3(1.0, 0.0, 1.0)), f.x);
+	float d = mix(hash3(i + vec3(0.0, 1.0, 1.0)), hash3(i + vec3(1.0, 1.0, 1.0)), f.x);
+	return mix(mix(a, b, f.y), mix(c, d, f.y), f.z);
+}
 
 void vertex() {
 	lpos = VERTEX;
 }
 
 void fragment() {
-	if ((dot(snij_n, lpos) + snij_d) * kant < 0.0) {
+	if (kant != 0.0 && (dot(snij_n, lpos) + snij_d) * kant < 0.0) {
 		discard;
 	}
+	// Ruis op de UV, niet op de positie: een geskinde mesh (het lijf) rekent
+	// zijn VERTEX in een andere ruimte dan zijn AABB en werd stof; de UV is
+	// overal 0..1, dus de blobs zijn op een gib en op het lijf even grof.
+	vec3 q = vec3(UV, 0.37);
 	vec3 doek = texture(textuur, UV).rgb * tint.rgb;
+	float nat = 0.0;
 	if (!FRONT_FACING) {
-		// In de snede kijk je op de binnenkant van de mesh: vlees, met wat korrel.
-		float korrel = fract(sin(dot(floor(lpos.xz * 40.0), vec2(12.9898, 78.233))) * 43758.5453);
+		// Door een open uiteinde (of in de snede) kijk je op de binnenkant: vlees, met wat korrel.
+		float korrel = hash3(floor(q * 90.0));
 		doek = vlees.rgb * (0.75 + 0.35 * korrel);
 		NORMAL = -NORMAL;
+		nat = 1.0;
+	} else if (bloed > 0.0) {
+		// Spatten: gladde ruis op twee maten, de grove bepaalt waar de blobs
+		// zitten, de fijne rafelt de rand; `bloed` schuift de drempel.
+		float veld = 0.65 * ruis(q * 7.0) + 0.35 * ruis(q * 19.0);
+		float drempel = 1.0 - bloed;
+		float vlek = smoothstep(drempel - 0.07, drempel + 0.07, veld);
+		doek = mix(doek, vlees.rgb * (0.55 + 0.45 * ruis(q * 45.0)), vlek);
+		nat = vlek;
 	}
 	ALBEDO = doek * dim;
-	ROUGHNESS = 0.85;
+	ROUGHNESS = mix(0.85, 0.45, nat);   // bloed glimt
 }
 """
 
@@ -2080,6 +2120,7 @@ func _spawn_slice(dir: Vector3, strength: float, kind: String) -> bool:
 	if boven.get_child_count() == 0 or onder.get_child_count() == 0:
 		parts_root.queue_free()
 		return false   # vlak raakte niets: geen halve dood
+	_zet_vlees_alle(parts_root)  # de ongesneden delen: rood door hun open uiteinden, spatten
 	# Bloed op de snede: de kanon-mist en druppels, en een spuit uit beide helften.
 	var c_w: Vector3 = parts_root.global_transform * c
 	var mist: float = fx("blood_mist", 1.0)
@@ -2105,6 +2146,19 @@ func _spawn_slice(dir: Vector3, strength: float, kind: String) -> bool:
 ## Zet het snijvlak-materiaal op een gib-mesh: het vlak (root-ruimte) naar de
 ## mesh-ruimte van dit deel (n' = Bᵀn, d' = n·o + d), de teamjas als textuur.
 func _zet_snij(mi: MeshInstance3D, naar_root: Transform3D, n: Vector3, d: float, kant: float) -> void:
+	var sm := _zet_vlees(mi)
+	sm.set_shader_parameter("snij_n", naar_root.basis.transposed() * n)
+	sm.set_shader_parameter("snij_d", n.dot(naar_root.origin) + d)
+	sm.set_shader_parameter("kant", kant)
+
+
+## Het vlees-materiaal op een mesh (gib of lijf-deel): de huidige teamjas als
+## textuur, de binnenkant rood door elk open uiteinde, bloedspatten op de
+## buitenkant (knop gib_bloed). Geeft het materiaal terug (voor de snede).
+static func _zet_vlees(mi: MeshInstance3D) -> ShaderMaterial:
+	var bestaand := mi.material_override as ShaderMaterial
+	if bestaand != null and bestaand.get_shader_parameter("vlees") != null:
+		return bestaand   # al vlees (bv. de romp na een ledemaat en daarna de snede)
 	var sm := ShaderMaterial.new()
 	sm.shader = _snij_shader()
 	var bm := mi.get_active_material(0) as BaseMaterial3D
@@ -2112,10 +2166,25 @@ func _zet_snij(mi: MeshInstance3D, naar_root: Transform3D, n: Vector3, d: float,
 		if bm.albedo_texture != null:
 			sm.set_shader_parameter("textuur", bm.albedo_texture)
 		sm.set_shader_parameter("tint", bm.albedo_color)
-	sm.set_shader_parameter("snij_n", naar_root.basis.transposed() * n)
-	sm.set_shader_parameter("snij_d", n.dot(naar_root.origin) + d)
-	sm.set_shader_parameter("kant", kant)
+	sm.set_shader_parameter("bloed", clampf(fx("gib_bloed", 0.45), 0.0, 1.0))
+	sm.set_shader_parameter("kant", 0.0)
+	# Expliciet zetten: get_shader_parameter geeft null voor een uniform die
+	# nooit gezet is, en daar kijken verduister_later ("dim") en de checks
+	# ("vlees") naar.
+	sm.set_shader_parameter("vlees", Color(0.45, 0.04, 0.04, 1.0))
+	sm.set_shader_parameter("dim", 1.0)
 	mi.material_override = sm
+	return sm
+
+
+## Vlees op alle mesh-delen onder een wortel (de gibs van een explosie of een
+## afgerukt ledemaat, of wat er van het lijf overblijft).
+static func _zet_vlees_alle(root: Node) -> void:
+	if root == null:
+		return
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		if (mi as MeshInstance3D).visible:
+			_zet_vlees(mi as MeshInstance3D)
 
 
 ## Tween-doel voor de helften: draai om een wereld-as door de groep-oorsprong
@@ -2309,6 +2378,11 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 	for mi in targets:
 		(mi as MeshInstance3D).visible = false
 	if not part_name.contains("hat"):
+		# Wat er van het lijf overblijft krijgt het vlees-materiaal: door het
+		# gat waar het ledemaat zat kijk je nu op rood, met spatten eromheen.
+		for mi in live:
+			if (mi as MeshInstance3D).visible:
+				_zet_vlees(mi as MeshInstance3D)
 		# Bloed spuit uit het gat waar het ledemaat zat, van het lijf af.
 		var out: Vector3 = (start as Vector3) - global_position
 		_spawn_blood_spurt(start as Vector3, out, int(7.0 * fx("blood_spurt", 1.0)))
@@ -2351,6 +2425,7 @@ func _fling_limb_gibs(part_name: String, dir: Vector3, violence: float, time_sca
 	if chosen.is_empty():
 		parts_root.queue_free()
 		return null
+	_zet_vlees_alle(parts_root)  # het afgerukte ledemaat: rood door het open uiteinde (17 september)
 	# Wond-plek = het segment dat het dichtst bij de romp zat.
 	var start: Vector3 = (chosen[0] as Node3D).global_position
 	var dichtst: float = start.distance_to(global_position)

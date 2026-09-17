@@ -636,6 +636,23 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   twee helften, romp verdubbeld, los stukje, bovenste helft vliegt, onderste
   kiept, alles in de debris-groep; plaatjes `_shot_snij.png` halverwege de
   vlucht en `_shot_snij_laat.png` erna). Puur visueel: uispel gelijk.
+  **Vlees op ALLE gibs (17 september, Max: "dat rode bloederige bij alle
+  gibs, ook bij melee of musket", "de kleur"):** dezelfde shader
+  (`PawnView._zet_vlees`, `_zet_vlees_alle`) zit nu op elk brokstuk van de
+  kanon-explosie (`_spawn_gibs`), op het afgerukte ledemaat van musket en
+  bajonet (`_fling_limb_gibs`), op de ongesneden delen van de snede en op
+  wat er van het LIJF overblijft als er een ledemaat af is (`_shed_one`):
+  de gibs zijn niet dichtgemaakt (romp 542 open randen), dus door elk open
+  uiteinde en door het gat in de schouder kijk je op rood; daarbovenop
+  bloedspatten op de buitenkant (knop `gib_bloed`, 0,45 = deel van het
+  oppervlak, tab Gore), nat glimmend. De ruis loopt over de UV, niet de
+  positie: een geskinde mesh rekent zijn VERTEX in een andere ruimte dan
+  zijn AABB en werd stof. `kant` 0 = niet snijden. Zet de uniforms `vlees`
+  en `dim` expliciet: `get_shader_parameter` geeft null voor een uniform
+  die nooit gezet is, en daar kijken `verduister_later` en de checks naar.
+  Check: `-- stompcheck [closeup]` (musketdood met gedwongen ledemaat: het
+  ledemaat en de rest van het lijf dragen vlees; `_shot_stomp.png`);
+  `-- gibshot [musket|melee|sabel]` voor het plaatje.
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
