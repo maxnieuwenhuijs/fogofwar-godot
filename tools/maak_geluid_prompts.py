@@ -29,29 +29,37 @@ STUDIO_JSON = os.path.join(WORTEL, "sounds", "geluid_studio.json")
 
 # -------------------------------------------------------------- de dieren
 # infanterie = het kleine broertje, big bro = het grote dier (MODEL-WISHLIST)
+# Gewone dierentaal (18 september, Max: "high pitched enzo maakt het raar en
+# niet natuurlijk"): geen toonhoogte-bijvoeglijke naamwoorden, alleen het dier
+# en het geluid dat het echt maakt (squeak, squeal, growl, hiss).
 INF = {
-    "mouse": ("a small mouse soldier", "a thin high-pitched squeak"),
-    "pig": ("a young pig soldier", "a shrill snorting squeal"),
-    "lion": ("a young cheetah soldier", "a sharp chirping feline cry"),
-    "bear": ("a raccoon soldier", "a rattling chattering screech"),
-    "wolf": ("a fox soldier", "an eerie high piercing scream"),
-    "crocodile": ("a lizard soldier", "a sharp sputtering hiss"),
+    "mouse": ("mouse", "squeaks"),
+    "pig": ("young pig", "squeals"),
+    "lion": ("young cheetah", "yowls"),
+    "bear": ("raccoon", "screams"),
+    "wolf": ("fox", "yelps"),
+    "crocodile": ("lizard", "hisses"),
 }
 CAV = {
-    "mouse": ("a big rat", "a deep raspy squeal"),
-    "pig": ("a wild boar", "a deep snorting grunt"),
-    "lion": ("a full-grown lion", "a full-throated rolling growl"),
-    "bear": ("a grizzly bear", "a low chesty roar"),
-    "wolf": ("a huge dire wolf", "a broken yelp that turns into a growl"),
-    "crocodile": ("a crocodile", "a deep booming bellow that ends in a hiss"),
+    "mouse": ("a big rat", "squeals"),
+    "pig": ("a wild boar", "grunts and squeals"),
+    "lion": ("a lion", "roars"),
+    "bear": ("a grizzly bear", "roars"),
+    "wolf": ("a big wolf", "yelps and growls"),
+    "crocodile": ("a crocodile", "bellows and hisses"),
 }
+# de bouw van het model, in gewone woorden (geen "higher pitched")
 ARCH = {
-    "base": "",
-    "spd": ", a thin wiry fast one, so the voice is higher and quicker than usual",
-    "hp": ", a fat heavy one in a steel breastplate, so the voice is deep and muffled behind metal",
-    "atk": ", a huge muscular brute, so the voice is deep, hoarse and furious",
-    "mix": "",
+    "base": ("", ""),
+    "spd": ("small skinny ", ""),
+    "hp": ("big heavy ", " wearing a steel breastplate"),
+    "atk": ("huge strong ", ""),
+    "mix": ("", ""),
 }
+
+
+def lidwoord(zin):
+    return ("An " if zin[0] in "aeiou" else "A ") + zin
 # hout en ijzer van het kanon per factie (MODEL-WISHLIST 3c-2)
 KANON = {
     "pig": "dark oak with heavy copper fittings",
@@ -95,15 +103,15 @@ def kreten():
     for f in FACTIES:
         dier, kreet = INF[f]
         dier_c, kreet_c = CAV[f]
-        for a, bouw in ARCH.items():
-            wie = dier + bouw
+        for a, (bouw, extra) in ARCH.items():
+            wie = lidwoord(bouw + dier + extra)
             naam = "" if a == "" else "_" + a
             p["inf_die_%s%s" % (f, naam)] = (
-                "The dying cry of %s: %s that weakens and fades as it collapses to the ground. One single cry. %s"
+                "%s dies: it %s in pain, then goes quiet as it falls to the ground. One single cry. %s"
                 % (wie, kreet, SLOT))
             i["inf_die_%s%s" % (f, naam)] = {"duur": 1.5, "invloed": 0.6}
             p["inf_kanon_die_%s%s" % (f, naam)] = (
-                "The sudden scream of %s hit by a cannonball: %s, panicked and violent, cut off abruptly. One single short scream. %s"
+                "%s is hit by a cannonball and %s once, short and loud, cut off suddenly. One single short scream. %s"
                 % (wie, kreet, SLOT))
             i["inf_kanon_die_%s%s" % (f, naam)] = {"duur": 0.8, "invloed": 0.6}
         # zonder archetype: dezelfde als base
@@ -112,8 +120,8 @@ def kreten():
         p["inf_kanon_die_%s" % f] = p["inf_kanon_die_%s_base" % f]
         i["inf_kanon_die_%s" % f] = dict(i["inf_kanon_die_%s_base" % f])
         p["cav_die_%s" % f] = (
-            "The death cry of %s mortally wounded in battle: %s, then a heavy body collapsing onto packed earth. One single cry. %s"
-            % (dier_c, kreet_c, SLOT))
+            "%s is wounded in battle and dies: it %s in pain, then its heavy body falls onto the ground. One single cry. %s"
+            % (dier_c[0].upper() + dier_c[1:], kreet_c, SLOT))
         i["cav_die_%s" % f] = {"duur": 2.0, "invloed": 0.6}
         p["cannon_die_%s" % f] = (
             "A wooden field cannon smashed to pieces: the carriage of %s cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. One single crash. %s"
@@ -129,8 +137,8 @@ def kreten():
 # -------------------------------------------------------------- de rest
 HAND = {
     # algemeen: sterven en bewegen zonder factie
-    "inf_die": ("The dying cry of a small animal soldier, weak and fading as it collapses. One single cry. " + SLOT, 1.5, 0.6),
-    "cav_die": ("The death roar of a large beast collapsing on a battlefield, then the heavy thud of its body. One single sound. " + SLOT, 2.0, 0.6),
+    "inf_die": ("A small animal dies: it cries out in pain, then goes quiet as it falls to the ground. One single cry. " + SLOT, 1.5, 0.6),
+    "cav_die": ("A large animal is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. One single sound. " + SLOT, 2.0, 0.6),
     "cannon_die": ("A wooden field cannon smashed to pieces: oak splinters, iron fittings snap and clatter, a wheel falls over. One single crash. " + SLOT, 2.2, 0.5),
     "cannon_wheel_loose": ("A heavy wooden cannon wheel with an iron rim breaks loose, rolls wobbling for a moment and falls flat on packed earth. " + SLOT, 2.0, 0.5),
     "step": ("A single footstep of a leather army boot on dry packed earth, marching infantry. Just one step. " + SLOT, 0.5, 0.6),
@@ -159,7 +167,7 @@ HAND = {
     "retaliation": ("A quick steel-on-steel counterstrike, one sharp clang, and a short grunt of effort from a small soldier. " + SLOT, 0.9, 0.6),
     "retaliation_cav": ("A large beast lashes back: a heavy paw strikes with a thud and a short angry snarl. " + SLOT, 1.0, 0.5),
     "blood_splash": ("A small wet blood splatter hitting the ground, quick and light. One splatter. " + SLOT, 0.5, 0.6),
-    "charge_yell": ("A short furious battle cry of animal cavalry charging into an attack, a snarling roar over pounding feet. " + SLOT, 1.5, 0.5),
+    "charge_yell": ("A short battle cry of animals charging into an attack, snarling and roaring over pounding feet. " + SLOT, 1.5, 0.5),
     "body_hit_floor": ("A body in a wool uniform falling and hitting packed earth, a dull heavy thump with a small rattle of gear. One fall. " + SLOT, 0.8, 0.6),
     # materiaal-laag
     "impact_flesh": ("A heavy wet impact on flesh, a dull meaty thud with a short liquid splatter. One hit. " + SLOT, 0.6, 0.6),
@@ -249,7 +257,7 @@ HAND = {
     "prop_kogel": ("Two iron cannonballs knocking together, a dull heavy iron clunk. " + SLOT, 0.5, 0.7),
     "prop_kokos": ("A coconut dropping from a palm tree and hitting the ground with a hard hollow thud. " + SLOT, 0.6, 0.6),
     "prop_kookpot": ("An iron lid dropped onto an iron cooking pot, a dull ringing bong. " + SLOT, 1.0, 0.6),
-    "prop_kraai": ("A crow cawing once, harsh and raspy. " + SLOT, 0.8, 0.6),
+    "prop_kraai": ("A crow caws once. " + SLOT, 0.8, 0.6),
     "prop_kruitvat": ("A small powder keg exploding: a dull heavy bang followed by crackling sparks and falling wood. " + SLOT, 1.8, 0.5),
     "prop_lantaarn": ("A small iron lantern knocked and swinging, its metal frame tinkling twice. " + SLOT, 0.8, 0.6),
     "prop_molen": ("The wooden sails of an old windmill creaking slowly as they turn in the wind. " + SLOT, 1.5, 0.5),
