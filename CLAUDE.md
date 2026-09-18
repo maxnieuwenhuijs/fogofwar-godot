@@ -669,8 +669,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `a6677ac8…` geven (220 acties, cyclus 7, sinds
-  16 september, 4.3.6: de ruiter krijgt +2/+2; was `d16a14f8…` (246, 6) sinds
+  eind-zobrist; seed 777 moet `3d361f8b…` geven (116 acties, cyclus 3, sinds
+  18 september, 4.3.7: de ruiter krijgt alleen +2 attack; was `a6677ac8…`
+  (220, 7) onder 4.3.6 op 16 september en `d16a14f8…` (246, 6) sinds
   11 september: de omgeving en de bewoners hebben een EIGEN
   RandomNumberGenerator; de oude referentie `d9985647…` (272, 7, onder
   4.3.5) bevatte stiekem het aantal trekjes dat het diorama bij de herbouw
@@ -1059,11 +1060,17 @@ en dat is nu op vier punten gebeurd:
   haven of op eliminatie. Vanaf cyclus 10 knaagt de honger: elke speler verliest
   bij het begin van een cyclus zijn achterste pion. Geen remise, geen
   cycluslimiet, geen tiebreak.
-- **C22 (4.3.6, 16 september; was 4.3.5)**: de ruiter krijgt na kaart en
-  factie-bonussen +2 stamina en +2 attack (`stat_bonus`, naast `basis_hp`
-  uit C12; staat in `rules_v42_campaign.json`, `v42_default.json`, de zes
-  `duur/rules_pt*.json` en `duel_rules_voor`). Max, 16 september: "het is
-  plus, een cavalry met een 1-attack-kaart heeft 3 attack, niet 2". De
+- **C22 (4.3.7, 18 september; 4.3.6 op de 16e, 4.3.5 op de 8e)**: de ruiter
+  krijgt na kaart en factie-bonussen **+2 attack** (`stat_bonus`, naast
+  `basis_hp` uit C12; staat in `rules_v42_campaign.json`, `v42_default.json`,
+  de zes `duur/rules_pt*.json` en `duel_rules_voor`). Max, 16 september:
+  "het is plus, een cavalry met een 1-attack-kaart heeft 3 attack, niet 2".
+  4.3.6 gaf daarbovenop +2 stamina: de nachtmatrix van 18 september mat
+  daarmee band 27-69% (havenrace, partijen van 6 cycli, honger buitenspel);
+  drie varianten naast elkaar (5400 partijen elk, `tools/balans/
+  meet_437_varianten.ps1`) gaven met alleen de attack-plus band 45-54%
+  (9,2 pp, de smalste ooit), met +1 stamina alweer 36-63. **De stamina op
+  de ruiter is de gevoelige knop: elk punt kost een factie 10-20 pp.** De
   ondergrens van 4.3.5 (`stat_minimum`) bestaat nog als knop maar staat
   nergens meer aan.
 - **C15-buit (4.3.4).** Vaandeldrager neerleggen levert 2 versterkingspunten op,

@@ -1,5 +1,58 @@
 # Fog of War — Work In Progress & Context
 
+## 18 september -- 4.3.7: de ruiter krijgt alleen nog +2 attack
+
+Max, na de nachtmatrix en de driedubbele meting: "voeg toe en dan kunnen we
+trainen vanavond."
+
+- **Nachtrun 18 september** (Max gestart, 04:42, 60 min, git 89ec74f, 3240
+  partijen, fuzz 500 schoon): 4.3.6 voor het eerst als matrix gemeten:
+  band 27,1-68,6% (41,5 pp; 4.3.5 op 10 september 39,3-55,6 / 16,3). Beer
+  39 -> 69, Muis 51 -> 66, Leeuw 56 -> 27, Wolf 46 -> 34. Mechanisme: de
+  +2 stamina maakte elke ruiter een havenrenner; Muis en Beer winnen in
+  5,8-6,4 cycli op de haven (89-90%), de honger vanaf cyclus 10 doet niets
+  meer (0,2-0,4 hongerdoden per partij, was 1,2-2,5), de slachters
+  (Varken, Leeuw, Krokodil, 97-99% eliminatie) krijgen de tijd niet.
+- **Drie kandidaten naast elkaar** (`tools/balans/meet_437_varianten.ps1`,
+  configs in `arena/arena_configs/varianten/`, 5400 partijen elk, 30
+  procs, 09:57-17:39; let op: de variant met alleen een ondergrens draagt
+  expliciet `stat_bonus cav {attack 0}`, anders legt `arena/run.gd` de
+  campagne-bonus eroverheen):
+
+  | | 4.3.5 | 4.3.6 | +2 atk | +2 atk +1 sta | min 2 atk |
+  |---|---|---|---|---|---|
+  | Varken | 54,7 | 49,5 | 54,0 | 50,4 | 54,0 |
+  | Muis | 51,3 | 65,6 | 49,9 | 62,9 | 52,7 |
+  | Leeuw | 55,6 | 27,1 | 47,3 | 35,9 | 57,2 |
+  | Beer | 39,3 | 68,6 | 49,1 | 58,6 | 43,1 |
+  | Wolf | 46,1 | 34,4 | 45,3 | 40,4 | 44,6 |
+  | Krokodil | 53,1 | 54,7 | 54,4 | 51,7 | 48,3 |
+  | spreiding | 16,3 | 41,5 | **9,2** | 26,9 | 14,1 |
+  | cycli / haven | 9,8 / 39% | 7,8 / 55% | 9,9 / 38% | 8,8 / 48% | 9,8 / 42% |
+
+  Met alleen de attack-plus is de band 9,2 pp, de smalste ooit gemeten;
+  al +1 stamina trekt hem open naar 27. De ondergrens-variant van Max
+  (min 2 attack) komt uit waar hij verwacht werd: het 4.3.5-beeld met de
+  Beer weer laag. **De stamina op de ruiter is de gevoelige knop: elk punt
+  kost een factie 10-20 pp.** Gemeten met de bots van voor de regel (0
+  adopties op 17 september).
+- **4.3.7 vastgezet:** `stat_bonus` -> `{"cav": {"attack": 2}}` in
+  `rules_v42_campaign.json`, `v42_default.json`, de zes `duur/rules_pt*.json`
+  en `duel_rules_voor`; `rules_config.gd` bumpt naar 4.3.7; engine
+  ongewijzigd (de knop bestond). SpawnTests: versie-asserts en een check
+  dat geen config nog een stamina-bonus draagt. Goldens opnieuw
+  (`-- makegoldens`), `golden_sims.json` geijkt (tabel in de CHANGELOG),
+  spelregels-v4.2 C22 en CLAUDE.md bijgewerkt.
+
+**Checks:** testsuite 2495/0; `-- simcheck` 0 afwijkingen; `-- uispel 777`
+nu `3d361f8b…` (116 acties, cyclus 3; was a6677ac8, 220, 7); `-- herstelcheck
+777` 138 momenten, 0 verschillen; `-- naadcheck` PASS. Core-hash veranderd:
+server opnieuw uitrollen en een nieuwe client-build.
+
+**Volgende:** de bots trainen op 4.3.7 (`train_ai.bat` of de zes losse
+trainers zoals op 17 september), daarna een nachtrun als nulpunt, en pas dan
+de factiezoeker voor wat er dan nog scheef staat.
+
 ## 18 september -- De big bro sterft als de infanterie (kreet per kanon/archetype)
 
 Max: "gebruik ook bij cav de sounds voor de body en gibs, die doodemans-

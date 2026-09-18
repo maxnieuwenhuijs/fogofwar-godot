@@ -41,7 +41,7 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.3.6", "campaign-activering = 4.3.6 (ruiter +2/+2 bovenop de kaart)")
+	assert_eq(met.rules_version, "4.3.7", "campaign-activering = 4.3.7 (ruiter +2 attack bovenop de kaart)")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
@@ -586,7 +586,7 @@ func _c21_actief(s: GameState, owner: int, pos: Vector2i, hp: int, spd: int, atk
 
 func test_c21_vaandel_aura_geeft_attack() -> void:
 	var s := _c21_staat()
-	assert_eq(s.rules.rules_version, "4.3.6", "de aura is een regelwijziging (4.3.3); 4.3.4, 4.3.5 en 4.3.6 kwamen erachteraan")
+	assert_eq(s.rules.rules_version, "4.3.7", "de aura is een regelwijziging (4.3.3); 4.3.4 tot 4.3.7 kwamen erachteraan")
 	var aanvaller: Pawn = _c21_actief(s, 1, Vector2i(5, 5), 3, 3, 1)
 	var vaandel: Pawn = s._spawn_pawn(1, Vector2i(4, 4), Constants.UnitType.INFANTRY)
 	vaandel.rol = "flag"   # diagonaal: hoort bij het blok van acht
@@ -811,10 +811,17 @@ func test_ruiter_krijgt_2_stamina_en_2_attack_erbij() -> void:
 	assert_true(bool(Reducer.apply(s, Actions.make_link(sterk.id, sterke.id), 1).ok))
 	assert_eq(sterke.remaining_stamina, 6, "een sterke kaart krijgt er ook 2 bij: 4 + 2")
 	assert_eq(sterke.attack_value, 5, "3 + 2")
-	# de echte campagne-regels dragen de bonus, niet meer de ondergrens
+	# de echte campagne-regels dragen de bonus, niet meer de ondergrens; sinds
+	# 4.3.7 (18 september) ALLEEN attack: de +2 stamina van 4.3.6 maakte van
+	# elke ruiter een havenrenner (nachtmatrix: band 27-69%).
 	var echt: RulesConfig = RulesConfig.load_from_file(CRules.REGELS_BESTAND)
-	assert_eq(int(echt.stat_bonus["cav"]["attack"]), 2, "rules_v42_campaign.json: stat_bonus cav 2/2")
+	assert_eq(int(echt.stat_bonus["cav"]["attack"]), 2, "rules_v42_campaign.json: stat_bonus cav attack 2")
+	assert_eq(int(echt.stat_bonus["cav"].get("stamina", 0)), 0, "rules_v42_campaign.json: geen stamina-bonus meer (4.3.7)")
 	assert_true((echt.stat_minimum as Dictionary).is_empty(), "rules_v42_campaign.json: geen stat_minimum meer")
+	for pad in ["res://arena/arena_configs/v42_default.json", "res://arena/arena_configs/duur/rules_pt0.json"]:
+		var ander: RulesConfig = RulesConfig.load_from_file(pad)
+		assert_eq(int(ander.stat_bonus["cav"]["attack"]), 2, pad + ": attack 2")
+		assert_eq(int(ander.stat_bonus["cav"].get("stamina", 0)), 0, pad + ": geen stamina-bonus")
 
 
 func test_c21_aura_bereik_is_een_knop() -> void:

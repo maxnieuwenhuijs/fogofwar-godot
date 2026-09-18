@@ -480,19 +480,24 @@ bots kennen de aura: `effectieve_attack` en `stamina_beschikbaar` zitten in hun
 kill-check en zetten, de Hard-sortering leest ze, en `aura_waarde` (leerbaar)
 beloont eigen actieve pionnen in een eigen aura.
 
-## C22 — De ruiter krijgt 2 stamina en 2 attack erbij (4.3.6; was: minstens 2 in 4.3.5)
+## C22 — De ruiter krijgt 2 attack erbij (4.3.7; 4.3.6 gaf ook 2 stamina; 4.3.5: minstens 2)
 
 *Besluit Max, 8 september 2026: "een bigbro / paard heeft altijd 2 stamina en
 2 attack." Verduidelijkt op 16 september: "het is plus, dus als ik een
-cavalry een 1-attack-kaart geef dan heeft ie 3 attack, niet 2."*
+cavalry een 1-attack-kaart geef dan heeft ie 3 attack, niet 2." Bijgesteld
+op 18 september na de meting: alleen de attack.*
 
 Naast de basis-HP van C12 (`basis_hp`, +2 HP bovenop de kaart) krijgt de
-ruiter een **bonus** bovenop kaart en factie-bonussen: +2 stamina en +2
-attack (`stat_bonus`, default `{"cav": {"stamina": 2, "attack": 2}}` in de
-campagne- en potje-configs). Een 1-attack-kaart geeft dus 3, een 3-attack-
-kaart 5. Infanterie en artillerie krijgen niets. In 4.3.5 (8 september tot
-16 september) was dit een ondergrens (`stat_minimum`: minstens 2, een
-sterkere kaart telde gewoon); die knop bestaat nog, maar staat in geen
+ruiter een **bonus** bovenop kaart en factie-bonussen: +2 attack
+(`stat_bonus`, default `{"cav": {"attack": 2}}` in de campagne- en
+potje-configs). Een 1-attack-kaart geeft dus 3, een 3-attack-kaart 5; de
+stamina komt alleen uit de kaart en de factie. Infanterie en artillerie
+krijgen niets. In 4.3.6 (16 tot 18 september) was de bonus +2 stamina én
++2 attack: dat maakte van elke ruiter een havenrenner (nachtmatrix van 18
+september: band 27-69%, partijen van 6 cycli, honger buitenspel); met alleen
+de attack-plus is de band 45-54% over 5400 partijen (zie de CHANGELOG). In
+4.3.5 (8 tot 16 september) was het een ondergrens (`stat_minimum`: minstens
+2, een sterkere kaart telde gewoon); die knop bestaat nog, maar staat in geen
 config meer. Zonder de knop (4.1, oude configs) verandert er niets.
 Implementatie: `Reducer._do_link`, na de factie-bonussen en voor de
 (lege) ondergrens.

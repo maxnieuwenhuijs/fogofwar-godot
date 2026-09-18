@@ -41,8 +41,11 @@ var basis_hp: Dictionary = {}         # C12: basis-HP per type BOVENOP de kaart 
 var stat_minimum: Dictionary = {}
 ## 4.3.6 (Max, 16 september): "het is plus: een cavalry met een 1-attack-kaart
 ## heeft 3 attack, niet 2". Bonus per type BOVENOP kaart en factie-bonussen,
-## bv {"cav": {"stamina": 2, "attack": 2}}; sleutels stamina/attack/hp.
-## Vervangt in de configs de ondergrens van 4.3.5. {} = niets erbij.
+## sleutels stamina/attack/hp. Vervangt in de configs de ondergrens van 4.3.5.
+## 4.3.7 (18 september): alleen nog {"cav": {"attack": 2}}. De +2 stamina van
+## 4.3.6 maakte van elke ruiter een havenrenner (nachtmatrix 18 september:
+## band 27-69%, Beer 69, Leeuw 27); met alleen de attack-plus band 45-54%
+## over 5400 partijen, de smalste ooit gemeten. {} = niets erbij.
 var stat_bonus: Dictionary = {}
 
 # --- Schotparameters ---
@@ -352,8 +355,8 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
-		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3" or c.rules_version == "4.3.4" or c.rules_version == "4.3.5":
-			c.rules_version = "4.3.6"
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3" or c.rules_version == "4.3.4" or c.rules_version == "4.3.5" or c.rules_version == "4.3.6":
+			c.rules_version = "4.3.7"
 	else:
 		c.campaign = null
 	return c

@@ -1,5 +1,56 @@
 # Spelregels — CHANGELOG
 
+## 4.3.7 — 18 september 2026 (de ruiter krijgt alleen nog +2 attack; de +2 stamina gaat eruit)
+
+*Besluit Max, 18 september, na de nachtmatrix en de driedubbele meting:
+"voeg toe en dan kunnen we trainen vanavond."*
+
+**Waarom.** De nachtrun van 18 september (3240 partijen, L2 tegen L2, git
+89ec74f) mat 4.3.6 voor het eerst als matrix: band **27,1-68,6%** (spreiding
+41,5 pp; onder 4.3.5 op 10 september 39,3-55,6, 16,3 pp). Beer 39 -> 69,
+Muis 51 -> 66, Leeuw 56 -> 27, Wolf 46 -> 34. De +2 stamina maakte van elke
+ruiter een havenrenner: de renners (Muis, Beer) wonnen in 5,8-6,4 cycli op
+de haven (89-90%), de honger vanaf cyclus 10 deed niets meer, en de
+slachters (Varken, Leeuw, Krokodil, 97-99% eliminatie) kregen de tijd niet.
+Drie kandidaten naast elkaar, elk 5400 partijen (`tools/balans/
+meet_437_varianten.ps1`, configs in `arena/arena_configs/varianten/`):
+
+| variant | Varken | Muis | Leeuw | Beer | Wolf | Krokodil | band | cycli | haven |
+|---|---|---|---|---|---|---|---|---|---|
+| 4.3.5 min 2/2 (ref, 3240) | 54,7 | 51,3 | 55,6 | 39,3 | 46,1 | 53,1 | 39,3-55,6 (16,3) | 9,8 | 39% |
+| 4.3.6 +2/+2 (ref, 3240) | 49,5 | 65,6 | 27,1 | 68,6 | 34,4 | 54,7 | 27,1-68,6 (41,5) | 7,8 | 55% |
+| **+2 attack** | 54,0 | 49,9 | 47,3 | 49,1 | 45,3 | 54,4 | **45,3-54,4 (9,2)** | 9,9 | 38% |
+| +2 attack, +1 stamina | 50,4 | 62,9 | 35,9 | 58,6 | 40,4 | 51,7 | 35,9-62,9 (26,9) | 8,8 | 48% |
+| min 2 attack (ondergrens) | 54,0 | 52,7 | 57,2 | 43,1 | 44,6 | 48,3 | 43,1-57,2 (14,1) | 9,8 | 42% |
+
+Met alleen de attack-plus is de band 9,2 pp: de smalste die dit spel ooit
+gemeten heeft (juli 48, na C20 11,9). Al +1 stamina trekt hem weer open naar
+27 pp. De stamina op de ruiter is de gevoelige knop: elk punt kost een
+factie tien tot twintig procentpunt. Gemeten met de bots van vóór de regel
+(0 adopties op 17 september), dus "wat de bots ermee doen"; de nachtrun na
+het hertrainen is de echte maat.
+
+**Wat verandert.** `stat_bonus` in alle configs van `{"cav": {"stamina": 2,
+"attack": 2}}` naar **`{"cav": {"attack": 2}}`** (`rules_v42_campaign.json`,
+`v42_default.json`, de zes `duur/rules_pt*.json`, `duel_rules_voor` in de
+campagne). Een 1-attack-kaart op een ruiter geeft nog steeds 3 attack (Max'
+wens van 16 september blijft staan); de stamina komt weer alleen uit de
+kaart en de factie (Wolf `cav_speed_bonus` 2). De engine verandert niet: de
+knop bestond al. `stat_minimum` blijft bestaan en staat nergens aan.
+
+`rules_version` 4.3.6 -> **4.3.7**. Goldens opnieuw gegenereerd en
+`golden_sims.json` opnieuw geijkt; `-- uispel 777` geeft een nieuwe digest
+(zie CLAUDE.md). De core-hash verandert: server opnieuw uitrollen en een
+nieuwe client-build.
+
+| sim | was (4.3.6) | wordt (4.3.7) |
+|---|---|---|
+| muis-wolf 777 | winner 2, cyclus 3, 90 acties | winner 2, cyclus 5, 175 acties |
+| mens-vos 101 | winner 1, cyclus 13, 358 | winner 1, cyclus 19, 486 |
+| leeuw-beer 202 | winner 2, cyclus 16, 441 | winner 2, cyclus 18, 445 |
+| beer-muis 303 | winner 1, cyclus 5, 181 | winner 1, cyclus 15, 563 |
+| wolf-leeuw 404 | winner 1, cyclus 6, 135 | winner 1, cyclus 8, 209 |
+
 ## Terminologie — 17 september 2026 (stamina, geen speed; geen regelwijziging)
 
 *Max: "het is belangrijk, de term is stamina niet speed. Dat moet overal

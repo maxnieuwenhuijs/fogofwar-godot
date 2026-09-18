@@ -19,10 +19,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5f55fedae164eced077a24dfa0bb91938b56ad5481b150ee59d9060b91e2063a",
+			"hash": "5f6f0f9327b0ec7e358077581ed29c1025ffd63ea0e87eeebe77567cfa93d206",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1789560612.359
+			"ts": 1789743924.067
 		},
 		{
 			"action": {
@@ -42,10 +42,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "6c69c729c1c0e02bf5fdccf2aae4ddab2e69dacb4731447ee987e11f9f0eb2b1",
+			"hash": "79a2a85fd17c2004644c66a1733ae26bf253a3bd7a68df94a8277a3555d301fd",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1789560612.359
+			"ts": 1789743924.068
 		},
 		{
 			"action": {
@@ -106,13 +106,13 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "e060bee7887cf9e7552831fd9124344fcaa810dff23afc7f8a5a5f9fb420a2bd",
+			"hash": "64940445009bb64f9d39c4ff659db227147ec8efcd822e05be8f707aab20ef67",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1789560612.359
+			"ts": 1789743924.068
 		}
 	],
-	"final_hash": "e060bee7887cf9e7552831fd9124344fcaa810dff23afc7f8a5a5f9fb420a2bd",
+	"final_hash": "64940445009bb64f9d39c4ff659db227147ec8efcd822e05be8f707aab20ef67",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -316,7 +316,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.6",
+			"rules_version": "4.3.7",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"stat_bonus": {},
@@ -339,7 +339,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-16T14:10:12",
+		"created": "2026-09-18T17:05:24",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -517,7 +517,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.6",
+				"rules_version": "4.3.7",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"stat_bonus": {},
@@ -539,6 +539,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.6"
+		"rules_version": "4.3.7"
 	}
 }
