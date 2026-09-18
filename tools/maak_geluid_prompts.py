@@ -80,6 +80,14 @@ STAP_CAV = {
 FACTIES = ["mouse", "pig", "lion", "bear", "wolf", "crocodile"]
 
 SLOT = "Close-up, dry studio recording, no reverb, no music."
+# Meerdere takes in een clip (18 september, Max: "doe weer multiple, geluid
+# duur dan op 7 of zo, en dan met die knip op stiltes"): de beschrijving
+# blijft een geluid, de reeks-zin erachter vraagt om vijf uitvoeringen met
+# stilte ertussen; de studio knipt ze op de stiltes in losse takes.
+REEKS = " Play it five times in a row, each one slightly different, with a clear pause of silence between them."
+REEKS_DUUR = 7.0
+# lange dingen die geen reeks worden (muziek, sfeer, fanfares)
+GEEN_REEKS = {"music_menu", "music_battle", "ambient_field", "win_fanfare", "lose_sting"}
 
 
 def kreten():
@@ -273,6 +281,11 @@ def main():
     for cat, (p, duur, invloed) in HAND.items():
         prompts[cat] = p
         inst[cat] = {"duur": duur, "invloed": invloed}
+    for cat in list(prompts):
+        if cat in GEEN_REEKS:
+            continue
+        prompts[cat] = prompts[cat].replace("One single cry. ", "").replace("One single short scream. ", "")             .replace("One single sound. ", "").replace("One single crash. ", "").replace("Just one step. ", "")             .replace("One shot. ", "").replace("One impact. ", "").replace("One hit. ", "").replace("One strike. ", "")             .replace("One clash. ", "").replace("One click. ", "").replace("One fall. ", "").replace("One crack. ", "")             .replace("One splatter. ", "").replace("One killing thrust. ", "").replace("One clash. ", "") + REEKS
+        inst[cat]["duur"] = REEKS_DUUR
     try:
         studio = json.load(io.open(STUDIO_JSON, encoding="utf-8"))
     except (OSError, ValueError):

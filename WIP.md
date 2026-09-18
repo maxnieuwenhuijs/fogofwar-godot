@@ -12,6 +12,12 @@ termen".
   standaard-invloed 0,6. Max' takes van vanochtend (charge_yell,
   impact_flesh, inf_die_mouse_base, ...) waren allemaal 2 s met het oude
   "6 in a row"-recept; dat recept is een eisenlijst, geen beschrijving.
+- Daarna toch weer een reeks (Max: "doe weer multiple, geluid duur dan op
+  7 of zo, en dan met die knip op stiltes"): de beschrijving blijft een
+  geluid, met erachter "Play it five times in a row, each one slightly
+  different, with a clear pause of silence between them", duur 7 s, en de
+  studio knipt de clip op de stiltes (het vinkje staat aan zodra de prompt
+  "in a row" zegt). Muziek, sfeer en de twee stings blijven een clip.
 - Studio: lader per rij met de seconden, x3, toasts, per-rij verversen
   (`/api/rij`), sectie-chips met dekking, inklappen, vinkje op een gebruikte
   take (`gebruikt` in de take-json), "alle takes weg", sha1-cache voor de
