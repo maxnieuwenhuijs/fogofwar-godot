@@ -553,7 +553,7 @@ async function genereer(c){const b=document.getElementById('g_'+c),m=document.ge
  catch(e){m.textContent=e.message;b.disabled=false;b.textContent='Genereer'}}
 async function gebruik(c,t,v){try{const j=await api('/api/gebruik',{categorie:c,take:t,vervang:v});await laad();document.getElementById('m_'+c).textContent='opgeslagen als '+j.doel+' (nog importeren in Godot)';document.querySelector('[data-cat="'+c+'"]').scrollIntoView({block:'center'})}catch(e){alert(e.message)}}
 async function weg(t){await api('/api/weg',{take:t});await laad()}
-async function bewaarSleutel(){const k=document.getElementById('sleutel').value.trim();if(!k)return;await api('/api/sleutel',{sleutel:k});document.getElementById('sleutel').value='';await laad()}
+async function bewaarSleutel(){const k=document.getElementById('sleutel').value.trim();if(!k)return;try{await api('/api/sleutel',{sleutel:k})}catch(e){alert(e.message);return}document.getElementById('sleutel').value='';await laad()}
 async function bewaarStandaard(){await api('/api/standaard',{duur:document.getElementById('s_duur').value,invloed:document.getElementById('s_invloed').value});await laad()}
 async function importeer(){await api('/api/import',{});D.import={bezig:true,laatste:'bezig...'};status()}
 laad();
@@ -648,7 +648,13 @@ class Handler(BaseHTTPRequestHandler):
             schrijf_studio(s)
             return {"ok": True}
         if pad == "/api/sleutel":
-            schrijf_sleutel(str(b.get("sleutel", "")))
+            k = str(b.get("sleutel", "")).strip()
+            if not k.startswith("sk_"):
+                # Max plakte het ID van de sleutel (18 september): ElevenLabs
+                # toont de echte sleutel maar een keer, bij het aanmaken.
+                raise RuntimeError("Dit is niet de API-sleutel zelf: die begint met 'sk_' en zie je alleen bij "
+                                   "het aanmaken of roteren (ElevenLabs > API Keys > Create). Dit lijkt het ID.")
+            schrijf_sleutel(k)
             return {"ok": True}
         if pad == "/api/genereer":
             cat = str(b.get("categorie", ""))
