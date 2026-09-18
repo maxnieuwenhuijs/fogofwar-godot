@@ -789,7 +789,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   nooit in de repo. Geen ffmpeg op deze machine: weigert het abonnement
   pcm, dan bewaart hij mp3 en zegt dat erbij (het spel zoekt .wav).
   `--overzicht` print alleen de telling (categorieen, leeg, synthetisch,
-  echt, zonder prompt) als check.
+  echt, zonder prompt) als check. **De prompts zelf (18 september, Max:
+  "verbeter echt alle prompts, nu komt er alleen maar bagger uit, gebruik
+  echt natuurlijke termen"):** `tools/maak_geluid_prompts.py` schrijft voor
+  elke categorie een beschrijvende prompt in gewone zinnen (wie, wat,
+  materiaal, verloop; een geluid per prompt) plus duur en prompt-invloed
+  (0,6) in `sounds/geluid_studio.json`; kreten per factie x archetype uit
+  een sjabloon (dier van het kleine broertje of de big bro + de bouw van
+  het model), de rest met de hand. Het oude wishlist-recept ("6 short ...
+  in a row, dry close mono") is een eisenlijst, geen beschrijving, en
+  leverde in de studio 2 s ruis op. Een prompt die je in de studio zelf
+  aanpast blijft staan bij een nieuwe run (`--overschrijf` zet alles). De
+  studio zet "knip op stiltes" alleen aan als de prompt om een reeks vraagt.
+  De pagina zelf: laders per rij met de tijd erbij, x3 (drie keer achter
+  elkaar), toasts in plaats van alerts, per rij verversen (filter en
+  scrollpositie blijven), sectie-chips bovenin met dekking, inklapbare
+  secties, een vinkje op een take die al in het spel zit.
 - **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
   "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
   het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het

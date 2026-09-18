@@ -1,5 +1,24 @@
 # Fog of War — Work In Progress & Context
 
+## 18 september -- Geluid-studio: natuurlijke prompts en een betere pagina
+
+Max: "improve the UI met loaders en alles" en "verbeter echt alle prompts
+voor ElevenLabs, nu komt er alleen maar bagger uit, gebruik echt natuurlijke
+termen".
+
+- `tools/maak_geluid_prompts.py`: 227 prompts in gewone beschrijvende
+  zinnen (kreten uit een sjabloon per factie x archetype, de rest met de
+  hand) met duur en invloed per categorie in `sounds/geluid_studio.json`;
+  standaard-invloed 0,6. Max' takes van vanochtend (charge_yell,
+  impact_flesh, inf_die_mouse_base, ...) waren allemaal 2 s met het oude
+  "6 in a row"-recept; dat recept is een eisenlijst, geen beschrijving.
+- Studio: lader per rij met de seconden, x3, toasts, per-rij verversen
+  (`/api/rij`), sectie-chips met dekking, inklappen, vinkje op een gebruikte
+  take (`gebruikt` in de take-json), "alle takes weg", sha1-cache voor de
+  overzichtsbouw, junk-rijen uit de wishlist-tabellen (base/spd/hp/atk/mix
+  en de oude horse_*-namen) overgeslagen. "Knip op stiltes" alleen aan als
+  de prompt "in a row" zegt.
+
 ## 18 september -- Geluid-studio (ElevenLabs in een overzicht)
 
 Max: "kunnen we alle prompts voor geluiden niet zo maken dat we met een
