@@ -763,6 +763,31 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met sha1's dat `tools/maak_prop_geluiden.py` schrijft; een echte opname op
   dezelfde naam heeft een andere hash) en een Engelse ElevenLabs-prompt
   (`PROP_PROMPT_EN` in het script).
+- **Geluid-studio: prompts naar ElevenLabs, luisteren, gebruiken (18
+  september, Max: "alle prompts voor geluiden met een ElevenLabs-api-call,
+  op Gebruiken drukken en opslaan, prompts aanpassen, retry, de
+  ElevenLabs-instelling aanpassen, een groot makkelijk overzicht met .wav").**
+  `python tools/geluid_studio.py` (paneelknop "Geluid-studio") start een
+  lokale webpagina op 127.0.0.1:8765 met ELKE categorie die het spel kent
+  (factie-kreten uit de tracker met de archetype-varianten, diorama-props,
+  wapens, het algemene arsenaal uit SOUND-WISHLIST.md, plus wat in de BANK
+  van audio_manager.gd staat), per stuk: wat er ligt (echt / synthetisch /
+  leeg, een speler per bestand), de prompt (leeg = die uit de wishlist;
+  zonder eigen prompt geleend van factie, basis of oude naam), duur en
+  prompt-invloed, "Genereer" (`POST /v1/sound-generation`, pcm_44100,
+  geknipt op stiltes in losse takes omdat de prompts "6 short ... in a row"
+  vragen), per take een speler met "Gebruiken" (volgende vrije
+  `<categorie>[_N].wav` in `sounds/factions/<factie>/`, `sounds/props/`,
+  `sounds/melee/` of `sounds/studio/`) of "Vervang synthetisch"
+  (overschrijft de eerste placeholder), en "Importeer in Godot" (headless
+  `--import`; kan niet met de editor open). Prompt-aanpassingen en
+  instellingen per categorie staan in `sounds/geluid_studio.json` (mee in
+  git); takes in `results/geluid_studio/<categorie>/` (niet in git); de
+  sleutel uit `ELEVENLABS_API_KEY` of `%LOCALAPPDATA%\FogOfWar\elevenlabs.key`,
+  nooit in de repo. Geen ffmpeg op deze machine: weigert het abonnement
+  pcm, dan bewaart hij mp3 en zegt dat erbij (het spel zoekt .wav).
+  `--overzicht` print alleen de telling (categorieen, leeg, synthetisch,
+  echt, zonder prompt) als check.
 - **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
   "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
   het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het

@@ -1,0 +1,9 @@
+{
+ "instellingen": {},
+ "prompts": {},
+ "standaard": {
+  "duur": 0.0,
+  "invloed": 0.3,
+  "model": "eleven_text_to_sound_v2"
+ }
+}

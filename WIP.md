@@ -1,5 +1,30 @@
 # Fog of War — Work In Progress & Context
 
+## 18 september -- Geluid-studio (ElevenLabs in een overzicht)
+
+Max: "kunnen we alle prompts voor geluiden niet zo maken dat we met een
+ElevenLabs-api-call die krijgen, en als ik op gebruiken druk dat we die
+opslaan; prompts aanpassen, retry, de ElevenLabs-instelling aanpassen; een
+groot makkelijk overzicht met .wav etc."
+
+- `tools/geluid_studio.py`: lokale webpagina (stdlib http.server, numpy voor
+  het knippen), leest dezelfde bronnen als de geluid-tracker (importeert
+  `bouw_geluid_tracker`), 237 categorieen in vijf secties. Genereren via
+  `POST /v1/sound-generation` met `output_format=pcm_44100` (mp3-terugval
+  bij een 4xx op pcm), stilte-knipper (10 ms-rms, drempel 5% van de piek,
+  gaten < 150 ms dicht, stukjes < 60 ms weg), takes als 16-bit wav in
+  `results/geluid_studio/<cat>/<stempel>_<i>.wav` + json met prompt en
+  instellingen. Gebruiken = kopie naar de doelmap als volgende vrije
+  variant, of over de eerste synthetische heen. Sleutel buiten de repo.
+  Paneel: vijfde knop in "Bekijken" (kader 40 px hoger, alles eronder
+  geschoven).
+- Getest zonder sleutel (nette melding), met een verkeerde sleutel
+  (ElevenLabs 401 komt door), knippen op een synthetische 6-takes-clip
+  (6 stukken), gebruiken/vervangen/audio-route (`..` geeft 404).
+  Poort 8765 was op deze machine al bezet door iets anders (luistert op
+  0.0.0.0:8765 maar weigert), daarom `--poort` als knop; de paneelknop
+  gebruikt de standaard, zet die om als het niet opent.
+
 ## 18 september -- de varken-atk stond scheef: object-actie op het musket, exporter gefixt
 
 Max: "kun je kijken of voor infantry attack pig er een model change iets is,

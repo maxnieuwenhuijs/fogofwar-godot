@@ -41,7 +41,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 968)
+$form.Size = New-Object System.Drawing.Size(470, 1008)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -273,7 +273,7 @@ $null = Maak-Knop $kadFacties "Facties uitproberen" {
 }
 
 # --- 6. Bekijken wat er nu geldt en wat eruit gekomen is.
-$kadKijk = Maak-Kader "Bekijken" 530 160
+$kadKijk = Maak-Kader "Bekijken" 530 200
 Maak-Uitleg $kadKijk "Het rapport met winst-percentages, of de factie-instellingen van nu."
 $null = Maak-Knop $kadKijk "Bekijk het rapport" {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
@@ -335,9 +335,24 @@ $btnPropTracker.Add_Click({
     }
 })
 $kadKijk.Controls.Add($btnPropTracker)
+# Vijfde knop: de geluid-studio (18 september, Max: "alle prompts met een
+# ElevenLabs-api-call, op Gebruiken drukken, prompts aanpassen, retry, een
+# groot makkelijk overzicht"). Start tools/geluid_studio.py als lokale
+# webpagina (127.0.0.1:8765) in een geminimaliseerd venster en opent de
+# browser; het venster sluiten stopt hem.
+$btnGeluidStudio = New-Object System.Windows.Forms.Button
+$btnGeluidStudio.Text = "Geluid-studio: prompts naar ElevenLabs, luisteren, gebruiken"
+$btnGeluidStudio.Location = New-Object System.Drawing.Point(12, 122)
+$btnGeluidStudio.Size = New-Object System.Drawing.Size(401, 34)
+$btnGeluidStudio.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnGeluidStudio.Add_Click({
+    Start-Process python -WorkingDirectory $repo -WindowStyle Minimized `
+        -ArgumentList @((Join-Path $repo "tools\geluid_studio.py"))
+})
+$kadKijk.Controls.Add($btnGeluidStudio)
 $lblKijkHint = New-Object System.Windows.Forms.Label
-$lblKijkHint.Text = "Facties: voor en na een voorstel, een sterretje wijst het verschil aan. Geluid en props: zien wat er nog mist, met de prompt erbij."
-$lblKijkHint.Location = New-Object System.Drawing.Point(12, 122)
+$lblKijkHint.Text = "Facties: voor en na een voorstel. Geluid en props: zien wat er nog mist. De studio maakt de geluiden zelf (ElevenLabs-sleutel nodig)."
+$lblKijkHint.Location = New-Object System.Drawing.Point(12, 162)
 $lblKijkHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblKijkHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblKijkHint.ForeColor = [System.Drawing.Color]::DimGray
@@ -346,7 +361,7 @@ $kadKijk.Controls.Add($lblKijkHint)
 # --- 7. Modellen bouwen uit de blend-inbox.
 # Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
 # Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
-$kadModellen = Maak-Kader "Modellen bouwen" 696 122
+$kadModellen = Maak-Kader "Modellen bouwen" 736 122
 Maak-Uitleg $kadModellen "Een map met een .blend en de nieuwe texturen erin gaat in een keer het spel in."
 # Hoofdknop: een complete levering (een map met de .blend EN de nieuwe texturen)
 # in een keer verwerken. Eerst de droogloop tonen en om bevestiging vragen; die
@@ -459,7 +474,7 @@ $btnRetexture.Add_Click({
 $kadModellen.Controls.Add($btnRetexture)
 
 # --- 8. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 824 86
+$kadStop = Maak-Kader "Noodrem" 864 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots
