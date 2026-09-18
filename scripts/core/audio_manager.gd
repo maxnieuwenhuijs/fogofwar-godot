@@ -581,12 +581,72 @@ func _laad_snd_tuning() -> void:
 
 func volume_correctie(category: String) -> float:
 	_laad_snd_tuning()
-	return float((_snd_tuning.get(category, {}) as Dictionary).get("db", 0.0))
+	return float((_snd_tuning.get(mix_bron(category), {}) as Dictionary).get("db", 0.0))
 
 
 func extra_vertraging(category: String) -> float:
 	_laad_snd_tuning()
-	return float((_snd_tuning.get(category, {}) as Dictionary).get("vertraging", 0.0))
+	return float((_snd_tuning.get(mix_bron(category), {}) as Dictionary).get("vertraging", 0.0))
+
+
+## EEN MENGPANEEL VOOR ALLES (18 september, Max: "alle geluiden qua niveau
+## dezelfde dB als bij de muis-infanterie ooit ingesteld; dat is de basis en
+## die geldt voor alle, tenzij je specifiek instelt per factie per unit").
+## Een categorie zonder EIGEN instelling (geen regel in CATEGORY_DB en geen
+## regel in sound_tuning.json) erft mix-dB, tuner-dB en vertraging van de
+## eerste in zijn keten die er wel een heeft:
+##   inf_die_pig_hp -> inf_die_mouse_hp -> inf_die_pig -> inf_die_mouse -> inf_die
+## De muis is de basis: dezelfde naam met de factie vervangen door de muis
+## gaat voor het strippen van het achtervoegsel. Voor de muis zelf verandert
+## er niets (die had de eigen regels al). `mix_bron` zegt van wie het niveau
+## komt; de Model-tuner en de geluid-studio tonen dat, en een eigen regel
+## zetten (zet_geluid_tuning) maakt de categorie weer zelfstandig.
+const MIX_FACTIES: Array = ["mouse", "pig", "lion", "bear", "wolf", "crocodile"]
+
+
+func mix_keten(category: String) -> Array:
+	var uit: Array = [category]
+	var k := category
+	while true:
+		var delen: PackedStringArray = k.split("_")
+		for i in delen.size():
+			if delen[i] != "mouse" and MIX_FACTIES.has(delen[i]):
+				var kopie: PackedStringArray = delen.duplicate()
+				kopie[i] = "mouse"
+				uit.append("_".join(kopie))
+				break
+		if not k.contains("_"):
+			break
+		k = k.rsplit("_", true, 1)[0]
+		uit.append(k)
+	return uit
+
+
+func mix_eigen(category: String) -> bool:
+	_laad_snd_tuning()
+	return CATEGORY_DB.has(category) or _snd_tuning.has(category)
+
+
+func mix_bron(category: String) -> String:
+	for k in mix_keten(category):
+		if mix_eigen(String(k)):
+			return String(k)
+	return category
+
+
+func mix_db(category: String) -> float:
+	return float(CATEGORY_DB.get(mix_bron(category), 0.0))
+
+
+## Het niveau dat het spel echt gebruikt: mix-dB plus tuner-dB van de bron.
+func mix_niveau(category: String) -> float:
+	return mix_db(category) + volume_correctie(category)
+
+
+func wis_geluid_tuning(category: String) -> void:
+	_laad_snd_tuning()
+	_snd_tuning.erase(category)
+	bewaar_geluid_tuning()
 
 
 func zet_geluid_tuning(category: String, db: float, vertraging: float) -> void:
@@ -638,7 +698,7 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	var idx: int = (variant % variants.size()) if variant >= 0 else (randi() % variants.size())
 	player.stream = variants[idx]
 	player.volume_db = master_db + volume_naar_db(vol_alles * vol_effecten) \
-		+ float(CATEGORY_DB.get(category, 0.0)) + volume_correctie(category)
+		+ mix_db(category) + volume_correctie(category)
 	player.pitch_scale = pitch if pitch > 0.0 else randf_range(0.96, 1.04)
 	player.play()
 

@@ -106,12 +106,14 @@ def kreten():
         for a, (bouw, extra) in ARCH.items():
             wie = lidwoord(bouw + dier + extra)
             naam = "" if a == "" else "_" + a
+            # Max, 18 september: "al die kreten moeten krijgen: loud and very
+            # short, very short bursts"
             p["inf_die_%s%s" % (f, naam)] = (
-                "%s dies: it %s in pain, then goes quiet as it falls to the ground. One single cry. %s"
+                "%s dies: one loud, very short burst as it %s in pain, cut off as it falls to the ground. One single cry. %s"
                 % (wie, kreet, SLOT))
             i["inf_die_%s%s" % (f, naam)] = {"duur": 1.5, "invloed": 0.6}
             p["inf_kanon_die_%s%s" % (f, naam)] = (
-                "%s is hit by a cannonball and %s once, short and loud, cut off suddenly. One single short scream. %s"
+                "%s is hit by a cannonball: one loud, very short burst as it %s, cut off instantly. One single short scream. %s"
                 % (wie, kreet, SLOT))
             i["inf_kanon_die_%s%s" % (f, naam)] = {"duur": 0.8, "invloed": 0.6}
         # zonder archetype: dezelfde als base
@@ -122,11 +124,11 @@ def kreten():
         for a, (bouw, extra) in ARCH.items():
             wie_c = lidwoord(bouw + dier_c.split(" ", 1)[1] + extra)
             p["cav_die_%s_%s" % (f, a)] = (
-                "%s is wounded in battle and dies: it %s in pain, then its heavy body falls onto the ground. One single cry. %s"
+                "%s is wounded in battle and dies: one loud, very short burst as it %s in pain, cut off as its heavy body falls onto the ground. One single cry. %s"
                 % (wie_c, kreet_c, SLOT))
             i["cav_die_%s_%s" % (f, a)] = {"duur": 2.0, "invloed": 0.6}
             p["cav_kanon_die_%s_%s" % (f, a)] = (
-                "%s is hit by a cannonball and %s once, loud and short, cut off suddenly as it goes down. One single short cry. %s"
+                "%s is hit by a cannonball: one loud, very short burst as it %s, cut off instantly as it goes down. One single short cry. %s"
                 % (wie_c, kreet_c, SLOT))
             i["cav_kanon_die_%s_%s" % (f, a)] = {"duur": 1.0, "invloed": 0.6}
         p["cav_die_%s" % f] = p["cav_die_%s_base" % f]
@@ -147,9 +149,9 @@ def kreten():
 # -------------------------------------------------------------- de rest
 HAND = {
     # algemeen: sterven en bewegen zonder factie
-    "inf_die": ("A small animal dies: it cries out in pain, then goes quiet as it falls to the ground. One single cry. " + SLOT, 1.5, 0.6),
-    "cav_kanon_die": ("A large animal is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. " + SLOT, 1.0, 0.6),
-    "cav_die": ("A large animal is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. One single sound. " + SLOT, 2.0, 0.6),
+    "inf_die": ("A small animal dies: one loud, very short burst as it cries out in pain, cut off as it falls to the ground. One single cry. " + SLOT, 1.5, 0.6),
+    "cav_kanon_die": ("A large animal is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. One single short cry. " + SLOT, 1.0, 0.6),
+    "cav_die": ("A large animal is wounded in battle and dies: one loud, very short burst as it roars in pain, cut off as its heavy body falls onto the ground. One single sound. " + SLOT, 2.0, 0.6),
     "cannon_die": ("A wooden field cannon smashed to pieces: oak splinters, iron fittings snap and clatter, a wheel falls over. One single crash. " + SLOT, 2.2, 0.5),
     "cannon_wheel_loose": ("A heavy wooden cannon wheel with an iron rim breaks loose, rolls wobbling for a moment and falls flat on packed earth. " + SLOT, 2.0, 0.5),
     "step": ("A single footstep of a leather army boot on dry packed earth, marching infantry. Just one step. " + SLOT, 0.5, 0.6),
@@ -296,15 +298,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--droogloop", action="store_true")
     ap.add_argument("--overschrijf", action="store_true", help="ook prompts die in de studio zijn aangepast vervangen")
+    ap.add_argument("--kreten", action="store_true", help="alleen de kreten (sterven, kanon) opnieuw zetten, ook als ze in de studio zijn aangepast")
     a = ap.parse_args()
     prompts, inst = kreten()
+    kreet_cats = set(prompts) | {"inf_die", "cav_die", "cav_kanon_die"}
+    kreet_cats = {c for c in kreet_cats if "_die" in c}
     for cat, (p, duur, invloed) in HAND.items():
         prompts[cat] = p
         inst[cat] = {"duur": duur, "invloed": invloed}
     for cat in list(prompts):
         if cat in GEEN_REEKS:
             continue
-        prompts[cat] = prompts[cat].replace("One single cry. ", "").replace("One single short scream. ", "")             .replace("One single sound. ", "").replace("One single crash. ", "").replace("Just one step. ", "")             .replace("One shot. ", "").replace("One impact. ", "").replace("One hit. ", "").replace("One strike. ", "")             .replace("One clash. ", "").replace("One click. ", "").replace("One fall. ", "").replace("One crack. ", "")             .replace("One splatter. ", "").replace("One killing thrust. ", "").replace("One clash. ", "") + REEKS
+        prompts[cat] = prompts[cat].replace("One single cry. ", "").replace("One single short scream. ", "")             .replace("One single sound. ", "").replace("One single short cry. ", "").replace("One single crash. ", "").replace("Just one step. ", "")             .replace("One shot. ", "").replace("One impact. ", "").replace("One hit. ", "").replace("One strike. ", "")             .replace("One clash. ", "").replace("One click. ", "").replace("One fall. ", "").replace("One crack. ", "")             .replace("One splatter. ", "").replace("One killing thrust. ", "").replace("One clash. ", "") + REEKS
         inst[cat]["duur"] = REEKS_DUUR
     try:
         studio = json.load(io.open(STUDIO_JSON, encoding="utf-8"))
@@ -315,7 +320,7 @@ def main():
     eigen = studio.setdefault("uit_generator", {})   # wat de generator schreef: zo zien we later wat Max zelf wijzigde
     nieuw = behouden = 0
     for cat, p in prompts.items():
-        if not a.overschrijf and cat in oud_p and oud_p[cat] != eigen.get(cat):
+        if not a.overschrijf and not (a.kreten and cat in kreet_cats) and cat in oud_p and oud_p[cat] != eigen.get(cat):
             behouden += 1
             continue
         oud_p[cat] = p

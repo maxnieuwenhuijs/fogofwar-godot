@@ -744,6 +744,30 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (per factie x type x archetype het wapen en de drie effectieve
   categorieen; FAIL als er iets stil is, terugvalt op het algemene geluid
   of de bajonet buiten de infanterie komt). Puur geluid: uispel gelijk.
+- **EEN MENGPANEEL voor alle geluiden (18 september, Max: "alle geluiden
+  qua niveau dezelfde dB als bij de muis-infanterie ooit ingesteld; dat is
+  de basis en die geldt voor alle, tenzij je specifiek instelt per factie
+  per unit").** `Audio.mix_bron(cat)` zoekt langs `Audio.mix_keten` de
+  eerste categorie met een EIGEN regel (in `CATEGORY_DB` of in
+  `sounds/sound_tuning.json`) en daar komen mix-dB, tuner-dB en vertraging
+  vandaan: `inf_die_pig_hp` → `inf_die_mouse_hp` → `inf_die_pig` →
+  `inf_die_mouse` → `inf_die` (de muis is de basis: eerst dezelfde naam met
+  de factie vervangen door de muis, dan het achtervoegsel eraf). Voor de
+  muis zelf verandert er niets. `mix_db`, `volume_correctie`,
+  `extra_vertraging` en `mix_niveau` erven zo; `mix_eigen` zegt of een
+  categorie zelfstandig is; `wis_geluid_tuning` laat hem weer erven. De
+  Model-tuner (tab Geluid) toont dus het geerfde niveau en maakt de
+  categorie zelfstandig zodra je er iets zet. `-- geluidcheck` print per
+  categorie de bron ("eigen" of van wie). De ERFT_MIX_DB-whitelist van
+  eerder die dag is hierin opgegaan. In de studio heeft elke rij een
+  derde kolom "mengpaneel": het echte niveau, van wie het komt, tuner-dB
+  en vertraging, "eigen instelling" (schrijft `sound_tuning.json`, het
+  spel leest het bij de volgende start) en "erf weer". Ook: filter "nog te
+  doen" en "eigen mix-instelling", en klare rijen (genoeg echte opnames,
+  geen takes) klappen in tot een regel ("klare rijen inklappen"). **Alle
+  kreten** (sterven, kanon, infanterie en big bro) vragen sinds die dag
+  om "one loud, very short burst" (Max); `maak_geluid_prompts.py --kreten`
+  zet alleen die opnieuw, ook over een studio-aanpassing heen.
 - **De big bro sterft met dezelfde lagen als de infanterie (18 september,
   Max: "gebruik ook bij cav de doodemans-geluiden voor body en gibs, en
   maak in de studio de die-geluiden aan voor een kanon of normaal

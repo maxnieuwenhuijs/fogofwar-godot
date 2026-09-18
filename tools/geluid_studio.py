@@ -194,6 +194,78 @@ def sha1_van(pad):
     return _sha_cache[pad][1]
 
 
+TUNING_JSON = os.path.join("sounds", "sound_tuning.json")
+_catdb_cache = None
+
+
+def category_db():
+    """CATEGORY_DB uit audio_manager.gd (de vaste mix-dB per categorie)."""
+    global _catdb_cache
+    if _catdb_cache is not None:
+        return _catdb_cache
+    uit = {}
+    try:
+        tekst = io.open(os.path.join("scripts", "core", "audio_manager.gd"), encoding="utf-8").read()
+        blok = tekst.split("const CATEGORY_DB", 1)[1].split("\n}", 1)[0]
+        for m in re.finditer(r'"([a-z0-9_]+)":\s*(-?[0-9.]+)', blok):
+            uit[m.group(1)] = float(m.group(2))
+    except (OSError, IndexError, ValueError):
+        pass
+    _catdb_cache = uit
+    return uit
+
+
+def lees_tuning():
+    try:
+        return json.load(io.open(TUNING_JSON, encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def schrijf_tuning(d):
+    # zelfde vorm als Audio.bewaar_geluid_tuning (tabs), gesorteerd
+    with io.open(TUNING_JSON, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(d, f, indent="\t", sort_keys=True)
+        f.write("\n")
+
+
+def mix_keten(cat):
+    """Dezelfde keten als Audio.mix_keten (een mengpaneel, 18 september): de
+    muis is de basis, dan het achtervoegsel eraf."""
+    uit = [cat]
+    k = cat
+    while True:
+        delen = k.split("_")
+        for i, d in enumerate(delen):
+            if d != "mouse" and d in FACTIES:
+                kopie = list(delen)
+                kopie[i] = "mouse"
+                uit.append("_".join(kopie))
+                break
+        if "_" not in k:
+            break
+        k = k.rsplit("_", 1)[0]
+        uit.append(k)
+    return uit
+
+
+def mix_van(cat, tuning=None, catdb=None):
+    """{mix, tuner, vertraging, niveau, bron, eigen}: wat het spel echt
+    gebruikt voor deze categorie, en van wie het komt."""
+    tuning = lees_tuning() if tuning is None else tuning
+    catdb = category_db() if catdb is None else catdb
+    bron = cat
+    for k in mix_keten(cat):
+        if k in catdb or k in tuning:
+            bron = k
+            break
+    t = tuning.get(bron, {}) if isinstance(tuning.get(bron, {}), dict) else {}
+    mix = float(catdb.get(bron, 0.0))
+    tdb = float(t.get("db", 0.0))
+    return {"mix": mix, "tuner": tdb, "vertraging": float(t.get("vertraging", 0.0)), "niveau": mix + tdb,
+            "bron": bron, "eigen": bron == cat}
+
+
 def bank():
     """Bestandsnaam -> categorie uit de BANK van audio_manager.gd (de oude
     namen: mellee_hit.wav hoort bij melee_kill, musket2.wav bij musket_fire)."""
@@ -264,6 +336,8 @@ def overzicht(alleen=None):
     studio = lees_studio()
     synth = tracker.synthetische_hashes()
     wl = wishlist_rijen()
+    tuning = lees_tuning()
+    catdb = category_db()
     rijen = []
     gezien = set()
 
@@ -287,6 +361,7 @@ def overzicht(alleen=None):
             "gewenst": gewenst or 3, "echt": echt, "synth": kunst,
             "duur": inst.get("duur"), "invloed": inst.get("invloed"), "model": inst.get("model"),
             "takes": takes_van(cat), "doelmap": doelmap(cat).replace("\\", "/"),
+            "mix": mix_van(cat, tuning, catdb),
         })
 
     facties, _, _ = tracker.bouw()
@@ -336,7 +411,7 @@ def overzicht(alleen=None):
     if alleen is not None:
         rijen = [r for r in rijen if r["categorie"] == alleen and "echt" in r]
     return {"rijen": rijen, "standaard": studio.get("standaard", {}), "sleutel": bool(lees_sleutel()),
-            "import": _import_status}
+            "import": _import_status, "catdb_heeft": {k: True for k in catdb}}
 
 
 # ------------------------------------------------------------------ ElevenLabs
@@ -607,7 +682,18 @@ h2{font-size:15px;margin:22px 0 6px;color:var(--accent);border-bottom:1px solid 
 h2 .pijl{display:inline-block;transition:transform .15s;font-size:12px;color:var(--dof)}h2.dicht .pijl{transform:rotate(-90deg)}
 h2 .sub{font-weight:400;font-size:12px;color:var(--dof)}
 .sectie.dicht .rij{display:none}
-.rij{background:var(--kaart);border:1px solid var(--rand);border-radius:6px;padding:8px 10px;margin:6px 0;display:grid;grid-template-columns:280px 1fr;gap:8px 14px;position:relative}
+.rij{background:var(--kaart);border:1px solid var(--rand);border-radius:6px;padding:8px 10px;margin:6px 0;display:grid;grid-template-columns:260px 1fr 210px;gap:8px 14px;position:relative}
+.mix{border-left:1px solid var(--rand);padding-left:12px;font-size:12px}
+.mix .niveau{font-size:18px;font-weight:600;color:#fff}
+.mix .niveau.geerfd{color:var(--dof);font-weight:400}
+.mix input{width:56px}
+.mix .rijtje{display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap}
+.samenvat{display:none;gap:10px;align-items:center;font-size:12px;grid-column:1/-1}
+body.compact .rij.klaar{grid-template-columns:1fr;padding:4px 10px}
+body.compact .rij.klaar>div:not(.samenvat){display:none}
+body.compact .rij.klaar .samenvat{display:flex}
+.rij.open{grid-template-columns:260px 1fr 210px!important;padding:8px 10px!important}
+.rij.open>div:not(.samenvat){display:block!important}.rij.open .samenvat{display:none!important}
 .rij.verberg{display:none}
 .rij.nieuw{animation:flits 1.2s ease-out}
 @keyframes flits{from{box-shadow:0 0 0 3px var(--accent)}to{box-shadow:0 0 0 0 transparent}}
@@ -644,7 +730,8 @@ textarea{width:100%;min-height:54px;resize:vertical}
 <div class="balk">
 <h1>Geluid-studio</h1>
 <input id="zoek" placeholder="zoek (categorie, tekst)..." style="width:220px">
-<select id="filter"><option value="">alles</option><option value="leeg">leeg</option><option value="synth">synthetisch</option><option value="echt">echt</option><option value="takes">met takes</option></select>
+<select id="filter"><option value="">alles</option><option value="todo">nog te doen (leeg of synthetisch)</option><option value="leeg">leeg</option><option value="synth">synthetisch</option><option value="echt">echt</option><option value="takes">met takes</option><option value="eigenmix">eigen mix-instelling</option></select>
+<label class="klein" title="rijen die klaar zijn (genoeg echte opnames) als een regel tonen"><input type="checkbox" id="compact" checked onchange="document.body.classList.toggle('compact',this.checked)"> klare rijen inklappen</label>
 <label class="klein">sleutel <input id="sleutel" type="password" placeholder="ElevenLabs API-sleutel (sk_...)" style="width:200px"><button class="klein" onclick="bewaarSleutel()">bewaar</button></label>
 <label class="klein">standaard duur <input id="s_duur" style="width:52px" title="seconden, 0 = ElevenLabs kiest"></label>
 <label class="klein">invloed <input id="s_invloed" style="width:52px" title="0-1, hoe strak hij de prompt volgt"></label>
@@ -687,8 +774,18 @@ function rijHtml(r){
   +'<label class="klein" title="aan als de prompt om een reeks vraagt (in a row); uit = de hele clip als een take"><input type="checkbox" id="k_'+esc(r.categorie)+'"'+(/in a row/i.test(r.prompt||r.prompt_bron||'')?' checked':'')+'> knip op stiltes</label>'
   +'<button class="prim" onclick="genereer(\''+esc(r.categorie)+'\',1)">Genereer</button><button onclick="genereer(\''+esc(r.categorie)+'\',3)" title="drie keer achter elkaar, meer keus">&times;3</button>'
   +((r.prompt_generator&&r.prompt!==r.prompt_generator)||(!r.prompt_generator&&r.prompt)?'<button class="klein" onclick="herstel(\''+esc(r.categorie)+'\')" title="'+(r.prompt_generator?'terug naar de prompt van Claude (maak_geluid_prompts.py)':'terug naar de prompt uit de wishlist')+'">herstel prompt</button>':'')
-  +'</div><div class="takes" id="t_'+esc(r.categorie)+'">'+takes+'</div></div>';}
-function rijAttrs(el,r){el.dataset.cat=r.categorie;el.dataset.st=st(r);el.dataset.takes=r.takes.length?1:0;el.dataset.zoek=(r.categorie+' '+r.waarvoor+' '+r.uitleg+' '+r.sectie).toLowerCase()}
+  +'</div><div class="takes" id="t_'+esc(r.categorie)+'">'+takes+'</div></div>'
+  +mixHtml(r)
+  +'<div class="samenvat"><span class="cat">'+esc(r.categorie)+'</span><span>'+esc(r.waarvoor)+'</span>'+badges+'<span class="klein">'+mixKort(r.mix)+'</span><button class="klein" onclick="this.closest(\'.rij\').classList.toggle(\'open\')">toon</button></div>';}
+function mixKort(m){return (m.niveau>=0?'+':'')+m.niveau.toFixed(1)+' dB'+(m.eigen?'':' (van '+esc(m.bron)+')')}
+function mixHtml(r){const m=r.mix;const c=esc(r.categorie);
+ return '<div class="mix"><div class="klein">mengpaneel</div><div class="niveau'+(m.eigen?'':' geerfd')+'" title="mix-dB uit audio_manager '+m.mix.toFixed(1)+' + tuner-dB '+m.tuner.toFixed(1)+'">'+(m.niveau>=0?'+':'')+m.niveau.toFixed(1)+' dB</div>'
+  +'<div class="klein">'+(m.eigen?'eigen instelling':'erft van <b>'+esc(m.bron)+'</b>')+(m.vertraging?' &middot; '+(m.vertraging>0?'+':'')+m.vertraging.toFixed(2)+' s':'')+'</div>'
+  +'<div class="rijtje"><span class="klein">tuner-dB</span><input id="mdb_'+c+'" value="'+m.tuner+'" title="correctie bovenop de mix-dB ('+m.mix.toFixed(1)+')"><span class="klein">vertr.</span><input id="mvt_'+c+'" value="'+m.vertraging+'" title="seconden later (+) of eerder (-)"></div>'
+  +'<div class="rijtje"><button class="klein prim" onclick="mixZet(\''+c+'\')" title="eigen regel in sounds/sound_tuning.json; het spel leest het bij de volgende start">eigen instelling</button>'+(m.eigen&&!D.catdb_heeft?.[r.categorie]?'<button class="klein" onclick="mixWis(\''+c+'\')" title="regel weghalen: erft weer van de familie">erf weer</button>':'')+'</div></div>';}
+async function mixZet(c){try{const j=await api('/api/mix_zet',{categorie:c,db:document.getElementById('mdb_'+c).value,vertraging:document.getElementById('mvt_'+c).value});toast(c+' heeft nu een eigen instelling: '+mixKort(j.mix)+' (spel herstarten om het te horen)');await ververs(c);await laad(true)}catch(e){toast(e.message,'fout')}}
+async function mixWis(c){try{const j=await api('/api/mix_wis',{categorie:c});toast(c+' erft weer: '+mixKort(j.mix));await ververs(c);await laad(true)}catch(e){toast(e.message,'fout')}}
+function rijAttrs(el,r){el.dataset.cat=r.categorie;el.dataset.st=st(r);el.dataset.takes=r.takes.length?1:0;el.dataset.eigen=r.mix.eigen?1:0;el.classList.toggle('klaar',r.echt.length>=r.gewenst&&!r.takes.length);el.dataset.zoek=(r.categorie+' '+r.waarvoor+' '+r.uitleg+' '+r.sectie).toLowerCase()}
 function teken(){
  const m=document.getElementById('main');let h='';let sec='';const secs=[];
  for(const r of D.rijen){
@@ -706,7 +803,7 @@ function teken(){
 function klap(h){const s=h.parentElement;s.classList.toggle('dicht');h.classList.toggle('dicht');open_[h.textContent.replace(/^\S+/,'').trim().split(/\d+ echt/)[0].trim()]=!s.classList.contains('dicht')}
 function spring(i){const s=document.getElementById('s_'+i);s.classList.remove('dicht');s.querySelector('h2').classList.remove('dicht');s.scrollIntoView({block:'start',behavior:'smooth'})}
 function filter(){const z=document.getElementById('zoek').value.toLowerCase();const f=document.getElementById('filter').value;
- for(const e of document.querySelectorAll('.rij')){let aan=!z||e.dataset.zoek.includes(z);if(f==='takes')aan=aan&&e.dataset.takes==='1';else if(f)aan=aan&&e.dataset.st===f;e.classList.toggle('verberg',!aan)}
+ for(const e of document.querySelectorAll('.rij')){let aan=!z||e.dataset.zoek.includes(z);if(f==='takes')aan=aan&&e.dataset.takes==='1';else if(f==='todo')aan=aan&&e.dataset.st!=='echt';else if(f==='eigenmix')aan=aan&&e.dataset.eigen==='1';else if(f)aan=aan&&e.dataset.st===f;e.classList.toggle('verberg',!aan)}
  for(const s of document.querySelectorAll('.sectie')){const zicht=[...s.querySelectorAll('.rij')].some(e=>!e.classList.contains('verberg'));s.style.display=zicht?'':'none'}}
 document.getElementById('zoek').oninput=filter;document.getElementById('filter').onchange=filter;
 async function ververs(c,flits){try{const r=await api('/api/rij?cat='+encodeURIComponent(c));const el=document.querySelector('.rij[data-cat="'+c+'"]');if(!el)return;const idx=D.rijen.findIndex(x=>x.categorie===c);if(idx>=0)D.rijen[idx]=r;el.innerHTML=rijHtml(r);rijAttrs(el,r);if(flits){el.classList.remove('nieuw');void el.offsetWidth;el.classList.add('nieuw')}filter()}catch(e){toast(e.message,'fout')}}
@@ -852,6 +949,25 @@ class Handler(BaseHTTPRequestHandler):
             invloed = float(str(b.get("invloed") or st.get("invloed") or 0.3).replace(",", "."))
             model = s.get("instellingen", {}).get(cat, {}).get("model") or st.get("model") or MODELLEN[0]
             return genereer(cat, prompt, duur, max(0.0, min(1.0, invloed)), model, bool(b.get("knippen", True)))
+        if pad == "/api/mix_zet":
+            # eigen regel in sound_tuning.json (het mengpaneel): dan erft de
+            # categorie niet meer; het spel leest het bij de volgende start
+            cat = str(b.get("categorie", ""))
+            if not re.fullmatch(r"[a-z0-9_]+", cat):
+                raise RuntimeError("rare categorie")
+            t = lees_tuning()
+            regel = {"db": float(str(b.get("db", "0")).replace(",", ".") or 0),
+                     "vertraging": float(str(b.get("vertraging", "0")).replace(",", ".") or 0)}
+            t[cat] = regel
+            schrijf_tuning(t)
+            return {"mix": mix_van(cat)}
+        if pad == "/api/mix_wis":
+            cat = str(b.get("categorie", ""))
+            t = lees_tuning()
+            if cat in t:
+                del t[cat]
+                schrijf_tuning(t)
+            return {"mix": mix_van(cat)}
         if pad == "/api/takes_weg":
             cat = str(b.get("categorie", ""))
             if re.fullmatch(r"[a-z0-9_]+", cat):

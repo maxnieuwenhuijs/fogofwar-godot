@@ -1624,7 +1624,10 @@ func _ready() -> void:
 		# sounds"). Per categorie: hoeveel varianten geladen zijn, de mix-stand
 		# en de tuning uit sounds/sound_tuning.json. Regels met AAN=0 zijn
 		# bestanden die het spel NIET kan spelen -- die moet je zien.
-		print("[SND] categorie | varianten | mix-dB | tuner-dB | vertraging")
+		# Sinds 18 september (een mengpaneel): mix-dB, tuner-dB en vertraging
+		# zijn wat het spel ECHT gebruikt, geerfd van `bron` als de categorie
+		# geen eigen regel heeft (Audio.mix_bron); "eigen" = zelfstandig.
+		print("[SND] categorie | varianten | mix-dB | tuner-dB | vertraging | bron")
 		var cats: Array = Audio.alle_categorieen()
 		var stil: Array = []
 		var los: Array = []
@@ -1632,9 +1635,10 @@ func _ready() -> void:
 			var n: int = Audio.variant_aantal(cat)
 			if n == 0:
 				stil.append(cat)
-			print("[SND] %-24s | %d | %+.1f | %+.1f | %+.2f" % [cat, n,
-				float(Audio.CATEGORY_DB.get(cat, 0.0)),
-				Audio.volume_correctie(cat), Audio.extra_vertraging(cat)])
+			var bron: String = Audio.mix_bron(String(cat))
+			print("[SND] %-24s | %d | %+.1f | %+.1f | %+.2f | %s" % [cat, n,
+				Audio.mix_db(cat), Audio.volume_correctie(cat), Audio.extra_vertraging(cat),
+				"eigen" if bron == String(cat) else bron])
 		# Stille opnames: een categorie die geladen is maar die geen enkel
 		# script ooit afspeelt. Dat is de vraag die telt -- "staat het bestand
 		# in een categorie" is altijd waar en zegt dus niets.

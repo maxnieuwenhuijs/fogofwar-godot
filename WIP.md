@@ -53,6 +53,28 @@ server opnieuw uitrollen en een nieuwe client-build.
 trainers zoals op 17 september), daarna een nachtrun als nulpunt, en pas dan
 de factiezoeker voor wat er dan nog scheef staat.
 
+## 18 september -- Een mengpaneel voor alles; studio overzichtelijker
+
+Max: "alle geluiden qua niveau dezelfde dB als bij de muis-infanterie ooit
+ingesteld, 1 mixboard voor alle sounds, tenzij je specifiek instelt per
+factie per unit" en "maak het paneel voor de sounds nog beter en
+overzichtelijker", plus "al die kreten: loud and very short bursts".
+
+- `Audio.mix_keten`/`mix_bron`/`mix_eigen`/`mix_db`/`mix_niveau`/
+  `wis_geluid_tuning`; `volume_correctie` en `extra_vertraging` erven via
+  de bron. Gemeten: `inf_die_pig_hp` erft -2 dB van `inf_die_mouse`,
+  `inf_kanon_die_pig` +12 dB en -0,04 s van `inf_kanon_die_mouse`,
+  `step_pig` -7 van `step`. De muis-categorieen zelf ongewijzigd.
+  De ongecommitte `mix_db`/`ERFT_MIX_DB` van de andere sessie is in de
+  werkmap vervangen door de generieke versie (let op bij hun commit).
+- Studio: derde kolom mengpaneel (niveau, bron, tuner-dB, vertraging,
+  eigen instelling / erf weer via `/api/mix_zet` en `/api/mix_wis`, schrijft
+  `sounds/sound_tuning.json` met tabs zoals Godot), filters "nog te doen"
+  en "eigen mix-instelling", klare rijen ingeklapt tot een regel met
+  "toon". Rondje zetten/wissen getest: bestand inhoudelijk gelijk.
+- Prompts: alle kreten "one loud, very short burst ... cut off";
+  `maak_geluid_prompts.py --kreten`.
+
 ## 18 september -- De big bro sterft als de infanterie (kreet per kanon/archetype)
 
 Max: "gebruik ook bij cav de sounds voor de body en gibs, die doodemans-
