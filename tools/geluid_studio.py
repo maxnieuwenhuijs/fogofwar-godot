@@ -401,8 +401,18 @@ def schrijf_wav(pad, x, sr):
         w.writeframes((x * 32767).astype(np.int16).tobytes())
 
 
+def takes_map():
+    """results/geluid_studio met een .gdignore: anders importeert Max' open
+    Godot-editor elke take als resource (en laat .import-bestanden achter)."""
+    os.makedirs(TAKES_DIR, exist_ok=True)
+    gdi = os.path.join(TAKES_DIR, ".gdignore")
+    if not os.path.exists(gdi):
+        open(gdi, "w").close()
+
+
 def genereer(cat, prompt, duur, invloed, model, knippen=True):
     data, formaat = elevenlabs(prompt, duur, invloed, model)
+    takes_map()
     map_ = os.path.join(TAKES_DIR, cat)
     os.makedirs(map_, exist_ok=True)
     stempel = time.strftime("%Y%m%d_%H%M%S")
@@ -481,10 +491,52 @@ def verwijder_bestand(pad):
     return ""
 
 
+def ruim_takes_op():
+    """Bij het openen van de pagina (18 september, Max: "als ik refresh moet
+    je alle takes weghalen die ik niet heb toegevoegd"): elke take die niet
+    met Gebruiken in het spel is gezet gaat weg; wat wel gebruikt is blijft
+    staan als geheugensteun. Geeft het aantal verwijderde takes."""
+    weg = 0
+    for mp in glob.glob(os.path.join(TAKES_DIR, "*", "*.json")):
+        try:
+            meta = json.load(io.open(mp, encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        gebruikt = meta.get("gebruikt", {})
+        rest = []
+        for t in meta.get("takes", []):
+            if t in gebruikt:
+                rest.append(t)
+            else:
+                try:
+                    os.remove(t)
+                    weg += 1
+                except OSError:
+                    pass
+                try:
+                    os.remove(t + ".import")
+                except OSError:
+                    pass
+        if rest:
+            meta["takes"] = rest
+            with io.open(mp, "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=1, ensure_ascii=False)
+        else:
+            try:
+                os.remove(mp)
+            except OSError:
+                pass
+    return weg
+
+
 def verwijder_take(take):
     take = os.path.normpath(take)
     if take.startswith(os.path.normpath(TAKES_DIR)) and os.path.exists(take):
         os.remove(take)
+        try:
+            os.remove(take + ".import")
+        except OSError:
+            pass
 
 
 def godot_import():
@@ -598,7 +650,7 @@ function toast(t,soort){const d=document.createElement('div');d.className='toast
 function speler(p){return '<audio controls preload="none" src="/audio?p='+encodeURIComponent(p)+'"></audio>'}
 function naam(p){return p.split('/').pop()}
 function st(r){return r.echt.length?'echt':(r.synth.length?'synth':'leeg')}
-async function laad(stil){if(!stil)document.getElementById('laden').style.display='flex';try{D=await api('/api/overzicht');teken();document.getElementById('sleutel').placeholder=D.sleutel?'sleutel staat (verborgen)':'ElevenLabs API-sleutel (sk_...)';document.getElementById('s_duur').value=D.standaard.duur??0;document.getElementById('s_invloed').value=D.standaard.invloed??0.3;status()}catch(e){toast(e.message,'fout')}document.getElementById('laden').style.display='none'}
+async function laad(stil){if(!stil)document.getElementById('laden').style.display='flex';try{if(!stil){const o=await api('/api/opruimen');if(o.weg)setTimeout(()=>toast(o.weg+' niet-gebruikte take(s) van de vorige keer opgeruimd','info'),300)}D=await api('/api/overzicht');teken();document.getElementById('sleutel').placeholder=D.sleutel?'sleutel staat (verborgen)':'ElevenLabs API-sleutel (sk_...)';document.getElementById('s_duur').value=D.standaard.duur??0;document.getElementById('s_invloed').value=D.standaard.invloed??0.3;status()}catch(e){toast(e.message,'fout')}document.getElementById('laden').style.display='none'}
 function status(){const s=D.import||{};const el=document.getElementById('status');el.innerHTML=s.bezig?'<span class="spin"></span> Godot importeert...':(s.laatste?'import: '+esc(s.laatste):'');document.getElementById('btnImport').disabled=!!s.bezig;if(s.bezig)setTimeout(async()=>{try{D.import=await api('/api/import_status')}catch(e){}status();if(!D.import.bezig){toast('Godot-import '+D.import.laatste,(D.import.laatste||'').startsWith('klaar')?'':'fout');laad(true)}},3000)}
 function rijHtml(r){
  const s=st(r);
@@ -693,6 +745,9 @@ class Handler(BaseHTTPRequestHandler):
         elif u.path == "/api/overzicht":
             with _lock:
                 self._json(overzicht())
+        elif u.path == "/api/opruimen":
+            with _lock:
+                self._json({"weg": ruim_takes_op()})
         elif u.path == "/api/rij":
             cat = urllib.parse.parse_qs(u.query).get("cat", [""])[0]
             with _lock:
@@ -851,6 +906,7 @@ def main():
     # tweede studio naast een ander programma op 8765 binden, waarna de
     # browser bij dat andere programma uitkwam. Dus: bind, vraag /ping aan
     # onszelf, en schuif door als het antwoord niet van dit proces komt.
+    takes_map()
     srv = None
     poort = a.poort
     for poging in range(50):

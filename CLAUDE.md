@@ -808,7 +808,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   bestaand bestand een "weg" (Max: "laat me ook bestaande geluiden
   verwijderen als ik het daar niet mee eens ben"; wist de wav met zijn
   .import, alleen onder sounds/, en waarschuwt als de BANK hem bij naam
-  noemt; git haalt hem zo nodig terug).
+  noemt; git haalt hem zo nodig terug). **Takes zijn vluchtig** (Max: "als
+  ik refresh moet je alle takes weghalen die ik niet heb toegevoegd"): bij
+  het openen van de pagina (`/api/opruimen`) gaat elke take weg die niet
+  met Gebruiken in het spel is gezet; gebruikte blijven staan als
+  geheugensteun. `results/geluid_studio/` draagt een `.gdignore`, anders
+  importeert de open editor elke take.
 - **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
   "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
   het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het
