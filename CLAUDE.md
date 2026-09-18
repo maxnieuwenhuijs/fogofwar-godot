@@ -743,6 +743,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (per factie x type x archetype het wapen en de drie effectieve
   categorieen; FAIL als er iets stil is, terugvalt op het algemene geluid
   of de bajonet buiten de infanterie komt). Puur geluid: uispel gelijk.
+- **De big bro sterft met dezelfde lagen als de infanterie (18 september,
+  Max: "gebruik ook bij cav de doodemans-geluiden voor body en gibs, en
+  maak in de studio de die-geluiden aan voor een kanon of normaal
+  sterven").** Lijf-op-de-grond, gibs, snede, vallend wapen en de
+  materiaal-laag waren al type-onafhankelijk; de KREET niet.
+  `game._death_sound`: cavalerie door een kanon speelt
+  `cav_kanon_die_<factie>[_archetype]` vlak voor de inslag (terugval
+  `cav_die` van die factie, en als ook die ontbreekt de infanterie-
+  kanonkreet van de factie), een gewone dood `cav_die_<factie>[_archetype]`
+  (terugval `inf_die`); beide zetten `kreet_al_gespeeld` zodat PawnView
+  niet dubbelt. `PawnView._speel_doodskreet` (tuner, de 15%-poort) kent
+  de big bro nu ook. In de studio staan per factie met cavalerie de rijen
+  `cav_kanon_die_<f>` en per archetype `cav_die_<f>_<a>` /
+  `cav_kanon_die_<f>_<a>` (prompts uit `maak_geluid_prompts.py`: het grote
+  dier met de bouw van het model); de geluid-tracker kent die rijen nog
+  niet (die zit in de paarden-opruiming van de andere sessie).
 - Choreografie meten: `-- meleecheck` (bajonetstoot in het echte spel: speelt
   er een melee-clip, blijft de aanvaller op zijn eigen vak staan, en steekt hij
   pas over als de dood-animatie klaar is? PASS/FAIL + de gemeten seconden).

@@ -132,6 +132,9 @@ const CATEGORY_DB := {
 	"horse_die": -2.0,
 	"inf_die": -2.0,
 	"cannon_die": -2.0,
+	# de big bro geraakt door een kanon (18 september): eigen, zwaardere kreet
+	# die voor de inslag inzet, zoals inf_kanon_die; terugval cav_die
+	"cav_kanon_die": -2.0,
 	"retaliation_horse": -3.0,
 	"blood_splash": -6.0,
 	# De materiaal-laag ligt onder het schot/de klap: hij mag kleuren, niet

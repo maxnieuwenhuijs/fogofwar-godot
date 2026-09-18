@@ -1375,6 +1375,16 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 ## De kreet die bij deze dood hoort: een kanontreffer (kracht >= 1.2) klinkt
 ## anders dan een musketkogel of een bajonet.
 func _speel_doodskreet() -> void:
+	if _unit_type == Constants.UnitType.CAVALRY:
+		# de big bro (18 september): cav_kanon_die / cav_die per factie en
+		# archetype, terugval op de infanterie-kreet van de factie
+		if _dodelijke_kracht >= 1.2 and Audio.effectieve_categorie("cav_kanon_die", _doctrine, "cav_die", _archetype) != "":
+			Audio.play_factie("cav_kanon_die", _doctrine, 0.0, 0.0, "cav_die", _archetype)
+		elif _dodelijke_kracht >= 1.2:
+			Audio.play_factie("inf_kanon_die", _doctrine, 0.0, 0.0, "inf_die", _archetype)
+		else:
+			Audio.play_factie("cav_die", _doctrine, 0.0, 0.0, "inf_die", _archetype)
+		return
 	if _unit_type != Constants.UnitType.INFANTRY:
 		return
 	if _dodelijke_kracht >= 1.2:

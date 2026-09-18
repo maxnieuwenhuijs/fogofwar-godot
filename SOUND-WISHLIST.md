@@ -208,7 +208,7 @@ paarden waren); die namen houden we aan, zodat de terugval automatisch klopt.
 | Type | Algemene categorie (bestaat) | Factie-categorie | # var |
 |---|---|---|---|
 | Infanterie | `inf_die` | `inf_die_<factie>` | 5 |
-| Cavalerie (big bro) | `horse_die` | `horse_die_<factie>` | 5 |
+| Cavalerie (big bro) | `cav_die` (was `horse_die`) | `cav_die_<factie>[_<archetype>]`, door een kanon `cav_kanon_die_<factie>[_<archetype>]` (18 september) | 5 |
 | Artillerie | `cannon_die` | `cannon_die_<factie>` | 5 |
 
 **Muis en Beer hebben geen kanon** (stand C19, 8 augustus 2026: hun comp is

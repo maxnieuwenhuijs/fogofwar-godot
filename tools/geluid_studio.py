@@ -299,6 +299,20 @@ def overzicht(alleen=None):
             for a in r["archetypes"]:
                 voeg(sectie, a["bestand"], "%s, model %s" % (r["label"], a["naam"]), "",
                      a["prompt"] or wl.get(a["bestand"], {}).get("prompt", ""), 2)
+        # de big bro sterft ook per archetype en door een kanon (18 september,
+        # Max: "maak in de studio de die-geluiden aan voor als ze worden
+        # geraakt door een kanon of normaal sterven"); de tracker kent die
+        # rijen (nog) niet, dus hier erbij
+        if any(r["categorie"] == "cav_die_%s" % f["sleutel"] for r in f["rijen"]):
+            fk = f["sleutel"]
+            voeg(sectie, "cav_kanon_die_%s" % fk, "Big bro geraakt door een kanon",
+                 "Zet voor de inslag in, zoals inf_kanon_die. Zonder opname de gewone big-bro-kreet.",
+                 wl.get("cav_kanon_die_%s" % fk, {}).get("prompt", ""), 3)
+            for a in ["base", "spd", "hp", "atk", "mix"]:
+                voeg(sectie, "cav_die_%s_%s" % (fk, a), "Big bro sterft, model %s" % a, "",
+                     wl.get("cav_die_%s_%s" % (fk, a), {}).get("prompt", ""), 2)
+                voeg(sectie, "cav_kanon_die_%s_%s" % (fk, a), "Big bro geraakt door een kanon, model %s" % a, "",
+                     wl.get("cav_kanon_die_%s_%s" % (fk, a), {}).get("prompt", ""), 2)
     for soort, sectie in (("props", "Diorama-props"), ("wapens", "Wapens: zwaai en klap")):
         for r in tracker.bouw_props(soort):
             voeg(sectie, r["categorie"], r["waarvoor"], r["hoe"], r["prompt"], r["gewenst"])

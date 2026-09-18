@@ -100,7 +100,47 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "cav_die_bear_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_bear_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_bear_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_bear_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_bear_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "cav_die_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_crocodile_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_crocodile_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_crocodile_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_crocodile_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_crocodile_spd": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -108,7 +148,47 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "cav_die_lion_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_lion_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_lion_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_lion_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_lion_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "cav_die_mouse": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_mouse_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_mouse_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_mouse_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_mouse_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_mouse_spd": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -116,7 +196,195 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "cav_die_pig_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_pig_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_pig_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_pig_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_pig_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "cav_die_wolf": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_wolf_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_wolf_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_wolf_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_wolf_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_die_wolf_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_bear": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_bear_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_bear_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_bear_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_bear_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_bear_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_crocodile_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_crocodile_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_crocodile_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_crocodile_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_crocodile_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_lion": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_lion_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_lion_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_lion_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_lion_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_lion_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_mouse": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_mouse_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_mouse_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_mouse_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_mouse_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_mouse_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_pig": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_pig_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_pig_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_pig_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_pig_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_pig_spd": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_wolf": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_wolf_atk": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_wolf_base": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_wolf_hp": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_wolf_mix": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_kanon_die_wolf_spd": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -153,8 +421,8 @@
    "invloed": 0.5
   },
   "charge_rumble": {
-   "duur": 3.0,
-   "invloed": 0.5
+   "duur": 1.4,
+   "invloed": 0.9
   },
   "charge_yell": {
    "duur": 1.0,
@@ -749,11 +1017,11 @@
    "invloed": 0.6
   },
   "prop_vuur": {
-   "duur": 7.0,
-   "invloed": 0.6
+   "duur": 1.0,
+   "invloed": 0.9
   },
   "prop_wc": {
-   "duur": 7.0,
+   "duur": 0.5,
    "invloed": 0.6
   },
   "prop_wegwijzer": {
@@ -939,11 +1207,78 @@
   "card_stat_up": "A small brass weight placed onto a balance scale, a bright short clink. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die": "A large animal is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_bear": "A grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_atk": "A huge strong grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_base": "A grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_hp": "A big heavy grizzly bear wearing a steel breastplate is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_mix": "A grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_spd": "A small skinny grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_crocodile": "A crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_atk": "A huge strong crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_base": "A crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_hp": "A big heavy crocodile wearing a steel breastplate is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_mix": "A crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_spd": "A small skinny crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_lion": "A lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "cav_die_mouse": "A big rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_atk": "A huge strong lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_base": "A lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_hp": "A big heavy lion wearing a steel breastplate is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_mix": "A lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_spd": "A small skinny lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse": "A rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_atk": "A huge strong rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_base": "A rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_hp": "A big heavy rat wearing a steel breastplate is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_mix": "A rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_spd": "A small skinny rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_pig": "A wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "cav_die_wolf": "A big wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_atk": "A huge strong wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_base": "A wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_hp": "A big heavy wild boar wearing a steel breastplate is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_mix": "A wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_spd": "A small skinny wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf": "A wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_atk": "A huge strong wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_base": "A wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_hp": "A big heavy wolf wearing a steel breastplate is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_mix": "A wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_spd": "A small skinny wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die": "A large animal is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear": "A grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_atk": "A huge strong grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_base": "A grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_hp": "A big heavy grizzly bear wearing a steel breastplate is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_mix": "A grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_spd": "A small skinny grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile": "A crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_atk": "A huge strong crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_base": "A crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_hp": "A big heavy crocodile wearing a steel breastplate is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_mix": "A crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_spd": "A small skinny crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion": "A lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_atk": "A huge strong lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_base": "A lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_hp": "A big heavy lion wearing a steel breastplate is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_mix": "A lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_spd": "A small skinny lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse": "A rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_atk": "A huge strong rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_base": "A rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_hp": "A big heavy rat wearing a steel breastplate is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_mix": "A rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_spd": "A small skinny rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig": "A wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_atk": "A huge strong wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_base": "A wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_hp": "A big heavy wild boar wearing a steel breastplate is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_mix": "A wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_spd": "A small skinny wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf": "A wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_atk": "A huge strong wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_base": "A wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_hp": "A big heavy wolf wearing a steel breastplate is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_mix": "A wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_spd": "A small skinny wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move": "A single heavy footstep of a large beast on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_bear": "A single heavy footstep of the massive paw of a grizzly bear that makes the ground thud on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_crocodile": "A single heavy footstep of the heavy foot of a crocodile with its belly dragging over the mud on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -952,7 +1287,7 @@
   "cav_move_pig": "A single heavy footstep of the heavy hoof of a wild boar on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_wolf": "A single heavy footstep of the heavy paw of a huge wolf, claws digging in on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_select": "A large beast snorts once and shifts its weight, harness leather creaking, a buckle jingling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "charge_rumble": "The heavy pounding footsteps of a large animal charging at full speed over packed earth, getting faster, the ground trembling and rumbling under the weight. No voice. Close-up, dry studio recording, no reverb, no music.",
+  "charge_rumble": "fast and heavy running footsteps of a large animal charging at full speed over packed earth, getting faster. No voice. Close-up, dry studio recording, no reverb, no music.",
   "charge_yell": "A short battle cry of man charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1101,8 +1436,8 @@
   "prop_trom": "A single hit on a small military drum, a dull thump on the drumhead. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_uil": "An owl hooting twice at night, soft and low. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_vis": "A wet fish slapped onto wooden planks and flopping twice. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "prop_vuur": "A campfire crackling and popping for a moment. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "prop_wc": "A thin wooden outhouse door slamming shut with a squeak of the hinge. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "prop_vuur": "a flame woosh crackling and popping\n Close-up, dry studio recording, no reverb, no music.",
+  "prop_wc": "a fart",
   "prop_wegwijzer": "A wooden signpost creaking as its sign swings in the wind. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_zand": "Dry sand sliding down a slope, a soft hiss of grains. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "retaliation": "a battle between two man \nwith swords",
@@ -1174,11 +1509,78 @@
   "card_stat_up": "A small brass weight placed onto a balance scale, a bright short clink. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die": "A large animal is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_bear": "A grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_atk": "A huge strong grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_base": "A grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_hp": "A big heavy grizzly bear wearing a steel breastplate is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_mix": "A grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_bear_spd": "A small skinny grizzly bear is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_crocodile": "A crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_atk": "A huge strong crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_base": "A crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_hp": "A big heavy crocodile wearing a steel breastplate is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_mix": "A crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_crocodile_spd": "A small skinny crocodile is wounded in battle and dies: it bellows and hisses in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_lion": "A lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "cav_die_mouse": "A big rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_atk": "A huge strong lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_base": "A lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_hp": "A big heavy lion wearing a steel breastplate is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_mix": "A lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_lion_spd": "A small skinny lion is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse": "A rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_atk": "A huge strong rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_base": "A rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_hp": "A big heavy rat wearing a steel breastplate is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_mix": "A rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_mouse_spd": "A small skinny rat is wounded in battle and dies: it squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_pig": "A wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "cav_die_wolf": "A big wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_atk": "A huge strong wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_base": "A wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_hp": "A big heavy wild boar wearing a steel breastplate is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_mix": "A wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_pig_spd": "A small skinny wild boar is wounded in battle and dies: it grunts and squeals in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf": "A wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_atk": "A huge strong wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_base": "A wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_hp": "A big heavy wolf wearing a steel breastplate is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_mix": "A wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_die_wolf_spd": "A small skinny wolf is wounded in battle and dies: it yelps and growls in pain, then its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die": "A large animal is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear": "A grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_atk": "A huge strong grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_base": "A grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_hp": "A big heavy grizzly bear wearing a steel breastplate is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_mix": "A grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_bear_spd": "A small skinny grizzly bear is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile": "A crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_atk": "A huge strong crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_base": "A crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_hp": "A big heavy crocodile wearing a steel breastplate is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_mix": "A crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_crocodile_spd": "A small skinny crocodile is hit by a cannonball and bellows and hisses once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion": "A lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_atk": "A huge strong lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_base": "A lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_hp": "A big heavy lion wearing a steel breastplate is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_mix": "A lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_lion_spd": "A small skinny lion is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse": "A rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_atk": "A huge strong rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_base": "A rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_hp": "A big heavy rat wearing a steel breastplate is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_mix": "A rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_mouse_spd": "A small skinny rat is hit by a cannonball and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig": "A wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_atk": "A huge strong wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_base": "A wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_hp": "A big heavy wild boar wearing a steel breastplate is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_mix": "A wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_pig_spd": "A small skinny wild boar is hit by a cannonball and grunts and squeals once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf": "A wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_atk": "A huge strong wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_base": "A wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_hp": "A big heavy wolf wearing a steel breastplate is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_mix": "A wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_kanon_die_wolf_spd": "A small skinny wolf is hit by a cannonball and yelps and growls once, loud and short, cut off suddenly as it goes down. One single short cry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move": "A single heavy footstep of a large beast on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_bear": "A single heavy footstep of the massive paw of a grizzly bear that makes the ground thud on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_crocodile": "A single heavy footstep of the heavy foot of a crocodile with its belly dragging over the mud on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",

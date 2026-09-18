@@ -1,5 +1,18 @@
 # Fog of War — Work In Progress & Context
 
+## 18 september -- De big bro sterft als de infanterie (kreet per kanon/archetype)
+
+Max: "gebruik ook bij cav de sounds voor de body en gibs, die doodemans-
+geluiden, en maak in de studio de die-geluiden aan voor als ze worden
+geraakt door een kanon of normaal sterven." Body/gibs/snede/val waren al
+type-onafhankelijk; nieuw: `cav_kanon_die` (mix -2 dB) met archetype in
+`_death_sound` en `_speel_doodskreet`, `cav_die` met archetype, 66 nieuwe
+studio-rijen (6 x kanon + 6 x 5 x 2 archetypen) met prompts. geluidcheck
+134 categorieen, niets stil. **uispel 777 geeft nu 3d361f8b (116, 3):
+dat is de 4.3.7-regelwijziging (alleen +2 attack voor de ruiter) die de
+andere sessie ongecommit in rules_config.gd en de configs heeft staan,
+niet dit werk.**
+
 ## 18 september -- Dreunende aanloop onder de charge
 
 Max: "voeg ook een stukje trembling footsteps in als iemand een charge

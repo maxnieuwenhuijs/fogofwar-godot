@@ -41,11 +41,11 @@ INF = {
     "crocodile": ("lizard", "hisses"),
 }
 CAV = {
-    "mouse": ("a big rat", "squeals"),
+    "mouse": ("a rat", "squeals"),
     "pig": ("a wild boar", "grunts and squeals"),
     "lion": ("a lion", "roars"),
     "bear": ("a grizzly bear", "roars"),
-    "wolf": ("a big wolf", "yelps and growls"),
+    "wolf": ("a wolf", "yelps and growls"),
     "crocodile": ("a crocodile", "bellows and hisses"),
 }
 # de bouw van het model, in gewone woorden (geen "higher pitched")
@@ -119,10 +119,20 @@ def kreten():
         i["inf_die_%s" % f] = dict(i["inf_die_%s_base" % f])
         p["inf_kanon_die_%s" % f] = p["inf_kanon_die_%s_base" % f]
         i["inf_kanon_die_%s" % f] = dict(i["inf_kanon_die_%s_base" % f])
-        p["cav_die_%s" % f] = (
-            "%s is wounded in battle and dies: it %s in pain, then its heavy body falls onto the ground. One single cry. %s"
-            % (dier_c[0].upper() + dier_c[1:], kreet_c, SLOT))
-        i["cav_die_%s" % f] = {"duur": 2.0, "invloed": 0.6}
+        for a, (bouw, extra) in ARCH.items():
+            wie_c = lidwoord(bouw + dier_c.split(" ", 1)[1] + extra)
+            p["cav_die_%s_%s" % (f, a)] = (
+                "%s is wounded in battle and dies: it %s in pain, then its heavy body falls onto the ground. One single cry. %s"
+                % (wie_c, kreet_c, SLOT))
+            i["cav_die_%s_%s" % (f, a)] = {"duur": 2.0, "invloed": 0.6}
+            p["cav_kanon_die_%s_%s" % (f, a)] = (
+                "%s is hit by a cannonball and %s once, loud and short, cut off suddenly as it goes down. One single short cry. %s"
+                % (wie_c, kreet_c, SLOT))
+            i["cav_kanon_die_%s_%s" % (f, a)] = {"duur": 1.0, "invloed": 0.6}
+        p["cav_die_%s" % f] = p["cav_die_%s_base" % f]
+        i["cav_die_%s" % f] = dict(i["cav_die_%s_base" % f])
+        p["cav_kanon_die_%s" % f] = p["cav_kanon_die_%s_base" % f]
+        i["cav_kanon_die_%s" % f] = dict(i["cav_kanon_die_%s_base" % f])
         p["cannon_die_%s" % f] = (
             "A wooden field cannon smashed to pieces: the carriage of %s cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. One single crash. %s"
             % (KANON[f], SLOT))
@@ -138,6 +148,7 @@ def kreten():
 HAND = {
     # algemeen: sterven en bewegen zonder factie
     "inf_die": ("A small animal dies: it cries out in pain, then goes quiet as it falls to the ground. One single cry. " + SLOT, 1.5, 0.6),
+    "cav_kanon_die": ("A large animal is hit by a cannonball and roars once, loud and short, cut off suddenly as it goes down. One single short cry. " + SLOT, 1.0, 0.6),
     "cav_die": ("A large animal is wounded in battle and dies: it roars in pain, then its heavy body falls onto the ground. One single sound. " + SLOT, 2.0, 0.6),
     "cannon_die": ("A wooden field cannon smashed to pieces: oak splinters, iron fittings snap and clatter, a wheel falls over. One single crash. " + SLOT, 2.2, 0.5),
     "cannon_wheel_loose": ("A heavy wooden cannon wheel with an iron rim breaks loose, rolls wobbling for a moment and falls flat on packed earth. " + SLOT, 2.0, 0.5),

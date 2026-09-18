@@ -3021,6 +3021,22 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 		if pv_k != null:
 			pv_k.kreet_al_gespeeld = true
 		return
+	if kanon and pawn.unit_type == Constants.UnitType.CAVALRY:
+		# De big bro net zo (18 september, Max: "ook bij cav die
+		# doodemans-geluiden, en de die-geluiden voor een kanon of normaal
+		# sterven"): cav_kanon_die_<factie>[_archetype] voor de inslag,
+		# terugval cav_die van die factie, en als ook die er niet ligt de
+		# infanterie-kanonkreet van de factie (zoals cav_die op inf_die valt).
+		var pv_c: PawnView = _pawn_views.get(pawn_id)
+		var arch_c: String = pv_c._archetype if pv_c != null else ""
+		var doc_c: int = session.state.doctrine_of(pawn.owner_id)
+		if Audio.effectieve_categorie("cav_kanon_die", doc_c, "cav_die", arch_c) != "":
+			Audio.play_factie("cav_kanon_die", doc_c, delay, 0.0, "cav_die", arch_c)
+		else:
+			Audio.play_factie("inf_kanon_die", doc_c, delay, 0.0, "inf_die", arch_c)
+		if pv_c != null:
+			pv_c.kreet_al_gespeeld = true
+		return
 	# Factie-variant als die bestaat (SOUND-WISHLIST 7b), anders het algemene
 	# geluid: een muis piept, een grizzly brult.
 	var doc: int = session.state.doctrine_of(pawn.owner_id)
@@ -3039,7 +3055,14 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 			# PawnView hoeft niet nog eens: anders hoor je hem dubbel.
 			if pv_d != null:
 				pv_d.kreet_al_gespeeld = true
-		Constants.UnitType.CAVALRY: Audio.play_factie("horse_die", doc, delay)
+		# de big bro sterft in de kreet van zijn soort: cav_die_<factie>[_archetype],
+		# anders de infanterie-kreet van die factie (geen paardengehinnik meer)
+		Constants.UnitType.CAVALRY:
+			var pv_c2: PawnView = _pawn_views.get(pawn_id)
+			var arch_c2: String = pv_c2._archetype if pv_c2 != null else ""
+			Audio.play_factie("cav_die", doc, delay, 0.0, "inf_die", arch_c2)
+			if pv_c2 != null:
+				pv_c2.kreet_al_gespeeld = true
 		Constants.UnitType.ARTILLERY:
 			Audio.play_factie("cannon_die", doc, delay)
 			# Een affuit die het opgeeft verliest een wiel (Max, 30 juli): de
