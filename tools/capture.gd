@@ -896,6 +896,98 @@ func _ready() -> void:
 		print("[IDLE] %s: %d fout(en)" % ["PASS" if ic_fouten == 0 else "FAIL", ic_fouten])
 		get_tree().quit(0 if ic_fouten == 0 else 1)
 		return
+	elif "richtingcheck" in args:
+		# 18 september (Max: "voor infantry attack pig klopt de orientatie niet").
+		# Per type en archetype een PawnView zoals de Model-tuner, en in de pose
+		# die de speler ziet meten waar de VOETEN heen wijzen (voet -> teen, in
+		# wereldruimte, na de auto-fit van 180 graden). De voorkant van een pion
+		# is -Z: een model dat 90 of 180 graden anders staat valt hier meteen op.
+		# Gebruik: -- richtingcheck [factie] (default varken).
+		var rc_fac: int = Constants.Doctrine.MENS
+		var rc_namen := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		for rc_n in rc_namen:
+			if rc_n in args:
+				rc_fac = rc_namen[rc_n]
+		var rc_kaarten := {"base": null, "spd": [1, 3, 1], "hp": [3, 1, 1],
+			"atk": [1, 1, 3], "mix": [2, 2, 1]}
+		var rc_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var rc_fouten := 0
+		var rc_totaal := 0
+		for rc_tp in [0, 1]:
+			for rc_arch in ["base", "spd", "hp", "atk", "mix"]:
+				var rc_pv: PawnView = rc_scene.instantiate()
+				rc_pv.team = Constants.Team.RED
+				add_child(rc_pv)
+				rc_pv.set_unit_type(rc_tp)
+				var rc_st = rc_kaarten[rc_arch]
+				var rc_card = null
+				if rc_st != null:
+					rc_card = Card.new(0, 0, 0, int(rc_st[0]), int(rc_st[1]), int(rc_st[2]))
+				rc_pv.set_character(rc_fac, rc_tp, rc_card)
+				await get_tree().process_frame
+				await get_tree().process_frame
+				if String(rc_pv._model_path) == "":
+					rc_pv.queue_free()
+					continue
+				rc_totaal += 1
+				if "rust" in args and rc_pv._anim != null:
+					# Diagnose: dezelfde meting in de RUSTPOSE (animatie uit, botten terug).
+					rc_pv._anim.stop()
+					for rsk in rc_pv._piece.find_children("*", "Skeleton3D", true, false):
+						(rsk as Skeleton3D).reset_bone_poses()
+					await get_tree().process_frame
+				if "boom" in args:
+					# Diagnose: de node-boom van het stuk met transforms.
+					for rn in rc_pv._piece.find_children("*", "", true, false):
+						if rn is Node3D:
+							var rt: Transform3D = (rn as Node3D).transform
+							var re: Vector3 = rt.basis.get_euler()
+							print("[RICHTING]    node %-40s (%s) pos=(%.2f, %.2f, %.2f) rot=(%.0f, %.0f, %.0f) schaal=%.2f" % [
+								rn.name, rn.get_class(), rt.origin.x, rt.origin.y, rt.origin.z, rad_to_deg(re.x), rad_to_deg(re.y), rad_to_deg(re.z), rt.basis.get_scale().x])
+				var rc_m: Dictionary = _rc_meet(rc_pv)
+				var rc_soort: String = "infantry" if rc_tp == 0 else "cavalry"
+				if rc_m.is_empty():
+					print("[RICHTING] %s %-4s %s: geen voet/teen-botten gevonden" % [rc_soort, rc_arch, String(rc_pv._model_path).get_file()])
+					rc_pv.queue_free()
+					continue
+				# Hoek van de voetrichting t.o.v. de voorkant (-Z), in graden: 0 = goed.
+				var rc_hoek: float = rad_to_deg(Vector2(-rc_m.voet.z, rc_m.voet.x).angle_to(Vector2(1.0, 0.0)))
+				var rc_ok: bool = absf(rc_hoek) <= 25.0
+				if not rc_ok:
+					rc_fouten += 1
+				print("[RICHTING] %s %-4s %-22s voeten (%.2f, %.2f) = %+.0f graden van de voorkant; romp (%.2f, %.2f); op %.2f omhoog; rot.y stuk %.0f (%s)" % [
+					rc_soort, rc_arch, String(rc_pv._model_path).get_file(), rc_m.voet.x, rc_m.voet.z, rc_hoek,
+					rc_m.romp.x, rc_m.romp.z, rc_m.omhoog, rad_to_deg(rc_pv._piece.rotation.y) if rc_pv._piece != null else 0.0,
+					"PASS" if rc_ok else "FAIL"])
+				rc_pv.queue_free()
+		print("[RICHTING] %s: %d modellen, %d met een verkeerde richting" % ["PASS" if rc_fouten == 0 else "FAIL", rc_totaal, rc_fouten])
+		# Met venster: de vijf infanterie-archetypen op een rij op het bord, van
+		# voren gezien zoals de speler ze ziet (_shot_richting.png).
+		var rc_tex := get_viewport().get_texture()
+		if rc_tex != null and rc_tex.get_image() != null:
+			game._overlay.hide()
+			var rc_rij: Array = []
+			var rc_i := 0
+			for rc_arch2 in ["base", "spd", "hp", "atk", "mix"]:
+				var pv2: PawnView = rc_scene.instantiate()
+				pv2.team = Constants.Team.RED
+				game._board.add_child(pv2)
+				pv2.set_unit_type(0)
+				var st2 = rc_kaarten[rc_arch2]
+				pv2.set_character(rc_fac, 0, null if st2 == null else Card.new(0, 0, 0, int(st2[0]), int(st2[1]), int(st2[2])))
+				pv2.position = game.tile_position(3 + rc_i, 7) + Vector3(0.0, 0.05, 0.0)
+				pv2.face_dir(Vector2i(0, -1))
+				rc_rij.append(pv2)
+				rc_i += 1
+			await get_tree().create_timer(1.0).timeout
+			var rc_img: Image = rc_tex.get_image()
+			if rc_img != null:
+				rc_img.save_png("res://_shot_richting.png")
+				print("[RICHTING] screenshot -> _shot_richting.png (base, spd, hp, atk, mix op rij 7)")
+		get_tree().quit(0 if rc_fouten == 0 else 1)
+		return
 	elif "wapenroute" in args:
 		# Diagnose (7 september): welke wapen-route neemt het spel per model?
 		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt
@@ -4205,6 +4297,46 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 		return 0.5
 	var kant: int = Constants.PLAYER_1 if nieuw_is_p1 else Constants.PLAYER_2
 	return 1.0 if winner == kant else 0.0
+
+
+## Richtingcheck: voet -> teen (links en rechts gemiddeld), heup -> nek en de
+## op-as, in wereldruimte, uit het skelet van het stuk. Leeg als er geen
+## voet- en teenbotten zijn.
+func _rc_meet(pv: PawnView) -> Dictionary:
+	if pv._piece == null:
+		return {}
+	var skels: Array = pv._piece.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return {}
+	var sk: Skeleton3D = skels[0]
+	sk.force_update_all_bone_transforms()
+	var pos: Dictionary = {}
+	for i in sk.get_bone_count():
+		var naam: String = sk.get_bone_name(i).to_lower()
+		var wereld: Vector3 = (sk.global_transform * sk.get_bone_global_pose(i)).origin
+		for deel in ["leftfoot", "lefttoebase", "rightfoot", "righttoebase", "hips", "neck", "head"]:
+			if naam.ends_with(deel):   # mixamorig:LeftFoot, mixamorig_LeftFoot, LeftFoot
+				pos[deel] = wereld
+	var voet := Vector3.ZERO
+	var n := 0
+	for kant in ["left", "right"]:
+		if pos.has(kant + "foot") and pos.has(kant + "toebase"):
+			var d: Vector3 = pos[kant + "toebase"] - pos[kant + "foot"]
+			d.y = 0.0
+			if d.length() > 0.0001:
+				voet += d.normalized()
+				n += 1
+	if n == 0:
+		return {}
+	voet = (voet / float(n)).normalized()
+	var romp := Vector3.ZERO
+	var omhoog := 0.0
+	if pos.has("hips") and pos.has("neck"):
+		var r: Vector3 = pos["neck"] - pos["hips"]
+		omhoog = r.normalized().y
+		r.y = 0.0
+		romp = r.normalized() if r.length() > 0.0001 else Vector3.ZERO
+	return {"voet": voet, "romp": romp, "omhoog": omhoog}
 
 
 ## Beurtlicht: zetten doen (de bot speelt zijn beurten zelf) tot de mens aan

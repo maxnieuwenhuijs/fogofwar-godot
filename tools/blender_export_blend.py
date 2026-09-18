@@ -91,6 +91,37 @@ for img in bpy.data.images:
         img.scale(min(img.size[0], 1024), min(img.size[1], 1024))
         print("  texture verkleind: %s -> %dx%d" % (img.name, img.size[0], img.size[1]))
 
+# 2b. Object-acties eruit (18 september). Tripo zet soms een actie met
+#     location/rotation/scale-keys op het musket-OBJECT ("tripo_node...Action").
+#     In ACTIONS-modus probeert de exporter elke object-actie op elk object,
+#     dus ook op de Armature: die hield daarna de wapen-transform als
+#     node-transform over (T (-0,03, 0,36, 0,24), 114 graden gedraaid, schaal
+#     1 in plaats van 90 graden om X en 0,01) en het varken-atk-model stond
+#     114 graden gedraaid en scheef op het bord. Alleen bot-acties
+#     (pose.bones) horen mee; mesh-objecten krijgen geen animation_data.
+def is_botactie(act):
+    try:
+        for layer in act.layers:
+            for strip in layer.strips:
+                for cb in strip.channelbags:
+                    for fc in cb.fcurves:
+                        if fc.data_path.startswith("pose.bones"):
+                            return True
+        return False
+    except AttributeError:  # oudere Blender zonder gelaagde acties
+        return any(fc.data_path.startswith("pose.bones") for fc in act.fcurves)
+
+
+for o in bpy.data.objects:
+    if o.type != "ARMATURE" and o.animation_data is not None:
+        _an = o.animation_data.action.name if o.animation_data.action else "-"
+        o.animation_data_clear()
+        print("  object-animatie verwijderd van %s (actie %s)" % (o.name, _an))
+for act in list(bpy.data.actions):
+    if not is_botactie(act):
+        print("  object-actie verwijderd (geen bot-tracks): %s" % act.name)
+        bpy.data.actions.remove(act)
+
 # 3. Parent-inverse van bot-geparente wapens inbakken, alles selecteren en exporteren.
 bak_parent_inverse_in([o for o in bpy.data.objects if o.type == "MESH"])
 bpy.context.view_layer.update()

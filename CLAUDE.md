@@ -810,6 +810,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   thema over het hele spel en schermen kiezen vormen met
   `theme_type_variation` (lijst bij THEMA-VARIANTEN in dat bestand). Nieuwe
   png's onder `assets/ui/` eerst `--import`-en. Zie `assets/ui/LEESMIJ.md`.
+- **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
+  [factie]`** (capture.tscn, 18 september, Max: "voor infantry attack pig
+  klopt de orientatie niet"). Bouwt per type en archetype een PawnView
+  zoals de Model-tuner en meet in de pose die de speler ziet waar de voeten
+  heen wijzen (voet -> teen, wereldruimte, na de auto-fit van 180 graden;
+  de voorkant is -Z), de romp-richting en of heup -> nek omhoog staat;
+  FAIL boven 25 graden. `rust` meet de rustpose, `boom` dumpt de
+  node-boom met transforms; met venster `_shot_richting.png` (de vijf
+  infanterie-archetypen op rij 7). **Oorzaak van de scheve varken-atk:**
+  Tripo had op het musket-OBJECT een actie met location/rotation/scale-
+  keys gezet (in Godot de extra clip `tripo_node...Action`, 0,08 s). De
+  glTF-exporter probeert in ACTIONS-modus elke object-actie op elk object,
+  dus ook op de Armature, en die hield de wapen-transform als
+  node-transform over (114 graden gedraaid, romp-as 0,42 omlaag). De
+  .blend zelf was goed. `blender_export_blend.py` gooit sinds die dag
+  object-acties weg (alleen `pose.bones`-acties gaan mee) en wist de
+  animation_data van mesh-objecten; het model is opnieuw gebouwd (de
+  drie stappen van `bouw_modellen.stappen`: musket, karakter, gibs+fix).
 - **Zwevende wapens/props: `-- zweefcheck [factie] [cyclus]`** (capture.tscn, na de
   opstelling: elke zichtbare mesh die meer dan 2 eenheden van zijn eigen pion
   staat, met naam en ouderketen; PASS/FAIL). Met een cyclus-getal (bv `muis

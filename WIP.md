@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 18 september -- de varken-atk stond scheef: object-actie op het musket, exporter gefixt
+
+Max: "kun je kijken of voor infantry attack pig er een model change iets is,
+de orientatie klopt niet."
+
+**Meting.** Nieuwe check `-- richtingcheck [factie]`: per archetype een
+PawnView zoals de Model-tuner, in de pose die de speler ziet, voet -> teen
+in wereldruimte tegen de voorkant (-Z). Varken: base/spd/hp/mix op -8 tot
+-15 graden en heup -> nek recht omhoog; **atk op -114 graden en de romp-as
+0,42 OMLAAG**, ook in de rustpose. In de glb droeg de Armature-node
+T (-0,03, 0,36, 0,24), een draai van 114 graden en schaal 1, waar base en hp
+de Blender-objecttransform dragen (90 graden om X, schaal 0,01). De .blend
+(`Character 7.blend`) is goed: zelfde armature-transform als base, zelfde
+rustpose.
+
+**Oorzaak.** In de atk-blend staat op het musket-object (`tripo_node_ac43...`)
+een eigen actie met location/rotation/scale-keys (Blender 5: een
+"Legacy Slot" met 9 object-fcurves; in Godot de extra clip
+`tripo_node...Action`, 0,08 s). `blender_export_blend.py` exporteert in
+ACTIONS-modus, en daarin probeert de exporter elke object-actie op elk
+object, dus ook op de Armature; die hield de wapen-transform als
+node-transform over. Base en hp hebben zo'n actie niet.
+
+**Fix.** `blender_export_blend.py` stap 2b: mesh-objecten verliezen hun
+animation_data en elke actie zonder `pose.bones`-tracks gaat eruit (via de
+gelaagde acties van Blender 5: layers > strips > channelbags; terugval op
+`act.fcurves`). De varken-atk is opnieuw gebouwd met de drie stappen van
+`bouw_modellen.stappen` (musket, karakter, gibs+fix): Armature-node weer
+90 graden / 0,01, 17 acties, geen tripo-clip; richtingcheck varken 5/5
+PASS (atk -10 graden, omhoog 1,00); zweefcheck varken PASS; met venster
+`_shot_richting.png` bekeken: vijf varkens op een rij, allemaal dezelfde
+kant op. Bijvangst: de 18 base-varkens dragen hun musket op 0,29 van de
+hand (drempel 0,25 in de zweefcheck-lijst), consequent voor alle 18, dus
+een eigenschap van het geleverde base-model, niet van deze fix. De
+varken-levering zelf (assets/models/pig/) is nog ongecommit werk van de
+andere sessie; de herbouwde atk-glb's staan ernaast in de werkmap.
+
 ## 17 september -- de capes zijn eruit
 
 Max: "verwijder de capes, alles eromheen, alles." Weg: de cape-code in
