@@ -768,7 +768,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   op Gebruiken drukken en opslaan, prompts aanpassen, retry, de
   ElevenLabs-instelling aanpassen, een groot makkelijk overzicht met .wav").**
   `python tools/geluid_studio.py` (paneelknop "Geluid-studio") start een
-  lokale webpagina op 127.0.0.1:8765 met ELKE categorie die het spel kent
+  lokale webpagina op de eerste vrije poort vanaf 8765 (op deze machine
+  8766: iets anders zit op 8765, en Windows laat je daar gewoon naast
+  binden zonder dat je verbindingen krijgt) met ELKE categorie die het spel kent
   (factie-kreten uit de tracker met de archetype-varianten, diorama-props,
   wapens, het algemene arsenaal uit SOUND-WISHLIST.md, plus wat in de BANK
   van audio_manager.gd staat), per stuk: wat er ligt (echt / synthetisch /

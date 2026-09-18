@@ -21,9 +21,12 @@ groot makkelijk overzicht met .wav etc."
 - Getest zonder sleutel (nette melding), met een verkeerde sleutel
   (ElevenLabs 401 komt door), knippen op een synthetische 6-takes-clip
   (6 stukken), gebruiken/vervangen/audio-route (`..` geeft 404).
-  Poort 8765 was op deze machine al bezet door iets anders (luistert op
-  0.0.0.0:8765 maar weigert), daarom `--poort` als knop; de paneelknop
-  gebruikt de standaard, zet die om als het niet opent.
+  Poort 8765 was op deze machine al bezet door drie andere python-
+  processen op 0.0.0.0:8765 (Max: "ERR_EMPTY_RESPONSE"): Windows laat
+  http.server met SO_REUSEADDR gewoon naast een ander programma binden, en
+  dat andere programma krijgt dan de verbindingen. `vrije_poort` probeert
+  eerst te verbinden en bindt exclusief, en schuift door naar de eerste
+  vrije poort (8766); de browser opent de poort die hij echt kreeg.
 
 ## 18 september -- de varken-atk stond scheef: object-actie op het musket, exporter gefixt
 

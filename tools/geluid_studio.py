@@ -44,6 +44,7 @@ import io
 import json
 import os
 import re
+import socket
 import sys
 import threading
 import time
@@ -673,6 +674,31 @@ class Handler(BaseHTTPRequestHandler):
         raise RuntimeError("onbekend pad %s" % pad)
 
 
+def vrije_poort(start):
+    """De eerste poort vanaf `start` waar niets op luistert. Op Windows laat
+    SO_REUSEADDR (dat http.server aanzet) je gewoon binden naast een ander
+    programma op dezelfde poort, en dan krijgt DAT de verbindingen: zo kwam
+    de pagina leeg terug (Max: "ERR_EMPTY_RESPONSE"). Daarom eerst proberen
+    te verbinden en exclusief te binden."""
+    for poort in range(start, start + 50):
+        try:
+            socket.create_connection(("127.0.0.1", poort), 0.25).close()
+            continue    # iemand antwoordt al
+        except OSError:
+            pass
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+            s.bind(("127.0.0.1", poort))
+            return poort
+        except OSError:
+            continue
+        finally:
+            s.close()
+    raise RuntimeError("geen vrije poort vanaf %d" % start)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--poort", type=int, default=8765)
@@ -688,8 +714,11 @@ def main():
                           "zonder_prompt": [r["categorie"] for r in o["rijen"] if not (r["prompt"] or r["prompt_bron"])]},
                          indent=1))
         return
-    srv = ThreadingHTTPServer(("127.0.0.1", a.poort), Handler)
-    url = "http://127.0.0.1:%d/" % a.poort
+    poort = vrije_poort(a.poort)
+    srv = ThreadingHTTPServer(("127.0.0.1", poort), Handler)
+    url = "http://127.0.0.1:%d/" % poort
+    if poort != a.poort:
+        print("poort %d is bezet door een ander programma, dus %d" % (a.poort, poort))
     print("Geluid-studio op %s  (Ctrl+C stopt)" % url)
     if not a.geen_browser:
         webbrowser.open(url)
