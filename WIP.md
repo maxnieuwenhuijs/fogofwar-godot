@@ -49,9 +49,15 @@ nu `3d361f8b…` (116 acties, cyclus 3; was a6677ac8, 220, 7); `-- herstelcheck
 777` 138 momenten, 0 verschillen; `-- naadcheck` PASS. Core-hash veranderd:
 server opnieuw uitrollen en een nieuwe client-build.
 
-**Volgende:** de bots trainen op 4.3.7 (`train_ai.bat` of de zes losse
-trainers zoals op 17 september), daarna een nachtrun als nulpunt, en pas dan
-de factiezoeker voor wat er dan nog scheef staat.
+**Training gestart** (18 september 19:40, Max: "go! volle bak ultra je mag
+er ook 12uur van maken"): zes trainers `train 720 6 6 <factie> 0
+arena/arena_configs/rules_v42_campaign.json` op 4.3.7 (a1d5e15),
+geminimaliseerd, standby en hibernate op netstroom uit; klaar rond 07:40 op
+19 september. Gewichten bij elke adoptie in `data/ai_weights_f*.json`,
+rapporten in `data/matchup_*.txt` aan het einde. Daarna: gewichten apart
+committen, `-- simcheck` (bij adopties `golden_sims.json` opnieuw ijken en de
+uispel-digest opnieuw meten), een nachtrun als nulpunt van 4.3.7 met
+getrainde bots, en pas dan de factiezoeker voor wat er dan nog scheef staat.
 
 ## 18 september -- Een mengpaneel voor alles; studio overzichtelijker
 
