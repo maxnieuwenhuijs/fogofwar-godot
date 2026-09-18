@@ -283,6 +283,7 @@ def overzicht(alleen=None):
         rijen.append({
             "sectie": sectie, "categorie": cat, "waarvoor": waarvoor, "uitleg": uitleg,
             "prompt_bron": prompt, "prompt_geerfd": geerfd, "prompt": studio.get("prompts", {}).get(cat, ""),
+            "prompt_generator": studio.get("uit_generator", {}).get(cat, ""),
             "gewenst": gewenst or 3, "echt": echt, "synth": kunst,
             "duur": inst.get("duur"), "invloed": inst.get("invloed"), "model": inst.get("model"),
             "takes": takes_van(cat), "doelmap": doelmap(cat).replace("\\", "/"),
@@ -671,7 +672,7 @@ function rijHtml(r){
   +'<div class="inst"><span class="klein">duur</span><input id="d_'+esc(r.categorie)+'" value="'+(r.duur??'')+'" placeholder="'+(D.standaard.duur??0)+'" title="seconden, 0 = ElevenLabs kiest" onchange="bewaarPrompt(\''+esc(r.categorie)+'\')"><span class="klein">invloed</span><input id="i_'+esc(r.categorie)+'" value="'+(r.invloed??'')+'" placeholder="'+(D.standaard.invloed??0.3)+'" title="0-1, hoe strak hij de prompt volgt" onchange="bewaarPrompt(\''+esc(r.categorie)+'\')">'
   +'<label class="klein" title="aan als de prompt om een reeks vraagt (in a row); uit = de hele clip als een take"><input type="checkbox" id="k_'+esc(r.categorie)+'"'+(/in a row/i.test(r.prompt||r.prompt_bron||'')?' checked':'')+'> knip op stiltes</label>'
   +'<button class="prim" onclick="genereer(\''+esc(r.categorie)+'\',1)">Genereer</button><button onclick="genereer(\''+esc(r.categorie)+'\',3)" title="drie keer achter elkaar, meer keus">&times;3</button>'
-  +(r.prompt?'<button class="klein" onclick="herstel(\''+esc(r.categorie)+'\')" title="terug naar de prompt uit de wishlist">herstel prompt</button>':'')
+  +((r.prompt_generator&&r.prompt!==r.prompt_generator)||(!r.prompt_generator&&r.prompt)?'<button class="klein" onclick="herstel(\''+esc(r.categorie)+'\')" title="'+(r.prompt_generator?'terug naar de prompt van Claude (maak_geluid_prompts.py)':'terug naar de prompt uit de wishlist')+'">herstel prompt</button>':'')
   +'</div><div class="takes" id="t_'+esc(r.categorie)+'">'+takes+'</div></div>';}
 function rijAttrs(el,r){el.dataset.cat=r.categorie;el.dataset.st=st(r);el.dataset.takes=r.takes.length?1:0;el.dataset.zoek=(r.categorie+' '+r.waarvoor+' '+r.uitleg+' '+r.sectie).toLowerCase()}
 function teken(){
@@ -697,7 +698,7 @@ document.getElementById('zoek').oninput=filter;document.getElementById('filter')
 async function ververs(c,flits){try{const r=await api('/api/rij?cat='+encodeURIComponent(c));const el=document.querySelector('.rij[data-cat="'+c+'"]');if(!el)return;const idx=D.rijen.findIndex(x=>x.categorie===c);if(idx>=0)D.rijen[idx]=r;el.innerHTML=rijHtml(r);rijAttrs(el,r);if(flits){el.classList.remove('nieuw');void el.offsetWidth;el.classList.add('nieuw')}filter()}catch(e){toast(e.message,'fout')}}
 function promptVan(c){const t=document.getElementById('p_'+c);return t.value.trim()||t.placeholder}
 async function bewaarPrompt(c){try{await api('/api/prompt',{categorie:c,prompt:document.getElementById('p_'+c).value,duur:document.getElementById('d_'+c).value,invloed:document.getElementById('i_'+c).value})}catch(e){toast(e.message,'fout')}}
-async function herstel(c){document.getElementById('p_'+c).value='';await bewaarPrompt(c);await ververs(c);toast('prompt van '+c+' teruggezet','info')}
+async function herstel(c){const r=D.rijen.find(x=>x.categorie===c);document.getElementById('p_'+c).value=r&&r.prompt_generator?r.prompt_generator:'';await bewaarPrompt(c);await ververs(c);toast('prompt van '+c+' teruggezet','info')}
 function bezigAan(c,tekst){const el=document.querySelector('.rij[data-cat="'+c+'"]');if(!el)return null;const d=document.createElement('div');d.className='bezig';d.innerHTML='<span class="spin"></span><span></span>';el.appendChild(d);const t0=Date.now();d.timer=setInterval(()=>{d.lastChild.textContent=tekst+' '+Math.round((Date.now()-t0)/1000)+' s'},250);d.lastChild.textContent=tekst;return d}
 function bezigUit(d){if(!d)return;clearInterval(d.timer);d.remove()}
 async function genereer(c,n){await bewaarPrompt(c);const duur=document.getElementById('d_'+c).value||document.getElementById('s_duur').value,invloed=document.getElementById('i_'+c).value||document.getElementById('s_invloed').value,knippen=document.getElementById('k_'+c).checked,prompt=promptVan(c);
