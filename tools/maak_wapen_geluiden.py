@@ -149,8 +149,31 @@ def r_survive_bajonet(k, rng):
         + klik(t, rng, 1200, 6000, 0.005) * 0.7 + band(ruis(len(t), rng), 200, 900) * env(t, 0.04) * 0.3
 
 
+def r_charge_rumble(k, rng):
+    """De dreunende aanloop van een charge: zware stampen die versnellen,
+    met een laag gerommel eronder dat de grond laat trillen (18 september,
+    Max: "trembling footsteps als iemand een charge doet")."""
+    t = t_as(2.4)
+    uit = np.zeros_like(t)
+    # stappen die versnellen: interval van 0,32 naar 0,17 s
+    tijd = 0.05
+    n = 0
+    while tijd < 2.1:
+        i = int(tijd * SR)
+        lengte = int(SR * 0.22)
+        tt = t_as(0.22)
+        stamp = sinus(tt, (52 + 18 * (n % 2)) * k * np.exp(-tt / 0.06) + 38 * k) * env(tt, 0.09, 0.002) \
+            + band(ruis(len(tt), rng), 60, 700) * env(tt, 0.05, 0.003) * 0.5
+        uit[i:i + lengte] += stamp[:len(uit) - i] * (0.6 + 0.4 * min(1.0, tijd / 1.4))
+        tijd += 0.32 - 0.15 * min(1.0, tijd / 1.8) + rng.uniform(-0.015, 0.015)
+        n += 1
+    # gerommel eronder dat aanzwelt en aan het eind wegsterft
+    rommel = band(ruis(len(t), rng), 25, 140) * np.clip(t / 0.8, 0.0, 1.0) * np.exp(-np.clip(t - 1.9, 0.0, None) / 0.25)
+    return uit + rommel * 0.9
+
+
 WAPENS = ["sabel", "bijl", "lans", "bajonet"]
-RECEPTEN = {}
+RECEPTEN = {"charge_rumble": (r_charge_rumble, 3)}
 for _w, _slash, _kill, _surv in [
         ("sabel", r_slash_sabel, r_kill_sabel, r_survive_sabel),
         ("bijl", r_slash_bijl, r_kill_bijl, r_survive_bijl),

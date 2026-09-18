@@ -1,5 +1,17 @@
 # Fog of War — Work In Progress & Context
 
+## 18 september -- Dreunende aanloop onder de charge
+
+Max: "voeg ook een stukje trembling footsteps in als iemand een charge
+doet, die er apart onder komt." Nieuwe categorie `charge_rumble` (mix
+-5 dB), gespeeld in de charge-tak van game.gd naast `charge_yell`, per
+factie als `charge_rumble_<factie>` ligt (`play_factie`). Placeholder:
+drie synthetische clips van 2,4 s in `sounds/melee/`
+(`maak_wapen_geluiden.py`: versnellende stampen met een laag gerommel
+dat aanzwelt), prompt in de studio (een clip, geen reeks), rij in
+SOUND-WISHLIST 6. geluidcheck: 134 categorieen, niets stil; uispel 777
+a6677ac8 gelijk.
+
 ## 18 september -- Geluid-studio: natuurlijke prompts en een betere pagina
 
 Max: "improve the UI met loaders en alles" en "verbeter echt alle prompts

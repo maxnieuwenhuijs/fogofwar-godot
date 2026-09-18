@@ -3162,6 +3162,13 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 					_death_sound(action.target_id, travel + 0.05)
 		"charge":
 			Audio.play("charge_yell")  # strijdkreet bij het aanrijden
+			# en daaronder, apart, de dreunende aanloop (18 september, Max:
+			# "een stukje trembling footsteps als iemand een charge doet"):
+			# het gestamp van de big bro dat de grond laat trillen, per
+			# factie als die opname er ligt (charge_rumble_<factie>)
+			var charge_pawn: Pawn = session.state.pawns.get(action.pawn_id)
+			if charge_pawn != null:
+				Audio.play_factie("charge_rumble", session.state.doctrine_of(charge_pawn.owner_id))
 			var end_pos: Vector2i = result.defender_pos if result.get("forced_move", false) else result.move_target
 			# Choreografie in fasen (26 aug, Max: "jump en dan melee, dat is
 			# voor de charge"): eerst aanrijden op de rush-clip, dan de

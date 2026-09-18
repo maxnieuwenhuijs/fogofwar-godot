@@ -95,7 +95,7 @@ SLOT = "Close-up, dry studio recording, no reverb, no music."
 REEKS = " Play it five times in a row, each one slightly different, with a clear pause of silence between them."
 REEKS_DUUR = 7.0
 # lange dingen die geen reeks worden (muziek, sfeer, fanfares)
-GEEN_REEKS = {"music_menu", "music_battle", "ambient_field", "win_fanfare", "lose_sting"}
+GEEN_REEKS = {"music_menu", "music_battle", "ambient_field", "win_fanfare", "lose_sting", "charge_rumble"}
 
 
 def kreten():
@@ -167,6 +167,7 @@ HAND = {
     "retaliation": ("A quick steel-on-steel counterstrike, one sharp clang, and a short grunt of effort from a small soldier. " + SLOT, 0.9, 0.6),
     "retaliation_cav": ("A large beast lashes back: a heavy paw strikes with a thud and a short angry snarl. " + SLOT, 1.0, 0.5),
     "blood_splash": ("A small wet blood splatter hitting the ground, quick and light. One splatter. " + SLOT, 0.5, 0.6),
+    "charge_rumble": ("The heavy pounding footsteps of a large animal charging at full speed over packed earth, getting faster, the ground trembling and rumbling under the weight. No voice. " + SLOT, 3.0, 0.5),
     "charge_yell": ("A short battle cry of animals charging into an attack, snarling and roaring over pounding feet. " + SLOT, 1.5, 0.5),
     "body_hit_floor": ("A body in a wool uniform falling and hitting packed earth, a dull heavy thump with a small rattle of gear. One fall. " + SLOT, 0.8, 0.6),
     # materiaal-laag

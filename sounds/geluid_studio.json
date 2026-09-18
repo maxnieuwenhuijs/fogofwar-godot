@@ -137,8 +137,8 @@
    "invloed": 0.6
   },
   "cav_move_mouse": {
-   "duur": 7.0,
-   "invloed": 0.6
+   "duur": 0.1,
+   "invloed": 0.9
   },
   "cav_move_pig": {
    "duur": 7.0,
@@ -152,8 +152,12 @@
    "duur": 7.0,
    "invloed": 0.5
   },
+  "charge_rumble": {
+   "duur": 3.0,
+   "invloed": 0.5
+  },
   "charge_yell": {
-   "duur": 7.0,
+   "duur": 1.0,
    "invloed": 0.5
   },
   "cycle_start": {
@@ -269,7 +273,7 @@
    "invloed": 0.6
   },
   "inf_die_mouse_atk": {
-   "duur": 7.0,
+   "duur": 1.0,
    "invloed": 0.6
   },
   "inf_die_mouse_base": {
@@ -277,11 +281,11 @@
    "invloed": 0.6
   },
   "inf_die_mouse_hp": {
-   "duur": 7.0,
-   "invloed": 0.6
+   "duur": 1.0,
+   "invloed": 0.9
   },
   "inf_die_mouse_mix": {
-   "duur": 7.0,
+   "duur": 1.0,
    "invloed": 0.6
   },
   "inf_die_mouse_spd": {
@@ -553,7 +557,7 @@
    "invloed": 0.5
   },
   "musket_fire": {
-   "duur": 7.0,
+   "duur": 1.0,
    "invloed": 0.6
   },
   "musket_hit": {
@@ -761,7 +765,7 @@
    "invloed": 0.6
   },
   "retaliation": {
-   "duur": 7.0,
+   "duur": 1.0,
    "invloed": 0.6
   },
   "retaliation_cav": {
@@ -813,8 +817,8 @@
    "invloed": 0.6
   },
   "step_mouse": {
-   "duur": 7.0,
-   "invloed": 0.6
+   "duur": 0.1,
+   "invloed": 0.3
   },
   "step_pig": {
    "duur": 7.0,
@@ -881,7 +885,7 @@
    "invloed": 0.6
   },
   "val_melee": {
-   "duur": 7.0,
+   "duur": 1.0,
    "invloed": 0.6
   },
   "val_musket": {
@@ -944,11 +948,12 @@
   "cav_move_bear": "A single heavy footstep of the massive paw of a grizzly bear that makes the ground thud on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_crocodile": "A single heavy footstep of the heavy foot of a crocodile with its belly dragging over the mud on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_lion": "A single heavy footstep of the heavy padded paw of a lion on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "cav_move_mouse": "A single heavy footstep of the heavy scurrying paw of a big rat on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_move_mouse": "A single heavy footstep, deep bass",
   "cav_move_pig": "A single heavy footstep of the heavy hoof of a wild boar on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_wolf": "A single heavy footstep of the heavy paw of a huge wolf, claws digging in on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_select": "A large beast snorts once and shifts its weight, harness leather creaking, a buckle jingling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "charge_yell": "A short battle cry of animals charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "charge_rumble": "The heavy pounding footsteps of a large animal charging at full speed over packed earth, getting faster, the ground trembling and rumbling under the weight. No voice. Close-up, dry studio recording, no reverb, no music.",
+  "charge_yell": "A short battle cry of man charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "haven_score": "A ship's brass bell rung twice in a harbor, bright and clean. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -977,11 +982,11 @@
   "inf_die_lion_mix": "A young cheetah dies: it yowls in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_die_lion_spd": "A small skinny young cheetah dies: it yowls in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_die_mouse": "A mouse dies: it squeaks in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "inf_die_mouse_atk": "A huge strong mouse dies: it squeaks in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "inf_die_mouse_atk": "A higher pitched squeaking rodent dies: it squeaks in pain, then goes quiet",
   "inf_die_mouse_base": "A mouse dies: it squeaks in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "inf_die_mouse_hp": "A big heavy mouse wearing a steel breastplate dies: it squeaks in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "inf_die_mouse_mix": "A mouse dies: it squeaks in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "inf_die_mouse_spd": "A small skinny mouse dies: it squeaks in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "inf_die_mouse_hp": "A rodent dies: it squeaks in pain, then goes quiet",
+  "inf_die_mouse_mix": "A squeaking mouse rodent dies: it squeaks in pain, then goes quiet",
+  "inf_die_mouse_spd": "rodent squaks and dieing",
   "inf_die_pig": "A young pig dies: it squeals in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_die_pig_atk": "A huge strong young pig dies: it squeals in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_die_pig_base": "A young pig dies: it squeals in pain, then goes quiet as it falls to the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1048,7 +1053,7 @@
   "music_menu": "A calm 18th century military camp theme on fife and snare drum, slow march, soft and looping, no vocals.",
   "musket_cock": "The hammer of a flintlock musket being cocked, a crisp metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "musket_echo": "The distant rolling echo of a musket shot fading across open fields, no initial crack, only the tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "musket_fire": "A single flintlock musket shot fired at close range: the sharp crack of black powder with a short puff of the pan. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "musket_fire": "A single musket shot fired",
   "musket_hit": "A musket ball striking a body at close range: a wet heavy thud with a small spray of dust. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "pawn_block": "A musket ball thudding into a thick wooden shield, a dull heavy knock, the shot blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "phase_change": "A short trumpet signal of two rising notes, an 18th century army bugle, clean and short. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1100,7 +1105,7 @@
   "prop_wc": "A thin wooden outhouse door slamming shut with a squeak of the hinge. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_wegwijzer": "A wooden signpost creaking as its sign swings in the wind. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_zand": "Dry sand sliding down a slope, a soft hiss of grains. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "retaliation": "A quick steel-on-steel counterstrike, one sharp clang, and a short grunt of effort from a small soldier. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "retaliation": "a battle between two man \nwith swords",
   "retaliation_cav": "A large beast lashes back: a heavy paw strikes with a thud and a short angry snarl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "reveal": "A short military snare drum roll building for a second and ending on one firm hit. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ricochet": "A musket ball ricocheting off stone: a sharp bright metallic whine spinning away into the distance. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1113,7 +1118,7 @@
   "step_bear": "A single footstep of the small clawed paw of a raccoon, with a little scuff on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_crocodile": "A single footstep of the scaly foot of a lizard slapping and dragging a little on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_lion": "A single footstep of the soft padded paw of a young cheetah on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "step_mouse": "A single footstep of the tiny clawed paw of a mouse on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "step_mouse": "A single light footstep on dry packed land",
   "step_pig": "A single footstep of the small hard trotter of a young pig on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_wolf": "A single footstep of the quick padded paw of a fox, claws ticking on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_tick": "A single tick of an antique pocket watch. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1130,7 +1135,7 @@
   "val_flag": "A wooden flagpole with a cloth banner falling over onto the ground: the pole knocks, the cloth flaps and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_hoed": "A felt soldier's hat falling onto the ground, a soft muffled flop. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_horn": "A brass bugle dropped onto hard ground, a bright metallic clunk and a short bounce. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "val_melee": "A steel sabre dropped onto hard ground: a bright clang, a short ring and a skid to rest. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "val_melee": "A steel object dropped onto hard ground: a bright clang, a short ring and a skid to rest. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_musket": "A wooden musket with iron fittings dropped onto packed earth: the stock knocks, the metal rattles, it settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_prop": "A small wooden object dropped onto hard ground, a short clatter and it comes to rest. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_sapper": "A heavy axe dropped onto the ground: the iron head thuds and the wooden handle knocks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1182,6 +1187,7 @@
   "cav_move_pig": "A single heavy footstep of the heavy hoof of a wild boar on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_wolf": "A single heavy footstep of the heavy paw of a huge wolf, claws digging in on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_select": "A large beast snorts once and shifts its weight, harness leather creaking, a buckle jingling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "charge_rumble": "The heavy pounding footsteps of a large animal charging at full speed over packed earth, getting faster, the ground trembling and rumbling under the weight. No voice. Close-up, dry studio recording, no reverb, no music.",
   "charge_yell": "A short battle cry of animals charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",

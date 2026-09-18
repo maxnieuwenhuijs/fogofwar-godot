@@ -150,6 +150,10 @@ const CATEGORY_DB := {
 	"val_horn": -6.0,
 	"val_sapper": -6.0,
 	"charge_yell": -3.0,
+	# De dreunende aanloop ONDER de strijdkreet (18 september, Max: "een stukje
+	# trembling footsteps als iemand een charge doet, apart eronder"): zwaar
+	# gestamp dat de grond laat trillen, per factie mogelijk (charge_rumble_pig).
+	"charge_rumble": -5.0,
 	"pawn_block": -4.0,
 	"haven_score": -2.0,
 	"win_fanfare": -2.0,

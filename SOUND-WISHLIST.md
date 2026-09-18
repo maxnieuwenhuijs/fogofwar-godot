@@ -128,6 +128,7 @@ tabel onderaan, dan heb je alle varianten in een generatie.
 | `retaliation` | `retaliation.wav` | 1 | Terugslag door infanterie (staal-op-staal) | 3 short steel counterstrike clangs with a single male grunt in a row, each about 0.4 seconds, silence between each, dry close mono, no reverb, no music |
 | `retaliation_horse` | `retaliation_with_horse.wav` | 1 | Terugslag door een paard (hoeven) | ✓ |
 | `blood_splash` | `small_blood_splash*.wav` | 3 | Levend stuk overleeft een treffer | 6 short wet blood splatters in a row, each about 0.25 seconds, silence between each, dry close mono, no reverb, no music |
+| `charge_rumble` | `charge_rumble*.wav` | 3 | De dreunende aanloop onder de strijdkreet: zwaar gestamp dat de grond laat trillen (18 september; per factie als `charge_rumble_<factie>`) | synthetisch (tools/maak_wapen_geluiden.py); prompt in de geluid-studio |
 | `charge_yell` | `charge_yell.wav` | 1 | Cavalerie begint een charge (strijdkreet) | 3 short male battle shouts in a row, each about 0.6 seconds, hoarse and forward, silence between each, a few men only, dry close mono, no reverb, no music |
 | `pawn_block` | `pawn_block.wav` | 2 | Schot geblokkeerd (bank klaar; nog geen event) | 3 short musket ball thuds into thick wood in a row, each about 0.3 seconds, blocked and dull, silence between each, dry close mono, no reverb, no music |
 
