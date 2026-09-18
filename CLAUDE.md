@@ -804,7 +804,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   De pagina zelf: laders per rij met de tijd erbij, x3 (drie keer achter
   elkaar), toasts in plaats van alerts, per rij verversen (filter en
   scrollpositie blijven), sectie-chips bovenin met dekking, inklapbare
-  secties, een vinkje op een take die al in het spel zit.
+  secties, een vinkje op een take die al in het spel zit, en naast elk
+  bestaand bestand een "weg" (Max: "laat me ook bestaande geluiden
+  verwijderen als ik het daar niet mee eens ben"; wist de wav met zijn
+  .import, alleen onder sounds/, en waarschuwt als de BANK hem bij naam
+  noemt; git haalt hem zo nodig terug).
 - **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
   "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
   het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het

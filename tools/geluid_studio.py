@@ -461,6 +461,25 @@ def gebruik(cat, take, vervang_synth=False):
     return doel.replace("\\", "/")
 
 
+def verwijder_bestand(pad):
+    """Een bestaand geluid uit sounds/ weg (18 september, Max: "laat me ook
+    bestaande geluiden verwijderen als ik het daar niet mee eens ben"), met
+    zijn .import. Alleen wav's onder sounds/. Geeft een waarschuwing terug
+    als de BANK in audio_manager.gd het bestand bij naam noemt."""
+    pad = os.path.normpath(pad)
+    if not pad.startswith("sounds") or ".." in pad or not pad.lower().endswith(".wav") or not os.path.isfile(pad):
+        raise RuntimeError("Onbekend geluidsbestand: %s" % pad)
+    os.remove(pad)
+    try:
+        os.remove(pad + ".import")
+    except OSError:
+        pass
+    naam = os.path.basename(pad)
+    if naam in bank():
+        return "%s stond bij naam in de BANK van audio_manager.gd (categorie %s); haal hem daar ook weg." % (naam, bank()[naam])
+    return ""
+
+
 def verwijder_take(take):
     take = os.path.normpath(take)
     if take.startswith(os.path.normpath(TAKES_DIR)) and os.path.exists(take):
@@ -586,8 +605,8 @@ function rijHtml(r){
  if(r.synth.length)badges+='<span class="badge b-syn">'+r.synth.length+' synthetisch</span>';
  if(!r.echt.length&&!r.synth.length)badges+='<span class="badge b-nee">leeg</span>';
  badges+='<span class="klein">gewenst '+r.gewenst+'</span>';
- let best='';for(const p of r.echt)best+='<div class="bestand">'+speler(p)+'<span>'+esc(naam(p))+'</span></div>';
- for(const p of r.synth)best+='<div class="bestand">'+speler(p)+'<span class="klein">'+esc(naam(p))+' (synthetisch)</span></div>';
+ let best='';for(const p of r.echt)best+='<div class="bestand">'+speler(p)+'<span>'+esc(naam(p))+'</span><button class="klein" title="dit geluid uit het spel halen" onclick="bestandWeg(''+esc(r.categorie)+'',''+esc(p)+'')">weg</button></div>';
+ for(const p of r.synth)best+='<div class="bestand">'+speler(p)+'<span class="klein">'+esc(naam(p))+' (synthetisch)</span><button class="klein" title="deze placeholder weghalen" onclick="bestandWeg(''+esc(r.categorie)+'',''+esc(p)+'')">weg</button></div>';
  let takes='';
  for(const g of r.takes){const gb=g.gebruikt||{};
   takes+='<div class="groep"><div class="klein">'+esc(g.tijd)+' &middot; invloed '+g.invloed+(g.duur?' &middot; '+g.duur+' s':'')+(g.seconden?' &middot; clip '+g.seconden+' s':'')+' &middot; <span title="'+esc(g.prompt)+'">'+esc((g.prompt||'').slice(0,80))+(g.prompt&&g.prompt.length>80?'...':'')+'</span>'+(g.melding?' <span class="melding">'+esc(g.melding)+'</span>':'')+'</div>';
@@ -635,6 +654,7 @@ async function genereer(c,n){await bewaarPrompt(c);const duur=document.getElemen
   bezigUit(d)}
  await ververs(c,true);if(tot)toast(tot+' take(s) voor '+c+' klaar, luister en kies');}
 async function gebruik(btn,c,t,v){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';try{const j=await api('/api/gebruik',{categorie:c,take:t,vervang:v});toast('opgeslagen als '+j.doel+' (nog importeren in Godot)');await ververs(c,true)}catch(e){toast(e.message,'fout');btn.disabled=false;btn.textContent=v?'Vervang synthetisch':'Gebruiken'}}
+async function bestandWeg(c,p){if(!confirm(naam(p)+' uit het spel halen? (git kan hem terughalen)'))return;try{const j=await api('/api/bestand_weg',{pad:p});toast(naam(p)+' verwijderd'+(j.melding?' - '+j.melding:''),j.melding?'info':'');await ververs(c,true)}catch(e){toast(e.message,'fout')}}
 async function weg(c,t){try{await api('/api/weg',{take:t});await ververs(c)}catch(e){toast(e.message,'fout')}}
 async function allesWeg(c){if(!confirm('Alle takes van '+c+' weggooien (wat al in het spel staat blijft)?'))return;try{await api('/api/takes_weg',{categorie:c});await ververs(c)}catch(e){toast(e.message,'fout')}}
 async function bewaarSleutel(){const k=document.getElementById('sleutel').value.trim();if(!k)return;try{await api('/api/sleutel',{sleutel:k})}catch(e){toast(e.message,'fout');return}document.getElementById('sleutel').value='';toast('sleutel bewaard');await laad(true)}
@@ -771,6 +791,8 @@ class Handler(BaseHTTPRequestHandler):
             return {"ok": True}
         if pad == "/api/gebruik":
             return {"doel": gebruik(str(b.get("categorie", "")), str(b.get("take", "")), bool(b.get("vervang")))}
+        if pad == "/api/bestand_weg":
+            return {"melding": verwijder_bestand(str(b.get("pad", "")))}
         if pad == "/api/weg":
             verwijder_take(str(b.get("take", "")))
             return {"ok": True}
