@@ -72,6 +72,7 @@ FACTIE_NL = {"mouse": "Muis", "pig": "Varken", "lion": "Leeuw", "bear": "Beer", 
 MODELLEN = ["eleven_text_to_sound_v2"]
 
 _lock = threading.Lock()
+STUDIO_STEMPEL = "%d-%d" % (os.getpid(), int(time.time()))
 _import_status = {"bezig": False, "laatste": "", "uitvoer": ""}
 
 
@@ -605,8 +606,8 @@ function rijHtml(r){
  if(r.synth.length)badges+='<span class="badge b-syn">'+r.synth.length+' synthetisch</span>';
  if(!r.echt.length&&!r.synth.length)badges+='<span class="badge b-nee">leeg</span>';
  badges+='<span class="klein">gewenst '+r.gewenst+'</span>';
- let best='';for(const p of r.echt)best+='<div class="bestand">'+speler(p)+'<span>'+esc(naam(p))+'</span><button class="klein" title="dit geluid uit het spel halen" onclick="bestandWeg(''+esc(r.categorie)+'',''+esc(p)+'')">weg</button></div>';
- for(const p of r.synth)best+='<div class="bestand">'+speler(p)+'<span class="klein">'+esc(naam(p))+' (synthetisch)</span><button class="klein" title="deze placeholder weghalen" onclick="bestandWeg(''+esc(r.categorie)+'',''+esc(p)+'')">weg</button></div>';
+ let best='';for(const p of r.echt)best+='<div class="bestand">'+speler(p)+'<span>'+esc(naam(p))+'</span><button class="klein" title="dit geluid uit het spel halen" onclick="bestandWeg(\''+esc(r.categorie)+'\',\''+esc(p)+'\')">weg</button></div>';
+ for(const p of r.synth)best+='<div class="bestand">'+speler(p)+'<span class="klein">'+esc(naam(p))+' (synthetisch)</span><button class="klein" title="deze placeholder weghalen" onclick="bestandWeg(\''+esc(r.categorie)+'\',\''+esc(p)+'\')">weg</button></div>';
  let takes='';
  for(const g of r.takes){const gb=g.gebruikt||{};
   takes+='<div class="groep"><div class="klein">'+esc(g.tijd)+' &middot; invloed '+g.invloed+(g.duur?' &middot; '+g.duur+' s':'')+(g.seconden?' &middot; clip '+g.seconden+' s':'')+' &middot; <span title="'+esc(g.prompt)+'">'+esc((g.prompt||'').slice(0,80))+(g.prompt&&g.prompt.length>80?'...':'')+'</span>'+(g.melding?' <span class="melding">'+esc(g.melding)+'</span>':'')+'</div>';
@@ -679,6 +680,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
+        if u.path == "/ping":
+            self._json({"pong": True, "studio": STUDIO_STEMPEL})
+            return
         if u.path == "/":
             data = PAGINA.encode("utf-8")
             self.send_response(200)
@@ -842,8 +846,35 @@ def main():
                           "zonder_prompt": [r["categorie"] for r in o["rijen"] if not (r["prompt"] or r["prompt_bron"])]},
                          indent=1))
         return
-    poort = vrije_poort(a.poort)
-    srv = ThreadingHTTPServer(("127.0.0.1", poort), Handler)
+    # Binden en dan BEWIJZEN dat wij het zijn die antwoorden (18 september,
+    # Max: "blijft hangen op overzicht laden"): op deze machine kon een
+    # tweede studio naast een ander programma op 8765 binden, waarna de
+    # browser bij dat andere programma uitkwam. Dus: bind, vraag /ping aan
+    # onszelf, en schuif door als het antwoord niet van dit proces komt.
+    srv = None
+    poort = a.poort
+    for poging in range(50):
+        poort = vrije_poort(a.poort + poging)
+        try:
+            srv = ThreadingHTTPServer(("127.0.0.1", poort), Handler)
+        except OSError:
+            continue
+        t = threading.Thread(target=srv.serve_forever, daemon=True)
+        t.start()
+        try:
+            with urllib.request.urlopen("http://127.0.0.1:%d/ping" % poort, timeout=3) as r:
+                ok = json.loads(r.read().decode("utf-8")).get("studio") == STUDIO_STEMPEL
+        except Exception:  # noqa: BLE001
+            ok = False
+        if ok:
+            break
+        print("poort %d antwoordt niet als deze studio (iets anders zit ervoor), volgende" % poort)
+        srv.shutdown()
+        srv.server_close()
+        srv = None
+    if srv is None:
+        print("geen werkende poort gevonden vanaf %d" % a.poort)
+        return
     url = "http://127.0.0.1:%d/" % poort
     if poort != a.poort:
         print("poort %d is bezet door een ander programma, dus %d" % (a.poort, poort))
@@ -851,9 +882,10 @@ def main():
     if not a.geen_browser:
         webbrowser.open(url)
     try:
-        srv.serve_forever()
+        while True:
+            time.sleep(3600)
     except KeyboardInterrupt:
-        pass
+        srv.shutdown()
 
 
 if __name__ == "__main__":
