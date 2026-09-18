@@ -1,0 +1,81 @@
+{
+ "_uitleg_doctrines": "C19 (8 augustus): de definitieve factie-instellingen. Bevestigd op 1152 partijen en ANDERE seeds dan waarop ze zijn afgesteld: spreiding 4,4 procentpunt, band 45-56%, niemand verder dan 6,2 van de 50. Beer wint met 93% haven, Leeuw met 99% eliminatie, allebei rond 53%: twee speelstijlen, even sterk. Dit blok stuurt spel, campagne, trainer, arena en ijk-sims tegelijk; wijzigen = regelwijziging, dus golden_sims.json opnieuw ijken en de bots hertrainen.",
+ "_uitleg_honger": "V0 (3 augustus): een duel kent alleen haven en eliminatie. Geen remise, geen tiebreak, geen cycluslimiet. Vanaf deze cyclus verhongert elke speler een pion per cyclus (de achterste), zodat het einde uit de regels zelf komt. Gemeten zonder klok liep een partij door tot 330 cycli en 6001 stappen; met de honger op 10 blijft alles beslissend. Dit is dus GEEN meetgrens meer maar een spelregel, en hij geldt in campagne en los potje gelijk.",
+ "basis_hp": {
+  "cav": 2
+ },
+ "stat_bonus": {
+  "cav": {
+   "attack": 2
+  }
+ },
+ "campaign": {
+  "budget_bonus": {
+   "1": {
+    "cp": 0,
+    "pt": 4
+   },
+   "3": {
+    "cp": 0,
+    "pt": 3
+   },
+   "4": {
+    "cp": 4,
+    "pt": 2
+   },
+   "5": {
+    "cp": 0,
+    "pt": 3
+   }
+  },
+  "cp_start": 10,
+  "pool_model": "punten",
+  "potje_factor": 1.0,
+  "spawn_totaal_max": 15,
+  "start_poolfactor": 0.5
+ },
+ "doctrines": {
+  "0": {
+   "comp": [
+    11,
+    5,
+    3
+   ]
+  },
+  "1": {
+   "cards": 5,
+   "comp": [
+    16,
+    4,
+    0
+   ]
+  },
+  "2": {
+   "budget": 8,
+   "comp": [
+    12,
+    4,
+    2
+   ]
+  },
+  "3": {
+   "comp": [
+    19,
+    3,
+    0
+   ]
+  },
+  "4": {
+   "cav_speed_bonus": 2
+  },
+  "5": {
+   "comp": [
+    13,
+    5,
+    3
+   ]
+  }
+ },
+ "honger_vanaf_cyclus": 10,
+ "stat_minimum": {}
+}
