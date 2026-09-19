@@ -3813,6 +3813,20 @@ const CONV_GAMES := 12
 ## de top-helft wordt gerecombineerd (meetkundig gemiddelde) en geverifieerd
 ## tegen de kampioen. Sigma past zichzelf aan (groter bij succes, kleiner bij
 ## falen). Het profiel wordt bij elke adoptie opgeslagen.
+## Adoptie-poort van de trainer (19 september, zie de toelichting bij de
+## verificatie): verificatie per helft VERIFY_FACTOR x games potjes, eis
+## +VERIFY_MARGE op het totaal (fitness 0-1 per potje, dus 1,0 = een winst
+## netto), per helft hooguit VERIFY_HELFT_MIN achteruit. Stapgrootte sigma
+## zakt niet onder SIGMA_VLOER en gaat na SIGMA_RESET_NA afwijzingen op rij
+## terug naar 0,25.
+const VERIFY_FACTOR := 2
+const VERIFY_MARGE := 1.0
+const VERIFY_HELFT_MIN := 0.5
+const SIGMA_VLOER := 0.12
+const SIGMA_RESET_NA := 5
+const VERIFY_THREADS := 6      # verificatiepotjes tegelijk (meer = allocator-contention)
+
+
 func _run_training(minutes: float, pop: int, games: int, faction: int = -1, train_seed: int = 0) -> void:
 	# F0.1: alle trainings-loting via één seedbare stream (was: globale randi/randfn
 	# op de hoofdthread; die thread-beperking vervalt hiermee).
@@ -3841,6 +3855,11 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	var sigma: Dictionary = {}
 	for d in doctrines:
 		sigma[d] = 0.25
+	# 19 september: na een reeks afwijzingen de stap weer opgooien, anders
+	# krimpt hij naar de vloer en zijn alle kandidaten kopieen van de kampioen.
+	var afwijzingen_op_rij: Dictionary = {}
+	for d in doctrines:
+		afwijzingen_op_rij[d] = 0
 	var t0: int = Time.get_ticks_msec()
 	var deadline: float = minutes * 60_000.0
 	var gen: int = 0
@@ -3859,7 +3878,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	print("[TRAIN] Budget %.1f min · populatie %d · %d potjes per kandidaat · %d facties · PARALLEL (%d threads)" % [
 		minutes, pop, games, doctrines.size(), pop])
 	print("[TRAIN] Eén generatie = %d potjes (kandidaten + dubbele verificatie); parallel op eigen threads..." % [
-		pop * games + games * 2])
+		pop * games + games * VERIFY_FACTOR * 2])
 	while Time.get_ticks_msec() - t0 < deadline:
 		gen += 1
 		var d: int = faction if faction >= 0 else doctrines[(gen - 1) % doctrines.size()]
@@ -3953,23 +3972,35 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 		#    referentie; adoptie eist totaal >= referentie + 2 en per helft geen
 		#    achteruitgang groter dan 1. Meet "beter dan nu", niet "goed".
 		# Twee rondes van `games` threads (12 tegelijk = allocator-contention).
-		var n_verify: int = games * 2
+		#    19 september (diagnose na vier runs met samen 1 adoptie op ~300
+		#    generaties, waarvan 186 op 4.3.7): de fitness is sinds de
+		#    campagne-fitness GENORMALISEERD naar 0-1 per potje, dus "+2" eiste
+		#    twee verliespartijen die in havenwinsten omslaan op 12 vaste loten,
+		#    zonder er een terug te geven. Gemeten: een kandidaat die tegen de
+		#    baseline +0,6 en in totaal +0,4 beter was ging de prullenbak in.
+		#    Nu: elke helft VERIFY_FACTOR x games potjes (24 in totaal), eis
+		#    +VERIFY_MARGE (1,0: een extra winst netto) en per helft hooguit
+		#    -VERIFY_HELFT_MIN (0,5) achteruit. De referentie speelt dezelfde
+		#    (deterministische) reeks, dus dit blijft "beter dan nu".
+		var n_half: int = games * VERIFY_FACTOR
+		var n_verify: int = n_half * 2
 		if not verify_ref.has(d):
 			verify_ref[d] = {
-				"champ": _verify_round(champ_w, d, profile, doctrines, games),
-				"base": _verify_round(champ_w, d, baseline, doctrines, games),
+				"champ": _verify_round(champ_w, d, profile, doctrines, n_half),
+				"base": _verify_round(champ_w, d, baseline, doctrines, n_half),
 			}
 		var ref: Dictionary = verify_ref[d]
 		var ref_tot: float = float(ref.champ) + float(ref.base)
-		var verify_champ: float = _verify_round(mean, d, profile, doctrines, games)
-		var verify_base: float = _verify_round(mean, d, baseline, doctrines, games)
+		var verify_champ: float = _verify_round(mean, d, profile, doctrines, n_half)
+		var verify_base: float = _verify_round(mean, d, baseline, doctrines, n_half)
 		var verify: float = verify_champ + verify_base
-		var adopted: bool = verify >= ref_tot + 2.0 \
-			and verify_champ >= float(ref.champ) - 1.0 \
-			and verify_base >= float(ref.base) - 1.0
+		var adopted: bool = verify >= ref_tot + VERIFY_MARGE \
+			and verify_champ >= float(ref.champ) - VERIFY_HELFT_MIN \
+			and verify_base >= float(ref.base) - VERIFY_HELFT_MIN
 		if adopted:
 			profile[d] = mean
 			adoptions += 1
+			afwijzingen_op_rij[d] = 0
 			verify_ref.erase(d)  # nieuwe kampioen → nieuwe referentie meten
 			sigma[d] = minf(0.35, float(sigma[d]) * 1.15)
 			if faction >= 0:
@@ -3983,7 +4014,14 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 			if pool.size() > max_pool:
 				pool.remove_at(1)
 		else:
-			sigma[d] = maxf(0.06, float(sigma[d]) * 0.85)
+			afwijzingen_op_rij[d] = int(afwijzingen_op_rij[d]) + 1
+			if int(afwijzingen_op_rij[d]) >= SIGMA_RESET_NA:
+				# Vast op een plateau: weer breed zoeken in plaats van
+				# steeds kleinere kopieen van dezelfde kampioen.
+				sigma[d] = 0.25
+				afwijzingen_op_rij[d] = 0
+			else:
+				sigma[d] = maxf(SIGMA_VLOER, float(sigma[d]) * 0.85)
 		var elapsed: float = float(Time.get_ticks_msec() - t0) / 60_000.0
 		print("[TRAIN] gen %d · %s · beste kandidaat %.1f/%d · verificatie %.1f/%d vs referentie %.1f (kampioen %.1f/%.1f + baseline %.1f/%.1f) → %s · sigma %.2f · %.1f min" % [
 			gen, Constants.doctrine_name(d), float(candidates[0].fit), games,
@@ -4159,20 +4197,28 @@ func _run_arena(per: int, level: String) -> void:
 ## round-robin, kant om en om. Retour: behaalde punten (win=1, gelijk=0.5).
 func _verify_round(cand_w: Dictionary, cand_d: int, opp_profile: Dictionary,
 		doctrines: Array, games: int) -> float:
-	var threads: Array = []
-	for g in games:
-		var opp_d: int = doctrines[g % doctrines.size()]
-		var vjobs: Array = [{
-			"cand_w": cand_w, "cand_d": cand_d,
-			"opp_w": opp_profile[opp_d], "opp_d": opp_d,
-			"cand_is_p1": g % 2 == 0,
-		}]
-		var thread := Thread.new()
-		thread.start(_eval_games_threaded.bind(vjobs))
-		threads.append(thread)
+	# Hooguit VERIFY_THREADS threads tegelijk: meer GDScript-threads vechten om
+	# de allocator en maken het trager (gemeten 19 september: 12 tegelijk
+	# verdubbelde de generatietijd, 14,6 -> 28,8 min). De potjes worden dus in
+	# rondes gespeeld; de reeks (tegenstander-factie en kant per index) blijft
+	# dezelfde, dus de referentie blijft geldig.
 	var pts: float = 0.0
-	for t in threads:
-		pts += float(t.wait_to_finish().fit)
+	var g0: int = 0
+	while g0 < games:
+		var threads: Array = []
+		for g in range(g0, mini(games, g0 + VERIFY_THREADS)):
+			var opp_d: int = doctrines[g % doctrines.size()]
+			var vjobs: Array = [{
+				"cand_w": cand_w, "cand_d": cand_d,
+				"opp_w": opp_profile[opp_d], "opp_d": opp_d,
+				"cand_is_p1": g % 2 == 0,
+			}]
+			var thread := Thread.new()
+			thread.start(_eval_games_threaded.bind(vjobs))
+			threads.append(thread)
+		for t in threads:
+			pts += float(t.wait_to_finish().fit)
+		g0 += VERIFY_THREADS
 	return pts
 
 

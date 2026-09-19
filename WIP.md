@@ -1,5 +1,40 @@
 # Fog of War — Work In Progress & Context
 
+## 19 september -- De adoptie-poort van de trainer stond dicht
+
+Max, na de nachtrun op 4.3.7 (186 generaties, 0 adopties): "korte diagnose
+run."
+
+- **Diagnose** (Leeuw, 25 min in de voorgrond, log
+  `results/diagnose_train_leeuw.log`): gen 1 verificatie 4,5/12 tegen
+  referentie 4,1 (kampioen 1,4/1,5, baseline 3,1/2,5), gen 2 4,1 tegen 4,1.
+  Een kandidaat die +0,4 beter was (tegen de baseline +0,6) werd
+  verworpen, want de poort eiste **+2,0**. Die eis stamt uit de tijd dat een
+  winst 1 punt was; sinds de campagne-fitness is een potje genormaliseerd
+  naar 0-1, dus "+2" betekende: twee verliespartijen die op 12 vaste loten
+  in havenwinsten omslaan, zonder er een terug te geven. Daarbovenop
+  kromp sigma na acht afwijzingen naar 0,06: kopieen van de kampioen.
+  Vier runs sinds 8 september, samen ~300 generaties, 1 adoptie.
+- **Fix in `tools/capture.gd`** (constanten boven `_run_training`):
+  verificatie per helft `VERIFY_FACTOR` (2) x games = 12 + 12 potjes; eis
+  `VERIFY_MARGE` 1,0 op het totaal (een winst netto op 24); per helft
+  hooguit `VERIFY_HELFT_MIN` 0,5 achteruit; `SIGMA_VLOER` 0,12 en na
+  `SIGMA_RESET_NA` (5) afwijzingen op rij sigma terug naar 0,25.
+  `_verify_round` speelt in rondes van `VERIFY_THREADS` (6): 12 threads
+  tegelijk gaf allocator-contention (generatie 14,6 -> 28,8 min; met rondes
+  20,5 min, waarvan ~6 min de verdubbelde verificatie).
+- **Controle** (dezelfde seed, dus dezelfde kandidaat): verificatie 9,1/24
+  tegen 8,2 (kampioen 2,9/3,1, baseline 6,2/5,1) -> +0,9, net onder de
+  eis van 1,0. De poort staat nu op de juiste schaal; de marge blijft op
+  1,0 (niet bijstellen op een meetpunt). Geen scriptfouten.
+- Niet in de engine, niet in de regels: uispel, goldens en sims
+  ongewijzigd. De diagnose-runs schreven `data/matchup_leeuw.txt` over;
+  teruggezet op het nachtrapport.
+
+**Volgende:** nachtrun trainen op 4.3.7 met de nieuwe poort; daarna
+gewichten committen, `-- simcheck` (bij adopties de sims herijken en de
+uispel-digest opnieuw meten), nachtmatrix als nulpunt, dan de factiezoeker.
+
 ## 18 september -- 4.3.7: de ruiter krijgt alleen nog +2 attack
 
 Max, na de nachtmatrix en de driedubbele meting: "voeg toe en dan kunnen we
