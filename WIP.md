@@ -31,9 +31,12 @@ run."
   ongewijzigd. De diagnose-runs schreven `data/matchup_leeuw.txt` over;
   teruggezet op het nachtrapport.
 
-**Volgende:** nachtrun trainen op 4.3.7 met de nieuwe poort; daarna
-gewichten committen, `-- simcheck` (bij adopties de sims herijken en de
-uispel-digest opnieuw meten), nachtmatrix als nulpunt, dan de factiezoeker.
+**Training gestart** (20 september 10:00, Max: "go!!!!"): zes trainers
+`train 720 6 6 <factie> 0 arena/arena_configs/rules_v42_campaign.json` op
+4.3.7 met de nieuwe poort (4a502b8), geminimaliseerd, standby en hibernate
+uit; klaar rond 22:00. Daarna: gewichten apart committen, `-- simcheck` (bij
+adopties de sims herijken en de uispel-digest opnieuw meten), nachtmatrix
+als nulpunt, dan de factiezoeker.
 
 ## 18 september -- 4.3.7: de ruiter krijgt alleen nog +2 attack
 
