@@ -669,10 +669,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `3d361f8b…` geven (116 acties, cyclus 3, sinds
-  18 september, 4.3.7: de ruiter krijgt alleen +2 attack; was `a6677ac8…`
-  (220, 7) onder 4.3.6 op 16 september en `d16a14f8…` (246, 6) sinds
-  11 september: de omgeving en de bewoners hebben een EIGEN
+  eind-zobrist; seed 777 moet `90650e1e…` geven (213 acties, cyclus 5, sinds
+  21 september: de bot speelt met de Wolf-gewichten van de trainingsrun van
+  20 september; een bot-wijziging verschuift de digest net zo goed als een
+  regelwijziging; was `3d361f8b…` (116, 3) onder 4.3.7 op 18 september,
+  `a6677ac8…` (220, 7) onder 4.3.6 op 16 september en `d16a14f8…` (246, 6)
+  sinds 11 september: de omgeving en de bewoners hebben een EIGEN
   RandomNumberGenerator; de oude referentie `d9985647…` (272, 7, onder
   4.3.5) bevatte stiekem het aantal trekjes dat het diorama bij de herbouw
   uit de globale RNG deed, tussen `seed(777)` en de auto-opstelling van de

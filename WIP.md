@@ -1,5 +1,31 @@
 # Fog of War — Work In Progress & Context
 
+## 21 september -- De poort werkt: vijf adopties
+
+Trainingsrun van 20 september (10:00-22:00, zes trainers, 720 min, 4.3.7 met
+de nieuwe poort 4a502b8):
+
+| factie | generaties | adopties |
+|---|---|---|
+| Varken | 28 | 1 |
+| Muis | 8 | 0 |
+| Leeuw | 38 | 1 |
+| Beer | 20 | 0 |
+| Wolf | 27 | 3 |
+| Krokodil | 19 | 0 |
+
+Gewichten `ai_weights_f0/f2/f4.json` vernieuwd (77f5314). `-- simcheck` 0
+afwijkingen (de easy-bots gebruiken de L2-gewichten niet, en de enige
+medium in de sims is de Beer, ongewijzigd). `-- uispel 777` verschuift wel:
+de bot speelt daar de Wolf met de nieuwe gewichten: nu `90650e1e…` (213
+acties, cyclus 5; was 3d361f8b, 116, 3). `-- herstelcheck 777` 138 momenten,
+0 verschillen.
+
+**Volgende:** nachtmatrix als nulpunt van 4.3.7 met de getrainde bots
+(`.rena_nacht.ps1`, Max start), dan de factiezoeker voor wat er scheef
+staat. De Muis haalt maar 8 generaties in 12 uur (lange partijen): als de
+Muis niets leert is dat eerder een tijdsprobleem dan een plateau.
+
 ## 19 september -- De adoptie-poort van de trainer stond dicht
 
 Max, na de nachtrun op 4.3.7 (186 generaties, 0 adopties): "korte diagnose
