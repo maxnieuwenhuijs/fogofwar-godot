@@ -46,15 +46,26 @@ if (-not $NietWachten) {
     }
 }
 
-# Achtergrond: standaard de nieuwste run met een volledige 36-paren-matrix.
+# Achtergrond: standaard de nieuwste NACHTMATRIX. Expres niet "de nieuwste run
+# die er is": een variant-run (bv. results\leeuw_bonus2_*) speelt ANDERE regels
+# dan de zoeker zelf, en dan meet je 25 paren onder de ene regel en 11 onder de
+# andere. Een nachtmatrix draait per definitie op rules_v42_campaign.json.
 if (-not $Achtergrond) {
-    $kandidaat = Get-ChildItem "results" -Directory -ErrorAction SilentlyContinue |
+    $kandidaat = Get-ChildItem "results" -Directory -Filter "nacht_*_v42_matrix_l2" -ErrorAction SilentlyContinue |
         Where-Object { Test-Path (Join-Path $_.FullName "games.jsonl") } |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $kandidaat) { Log "[ZOEKER] geen enkele run met games.jsonl gevonden"; exit 1 }
+    if (-not $kandidaat) { Log "[ZOEKER] geen nachtmatrix gevonden; geef -Achtergrond"; exit 1 }
     $Achtergrond = (Resolve-Path (Join-Path $kandidaat.FullName "games.jsonl") -Relative) -replace '^\.\\',''
 }
 Log "[ZOEKER] achtergrond: $Achtergrond"
+# Speelt die achtergrond dezelfde regels als de zoeker? De eerste regel van een
+# games.jsonl is de run-metadata, met het gebruikte regels-bestand erin.
+$meta = (Get-Content $Achtergrond -TotalCount 1)
+if ($meta -notmatch 'rules_v42_campaign') {
+    Log "[ZOEKER] LET OP: deze achtergrond draaide NIET op rules_v42_campaign.json."
+    Log "[ZOEKER] De zoeker speelt die regels wel, dus de 25 achtergrond-paren en"
+    Log "[ZOEKER] de 11 gespeelde paren zijn dan niet met elkaar te vergelijken."
+}
 
 # Welke factie? Zonder -Facties: die het verst van 50% staat in de achtergrond.
 if (-not $Facties) {

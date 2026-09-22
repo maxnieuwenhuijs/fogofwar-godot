@@ -17,6 +17,7 @@
 # Nu staat elke knop met zijn eigen instellingen in een eigen kader. Wat in het
 # kader staat, hoort bij die knop. Meer regel is het niet.
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName System.Drawing
 
 $repo = $PSScriptRoot
@@ -41,7 +42,7 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 1008)
+$form.Size = New-Object System.Drawing.Size(470, 1096)
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -210,7 +211,7 @@ $null = Maak-Knop $kadRegels "Regels uitproberen" {
 
 # --- 5. Facties uitproberen: zoekt aan de factie-eigenschappen zelf.
 # Dit kader is hoger, want er hoort een derde instelling bij.
-$kadFacties = Maak-Kader "Facties uitproberen" 404 122
+$kadFacties = Maak-Kader "Facties uitproberen" 404 210
 Maak-Uitleg $kadFacties "Probeert kaartbudget, perks en legers per factie; komt met een voorstel."
 $numFacties = Maak-Getal $kadFacties 205 480 5 600 "minuten"
 # 2 potjes = 216 partijen per kandidaat. Met 1 potje schommelt een factie op
@@ -272,8 +273,86 @@ $null = Maak-Knop $kadFacties "Facties uitproberen" {
         "Fog of War") | Out-Null
 }
 
+# Tweede knop: de zoeker voor een hele avond (22 september). Verschil met de
+# knop hierboven: hij WACHT tot er niets meer draait, pakt de nieuwste
+# nachtmatrix als achtergrond (dan hoeft hij alleen de 11 paren met die factie
+# te spelen, ruim drie keer sneller) en kiest zelf de factie die het verst van
+# 50% staat als je het veld leeg laat.
+$btnZoekerAvond = New-Object System.Windows.Forms.Button
+$btnZoekerAvond.Text = "Zoeker voor vanavond (wacht tot de rest klaar is)"
+$btnZoekerAvond.Location = New-Object System.Drawing.Point(12, 114)
+$btnZoekerAvond.Size = New-Object System.Drawing.Size(401, 34)
+$btnZoekerAvond.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnZoekerAvond.Add_Click({
+    $duur = [int]$numFacties.Value
+    $potjes = [int]$numFactiesPotjes.Value
+    $zoekArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "$repo\tools\balans\zoeker_vanavond.ps1", "-Minuten", "$duur", "-Potjes", "$potjes")
+    $welke = $txtFacties.Text.Trim()
+    if ($welke -ne "") { $zoekArgs += @("-Facties", $welke) }
+    Start-Process powershell -WorkingDirectory $repo -WindowStyle Minimized -ArgumentList $zoekArgs
+    $watVoor = if ($welke -ne "") { "factie(s) $welke" } else { "de factie die het verst van 50% staat" }
+    [System.Windows.Forms.MessageBox]::Show(
+        "De zoeker staat klaar voor $watVoor, $duur minuten met $potjes potje(s)." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Hij begint pas als er geen arena- of trainingsprocessen meer draaien, dus je " +
+        "kunt hem nu al starten en de meting die bezig is gewoon laten uitlopen." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Als achtergrond pakt hij de nieuwste nachtmatrix: de 25 paren zonder die factie " +
+        "komen daaruit, alleen de 11 paren MET die factie speelt hij zelf. Dat scheelt " +
+        "ruim twee derde van de tijd." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Zijn knoppen zijn grof: een kaart erbij is al ~25 procentpunt. Voor een " +
+        "correctie van tien punten is 'Startpunten van een factie' de betere knop." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Log: " + 'results\zoeker_<tijd>.log' + ", voorstel in " + 'results\facties_<tijd>\voorstel.json' + ".",
+        "Fog of War") | Out-Null
+})
+$kadFacties.Controls.Add($btnZoekerAvond)
+
+# Derde knop: de FIJNE knop. Startpunten (C11-budget_bonus) per factie, op de
+# drie plekken tegelijk (crules.gd + de twee regels-jsons); een punt is ~5 pp,
+# tegen ~25 voor een kaart. Eerst een droogloop tonen, dan pas schrijven.
+$btnStartpunten = New-Object System.Windows.Forms.Button
+$btnStartpunten.Text = "Startpunten van een factie (fijne knop)"
+$btnStartpunten.Location = New-Object System.Drawing.Point(12, 154)
+$btnStartpunten.Size = New-Object System.Drawing.Size(401, 34)
+$btnStartpunten.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnStartpunten.Add_Click({
+    $welke = $txtFacties.Text.Trim()
+    if ($welke -notmatch '^[0-5]$') {
+        [System.Windows.Forms.MessageBox]::Show(
+            "Vul eerst EEN factie in het facties-vakje hierboven: 0 Varken, 1 Muis, " +
+            "2 Leeuw, 3 Beer, 4 Wolf, 5 Krokodil.", "Fog of War") | Out-Null
+        return
+    }
+    $antwoord = [Microsoft.VisualBasic.Interaction]::InputBox(
+        "Hoeveel startpunten krijgt factie $welke erbij?" + [Environment]::NewLine +
+        "(Muis heeft 4, Beer 3, Wolf 2 + 4 CP, Krokodil 3; een punt is ongeveer 5 procentpunt. " +
+        "0 haalt de bonus weg.)", "Startpunten", "2")
+    if ($antwoord -eq "") { return }
+    if ($antwoord -notmatch '^-?\d+$') {
+        [System.Windows.Forms.MessageBox]::Show("Dat is geen getal.", "Fog of War") | Out-Null
+        return
+    }
+    $uit = & python "$repo\tools\balans\zet_budget_bonus.py" $welke "--pt" $antwoord "--droogloop" 2>&1
+    $bevestig = [System.Windows.Forms.MessageBox]::Show(
+        ($uit -join [Environment]::NewLine) + [Environment]::NewLine + [Environment]::NewLine +
+        "Dit is een REGELWIJZIGING: daarna moeten de goldens opnieuw, golden_sims.json " +
+        "opnieuw geijkt, de testsuite draaien en de CHANGELOG bij. Doorzetten?",
+        "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Warning)
+    if ($bevestig -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+    $uit2 = & python "$repo\tools\balans\zet_budget_bonus.py" $welke "--pt" $antwoord 2>&1
+    [System.Windows.Forms.MessageBox]::Show(
+        ($uit2 -join [Environment]::NewLine) + [Environment]::NewLine + [Environment]::NewLine +
+        "Zeg tegen Claude dat de startpunten zijn gezet; hij doet de goldens, de sims, " +
+        "de testsuite en de CHANGELOG.", "Fog of War") | Out-Null
+})
+$kadFacties.Controls.Add($btnStartpunten)
+
 # --- 6. Bekijken wat er nu geldt en wat eruit gekomen is.
-$kadKijk = Maak-Kader "Bekijken" 530 200
+$kadKijk = Maak-Kader "Bekijken" 618 200
 Maak-Uitleg $kadKijk "Het rapport met winst-percentages, of de factie-instellingen van nu."
 $null = Maak-Knop $kadKijk "Bekijk het rapport" {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
@@ -361,7 +440,7 @@ $kadKijk.Controls.Add($lblKijkHint)
 # --- 7. Modellen bouwen uit de blend-inbox.
 # Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
 # Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
-$kadModellen = Maak-Kader "Modellen bouwen" 736 122
+$kadModellen = Maak-Kader "Modellen bouwen" 824 122
 Maak-Uitleg $kadModellen "Een map met een .blend en de nieuwe texturen erin gaat in een keer het spel in."
 # Hoofdknop: een complete levering (een map met de .blend EN de nieuwe texturen)
 # in een keer verwerken. Eerst de droogloop tonen en om bevestiging vragen; die
@@ -474,7 +553,7 @@ $btnRetexture.Add_Click({
 $kadModellen.Controls.Add($btnRetexture)
 
 # --- 8. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 864 86
+$kadStop = Maak-Kader "Noodrem" 952 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots
