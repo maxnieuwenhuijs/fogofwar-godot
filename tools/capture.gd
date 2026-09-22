@@ -1503,6 +1503,98 @@ func _ready() -> void:
 		print("[TUNER] klaar: %d fout(en)" % tuner_fouten)
 		get_tree().quit(0 if tuner_fouten == 0 else 1)
 		return
+	elif "imitcheck" in args:
+		# L4 neuraal (22 september): waar wijkt het netje af van L2, en hoe
+		# erg? Speelt L2 vs L2 (rood = de opgegeven factie, default leeuw)
+		# en rekent bij elke rode actiefase-beslissing OOK de keuze van het
+		# score-netje uit. Telt per actietype wat L2 koos en wat het netje
+		# koos, of het netje in L2's topgroep zat, en de SPIJT: L2's
+		# evaluate() van de beste zet min die van de netje-zet.
+		# Gebruik: -- imitcheck [factie] [seed] [net=<pad>]
+		var ic_pad: String = "res://data/ai_net_imit.json"
+		var ic_seed: int = 777
+		var ic_factie: int = Constants.Doctrine.LEEUW
+		for a in args:
+			if String(a).begins_with("net="):
+				ic_pad = String(a).substr(4)
+			elif String(a).is_valid_int():
+				ic_seed = int(String(a))
+		for d in Constants.DOCTRINE_DATA.keys():
+			if args.has(Constants.doctrine_name(int(d)).to_lower()):
+				ic_factie = int(d)
+		var ic_net: NeuraalNet = NeuraalNet.laad(ic_pad)
+		if ic_net == null:
+			print("[IMITCHECK] geen netje op %s" % ic_pad)
+			get_tree().quit(1)
+			return
+		var ic_rules: RulesConfig = RulesConfig.load_from_file("res://arena/arena_configs/rules_v42_campaign.json")
+		var ic_a1 := AgentL2.new()
+		var ic_a2 := AgentL2.new()
+		ic_a1.tie_break_loting = true
+		ic_a2.tie_break_loting = true
+		var ic_runner := AgentRunner.new(ic_a1, ic_a2, ic_factie, Constants.Doctrine.WOLF, ic_seed, ic_rules)
+		ic_runner.max_steps = 2500
+		var ic_n := 0
+		var ic_gelijk := 0
+		var ic_in_top := 0
+		var ic_spijt_som: float = 0.0
+		var ic_spijt_max: float = 0.0
+		var ic_l2_type: Dictionary = {}
+		var ic_net_type: Dictionary = {}
+		var ic_afwijk: Dictionary = {}  # "l2type>nettype" -> aantal, alleen bij afwijking buiten de topgroep
+		var ic_spijt_per: Dictionary = {}
+		while not ic_runner.done:
+			var st: GameState = ic_runner.state()
+			if st.phase == Phase.Type.ACTION and st.pending_wolf_step_pawn == -1 and st.current_player == 1:
+				var view: Dictionary = View.for_player(st, 1, true)
+				var ai = ic_a1._get_ai(view)
+				var s: GameState = Agent.reconstruct_state(view)
+				var acties: Array = ai.enumerate_actions(s, 1)
+				if not acties.is_empty():
+					var evals: Array = []
+					var best: int = -2147483647
+					var net_best: float = -INF
+					var net_idx: int = 0
+					for i in acties.size():
+						var na: GameState = ai.simulate(s, acties[i])
+						var v: int = ai.evaluate(na, 1)
+						evals.append(v)
+						if v > best:
+							best = v
+						var w: float = ic_net.waarde(Kenmerken.van_staat(na, 1))
+						if w > net_best:
+							net_best = w
+							net_idx = i
+					var l2_keuze: Dictionary = ai.choose_action(s)
+					var l2_idx: int = acties.find(l2_keuze)
+					ic_n += 1
+					var t_l2: String = String(l2_keuze.get("type", "?"))
+					var t_net: String = String(acties[net_idx].get("type", "?"))
+					ic_l2_type[t_l2] = int(ic_l2_type.get(t_l2, 0)) + 1
+					ic_net_type[t_net] = int(ic_net_type.get(t_net, 0)) + 1
+					if net_idx == l2_idx:
+						ic_gelijk += 1
+					var spijt: float = float(best - evals[net_idx])
+					if spijt == 0.0:
+						ic_in_top += 1
+					else:
+						var sl := "%s>%s" % [t_l2, t_net]
+						ic_afwijk[sl] = int(ic_afwijk.get(sl, 0)) + 1
+						ic_spijt_per[sl] = float(ic_spijt_per.get(sl, 0.0)) + spijt
+					ic_spijt_som += spijt
+					ic_spijt_max = maxf(ic_spijt_max, spijt)
+			ic_runner.step()
+		print("[IMITCHECK] %s (rood) vs wolf, seed %d, netje %s: winnaar %d na %d cycli" % [Constants.doctrine_name(ic_factie), ic_seed, ic_pad, ic_runner.winner, ic_runner.state().cycle])
+		print("[IMITCHECK] %d rode beslissingen: zelfde zet %d (%.1f%%), in L2's topgroep %d (%.1f%%), gemiddelde spijt %.1f, max %.0f (L2-eval-eenheden; material = %d)"
+			% [ic_n, ic_gelijk, 100.0 * ic_gelijk / maxi(1, ic_n), ic_in_top, 100.0 * ic_in_top / maxi(1, ic_n), ic_spijt_som / maxi(1, ic_n), ic_spijt_max, int(ic_a1._ai.weights.get("material", 0)) if ic_a1._ai != null else 0])
+		print("[IMITCHECK] L2 koos:    %s" % str(ic_l2_type))
+		print("[IMITCHECK] netje koos: %s" % str(ic_net_type))
+		var ic_keys: Array = ic_afwijk.keys()
+		ic_keys.sort_custom(func(a, b): return int(ic_afwijk[a]) > int(ic_afwijk[b]))
+		for k in ic_keys:
+			print("[IMITCHECK]   buiten topgroep %-14s %3d keer, gemiddelde spijt %.0f" % [k, int(ic_afwijk[k]), float(ic_spijt_per[k]) / int(ic_afwijk[k])])
+		get_tree().quit(0)
+		return
 	elif "tiecheck" in args:
 		# L4 neuraal (22 september): hoe vaak staat L2 voor gelijke zetten?
 		# Speelt een partij L2 vs L2 en telt per actiefase-beslissing hoeveel

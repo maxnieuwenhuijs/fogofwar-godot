@@ -29,6 +29,12 @@ var _gewaarschuwd: bool = false
 var waarde_pad: String = ""
 var tie_eps: float = 0.3
 var _waarde_net: NeuraalNet = null
+## Gewogen loting (22 september, na de Leeuw-les): het waarde-netje BESLIST
+## de topgroep niet, het WEEGT de loting. Kans per kandidaat evenredig met
+## exp((waarde - max) / waarde_temp): temp 0 = altijd de hoogste waarde
+## (deterministisch, en dat bleek slecht: L4 als Leeuw 24%), heel groot =
+## L2's uniforme loting. Alleen met tie_break_loting; anders de hoogste.
+var waarde_temp: float = 0.5
 
 ## Meetgereedschap: hoeveel netje-beslissingen, hoeveel kandidaten totaal,
 ## en hoe vaak het waarde-netje een topgroep van meer dan een besliste.
@@ -132,20 +138,48 @@ func _beste(rijen: Array) -> int:
 		elif tie_break_loting and v == best_val:
 			toppers.append(i)
 	if _waarde_net != null:
+		var groep: Array = []
+		var waarden: PackedFloat64Array = PackedFloat64Array()
 		var groep_idx: int = -1
 		var groep_val: float = -INF
-		var groep_n: int = 0
 		for i in rijen.size():
 			if scores[i] < best_val - tie_eps:
 				continue
-			groep_n += 1
 			var w: float = _waarde_net.waarde(rijen[i])
+			groep.append(i)
+			waarden.append(w)
 			if w > groep_val:
 				groep_val = w
 				groep_idx = i
-		if groep_n > 1:
+		if groep.size() <= 1:
+			return groep_idx
+		lotingen += 1
+		if not tie_break_loting or waarde_temp <= 0.0:
+			return groep_idx
+		# Gewogen loting: exp((w - max) / temp), max heeft gewicht 1.
+		var gewichten: PackedFloat64Array = PackedFloat64Array()
+		var som: float = 0.0
+		for w in waarden:
+			var g: float = exp((w - groep_val) / waarde_temp)
+			gewichten.append(g)
+			som += g
+		var trek: float = rng.randf() * som
+		for k in groep.size():
+			trek -= gewichten[k]
+			if trek <= 0.0:
+				return groep[k]
+		return groep[groep.size() - 1]
+	if tie_break_loting:
+		# Zonder waarde-netje: loot binnen de topgroep, net als L2 tussen zijn
+		# exact gelijke scores. Het netje maakt van L2's gelijke scores bijna
+		# gelijke getallen; wie dan altijd de EERSTE pakt speelt systematisch
+		# (zelfde pion, zelfde vak) waar L2 spreidt. (22 september: L4 als
+		# Leeuw zakte daardoor naar 24% waar L2 38% haalt.)
+		toppers = []
+		for i in rijen.size():
+			if scores[i] >= best_val - tie_eps:
+				toppers.append(i)
+		if toppers.size() > 1:
 			lotingen += 1
-		return groep_idx
-	if tie_break_loting and toppers.size() > 1:
-		return toppers[rng.randi_range(0, toppers.size() - 1)]
+			return toppers[rng.randi_range(0, toppers.size() - 1)]
 	return best_idx

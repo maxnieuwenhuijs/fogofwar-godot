@@ -221,3 +221,32 @@ func test_waarde_net_beslist_de_topgroep() -> void:
 	assert_eq(b._beste(rijen), 0)
 	assert_eq(a._beste(rijen), 0, "kandidaat 0 staat nu alleen bovenaan (1.5 vs 1.1 > eps)")
 	assert_eq(a.lotingen, 1)
+
+
+func test_gewogen_loting_volgt_het_waarde_net() -> void:
+	_schrijf_proefnet("user://l4tests_score.json", 0)
+	_schrijf_proefnet("user://l4tests_waarde.json", 1)
+	var a := AgentL4.new("user://l4tests_score.json+user://l4tests_waarde.json")
+	assert_true(a.heeft_net() and a.heeft_waarde_net())
+	a.tie_break_loting = true
+	a.waarde_temp = 0.5
+	a.rng = SeededRng.new(99)
+	var n: int = Kenmerken.aantal()
+	var rijen: Array = []
+	for paar in [[1.0, 0.0], [1.0, 1.0], [0.0, 9.0]]:
+		var r := PackedFloat32Array()
+		r.resize(n)
+		r[0] = paar[0]
+		r[1] = paar[1]
+		rijen.append(r)
+	var tel: Dictionary = {0: 0, 1: 0, 2: 0}
+	for i in 400:
+		tel[a._beste(rijen)] += 1
+	assert_eq(tel[2], 0, "buiten de topgroep wordt nooit geloot")
+	assert_true(tel[0] > 0, "de lagere waarde komt ook voorbij (loting, geen beslissing)")
+	assert_true(tel[1] > tel[0] * 3, "de hoogste waarde (verschil 1, temp 0.5: e^2 = 7x) wint veel vaker: %s" % str(tel))
+	assert_eq(a.lotingen, 400)
+	# temp 0 = deterministisch de hoogste waarde.
+	a.waarde_temp = 0.0
+	for i in 20:
+		assert_eq(a._beste(rijen), 1)

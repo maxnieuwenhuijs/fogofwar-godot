@@ -174,6 +174,22 @@ def bundel(logs):
     }
 
 
+def filter_doctrine(D, doctrine):
+    """Alleen de beslissingen van een factie (kandidaten opnieuw aaneengeregen)."""
+    idx = np.nonzero(D["doctrine"] == doctrine)[0]
+    starts = D["seg"][idx]
+    ends = D["seg"][idx + 1]
+    lengtes = ends - starts
+    rijen = np.concatenate([np.arange(a, b) for a, b in zip(starts, ends)]) if len(idx) else np.zeros(0, dtype=np.int64)
+    seg = np.concatenate([[0], np.cumsum(lengtes)])
+    uit = dict(D)
+    uit["X"] = D["X"][rijen]
+    uit["seg"] = seg
+    for k in ("gekozen", "won", "doctrine", "partij"):
+        uit[k] = D[k][idx]
+    return uit
+
+
 # ---------------------------------------------------------------------------
 # Het netje
 # ---------------------------------------------------------------------------
@@ -361,6 +377,13 @@ def train(D, args):
               f"uitslag {va[3]*100:5.1f}% (n={va[4]}) | {time.time() - t0:.0f}s{vlag}")
     net.W, net.b = beste
     va = evalueer(net, D, Xn, idx_val, args.imitatie, args.uitslag)
+    # Per factie: waar doet het netje de bot niet na?
+    for d in range(6):
+        sub = idx_val[D["doctrine"][idx_val] == d]
+        if len(sub) == 0:
+            continue
+        e = evalueer(net, D, Xn, sub, args.imitatie, args.uitslag)
+        print(f"[L4]   {DOCTRINE_NAMEN[d]:<9} validatie {len(sub):5d}: imitatie {e[1]*100:5.1f}% top3 {e[2]*100:5.1f}% uitslag {e[3]*100:5.1f}%")
     return net, mu, sigma, va, Xn, idx_val
 
 
@@ -427,6 +450,7 @@ def main():
     ap.add_argument("--val", type=float, default=0.1, help="deel van de partijen voor validatie")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--max-beslissingen", type=int, default=None, help="per log (snelle proef)")
+    ap.add_argument("--doctrine", type=int, default=None, help="alleen beslissingen van deze factie (0..5)")
     args = ap.parse_args()
     bronnen = vind_logs(args.paden)
     if not bronnen:
@@ -439,6 +463,9 @@ def main():
               f"{len(lg['uitslag'])} uitslagen, kenmerk-versie {lg['kenmerk_versie']} ({lg['n_kenmerken']})")
         logs.append(lg)
     D = bundel(logs)
+    if args.doctrine is not None:
+        D = filter_doctrine(D, args.doctrine)
+        print(f"[L4] alleen {DOCTRINE_NAMEN[args.doctrine]}: {len(D['gekozen'])} beslissingen")
     if len(D["gekozen"]) < 10:
         print("[L4] te weinig beslissingen om te trainen", file=sys.stderr)
         sys.exit(1)
