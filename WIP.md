@@ -38,10 +38,49 @@ legaal (0 illegaal, 0 terugval), 634 ms per beslissing incl. de L2-
 tegenstander. `-- uispel 777` blijft `90650e1e` (het haakje in L2 staat
 achter `beslis_log != null`).
 
-**Draait nu:** `results/l4_log_20260922/` (12 procs, 36 paren x 2, L2 vs
-L2, elke 4e beslissing): ~860 partijen, ~86.000 beslissingen. Daarna:
-trainen naar `data/ai_net.json`, `-- netcheck`, en de meting
-`l4_vs_l2.json` + `l2_vs_l4.json`. Dan selfplay met `l4_beslislog.json`.
+**Datarun:** `results/l4_log_20260922/` (12 procs, 36 paren x 2, L2 vs L2,
+elke 4e beslissing): 864 partijen, 68.508 beslissingen, 3,58 miljoen
+kandidaat-rijen, 892 MB. Trainen duurt 4 min (numpy).
+
+**Metingen (winst van L4 tegen L2, 432 partijen per kleur, +-4,7):**
+
+| netje | validatie | rood | blauw |
+|---|---|---|---|
+| imitatie + uitslag in een getal (48-48) | imit 55,6% | 43,5% | 46,3% |
+| alleen imitatie | imit 64,5% | 49,5% | - |
+| groot (96-96, imitatie + uitslag) | imit 56,3% | 44,4% | - |
+| tweetraps, waarde-netje BESLIST de topgroep | uitslag 84,2% | 53,9% | 47,0% |
+| tweetraps, waarde-netje WEEGT de loting (temp 0,5) | | loopt | loopt |
+
+**De twee lessen van de dag.** (1) `-- tiecheck`: bij 48% van L2's
+beslissingen delen meerdere zetten de hoogste score (topgroep gemiddeld
+4,4, soms 10+) en loot L2. Perfecte kennis van de score haalt dus
+maximaal 66% imitatie; het imitatie-netje zit op 64,5% en speelt 49,5%:
+een kopie van L2. De uitslag-term in hetzelfde getal maakt het netje
+slechter, klein of groot. (2) De Leeuw: L4 als Leeuw zakte in ELKE
+variant naar 24-27% waar L2 38% haalt, terwijl het netje juist de Leeuw
+het best nadoet (71% imitatie, 93% top-3; `-- imitcheck leeuw`: 87-97%
+van de zetten in L2's topgroep). Oorzaak: "altijd de eerste" bij bijna
+gelijke scores is systematisch (zelfde pion, zelfde vak) waar L2 spreidt,
+en de Leeuw loot het meest (zijn override-gewichten `ai_weights_f2.json`:
+haven 0,05, material 3,97, dus bijna alles rondt naar dezelfde int).
+Met loting binnen de topgroep (`tie_eps` 0,3) staat L4 als Leeuw weer op
+38% (128 partijen, loopt door tot 432). Daarom weegt het waarde-netje nu
+de loting (`waarde_temp` 0,5) in plaats van hem te beslissen. **Let op
+voor de balans:** de live gewichten per factie zijn extreem geschaald
+(Beer cav_value 278.630, ranged 97.520; Leeuw haven 0,05). Dat is wat
+L2 echt speelt; de tabel in `data/ai_weights.json` zegt daar niets over.
+
+**Hardware-noot:** een andere sessie draait tegelijk 20 arena-procs
+(`c23_leeuw3`), dus alles liep op halve snelheid; een partij L4 vs L2
+kost 2-3 minuten.
+
+**Volgende:** uitslag van de gewogen tweetraps in beide kleuren. Boven
+55%: `data/ai_net_imit.json` + `data/ai_net_waarde.json` committen als
+de officiele L4 en `tools/l4/selfplay_ronde.ps1` draaien (L4 logt
+zichzelf, waarde-netje hertrainen). Eronder: parkeren, de keten staat en
+is gemeten; de winst moet dan uit selfplay-data komen, niet uit meer
+gesleutel aan de keuze.
 
 ## 21 september -- De poort werkt: vijf adopties
 
