@@ -15,6 +15,18 @@ var _ai = null
 var _profiel_geladen: bool = false
 var tie_break_loting: bool = false  # arena-config zet dit aan (meet-spreiding)
 
+## L4 neuraal (22 september): optionele beslislogger (arena/beslis_log.gd).
+## Staat hij aan, dan schrijft elke actiefase-keuze de kenmerkrijen van ALLE
+## kandidaten plus de index van de gekozen zet weg: de trainingsdata voor het
+## netje. beslis_game is het partijnummer in de run (voor de uitslag erbij).
+var beslis_log = null
+var beslis_game: int = 0
+## Verdunning: alleen elke k-de beslissing loggen (een partij weegt anders
+## megabytes; de beslissingen binnen een partij lijken toch op elkaar).
+## Deterministisch via een teller, geen RNG: de partij zelf verandert niet.
+var beslis_elke: int = 1
+var _beslis_teller: int = 0
+
 
 func _get_ai(view: Dictionary):
 	if _ai == null:
@@ -70,7 +82,10 @@ func decide(view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictionar
 		if s.pending_wolf_step_pawn != -1:
 			var stap: Dictionary = ai.choose_wolf_step(s)
 			return Actions.make_wolf_step(stap.target) if stap.has("target") else Actions.make_skip_wolf_step()
-		var actie: Dictionary = Agent.legacy_to_action(ai.choose_action(s))
+		var legacy: Dictionary = ai.choose_action(s)
+		if beslis_log != null and not legacy.is_empty() and _beslis_aan_de_beurt():
+			_log_keuze(ai, s, legacy, view)
+		var actie: Dictionary = Agent.legacy_to_action(legacy)
 		if actie.is_empty():
 			return legal[0]
 		# F2.5/B3: onder campaign spreekt artillerie CANNON_ACT — vertaal de
@@ -94,3 +109,25 @@ func _vertaal_kanon(s: GameState, actie: Dictionary) -> Dictionary:
 			if schutter != null and schutter.unit_type == Constants.UnitType.ARTILLERY:
 				return Actions.make_cannon_shoot(int(actie.shooter_id), int(actie.target_id))
 	return actie
+
+
+## L4-logging: kandidaten opnieuw opsommen (zelfde volgorde als
+## enumerate_actions, dus de gekozen zet zit erin) en wegschrijven.
+func _log_keuze(ai, s: GameState, legacy: Dictionary, view: Dictionary) -> void:
+	var k: Dictionary = Kenmerken.kandidaten(ai, s, player_id)
+	var acties: Array = k.acties
+	var idx: int = -1
+	for i in acties.size():
+		if acties[i] == legacy:
+			idx = i
+			break
+	if idx == -1:
+		push_warning("AgentL2: gekozen zet niet in de kandidatenlijst, beslissing niet gelogd")
+		return
+	beslis_log.schrijf_beslissing(beslis_game, player_id,
+		int(view.doctrines.get(str(player_id), 0)), k.kenmerken, idx)
+
+
+func _beslis_aan_de_beurt() -> bool:
+	_beslis_teller += 1
+	return beslis_elke <= 1 or (_beslis_teller % beslis_elke) == 0

@@ -1,0 +1,14 @@
+{
+ "matchups": "all",
+ "games_per_matchup": 3,
+ "agents": {
+  "p1": "l4",
+  "p2": "l4"
+ },
+ "base_seed": 96000,
+ "max_steps": 2500,
+ "track_repetitions": true,
+ "rules": "res://arena/arena_configs/rules_v42_campaign.json",
+ "tie_break_loting": true,
+ "beslis_log": true
+}

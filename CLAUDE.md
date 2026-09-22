@@ -141,6 +141,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - **GDScript-edits met `\`-regelvoortzettingen NOOIT via bash-heredocs** —
   python-script via de Write-tool, dan `python script.py` (bekende bug).
 
+- **L4 neuraal (22 september, F8.1, TD-Gammon-route):** AgentL4
+  (`agents/l4_net.gd`) is L2 met de na-staat-waarde uit een netje
+  (`scripts/ai/neuraal_net.gd`, json `data/ai_net.json`) op
+  `Kenmerken.van_staat` (`scripts/ai/kenmerken.gd`, 65 kenmerken = de
+  L2-termen ongewogen per kant + globaal; `KENMERK_VERSIE` ophogen bij elke
+  wijziging van de rij, een netje van een andere versie wordt geweigerd).
+  Kenmerken worden ALLEEN in GDScript berekend; Python leest ze uit het
+  binaire beslislog (`arena/beslis_log.gd`, arena-config `"beslis_log":
+  true`, `"beslis_elke": 4`, label `l4` of `l4:<pad>`). Trainen:
+  `python tools/l4/train_net.py results/<run> --uit data/ai_net.json`
+  (numpy; imitatie-softmax over de kandidaten + uitslag-logit, splits op
+  partij). Check: `-- netcheck [net=<pad>] [seed]` (pariteit GDScript/
+  Python via de `proef`-vector, legaliteit, ms per beslissing). Zonder
+  netje speelt L4 byte-identiek L2. Configs: `l2_beslislog.json`
+  (data van L2), `l4_beslislog.json` (selfplay), `l4_vs_l2.json` +
+  `l2_vs_l4.json` (meting, beide kleuren). Een volledig log weegt 6,5 MB
+  per partij: verdun.
+
 ## Commando's
 
 - Godot: `$env:GODOT_PATH`, anders

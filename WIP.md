@@ -1,5 +1,48 @@
 # Fog of War — Work In Progress & Context
 
+## 22 september -- L4 neuraal: de keten staat, de eerste datarun draait
+
+Max las het TypeSafe-stuk over "System One models" (Jev) en vroeg of zo'n
+model de bots slimmer zou maken. Nee: Jev kent het spel niet en leert niet
+van de arena; de winst zit in een netje op EIGEN data, lokaal en
+deterministisch. Max: "BOUWEN". F8.1 is daarmee naar voren gehaald (voor
+F4.3j).
+
+**Ontwerp (TD-Gammon, geen PPO):** L4 is dezelfde 1-ply greedy als L2, maar
+de waarde van elke na-staat komt uit een MLP op `Kenmerken.van_staat` (65
+getallen: alle termen van `evaluate()` ongewogen per kant, plus cyclus,
+honger, ronde, wanhoop en de twee facties als one-hot). Een lineair netje
+kan L2 dus exact nadoen; alles erboven is winst die 42 gewichten niet
+kunnen uitdrukken. De kenmerken worden in GDScript berekend en zo gelogd:
+Python rekent nooit zelf kenmerken, dus wat je traint is wat je speelt.
+
+**Gebouwd:** `scripts/ai/kenmerken.gd`, `scripts/ai/neuraal_net.gd`
+(forward pass in pure GDScript, float32-gewichten, double-rekenen, `proef`
+in het json bewijst pariteit met numpy), `agents/l4_net.gd` (AgentL4 erft
+AgentL2: actiefase en Wolf-stap via het netje, de rest L2; geen netje of
+verkeerde kenmerk-versie = waarschuwing en byte-identiek L2),
+`arena/beslis_log.gd` + haakje in AgentL2/AgentL4 (`"beslis_log": true`,
+`"beslis_elke": 4`; per beslissing ALLE kandidaat-rijen + gekozen index,
+per partij de uitslag; binair, formaat in de kop van het bestand),
+arena-label `l4` en `l4:<pad>`, `tools/l4/train_net.py` (numpy-MLP, Adam,
+imitatie = softmax over de kandidaten, uitslag = sigmoid van de gekozen
+na-staat; validatie gesplitst op PARTIJ), `-- netcheck [net=<pad>]
+[seed]`, `tests/L4Tests.gd` (6 tests, 52 asserts).
+
+**Gemeten (rooktest, 4 partijen L2 vs L2 met volledig log):** 400
+beslissingen per partij, gemiddeld 62 kandidaten, 6,5 MB per partij bij
+elke beslissing, 150 s per partij (het log simuleert alles nog een keer);
+daarom `beslis_elke` 4 voor de echte run. Netje 65-48-48-1 op die 4
+partijen: pariteit `-0.265173` in beide talen, L4 speelt 313 stappen
+legaal (0 illegaal, 0 terugval), 634 ms per beslissing incl. de L2-
+tegenstander. `-- uispel 777` blijft `90650e1e` (het haakje in L2 staat
+achter `beslis_log != null`).
+
+**Draait nu:** `results/l4_log_20260922/` (12 procs, 36 paren x 2, L2 vs
+L2, elke 4e beslissing): ~860 partijen, ~86.000 beslissingen. Daarna:
+trainen naar `data/ai_net.json`, `-- netcheck`, en de meting
+`l4_vs_l2.json` + `l2_vs_l4.json`. Dan selfplay met `l4_beslislog.json`.
+
 ## 21 september -- De poort werkt: vijf adopties
 
 Trainingsrun van 20 september (10:00-22:00, zes trainers, 720 min, 4.3.7 met

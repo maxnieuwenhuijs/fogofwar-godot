@@ -8,13 +8,15 @@ extends Node
 #   {
 #     "matchups": "all" | [["muis", "wolf"], ...],   # "all" = alle 36 gerichte paren
 #     "games_per_matchup": 5,
-#     "agents": {"p1": "l1", "p2": "l1"},            # l0 | l1 | l2 | l3 | l3u
+#     "agents": {"p1": "l1", "p2": "l1"},            # l0 | l1 | l2 | l3 | l3u | l4 | l4:<netje.json>
 #     "base_seed": 1000,
 #     "rules": "res://arena/arena_configs/rules_v42_campaign.json",  # optioneel
 #     "max_steps": 1500,
 #     "track_repetitions": true,
 #     "full_state": {"p1": false, "p2": false},      # B8-ablatie
-#     "facties_uit_bestand": false                   # zie hieronder, default true
+#     "facties_uit_bestand": false,                  # zie hieronder, default true
+#     "beslis_log": true,                            # L4: beslissingen.bin ernaast (trainingsdata)
+#     "beslis_elke": 3                               # L4: elke 3e beslissing loggen (verdunning)
 #   }
 #
 # FACTIES (8 augustus): draagt het regels-bestand zelf geen `doctrines`-blok,
@@ -116,6 +118,14 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		"stat_minimum": (rules.stat_minimum if rules != null else {}),
 		"stat_bonus": (rules.stat_bonus if rules != null else {}),
 	}))
+	# L4 neuraal (22 september): "beslis_log": true schrijft naast games.jsonl
+	# een beslissingen.bin met per actiefase-keuze alle kandidaten (Kenmerken)
+	# en de uitslag per partij: de trainingsdata voor tools/l4/train_net.py.
+	var beslis_log: BeslisLog = null
+	if bool(config.get("beslis_log", false)):
+		beslis_log = BeslisLog.new(out_map.path_join("beslissingen.bin"))
+		if not beslis_log.open():
+			beslis_log = null
 	var matrix: Dictionary = {}
 	var games := 0
 	var index := 0
@@ -132,6 +142,9 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 			for a in [a1, a2]:
 				if a is AgentL2:
 					a.tie_break_loting = bool(config.get("tie_break_loting", false))
+					a.beslis_log = beslis_log
+					a.beslis_game = index - 1
+					a.beslis_elke = int(config.get("beslis_elke", 1))
 			var runner := AgentRunner.new(a1, a2, d1, d2, seed_val, rules)
 			runner.max_steps = max_steps
 			var metrics := ArenaMetrics.new()
@@ -145,6 +158,8 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 				"full_state_2": a2.full_state,
 			})
 			f.store_line(JSON.stringify(regel))
+			if beslis_log != null:
+				beslis_log.schrijf_uitslag(index - 1, runner.winner, d1, d2, runner.state().cycle)
 			games += 1
 			var sleutel := "%s>%s" % [Constants.doctrine_name(d1), Constants.doctrine_name(d2)]
 			if not matrix.has(sleutel):
@@ -156,6 +171,10 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 			else:
 				matrix[sleutel].remise += 1
 	f.close()
+	if beslis_log != null:
+		beslis_log.sluit()
+		print("[ARENA] beslislog: %d beslissingen, %d kandidaten, %d uitslagen -> %s"
+			% [beslis_log.beslissingen, beslis_log.kandidaten, beslis_log.uitslagen, beslis_log.pad])
 	var duur := (Time.get_ticks_msec() - t0) / 1000.0
 	return {"games": games, "pad": pad, "duur": duur,
 		"per_sec": (games / duur) if duur > 0 else 0.0, "matrix": matrix}
@@ -240,6 +259,10 @@ func _maak_agent(label: String) -> Agent:
 			return AgentL3.new()
 		"l3u":
 			return AgentL3.new(true)
+		"l4":
+			return AgentL4.new()
+	if label.to_lower().begins_with("l4:"):
+		return AgentL4.new(label.substr(3))  # l4:res://data/ai_net_x.json
 	push_warning("Arena: onbekend agent-label '%s', val terug op l1" % label)
 	return AgentL1.new()
 

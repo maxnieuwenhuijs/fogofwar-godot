@@ -1503,6 +1503,69 @@ func _ready() -> void:
 		print("[TUNER] klaar: %d fout(en)" % tuner_fouten)
 		get_tree().quit(0 if tuner_fouten == 0 else 1)
 		return
+	elif "netcheck" in args:
+		# L4 neuraal (22 september): het statusbord van het netje. Print de
+		# kenmerkrij (aantal + namen), laadt data/ai_net.json (of net=<pad>),
+		# bewijst dat GDScript dezelfde waarde rekent als Python (de `proef`
+		# in het json), speelt een partij L4 (rood, muis) tegen L2 (blauw,
+		# wolf) op seed 777 onder rules_v42_campaign en meet legaliteit,
+		# uitslag en de tijd per beslissing. Zonder netje: exit 1, maar de
+		# kenmerken en de L2-terugval worden wel gecontroleerd.
+		var nc_fouten := 0
+		var nc_pad: String = NeuraalNet.STANDAARD_PAD
+		var nc_seed: int = 777
+		for a in args:
+			if String(a).begins_with("net="):
+				nc_pad = String(a).substr(4)
+			elif String(a).is_valid_int():
+				nc_seed = int(String(a))
+		print("[NETCHECK] kenmerken: versie %d, %d stuks" % [Kenmerken.KENMERK_VERSIE, Kenmerken.aantal()])
+		print("[NETCHECK]   %s" % ", ".join(Kenmerken.namen()))
+		if Kenmerken.namen().size() != Kenmerken.aantal():
+			print("[NETCHECK] FOUT: namen() en aantal() verschillen")
+			nc_fouten += 1
+		var nc_net: NeuraalNet = NeuraalNet.laad(nc_pad)
+		if nc_net == null:
+			print("[NETCHECK] geen netje op %s (train er een met tools/l4/train_net.py)" % nc_pad)
+			nc_fouten += 1
+		else:
+			print("[NETCHECK] netje: %s" % nc_net.beschrijving())
+			if not nc_net.heeft_proef:
+				print("[NETCHECK] FOUT: netje draagt geen proef-vector")
+				nc_fouten += 1
+			elif nc_net.proef_ok():
+				print("[NETCHECK] pariteit: GDScript rekent %.6f, Python %.6f: PASS" % [nc_net.waarde(nc_net.proef_invoer), nc_net.proef_uitvoer])
+			else:
+				print("[NETCHECK] FOUT pariteit: GDScript rekent %.6f, Python %.6f" % [nc_net.waarde(nc_net.proef_invoer), nc_net.proef_uitvoer])
+				nc_fouten += 1
+			if nc_net.kenmerk_versie != Kenmerken.KENMERK_VERSIE or nc_net.kenmerken != Kenmerken.aantal():
+				print("[NETCHECK] FOUT: netje is kenmerk-versie %d met %d kenmerken, het spel versie %d met %d" % [nc_net.kenmerk_versie, nc_net.kenmerken, Kenmerken.KENMERK_VERSIE, Kenmerken.aantal()])
+				nc_fouten += 1
+		var nc_rules: RulesConfig = RulesConfig.load_from_file("res://arena/arena_configs/rules_v42_campaign.json")
+		var nc_l4 := AgentL4.new(nc_pad)
+		var nc_l2 := AgentL2.new()
+		var nc_runner := AgentRunner.new(nc_l4, nc_l2, Constants.Doctrine.MUIS, Constants.Doctrine.WOLF, nc_seed, nc_rules)
+		nc_runner.max_steps = 2500
+		var nc_t0 := Time.get_ticks_msec()
+		nc_runner.run()
+		var nc_ms := Time.get_ticks_msec() - nc_t0
+		var nc_staat: GameState = nc_runner.state()
+		var nc_r1: PackedFloat32Array = Kenmerken.van_staat(nc_staat, 1)
+		var nc_r2: PackedFloat32Array = Kenmerken.van_staat(nc_staat, 1)
+		if nc_r1 != nc_r2:
+			print("[NETCHECK] FOUT: kenmerken zijn niet deterministisch")
+			nc_fouten += 1
+		print("[NETCHECK] partij L4(muis, %s) vs L2(wolf) seed %d: winnaar %d, cyclus %d, %d stappen, %.1f s"
+			% ["netje" if nc_l4.heeft_net() else "L2-terugval", nc_seed, nc_runner.winner, nc_staat.cycle, nc_runner.steps, nc_ms / 1000.0])
+		print("[NETCHECK]   illegaal %d, terugval %d, afgekapt %s" % [nc_runner.illegal_count, nc_runner.fallback_count, str(nc_runner.afgekapt)])
+		if nc_runner.illegal_count > 0 or nc_runner.fallback_count > 0 or nc_runner.afgekapt:
+			nc_fouten += 1
+		if nc_l4.beslissingen > 0:
+			print("[NETCHECK]   netje-beslissingen %d, gemiddeld %.1f kandidaten, %.1f ms per beslissing (hele partij / beslissingen)"
+				% [nc_l4.beslissingen, float(nc_l4.kandidaten_totaal) / nc_l4.beslissingen, float(nc_ms) / nc_l4.beslissingen])
+		print("[NETCHECK] klaar: %d fout(en)" % nc_fouten)
+		get_tree().quit(0 if nc_fouten == 0 else 1)
+		return
 	elif "facties" in args:
 		# Waar spelen we nu eigenlijk mee? (C17, 3 augustus.) Drukt per factie
 		# de kale tabel uit constants.gd af naast de ACTIEVE waarden, dus met
