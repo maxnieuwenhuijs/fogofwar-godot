@@ -1503,6 +1503,69 @@ func _ready() -> void:
 		print("[TUNER] klaar: %d fout(en)" % tuner_fouten)
 		get_tree().quit(0 if tuner_fouten == 0 else 1)
 		return
+	elif "tiecheck" in args:
+		# L4 neuraal (22 september): hoe vaak staat L2 voor gelijke zetten?
+		# Speelt een partij L2 vs L2 en telt per actiefase-beslissing hoeveel
+		# kandidaten de hoogste evaluate()-score delen. Met tie_break_loting
+		# loot L2 daartussen, en dat is het plafond voor imitatie: een netje
+		# kan een loting niet raden. Gebruik: -- tiecheck [seed]
+		var tc_seed: int = 777
+		for a in args:
+			if String(a).is_valid_int():
+				tc_seed = int(String(a))
+		var tc_rules: RulesConfig = RulesConfig.load_from_file("res://arena/arena_configs/rules_v42_campaign.json")
+		var tc_a1 := AgentL2.new()
+		var tc_a2 := AgentL2.new()
+		tc_a1.tie_break_loting = true
+		tc_a2.tie_break_loting = true
+		var tc_runner := AgentRunner.new(tc_a1, tc_a2, Constants.Doctrine.MUIS, Constants.Doctrine.WOLF, tc_seed, tc_rules)
+		tc_runner.max_steps = 2500
+		var tc_besl := 0
+		var tc_ties := 0
+		var tc_topgroep := 0
+		var tc_kand := 0
+		var tc_hist: Dictionary = {}
+		while not tc_runner.done:
+			var st: GameState = tc_runner.state()
+			if st.phase == Phase.Type.ACTION and st.pending_wolf_step_pawn == -1:
+				var p: int = st.current_player
+				var agent: AgentL2 = tc_a1 if p == 1 else tc_a2
+				var view: Dictionary = View.for_player(st, p, true)
+				var ai = agent._get_ai(view)
+				var s: GameState = Agent.reconstruct_state(view)
+				var acties: Array = ai.enumerate_actions(s, p)
+				if not acties.is_empty():
+					var best: int = -2147483647
+					var n_best: int = 0
+					for a in acties:
+						var v: int = ai.evaluate(ai.simulate(s, a), p)
+						if v > best:
+							best = v
+							n_best = 1
+						elif v == best:
+							n_best += 1
+					tc_besl += 1
+					tc_kand += acties.size()
+					tc_topgroep += n_best
+					if n_best > 1:
+						tc_ties += 1
+					var b: int = mini(n_best, 10)
+					tc_hist[b] = int(tc_hist.get(b, 0)) + 1
+			tc_runner.step()
+		print("[TIECHECK] seed %d: %d actiefase-beslissingen, gemiddeld %.1f kandidaten" % [tc_seed, tc_besl, float(tc_kand) / maxi(1, tc_besl)])
+		print("[TIECHECK] loting nodig bij %d (%.1f%%), gemiddelde topgroep %.2f" % [tc_ties, 100.0 * tc_ties / maxi(1, tc_besl), float(tc_topgroep) / maxi(1, tc_besl)])
+		var tc_verwacht: float = 0.0
+		for k in tc_hist:
+			tc_verwacht += float(tc_hist[k]) / float(int(k))
+		print("[TIECHECK] verwachte imitatie-trefkans bij perfecte kennis van de score: %.1f%%" % [100.0 * tc_verwacht / maxi(1, tc_besl)])
+		var tc_keys: Array = tc_hist.keys()
+		tc_keys.sort()
+		var tc_regels: Array = []
+		for k in tc_keys:
+			tc_regels.append("%s%s: %d" % [str(k), "+" if int(k) == 10 else "", int(tc_hist[k])])
+		print("[TIECHECK] topgroep-grootte: %s" % ", ".join(tc_regels))
+		get_tree().quit(0)
+		return
 	elif "netcheck" in args:
 		# L4 neuraal (22 september): het statusbord van het netje. Print de
 		# kenmerkrij (aantal + namen), laadt data/ai_net.json (of net=<pad>),
@@ -1513,10 +1576,13 @@ func _ready() -> void:
 		# kenmerken en de L2-terugval worden wel gecontroleerd.
 		var nc_fouten := 0
 		var nc_pad: String = NeuraalNet.STANDAARD_PAD
+		var nc_waarde: String = ""
 		var nc_seed: int = 777
 		for a in args:
 			if String(a).begins_with("net="):
 				nc_pad = String(a).substr(4)
+			elif String(a).begins_with("waarde="):
+				nc_waarde = String(a).substr(7)
 			elif String(a).is_valid_int():
 				nc_seed = int(String(a))
 		print("[NETCHECK] kenmerken: versie %d, %d stuks" % [Kenmerken.KENMERK_VERSIE, Kenmerken.aantal()])
@@ -1542,7 +1608,11 @@ func _ready() -> void:
 				print("[NETCHECK] FOUT: netje is kenmerk-versie %d met %d kenmerken, het spel versie %d met %d" % [nc_net.kenmerk_versie, nc_net.kenmerken, Kenmerken.KENMERK_VERSIE, Kenmerken.aantal()])
 				nc_fouten += 1
 		var nc_rules: RulesConfig = RulesConfig.load_from_file("res://arena/arena_configs/rules_v42_campaign.json")
-		var nc_l4 := AgentL4.new(nc_pad)
+		var nc_l4 := AgentL4.new(nc_pad if nc_waarde == "" else nc_pad + "+" + nc_waarde)
+		if nc_waarde != "":
+			print("[NETCHECK] waarde-netje: %s (%s)" % [nc_waarde, "geladen" if nc_l4.heeft_waarde_net() else "NIET geladen"])
+			if not nc_l4.heeft_waarde_net():
+				nc_fouten += 1
 		var nc_l2 := AgentL2.new()
 		var nc_runner := AgentRunner.new(nc_l4, nc_l2, Constants.Doctrine.MUIS, Constants.Doctrine.WOLF, nc_seed, nc_rules)
 		nc_runner.max_steps = 2500
@@ -1561,8 +1631,8 @@ func _ready() -> void:
 		if nc_runner.illegal_count > 0 or nc_runner.fallback_count > 0 or nc_runner.afgekapt:
 			nc_fouten += 1
 		if nc_l4.beslissingen > 0:
-			print("[NETCHECK]   netje-beslissingen %d, gemiddeld %.1f kandidaten, %.1f ms per beslissing (hele partij / beslissingen)"
-				% [nc_l4.beslissingen, float(nc_l4.kandidaten_totaal) / nc_l4.beslissingen, float(nc_ms) / nc_l4.beslissingen])
+			print("[NETCHECK]   netje-beslissingen %d, gemiddeld %.1f kandidaten, %.1f ms per beslissing (hele partij / beslissingen), %d lotingen door het waarde-netje"
+				% [nc_l4.beslissingen, float(nc_l4.kandidaten_totaal) / nc_l4.beslissingen, float(nc_ms) / nc_l4.beslissingen, nc_l4.lotingen])
 		print("[NETCHECK] klaar: %d fout(en)" % nc_fouten)
 		get_tree().quit(0 if nc_fouten == 0 else 1)
 		return

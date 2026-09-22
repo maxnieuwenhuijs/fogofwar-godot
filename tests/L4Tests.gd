@@ -32,7 +32,7 @@ func _staat_na(stappen: int, seed_val: int = 4242) -> GameState:
 ## Handgemaakt netje: mu 0, sigma 1, een verborgen laag van 2 (relu(x0),
 ## relu(-x0)) en uitvoer h0 - h1 = x0. De waarde is dus precies het eerste
 ## kenmerk (me_alive): "meer eigen pionnen is beter".
-func _schrijf_proefnet(pad: String) -> void:
+func _schrijf_proefnet(pad: String, kenmerk: int = 0) -> void:
 	var n: int = Kenmerken.aantal()
 	var mu: Array = []
 	var sigma: Array = []
@@ -40,7 +40,7 @@ func _schrijf_proefnet(pad: String) -> void:
 	for i in n:
 		mu.append(0.0)
 		sigma.append(1.0)
-		w1.append([1.0, -1.0] if i == 0 else [0.0, 0.0])
+		w1.append([1.0, -1.0] if i == kenmerk else [0.0, 0.0])
 	var invoer: Array = []
 	for i in n:
 		invoer.append(float(i) * 0.25 - 1.0)
@@ -54,7 +54,7 @@ func _schrijf_proefnet(pad: String) -> void:
 			{"w": w1, "b": [0.0, 0.0]},
 			{"w": [[1.0], [-1.0]], "b": [0.5]},
 		],
-		"proef": {"invoer": invoer, "uitvoer": invoer[0] + 0.5},
+		"proef": {"invoer": invoer, "uitvoer": invoer[kenmerk] + 0.5},
 	}
 	var f := FileAccess.open(pad, FileAccess.WRITE)
 	f.store_string(JSON.stringify(data))
@@ -194,3 +194,30 @@ func test_beslislog_formaat() -> void:
 	assert_eq(f.get_16(), 9)
 	assert_true(f.eof_reached() or f.get_position() == f.get_length())
 	f.close()
+
+func test_waarde_net_beslist_de_topgroep() -> void:
+	# Score-netje = kenmerk 0, waarde-netje = kenmerk 1. Drie kandidaten:
+	# twee delen de hoogste score (binnen tie_eps), de derde ligt eronder.
+	_schrijf_proefnet("user://l4tests_score.json", 0)
+	_schrijf_proefnet("user://l4tests_waarde.json", 1)
+	var a := AgentL4.new("user://l4tests_score.json+user://l4tests_waarde.json")
+	assert_true(a.heeft_net())
+	assert_true(a.heeft_waarde_net())
+	var n: int = Kenmerken.aantal()
+	var rijen: Array = []
+	for paar in [[1.0, 0.2], [1.1, 0.9], [0.2, 5.0]]:
+		var r := PackedFloat32Array()
+		r.resize(n)
+		r[0] = paar[0]
+		r[1] = paar[1]
+		rijen.append(r)
+	assert_eq(a._beste(rijen), 1, "binnen de topgroep {0,1} wint de hoogste waarde (kandidaat 1)")
+	assert_eq(a.lotingen, 1)
+	# Zonder waarde-netje wint gewoon de hoogste score.
+	var b := AgentL4.new("user://l4tests_score.json")
+	assert_true(b.heeft_net())
+	assert_eq(b._beste(rijen), 1)
+	rijen[0][0] = 1.5
+	assert_eq(b._beste(rijen), 0)
+	assert_eq(a._beste(rijen), 0, "kandidaat 0 staat nu alleen bovenaan (1.5 vs 1.1 > eps)")
+	assert_eq(a.lotingen, 1)
