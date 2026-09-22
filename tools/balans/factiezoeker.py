@@ -585,14 +585,18 @@ def main():
             if kandidaat is None:
                 print("[FACTIES] gen %d: geen nieuwe kandidaat meer te vinden na kandidaat %d" % (generatie, i))
                 break
-        if not lopend:
-            print("[FACTIES] de zoekruimte rond deze kampioen is uitgeput; klaar")
-            generatie += 1
-            break
             naam = "gen%d_k%d" % (generatie, i)
             plist, gpaden = draai_kandidaat(map_pad, naam, kandidaat, args.potjes,
                                             ZOEK_SEED, args.procs, matchups)
             lopend.append((naam, kandidaat, plist, gpaden))
+        # 22 september: sinds 69af571 stonden de drie regels hierboven ONDER
+        # de break van deze if, dus `lopend` bleef altijd leeg en de zoeker
+        # stopte na de nulmeting met "zoekruimte uitgeput" (run van 21
+        # september: gen 0 om 19:20, daarna niets).
+        if not lopend:
+            print("[FACTIES] de zoekruimte rond deze kampioen is uitgeput; klaar")
+            generatie += 1
+            break
         for naam, kandidaat, plist, gpaden in lopend:
             for pr in plist:
                 pr.wait()
