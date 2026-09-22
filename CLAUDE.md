@@ -157,7 +157,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   netje speelt L4 byte-identiek L2. Configs: `l2_beslislog.json`
   (data van L2), `l4_beslislog.json` (selfplay), `l4_vs_l2.json` +
   `l2_vs_l4.json` (meting, beide kleuren). Een volledig log weegt 6,5 MB
-  per partij: verdun.
+  per partij: verdun. **Stand 22 september: L4 = L2 (49% over 864
+  partijen), geparkeerd.** Het officiele netje is de L2-kopie plus een
+  waarde-netje dat de loting weegt (`l4:<score>+<waarde>`, `waarde_temp`);
+  imitatie-plafond 66% omdat L2 bij 48% van zijn zetten loot (`--
+  tiecheck`). Meetgereedschap: `-- imitcheck [factie]` (waar wijkt het
+  netje af, spijt in eval-eenheden), label `l4:l2` (L2's evaluate door de
+  L4-route), `tools/l4/meet_l4.py <run>...` (winst per kleur/factie),
+  `tools/l4/selfplay_ronde.ps1` (Max start). Meet NOOIT op een lopende
+  run: de snelle partijen komen eerst binnen en vertekenen 20-30 punten.
 
 ## Commando's
 

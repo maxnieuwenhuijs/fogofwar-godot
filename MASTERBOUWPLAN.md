@@ -1027,11 +1027,11 @@ server-logs van dat event.
   `tools/l4/train_net.py` (numpy, imitatie-softmax over kandidaten + uitslag-logit,
   splits op partij), `-- netcheck`, `tests/L4Tests.gd`. **CHECK:** pariteit
   GDScript/Python exact, L4 speelt legaal, uispel 777 ongewijzigd (`90650e1e`).
-- ☐ **F8.1b L4 verslaat L2.** Eerste netje op de L2-logrun van 22 september, meting
-  `l4_vs_l2.json` + `l2_vs_l4.json` (beide kleuren). Daarna selfplay: L4 logt zichzelf
-  (`l4_beslislog.json`), hertrainen met `--imitatie` laag en `--uitslag` hoog, tot de
-  winst tegen L2 stopt met groeien. **CHECK:** >55% tegen L2 over minstens 2000 partijen,
-  beide kleuren.
+- ☐ **F8.1b L4 verslaat L2. GEPARKEERD 22 september:** vijf varianten gemeten (elk
+  432-864 partijen), alle 44-51% tegen L2; de L2-kopie (imitatie 64,5%, plafond 66% door
+  L2's lotingen) staat als `data/ai_net.json` + `ai_net_waarde.json`. Lessen in WIP 22
+  september. Verder alleen via selfplay-data (`tools/l4/selfplay_ronde.ps1`, Max start) of
+  een tweede ply. **CHECK blijft:** >55% tegen L2 over minstens 2000 partijen, beide kleuren.
 
 L4 neuraal (imitatie op event-logs → PPO-selfplay met action-masking; pas als F7-data er ligt),
 **determinized sampling N=16 voor L3** (B11-upgrade, eerder mag als de arena de noodzaak aantoont),

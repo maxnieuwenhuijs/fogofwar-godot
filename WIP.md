@@ -50,7 +50,7 @@ kandidaat-rijen, 892 MB. Trainen duurt 4 min (numpy).
 | alleen imitatie | imit 64,5% | 49,5% | - |
 | groot (96-96, imitatie + uitslag) | imit 56,3% | 44,4% | - |
 | tweetraps, waarde-netje BESLIST de topgroep | uitslag 84,2% | 53,9% | 47,0% |
-| tweetraps, waarde-netje WEEGT de loting (temp 0,5) | | loopt | loopt |
+| tweetraps, waarde-netje WEEGT de loting (temp 0,5) | | 50,0% | 48,1% |
 
 **De twee lessen van de dag.** (1) `-- tiecheck`: bij 48% van L2's
 beslissingen delen meerdere zetten de hoogste score (topgroep gemiddeld
@@ -75,12 +75,35 @@ L2 echt speelt; de tabel in `data/ai_weights.json` zegt daar niets over.
 (`c23_leeuw3`), dus alles liep op halve snelheid; een partij L4 vs L2
 kost 2-3 minuten.
 
-**Volgende:** uitslag van de gewogen tweetraps in beide kleuren. Boven
-55%: `data/ai_net_imit.json` + `data/ai_net_waarde.json` committen als
-de officiele L4 en `tools/l4/selfplay_ronde.ps1` draaien (L4 logt
-zichzelf, waarde-netje hertrainen). Eronder: parkeren, de keten staat en
-is gemeten; de winst moet dan uit selfplay-data komen, niet uit meer
-gesleutel aan de keuze.
+**Slot van de dag (16:45): L4 = L2, geparkeerd.** De gewogen tweetraps
+eindigt op 49,1% over 864 partijen (beide kleuren). De Leeuw-loting
+bleek bij 428 partijen 25,5% (de 59% en 38% van onderweg waren de snelle
+partijen die als eerste binnenkwamen: meet nooit op een lopende run).
+Scheidingstest `l4:l2` (L2's eigen evaluate door de L4-route, met
+loting): 31,0% als Leeuw over 355 partijen, tegen L2's eigen 38,3%
+(360 partijen uit vier runs, +-5,0); zonder loting speelt die route
+byte-identiek L2 (test). Verschil van 7 punten met marges van 5: ruis
+of een klein effect, geen bug. De Leeuw is gewoon de factie waar een
+paar procent imitatiefout het hardst aankomt (hp-gewicht 1130: elk
+gemist HP-punt schade is een grote spijt).
+
+Gecommit als de officiele L4: `data/ai_net.json` (score, de L2-kopie) +
+`data/ai_net_waarde.json`; label `l4` in de arena werkt daarmee direct.
+Meetgereedschap dat blijft: `-- tiecheck`, `-- imitcheck [factie]`,
+`l4:l2`, `tools/l4/meet_l4.py`, `tools/l4/selfplay_ronde.ps1`.
+
+**Wat het waard was:** een netje dat L2 exact nadoet, in 4 minuten
+getraind, met een waarde-netje dat de uitslag op 84% voorspelt. Wat het
+NIET opleverde: winst tegen L2. De uitslag-term in een greedy-score
+maakt het spel slechter, en het waarde-netje als loting-wegger maakt het
+niet beter: een 1-ply-bot verandert niet van sterkte door wie hij kiest
+tussen zetten die L2 al gelijk vond.
+
+**Als Max hier ooit op door wil:** de winst moet uit selfplay-data komen
+(`selfplay_ronde.ps1`, Max start hem zelf, B13: elke ronde ~3 uur op 12
+procs) of uit een tweede ply (het netje als evaluatie onder L3's
+search). Niet uit meer varianten van de keuze. F4.3j is weer de
+volgende stap.
 
 ## 21 september -- De poort werkt: vijf adopties
 
