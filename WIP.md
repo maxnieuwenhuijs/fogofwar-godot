@@ -80,7 +80,7 @@ eindigt op 49,1% over 864 partijen (beide kleuren). De Leeuw-loting
 bleek bij 428 partijen 25,5% (de 59% en 38% van onderweg waren de snelle
 partijen die als eerste binnenkwamen: meet nooit op een lopende run).
 Scheidingstest `l4:l2` (L2's eigen evaluate door de L4-route, met
-loting): 31,0% als Leeuw over 355 partijen, tegen L2's eigen 38,3%
+loting): 31,9% als Leeuw over 432 partijen, tegen L2's eigen 38,3%
 (360 partijen uit vier runs, +-5,0); zonder loting speelt die route
 byte-identiek L2 (test). Verschil van 7 punten met marges van 5: ruis
 of een klein effect, geen bug. De Leeuw is gewoon de factie waar een
