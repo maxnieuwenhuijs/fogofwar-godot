@@ -250,3 +250,18 @@ func test_gewogen_loting_volgt_het_waarde_net() -> void:
 	a.waarde_temp = 0.0
 	for i in 20:
 		assert_eq(a._beste(rijen), 1)
+
+
+func test_l4_met_l2_score_speelt_als_l2() -> void:
+	# Meetgereedschap: "l4:l2" = L2's evaluate() als score door de L4-route.
+	# Zonder loting kiest L2 de eerste hoogste en _beste ook: byte-identiek.
+	var a := AgentL4.new("l2")
+	assert_true(a.heeft_net())
+	var r4 := AgentRunner.new(a, AgentL2.new(), Constants.Doctrine.LEEUW, Constants.Doctrine.WOLF, 779, _regels())
+	r4.run()
+	var r2 := AgentRunner.new(AgentL2.new(), AgentL2.new(), Constants.Doctrine.LEEUW, Constants.Doctrine.WOLF, 779, _regels())
+	r2.run()
+	assert_true(a.beslissingen > 0)
+	assert_eq(r4.illegal_count, 0)
+	assert_eq(r4.steps, r2.steps)
+	assert_eq(Zobrist.state_hash(r4.state()), Zobrist.state_hash(r2.state()), "L4 met L2-score hoort byte-identiek L2 te spelen")

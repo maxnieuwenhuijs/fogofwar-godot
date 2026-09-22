@@ -35,6 +35,12 @@ var _waarde_net: NeuraalNet = null
 ## (deterministisch, en dat bleek slecht: L4 als Leeuw 24%), heel groot =
 ## L2's uniforme loting. Alleen met tie_break_loting; anders de hoogste.
 var waarde_temp: float = 0.5
+## Meetgereedschap (22 september, Leeuw-raadsel): score_bron "l2" laat deze
+## agent L2's eigen evaluate() als score gebruiken, maar verder de hele
+## L4-route (kandidaten, topgroep, loting, waarde-netje). Speelt die als
+## L2, dan zit een verschil in het netje; anders in de route. Pad-vorm:
+## "l4:l2" of "l4:l2+<waarde.json>".
+var score_bron: String = "net"
 
 ## Meetgereedschap: hoeveel netje-beslissingen, hoeveel kandidaten totaal,
 ## en hoe vaak het waarde-netje een topgroep van meer dan een besliste.
@@ -51,17 +57,26 @@ func _init(pad: String = "") -> void:
 			waarde_pad = pad.substr(plus + 1)
 		else:
 			net_pad = pad
+		if net_pad == "l2":
+			score_bron = "l2"
+			net_pad = ""
 
 
 func heeft_net() -> bool:
 	_zoek_net()
-	return _net != null
+	return _net != null or score_bron == "l2"
 
 
 func _zoek_net() -> void:
 	if _net_gezocht:
 		return
 	_net_gezocht = true
+	if score_bron == "l2":
+		if waarde_pad != "":
+			_waarde_net = NeuraalNet.laad(waarde_pad)
+			if _waarde_net != null and not _versie_ok(_waarde_net, waarde_pad):
+				_waarde_net = null
+		return
 	_net = NeuraalNet.laad(net_pad)
 	if _net == null:
 		if not _gewaarschuwd:
@@ -96,11 +111,13 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	if legal.is_empty():
 		return {}
 	_zoek_net()
-	if _net == null or int(view.phase) != Phase.Type.ACTION:
+	if not heeft_net() or int(view.phase) != Phase.Type.ACTION:
 		return super.decide(view, legal, decide_rng)
 	var ai = _get_ai(view)
 	var s: GameState = Agent.reconstruct_state(view)
 	if s.pending_wolf_step_pawn != -1:
+		if score_bron == "l2":
+			return super.decide(view, legal, decide_rng)
 		var wk: Dictionary = Kenmerken.wolf_kandidaten(s, player_id)
 		var idx: int = _beste(wk.kenmerken)
 		var doel = wk.doelen[idx]
@@ -108,7 +125,11 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 	var k: Dictionary = Kenmerken.kandidaten(ai, s, player_id)
 	if (k.acties as Array).is_empty():
 		return legal[0]
-	var gekozen: int = _beste(k.kenmerken)
+	var l2_scores: PackedFloat64Array = PackedFloat64Array()
+	if score_bron == "l2":
+		for a in k.acties:
+			l2_scores.append(float(ai.evaluate(ai.simulate(s, a), player_id)))
+	var gekozen: int = _beste(k.kenmerken, l2_scores)
 	beslissingen += 1
 	kandidaten_totaal += (k.acties as Array).size()
 	if beslis_log != null and _beslis_aan_de_beurt():
@@ -122,14 +143,15 @@ func decide(view: Dictionary, legal: Array, decide_rng: SeededRng) -> Dictionary
 
 ## Index van de kandidaat met de hoogste netwaarde. Met een waarde-netje:
 ## de topgroep (binnen tie_eps van de hoogste score) wordt daarop beslist.
-func _beste(rijen: Array) -> int:
+func _beste(rijen: Array, vaste_scores: PackedFloat64Array = PackedFloat64Array()) -> int:
 	var scores: PackedFloat64Array = PackedFloat64Array()
 	scores.resize(rijen.size())
 	var best_idx: int = 0
 	var best_val: float = -INF
 	var toppers: Array = []
+	var eps: float = tie_eps if vaste_scores.is_empty() else 0.0  # L2-scores: exact gelijk = gelijk
 	for i in rijen.size():
-		var v: float = _net.waarde(rijen[i])
+		var v: float = vaste_scores[i] if not vaste_scores.is_empty() else _net.waarde(rijen[i])
 		scores[i] = v
 		if v > best_val:
 			best_val = v
@@ -143,7 +165,7 @@ func _beste(rijen: Array) -> int:
 		var groep_idx: int = -1
 		var groep_val: float = -INF
 		for i in rijen.size():
-			if scores[i] < best_val - tie_eps:
+			if scores[i] < best_val - eps:
 				continue
 			var w: float = _waarde_net.waarde(rijen[i])
 			groep.append(i)
@@ -177,7 +199,7 @@ func _beste(rijen: Array) -> int:
 		# Leeuw zakte daardoor naar 24% waar L2 38% haalt.)
 		toppers = []
 		for i in rijen.size():
-			if scores[i] >= best_val - tie_eps:
+			if scores[i] >= best_val - eps:
 				toppers.append(i)
 		if toppers.size() > 1:
 			lotingen += 1
