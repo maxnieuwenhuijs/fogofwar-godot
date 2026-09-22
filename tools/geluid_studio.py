@@ -806,6 +806,8 @@ function filter(){const z=document.getElementById('zoek').value.toLowerCase();co
  for(const e of document.querySelectorAll('.rij')){let aan=!z||e.dataset.zoek.includes(z);if(f==='takes')aan=aan&&e.dataset.takes==='1';else if(f==='todo')aan=aan&&e.dataset.st!=='echt';else if(f==='eigenmix')aan=aan&&e.dataset.eigen==='1';else if(f)aan=aan&&e.dataset.st===f;e.classList.toggle('verberg',!aan)}
  for(const s of document.querySelectorAll('.sectie')){const zicht=[...s.querySelectorAll('.rij')].some(e=>!e.classList.contains('verberg'));s.style.display=zicht?'':'none'}}
 document.getElementById('zoek').oninput=filter;document.getElementById('filter').onchange=filter;
+// een speler tegelijk (22 september, Max: "als ik 1 afspeel dat de andere stoppen"): 'play' bubbelt niet, dus in de capture-fase
+document.addEventListener('play',e=>{if(e.target.tagName!=='AUDIO')return;document.querySelectorAll('audio').forEach(a=>{if(a!==e.target&&!a.paused){a.pause();a.currentTime=0}})},true);
 async function ververs(c,flits){try{const r=await api('/api/rij?cat='+encodeURIComponent(c));const el=document.querySelector('.rij[data-cat="'+c+'"]');if(!el)return;const idx=D.rijen.findIndex(x=>x.categorie===c);if(idx>=0)D.rijen[idx]=r;el.innerHTML=rijHtml(r);rijAttrs(el,r);if(flits){el.classList.remove('nieuw');void el.offsetWidth;el.classList.add('nieuw')}filter()}catch(e){toast(e.message,'fout')}}
 function promptVan(c){const t=document.getElementById('p_'+c);return t.value.trim()||t.placeholder}
 async function bewaarPrompt(c){try{await api('/api/prompt',{categorie:c,prompt:document.getElementById('p_'+c).value,duur:document.getElementById('d_'+c).value,invloed:document.getElementById('i_'+c).value})}catch(e){toast(e.message,'fout')}}
