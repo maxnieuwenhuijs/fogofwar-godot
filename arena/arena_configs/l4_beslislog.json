@@ -2,8 +2,8 @@
  "matchups": "all",
  "games_per_matchup": 2,
  "agents": {
-  "p1": "l4:res://data/ai_net_imit.json+res://data/ai_net_waarde.json",
-  "p2": "l4:res://data/ai_net_imit.json+res://data/ai_net_waarde.json"
+  "p1": "l4:res://data/ai_net.json+res://data/ai_net_waarde.json",
+  "p2": "l4:res://data/ai_net.json+res://data/ai_net_waarde.json"
  },
  "base_seed": 96000,
  "max_steps": 2500,

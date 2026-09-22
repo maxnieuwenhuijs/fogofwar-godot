@@ -32,10 +32,10 @@ Write-Host "[SELFPLAY] waarde-netje trainen op: $($logs -join ', ')"
 python tools/l4/train_net.py @logs --uit $netUit --epochs 20 --imitatie 0 --uitslag 1
 
 Write-Host "[SELFPLAY] netcheck"
-& $godot --headless --path . res://tools/capture.tscn -- netcheck "net=res://data/ai_net_imit.json" "waarde=res://$netUit" 2>&1 | Select-String "NETCHECK"
+& $godot --headless --path . res://tools/capture.tscn -- netcheck "net=res://data/ai_net.json" "waarde=res://$netUit" 2>&1 | Select-String "NETCHECK"
 
 $cfg = Get-Content arena/arena_configs/l4_vs_l2.json | ConvertFrom-Json
-$cfg.agents.p1 = "l4:res://data/ai_net_imit.json+res://$netUit"
+$cfg.agents.p1 = "l4:res://data/ai_net.json+res://$netUit"
 $cfg.base_seed = 100000 + 1000 * $Ronde
 $cfgPad = "arena/arena_configs/_proef_r${Ronde}_vs_l2.json"
 $cfg | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 $cfgPad

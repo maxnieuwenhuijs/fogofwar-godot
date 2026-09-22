@@ -2,7 +2,7 @@
  "matchups": "all",
  "games_per_matchup": 1,
  "agents": {
-  "p1": "l4",
+  "p1": "l4:res://data/ai_net.json+res://data/ai_net_waarde.json",
   "p2": "l2"
  },
  "base_seed": 94000,
