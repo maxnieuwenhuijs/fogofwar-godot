@@ -1,5 +1,9 @@
-# Fog of War - meet de Leeuw met startpunten (C11-budget_bonus) in plaats van
-# een extra kaart (22 september, Max: "doe idd met +2 voor de leeuw").
+# Fog of War - meet EEN regelvariant op de volle campagne-matrix, tegen de
+# nachtmatrix van 21 september (dezelfde getrainde bots) als ijkpunt.
+# Begon op 22 september als de Leeuw-met-startpunten-meting (Max: "doe idd
+# met +2 voor de leeuw") en is op 23 september algemeen gemaakt, nadat een
+# variantnaam die niet in het vaste naampatroon paste 28 Godots liet starten
+# die meteen weer stopten: de config bestond niet en niemand zei het.
 #
 # De nachtmatrix van 21 september met getrainde bots gaf Leeuw 36,6% (band
 # 36,6-59,2). Het factiezoeker-voorstel "3 kaarten" haalde hem naar 59,8%:
@@ -21,23 +25,33 @@ param(
 $ErrorActionPreference = "Continue"
 Set-Location (Join-Path $PSScriptRoot "..\..")
 $stamp = Get-Date -Format "yyyyMMdd_HHmm"
-$log = "results/leeuw_${Variant}_$stamp.log"
+$log = "results/variant_${Variant}_$stamp.log"
 function Log([string]$msg) {
     $regel = "{0:HH:mm:ss} {1}" -f (Get-Date), $msg
     Write-Host $regel
     Add-Content -Encoding utf8 -Path $log -Value $regel
 }
 if ($WachtOp) {
-    Log "[LEEUW] wacht tot de arena-processen van $WachtOp klaar zijn"
+    Log "[METING] wacht tot de arena-processen van $WachtOp klaar zijn"
     while (@(Get-CimInstance Win32_Process -Filter "Name like 'Godot%'" | Where-Object { $_.CommandLine -like "*$WachtOp*" }).Count -gt 0) {
         Start-Sleep -Seconds 30
     }
 }
-$naam = "leeuw_${Variant}_$stamp"
-Log "[LEEUW] arena: Leeuw $Variant startpunten, 5 potjes per paar, $Procs processen -> results/$naam"
-& .\arena.ps1 -Config "arena/arena_configs/varianten/v437_matrix_leeuw_$Variant.json" -Procs $Procs -Naam $naam 2>&1 | ForEach-Object { Log "[ARENA] $_" }
+$naam = "variant_${Variant}_$stamp"
+$cfg = "arena/arena_configs/varianten/v437_matrix_$Variant.json"
+if (-not (Test-Path $cfg)) {
+    # 23 september: zonder deze check starten er 28 Godots die meteen weer
+    # stoppen (config niet gevonden) en meldt alleen het samenvoegen "0 partijen".
+    Log "[METING] GEEN CONFIG: $cfg"
+    $namen = (Get-ChildItem "arena/arena_configs/varianten" -Filter "v437_matrix_*.json" |
+        ForEach-Object { $_.BaseName -replace "^v437_matrix_", "" }) -join ", "
+    Log "[METING] beschikbare varianten: $namen"
+    exit 1
+}
+Log "[METING] arena: variant $Variant, 5 potjes per paar, $Procs processen -> results/$naam"
+& .\arena.ps1 -Config $cfg -Procs $Procs -Naam $naam 2>&1 | ForEach-Object { Log "[ARENA] $_" }
 $n = 0
 if (Test-Path "results/$naam/games.jsonl") { $n = (Get-Content "results/$naam/games.jsonl" | Measure-Object -Line).Lines - 1 }
-Log "[LEEUW] klaar: $n partijen"
+Log "[METING] klaar: $n partijen"
 python tools/dashboard/compare_runs.py results/nacht_20260921_1621_v42_matrix_l2 "results/$naam" 2>&1 | ForEach-Object { Log "[VS HUIDIG] $_" }
-Log "[LEEUW] klaar -> $log"
+Log "[METING] klaar -> $log"
