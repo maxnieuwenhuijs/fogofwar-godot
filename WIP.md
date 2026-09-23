@@ -28,9 +28,22 @@ increasen en dan Varken testen en daarna een superrun in de nacht."
   `-- simcheck` 0 afwijkingen; testsuite **2592/0**; `-- uispel 777` nu
   `b9c2ee75...` (213 acties, cyclus 5).
 
-**Volgende:** Varken `[12,4,2]` meten (voorstel factiezoeker van 22
-september, `rules_c25_varken_1242.json`, bovenop deze Leeuw-bonus zodat je
-niet twee dingen door elkaar meet), daarna 's nachts de volle matrix.
+**C25, dezelfde dag:** Varken [11,5,3] -> [12,4,2] (voorstel van de
+factiezoeker van 22 op 23 september) gemeten op de volle matrix, 4320
+partijen, bovenop C24: Varken 59,2 -> 49,4, Leeuw 36,6 -> 41,2, band
+36,6-59,2 -> **41,2-53,4 (12,2 pp)**, niemand buiten 40-60. Vastgezet in het
+doctrines-blok. Een eerste meetpoging stopte om 09:17 op 1552 van 5040
+partijen (hing aan de sessie, die bij een modelwissel onderbrak); niet
+gebruikt, want een half gelopen run speelt alleen de eerste paren en de
+korte partijen. Sindsdien starten metingen in een eigen venster.
+Goldens opnieuw, sim mens-vos 101 geijkt (19 -> 17 cycli), `-- simcheck`
+0, testsuite 2589/0 (drie beweringen minder: het Varken heeft een pion
+minder in de start-opstelling), `-- uispel 777` nu `6b820e3f...` (213, 5).
+
+**Daarna:** de TRAINING-NACHT-pijplijn opnieuw gestart op de C24+C25-regels
+(de eerste start om 11:48 liep op het oude Varken en is na 2 minuten
+gestopt): 7 uur trainen, dan 60 minuten matrix en het dashboard.
+`tools/wacht_en_start.ps1` zet zo'n klus klaar achter een lopende meting.
 
 ## 22 september -- L4 neuraal: de keten staat, de eerste datarun draait
 

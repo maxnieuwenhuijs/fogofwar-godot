@@ -1,5 +1,40 @@
 # Spelregels — CHANGELOG
 
+## C25 — 23 september 2026 (het Varken speelt met [12,4,2])
+
+*Voorstel van de factiezoeker (nacht van 22 op 23 september, tien
+generaties, twee adopties, gericht op het Varken); controlemeting dezelfde
+ochtend, besluit na de meting.*
+
+Het Varken stond met getrainde bots op **59,2%** (nachtmatrix 21 september),
+de bovenkant van de band. De zoeker stelde voor zijn leger te veranderen van
+**[11,5,3] naar [12,4,2]**: een ruiter en een kanon eruit, een soldaat erbij.
+Kaarten (3), budget (7) en perk (geen, de allrounder) blijven.
+
+Controlemeting op de volle matrix, 4320 partijen, dezelfde bots, bovenop C24
+(`tools/balans/meet_variant.ps1 -Variant varken_1242`):
+
+| factie | 21 sept (voor C24/C25) | met C24 + C25 | delta |
+|---|---|---|---|
+| Varken | 59,2 | **49,4** | -9,7 |
+| Muis | 54,0 | 53,4 | -0,6 |
+| Leeuw | 36,6 | **41,2** | +4,6 |
+| Beer | 50,7 | 51,3 | +0,6 |
+| Wolf | 48,2 | 52,8 | +4,5 |
+| Krokodil | 51,3 | 51,9 | +0,6 |
+| **band** | 36,6-59,2 (22,6) | **41,2-53,4 (12,2)** | |
+
+Het Varken landt precies in het midden, niemand valt buiten 40-60 en de
+spreiding halveert. De Leeuw profiteert mee (hij won 32% van het Varken) maar
+blijft met 41,2 de onderkant: zijn probleem is het tempo van 2 kaarten per
+ronde, zie C24.
+
+Alleen het `doctrines`-blok in `rules_v42_campaign.json` verandert
+(`v42_default.json` leest zijn facties daaruit; `constants.gd` houdt de kale
+tabel als terugval). `rules_version` blijft 4.3.7. Goldens opnieuw
+gegenereerd; een sim verschuift (mens-vos 101: cyclus 19 -> 17, 486 -> 458
+acties). Een lopende campagne houdt zijn bevroren facties.
+
 ## C24 — 23 september 2026 (de Leeuw krijgt 4 versterkingspunten)
 
 *Besluit Max: "doe maar even niks met de Leeuw, behalve dan die

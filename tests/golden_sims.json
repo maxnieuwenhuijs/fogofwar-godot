@@ -1,6 +1,6 @@
 {
 	"_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
-	"gemeten_op": "C24 (23 september): de Leeuw krijgt 4 versterkingspunten startcompensatie (C11-budget_bonus, was 0); alleen de twee sims met een Leeuw verschuiven. Regelwijziging, dus opnieuw geijkt; vijf sims zeggen niets over balans, daarvoor de nachtrun.",
+	"gemeten_op": "C25 (23 september): het Varken speelt met leger [12,4,2] in plaats van [11,5,3] (een ruiter en een kanon eruit, een soldaat erbij); alleen de sim met het Varken verschuift. Daarvoor C24 (Leeuw +4 versterkingspunten). Regelwijziging, dus opnieuw geijkt; vijf sims zeggen niets over balans, daarvoor de nachtrun.",
 	"sims": [
 		{
 			"p1": "easy",
@@ -19,8 +19,8 @@
 			"d2": "vos",
 			"seed": 101,
 			"winner": 1,
-			"cyclus": 19,
-			"acties": 486
+			"cyclus": 17,
+			"acties": 458
 		},
 		{
 			"p1": "easy",

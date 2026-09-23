@@ -26,7 +26,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
   | factie | kaarten | budget | leger [inf,cav,art] | perk |
   |---|---|---|---|---|
-  | Varken (enum MENS) | 3 | 7 | [11,5,3] | - allrounder |
+  | Varken (enum MENS) | 3 | 7 | [12,4,2] (C25, 23 sept; was [11,5,3]) | - allrounder |
   | Muis | 5 | 5 | [16,4,0] | +1 stamina op elke pion, loopt door eigen pionnen |
   | Leeuw | 2 | 8 | [12,4,2] | artilleriedracht 7 |
   | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-stamina max 4 |
@@ -43,6 +43,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
+  **Stand 23 september (C24 + C25, getrainde bots, 4320 partijen): band
+  41,2-53,4%, spreiding 12,2 pp** (Leeuw 41,2 onderaan, Muis 53,4 boven);
+  daarvoor met getrainde bots 36,6-59,2 (21 september). Schaal van de knoppen,
+  23 september gemeten: kaart erbij ~23 pp, versterkingspunt ~0,6, ruiter
+  eruit plus kanon eruit (Varken) -9,7.
   Gemeten na C20 op verse seeds (2160 partijen): band **44,7-56,7%, spreiding
   11,9 procentpunt**. Daarvoor 42,4-55,0 / 12,6 over 6480 partijen; in juli 48.
   C20 gaf Krokodil +2,3 en liet de band verder zoals hij was. Beer is nu met
@@ -698,8 +703,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `b9c2ee75…` geven (213 acties, cyclus 5, sinds
-  23 september, C24: de Leeuw krijgt 4 versterkingspunten; was `90650e1e…`
+  eind-zobrist; seed 777 moet `6b820e3f…` geven (213 acties, cyclus 5, sinds
+  23 september, C25: het Varken speelt [12,4,2]; daarvoor `b9c2ee75…` na C24,
+  de Leeuw met 4 versterkingspunten; was `90650e1e…`
   (213, 5) sinds 21 september: de bot speelt met de Wolf-gewichten van de trainingsrun van
   20 september; een bot-wijziging verschuift de digest net zo goed als een
   regelwijziging; was `3d361f8b…` (116, 3) onder 4.3.7 op 18 september,
