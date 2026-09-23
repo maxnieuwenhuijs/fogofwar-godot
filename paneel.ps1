@@ -171,6 +171,25 @@ $null = Maak-Knop $kadTrain "Bots laten leren" {
     if (-not (Bevestig-BijDrukte)) { return }
     Start-Training ([int]$numTrain.Value)
 }
+# L4 neuraal (23 september, Max: "hij moet zelf playen, hoe doe ik dat"):
+# een selfplay-ronde van het netje. L4 speelt 864 partijen tegen zichzelf en
+# logt ze, het waarde-netje leert opnieuw van alle logs tot nu toe, netcheck,
+# en dan een meting tegen L2. Ruim drie uur op 12 processen; de uitslag staat
+# onderaan het venster en in results/proef_r<N>_<datum>/. Zie
+# tools/l4/selfplay_ronde.ps1 en WIP 22 september.
+$btnSelfplay = New-Object System.Windows.Forms.Button
+$btnSelfplay.Text = "Netje laten zelfspelen (3 uur)"
+$btnSelfplay.Location = New-Object System.Drawing.Point(305, 42)
+$btnSelfplay.Size = New-Object System.Drawing.Size(108, 34)
+$btnSelfplay.Font = New-Object System.Drawing.Font("Segoe UI", 8, [System.Drawing.FontStyle]::Regular)
+$btnSelfplay.Add_Click({
+    if (-not (Bevestig-BijDrukte)) { return }
+    $ronde = @(Get-ChildItem (Join-Path $repo "results") -Directory -Filter "l4_selfplay_*" -ErrorAction SilentlyContinue).Count + 1
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-File", "$repo\tools\l4\selfplay_ronde.ps1",
+        "-Ronde", $ronde, "-Procs", 12)
+})
+$kadTrain.Controls.Add($btnSelfplay)
 
 # --- 3. Losse meting: bots spelen tegen elkaar, cijfers voor het rapport.
 $kadMeet = Maak-Kader "Meten hoe het ervoor staat" 220 86

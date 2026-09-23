@@ -24,7 +24,7 @@ $stempel = Get-Date -Format "yyyyMMdd"
 $logNaam = "l4_selfplay_r${Ronde}_$stempel"
 $netUit = "data/ai_net_waarde_r$Ronde.json"
 
-Write-Host "[SELFPLAY] ronde $Ronde: L4 vs L4 loggen -> results/$logNaam"
+Write-Host "[SELFPLAY] ronde ${Ronde}: L4 vs L4 loggen -> results/$logNaam"
 .\arena.ps1 -Config arena/arena_configs/l4_beslislog.json -Procs $Procs -Naam $logNaam
 
 $logs = Get-ChildItem results -Directory | Where-Object { $_.Name -like "l4_log_*" -or $_.Name -like "l4_selfplay_*" } | ForEach-Object { $_.FullName }
