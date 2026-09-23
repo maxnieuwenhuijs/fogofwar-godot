@@ -455,3 +455,73 @@ MENU_AUDIO_MUSIC,"Music","Muziek"
 MENU_AUDIO_SFX,"Effects","Effecten"
 MENU_AUDIO_AMBIENT,"Ambience","Omgeving"
 MENU_AUDIO_HINT,"During play, M mutes everything at once.","Tijdens het spel dempt M alles in een keer."
+HUB_TITLE,Campaign Hub,Campagne-hub
+HUB_SUBTITLE,ROUND %d   %s,RONDE %d   %s
+HUB_PHASE_SHORT_NOMINATION,COUNCIL,RAAD
+HUB_PHASE_SHORT_DONATION,DONATIONS,DONATIES
+HUB_PHASE_SHORT_DUELS,DUELS,DUELS
+HUB_PHASE_SHORT_TESTAMENT,LAST WILL,TESTAMENT
+HUB_PHASE_SHORT_CIVIL_WAR,CIVIL WAR,BURGEROORLOG
+HUB_PHASE_SHORT_OVER,CAMPAIGN OVER,CAMPAGNE VOORBIJ
+HUB_COL_ENEMY,ENEMY,VIJAND
+HUB_TIMELINE,TIMELINE,TIJDLIJN
+HUB_TAB_PHASE,PHASE,FASE
+HUB_TAB_CHAT,CHAT (%d),CHAT (%d)
+HUB_TAB_CHAT_PLAIN,CHAT,CHAT
+HUB_YOU_TAG,YOU,JIJ
+HUB_STATUS_BAR_TIP,"Reinforcement points, of which cavalry and cannons, CP and fame. Tap for the ledger.","Versterkingspunten, waarvan ruiters en kanonnen, CP en roem. Tik voor het grootboek."
+HUB_TAG_BATTLE_REPORT,BATTLE REPORT,SLAGRAPPORT
+HUB_TAG_VOTE_RESULT,VOTE RESULT,STEMUITSLAG
+HUB_TAG_DONATION,DONATION,DONATIE
+HUB_TAG_EXCHANGE,EXCHANGE,RUIL
+HUB_TAG_NOMINATION,NOMINATION,NOMINATIE
+HUB_TAG_TESTAMENT,LAST WILL,TESTAMENT
+HUB_TAG_PHASE,PHASE,FASE
+HUB_TAG_QUICK_CHAT,QUICK CHAT,QUICK CHAT
+HUB_FEED_PAIR,%s against %s,%s tegen %s
+HUB_FEED_COUNCIL_CHOSE,The council chose: %s as target,De raad koos: %s als doelwit
+HUB_FEED_REPORT_US,Our forces pushed them back.,Onze troepen dreven ze terug.
+HUB_FEED_REPORT_THEM,The enemy drove us back.,De vijand dreef ons terug.
+HUB_FEED_REPORT_DRAW,Neither side gave way.,Geen van beide weken.
+HUB_FEED_REPORT_WHO,%s wins (%s),%s wint (%s)
+HUB_METHOD_HARBOR,harbor,haven
+HUB_METHOD_ELIMINATION,elimination,eliminatie
+HUB_METHOD_RESIGN,surrender,overgave
+HUB_METHOD_HUNGER,hunger,honger
+HUB_FEED_NOMINATE,%s nominated %s against %s,%s nomineerde %s tegen %s
+HUB_FEED_NOMINATE_SELF,%s volunteers against %s,%s meldt zich tegen %s
+HUB_FEED_PHASE_SUB,"End of %s, start of %s","Einde %s, begin %s"
+HUB_COUNCIL_TITLE,COUNCIL: NOMINATE A TARGET,RAAD: NOMINEER EEN DOELWIT
+HUB_YOUR_FIGHTER,YOUR FIGHTER,JOUW VECHTER
+HUB_ENEMY_TARGET,ENEMY TARGET,VIJANDELIJK DOEL
+HUB_TEAM_VOTES,TEAM VOTES,TEAMSTEMMEN
+HUB_VOTE_CAPS,VOTE,STEM
+HUB_DUEL_PLAY_CAPS,TO THE BOARD,NAAR HET BORD
+HUB_DONATE_SHORT,DONATE TO YOUR TEAM,DONEER AAN JE TEAM
+HUB_DONATE_HINT,"+1 gives a reinforcement point, +CP a command point (max 10 pt / 3 CP per receiver per round).","+1 geeft een versterkingspunt, +CP een commandopunt (max 10 pt / 3 CP per ontvanger per ronde)."
+HUB_QUICK_CHAT,QUICK CHAT,QUICK CHAT
+HUB_QC_WELL_PLAYED,WELL PLAYED!,GOED GESPEELD!
+HUB_QC_ATTACK,ATTACK THERE!,VAL DAAR AAN!
+HUB_QC_HOLD,HOLD POSITION!,HOUD STAND!
+HUB_QC_NEED_SUPPORT,NEED SUPPORT!,STEUN NODIG!
+HUB_QC_REGROUP,REGROUP!,HERGROEPEREN!
+HUB_QC_PUSH,PUSH NOW!,NU DOORDRUKKEN!
+HUB_QC_COVER,COVER ME!,DEK ME!
+HUB_QC_FLANK,DEFEND THE FLANK!,VERDEDIG DE FLANK!
+HUB_QC_RETREAT,RETREAT!,TERUGTREKKEN!
+HUB_QC_REPLY_1,UNDERSTOOD!,BEGREPEN!
+HUB_QC_REPLY_2,ON MY WAY!,ONDERWEG!
+HUB_QC_REPLY_3,AYE!,JA KAPITEIN!
+HUB_QC_REPLY_4,NOT NOW.,NU EVEN NIET.
+HUB_CHAT_EMPTY,No messages yet. Use the quick chat below.,Nog geen berichten. Gebruik de quick chat hieronder.
+HUB_TIME_NOW,just now,zojuist
+HUB_TIME_MIN,%dm ago,%d min geleden
+HUB_TIME_HOUR,%dh ago,%d uur geleden
+HUB_SETTINGS_TITLE,SETTINGS,INSTELLINGEN
+HUB_MAIN_MENU,Main menu,Hoofdmenu
+HUB_HELP_TITLE,HOW IT WORKS,ZO WERKT HET
+HUB_HELP_TEXT,"Every round has four phases. COUNCIL: the nominating team picks a fighter and an enemy target (tap the portraits in the columns, then VOTE). DONATIONS: give reinforcements or CP to teammates. DUELS: the pairs fight on the board; your own duel starts automatically. LAST WILL: whoever falls may leave half to others. The timeline shows everything that happens, newest on top; tap a battle report for the details.","Elke ronde heeft vier fasen. RAAD: het nominerende team kiest een vechter en een vijandelijk doelwit (tik de portretten in de kolommen, dan STEM). DONATIES: geef versterkingen of CP aan teamgenoten. DUELS: de paren vechten op het bord; je eigen duel start vanzelf. TESTAMENT: wie valt mag de helft nalaten. De tijdlijn toont alles wat er gebeurt, nieuwste bovenaan; tik een slagrapport voor de details."
+HUB_STATUS_ACTIEF,Takes part this round,Doet mee deze ronde
+HUB_STATUS_STRIJD,Fighting now,Vecht nu
+HUB_STATUS_RUST,Resting this round,Rust deze ronde
+HUB_STATUS_DOOD,Fallen,Gevallen

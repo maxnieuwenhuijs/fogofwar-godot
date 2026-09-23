@@ -177,6 +177,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
 ## Commando's
 
+- **Campaign Hub (23 september, pdf `Campaign_hub` + map
+  `Campaign_HUB_UI`):** `scripts/ui/campaign/campaign_hub.gd` bouwt het
+  staande frame van de ontwerper in ontwerp-eenheden (564 x 981) maal S =
+  schermbreedte / 564; elementen in `assets/ui/campaign_hub/`, paden alleen
+  via `HubAssets`; tijdlijnkaartjes per feed-soort in `HubFeedKaart`
+  (`nominatie`- en `fase`-items zet de SoloDriver in de feed, alleen
+  presentatie). Check: `-- shot campaign_hub [seed] [chat|popup|raad]`.
 - Godot: `$env:GODOT_PATH`, anders
   `C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe`
   (console-variant `..._console.exe` voor terminal-output).

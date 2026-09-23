@@ -408,7 +408,11 @@ func test_c15_verwerk_duel_uitslag_boekt_de_buit_terug() -> void:
 			buit_entries.append(e)
 	assert_eq(buit_entries.size(), 1, "een buit-boeking voor de mens")
 	assert_eq(int(buit_entries[0].inf), 2)
-	var rapport: Dictionary = driver.feed[driver.feed.size() - 1]
-	assert_eq(String(rapport.type), "report")
+	# Het laatste rapport (na het rapport kan nog een fasewissel-kaartje komen).
+	var rapport: Dictionary = {}
+	for e in driver.feed:
+		if String(e.get("type", "")) == "report":
+			rapport = e
+	assert_eq(String(rapport.get("type", "")), "report")
 	assert_eq(int((rapport.buit as Dictionary).get("0", 0)), 2, "het battlereport meldt de buit")
 	assert_eq(int((rapport.buit as Dictionary).get(str(b), 0)), 0, "en niets voor wie niets veroverde")

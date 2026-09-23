@@ -137,29 +137,49 @@ func stap() -> void:
 
 
 func _pas_toe(action: Dictionary, speler: int) -> bool:
+	var fase_voor: int = c.fase
 	var res: Dictionary = CReducer.apply(c, action, speler)
 	if res.ok:
 		clog.record(speler, action)
 		_feed_event(action, speler)
+		if c.fase != fase_voor:
+			_feed_fase(fase_voor)
 	return res.ok
+
+
+## Campagne-hub (23 september): een fasewissel is een eigen kaartje in de
+## tijdlijn. Wie uit de raad komt draagt de gekozen paren mee (de stemuitslag).
+func _feed_fase(van: int) -> void:
+	var paren: Array = []
+	if van == CState.Fase.NOMINATIE:
+		for duel in c.duels_deze_ronde:
+			paren.append([int(duel.p1), int(duel.p2)])
+	feed.append({"type": "fase", "ronde": c.ronde, "van": van, "naar": c.fase,
+		"paren": paren})
 
 
 ## 27 juli (Max): élke donatie/testament als leesbare regel in de tijdlijn —
 ## ook wat de mens zelf doet. Het ledger is toch openbaar (Among Us-principe).
 func _feed_event(action: Dictionary, speler: int) -> void:
 	var t: String = String(action.type)
-	if t == CActions.DONATE:
+	if t == CActions.NOMINATE:
+		feed.append({"type": "nominatie", "speler": speler, "ronde": c.ronde,
+			"eigen": int(action.eigen), "vijand": int(action.vijand)})
+	elif t == CActions.DONATE:
 		var delen: Array = []
 		for veld in [["inf", "SOLO_UNIT_INF"], ["cav", "SOLO_UNIT_CAV"], ["art", "SOLO_UNIT_ART"], ["cp", "SOLO_UNIT_CP"]]:
 			var n: int = int(action.get(veld[0], 0))
 			if n > 0:
 				delen.append("%d %s" % [n, tr(String(veld[1]))])
-		feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
+		feed.append({"type": "event", "soort": "donatie", "speler": speler, "ronde": c.ronde,
+			"naar": int(action.naar), "inf": int(action.get("inf", 0)), "cav": int(action.get("cav", 0)),
+			"art": int(action.get("art", 0)), "cp": int(action.get("cp", 0)),
 			"tekst": tr("SOLO_FEED_DONATE") % [String(c.spelers[speler].naam),
 				", ".join(delen), String(c.spelers[int(action.naar)].naam)]})
 	elif t == CActions.EXCHANGE:
 		var koers: int = maxi(1, c.rules.ruil_cp_per_punt)
-		feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
+		feed.append({"type": "event", "soort": "ruil", "speler": speler, "ronde": c.ronde,
+			"cp": int(action.cp),
 			"tekst": tr("SOLO_FEED_RUIL") % [String(c.spelers[speler].naam),
 				int(action.cp), int(action.cp) / koers]})
 	elif t == CActions.TESTAMENT:
@@ -170,7 +190,10 @@ func _feed_event(action: Dictionary, speler: int) -> void:
 				if n2 > 0:
 					delen2.append("%d %s" % [n2, tr(String(veld[1]))])
 			if not delen2.is_empty():
-				feed.append({"type": "event", "speler": speler, "ronde": c.ronde,
+				var d: Dictionary = deel
+				feed.append({"type": "event", "soort": "testament", "speler": speler, "ronde": c.ronde,
+					"naar": int(d.naar), "inf": int(d.get("inf", 0)), "cav": int(d.get("cav", 0)),
+					"art": int(d.get("art", 0)), "cp": int(d.get("cp", 0)),
 					"tekst": tr("SOLO_FEED_TESTAMENT") % [String(c.spelers[speler].naam),
 						", ".join(delen2), String(c.spelers[int((deel as Dictionary).naar)].naam)]})
 

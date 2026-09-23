@@ -1,5 +1,47 @@
 # Fog of War — Work In Progress & Context
 
+## 23 september -- De Campaign Hub in het nieuwe ontwerp
+
+Max: "MAAK DIT IN HET SPEL NU" bij de pdf `Campaign_hub.pdf` (drie pagina's:
+hoofdscherm, de soorten tijdlijnkaartjes, het chat-frame) en de map
+`fogofwar-assets/Campaign_HUB_UI` met de elementen.
+
+- Elementen staan in `assets/ui/campaign_hub/<map>/` met de namen van de
+  ontwerper (56 png's, VRAM-compressie uit, mipmaps aan). `HubAssets`
+  (`scripts/ui/campaign/hub_assets.gd`) is de enige plek die de paden kent:
+  9-patches, het ronde portret (schijf teal/zalm, gravure, gouden ring,
+  statusbadge), knopstijlen, een silhouet-shader voor de factievlag.
+- De hub (`campaign_hub.gd`) rekent in ontwerp-eenheden van het frame
+  (564 x 981, de maat van BG.png) maal S = schermbreedte / 564; een hoger
+  scherm geeft de kolommen meer hoogte, een breder scherm zet het frame in
+  het midden. Opbouw: titelbalk (vlag, ronde + fase, ? en tandwiel),
+  statusbalk (versterkingspunten, ruiters, kanonnen, CP, roem; tik =
+  grootboek), jouw team / tijdlijn / vijand, tabbladen FASE en CHAT, het
+  fasepaneel en de quick-chat-balk. Alle driver-aanroepen zijn gebleven.
+- De raad zoals op pagina 1: je vechter en het doelwit kies je door een
+  portret in de kolommen aan te tikken (of het portret in het paneel:
+  volgende kandidaat); teamstemmen als rondjes, de balk telt de stemmen
+  (er is in solo geen klok, dus geen nep-aftelling), STEM.
+- Tijdlijn (pagina 2): `HubFeedKaart` bouwt per feed-item een kaartje:
+  slagrapport, nominatie, donatie/ruil, testament, fase, stemuitslag,
+  quick chat, systeem. Nieuwste bovenaan; de bovenste 12 nieuwe faden in.
+  Daarvoor zet de SoloDriver meer in de feed (alleen presentatie, geen
+  staat): `nominatie`-items, `fase`-items bij elke fasewissel (met de
+  paren uit de raad), en bij donatie/ruil/testament `soort` + bedragen.
+  Nominatie-barks staan alleen in de chat (anders dubbel).
+- Quick chat (pagina 3): drie vaste knoppen plus het pop-upvenster met
+  zes; een bericht komt in de tijdlijn en het chat-tabblad en soms
+  antwoordt een teamgenoot (eigen RNG). Chat staat alleen in de feed,
+  nooit in het campagnelog.
+- `SoloTests` zocht het rapport als laatste feed-item; nu het laatste
+  rapport (er kan een fasekaartje achter komen).
+- Check: `-- shot campaign_hub [seed] [chat|popup|raad|donatie]`
+  (capture.tscn, met venster voor het plaatje). `raad` speelt door tot de
+  eerste raad na ronde 1 en zet voor het plaatje de mens terug op actief.
+  Testbatterij (`tests.ps1`): 2498 geslaagd, 0 gefaald.
+- Open: portretten tonen de factiegravure (er zijn geen generaalsportretten
+  geleverd); de groene quick-chat-lint is een effen vlak (geen asset).
+
 ## 23 september -- C24: de Leeuw krijgt 4 versterkingspunten; de knoppen zijn nu gemeten
 
 Max: "doe maar even niks met de Leeuw, behalve dan die reinforcements
