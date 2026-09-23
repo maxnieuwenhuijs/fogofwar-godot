@@ -1,5 +1,47 @@
 # Spelregels — CHANGELOG
 
+## C24 — 23 september 2026 (de Leeuw krijgt 4 versterkingspunten)
+
+*Besluit Max: "doe maar even niks met de Leeuw, behalve dan die
+reinforcements increasen."*
+
+De nachtmatrix van 21 september met getrainde bots gaf de Leeuw **36,6%**
+(band 36,6-59,2). Twee kandidaten zijn eerst gemeten, allebei op de volle
+matrix met dezelfde bots:
+
+| kandidaat | Leeuw | rest | oordeel |
+|---|---|---|---|
+| 3 kaarten in plaats van 2 (voorstel factiezoeker) | 36,6 -> **59,8** (+23,3) | band 44,4-59,8 | doorgeschoten: hij wordt de sterkste |
+| +2 versterkingspunten (C11-`budget_bonus`) | 36,6 -> **37,8** (+1,3) | alles binnen 2 pp | te klein, maar de goede richting |
+
+Daarmee staat de schaal van de knoppen vast: een kaart erbij is ~23 pp, een
+kaartbudget-punt ~27 (C20-meting), een ruiter ~18, **een versterkingspunt
+~0,6** en een soldaat of legergrootte vrijwel niets. Voor een gat van twaalf
+punten bestaat geen hele knop; de Leeuw krijgt daarom voorlopig alleen de
+startcompensatie die de andere zwakke facties ook hebben.
+
+**Wat verandert.** `budget_bonus` van de Leeuw (doctrine 2) van niets naar
+**4 punten, 0 CP** -- gelijk aan de Muis, meer dan Beer en Krokodil (3) en
+Wolf (2 + 4 CP). Zijn startreserve gaat daarmee van 6 naar 10 infanterie
+(comp x `start_poolfactor` 0,5 + bonus). Kaarten (2), budget (8), leger
+([12,4,2]) en zijn perk (artilleriedracht 7) blijven ongemoeid. Verwacht
+effect ~2,5 pp: dit dicht het gat NIET, het is de kleinste correctie die
+past bij hoe de andere facties gecompenseerd worden.
+
+De tabel staat op drie plekken (`CRules.budget_bonus`,
+`campaign.budget_bonus` in `rules_v42_campaign.json` en in
+`v42_default.json`); `tools/balans/zet_budget_bonus.py` zet ze in een keer,
+`CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt ze.
+`rules_version` blijft **4.3.7**: dit is een factie-instelling, geen
+mechaniek.
+
+Goldens opnieuw gegenereerd; twee sims verschuiven (leeuw-beer 202: cyclus
+18 -> 21, 445 -> 518 acties; wolf-leeuw 404: 8 -> 9, 209 -> 236) en
+`golden_sims.json` is opnieuw geijkt. Testsuite 2592/0, `-- simcheck` 0
+afwijkingen, `-- uispel 777` nu `b9c2ee75...` (213 acties, cyclus 5).
+Wie nog een Leeuw-campagne open heeft speelt met de bevroren tabel uit
+zijn save verder.
+
 ## 4.3.7 — 18 september 2026 (de ruiter krijgt alleen nog +2 attack; de +2 stamina gaat eruit)
 
 *Besluit Max, 18 september, na de nachtmatrix en de driedubbele meting:

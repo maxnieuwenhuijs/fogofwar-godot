@@ -14,7 +14,7 @@
 #
 # Gebruik: .\tools\balans\meet_leeuw_bonus.ps1 [-Variant bonus2] [-Procs 24]
 param(
-    [string]$Variant = "bonus2",
+    [string]$Variant = "bonus2",   # naam na v437_matrix_ in arena/arena_configs/varianten
     [int]$Procs = 24,
     [string]$WachtOp = ""
 )

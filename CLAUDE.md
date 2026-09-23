@@ -34,7 +34,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
 
   **Startcompensatie (C11-`budget_bonus`, geen kaartbudget):** Muis +4 punten,
-  Beer +3, Wolf +2 punten en 4 CP, **Krokodil +3** (C20, 9 augustus). Die tabel
+  Beer +3, Wolf +2 punten en 4 CP, **Krokodil +3** (C20, 9 augustus),
+  **Leeuw +4** (C24, 23 september). Zetten met
+  `python tools/balans/zet_budget_bonus.py <factie> --pt N [--cp N]`: die
+  schrijft alle drie de plekken tegelijk. Die tabel
   staat op DRIE plekken die gelijk moeten blijven — `CRules.budget_bonus`,
   `campaign.budget_bonus` in `rules_v42_campaign.json` en in `v42_default.json`
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
@@ -695,8 +698,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `90650e1e…` geven (213 acties, cyclus 5, sinds
-  21 september: de bot speelt met de Wolf-gewichten van de trainingsrun van
+  eind-zobrist; seed 777 moet `b9c2ee75…` geven (213 acties, cyclus 5, sinds
+  23 september, C24: de Leeuw krijgt 4 versterkingspunten; was `90650e1e…`
+  (213, 5) sinds 21 september: de bot speelt met de Wolf-gewichten van de trainingsrun van
   20 september; een bot-wijziging verschuift de digest net zo goed als een
   regelwijziging; was `3d361f8b…` (116, 3) onder 4.3.7 op 18 september,
   `a6677ac8…` (220, 7) onder 4.3.6 op 16 september en `d16a14f8…` (246, 6)

@@ -1,6 +1,6 @@
 {
 	"_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
-	"gemeten_op": "4.3.7 (18 september): de ruiter krijgt alleen nog +2 attack bovenop de kaart (stat_bonus cav {attack 2}); de +2 stamina van 4.3.6 maakte van elke ruiter een havenrenner (nachtmatrix 18 september: band 27-69%), met alleen de attack-plus band 45-54% over 5400 partijen. Regelwijziging, dus opnieuw geijkt; vijf sims zeggen niets over balans, daarvoor de nachtrun na het hertrainen.",
+	"gemeten_op": "C24 (23 september): de Leeuw krijgt 4 versterkingspunten startcompensatie (C11-budget_bonus, was 0); alleen de twee sims met een Leeuw verschuiven. Regelwijziging, dus opnieuw geijkt; vijf sims zeggen niets over balans, daarvoor de nachtrun.",
 	"sims": [
 		{
 			"p1": "easy",
@@ -29,8 +29,8 @@
 			"d2": "beer",
 			"seed": 202,
 			"winner": 2,
-			"cyclus": 18,
-			"acties": 445
+			"cyclus": 21,
+			"acties": 518
 		},
 		{
 			"p1": "medium",
@@ -49,8 +49,8 @@
 			"d2": "leeuw",
 			"seed": 404,
 			"winner": 1,
-			"cyclus": 8,
-			"acties": 209
+			"cyclus": 9,
+			"acties": 236
 		}
 	],
 	"rules": "res://arena/arena_configs/rules_v42_campaign.json"

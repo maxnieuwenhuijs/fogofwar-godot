@@ -1,5 +1,37 @@
 # Fog of War — Work In Progress & Context
 
+## 23 september -- C24: de Leeuw krijgt 4 versterkingspunten; de knoppen zijn nu gemeten
+
+Max: "doe maar even niks met de Leeuw, behalve dan die reinforcements
+increasen en dan Varken testen en daarna een superrun in de nacht."
+
+- **Wat er gemeten is** (elk de volle matrix, getrainde bots van 21
+  september): 3 kaarten voor de Leeuw +23,3 pp (36,6 -> 59,8, doorgeschoten),
+  +2 versterkingspunten +1,3 pp (te klein). Daarmee staat de schaal:
+  kaart ~23, kaartbudget ~27 (C20), ruiter ~18, **versterkingspunt ~0,6**,
+  soldaat en legergrootte ~0. Voor het gat van twaalf punten bestaat geen
+  hele knop.
+- **CP is voor de Leeuw structureel minder waard** (opgezocht, niet eerder
+  opgeschreven): een ingezette CP staat precies EEN kaart met budget+1 toe
+  (`cp_effect_mode: define_budget`, `cp_inzet_max: per_kaart`). Met 2
+  kaarten per ronde kan de Leeuw dus hooguit 2 CP per ronde omzetten, de
+  Muis 5. Zijn hoge budget (8) compenseert de sterkte van een kaart, niet
+  het TEMPO: hij activeert 2 pionnen per cyclus waar de Muis er 5 doet.
+  Dat is waarschijnlijk de kern van zijn 37%.
+- **C24 aangenomen:** `budget_bonus` Leeuw 0 -> 4 punten (startreserve 6 ->
+  10 inf), gelijk aan de Muis. Gezet met het nieuwe
+  `tools/balans/zet_budget_bonus.py` (drie plekken tegelijk, commentaar per
+  regel blijft staan). Kaarten, budget, leger en perk ongemoeid;
+  `rules_version` blijft 4.3.7 (factie-instelling, geen mechaniek).
+- **Checks:** `-- facties` toont Leeuw 10 inf startreserve; goldens opnieuw,
+  twee sims geijkt (leeuw-beer 202 en wolf-leeuw 404, allebei langer);
+  `-- simcheck` 0 afwijkingen; testsuite **2592/0**; `-- uispel 777` nu
+  `b9c2ee75...` (213 acties, cyclus 5).
+
+**Volgende:** Varken `[12,4,2]` meten (voorstel factiezoeker van 22
+september, `rules_c25_varken_1242.json`, bovenop deze Leeuw-bonus zodat je
+niet twee dingen door elkaar meet), daarna 's nachts de volle matrix.
+
 ## 22 september -- L4 neuraal: de keten staat, de eerste datarun draait
 
 Max las het TypeSafe-stuk over "System One models" (Jev) en vroeg of zo'n
