@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""L4 neuraal: hoe doet het netje het tegen L2?
+"""L4 neuraal: hoe doet het netwerk het tegen L2?
 
 Leest de games.jsonl van een of meer arena-runs (l4_vs_l2.json en
 l2_vs_l4.json, of elke run waarin precies een kant "l4" speelt) en print de

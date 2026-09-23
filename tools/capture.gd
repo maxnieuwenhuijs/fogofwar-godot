@@ -1504,12 +1504,12 @@ func _ready() -> void:
 		get_tree().quit(0 if tuner_fouten == 0 else 1)
 		return
 	elif "imitcheck" in args:
-		# L4 neuraal (22 september): waar wijkt het netje af van L2, en hoe
+		# L4 neuraal (22 september): waar wijkt het netwerk af van L2, en hoe
 		# erg? Speelt L2 vs L2 (rood = de opgegeven factie, default leeuw)
 		# en rekent bij elke rode actiefase-beslissing OOK de keuze van het
-		# score-netje uit. Telt per actietype wat L2 koos en wat het netje
-		# koos, of het netje in L2's topgroep zat, en de SPIJT: L2's
-		# evaluate() van de beste zet min die van de netje-zet.
+		# scorenetwerk uit. Telt per actietype wat L2 koos en wat het netwerk
+		# koos, of het netwerk in L2's topgroep zat, en de SPIJT: L2's
+		# evaluate() van de beste zet min die van de netwerkzet.
 		# Gebruik: -- imitcheck [factie] [seed] [net=<pad>]
 		var ic_pad: String = "res://data/ai_net_imit.json"
 		var ic_seed: int = 777
@@ -1524,7 +1524,7 @@ func _ready() -> void:
 				ic_factie = int(d)
 		var ic_net: NeuraalNet = NeuraalNet.laad(ic_pad)
 		if ic_net == null:
-			print("[IMITCHECK] geen netje op %s" % ic_pad)
+			print("[IMITCHECK] geen netwerk op %s" % ic_pad)
 			get_tree().quit(1)
 			return
 		var ic_rules: RulesConfig = RulesConfig.load_from_file("res://arena/arena_configs/rules_v42_campaign.json")
@@ -1584,11 +1584,11 @@ func _ready() -> void:
 					ic_spijt_som += spijt
 					ic_spijt_max = maxf(ic_spijt_max, spijt)
 			ic_runner.step()
-		print("[IMITCHECK] %s (rood) vs wolf, seed %d, netje %s: winnaar %d na %d cycli" % [Constants.doctrine_name(ic_factie), ic_seed, ic_pad, ic_runner.winner, ic_runner.state().cycle])
+		print("[IMITCHECK] %s (rood) vs wolf, seed %d, netwerk %s: winnaar %d na %d cycli" % [Constants.doctrine_name(ic_factie), ic_seed, ic_pad, ic_runner.winner, ic_runner.state().cycle])
 		print("[IMITCHECK] %d rode beslissingen: zelfde zet %d (%.1f%%), in L2's topgroep %d (%.1f%%), gemiddelde spijt %.1f, max %.0f (L2-eval-eenheden; material = %d)"
 			% [ic_n, ic_gelijk, 100.0 * ic_gelijk / maxi(1, ic_n), ic_in_top, 100.0 * ic_in_top / maxi(1, ic_n), ic_spijt_som / maxi(1, ic_n), ic_spijt_max, int(ic_a1._ai.weights.get("material", 0)) if ic_a1._ai != null else 0])
 		print("[IMITCHECK] L2 koos:    %s" % str(ic_l2_type))
-		print("[IMITCHECK] netje koos: %s" % str(ic_net_type))
+		print("[IMITCHECK] netwerk koos: %s" % str(ic_net_type))
 		var ic_keys: Array = ic_afwijk.keys()
 		ic_keys.sort_custom(func(a, b): return int(ic_afwijk[a]) > int(ic_afwijk[b]))
 		for k in ic_keys:
@@ -1599,7 +1599,7 @@ func _ready() -> void:
 		# L4 neuraal (22 september): hoe vaak staat L2 voor gelijke zetten?
 		# Speelt een partij L2 vs L2 en telt per actiefase-beslissing hoeveel
 		# kandidaten de hoogste evaluate()-score delen. Met tie_break_loting
-		# loot L2 daartussen, en dat is het plafond voor imitatie: een netje
+		# loot L2 daartussen, en dat is het plafond voor imitatie: een netwerk
 		# kan een loting niet raden. Gebruik: -- tiecheck [seed]
 		var tc_seed: int = 777
 		for a in args:
@@ -1659,12 +1659,12 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 	elif "netcheck" in args:
-		# L4 neuraal (22 september): het statusbord van het netje. Print de
+		# L4 neuraal (22 september): het statusbord van het netwerk. Print de
 		# kenmerkrij (aantal + namen), laadt data/ai_net.json (of net=<pad>),
 		# bewijst dat GDScript dezelfde waarde rekent als Python (de `proef`
 		# in het json), speelt een partij L4 (rood, muis) tegen L2 (blauw,
 		# wolf) op seed 777 onder rules_v42_campaign en meet legaliteit,
-		# uitslag en de tijd per beslissing. Zonder netje: exit 1, maar de
+		# uitslag en de tijd per beslissing. Zonder netwerk: exit 1, maar de
 		# kenmerken en de L2-terugval worden wel gecontroleerd.
 		var nc_fouten := 0
 		var nc_pad: String = NeuraalNet.STANDAARD_PAD
@@ -1684,12 +1684,12 @@ func _ready() -> void:
 			nc_fouten += 1
 		var nc_net: NeuraalNet = NeuraalNet.laad(nc_pad)
 		if nc_net == null:
-			print("[NETCHECK] geen netje op %s (train er een met tools/l4/train_net.py)" % nc_pad)
+			print("[NETCHECK] geen netwerk op %s (train er een met tools/l4/train_net.py)" % nc_pad)
 			nc_fouten += 1
 		else:
-			print("[NETCHECK] netje: %s" % nc_net.beschrijving())
+			print("[NETCHECK] netwerk: %s" % nc_net.beschrijving())
 			if not nc_net.heeft_proef:
-				print("[NETCHECK] FOUT: netje draagt geen proef-vector")
+				print("[NETCHECK] FOUT: netwerk draagt geen proef-vector")
 				nc_fouten += 1
 			elif nc_net.proef_ok():
 				print("[NETCHECK] pariteit: GDScript rekent %.6f, Python %.6f: PASS" % [nc_net.waarde(nc_net.proef_invoer), nc_net.proef_uitvoer])
@@ -1697,12 +1697,12 @@ func _ready() -> void:
 				print("[NETCHECK] FOUT pariteit: GDScript rekent %.6f, Python %.6f" % [nc_net.waarde(nc_net.proef_invoer), nc_net.proef_uitvoer])
 				nc_fouten += 1
 			if nc_net.kenmerk_versie != Kenmerken.KENMERK_VERSIE or nc_net.kenmerken != Kenmerken.aantal():
-				print("[NETCHECK] FOUT: netje is kenmerk-versie %d met %d kenmerken, het spel versie %d met %d" % [nc_net.kenmerk_versie, nc_net.kenmerken, Kenmerken.KENMERK_VERSIE, Kenmerken.aantal()])
+				print("[NETCHECK] FOUT: netwerk is kenmerk-versie %d met %d kenmerken, het spel versie %d met %d" % [nc_net.kenmerk_versie, nc_net.kenmerken, Kenmerken.KENMERK_VERSIE, Kenmerken.aantal()])
 				nc_fouten += 1
 		var nc_rules: RulesConfig = RulesConfig.load_from_file("res://arena/arena_configs/rules_v42_campaign.json")
 		var nc_l4 := AgentL4.new(nc_pad if nc_waarde == "" else nc_pad + "+" + nc_waarde)
 		if nc_waarde != "":
-			print("[NETCHECK] waarde-netje: %s (%s)" % [nc_waarde, "geladen" if nc_l4.heeft_waarde_net() else "NIET geladen"])
+			print("[NETCHECK] waardenetwerk: %s (%s)" % [nc_waarde, "geladen" if nc_l4.heeft_waarde_net() else "NIET geladen"])
 			if not nc_l4.heeft_waarde_net():
 				nc_fouten += 1
 		var nc_l2 := AgentL2.new()
@@ -1718,12 +1718,12 @@ func _ready() -> void:
 			print("[NETCHECK] FOUT: kenmerken zijn niet deterministisch")
 			nc_fouten += 1
 		print("[NETCHECK] partij L4(muis, %s) vs L2(wolf) seed %d: winnaar %d, cyclus %d, %d stappen, %.1f s"
-			% ["netje" if nc_l4.heeft_net() else "L2-terugval", nc_seed, nc_runner.winner, nc_staat.cycle, nc_runner.steps, nc_ms / 1000.0])
+			% ["netwerk" if nc_l4.heeft_net() else "L2-terugval", nc_seed, nc_runner.winner, nc_staat.cycle, nc_runner.steps, nc_ms / 1000.0])
 		print("[NETCHECK]   illegaal %d, terugval %d, afgekapt %s" % [nc_runner.illegal_count, nc_runner.fallback_count, str(nc_runner.afgekapt)])
 		if nc_runner.illegal_count > 0 or nc_runner.fallback_count > 0 or nc_runner.afgekapt:
 			nc_fouten += 1
 		if nc_l4.beslissingen > 0:
-			print("[NETCHECK]   netje-beslissingen %d, gemiddeld %.1f kandidaten, %.1f ms per beslissing (hele partij / beslissingen), %d lotingen door het waarde-netje"
+			print("[NETCHECK]   netwerk-beslissingen %d, gemiddeld %.1f kandidaten, %.1f ms per beslissing (hele partij / beslissingen), %d lotingen door het waardenetwerk"
 				% [nc_l4.beslissingen, float(nc_l4.kandidaten_totaal) / nc_l4.beslissingen, float(nc_ms) / nc_l4.beslissingen, nc_l4.lotingen])
 		print("[NETCHECK] klaar: %d fout(en)" % nc_fouten)
 		get_tree().quit(0 if nc_fouten == 0 else 1)

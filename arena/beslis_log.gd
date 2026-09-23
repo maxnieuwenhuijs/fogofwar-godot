@@ -1,7 +1,7 @@
 class_name BeslisLog
 extends RefCounted
 
-# L4 neuraal (22 september) -- de beslislogger: trainingsdata voor het netje.
+# L4 neuraal (22 september) -- de beslislogger: trainingsdata voor het netwerk.
 #
 # Per actiefase-beslissing schrijft een agent (AgentL2 of AgentL4 met
 # `beslis_log` gezet) de kenmerkrij van ELKE kandidaat-na-staat plus de index

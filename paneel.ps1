@@ -172,13 +172,13 @@ $null = Maak-Knop $kadTrain "Bots laten leren" {
     Start-Training ([int]$numTrain.Value)
 }
 # L4 neuraal (23 september, Max: "hij moet zelf playen, hoe doe ik dat"):
-# een selfplay-ronde van het netje. L4 speelt 864 partijen tegen zichzelf en
-# logt ze, het waarde-netje leert opnieuw van alle logs tot nu toe, netcheck,
+# een selfplay-ronde van het netwerk. L4 speelt 864 partijen tegen zichzelf en
+# logt ze, het waardenetwerk leert opnieuw van alle logs tot nu toe, netcheck,
 # en dan een meting tegen L2. Ruim drie uur op 12 processen; de uitslag staat
 # onderaan het venster en in results/proef_r<N>_<datum>/. Zie
 # tools/l4/selfplay_ronde.ps1 en WIP 22 september.
 $btnSelfplay = New-Object System.Windows.Forms.Button
-$btnSelfplay.Text = "Netje laten zelfspelen (3 uur)"
+$btnSelfplay.Text = "Netwerk laten zelfspelen (3 uur)"
 $btnSelfplay.Location = New-Object System.Drawing.Point(305, 42)
 $btnSelfplay.Size = New-Object System.Drawing.Size(108, 34)
 $btnSelfplay.Font = New-Object System.Drawing.Font("Segoe UI", 8, [System.Drawing.FontStyle]::Regular)

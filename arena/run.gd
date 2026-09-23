@@ -8,7 +8,7 @@ extends Node
 #   {
 #     "matchups": "all" | [["muis", "wolf"], ...],   # "all" = alle 36 gerichte paren
 #     "games_per_matchup": 5,
-#     "agents": {"p1": "l1", "p2": "l1"},            # l0 | l1 | l2 | l3 | l3u | l4 | l4:<netje.json>
+#     "agents": {"p1": "l1", "p2": "l1"},            # l0 | l1 | l2 | l3 | l3u | l4 | l4:<netwerk.json>
 #     "base_seed": 1000,
 #     "rules": "res://arena/arena_configs/rules_v42_campaign.json",  # optioneel
 #     "max_steps": 1500,

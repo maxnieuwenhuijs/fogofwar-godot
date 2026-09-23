@@ -6,17 +6,17 @@ extends RefCounted
 # Zet een (na-)staat om in een vaste rij getallen, gezien vanuit speler `me`.
 # Dit is de ENIGE plek waar kenmerken worden berekend: de logger in de arena
 # schrijft deze rij weg voor de trainer, en AgentL4 voert dezelfde rij aan het
-# netje. Python rekent dus nooit zelf kenmerken uit: wat je traint is wat je
+# netwerk. Python rekent dus nooit zelf kenmerken uit: wat je traint is wat je
 # speelt, byte voor byte.
 #
 # De rij bevat om te beginnen ALLE termen van de L2-evaluatie (AIController.
-# evaluate), maar dan ongewogen en per kant apart. Een lineair netje op deze
+# evaluate), maar dan ongewogen en per kant apart. Een lineair netwerk op deze
 # rij kan L2 dus exact nadoen; alles daarboven (combinaties, drempels) is
 # winst die de gewichten van L2 niet kunnen uitdrukken.
 #
 # Verander je de rij (volgorde, schaal, nieuwe termen): KENMERK_VERSIE
-# ophogen. Een netje draagt de versie waarop het getraind is en AgentL4
-# weigert een netje van een andere versie.
+# ophogen. Een netwerk draagt de versie waarop het getraind is en AgentL4
+# weigert een netwerk van een andere versie.
 
 const KENMERK_VERSIE: int = 1
 

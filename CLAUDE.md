@@ -142,11 +142,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   python-script via de Write-tool, dan `python script.py` (bekende bug).
 
 - **L4 neuraal (22 september, F8.1, TD-Gammon-route):** AgentL4
-  (`agents/l4_net.gd`) is L2 met de na-staat-waarde uit een netje
+  (`agents/l4_net.gd`) is L2 met de na-staat-waarde uit een netwerk
   (`scripts/ai/neuraal_net.gd`, json `data/ai_net.json`) op
   `Kenmerken.van_staat` (`scripts/ai/kenmerken.gd`, 65 kenmerken = de
   L2-termen ongewogen per kant + globaal; `KENMERK_VERSIE` ophogen bij elke
-  wijziging van de rij, een netje van een andere versie wordt geweigerd).
+  wijziging van de rij, een netwerk van een andere versie wordt geweigerd).
   Kenmerken worden ALLEEN in GDScript berekend; Python leest ze uit het
   binaire beslislog (`arena/beslis_log.gd`, arena-config `"beslis_log":
   true`, `"beslis_elke": 4`, label `l4` of `l4:<pad>`). Trainen:
@@ -154,15 +154,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (numpy; imitatie-softmax over de kandidaten + uitslag-logit, splits op
   partij). Check: `-- netcheck [net=<pad>] [seed]` (pariteit GDScript/
   Python via de `proef`-vector, legaliteit, ms per beslissing). Zonder
-  netje speelt L4 byte-identiek L2. Configs: `l2_beslislog.json`
+  netwerk speelt L4 byte-identiek L2. Configs: `l2_beslislog.json`
   (data van L2), `l4_beslislog.json` (selfplay), `l4_vs_l2.json` +
   `l2_vs_l4.json` (meting, beide kleuren). Een volledig log weegt 6,5 MB
   per partij: verdun. **Stand 22 september: L4 = L2 (49% over 864
-  partijen), geparkeerd.** Het officiele netje is de L2-kopie plus een
-  waarde-netje dat de loting weegt (`l4:<score>+<waarde>`, `waarde_temp`);
+  partijen), geparkeerd.** Het officiele netwerk is de L2-kopie plus een
+  waardenetwerk dat de loting weegt (`l4:<score>+<waarde>`, `waarde_temp`);
   imitatie-plafond 66% omdat L2 bij 48% van zijn zetten loot (`--
   tiecheck`). Meetgereedschap: `-- imitcheck [factie]` (waar wijkt het
-  netje af, spijt in eval-eenheden), label `l4:l2` (L2's evaluate door de
+  netwerk af, spijt in eval-eenheden), label `l4:l2` (L2's evaluate door de
   L4-route), `tools/l4/meet_l4.py <run>...` (winst per kleur/factie),
   `tools/l4/selfplay_ronde.ps1` (Max start). Meet NOOIT op een lopende
   run: de snelle partijen komen eerst binnen en vertekenen 20-30 punten.
@@ -317,7 +317,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   ligt (fakkel, wagen, kookpot, musketrek, kanon, boom, troon, ...). Een
   bewoner met teamwoord (`peasant_mouse_red`) staat alleen in het kamp van
   die kleur. De tweens van alle reacties hangen aan hun prop-node, zodat een
-  herbouw ze netjes meeneemt. **Budget (12 september):** klein 300-800
+  herbouw ze netwerken meeneemt. **Budget (12 september):** klein 300-800
   driehoeken, middel 800-1.500, groot decor tot 3.000, een diorama onder de
   30.000 en 15-25 props; een mesh en een materiaal per prop (draw calls
   tellen op een telefoon zwaarder dan vertices); Tripo-uitvoer door

@@ -18,7 +18,7 @@ var tie_break_loting: bool = false  # arena-config zet dit aan (meet-spreiding)
 ## L4 neuraal (22 september): optionele beslislogger (arena/beslis_log.gd).
 ## Staat hij aan, dan schrijft elke actiefase-keuze de kenmerkrijen van ALLE
 ## kandidaten plus de index van de gekozen zet weg: de trainingsdata voor het
-## netje. beslis_game is het partijnummer in de run (voor de uitslag erbij).
+## netwerk. beslis_game is het partijnummer in de run (voor de uitslag erbij).
 var beslis_log = null
 var beslis_game: int = 0
 ## Verdunning: alleen elke k-de beslissing loggen (een partij weegt anders

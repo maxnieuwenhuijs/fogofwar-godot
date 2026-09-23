@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-"""L4 neuraal (22 september) -- de trainer van het netje.
+"""L4 neuraal (22 september) -- de trainer van het netwerk.
 
 Leest een of meer `beslissingen.bin` (arena met "beslis_log": true, zie
 arena/beslis_log.gd voor het formaat), traint een klein MLP op de kenmerkrijen
 en schrijft `data/ai_net.json` in het formaat dat NeuraalNet (GDScript) leest.
 
-Het netje geeft elke na-staat EEN getal: de waarde voor de speler die hem
+Het netwerk geeft elke na-staat EEN getal: de waarde voor de speler die hem
 bekijkt. Twee leersignalen, samen in dat ene getal:
 
   imitatie   softmax over de kandidaten van een beslissing, kruisentropie met
              de zet die de logger-bot koos (L2 of een eerdere L4). Dit maakt
-             van het netje eerst een kopie van de bot die de data speelde.
+             van het netwerk eerst een kopie van de bot die de data speelde.
   uitslag    de gekozen na-staat als logit van "ik win deze partij":
-             sigmoid(waarde) tegen de uitslag. Dit is wat het netje voorbij
+             sigmoid(waarde) tegen de uitslag. Dit is wat het netwerk voorbij
              zijn leermeester kan brengen: het leert wat WON, niet wat L2 vond.
 
 Gewichten van de twee: --imitatie en --uitslag. Eerste ronde (data van L2):
@@ -191,7 +191,7 @@ def filter_doctrine(D, doctrine):
 
 
 # ---------------------------------------------------------------------------
-# Het netje
+# Het netwerk
 # ---------------------------------------------------------------------------
 
 class MLP:
@@ -333,7 +333,7 @@ def train(D, args):
     idx_val = np.nonzero(is_val)[0]
     breedtes = [X.shape[1]] + [int(h) for h in args.verborgen.split(",") if h.strip()] + [1]
     net = MLP(breedtes, rng)
-    print(f"[L4] netje {'-'.join(map(str, breedtes))}, {n_besl} beslissingen "
+    print(f"[L4] netwerk {'-'.join(map(str, breedtes))}, {n_besl} beslissingen "
           f"({len(idx_train)} train / {len(idx_val)} validatie, {len(partijen)} partijen), "
           f"{X.shape[0]} kandidaten, gemiddeld {X.shape[0] / n_besl:.1f} per beslissing")
     bekend = int((D['won'] >= 0).sum())
@@ -377,7 +377,7 @@ def train(D, args):
               f"uitslag {va[3]*100:5.1f}% (n={va[4]}) | {time.time() - t0:.0f}s{vlag}")
     net.W, net.b = beste
     va = evalueer(net, D, Xn, idx_val, args.imitatie, args.uitslag)
-    # Per factie: waar doet het netje de bot niet na?
+    # Per factie: waar doet het netwerk de bot niet na?
     for d in range(6):
         sub = idx_val[D["doctrine"][idx_val] == d]
         if len(sub) == 0:

@@ -1018,11 +1018,11 @@ server-logs van dat event.
 
 - ☑ **F8.1a L4 neuraal: de keten staat (22 september, naar voren gehaald, Max: "BOUWEN").**
   Niet PPO op event-logs maar de TD-Gammon-route: dezelfde 1-ply greedy als L2, met
-  de waarde van een na-staat uit een geleerd netje in plaats van uit `evaluate()`.
+  de waarde van een na-staat uit een geleerd netwerk in plaats van uit `evaluate()`.
   `scripts/ai/kenmerken.gd` (65 kenmerken, de L2-termen ongewogen per kant + globaal,
   `KENMERK_VERSIE`), `scripts/ai/neuraal_net.gd` (MLP in pure GDScript, json-formaat,
   `proef`-vector voor pariteit), `agents/l4_net.gd` (AgentL4, actiefase + Wolf-stap
-  via het netje, rest L2; zonder netje byte-identiek L2), `arena/beslis_log.gd` (binair
+  via het netwerk, rest L2; zonder netwerk byte-identiek L2), `arena/beslis_log.gd` (binair
   beslislog, `"beslis_log": true` + `"beslis_elke": k` in de arena-config, label `l4`),
   `tools/l4/train_net.py` (numpy, imitatie-softmax over kandidaten + uitslag-logit,
   splits op partij), `-- netcheck`, `tests/L4Tests.gd`. **CHECK:** pariteit

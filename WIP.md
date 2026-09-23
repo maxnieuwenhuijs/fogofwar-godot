@@ -4,14 +4,14 @@
 
 Max las het TypeSafe-stuk over "System One models" (Jev) en vroeg of zo'n
 model de bots slimmer zou maken. Nee: Jev kent het spel niet en leert niet
-van de arena; de winst zit in een netje op EIGEN data, lokaal en
+van de arena; de winst zit in een netwerk op EIGEN data, lokaal en
 deterministisch. Max: "BOUWEN". F8.1 is daarmee naar voren gehaald (voor
 F4.3j).
 
 **Ontwerp (TD-Gammon, geen PPO):** L4 is dezelfde 1-ply greedy als L2, maar
 de waarde van elke na-staat komt uit een MLP op `Kenmerken.van_staat` (65
 getallen: alle termen van `evaluate()` ongewogen per kant, plus cyclus,
-honger, ronde, wanhoop en de twee facties als one-hot). Een lineair netje
+honger, ronde, wanhoop en de twee facties als one-hot). Een lineair netwerk
 kan L2 dus exact nadoen; alles erboven is winst die 42 gewichten niet
 kunnen uitdrukken. De kenmerken worden in GDScript berekend en zo gelogd:
 Python rekent nooit zelf kenmerken, dus wat je traint is wat je speelt.
@@ -19,7 +19,7 @@ Python rekent nooit zelf kenmerken, dus wat je traint is wat je speelt.
 **Gebouwd:** `scripts/ai/kenmerken.gd`, `scripts/ai/neuraal_net.gd`
 (forward pass in pure GDScript, float32-gewichten, double-rekenen, `proef`
 in het json bewijst pariteit met numpy), `agents/l4_net.gd` (AgentL4 erft
-AgentL2: actiefase en Wolf-stap via het netje, de rest L2; geen netje of
+AgentL2: actiefase en Wolf-stap via het netwerk, de rest L2; geen netwerk of
 verkeerde kenmerk-versie = waarschuwing en byte-identiek L2),
 `arena/beslis_log.gd` + haakje in AgentL2/AgentL4 (`"beslis_log": true`,
 `"beslis_elke": 4`; per beslissing ALLE kandidaat-rijen + gekozen index,
@@ -32,7 +32,7 @@ na-staat; validatie gesplitst op PARTIJ), `-- netcheck [net=<pad>]
 **Gemeten (rooktest, 4 partijen L2 vs L2 met volledig log):** 400
 beslissingen per partij, gemiddeld 62 kandidaten, 6,5 MB per partij bij
 elke beslissing, 150 s per partij (het log simuleert alles nog een keer);
-daarom `beslis_elke` 4 voor de echte run. Netje 65-48-48-1 op die 4
+daarom `beslis_elke` 4 voor de echte run. Netwerk 65-48-48-1 op die 4
 partijen: pariteit `-0.265173` in beide talen, L4 speelt 313 stappen
 legaal (0 illegaal, 0 terugval), 634 ms per beslissing incl. de L2-
 tegenstander. `-- uispel 777` blijft `90650e1e` (het haakje in L2 staat
@@ -44,28 +44,28 @@ kandidaat-rijen, 892 MB. Trainen duurt 4 min (numpy).
 
 **Metingen (winst van L4 tegen L2, 432 partijen per kleur, +-4,7):**
 
-| netje | validatie | rood | blauw |
+| netwerk | validatie | rood | blauw |
 |---|---|---|---|
 | imitatie + uitslag in een getal (48-48) | imit 55,6% | 43,5% | 46,3% |
 | alleen imitatie | imit 64,5% | 49,5% | - |
 | groot (96-96, imitatie + uitslag) | imit 56,3% | 44,4% | - |
-| tweetraps, waarde-netje BESLIST de topgroep | uitslag 84,2% | 53,9% | 47,0% |
-| tweetraps, waarde-netje WEEGT de loting (temp 0,5) | | 50,0% | 48,1% |
+| tweetraps, waardenetwerk BESLIST de topgroep | uitslag 84,2% | 53,9% | 47,0% |
+| tweetraps, waardenetwerk WEEGT de loting (temp 0,5) | | 50,0% | 48,1% |
 
 **De twee lessen van de dag.** (1) `-- tiecheck`: bij 48% van L2's
 beslissingen delen meerdere zetten de hoogste score (topgroep gemiddeld
 4,4, soms 10+) en loot L2. Perfecte kennis van de score haalt dus
-maximaal 66% imitatie; het imitatie-netje zit op 64,5% en speelt 49,5%:
-een kopie van L2. De uitslag-term in hetzelfde getal maakt het netje
+maximaal 66% imitatie; het imitatienetwerk zit op 64,5% en speelt 49,5%:
+een kopie van L2. De uitslag-term in hetzelfde getal maakt het netwerk
 slechter, klein of groot. (2) De Leeuw: L4 als Leeuw zakte in ELKE
-variant naar 24-27% waar L2 38% haalt, terwijl het netje juist de Leeuw
+variant naar 24-27% waar L2 38% haalt, terwijl het netwerk juist de Leeuw
 het best nadoet (71% imitatie, 93% top-3; `-- imitcheck leeuw`: 87-97%
 van de zetten in L2's topgroep). Oorzaak: "altijd de eerste" bij bijna
 gelijke scores is systematisch (zelfde pion, zelfde vak) waar L2 spreidt,
 en de Leeuw loot het meest (zijn override-gewichten `ai_weights_f2.json`:
 haven 0,05, material 3,97, dus bijna alles rondt naar dezelfde int).
 Met loting binnen de topgroep (`tie_eps` 0,3) staat L4 als Leeuw weer op
-38% (128 partijen, loopt door tot 432). Daarom weegt het waarde-netje nu
+38% (128 partijen, loopt door tot 432). Daarom weegt het waardenetwerk nu
 de loting (`waarde_temp` 0,5) in plaats van hem te beslissen. **Let op
 voor de balans:** de live gewichten per factie zijn extreem geschaald
 (Beer cav_value 278.630, ranged 97.520; Leeuw haven 0,05). Dat is wat
@@ -92,16 +92,16 @@ Gecommit als de officiele L4: `data/ai_net.json` (score, de L2-kopie) +
 Meetgereedschap dat blijft: `-- tiecheck`, `-- imitcheck [factie]`,
 `l4:l2`, `tools/l4/meet_l4.py`, `tools/l4/selfplay_ronde.ps1`.
 
-**Wat het waard was:** een netje dat L2 exact nadoet, in 4 minuten
-getraind, met een waarde-netje dat de uitslag op 84% voorspelt. Wat het
+**Wat het waard was:** een netwerk dat L2 exact nadoet, in 4 minuten
+getraind, met een waardenetwerk dat de uitslag op 84% voorspelt. Wat het
 NIET opleverde: winst tegen L2. De uitslag-term in een greedy-score
-maakt het spel slechter, en het waarde-netje als loting-wegger maakt het
+maakt het spel slechter, en het waardenetwerk als loting-wegger maakt het
 niet beter: een 1-ply-bot verandert niet van sterkte door wie hij kiest
 tussen zetten die L2 al gelijk vond.
 
 **Als Max hier ooit op door wil:** de winst moet uit selfplay-data komen
 (`selfplay_ronde.ps1`, Max start hem zelf, B13: elke ronde ~3 uur op 12
-procs) of uit een tweede ply (het netje als evaluatie onder L3's
+procs) of uit een tweede ply (het netwerk als evaluatie onder L3's
 search). Niet uit meer varianten van de keuze. F4.3j is weer de
 volgende stap.
 

@@ -2,14 +2,14 @@
 #
 # 1. L4 (tweetraps) speelt tegen zichzelf op alle 36 paren en logt elke 4e
 #    beslissing (arena/arena_configs/l4_beslislog.json).
-# 2. Het WAARDE-netje wordt opnieuw getraind op ALLE beslislogs tot nu toe
+# 2. Het WAARDENETWERK wordt opnieuw getraind op ALLE beslislogs tot nu toe
 #    (de L2-run plus elke selfplay-ronde): partijen die al beter gespeeld
-#    zijn dan die van L2. Het score-netje (de L2-imitatie) blijft staan.
+#    zijn dan die van L2. Het scorenetwerk (de L2-imitatie) blijft staan.
 # 3. netcheck (pariteit, legaliteit).
-# 4. Meting van het nieuwe waarde-netje als rood tegen L2.
+# 4. Meting van het nieuwe waardenetwerk als rood tegen L2.
 #
 # Gebruik: .\tools\l4\selfplay_ronde.ps1 [-Ronde 1] [-Procs 12]
-# Het nieuwe netje komt in data/ai_net_waarde_r<Ronde>.json; pas als de
+# Het nieuwe netwerk komt in data/ai_net_waarde_r<Ronde>.json; pas als de
 # meting (tools/l4/meet_l4.py) beter is dan de vorige ronde kopieer je hem
 # over data/ai_net_waarde.json en commit je hem apart (trainingsdata).
 param(
@@ -28,7 +28,7 @@ Write-Host "[SELFPLAY] ronde ${Ronde}: L4 vs L4 loggen -> results/$logNaam"
 .\arena.ps1 -Config arena/arena_configs/l4_beslislog.json -Procs $Procs -Naam $logNaam
 
 $logs = Get-ChildItem results -Directory | Where-Object { $_.Name -like "l4_log_*" -or $_.Name -like "l4_selfplay_*" } | ForEach-Object { $_.FullName }
-Write-Host "[SELFPLAY] waarde-netje trainen op: $($logs -join ', ')"
+Write-Host "[SELFPLAY] waardenetwerk trainen op: $($logs -join ', ')"
 python tools/l4/train_net.py @logs --uit $netUit --epochs 20 --imitatie 0 --uitslag 1
 
 Write-Host "[SELFPLAY] netcheck"

@@ -4,7 +4,7 @@ extends RefCounted
 # L4 neuraal (22 september) -- een klein MLP in pure GDScript.
 #
 # Leest het json dat tools/l4/train_net.py schrijft en rekent het voorwaarts
-# uit, deterministisch en zonder afhankelijkheden: het netje moet in de
+# uit, deterministisch en zonder afhankelijkheden: het netwerk moet in de
 # arena, in het spel en straks op een telefoon draaien. Formaat:
 #
 #   {
@@ -37,7 +37,7 @@ var meta: Dictionary = {}
 static var _cache: Dictionary = {}
 
 
-## Geladen netje uit de cache (een keer van schijf per proces); null als het
+## Geladen netwerk uit de cache (een keer van schijf per proces); null als het
 ## bestand ontbreekt of niet leest.
 static func laad(pad_: String = STANDAARD_PAD) -> NeuraalNet:
 	if _cache.has(pad_):
@@ -105,7 +105,7 @@ func _lees(pad_: String) -> bool:
 ## Waarde van een kenmerkrij. Rekent in doubles (GDScript float); de
 ## gewichten zelf zijn float32, net als in de trainer.
 func waarde(x: PackedFloat32Array) -> float:
-	assert(x.size() == kenmerken, "NeuraalNet: %d kenmerken, netje wil %d" % [x.size(), kenmerken])
+	assert(x.size() == kenmerken, "NeuraalNet: %d kenmerken, netwerk wil %d" % [x.size(), kenmerken])
 	var h: PackedFloat64Array = PackedFloat64Array()
 	h.resize(kenmerken)
 	for i in kenmerken:

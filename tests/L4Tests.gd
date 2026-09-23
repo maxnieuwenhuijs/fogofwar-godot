@@ -1,10 +1,10 @@
 extends TestSuite
 
-# L4 neuraal (22 september): kenmerken, het netje en de agent.
+# L4 neuraal (22 september): kenmerken, het netwerk en de agent.
 # (1) de kenmerkrij heeft de aangekondigde lengte en is deterministisch,
-# (2) NeuraalNet rekent een handgemaakt netje goed uit (en de proef),
-# (3) AgentL4 zonder netje speelt exact als L2,
-# (4) AgentL4 met een netje speelt een hele partij legaal via het netje,
+# (2) NeuraalNet rekent een handgemaakt netwerk goed uit (en de proef),
+# (3) AgentL4 zonder netwerk speelt exact als L2,
+# (4) AgentL4 met een netwerk speelt een hele partij legaal via het netwerk,
 # (5) BeslisLog schrijft de kop en records in het beloofde formaat.
 
 
@@ -29,7 +29,7 @@ func _staat_na(stappen: int, seed_val: int = 4242) -> GameState:
 	return runner.state()
 
 
-## Handgemaakt netje: mu 0, sigma 1, een verborgen laag van 2 (relu(x0),
+## Handgemaakt netwerk: mu 0, sigma 1, een verborgen laag van 2 (relu(x0),
 ## relu(-x0)) en uitvoer h0 - h1 = x0. De waarde is dus precies het eerste
 ## kenmerk (me_alive): "meer eigen pionnen is beter".
 func _schrijf_proefnet(pad: String, kenmerk: int = 0) -> void:
@@ -126,7 +126,7 @@ func test_neuraal_net_rekent_proefnet() -> void:
 	f.close()
 	NeuraalNet.wis_cache()
 	var oud := AgentL4.new("user://l4tests_net_oud.json")
-	assert_false(oud.heeft_net(), "een netje van een andere kenmerk-versie hoort geweigerd te worden")
+	assert_false(oud.heeft_net(), "een netwerk van een andere kenmerk-versie hoort geweigerd te worden")
 
 
 func test_l4_zonder_net_speelt_als_l2() -> void:
@@ -139,7 +139,7 @@ func test_l4_zonder_net_speelt_als_l2() -> void:
 	r2.run()
 	assert_eq(r4.winner, r2.winner)
 	assert_eq(r4.steps, r2.steps)
-	assert_eq(Zobrist.state_hash(r4.state()), Zobrist.state_hash(r2.state()), "zonder netje is L4 byte-identiek L2")
+	assert_eq(Zobrist.state_hash(r4.state()), Zobrist.state_hash(r2.state()), "zonder netwerk is L4 byte-identiek L2")
 	assert_eq(a.beslissingen, 0)
 
 
@@ -154,7 +154,7 @@ func test_l4_met_net_speelt_legaal() -> void:
 	assert_true(runner.done)
 	assert_eq(runner.illegal_count, 0, "L4 mag nooit iets illegaals kiezen")
 	assert_eq(runner.fallback_count, 0, "L4 hoort altijd zelf te kiezen")
-	assert_true(a.beslissingen > 0, "het netje hoort beslissingen te nemen")
+	assert_true(a.beslissingen > 0, "het netwerk hoort beslissingen te nemen")
 	assert_true(a.kandidaten_totaal >= a.beslissingen)
 
 
@@ -196,7 +196,7 @@ func test_beslislog_formaat() -> void:
 	f.close()
 
 func test_waarde_net_beslist_de_topgroep() -> void:
-	# Score-netje = kenmerk 0, waarde-netje = kenmerk 1. Drie kandidaten:
+	# Scorenetwerk = kenmerk 0, waardenetwerk = kenmerk 1. Drie kandidaten:
 	# twee delen de hoogste score (binnen tie_eps), de derde ligt eronder.
 	_schrijf_proefnet("user://l4tests_score.json", 0)
 	_schrijf_proefnet("user://l4tests_waarde.json", 1)
@@ -213,7 +213,7 @@ func test_waarde_net_beslist_de_topgroep() -> void:
 		rijen.append(r)
 	assert_eq(a._beste(rijen), 1, "binnen de topgroep {0,1} wint de hoogste waarde (kandidaat 1)")
 	assert_eq(a.lotingen, 1)
-	# Zonder waarde-netje wint gewoon de hoogste score.
+	# Zonder waardenetwerk wint gewoon de hoogste score.
 	var b := AgentL4.new("user://l4tests_score.json")
 	assert_true(b.heeft_net())
 	assert_eq(b._beste(rijen), 1)
