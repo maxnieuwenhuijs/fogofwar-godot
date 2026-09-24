@@ -23,6 +23,9 @@ param(
     [string]$Referentie = ""
 )
 $ErrorActionPreference = "Continue"
+# Via `powershell -File` komt "a,b" binnen als EEN tekst, niet als lijst
+# (24 september); dus hier zelf splitsen.
+$Variant = @($Variant | ForEach-Object { $_ -split "," } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 Set-Location (Join-Path $PSScriptRoot "..\..")
 $stamp = Get-Date -Format "yyyyMMdd_HHmm"
 $log = "results/variant_$($Variant -join '+')_$stamp.log"
