@@ -1,5 +1,39 @@
 # Spelregels — CHANGELOG
 
+## C26 — 24 september 2026 (de Leeuw krijgt 6 versterkingspunten en 5 CP)
+
+*Besluit Max, na vier varianten naast elkaar: "ja vast en nu trainen!"
+(zijn eigen voorstel: "minder CP en meer reinforcements, zeg 5 CP en 1 of 2
+extra reinforcements").*
+
+Na C24 en C25 en een trainingsnacht (nachtmatrix 23 september, 3240
+partijen) stond de Leeuw als enige nog buiten de band: **41,9%** (band
+41,9-54,2). Vier startcompensaties gemeten, elk 4320 partijen tegen die
+matrix met dezelfde getrainde bots (`tools/balans/meet_variant.ps1`):
+
+| Leeuw | Leeuw % | band | spreiding |
+|---|---|---|---|
+| +4 punten, 0 CP (C24) | 41,9 | 41,9-54,2 | 12,3 |
+| +4 punten, +4 CP | 43,7 | 43,7-55,3 | 11,7 |
+| +5 punten, +5 CP | 44,1 | 44,1-54,4 | 10,3 |
+| **+6 punten, +5 CP** | **44,8** | **44,8-54,1** | **9,3** |
+| +4 punten, +8 CP | 44,8 | 44,8-54,4 | 9,6 |
+
+Schaal, nu voor beide knoppen gemeten: een versterkingspunt ~0,6 pp, een
+start-CP ~0,36 pp. CP werkt voor de Leeuw via zijn kaarten: een ingezette CP
+staat een kaart met budget+1 toe, maximaal een per kaart, dus met 2 kaarten
+kan hij er 2 per ronde kwijt; 15 start-CP (10 + 5) houden dat een groot deel
+van het potje vol.
+
+**Wat verandert.** `budget_bonus` van de Leeuw van `{pt 4, cp 0}` naar
+**`{pt 6, cp 5}`** op de drie plekken (`CRules.budget_bonus`,
+`rules_v42_campaign.json`, `v42_default.json`; gezet met
+`zet_budget_bonus.py`). Startreserve 10 -> 12 infanterie, start-CP 10 -> 15.
+Kaarten, budget, leger en perk blijven. `rules_version` blijft 4.3.7.
+
+Goldens opnieuw; een sim verschuift (wolf-leeuw 404: cyclus 9 -> 7, 236 ->
+185 acties).
+
 ## C25 — 23 september 2026 (het Varken speelt met [12,4,2])
 
 *Voorstel van de factiezoeker (nacht van 22 op 23 september, tien

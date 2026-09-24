@@ -1,5 +1,27 @@
 # Fog of War — Work In Progress & Context
 
+## 24 september -- C26: de Leeuw +6 versterkingen en 5 CP; nu trainen
+
+Max: "maar de Leeuw minder CP en meer reinforcements? zeg 5 CP en 1 of 2
+extra reinforcements" en na de meting "ja vast en nu trainen!".
+
+- **Nacht 23 op 24 september:** training op C24 + C25 (12:23-20:45, Beer 3
+  adopties, Leeuw 1), daarna matrix `nacht_20260923_2045` (3240 partijen):
+  band 41,9-54,2, alleen de Leeuw (41,9) buiten. Daarna vanzelf (via
+  `tools/wacht_en_start.ps1`) Leeuw +4 CP en +8 CP gemeten.
+- **Ochtend:** Max' voorstel gemeten, pt5/cp5 en pt6/cp5. Vier varianten
+  naast elkaar (tabel in de CHANGELOG, C26): +6 punten en +5 CP geeft de
+  smalste band, **44,8-54,1 (9,3 pp)**. Knoppen: versterkingspunt ~0,6 pp,
+  start-CP ~0,36 pp.
+- **C26 vastgezet** met `zet_budget_bonus.py leeuw --pt 6 --cp 5`
+  (startreserve 12 inf, 15 CP). Goldens opnieuw, wolf-leeuw 404 geijkt
+  (9 -> 7 cycli), simcheck 0, testsuite 2589/0, uispel 777 `9e0c375b...`.
+- `meet_variant.ps1` splitst "a,b" nu zelf: via `powershell -File` kwam het
+  als een naam binnen (de vangrail stopte hem meteen).
+
+**Volgende:** TRAINING-NACHT op C24+C25+C26 (gestart na deze commit), dan
+de matrix erna als nieuw ijkpunt.
+
 ## 23 september -- De Campaign Hub in het nieuwe ontwerp
 
 Max: "MAAK DIT IN HET SPEL NU" bij de pdf `Campaign_hub.pdf` (drie pagina's:

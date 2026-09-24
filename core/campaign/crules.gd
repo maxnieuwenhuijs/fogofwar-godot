@@ -30,7 +30,7 @@ var ruil_cp_per_punt: int = 2
 # Wolf 2 nachten 0 adopties -> CP-steun).
 var budget_bonus: Dictionary = {
 	"1": {"pt": 4, "cp": 0},    # Muis
-	"2": {"pt": 4, "cp": 0},    # Leeuw (23 september: zwakste factie, 2 kaarten per ronde)
+	"2": {"pt": 6, "cp": 5},    # Leeuw (C24 23 sept +4 punten; C26 24 sept +6 punten en 5 CP)
 	"3": {"pt": 3, "cp": 0},    # Beer
 	"4": {"pt": 2, "cp": 4},    # Wolf
 	"5": {"pt": 3, "cp": 0},    # Krokodil (9 augustus, zie hieronder)

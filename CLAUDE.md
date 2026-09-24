@@ -35,7 +35,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
   **Startcompensatie (C11-`budget_bonus`, geen kaartbudget):** Muis +4 punten,
   Beer +3, Wolf +2 punten en 4 CP, **Krokodil +3** (C20, 9 augustus),
-  **Leeuw +4** (C24, 23 september). Zetten met
+  **Leeuw +6 punten en 5 CP** (C24 op 23 september +4, C26 op 24
+  september +6 en 5 CP). Zetten met
   `python tools/balans/zet_budget_bonus.py <factie> --pt N [--cp N]`: die
   schrijft alle drie de plekken tegelijk. Die tabel
   staat op DRIE plekken die gelijk moeten blijven — `CRules.budget_bonus`,
@@ -43,8 +44,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 23 september (C24 + C25, getrainde bots, 4320 partijen): band
-  41,2-53,4%, spreiding 12,2 pp** (Leeuw 41,2 onderaan, Muis 53,4 boven);
+  **Stand 24 september (C24 + C25 + C26, getrainde bots van 23 september,
+  4320 partijen): band 44,8-54,1%, spreiding 9,3 pp** (Leeuw 44,8 onder,
+  Muis 54,1 boven). Knoppen gemeten: versterkingspunt ~0,6 pp, start-CP
+  ~0,36 pp. Na C25: band 41,2-53,4% (12,2 pp);
   daarvoor met getrainde bots 36,6-59,2 (21 september). Schaal van de knoppen,
   23 september gemeten: kaart erbij ~23 pp, versterkingspunt ~0,6, ruiter
   eruit plus kanon eruit (Varken) -9,7.
@@ -710,8 +713,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `6b820e3f…` geven (213 acties, cyclus 5, sinds
-  23 september, C25: het Varken speelt [12,4,2]; daarvoor `b9c2ee75…` na C24,
+  eind-zobrist; seed 777 moet `9e0c375b…` geven (213 acties, cyclus 5, sinds
+  24 september, C26: de Leeuw +6 versterkingen en 5 CP; daarvoor `6b820e3f…`
+  na C25, het Varken [12,4,2], en `b9c2ee75…` na C24,
   de Leeuw met 4 versterkingspunten; was `90650e1e…`
   (213, 5) sinds 21 september: de bot speelt met de Wolf-gewichten van de trainingsrun van
   20 september; een bot-wijziging verschuift de digest net zo goed als een
