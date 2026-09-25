@@ -31,9 +31,14 @@ rusthouding en toont de idle-hoek als info; de scheve varken-atk van 18
 september (-110 graden in rust, omhoog -0,44) valt er nog steeds door. Het
 leveringsscript draait hem nu per factie mee.
 
-**Wat er verder in de levering zit.** `cavalry_hp` heeft een actie "Pommel
-strick" (verschreven): het spel herkent hem niet en die ruiter mist dus
-een melee-variant ("Attack" en "Thrust attack" werken). Hij heeft ook twee
+**Wat er verder in de levering zit.** `cavalry_hp` had een actie "Pommel
+strick" (verschreven): het spel herkende hem niet en die ruiter miste dus
+een melee-variant. Op verzoek van Max ("kan jij die niet hernoemen") in
+`pig hp.blend` hernoemd naar "Pommel strike" (headless Blender, zonder
+.blend1; het origineel als reservekopie in de werkmap van de sessie) en
+`cavalry_hp` opnieuw gebouwd met `verwerk_levering.py` op die ene map: vier
+jassen 99,7-100%, controleronde zonder problemen, `-- cliplengtes` geeft nu
+`Pommel strike -> melee2`. Hij heeft ook twee
 charge-clips ("Run jump attack" en "Standing Melee Run Jump Attack " met
 een spatie, beide 3,71 s); het spel neemt de eerste. Infanterie spd en mix
 delen hetzelfde musket (zelfde tripo-uuid), de .blends zelf verschillen.
