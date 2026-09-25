@@ -1,5 +1,24 @@
 # Fog of War — Work In Progress & Context
 
+## 25 september -- De trainingsnacht stierf mee met een app-update; trainer-noodstop naar 2500
+
+- **Wat er misging:** de TRAINING-NACHT op C26 (gestart 24 september 23:10)
+  stopte om 23:34, 0 generaties af. Windows-systeemlog: op 23:34:47 werkte de
+  Claude-app zichzelf bij (service uitgeschakeld, nieuwe versie). Omdat de
+  run door Claude was gestart (`Start-Process`, eigen venster) hing hij in
+  de procesboom van de app en ging mee onderuit. Sinds vandaag start Claude
+  lange runs via WMI (`Invoke-CimMethod Win32_Process Create`): de ouder is
+  dan `WmiPrvSE.exe`. Wat Max via het paneel start heeft hier geen last van.
+- **Gevonden in de logs:** de trainer kapte partijen af op 1400 stappen
+  (augustus gemeten: max 932). Met de reserves van C24-C26 duren partijen
+  langer: 23 september 23 Varken- en 23 Leeuw-partijen afgekapt, en een
+  afgekapte partij telde als gelijkspel (1 van de 3 punten). De arena
+  (grens 2500) kapte in 16.000 partijen NIETS af, langste 34 cycli.
+  `TRAIN_MAX_STEPS` = 2500 op alle drie de trainer-plekken (aced24e).
+  Geen spelwijziging; simcheck 0 afwijkingen.
+- **Opnieuw gestart** 25 september 07:55 via WMI: 7 uur trainen op
+  C24+C25+C26, dan matrix + dashboard, klaar rond 16:15.
+
 ## 24 september -- C26: de Leeuw +6 versterkingen en 5 CP; nu trainen
 
 Max: "maar de Leeuw minder CP en meer reinforcements? zeg 5 CP en 1 of 2
