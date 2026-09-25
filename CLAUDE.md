@@ -226,7 +226,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   waarom. Een map met alleen texturen mag ook (dan alleen de jas wisselen).
   Normal-maps gaan er nooit in: de engine zet alleen een albedo-override.
   Draait daarna zelf de vaste ronde (`--import`, `_wapencheck.gd`, `zweefcheck`
-  per geraakte factie, `tunercheck`) en vat de uitslag samen; `--geen-controles`
+  en `richtingcheck` per geraakte factie, `tunercheck`) en vat de uitslag
+  samen (sinds 25 september leest hij de zweef-UITSLAG, niet de eerste
+  `[ZWEEF]`-regel: dat was de wapen-tot-hand-lijst met de vaandelstok
+  bovenaan, en elke levering meldde daardoor "1 probleem"); `--geen-controles`
   slaat dat over, `--godot <pad>` of `GODOT_PATH` wijst de binary aan. Alleen de
   Model-tuner blijft handwerk.
 - **Een hele blend-inbox bouwen** (7 september, alleen CLI -- de paneelknoppen
@@ -971,12 +974,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
   [factie]`** (capture.tscn, 18 september, Max: "voor infantry attack pig
   klopt de orientatie niet"). Bouwt per type en archetype een PawnView
-  zoals de Model-tuner en meet in de pose die de speler ziet waar de voeten
-  heen wijzen (voet -> teen, wereldruimte, na de auto-fit van 180 graden;
-  de voorkant is -Z), de romp-richting en of heup -> nek omhoog staat;
-  FAIL boven 25 graden. `rust` meet de rustpose, `boom` dumpt de
-  node-boom met transforms; met venster `_shot_richting.png` (de vijf
-  infanterie-archetypen op rij 7). **Oorzaak van de scheve varken-atk:**
+  zoals de Model-tuner en meet waar de voeten heen wijzen (voet -> teen,
+  wereldruimte, na de auto-fit van 180 graden; de voorkant is -Z) en of
+  heup -> nek omhoog staat. Sinds 25 september valt het oordeel op de
+  RUSTHOUDING, het bestand (FAIL boven 25 graden of omhoog onder 0,9); de
+  hoek in de idle staat erbij als info, want een idle mag een
+  gevechtshouding hebben (vier van de vijf varken-cavaleristen staan in
+  hun gekozen idle 37-44 graden schuin, in rust recht), plus schaal en
+  gemeten hoogte. `idles` meet elke idle-clip apart, `boom` dumpt de
+  node-boom met transforms; met venster `_shot_richting.png` (infanterie
+  op rij 7, cavalerie op rij 5). `verwerk_levering.py` draait hem na elke
+  levering. **Factienamen:** de modelchecks (zweef, wind, richting,
+  wapenroute, debris, link) kennen via `_met_mapnamen` naast varken/muis/...
+  ook de mapnamen pig/mouse/lion/bear/wolf/crocodile; het leveringsscript
+  geeft de mapnaam door, en tot 25 september mat `zweefcheck mouse`
+  daardoor het varken (de standaard). **Oorzaak van de scheve varken-atk:**
   Tripo had op het musket-OBJECT een actie met location/rotation/scale-
   keys gezet (in Godot de extra clip `tripo_node...Action`, 0,08 s). De
   glTF-exporter probeert in ACTIONS-modus elke object-actie op elk object,

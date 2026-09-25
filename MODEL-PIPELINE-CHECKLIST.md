@@ -92,7 +92,10 @@ Blender zelf ziet; stap 3 bewaart de bot-kind-transforms uit de basis-glb vóór
 de import en zet ze na de export terug (`tools/blender_botkind_fix.py`).
 Controle na import: `<godot> --path . res://tools/capture.tscn -- zweefcheck
 [factie]` (elke mesh die meer dan 2 eenheden van zijn pion staat: PASS/FAIL),
-naast `--script tools/_wapencheck.gd`.
+`-- richtingcheck [factie]` (staat elk model in rust recht en naar voren; een
+object-actie op het musket draaide de varken-atk 114 graden, 18 september)
+naast `--script tools/_wapencheck.gd`. De factie mag de mapnaam zijn (pig,
+mouse, ...). `verwerk_levering.py` draait ze alle drie zelf.
 
 ## C-oud. Twee exports uit hetzelfde .blend (handmatig)
 - [ ] **Export 1** het model **+ Armature** · **Skinning AAN · Animation AAN**

@@ -593,9 +593,12 @@ func _ready() -> void:
 		# pion ontkoppelt en van vecht-model terug naar basismodel wisselt, en
 		# meet dan pas. Per pion ook team en koppeling, plus meshes die aan geen
 		# pion hangen en toch in de lucht staan (geen debris).
-		var zf := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
-			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		var zf := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
+			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
 		var zn_cyclus: int = 1
+		for zn0 in zf:
+			if zn0 in args:
+				print("[ZWEEF] factie: %s (%s)" % [zn0, Constants.doctrine_folder(int(zf[zn0]))])
 		for zn in zf:
 			if zn in args:
 				game._human_doctrine = zf[zn]
@@ -746,8 +749,8 @@ func _ready() -> void:
 		# de wind een kwartslag draaien en opnieuw meten. Beide teams moeten een
 		# vlag hebben (rood en blauw kijken tegengesteld, dus dit vangt precies de
 		# fout dat het doek in pion-ruimte staat). Gebruik: -- windcheck [factie]
-		var wf := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
-			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		var wf := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS, "leeuw": Constants.Doctrine.LEEUW,
+			"beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
 		game._human_doctrine = Constants.Doctrine.MUIS
 		game._ai_doctrine = Constants.Doctrine.MUIS
 		for wn in wf:
@@ -958,15 +961,18 @@ func _ready() -> void:
 		return
 	elif "richtingcheck" in args:
 		# 18 september (Max: "voor infantry attack pig klopt de orientatie niet").
-		# Per type en archetype een PawnView zoals de Model-tuner, en in de pose
-		# die de speler ziet meten waar de VOETEN heen wijzen (voet -> teen, in
-		# wereldruimte, na de auto-fit van 180 graden). De voorkant van een pion
-		# is -Z: een model dat 90 of 180 graden anders staat valt hier meteen op.
-		# Gebruik: -- richtingcheck [factie] (default varken).
+		# Per type en archetype een PawnView zoals de Model-tuner, en meten waar de
+		# VOETEN heen wijzen (voet -> teen, in wereldruimte, na de auto-fit van 180
+		# graden) en of heup -> nek omhoog staat. De voorkant van een pion is -Z.
+		# Sinds 25 september valt het oordeel op de RUSTHOUDING (het bestand); de
+		# idle-hoek staat erbij als info, want een idle mag een gevechtshouding
+		# hebben. Gebruik: -- richtingcheck [factie] [idles] [boom] (default
+		# varken; mapnamen als pig of mouse mogen ook). verwerk_levering.py draait
+		# hem na elke levering.
 		var rc_fac: int = Constants.Doctrine.MENS
-		var rc_namen := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+		var rc_namen := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
-			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
 		for rc_n in rc_namen:
 			if rc_n in args:
 				rc_fac = rc_namen[rc_n]
@@ -992,12 +998,6 @@ func _ready() -> void:
 					rc_pv.queue_free()
 					continue
 				rc_totaal += 1
-				if "rust" in args and rc_pv._anim != null:
-					# Diagnose: dezelfde meting in de RUSTPOSE (animatie uit, botten terug).
-					rc_pv._anim.stop()
-					for rsk in rc_pv._piece.find_children("*", "Skeleton3D", true, false):
-						(rsk as Skeleton3D).reset_bone_poses()
-					await get_tree().process_frame
 				if "boom" in args:
 					# Diagnose: de node-boom van het stuk met transforms.
 					for rn in rc_pv._piece.find_children("*", "", true, false):
@@ -1006,6 +1006,36 @@ func _ready() -> void:
 							var re: Vector3 = rt.basis.get_euler()
 							print("[RICHTING]    node %-40s (%s) pos=(%.2f, %.2f, %.2f) rot=(%.0f, %.0f, %.0f) schaal=%.2f" % [
 								rn.name, rn.get_class(), rt.origin.x, rt.origin.y, rt.origin.z, rad_to_deg(re.x), rad_to_deg(re.y), rad_to_deg(re.z), rt.basis.get_scale().x])
+				if "idles" in args and rc_pv._anim != null:
+					# Diagnose: elke idle-clip apart, halverwege gemeten (welke draait het lijf?).
+					var rc_soort0: String = "infantry" if rc_tp == 0 else "cavalry"
+					var rc_speelde: String = String(rc_pv._anim.current_animation)
+					for rc_clip in rc_pv._anim.get_animation_list():
+						if not String(rc_clip).begins_with("idle"):
+							continue
+						rc_pv._anim.play(rc_clip)
+						rc_pv._anim.seek(rc_pv._anim.current_animation_length * 0.5, true)
+						await get_tree().process_frame
+						var rc_mi: Dictionary = _rc_meet(rc_pv)
+						if not rc_mi.is_empty():
+							print("[RICHTING]    %s %s clip %-8s voeten %+.0f graden, romp (%.2f, %.2f)" % [rc_soort0, rc_arch, rc_clip,
+								rad_to_deg(Vector2(-rc_mi.voet.z, rc_mi.voet.x).angle_to(Vector2(1.0, 0.0))), rc_mi.romp.x, rc_mi.romp.z])
+					print("[RICHTING]    %s %s: het spel speelde als idle %s" % [rc_soort0, rc_arch, rc_speelde])
+					if rc_speelde != "":
+						rc_pv._anim.play(rc_speelde)
+				# Eerst de houding die de speler ziet: de idle, uitgespeeld (de eerste
+				# frames zijn nog een overgang vanuit de rusthouding).
+				await get_tree().create_timer(0.6).timeout
+				var rc_idle: Dictionary = _rc_meet(rc_pv)
+				# Dan het BESTAND: animatie uit, botten in rust. Hierop valt het oordeel:
+				# een idle mag een gevechtshouding hebben (de varken-cavalerie staat in een
+				# van zijn idles 40 graden schuin), een gedraaid of gekanteld bestand
+				# (de varken-atk van 18 september, -110 graden en omhoog -0,44) niet.
+				if rc_pv._anim != null:
+					rc_pv._anim.stop()
+				for rsk in rc_pv._piece.find_children("*", "Skeleton3D", true, false):
+					(rsk as Skeleton3D).reset_bone_poses()
+				await get_tree().process_frame
 				var rc_m: Dictionary = _rc_meet(rc_pv)
 				var rc_soort: String = "infantry" if rc_tp == 0 else "cavalry"
 				if rc_m.is_empty():
@@ -1014,13 +1044,17 @@ func _ready() -> void:
 					continue
 				# Hoek van de voetrichting t.o.v. de voorkant (-Z), in graden: 0 = goed.
 				var rc_hoek: float = rad_to_deg(Vector2(-rc_m.voet.z, rc_m.voet.x).angle_to(Vector2(1.0, 0.0)))
-				var rc_ok: bool = absf(rc_hoek) <= 25.0
+				var rc_idle_hoek: float = 0.0
+				if not rc_idle.is_empty():
+					rc_idle_hoek = rad_to_deg(Vector2(-rc_idle.voet.z, rc_idle.voet.x).angle_to(Vector2(1.0, 0.0)))
+				var rc_ok: bool = absf(rc_hoek) <= 25.0 and float(rc_m.omhoog) >= 0.9
 				if not rc_ok:
 					rc_fouten += 1
-				print("[RICHTING] %s %-4s %-22s voeten (%.2f, %.2f) = %+.0f graden van de voorkant; romp (%.2f, %.2f); op %.2f omhoog; rot.y stuk %.0f (%s)" % [
-					rc_soort, rc_arch, String(rc_pv._model_path).get_file(), rc_m.voet.x, rc_m.voet.z, rc_hoek,
-					rc_m.romp.x, rc_m.romp.z, rc_m.omhoog, rad_to_deg(rc_pv._piece.rotation.y) if rc_pv._piece != null else 0.0,
-					"PASS" if rc_ok else "FAIL"])
+				var rc_fit: Dictionary = rc_pv.last_fit
+				print("[RICHTING] %s %-4s %-22s rust %+.0f graden, omhoog %.2f; idle %+.0f graden%s; schaal %.4f, hoogte %.2f (%s)" % [
+					rc_soort, rc_arch, String(rc_pv._model_path).get_file(), rc_hoek, float(rc_m.omhoog), rc_idle_hoek,
+					" (houding van de idle, geen bestandsfout)" if absf(rc_idle_hoek) > 25.0 and rc_ok else "",
+					float(rc_fit.get("s", 0.0)), float(rc_fit.get("h", 0.0)), "PASS" if rc_ok else "FAIL"])
 				rc_pv.queue_free()
 		print("[RICHTING] %s: %d modellen, %d met een verkeerde richting" % ["PASS" if rc_fouten == 0 else "FAIL", rc_totaal, rc_fouten])
 		# Met venster: de vijf infanterie-archetypen op een rij op het bord, van
@@ -1030,22 +1064,26 @@ func _ready() -> void:
 			game._overlay.hide()
 			var rc_rij: Array = []
 			var rc_i := 0
-			for rc_arch2 in ["base", "spd", "hp", "atk", "mix"]:
-				var pv2: PawnView = rc_scene.instantiate()
-				pv2.team = Constants.Team.RED
-				game._board.add_child(pv2)
-				pv2.set_unit_type(0)
-				var st2 = rc_kaarten[rc_arch2]
-				pv2.set_character(rc_fac, 0, null if st2 == null else Card.new(0, 0, 0, int(st2[0]), int(st2[1]), int(st2[2])))
-				pv2.position = game.tile_position(3 + rc_i, 7) + Vector3(0.0, 0.05, 0.0)
-				pv2.face_dir(Vector2i(0, -1))
-				rc_rij.append(pv2)
-				rc_i += 1
+			# Rij 7: infanterie, rij 5: cavalerie (base, spd, hp, atk, mix van links
+			# naar rechts), allemaal met de voorkant naar de tegenstander.
+			for rc_tp2 in [0, 1]:
+				rc_i = 0
+				for rc_arch2 in ["base", "spd", "hp", "atk", "mix"]:
+					var pv2: PawnView = rc_scene.instantiate()
+					pv2.team = Constants.Team.RED
+					game._board.add_child(pv2)
+					pv2.set_unit_type(rc_tp2)
+					var st2 = rc_kaarten[rc_arch2]
+					pv2.set_character(rc_fac, rc_tp2, null if st2 == null else Card.new(0, 0, 0, int(st2[0]), int(st2[1]), int(st2[2])))
+					pv2.position = game.tile_position(3 + rc_i, 7 if rc_tp2 == 0 else 5) + Vector3(0.0, 0.05, 0.0)
+					pv2.face_dir(Vector2i(0, -1))
+					rc_rij.append(pv2)
+					rc_i += 1
 			await get_tree().create_timer(1.0).timeout
 			var rc_img: Image = rc_tex.get_image()
 			if rc_img != null:
 				rc_img.save_png("res://_shot_richting.png")
-				print("[RICHTING] screenshot -> _shot_richting.png (base, spd, hp, atk, mix op rij 7)")
+				print("[RICHTING] screenshot -> _shot_richting.png (base, spd, hp, atk, mix; infanterie op rij 7, cavalerie op rij 5)")
 		get_tree().quit(0 if rc_fouten == 0 else 1)
 		return
 	elif "wapenroute" in args:
@@ -1063,9 +1101,9 @@ func _ready() -> void:
 		# een partij: in een partij verschijnen alleen archetypen waarvoor een
 		# model bestaat, dus op een halfgevulde assets-map zie je niets.
 		var wr_fac: int = Constants.Doctrine.MUIS
-		var wr_namen := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+		var wr_namen := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
-			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
 		for wr_n in wr_namen:
 			if wr_n in args:
 				wr_fac = wr_namen[wr_n]
@@ -1136,9 +1174,9 @@ func _ready() -> void:
 		# materiaal per instantie gedupliceerd en niet het gedeelde glb-materiaal?
 		var db_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
 		var db_fac: int = Constants.Doctrine.MUIS
-		var db_namen := {"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+		var db_namen := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
 			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
-			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
 		for db_n in db_namen:
 			if db_n in args:
 				db_fac = db_namen[db_n]
@@ -2400,7 +2438,7 @@ func _ready() -> void:
 		print("[REVEAL] fase=%s" % Phase.to_string_phase(GameSession.state.phase))
 		out = "res://_shot_reveal.png"
 	elif "link" in args:
-		var lfn := {"muis": Constants.Doctrine.MUIS, "varken": Constants.Doctrine.MENS, "leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS}
+		var lfn := _met_mapnamen({"muis": Constants.Doctrine.MUIS, "varken": Constants.Doctrine.MENS, "leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
 		for fn in lfn:
 			if fn in args:
 				game._human_doctrine = lfn[fn]
@@ -4638,6 +4676,17 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 		return 0.5
 	var kant: int = Constants.PLAYER_1 if nieuw_is_p1 else Constants.PLAYER_2
 	return 1.0 if winner == kant else 0.0
+
+
+## Factienamen voor de modelchecks: de Nederlandse namen (varken, muis, ...)
+## PLUS de mapnamen van de modellen (pig, mouse, lion, bear, wolf, crocodile).
+## verwerk_levering.py geeft de mapnaam door; tot 25 september mat
+## `zweefcheck mouse` daardoor het varken (de standaard) in plaats van de muis.
+func _met_mapnamen(namen: Dictionary) -> Dictionary:
+	var uit: Dictionary = namen.duplicate()
+	for d in Constants.Doctrine.values():
+		uit[Constants.doctrine_folder(int(d))] = int(d)
+	return uit
 
 
 ## Richtingcheck: voet -> teen (links en rechts gemiddeld), heup -> nek en de

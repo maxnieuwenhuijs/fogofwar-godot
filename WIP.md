@@ -1,5 +1,48 @@
 # Fog of War — Work In Progress & Context
 
+## 25 september -- varken-levering nagekeken: het ene probleem was een vals alarm
+
+Max plakte de uitvoer van `verwerk_levering.py` op `assets/new upload
+folder/pig` (tien modellen, veertig jassen, alles OK) met onderaan "1
+probleem(en)": `zweef pig: wapen-hand 0.35 (prop tripo_node_6ef51aab...)
+... rol=flag`.
+
+**Vals alarm, van mij.** Dat is de vaandelstok (`prop_pole`, zelfde uuid als
+de textuur `prop_pole_Color_6ef51aab`), die door zijn lengte op 0,35 van de
+hand zit. Het script las de EERSTE `[ZWEEF]`-regel als uitslag; sinds 8
+september print de zweefcheck eerst de wapen-tot-hand-lijst (verste
+bovenaan), dus elke levering meldde dit. Nu leest hij de regel met
+(PASS)/(FAIL).
+
+**Tweede fout erbij: de verkeerde factie.** Het script geeft de mapnaam door
+(`pig`, `mouse`); de zweefcheck kende alleen varken/muis/leeuw/beer/wolf/
+krokodil en viel anders terug op de standaard, het varken. Voor het varken
+klopte het toevallig, een muis-levering werd dus nooit echt gecontroleerd.
+Nu kennen zweef-, wind-, richting-, wapenroute-, debris- en linkcheck ook
+de mapnamen (`_met_mapnamen`), en de zweefcheck meldt welke factie hij meet.
+
+**Richtingcheck in de controleronde, oordeel op de rusthouding.** Alle tien
+de varkens staan in rust recht (-2 tot +3 graden, omhoog 0,99-1,00). Vier van
+de vijf cavaleristen staan in de idle die het spel kiest (de stilste) 37-44
+graden schuin: dat is de gevechtshouding van die Mixamo-clip (bij `hp` is het
+`Idle 1`, bij de anderen `Idle 3`), geen bestandsfout, en op het bord zie je
+het nauwelijks (`_shot_richting.png` bekeken). De check oordeelt daarom op de
+rusthouding en toont de idle-hoek als info; de scheve varken-atk van 18
+september (-110 graden in rust, omhoog -0,44) valt er nog steeds door. Het
+leveringsscript draait hem nu per factie mee.
+
+**Wat er verder in de levering zit.** `cavalry_hp` heeft een actie "Pommel
+strick" (verschreven): het spel herkent hem niet en die ruiter mist dus
+een melee-variant ("Attack" en "Thrust attack" werken). Hij heeft ook twee
+charge-clips ("Run jump attack" en "Standing Melee Run Jump Attack " met
+een spatie, beide 3,71 s); het spel neemt de eerste. Infanterie spd en mix
+delen hetzelfde musket (zelfde tripo-uuid), de .blends zelf verschillen.
+
+**Checks.** Controleronde van het script op de tien varkens (zonder
+`--import`, er liep een trainingsnacht): 0 problemen; `zweefcheck mouse` en
+`pig` meten nu hun eigen factie, PASS; `richtingcheck pig` 10/10 PASS.
+De varken-modellen zelf zijn nog niet gecommit (werk van Max' levering).
+
 ## 25 september -- F7: de campagnetrainer (hoe bots handelen in het menu) + hub-saldi
 
 Max: "ook hier moeten we een campagne trainer strategie maken voor de bots, hoe

@@ -319,10 +319,26 @@ def controleer(godot, modellen, facties, bewoners=()):
 
     for factie in sorted(facties):
         code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "zweefcheck", factie])
-        regel = next((l for l in regels if "[ZWEEF]" in l), "")
+        # De UITSLAG, niet de eerste [ZWEEF]-regel: sinds 8 september komt eerst
+        # de lijst met wapen-tot-hand-afstanden (de vaandelstok bovenaan, 0,35),
+        # en die telde tot 25 september bij elke levering als "1 probleem".
+        regel = next((l for l in regels if "[ZWEEF]" in l and ("(PASS)" in l or "(FAIL)" in l)), "")
         ok = "(PASS)" in regel
         problemen += 0 if ok else 1
         print(f"  zweef  {factie}: {regel.replace('[ZWEEF] ', '') or 'geen uitslag'}")
+
+    for factie in sorted(facties):
+        # Staat elk model recht en naar voren, in rust (25 september; had de
+        # scheve varken-atk van 18 september gevangen). Alleen de modellen die
+        # FAIL geven worden getoond, plus de uitslag.
+        code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "richtingcheck", factie])
+        for l in regels:
+            if l.startswith("[RICHTING] ") and "(FAIL)" in l:
+                print(f"  richting {l.replace('[RICHTING] ', '')}")
+        uitslag = next((l for l in regels if l.startswith("[RICHTING] PASS") or l.startswith("[RICHTING] FAIL")), "")
+        ok = uitslag.startswith("[RICHTING] PASS")
+        problemen += 0 if ok else 1
+        print(f"  richting {factie}: {uitslag.replace('[RICHTING] ', '') or 'geen uitslag'}")
 
     code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "tunercheck"])
     slot = next((l for l in regels if "klaar:" in l), "")
