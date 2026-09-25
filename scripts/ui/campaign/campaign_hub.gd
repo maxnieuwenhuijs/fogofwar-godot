@@ -34,6 +34,7 @@ var _team_rechts: VBoxContainer
 var _tijdlijn: VBoxContainer
 var _scroll: ScrollContainer
 var _paneel: VBoxContainer
+var _paneel_scroll: ScrollContainer
 var _tab_fase: Button
 var _tab_chat: Button
 var _tab: int = 0                        # 0 = fase, 1 = chat
@@ -53,7 +54,7 @@ var _qc_label: Label = null
 var _qc_knoppen: Array = []     # de drie knoppen in de balk (inhoud per fase)
 var _qc_meer: Button = null
 
-## Zoveel nieuwe kaartjes faden bovenaan de tijdlijn in; oudere staan er meteen.
+## Zoveel nieuwe kaartjes faden onderaan de tijdlijn in; oudere staan er meteen.
 const ONTHUL_MAX := 12
 
 ## Wanneer de hub een feed-item voor het eerst zag (unix-tijd), per index.
@@ -370,6 +371,7 @@ func _bouw_layout() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	kader.add_child(scroll)
+	_paneel_scroll = scroll
 	_paneel = VBoxContainer.new()
 	_paneel.name = "FasePaneel"
 	_paneel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -861,14 +863,14 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 	b.name = "Lid_%d" % sid
 	b.flat = true
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, _u(82))
+	b.custom_minimum_size = Vector2(0, _u(90))
 	b.tooltip_text = String(sp.naam)
 	for staat in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
 		b.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
 	var status := _lid_status(c, sid)
-	var p := HubAssets.portret(int(sp.get("doctrine", 0)), eigen, status == "dood", _u(80), status)
-	p.position = Vector2(_u(21), _u(1))
-	p.size = Vector2(_u(80), _u(80))
+	var p := HubAssets.portret(int(sp.get("doctrine", 0)), eigen, status == "dood", _u(72), status)
+	p.position = Vector2(_u(25), 0)
+	p.size = Vector2(_u(72), _u(72))
 	var gekozen := (eigen and sid == _keuze_eigen) or (not eigen and sid == _keuze_vijand)
 	if _raad_open():
 		if not kandidaten.has(sid):
@@ -882,8 +884,8 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 			sb.set_border_width_all(maxi(3, _px(3)))
 			sb.set_corner_radius_all(_px(44))
 			gloed.add_theme_stylebox_override("panel", sb)
-			gloed.position = Vector2(_u(17), _u(-3))
-			gloed.size = Vector2(_u(88), _u(88))
+			gloed.position = Vector2(_u(21), _u(-4))
+			gloed.size = Vector2(_u(80), _u(80))
 			b.add_child(gloed)
 	b.add_child(p)
 	if sid == mens_id:
@@ -899,9 +901,16 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 		var jij_l := HubAssets.tekst(tr("HUB_YOU_TAG"), _px(7), UiAssets.SELECTIE_GOUD, true)
 		jij_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		jij.add_child(jij_l)
-		jij.position = Vector2(_u(8), _u(66))
+		jij.position = Vector2(_u(8), _u(56))
 		jij.size = Vector2(_u(30), _u(13))
 		b.add_child(jij)
+	# Versterkingen en CP onder het schild (25 september, Max: "per player wie
+	# hoeveel CP en reinforcements hebben, vlakbij hun schild"). D12: van de
+	# vijand zie je "?", tenzij je het mag zien (de doden zien alles).
+	var saldo := _saldo_regel(c, sid, status == "dood")
+	saldo.position = Vector2(0, _u(74))
+	saldo.size = Vector2(_u(122), _u(15))
+	b.add_child(saldo)
 	b.pressed.connect(func() -> void:
 		if _raad_open() and kandidaten.has(sid):
 			if eigen:
@@ -913,6 +922,39 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 		else:
 			_toon_lid(sid))
 	return b
+
+
+## De regel onder een schild: tent + versterkingspunten, medaille + CP; "?"
+## voor wat je niet mag zien (D12, CView.mag_saldo_zien); leeg voor de doden.
+func _saldo_regel(c: CState, sid: int, dood: bool) -> HBoxContainer:
+	var rij := HBoxContainer.new()
+	rij.name = "Saldo"
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rij.add_theme_constant_override("separation", _px(3))
+	if dood:
+		return rij
+	var zien: bool = CView.mag_saldo_zien(c, mens_id, sid)
+	var pool: Dictionary = c.pool_van(sid)
+	var vst: String = str(maxi(0, int(pool.inf) + 2 * int(pool.cav) + 3 * int(pool.art))) if zien else "?"
+	var cp: String = str(c.cp_van(sid)) if zien else "?"
+	var tent := HubAssets.icoon("Donation_icon", _u(12), HubAssets.IVOOR)
+	tent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(tent)
+	var l_vst := HubAssets.tekst(vst, _px(9), HubAssets.IVOOR, true)
+	l_vst.name = "Versterkingen"
+	rij.add_child(l_vst)
+	var tussen := Control.new()
+	tussen.custom_minimum_size = Vector2(_u(6), 0)
+	tussen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rij.add_child(tussen)
+	var medaille := UiAssets.icoon_rect("cp", _u(12), HubAssets.IVOOR)
+	medaille.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(medaille)
+	var l_cp := HubAssets.tekst(cp, _px(9), HubAssets.IVOOR, true)
+	l_cp.name = "Cp"
+	rij.add_child(l_cp)
+	return rij
 
 
 ## In de raad: zet een geldige standaardkeuze klaar (jijzelf of de eerste
@@ -944,9 +986,10 @@ func _tijd_tekst(idx: int) -> String:
 func _ververs_tijdlijn() -> void:
 	# F3.4c: kaartjes die de mens nog niet zag (bv. gesimuleerd terwijl hij
 	# op het bord stond) druppelen gefaseerd binnen: fade-in per kaartje.
-	# Nieuw staat bovenaan (pdf: "1m ago" boven, "14m ago" onder).
-	# Nieuwste eerst in beeld: de vertraging telt vanaf het nieuwste item, en
-	# alleen de bovenste ONTHUL_MAX kaartjes animeren (de rest staat er meteen).
+	# Chat-volgorde (25 september, Max: "van onder naar boven net als bij een
+	# chat scherm"): nieuw komt onderaan, ouder schuift omhoog, en de tijdlijn
+	# scrolt mee naar onder. Alleen de onderste ONTHUL_MAX nieuwe kaartjes
+	# animeren, oudste eerst; de rest staat er meteen.
 	var al_gezien: int = CampaignBridge.feed_gezien
 	var nieuw_totaal: int = clampi(driver.feed.size() - al_gezien, 1, ONTHUL_MAX)
 	var vertraging_per: float = minf(0.45, 4.0 / float(nieuw_totaal))
@@ -960,7 +1003,8 @@ func _ververs_tijdlijn() -> void:
 			_feed_tijd[idx] = int(Time.get_unix_time_from_system())
 		var kaarten: Array = [bouwer.bouw(e, _tijd_tekst(idx))]
 		if String(e.get("type", "")) == "fase":
-			kaarten.append(bouwer.stemuitslag(e, _tijd_tekst(idx)))
+			# De stemuitslag hoort voor de fasewissel die erop volgt.
+			kaarten.push_front(bouwer.stemuitslag(e, _tijd_tekst(idx)))
 		for kaart in kaarten:
 			if kaart == null:
 				continue
@@ -974,15 +1018,23 @@ func _ververs_tijdlijn() -> void:
 							and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 						_toon_report(e))
 			_tijdlijn.add_child(kaart)
-			_tijdlijn.move_child(kaart, 0)
-			var van_boven: int = driver.feed.size() - 1 - idx
-			if vers and van_boven < ONTHUL_MAX:
+			var van_onder: int = driver.feed.size() - 1 - idx
+			if vers and van_onder < ONTHUL_MAX:
 				kaart.modulate.a = 0.0
 				var tw := (kaart as Control).create_tween()
-				tw.tween_interval(0.15 + vertraging_per * van_boven)
+				tw.tween_interval(0.15 + vertraging_per * float(nieuw_totaal - 1 - van_onder))
 				tw.tween_property(kaart, "modulate:a", 1.0, 0.3)
 	CampaignBridge.feed_gezien = maxi(CampaignBridge.feed_gezien, driver.feed.size())
-	_scroll.scroll_vertical = 0
+	_scroll_naar_onder(_scroll)
+
+
+## Naar de onderkant scrollen zodra de nieuwe kaartjes hun maat hebben (twee
+## frames: de tekst in de kaartjes breekt pas af als de container staat).
+func _scroll_naar_onder(scroll: ScrollContainer) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_instance_valid(scroll) and is_inside_tree():
+		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
 
 
 ## F3.3-rest: MatchReport-detail: het hele battlereport in een pop-up.
@@ -1263,11 +1315,10 @@ func _paneel_chat() -> void:
 		return
 	var c: CState = driver.c
 	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
-	berichten.reverse()
 	for n in berichten.size():
 		var idx: int = berichten[n]
 		var e: Dictionary = _chat_e.get(idx, {})
-		var nieuw: bool = (berichten.size() - n) > _chat_gezien
+		var nieuw: bool = n >= _chat_gezien
 		var rij := PanelContainer.new()
 		rij.name = "Chat_%d" % idx
 		rij.add_theme_stylebox_override("panel", HubAssets.patch(
@@ -1297,6 +1348,7 @@ func _paneel_chat() -> void:
 		r.add_child(tijd)
 		_paneel.add_child(rij)
 	_chat_gezien = berichten.size()
+	_scroll_naar_onder(_paneel_scroll)
 
 
 ## Klokje van een bericht ("14:30"), lokale tijd.
