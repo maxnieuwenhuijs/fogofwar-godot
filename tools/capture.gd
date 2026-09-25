@@ -4104,6 +4104,13 @@ const CONV_GAMES := 12
 ## netto), per helft hooguit VERIFY_HELFT_MIN achteruit. Stapgrootte sigma
 ## zakt niet onder SIGMA_VLOER en gaat na SIGMA_RESET_NA afwijzingen op rij
 ## terug naar 0,25.
+## Noodstop van de trainer-partijen (25 september). Was 1400 (augustus
+## gemeten: max 932 stappen). Met de reserves van C24-C26 duren partijen
+## langer: de arena (grens 2500) haalde in 16.000 partijen tot 34 cycli en
+## kapte NIETS af, de trainer kapte op 23 september 23 Varken- en 23
+## Leeuw-partijen af. Een afgekapte partij telde als gelijkspel (1 van de 3
+## punten) en gaf juist de trage facties ruis. Nu gelijk aan de arena.
+const TRAIN_MAX_STEPS := 2500
 const VERIFY_FACTOR := 2
 const VERIFY_MARGE := 1.0
 const VERIFY_HELFT_MIN := 0.5
@@ -4522,9 +4529,8 @@ func _arena_games_threaded(jobs: Array, ai_script) -> Array:
 		var d2: int = job.dj if job.i_is_p1 else job.di
 		var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
 		# V0 (3 augustus): de noodstop levert geen uitslag meer op, dus hij moet
-		# ruim boven de echte partijduur liggen. Gemeten met honger vanaf cyclus
-		# 10 over 216 partijen: mediaan 608 stappen, p90 737, max 932.
-		runner.max_steps = 1400
+		# ruim boven de echte partijduur liggen. Zie TRAIN_MAX_STEPS.
+		runner.max_steps = TRAIN_MAX_STEPS
 		while not runner.done:
 			runner.step()
 		var winner: int = runner.winner
@@ -4585,7 +4591,7 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
 	# Patstellingen kosten anders tot 2500 stappen per potje; echte partijen zijn
 	# rond ~350 klaar. De tiebreak (materiaal → haven) geeft hetzelfde leersignaal.
-	runner.max_steps = 1400  # V0: gemeten max 932 stappen met honger vanaf 10
+	runner.max_steps = TRAIN_MAX_STEPS
 	while not runner.done:
 		runner.step()
 	var winner: int = runner.winner
@@ -4623,7 +4629,7 @@ func _conv_game(nieuw_w: Dictionary, oud_w: Dictionary, d: int, nieuw_is_p1: boo
 	var a1 = na if nieuw_is_p1 else oa
 	var a2 = oa if nieuw_is_p1 else na
 	var runner := MatchRunner.new(a1, a2, d, d, seed_val, _train_rules)
-	runner.max_steps = 1400  # V0: gemeten max 932 stappen met honger vanaf 10
+	runner.max_steps = TRAIN_MAX_STEPS
 	while not runner.done:
 		runner.step()
 	var winner: int = runner.winner
