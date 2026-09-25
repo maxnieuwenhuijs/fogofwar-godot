@@ -14,6 +14,12 @@ var speler_id: int = 0
 var naam: String = ""
 var profiel: Dictionary = {}
 var rng: SeededRng = SeededRng.new(7)
+## Quick chat (25 september): waar deze bot deze ronde AKKOORD! op zei,
+## {soort: [doel-ids]} met soort stuur/pak/doneer/nalaten. De driver zet het
+## voor elke keuze. De bot komt het na met kans `loyaliteit`, een trekking per
+## toezegging; zonder toezeggingen trekt hij niets extra, dus zonder mens
+## speelt alles precies als voorheen.
+var toezeggingen: Dictionary = {}
 
 
 func _w(sleutel: String, standaard: float = 0.0) -> float:
@@ -27,6 +33,21 @@ static func pool_uit_ledger(cview: Dictionary, speler: int) -> int:
 		if int(e.speler) == speler:
 			som += int(e.inf) + int(e.cav) + int(e.art)
 	return som
+
+
+## Een gewicht uit het profiel (ook voor de driver: antwoorden in de quick chat).
+func gewicht(sleutel: String, standaard: float = 0.0) -> float:
+	return _w(sleutel, standaard)
+
+
+## De toegezegde doelen van een soort die nog geldig zijn en die de bot deze
+## keer ook echt nakomt.
+func _nagekomen(soort: String, geldig: Array) -> Array:
+	var uit: Array = []
+	for doel in toezeggingen.get(soort, []):
+		if geldig.has(int(doel)) and rng.randf() < _w("loyaliteit", 0.8):
+			uit.append(int(doel))
+	return uit
 
 
 ## Nominatie-stem: {eigen, vijand} volgens de persoonlijkheid.
@@ -68,6 +89,13 @@ func kies_nominatie(cview: Dictionary) -> Dictionary:
 		if score > beste_es:
 			beste_es = score
 			beste_eigen = kandidaat
+	# Toegezegd in de quick chat (Stuur X!, Pak X!): nakomen of niet.
+	var stuur := _nagekomen("stuur", eigen_kandidaten)
+	if not stuur.is_empty():
+		beste_eigen = int(stuur[0])
+	var pak := _nagekomen("pak", vijand_kandidaten)
+	if not pak.is_empty():
+		beste_vijand = int(pak[0])
 	return {"eigen": beste_eigen, "vijand": beste_vijand}
 
 
@@ -85,6 +113,20 @@ func kies_donaties(cview: Dictionary) -> Array:
 			if id != speler_id and int(cview.spelers[str(id)].team) == mijn_team \
 					and String(cview.spelers[str(id)].status) == "actief":
 				doelen.append(id)
+	# Toegezegd in de quick chat (Versterking nodig!, Doneer aan X!): die
+	# teamgenoot eerst, ook als hij deze ronde niet vecht.
+	var beloofd: Array = []
+	if toezeggingen.has("doneer"):
+		var teamgenoten: Array = []
+		for id_str in cview.spelers:
+			var sp: Dictionary = cview.spelers[id_str]
+			if int(String(id_str)) != speler_id and int(sp.team) == mijn_team \
+					and String(sp.status) == "actief":
+				teamgenoten.append(int(String(id_str)))
+		beloofd = _nagekomen("doneer", teamgenoten)
+		if not beloofd.is_empty():
+			doelen.erase(beloofd[0])
+			doelen.push_front(beloofd[0])
 	if doelen.is_empty():
 		return []
 	var bezit: Dictionary = cview.eigen_pool
@@ -95,6 +137,8 @@ func kies_donaties(cview: Dictionary) -> Array:
 	var cav: int = int(floor(int(bezit.cav) * vrijgevigheid * 0.5))
 	var art: int = 0  # kanonnen geef je niet zomaar weg
 	var cp_gift: int = int(floor(cp * vrijgevigheid * 0.3))
+	if not beloofd.is_empty() and inf + cav == 0 and int(bezit.inf) > 0:
+		inf = 1  # een toezegging kost minstens een soldaat
 	# Binnen de harde caps blijven (de reducer weigert anders de hele actie).
 	var ontvangen: Dictionary = (cview.donaties_ontvangen as Dictionary).get(str(doel), {"pionnen": 0, "cp": 0})
 	var pion_ruimte: int = maxi(0, 10 - int(ontvangen.pionnen))
@@ -135,6 +179,12 @@ func kies_testament(cview: Dictionary) -> Dictionary:
 	# Grootste pool eerst (de erfenis moet renderen), max 2 ontvangers.
 	kandidaten.sort_custom(func(a, b) -> bool:
 		return pool_uit_ledger(cview, a) > pool_uit_ledger(cview, b))
+	if naar_team:
+		# Toegezegd in de quick chat (Laat het aan mij na): die eerst.
+		var beloofd := _nagekomen("nalaten", kandidaten)
+		if not beloofd.is_empty():
+			kandidaten.erase(beloofd[0])
+			kandidaten.push_front(beloofd[0])
 	var ontvangers: Array = kandidaten.slice(0, 2)
 	var verdeling: Array = []
 	var n: int = ontvangers.size()

@@ -18,6 +18,9 @@ var c: CState
 var mens_id: int
 var s: float
 var mijn_team: int
+## Gevallen: de teamchat is verzegeld (UI-spec 2b.4), er komen geen
+## chatkaartjes meer bij.
+var mens_dood: bool
 
 ## Lint per soort: [holder-nummer, icoon, tint van het lint].
 const LINT := {
@@ -41,6 +44,7 @@ func _init(p_c: CState, p_mens_id: int, p_s: float) -> void:
 	mens_id = p_mens_id
 	s = p_s
 	mijn_team = int(c.spelers.get(mens_id, {}).get("team", 0))
+	mens_dood = String(c.spelers.get(mens_id, {}).get("status", "actief")) != "actief"
 
 
 func _u(v: float) -> float:
@@ -57,6 +61,9 @@ func bouw(e: Dictionary, tijd: String) -> Control:
 		"report":
 			return _report(e, tijd)
 		"nominatie":
+			# Stemdetails zijn team-only (campagne-spec); de uitslag is publiek.
+			if _team(int(e.get("speler", -1))) != mijn_team:
+				return null
 			return _nominatie(e, tijd)
 		"event":
 			return _event(e, tijd)
@@ -66,6 +73,9 @@ func bouw(e: Dictionary, tijd: String) -> Control:
 			if int(e.get("speler", -1)) < 0:
 				return _systeem(e, tijd)
 			if ALLEEN_CHAT.has(String(e.get("trigger", ""))):
+				return null
+			# Teamchat: alleen je eigen team, en niet meer als je gevallen bent.
+			if mens_dood or _team(int(e.speler)) != mijn_team:
 				return null
 			return _chat(e, tijd)
 	return null

@@ -43,6 +43,25 @@ var duels_gespeeld: int = 0
 var _rng: SeededRng
 var _duel_teller: int = 0
 
+## Quick chat (25 september; UI-spec 2b.2, intrige-voorstel P1 en P4): een
+## gesloten lijst zinnen, alleen voor je eigen team en nooit in het
+## campagnelog. Een verzoek is een wens aan je team: teamgenoten zeggen
+## AKKOORD! of NEE. naar hun karakter, en wie akkoord zei komt het na met
+## kans `loyaliteit` (de trouwe generaal altijd, de rat bijna nooit). Alles
+## hier loopt alleen met een mens erbij en op een eigen rng-stroom, dus de
+## headless campagne en haar determinisme blijven gelijk.
+const QC_WENS := {
+	"HUB_QC_STUUR_MIJ": "stuur", "HUB_QC_STUUR": "stuur", "HUB_QC_PAK": "pak",
+	"HUB_QC_NODIG": "doneer", "HUB_QC_DONEER": "doneer", "HUB_QC_NALATEN": "nalaten",
+}
+## Deze zinnen gaan over de spreker zelf (doel = spreker).
+const QC_OVER_ZELF := ["HUB_QC_STUUR_MIJ", "HUB_QC_NODIG", "HUB_QC_NALATEN"]
+## bot-id -> {soort: [doel-ids]}: waar een bot deze ronde AKKOORD! op zei.
+var toezeggingen: Dictionary = {}
+var _toezeg_ronde: int = -1
+var _bedankt: Dictionary = {}           # "ronde|ontvanger" -> true
+var _chat_rng: SeededRng
+
 
 var n_spelers: int = 16
 
@@ -54,6 +73,7 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosa
 	n_spelers = p_n_spelers
 	clog.autosave_pad = autosave_pad
 	_rng = SeededRng.new(seed_val)
+	_chat_rng = _rng.fork("quick_chat")  # fork trekt niets uit _rng
 	var lobby: Array = Personalities.maak_lobby(n_spelers, _rng.fork("lobby"))
 	var doctrines: Array = Constants.DOCTRINE_DATA.keys()
 	var lijst: Array = []
@@ -156,6 +176,8 @@ func _feed_fase(van: int) -> void:
 			paren.append([int(duel.p1), int(duel.p2)])
 	feed.append({"type": "fase", "ronde": c.ronde, "van": van, "naar": c.fase,
 		"paren": paren})
+	if c.fase == CState.Fase.DONATIE:
+		_bots_vragen_om_steun()
 
 
 ## 27 juli (Max): élke donatie/testament als leesbare regel in de tijdlijn —
@@ -220,6 +242,149 @@ func _bark(speler: int, trigger: String, wie: String = "") -> void:
 		"trigger": trigger, "tekst": tekst, "ronde": c.ronde})
 
 
+# --- Quick chat -----------------------------------------------------------------
+
+## Een quick-chat-bericht van `speler` (de mens) plus de antwoorden van zijn
+## teamgenoten, alles in de feed. `doel` = de speler waar de zin over gaat
+## (Stuur X!, Pak X!, Doneer aan X!); de zinnen over jezelf vullen hem zelf in.
+## De doden zwijgen (UI-spec 2b.4).
+func quick_chat(speler: int, sleutel: String, doel: int = -1) -> void:
+	var sp: Dictionary = c.spelers.get(speler, {})
+	if sp.is_empty() or String(sp.status) != "actief" or c.fase == CState.Fase.KLAAR:
+		return
+	if QC_OVER_ZELF.has(sleutel):
+		doel = speler
+	_chat(speler, sleutel, doel)
+	var bots: Array = []
+	for sid in c.actieve_leden(int(sp.team)):
+		if int(sid) != speler and int(sid) != mens_id and agents.has(int(sid)):
+			bots.append(int(sid))
+	if bots.is_empty():
+		return
+	_chat_rng.shuffle(bots)
+	var soort: String = String(QC_WENS.get(sleutel, ""))
+	if soort != "":
+		_beantwoord_verzoek(bots, soort, doel)
+		return
+	match sleutel:
+		"HUB_QC_SUCCES":
+			# Wie deze ronde nog moet vechten, bedankt je (hooguit twee).
+			var n := 0
+			for bot in bots:
+				if n < 2 and _vecht_nog(bot):
+					_chat(bot, "HUB_QC_BEDANKT", speler)
+					n += 1
+		"HUB_QC_GOED_GEVOCHTEN":
+			for bot in bots:
+				if _vocht_al(bot):
+					_chat(bot, "HUB_QC_BEDANKT", speler)
+					break
+		"HUB_QC_VERTROUW":
+			var agent: CampaignAgent = agents[int(bots[0])]
+			var ja: bool = _chat_rng.randf() < agent.gewicht("loyaliteit", 0.8)
+			_chat(int(bots[0]), "HUB_QC_AKKOORD" if ja else "HUB_QC_NEE", speler)
+		"HUB_QC_VERRADER":
+			_chat(int(bots[0]), "HUB_QC_VERRADER" if _chat_rng.randf() < 0.5 else "HUB_QC_NEE", -1)
+
+
+## Een verzoek: wie het over zich hoort (Stuur X!) antwoordt eerst, daarna nog
+## twee anderen. AKKOORD! is een toezegging voor de rest van deze ronde.
+func _beantwoord_verzoek(bots: Array, soort: String, doel: int) -> void:
+	_vers_toezeggingen()
+	if soort == "doneer":
+		bots.erase(doel)  # niemand belooft zichzelf iets te geven
+	elif bots.has(doel):
+		bots.erase(doel)
+		bots.push_front(doel)
+	var n: int = mini(bots.size(), 3 if (not bots.is_empty() and int(bots[0]) == doel) else 2)
+	for i in n:
+		var bot: int = int(bots[i])
+		var agent: CampaignAgent = agents[bot]
+		if _chat_rng.randf() < _kans_akkoord(agent, soort, bot == doel):
+			var per_soort: Dictionary = toezeggingen.get(bot, {})
+			var doelen: Array = per_soort.get(soort, [])
+			if not doelen.has(doel):
+				doelen.append(doel)
+			per_soort[soort] = doelen
+			toezeggingen[bot] = per_soort
+			_chat(bot, "HUB_QC_AKKOORD", doel)
+		else:
+			_chat(bot, "HUB_QC_NEE", doel)
+
+
+## Hoe graag een bot ja zegt, naar zijn karakter. Zelf gestuurd worden hangt
+## af van zijn zin in een gevecht (w_zelf) en zijn angst om te verliezen.
+func _kans_akkoord(agent: CampaignAgent, soort: String, over_zichzelf: bool) -> float:
+	var p: float
+	match soort:
+		"stuur":
+			if over_zichzelf:
+				p = 0.15 + 0.5 * agent.gewicht("w_zelf") - 0.25 * agent.gewicht("risico_afslag")
+			else:
+				p = 0.2 + 0.7 * agent.gewicht("loyaliteit", 0.8)
+		"pak":
+			p = 0.2 + 0.7 * agent.gewicht("loyaliteit", 0.8)
+		"doneer":
+			p = 0.1 + 0.8 * agent.gewicht("vrijgevigheid")
+		_:
+			p = 0.1 + 0.8 * agent.gewicht("loyaliteit", 0.8)
+	return clampf(p, 0.05, 0.95)
+
+
+## Bij de start van het donatievenster vragen teamgenoten van de mens die deze
+## ronde vechten soms om versterking (hooguit twee): iets om op te reageren.
+func _bots_vragen_om_steun() -> void:
+	if mens_id < 0 or String(c.spelers.get(mens_id, {}).get("status", "")) != "actief":
+		return
+	var team: int = int(c.spelers[mens_id].team)
+	var vragers := 0
+	for duel in c.duels_deze_ronde:
+		for kant in ["p1", "p2"]:
+			var sid: int = int(duel[kant])
+			if vragers >= 2 or sid == mens_id or int(c.spelers[sid].team) != team:
+				continue
+			if _chat_rng.randf() < 0.5:
+				_chat(sid, "HUB_QC_NODIG", sid)
+				vragers += 1
+
+
+## Een chatregel in de feed; %s wordt de naam van het doel.
+func _chat(speler: int, sleutel: String, doel: int) -> void:
+	var tekst: String = tr(sleutel)
+	if tekst.contains("%s"):
+		tekst = tekst.replace("%s", String(c.spelers.get(doel, {}).get("naam", "?")))
+	feed.append({"type": "chat", "speler": speler, "naam": String(c.spelers[speler].naam),
+		"qc": sleutel, "doel": doel, "tekst": tekst, "ronde": c.ronde})
+
+
+## Toezeggingen gelden een ronde: daarna begint iedereen weer met een schone lei.
+func _vers_toezeggingen() -> void:
+	if _toezeg_ronde != c.ronde:
+		toezeggingen = {}
+		_toezeg_ronde = c.ronde
+
+
+func _toezeggingen_voor(sid: int) -> Dictionary:
+	if toezeggingen.is_empty():
+		return {}
+	_vers_toezeggingen()
+	return toezeggingen.get(sid, {})
+
+
+func _vecht_nog(sid: int) -> bool:
+	for duel in c.duels_deze_ronde:
+		if not bool(duel.klaar) and (int(duel.p1) == sid or int(duel.p2) == sid):
+			return true
+	return false
+
+
+func _vocht_al(sid: int) -> bool:
+	for duel in c.duels_deze_ronde:
+		if bool(duel.klaar) and (int(duel.p1) == sid or int(duel.p2) == sid):
+			return true
+	return false
+
+
 ## Wacht de driver op een beslissing van de mens? (F3.3/F3.4: de UI levert
 ## die via submit_* aan; bots gaan intussen gewoon door.)
 func wacht_op_mens() -> bool:
@@ -266,7 +431,14 @@ func submit_mens_nominatie(eigen: int, vijand: int) -> bool:
 
 
 func submit_mens_donatie(naar: int, inf: int, cav: int, art: int, cp: int) -> bool:
-	return _pas_toe(CActions.make_donate(naar, inf, cav, art, cp), mens_id)
+	var gelukt := _pas_toe(CActions.make_donate(naar, inf, cav, art, cp), mens_id)
+	var sleutel := "%d|%d" % [c.ronde, naar]
+	if gelukt and naar != mens_id and agents.has(naar) and not _bedankt.has(sleutel):
+		_bedankt[sleutel] = true
+		var agent: CampaignAgent = agents[naar]
+		if _chat_rng.randf() < 0.4 + 0.6 * agent.gewicht("loyaliteit", 0.8):
+			_chat(naar, "HUB_QC_BEDANKT", mens_id)
+	return gelukt
 
 
 func submit_mens_klaar_met_doneren() -> bool:
@@ -305,6 +477,7 @@ func _stap_nominatie() -> void:
 		if sid == mens_id or c.nominatie_stemmen.has(sid) or c.fase != CState.Fase.NOMINATIE:
 			continue
 		var agent: CampaignAgent = agents[sid]
+		agent.toezeggingen = _toezeggingen_voor(sid)
 		var keuze: Dictionary = agent.kies_nominatie(CView.for_player(c, sid))
 		var gelukt := false
 		if not keuze.is_empty():
@@ -328,6 +501,7 @@ func _stap_donatie() -> void:
 			if sid == mens_id or c.donatie_klaar.has(sid):
 				continue
 			var agent: CampaignAgent = agents[sid]
+			agent.toezeggingen = _toezeggingen_voor(sid)
 			for actie in agent.kies_donaties(CView.for_player(c, sid)):
 				if _pas_toe(actie, sid):
 					_bark(sid, "donatie", agents[int(actie.naar)].naam)
@@ -390,6 +564,7 @@ func _stap_testament() -> void:
 		if sid == mens_id:
 			continue  # de UI levert het mens-testament aan
 		var agent: CampaignAgent = agents[sid]
+		agent.toezeggingen = _toezeggingen_voor(sid)
 		var keuze: Dictionary = agent.kies_testament(CView.for_player(c, sid))
 		var gelukt := false
 		if not keuze.is_empty():

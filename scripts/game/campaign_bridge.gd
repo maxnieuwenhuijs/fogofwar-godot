@@ -71,6 +71,12 @@ func rond_af(s: GameState, winnaar_kant: int) -> void:
 	_ctx = {}
 
 
+## Loopt de achtergrond-simulatie nog? Dan schrijft die in de feed en mag de
+## hub er niet tegelijk in schrijven (quick chat wacht dan).
+func sim_bezig() -> bool:
+	return _sim_thread != null and _sim_thread.is_alive()
+
+
 func _wacht_op_sim() -> void:
 	if _sim_thread != null:
 		if _sim_thread.is_started():

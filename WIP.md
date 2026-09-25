@@ -1,5 +1,41 @@
 # Fog of War — Work In Progress & Context
 
+## 25 september -- Quick chat volgens het campagneontwerp
+
+Max: "de quick chats slaan niet echt op wat we hebben bedacht voor de campagne
+toch?" Klopt: de zinnen uit de pdf van de ontwerper (dek me, verdedig de flank,
+terugtrekken) zijn slagveld-commando's, en in de campagne vecht niemand samen
+op een bord. Wat wij bedachten: UI-spec 2b.2 (team-only, ~12 vaste zinnen zoals
+"Send me", "Donate to X", "Trust me", "Traitor!", verzegeld voor de doden),
+intrige-voorstel P1 (gesloten zinnenlijsten, het spel is notaris) en P4 (elke
+regel heeft botgedrag: leesbaar, feilbaar), masterplan F3.2/F5.2.
+
+- De lijst (14, NL en EN): raad (Stuur mij!, Stuur X!, Pak X!), donaties
+  (Versterking nodig!, Doneer aan X!, Bedankt!, Ik kan niets missen), duels
+  en testament (Succes!, Goed gevochten!, Laat het aan mij na), altijd
+  (Vertrouw me, Verrader!, Akkoord!, Nee.). De balk toont per fase de drie
+  die erbij horen (in de raad met je keuze uit de kolommen: "Pak Ludo!"),
+  "..." opent de hele lijst in groepen; een zin over iemand vraagt eerst wie.
+- Alleen je eigen team: het chat-tabblad en de chatkaartjes in de tijdlijn
+  tonen alleen je team (ook de barks); stemdetails (nominatiekaartjes) van de
+  vijand zijn weg, de uitslag blijft. Gevallen: de balk is VERZEGELD en het
+  tabblad zegt dat je team zonder jou verder praat.
+- Bots luisteren (SoloDriver.quick_chat). Een verzoek (stuur, pak, doneer,
+  versterking, nalaten) krijgt AKKOORD! of NEE. van hooguit drie teamgenoten,
+  naar karakter (kans uit loyaliteit, vrijgevigheid, w_zelf, risico_afslag).
+  AKKOORD! is een toezegging voor de rest van de ronde, en de bot komt hem na
+  met kans loyaliteit (`CampaignAgent._nagekomen`: de trouwe generaal altijd,
+  de rat bijna nooit). Dat werkt omdat de bots van jouw team pas stemmen en
+  doneren nadat jij gestemd of "klaar" gedrukt hebt. Vechtende teamgenoten
+  vragen zelf soms om versterking, en wie jij iets geeft bedankt je.
+- Nooit in het campagnelog, eigen rng-stroom (`_rng.fork("quick_chat")`),
+  zonder toezeggingen geen extra trekkingen: headless en determinisme gelijk.
+- Tests: CampaignTests `test_qc_*` (nakomen bij loyaliteit 1, breken bij 0 en
+  dan precies de keuze zonder toezegging, ongeldig doel telt niet, doneren aan
+  wie beloofd is, driver: antwoorden = toezeggingen, nooit in het log, de doden
+  zwijgen). Testbatterij 2531 geslaagd, 0 gefaald. Plaatjes: `-- shot
+  campaign_hub 42 popup|chat|raad`.
+
 ## 25 september -- De trainingsnacht stierf mee met een app-update; trainer-noodstop naar 2500
 
 - **Wat er misging:** de TRAINING-NACHT op C26 (gestart 24 september 23:10)

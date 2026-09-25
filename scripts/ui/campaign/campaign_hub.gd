@@ -46,8 +46,12 @@ var _duel_start_bezig: bool = false
 var _info_label: Label = null
 var _keuze_eigen: int = -1      # raad: jouw vechter
 var _keuze_vijand: int = -1     # raad: het doelwit
-var _chat_wacht: Array = []     # quick-chat die wacht tot de werk-thread klaar is
-var _rng := RandomNumberGenerator.new()   # eigen rng (antwoorden van bots), nooit de globale
+var _chat_wacht: Array = []     # [sleutel, doel] die wacht tot de werk-thread klaar is
+var _chat_cache: Array = []     # feed-indexen van het chat-tabblad (alleen buiten het botwerk gelezen)
+var _chat_e: Dictionary = {}    # feed-index -> bericht, voor het tabblad tijdens het botwerk
+var _qc_label: Label = null
+var _qc_knoppen: Array = []     # de drie knoppen in de balk (inhoud per fase)
+var _qc_meer: Button = null
 
 ## Zoveel nieuwe kaartjes faden bovenaan de tijdlijn in; oudere staan er meteen.
 const ONTHUL_MAX := 12
@@ -73,14 +77,35 @@ const KNOP_HOOGTE := 84.0
 ## Buitenrand van de keuzeschermen.
 const RAND := 20.0
 
-## De quick-chat-berichten: de drie vaste knoppen onderaan en de zes uit het
-## pop-up-venster (pdf pagina 3).
-const QC_BALK := [["HUB_QC_WELL_PLAYED", "WellPlayed_icon"], ["HUB_QC_ATTACK", "Inbattle_icon"],
-	["HUB_QC_HOLD", "Active_icon"]]
-const QC_POPUP := ["HUB_QC_NEED_SUPPORT", "HUB_QC_REGROUP", "HUB_QC_PUSH", "HUB_QC_COVER",
-	"HUB_QC_FLANK", "HUB_QC_RETREAT"]
-const QC_ANTWOORD := ["HUB_QC_REPLY_1", "HUB_QC_REPLY_2", "HUB_QC_REPLY_3", "HUB_QC_REPLY_4"]
-
+## De quick chat (UI-spec 2b.2, intrige-voorstel P1): een gesloten lijst
+## zinnen over de raad, de donaties en vertrouwen; geen slagveld-commando's,
+## want in de campagne vecht niemand samen op een bord. Per zin het icoon
+## ("ui:" = uit het UI-pack) en wie %s is: "" (niemand), "team" (een
+## teamgenoot) of "vijand". Antwoorden en toezeggingen van de bots doet de
+## SoloDriver (quick_chat).
+const QC := {
+	"HUB_QC_STUUR_MIJ": ["Inbattle_icon", ""],
+	"HUB_QC_STUUR": ["Arrow_icon", "team"],
+	"HUB_QC_PAK": ["Nomination_icon", "vijand"],
+	"HUB_QC_NODIG": ["Donation_icon", ""],
+	"HUB_QC_DONEER": ["Donation_icon", "team"],
+	"HUB_QC_BEDANKT": ["WellPlayed_icon", ""],
+	"HUB_QC_BLUT": ["Neutral_icon", ""],
+	"HUB_QC_SUCCES": ["Active_icon", ""],
+	"HUB_QC_GOED_GEVOCHTEN": ["WellPlayed_icon", ""],
+	"HUB_QC_NALATEN": ["Testament_icon", ""],
+	"HUB_QC_VERTROUW": ["Chat_icon", ""],
+	"HUB_QC_VERRADER": ["Dead_icon", ""],
+	"HUB_QC_AKKOORD": ["ui:check", ""],
+	"HUB_QC_NEE": ["Close_icon", ""],
+}
+## De groepen in het pop-upvenster.
+const QC_GROEPEN := [
+	["HUB_QC_GROEP_RAAD", ["HUB_QC_STUUR_MIJ", "HUB_QC_STUUR", "HUB_QC_PAK"]],
+	["HUB_QC_GROEP_DONATIE", ["HUB_QC_NODIG", "HUB_QC_DONEER", "HUB_QC_BEDANKT", "HUB_QC_BLUT"]],
+	["HUB_QC_GROEP_DUEL", ["HUB_QC_SUCCES", "HUB_QC_GOED_GEVOCHTEN", "HUB_QC_NALATEN"]],
+	["HUB_QC_GROEP_ALTIJD", ["HUB_QC_VERTROUW", "HUB_QC_VERRADER", "HUB_QC_AKKOORD", "HUB_QC_NEE"]],
+]
 
 func _ready() -> void:
 	# Iconen (500 px) en portretten worden fors verkleind: mipmaps voor het
@@ -89,7 +114,6 @@ func _ready() -> void:
 	# ouder (capture-flow): zelf zetten is dezelfde Theme-resource en kost niets.
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	theme = UiAssets.thema()
-	_rng.seed = int(Time.get_ticks_usec())
 	if driver == null and CampaignBridge.driver != null \
 			and CampaignBridge.driver.c.fase != CState.Fase.KLAAR:
 		# F3.4b: terug van het bord (of een andere scene-wissel): zelfde campagne.
@@ -562,32 +586,36 @@ func _zet_tab(b: Button, gekozen: bool) -> void:
 		Vector2(20, 20), Vector4(_u(10), 0, _u(10), 0), HubAssets.INKT if gekozen else HubAssets.IVOOR)
 
 
-## De quick-chat-balk onderaan: label, drie vaste berichten en "..." (pop-up).
+## De quick-chat-balk onderaan: label, drie knoppen met de zinnen die bij
+## deze fase horen (_ververs_quick_chat) en "..." voor de hele lijst.
 func _bouw_quick_chat(y: float) -> void:
 	var label := PanelContainer.new()
 	label.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Holder_quickchat", Vector2(30, 30)))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_plaats(label, 4, y, 104, 40)
-	var t := HubAssets.tekst(tr("HUB_QUICK_CHAT"), _px(8), HubAssets.IVOOR, true)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_child(t)
+	_qc_label = HubAssets.tekst(tr("HUB_QUICK_CHAT"), _px(8), HubAssets.IVOOR, true)
+	_qc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_qc_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_child(_qc_label)
+	_qc_knoppen = []
 	var x := 114.0
-	for spec in QC_BALK:
-		var b := _chat_knop(tr(String(spec[0])), String(spec[1]), 7.0)
-		b.name = "QC_" + String(spec[0])
+	for i in 3:
+		var b := _chat_knop("", "", 7.0)
+		b.name = "QC_%d" % i
 		_plaats(b, x, y, 112, 40)
-		var sleutel := String(spec[0])
-		b.pressed.connect(func() -> void: _stuur_chat(sleutel))
+		b.pressed.connect(func() -> void:
+			if b.has_meta("qc"):
+				_stuur_chat(String(b.get_meta("qc")), int(b.get_meta("doel"))))
+		_qc_knoppen.append(b)
 		x += 116.0
-	var meer := _chat_knop("", "Other_message_icon", 0.0)
-	meer.name = "QC_Meer"
-	meer.add_theme_constant_override("icon_max_width", _px(26))
-	_plaats(meer, x, y, 560 - x, 40)
-	meer.pressed.connect(_toon_quick_chat)
+	_qc_meer = _chat_knop("", "Other_message_icon", 0.0)
+	_qc_meer.name = "QC_Meer"
+	_qc_meer.add_theme_constant_override("icon_max_width", _px(26))
+	_plaats(_qc_meer, x, y, 560 - x, 40)
+	_qc_meer.pressed.connect(_toon_quick_chat)
 
 
-## Kleine perkamenten knop met icoon links (quick chat).
+## Kleine perkamenten knop met icoon links (quick chat, doneren).
 func _chat_knop(tekst: String, icoon: String, grootte: float) -> Button:
 	var b := Button.new()
 	b.text = tekst
@@ -596,14 +624,81 @@ func _chat_knop(tekst: String, icoon: String, grootte: float) -> Button:
 	HubAssets.knop(b, "buttons/Small_button_quickchat", Vector2(30, 30), Vector4(_u(6), 0, _u(6), 0))
 	if grootte > 0:
 		b.add_theme_font_size_override("font_size", _px(grootte))
+	b.expand_icon = true
+	b.add_theme_constant_override("icon_max_width", _px(14))
+	b.add_theme_constant_override("h_separation", _px(3))
 	if icoon != "":
-		b.icon = HubAssets.tex("icons/" + icoon)
-		b.expand_icon = true
+		b.icon = _icoon_tex(icoon)
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER if tekst == "" else HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_constant_override("icon_max_width", _px(14))
-		b.add_theme_constant_override("h_separation", _px(3))
 	return b
 
+
+## Icoon op naam: uit het hub-pack, of met "ui:" uit het UI-pack.
+func _icoon_tex(naam: String) -> Texture2D:
+	if naam.begins_with("ui:"):
+		return UiAssets.icoon(naam.substr(3))
+	return HubAssets.tex("icons/" + naam)
+
+
+## De zin met de naam van het doel ingevuld (%s).
+func _qc_tekst(sleutel: String, doel: int) -> String:
+	var tekst: String = tr(sleutel)
+	if tekst.contains("%s"):
+		var naam: String = String(driver.c.spelers.get(doel, {}).get("naam", "..."))
+		tekst = tekst.replace("%s", naam.to_upper())
+	return tekst
+
+
+## De drie knoppen in de balk: de zinnen die bij deze fase horen. In de raad
+## gebruiken Stuur en Pak je huidige keuze uit de kolommen.
+func _qc_context() -> Array:
+	var c: CState = driver.c
+	match c.fase:
+		CState.Fase.NOMINATIE:
+			if not _raad_open():
+				return [["HUB_QC_VERTROUW", -1], ["HUB_QC_AKKOORD", -1], ["HUB_QC_NEE", -1]]
+			var uit: Array = [["HUB_QC_STUUR_MIJ", mens_id]]
+			if _keuze_eigen >= 0 and _keuze_eigen != mens_id:
+				uit.append(["HUB_QC_STUUR", _keuze_eigen])
+			else:
+				uit.append(["HUB_QC_VERTROUW", -1])
+			if _keuze_vijand >= 0:
+				uit.append(["HUB_QC_PAK", _keuze_vijand])
+			else:
+				uit.append(["HUB_QC_AKKOORD", -1])
+			return uit
+		CState.Fase.DONATIE:
+			return [["HUB_QC_NODIG", mens_id], ["HUB_QC_BEDANKT", -1], ["HUB_QC_BLUT", -1]]
+		CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
+			return [["HUB_QC_SUCCES", -1], ["HUB_QC_GOED_GEVOCHTEN", -1], ["HUB_QC_VERTROUW", -1]]
+		CState.Fase.TESTAMENT:
+			return [["HUB_QC_NALATEN", mens_id], ["HUB_QC_VERTROUW", -1], ["HUB_QC_VERRADER", -1]]
+	return [["HUB_QC_GOED_GEVOCHTEN", -1], ["HUB_QC_BEDANKT", -1], ["HUB_QC_AKKOORD", -1]]
+
+
+## De balk bijwerken: zinnen per fase, verzegeld als je gevallen bent.
+func _ververs_quick_chat() -> void:
+	if _qc_knoppen.is_empty():
+		return
+	var dood := _mens_dood()
+	_qc_label.text = tr("HUB_QC_VERZEGELD") if dood else tr("HUB_QUICK_CHAT")
+	var context := _qc_context()
+	for i in _qc_knoppen.size():
+		var b: Button = _qc_knoppen[i]
+		var sleutel: String = String(context[i][0])
+		var doel: int = int(context[i][1])
+		b.set_meta("qc", sleutel)
+		b.set_meta("doel", doel)
+		b.text = _qc_tekst(sleutel, doel)
+		b.icon = _icoon_tex(String(QC[sleutel][0]))
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.disabled = dood
+	_qc_meer.disabled = dood
+
+
+## Is de mens gevallen? Dan zwijgt hij (UI-spec 2b.4: verzegeld voor de doden).
+func _mens_dood() -> bool:
+	return String(driver.c.spelers.get(mens_id, {}).get("status", "actief")) != "actief"
 
 # --- Doorwerken: bots draaien op een thread tot de mens aan zet is -------------
 
@@ -639,10 +734,10 @@ func _poll_thread() -> void:
 		return
 	_thread.wait_to_finish()
 	_bezig = false
-	# Quick chat die tijdens het botwerk verstuurd werd: nu pas in de feed
-	# (de werk-thread schrijft er ook in).
-	for bericht in _chat_wacht:
-		driver.feed.append(bericht)
+	# Quick chat die tijdens het botwerk verstuurd werd: nu pas naar de driver
+	# (de werk-thread schrijft ook in de feed en leest de toezeggingen).
+	for wacht in _chat_wacht:
+		driver.quick_chat(mens_id, String(wacht[0]), int(wacht[1]))
 	_chat_wacht.clear()
 	_ververs()
 	if driver.c.fase != CState.Fase.KLAAR and not driver.wacht_op_mens():
@@ -984,18 +1079,86 @@ func _popup_knop(tekst: String, naam: String, actie: Callable) -> Button:
 	return b
 
 
+## Het hele quick-chat-venster, in groepen. Een zin over iemand anders
+## (Stuur X!, Pak X!, Doneer aan X!) vraagt eerst wie.
 func _toon_quick_chat() -> void:
+	if _mens_dood():
+		return
 	var inhoud := _popup(tr("HUB_QUICK_CHAT"), "QuickChat")
+	for groep in QC_GROEPEN:
+		var kop := HubAssets.tekst(tr(String(groep[0])), _px(9), HubAssets.INKT_ZACHT, true)
+		inhoud.add_child(kop)
+		var raster := GridContainer.new()
+		raster.columns = 2
+		raster.add_theme_constant_override("h_separation", _px(10))
+		raster.add_theme_constant_override("v_separation", _px(6))
+		inhoud.add_child(raster)
+		for sleutel in groep[1]:
+			var s: String = sleutel
+			var wie: String = String(QC[s][1])
+			var b := _popup_knop(tr(s).replace("%s", "..."), "QC_" + s, func() -> void:
+				if wie == "":
+					_sluit_popup()
+					_stuur_chat(s, -1)
+				else:
+					_kies_doel(s, wie))
+			b.custom_minimum_size = Vector2(_u(200), _u(40))
+			b.add_theme_font_size_override("font_size", _px(10))
+			b.icon = _icoon_tex(String(QC[s][0]))
+			b.expand_icon = true
+			b.add_theme_constant_override("icon_max_width", _px(16))
+			for staat in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color"]:
+				b.add_theme_color_override(staat, HubAssets.INKT)
+			raster.add_child(b)
+
+
+## Tweede stap voor een zin over iemand: kies de teamgenoot of de vijand.
+## Sturen en pakken kan alleen wie deze ronde nog niet gekozen is.
+func _kies_doel(sleutel: String, wie: String) -> void:
+	var c: CState = driver.c
+	var mijn_team: int = int(c.spelers[mens_id].team)
+	var team: int = mijn_team if wie == "team" else 1 - mijn_team
+	var kandidaten: Array = []
+	for sid in c.actieve_leden(team):
+		if int(sid) == mens_id:
+			continue
+		if sleutel != "HUB_QC_DONEER" and c.al_genomineerd.has(sid):
+			continue
+		kandidaten.append(int(sid))
+	var inhoud := _popup(tr(sleutel).replace("%s", "..."), "QcDoel")
+	if kandidaten.is_empty():
+		var leeg := HubAssets.tekst(tr("HUB_QC_NIEMAND"), _px(11), HubAssets.INKT_ZACHT)
+		leeg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		inhoud.add_child(leeg)
+		return
 	var raster := GridContainer.new()
-	raster.columns = 2
-	raster.add_theme_constant_override("h_separation", _px(10))
-	raster.add_theme_constant_override("v_separation", _px(10))
+	raster.columns = 4
+	raster.add_theme_constant_override("h_separation", _px(8))
+	raster.add_theme_constant_override("v_separation", _px(8))
 	inhoud.add_child(raster)
-	for sleutel in QC_POPUP:
-		var s: String = sleutel
-		raster.add_child(_popup_knop(tr(s), "QC_" + s, func() -> void:
+	for sid in kandidaten:
+		var doel: int = sid
+		var sp: Dictionary = c.spelers[doel]
+		var b := Button.new()
+		b.name = "Doel_%d" % doel
+		b.flat = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(_u(104), _u(84))
+		for staat in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
+			b.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), team == mijn_team, false, _u(60))
+		p.position = Vector2(_u(22), 0)
+		p.size = Vector2(_u(60), _u(60))
+		b.add_child(p)
+		var naam := HubAssets.tekst(String(sp.naam), _px(9), HubAssets.INKT, true)
+		naam.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		naam.position = Vector2(0, _u(62))
+		naam.size = Vector2(_u(104), _u(18))
+		b.add_child(naam)
+		b.pressed.connect(func() -> void:
 			_sluit_popup()
-			_stuur_chat(s)))
+			_stuur_chat(sleutel, doel))
+		raster.add_child(b)
 
 
 func _toon_help() -> void:
@@ -1047,53 +1210,51 @@ func _toon_lid(sid: int) -> void:
 
 # --- Quick chat -------------------------------------------------------------------
 
-## Een quick-chat-bericht van de mens: in de feed (tijdlijn + chat) en soms
-## een kort antwoord van een teamgenoot. Puur presentatie: de campagnestaat
-## en het log merken er niets van.
-func _stuur_chat(sleutel: String) -> void:
-	var c: CState = driver.c
-	var bericht := {"type": "chat", "speler": mens_id, "naam": String(c.spelers[mens_id].naam),
-		"tekst": tr(sleutel), "ronde": c.ronde}
-	_voeg_chat_toe(bericht)
-	if _rng.randf() < 0.6:
-		var genoten: Array = []
-		for sid in c.actieve_leden(int(c.spelers[mens_id].team)):
-			if int(sid) != mens_id:
-				genoten.append(int(sid))
-		if genoten.is_empty():
-			return
-		var wie: int = genoten[_rng.randi_range(0, genoten.size() - 1)]
-		var antwoord: String = QC_ANTWOORD[_rng.randi_range(0, QC_ANTWOORD.size() - 1)]
-		await get_tree().create_timer(_rng.randf_range(0.8, 1.8)).timeout
-		if is_inside_tree():
-			_voeg_chat_toe({"type": "chat", "speler": wie, "naam": String(c.spelers[wie].naam),
-				"tekst": tr(antwoord), "ronde": c.ronde})
-
-
-func _voeg_chat_toe(bericht: Dictionary) -> void:
-	if _bezig:
-		_chat_wacht.append(bericht)
+## Een quick-chat-zin van de mens. De SoloDriver zet hem in de feed, laat
+## teamgenoten antwoorden (AKKOORD! of NEE., naar karakter) en onthoudt wie
+## iets toezegde. Tijdens het botwerk wacht hij tot de thread klaar is.
+func _stuur_chat(sleutel: String, doel: int = -1) -> void:
+	if _mens_dood():
 		return
-	driver.feed.append(bericht)
-	if _tab == 1 and int(bericht.speler) == mens_id:
+	if _bezig or CampaignBridge.sim_bezig():
+		_chat_wacht.append([sleutel, doel])
+		return
+	driver.quick_chat(mens_id, sleutel, doel)
+	if _tab == 1:
 		_chat_gezien = _chat_berichten().size()
 	_ververs_tijdlijn()
 	_bouw_fase_paneel()
 
 
-## Alles wat in het chat-tabblad hoort: quick chat en de barks van spelers.
+## Alles wat in het chat-tabblad hoort: quick chat en barks, alleen van je
+## eigen team (UI-spec 2b.2: team-only). Buiten het botwerk opnieuw geteld;
+## tijdens het botwerk de laatste telling (de werk-thread schrijft de feed).
 func _chat_berichten() -> Array:
+	if _bezig or CampaignBridge.sim_bezig():
+		return _chat_cache
 	var uit: Array = []
+	var mijn_team: int = int(driver.c.spelers.get(mens_id, {}).get("team", 0))
 	for i in driver.feed.size():
 		var e: Dictionary = driver.feed[i]
 		var soort := String(e.get("type", ""))
-		if (soort == "chat" or soort == "bark") and int(e.get("speler", -1)) >= 0:
+		var sid: int = int(e.get("speler", -1))
+		if (soort == "chat" or soort == "bark") and sid >= 0 \
+				and int(driver.c.spelers.get(sid, {}).get("team", -1)) == mijn_team:
 			uit.append(i)
+			_chat_e[i] = e
+	_chat_cache = uit
 	return uit
 
 
 func _paneel_chat() -> void:
-	var berichten := _chat_berichten()
+	if _mens_dood():
+		var zegel := HubAssets.tekst(tr("HUB_CHAT_SEALED"), _px(10), HubAssets.INKT_ZACHT)
+		zegel.name = "ChatVerzegeld"
+		zegel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		zegel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_paneel.add_child(zegel)
+		return
+	var berichten: Array = _chat_berichten().duplicate()
 	if berichten.is_empty():
 		var l := HubAssets.tekst(tr("HUB_CHAT_EMPTY"), _px(10), HubAssets.INKT_ZACHT)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1105,7 +1266,7 @@ func _paneel_chat() -> void:
 	berichten.reverse()
 	for n in berichten.size():
 		var idx: int = berichten[n]
-		var e: Dictionary = driver.feed[idx]
+		var e: Dictionary = _chat_e.get(idx, {})
 		var nieuw: bool = (berichten.size() - n) > _chat_gezien
 		var rij := PanelContainer.new()
 		rij.name = "Chat_%d" % idx
@@ -1212,6 +1373,7 @@ func _bouw_fase_paneel() -> void:
 		return
 	_wis_paneel()
 	_info_label = null
+	_ververs_quick_chat()
 	var berichten := _chat_berichten().size()
 	_zet_tab(_tab_fase, _tab == 0)
 	_zet_tab(_tab_chat, _tab == 1)

@@ -184,7 +184,7 @@ func _ready() -> void:
 				print("[SHOT] tijdlijn is leeg")
 			# Quick chat: een bericht moet in de tijdlijn en het chat-tabblad landen.
 			var tl_voor := tl.get_child_count()
-			hub.call("_stuur_chat", "HUB_QC_HOLD")
+			hub.call("_stuur_chat", "HUB_QC_VERTROUW", -1)
 			await get_tree().create_timer(0.3).timeout
 			if tl.get_child_count() <= tl_voor and not bool(hub.get("_bezig")):
 				shot_fouten += 1

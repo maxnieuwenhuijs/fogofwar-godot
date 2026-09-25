@@ -187,6 +187,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   via `HubAssets`; tijdlijnkaartjes per feed-soort in `HubFeedKaart`
   (`nominatie`- en `fase`-items zet de SoloDriver in de feed, alleen
   presentatie). Check: `-- shot campaign_hub [seed] [chat|popup|raad]`.
+  **Quick chat (25 september):** een gesloten lijst van 14 campagnezinnen
+  (raad, donaties, duels/testament, altijd; NIET de slagveldzinnen uit de pdf),
+  team-only en verzegeld voor de doden; bots antwoorden AKKOORD!/NEE. naar
+  karakter en komen een toezegging na met kans `loyaliteit`
+  (`SoloDriver.quick_chat`, `CampaignAgent.toezeggingen`). Nooit in het log.
 - Godot: `$env:GODOT_PATH`, anders
   `C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe`
   (console-variant `..._console.exe` voor terminal-output).

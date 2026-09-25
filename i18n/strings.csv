@@ -500,27 +500,35 @@ HUB_DUEL_PLAY_CAPS,TO THE BOARD,NAAR HET BORD
 HUB_DONATE_SHORT,DONATE TO YOUR TEAM,DONEER AAN JE TEAM
 HUB_DONATE_HINT,"+1 gives a reinforcement point, +CP a command point (max 10 pt / 3 CP per receiver per round).","+1 geeft een versterkingspunt, +CP een commandopunt (max 10 pt / 3 CP per ontvanger per ronde)."
 HUB_QUICK_CHAT,QUICK CHAT,QUICK CHAT
-HUB_QC_WELL_PLAYED,WELL PLAYED!,GOED GESPEELD!
-HUB_QC_ATTACK,ATTACK THERE!,VAL DAAR AAN!
-HUB_QC_HOLD,HOLD POSITION!,HOUD STAND!
-HUB_QC_NEED_SUPPORT,NEED SUPPORT!,STEUN NODIG!
-HUB_QC_REGROUP,REGROUP!,HERGROEPEREN!
-HUB_QC_PUSH,PUSH NOW!,NU DOORDRUKKEN!
-HUB_QC_COVER,COVER ME!,DEK ME!
-HUB_QC_FLANK,DEFEND THE FLANK!,VERDEDIG DE FLANK!
-HUB_QC_RETREAT,RETREAT!,TERUGTREKKEN!
-HUB_QC_REPLY_1,UNDERSTOOD!,BEGREPEN!
-HUB_QC_REPLY_2,ON MY WAY!,ONDERWEG!
-HUB_QC_REPLY_3,AYE!,JA KAPITEIN!
-HUB_QC_REPLY_4,NOT NOW.,NU EVEN NIET.
-HUB_CHAT_EMPTY,No messages yet. Use the quick chat below.,Nog geen berichten. Gebruik de quick chat hieronder.
+HUB_QC_STUUR_MIJ,SEND ME!,STUUR MIJ!
+HUB_QC_STUUR,SEND %s!,STUUR %s!
+HUB_QC_PAK,GO FOR %s!,PAK %s!
+HUB_QC_NODIG,NEED REINFORCEMENTS!,VERSTERKING NODIG!
+HUB_QC_DONEER,DONATE TO %s!,DONEER AAN %s!
+HUB_QC_BEDANKT,THANK YOU!,BEDANKT!
+HUB_QC_BLUT,I CAN'T SPARE ANY,IK KAN NIETS MISSEN
+HUB_QC_SUCCES,GOOD LUCK!,SUCCES!
+HUB_QC_GOED_GEVOCHTEN,WELL FOUGHT!,GOED GEVOCHTEN!
+HUB_QC_NALATEN,LEAVE IT TO ME,LAAT HET AAN MIJ NA
+HUB_QC_VERTROUW,TRUST ME,VERTROUW ME
+HUB_QC_VERRADER,TRAITOR!,VERRADER!
+HUB_QC_AKKOORD,AGREED!,AKKOORD!
+HUB_QC_NEE,NO.,NEE.
+HUB_QC_GROEP_RAAD,COUNCIL,RAAD
+HUB_QC_GROEP_DONATIE,DONATIONS,DONATIES
+HUB_QC_GROEP_DUEL,DUELS AND LAST WILL,DUELS EN TESTAMENT
+HUB_QC_GROEP_ALTIJD,ALWAYS,ALTIJD
+HUB_QC_NIEMAND,Nobody left to choose this round.,Niemand meer om te kiezen deze ronde.
+HUB_QC_VERZEGELD,SEALED,VERZEGELD
+HUB_CHAT_SEALED,"Sealed for the dead: your team talks on without you.","Verzegeld voor de doden: je team praat verder zonder jou."
+HUB_CHAT_EMPTY,"No messages yet. Ask your team something with the quick chat below: they vote and donate after you.","Nog geen berichten. Vraag je team iets met de quick chat hieronder: ze stemmen en geven na jou."
 HUB_TIME_NOW,just now,zojuist
 HUB_TIME_MIN,%dm ago,%d min geleden
 HUB_TIME_HOUR,%dh ago,%d uur geleden
 HUB_SETTINGS_TITLE,SETTINGS,INSTELLINGEN
 HUB_MAIN_MENU,Main menu,Hoofdmenu
 HUB_HELP_TITLE,HOW IT WORKS,ZO WERKT HET
-HUB_HELP_TEXT,"Every round has four phases. COUNCIL: the nominating team picks a fighter and an enemy target (tap the portraits in the columns, then VOTE). DONATIONS: give reinforcements or CP to teammates. DUELS: the pairs fight on the board; your own duel starts automatically. LAST WILL: whoever falls may leave half to others. The timeline shows everything that happens, newest on top; tap a battle report for the details.","Elke ronde heeft vier fasen. RAAD: het nominerende team kiest een vechter en een vijandelijk doelwit (tik de portretten in de kolommen, dan STEM). DONATIES: geef versterkingen of CP aan teamgenoten. DUELS: de paren vechten op het bord; je eigen duel start vanzelf. TESTAMENT: wie valt mag de helft nalaten. De tijdlijn toont alles wat er gebeurt, nieuwste bovenaan; tik een slagrapport voor de details."
+HUB_HELP_TEXT,"Every round has four phases. COUNCIL: the nominating team picks a fighter and an enemy target (tap the portraits in the columns, then VOTE). DONATIONS: give reinforcements or CP to teammates. DUELS: the pairs fight on the board; your own duel starts automatically. LAST WILL: whoever falls may leave half to others. QUICK CHAT: your team votes and donates after you, so ask first (Send me!, Go for X!, Need reinforcements!). Whoever says AGREED! usually keeps their word, but not always. Only your own team hears you, and the dead are silent. The timeline shows everything that happens, newest on top; tap a battle report for the details.","Elke ronde heeft vier fasen. RAAD: het nominerende team kiest een vechter en een vijandelijk doelwit (tik de portretten in de kolommen, dan STEM). DONATIES: geef versterkingen of CP aan teamgenoten. DUELS: de paren vechten op het bord; je eigen duel start vanzelf. TESTAMENT: wie valt mag de helft nalaten. QUICK CHAT: je team stemt en geeft na jou, dus vraag eerst (Stuur mij!, Pak X!, Versterking nodig!). Wie AKKOORD! zegt, houdt zich er meestal aan, maar niet altijd. Alleen je eigen team hoort je, en de doden zwijgen. De tijdlijn toont alles wat er gebeurt, nieuwste bovenaan; tik een slagrapport voor de details."
 HUB_STATUS_ACTIEF,Takes part this round,Doet mee deze ronde
 HUB_STATUS_STRIJD,Fighting now,Vecht nu
 HUB_STATUS_RUST,Resting this round,Rust deze ronde

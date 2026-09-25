@@ -609,3 +609,95 @@ func test_c15_leeg_testament_kan_niet_stranden_op_een_negatieve_pool() -> void:
 	var leeg: Dictionary = CReducer.apply(c, CActions.make_testament([]), 3)
 	assert_true(leeg.ok, "een leeg testament gaat altijd door: %s" % str(leeg.get("error", "")))
 	assert_true(c.fase != CState.Fase.TESTAMENT, "en de campagne loopt door")
+
+
+# --- Quick chat (25 september): toezeggingen van bots --------------------------
+
+## Een bot met het profiel van de trouwe generaal, eigen loyaliteit en seed.
+func _qc_bot(speler: int, loyaliteit: float, seed_val: int) -> CampaignAgent:
+	var agent := CampaignAgent.new()
+	agent.speler_id = speler
+	agent.profiel = (Personalities.ARCHETYPES["trouwe_generaal"] as Dictionary).duplicate(true)
+	agent.profiel["loyaliteit"] = loyaliteit
+	agent.rng = SeededRng.new(seed_val)
+	return agent
+
+
+func test_qc_toezegging_raad_nakomen() -> void:
+	# Loyaliteit 1: de bot stemt precies wat hij toezegde (Stuur 2!, Pak 5!).
+	var c := _mini()
+	var cview: Dictionary = CView.for_player(c, 1)
+	for seed_val in [1, 2, 3, 4, 5]:
+		var trouw := _qc_bot(1, 1.0, seed_val)
+		trouw.toezeggingen = {"stuur": [2], "pak": [5]}
+		var keuze: Dictionary = trouw.kies_nominatie(cview)
+		assert_eq(int(keuze.eigen), 2, "trouwe bot stuurt wie hij toezegde")
+		assert_eq(int(keuze.vijand), 5, "en pakt wie hij toezegde")
+		# Loyaliteit 0: breekt zijn woord, en kiest dan precies wat hij zonder
+		# toezegging gekozen had (de nakom-trekkingen komen na de gewone).
+		var rat := _qc_bot(1, 0.0, seed_val)
+		rat.toezeggingen = {"stuur": [2], "pak": [5]}
+		var zonder := _qc_bot(1, 0.0, seed_val)
+		assert_eq(rat.kies_nominatie(cview), zonder.kies_nominatie(cview),
+			"woordbreker kiest als zonder toezegging")
+
+
+func test_qc_toezegging_ongeldig_doel_telt_niet() -> void:
+	# Al genomineerd of dood: de toezegging vervalt, de bot kiest gewoon.
+	var c := _mini(2)
+	_stem_unaniem(c, 2, 5)
+	var cview: Dictionary = CView.for_player(c, 1)
+	var bot := _qc_bot(1, 1.0, 9)
+	bot.toezeggingen = {"stuur": [2], "pak": [5]}
+	var keuze: Dictionary = bot.kies_nominatie(cview)
+	assert_true(int(keuze.eigen) != 2 and int(keuze.vijand) != 5,
+		"wie al gekozen is kan niet nog eens")
+
+
+func test_qc_toezegging_doneren() -> void:
+	# Na de raad (0 tegen 3) geeft een bot normaal aan de vechter; met een
+	# toezegging aan teamgenoot 2 (die niet vecht) geeft hij aan 2.
+	var c := _mini()
+	_stem_unaniem(c, 0, 3)
+	assert_eq(c.fase, CState.Fase.DONATIE)
+	var cview: Dictionary = CView.for_player(c, 1)
+	var bot := _qc_bot(1, 1.0, 3)
+	var gewoon: Array = bot.kies_donaties(cview)
+	assert_eq(gewoon.size(), 1)
+	assert_eq(int(gewoon[0].naar), 0, "zonder toezegging: aan de vechter")
+	bot.toezeggingen = {"doneer": [2]}
+	var beloofd: Array = bot.kies_donaties(cview)
+	assert_eq(beloofd.size(), 1)
+	assert_eq(int(beloofd[0].naar), 2, "met toezegging: aan wie hij het beloofde")
+	assert_true(CReducer.apply(c, beloofd[0], 1).ok, "en de reducer neemt het aan")
+
+
+func test_qc_driver_antwoorden_en_log() -> void:
+	# De driver zet de zin en de antwoorden in de feed, nooit in het log;
+	# AKKOORD! is precies de lijst toezeggingen; de doden zwijgen.
+	var driver := SoloDriver.new(4242, 0, 6)
+	var log_voor: int = driver.clog.entries.size()
+	var feed_voor: int = driver.feed.size()
+	driver.quick_chat(0, "HUB_QC_STUUR_MIJ")
+	assert_eq(driver.clog.entries.size(), log_voor, "quick chat staat nooit in het campagnelog")
+	var nieuw: Array = driver.feed.slice(feed_voor)
+	assert_true(nieuw.size() >= 2, "zin plus minstens een antwoord")
+	assert_eq(String(nieuw[0].qc), "HUB_QC_STUUR_MIJ")
+	assert_eq(int(nieuw[0].doel), 0, "Stuur mij gaat over de spreker")
+	var team: int = int(driver.c.spelers[0].team)
+	var akkoord := 0
+	for e in nieuw.slice(1):
+		var wie: int = int(e.speler)
+		assert_eq(int(driver.c.spelers[wie].team), team, "alleen het eigen team antwoordt")
+		if String(e.qc) == "HUB_QC_AKKOORD":
+			akkoord += 1
+			assert_true((driver.toezeggingen[wie].stuur as Array).has(0), "akkoord is een toezegging")
+		else:
+			assert_eq(String(e.qc), "HUB_QC_NEE")
+			assert_true(not driver.toezeggingen.has(wie), "nee is geen toezegging")
+	assert_eq(akkoord, driver.toezeggingen.size())
+	driver.c.spelers[0].status = "uitgevallen"
+	var n: int = driver.feed.size()
+	driver.quick_chat(0, "HUB_QC_VERTROUW")
+	assert_eq(driver.feed.size(), n, "de doden zwijgen")
+
