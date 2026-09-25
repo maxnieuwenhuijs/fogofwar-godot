@@ -44,6 +44,9 @@ static func for_player(c: CState, viewer: int) -> Dictionary:
 		spelers_d[str(id)] = {
 			"naam": String(sp.naam),
 			"team": int(sp.team),
+			# De factie is openbaar (je ziet hem aan het schild); de bots wegen
+			# er matchups mee (F7.2a verstand).
+			"doctrine": int(sp.get("doctrine", 0)),
 			"status": String(sp.status),
 			"punten": c.punten_van(int(id)),
 			# Team-only (D12): de vijand ziet "?" in plaats van een saldo.

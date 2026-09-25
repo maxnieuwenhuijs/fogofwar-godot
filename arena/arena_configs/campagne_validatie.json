@@ -1,0 +1,19 @@
+{
+  "soort": "campagnes",
+  "campagnes": 2,
+  "base_seed": 70000,
+  "spelers": 16,
+  "duel_ai": "easy",
+  "honger": 10,
+  "max_steps": 3000,
+  "teams": [
+    {
+      "naam": "getraind"
+    },
+    {
+      "naam": "hand",
+      "verstand": {}
+    }
+  ],
+  "wissel": true
+}

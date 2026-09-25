@@ -42,7 +42,10 @@ function Bevestig-BijDrukte {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
-$form.Size = New-Object System.Drawing.Size(470, 1096)
+# Nooit hoger dan het scherm; wat er niet op past, scrolt (25 september: er
+# kwam een kader bij voor de campagnebots).
+$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1216, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
+$form.AutoScroll = $true
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
 $form.StartPosition = "CenterScreen"
@@ -571,8 +574,50 @@ $btnRetexture.Add_Click({
 })
 $kadModellen.Controls.Add($btnRetexture)
 
-# --- 8. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 952 86
+# --- 8. Campagnebots: hoe de bots handelen in het campagnemenu (F7.2,
+# docs/F7-campagnetrainer.md). Eerst duels meten (de data van het orakel),
+# dan trainen op dat orakel. De trainer schrijft data/campagne_verstand.json.
+$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 952 124
+Maak-Uitleg $kadCampagne "Eerst duels meten (orakel), dan trainen. Niet naast een training."
+$numCampMeet = Maak-Getal $kadCampagne 205 60 5 600 "minuten"
+$null = Maak-Knop $kadCampagne "Campagne-duels meten" {
+    if (-not (Bevestig-BijDrukte)) { return }
+    # Een duel duurt zo'n 40 s: minuten x 60 / 40 duels per proces.
+    $perProc = [Math]::Max(5, [int]([int]$numCampMeet.Value * 60 / 40))
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\campagne_arena.ps1",
+        "-Duels", $perProc)
+}
+# Tweede rij: trainen op het orakel dat uit de metingen komt.
+$btnCampTrain = New-Object System.Windows.Forms.Button
+$btnCampTrain.Text = "Campagnebots trainen"
+$btnCampTrain.Location = New-Object System.Drawing.Point(12, 80)
+$btnCampTrain.Size = New-Object System.Drawing.Size(185, 34)
+$btnCampTrain.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$numCampTrain = New-Object System.Windows.Forms.NumericUpDown
+$numCampTrain.Location = New-Object System.Drawing.Point(205, 85)
+$numCampTrain.Size = New-Object System.Drawing.Size(52, 26)
+$numCampTrain.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$numCampTrain.Minimum = 5
+$numCampTrain.Maximum = 600
+$numCampTrain.Value = 60
+$lblCampTrain = New-Object System.Windows.Forms.Label
+$lblCampTrain.Text = "minuten"
+$lblCampTrain.Location = New-Object System.Drawing.Point(259, 89)
+$lblCampTrain.Size = New-Object System.Drawing.Size(60, 18)
+$lblCampTrain.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$btnCampTrain.Add_Click({
+    if (-not (Bevestig-BijDrukte)) { return }
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\campagne_train.ps1",
+        "-Minuten", [int]$numCampTrain.Value)
+})
+$kadCampagne.Controls.Add($btnCampTrain)
+$kadCampagne.Controls.Add($numCampTrain)
+$kadCampagne.Controls.Add($lblCampTrain)
+
+# --- 9. Alles stoppen.
+$kadStop = Maak-Kader "Noodrem" 1082 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots

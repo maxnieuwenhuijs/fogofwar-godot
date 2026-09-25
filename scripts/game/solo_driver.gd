@@ -62,6 +62,25 @@ var _toezeg_ronde: int = -1
 var _bedankt: Dictionary = {}           # "ronde|ontvanger" -> true
 var _chat_rng: SeededRng
 
+## F7.1a (campagne-arena): een Array = elk bot-duel komt erin met zijn invoer
+## (facties, reserve, CP) en uitkomst, in het formaat van duel_record. Null
+## (standaard) = niets bijhouden.
+var duel_log = null
+## F7.1b: "echt" (de bots spelen het duel uit) of "orakel" (een gemeten duel
+## trekken uit `orakel`, voor de campagne-arena en de trainer). De mens
+## speelt altijd echt: zijn duel loopt via de brug, niet via _speel_duel.
+var duel_modus: String = "echt"
+var orakel = null  # DuelOrakel (ongetypeerd: de driver laadt ook zonder die klasse)
+const _OrakelScript := preload("res://scripts/training/duel_orakel.gd")
+
+
+## Het orakel dat de bots raadplegen voor hun winkans (F7.2a verstand). Los
+## van `orakel`/`duel_modus`: een mens-campagne speelt echte duels, maar zijn
+## bots mogen wel weten hoe matchups doorgaans uitvallen.
+func zet_orakel_voor_bots(o) -> void:
+	for sid in agents:
+		(agents[sid] as CampaignAgent).orakel = o
+
 
 var n_spelers: int = 16
 
@@ -100,7 +119,13 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosa
 		agent.naam = String(lijst[i].naam)
 		agent.profiel = lobby[i].profiel
 		agent.rng = _rng.fork("agent_%d" % i)
+		# F7.2a: het getrainde verstand (leeg zonder data/campagne_verstand.json)
+		# en het orakel voor de winkans (alleen als het verstand hem gebruikt).
+		agent.verstand = CampaignAgent.laad_verstand()
 		agents[i] = agent
+	var met_verstand: bool = not (agents[0] as CampaignAgent).verstand.is_empty()
+	if met_verstand and FileAccess.file_exists(_OrakelScript.STANDAARD):
+		zet_orakel_voor_bots(_OrakelScript.laad())
 
 
 ## F3.4 — hervatten vanaf een autosave: fold het log op de beginstand.
@@ -467,10 +492,16 @@ func _stap_nominatie() -> void:
 			for i in mini(a_leden.size(), b_leden.size()):
 				paren.append([int(a_leden[i]), int(b_leden[i])])
 			if _pas_toe(CActions.make_loting(paren), -1):
-				feed.append({"type": "bark", "speler": -1, "naam": tr("SOLO_NAME_LOTING"),
+				var lot := {"type": "bark", "speler": -1, "naam": tr("SOLO_NAME_LOTING"),
 					"trigger": "loting",
 					"tekst": tr("SOLO_FEED_LOTING"),
-					"ronde": c.ronde})
+					"ronde": c.ronde}
+				# De loting komt voor de fasewissel die ze veroorzaakt (die
+				# zette _pas_toe er net achteraan): in de tijdlijn eerst het lot.
+				if not feed.is_empty() and String(feed.back().get("type", "")) == "fase":
+					feed.insert(feed.size() - 1, lot)
+				else:
+					feed.append(lot)
 		return
 	var team: int = c.nominatie_team
 	for sid in c.actieve_leden(team):
@@ -502,6 +533,10 @@ func _stap_donatie() -> void:
 				continue
 			var agent: CampaignAgent = agents[sid]
 			agent.toezeggingen = _toezeggingen_voor(sid)
+			# F7.2a: eerst CP ruilen (alleen met verstand; standaard nooit).
+			var ruil: int = agent.kies_ruil(CView.for_player(c, sid), maxi(1, c.rules.ruil_cp_per_punt))
+			if ruil > 0:
+				_pas_toe(CActions.make_exchange(ruil), sid)
 			for actie in agent.kies_donaties(CView.for_player(c, sid)):
 				if _pas_toe(actie, sid):
 					_bark(sid, "donatie", agents[int(actie.naar)].naam)
@@ -605,18 +640,28 @@ func duel_rules_voor(a: int, b: int, p_honger_vanaf: int = -1) -> RulesConfig:
 		start_b = [mini(int(comp_b[0]), int(bezit_b.inf)), mini(int(comp_b[1]), int(bezit_b.cav)), mini(int(comp_b[2]), int(bezit_b.art))]
 		pool_a = {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]}
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
-	return RulesConfig.from_dict({"honger_vanaf_cyclus": duel_honger_vanaf if p_honger_vanaf < 0 else p_honger_vanaf,
+	return duel_regels(c.rules.doctrines, start_a, start_b, pool_a, pool_b, c.cp_van(a), c.cp_van(b),
+		duel_honger_vanaf if p_honger_vanaf < 0 else p_honger_vanaf)
+
+
+## De duel-config uit losse onderdelen (F7.1a): dezelfde voor de campagne
+## (duel_rules_voor) en de datarun van de campagne-arena, zodat het orakel
+## meet wat de campagne speelt. start = de opstelling op het bord, pool = de
+## reserve die mee het veld op kan, cp = het CP-saldo van elke kant.
+static func duel_regels(doctrines: Dictionary, start_a: Array, start_b: Array, pool_a: Dictionary,
+		pool_b: Dictionary, cp_a: int, cp_b: int, honger_vanaf: int) -> RulesConfig:
+	return RulesConfig.from_dict({"honger_vanaf_cyclus": honger_vanaf,
 		"basis_hp": {"cav": 2},  # C12: bigbro altijd minstens 2 HP, kaart erbovenop
 		"stat_bonus": {"cav": {"attack": 2}},  # 4.3.7: bigbro +2 attack bovenop de kaart (4.3.6 gaf ook +2 stamina: havenrace; 4.3.5: minstens 2/2)
 		# C17: de facties van DEZE campagne mee het bord op. Zonder dit blok
 		# vielen kaarten, budget en perks in elk campagne-duel terug op de
 		# kale tabel, terwijl de trainer en de arena wel de override maten.
-		"doctrines": c.rules.doctrines,
+		"doctrines": doctrines,
 		"campaign": {
 		"pool_model": "punten",  # C11: reserve = puntenpot (typed pools op waarde omgezet)
 		"comp_override": {"1": start_a, "2": start_b},
 		"pools": {"1": pool_a, "2": pool_b},
-		"cp": {"1": c.cp_van(a), "2": c.cp_van(b)},
+		"cp": {"1": cp_a, "2": cp_b},
 	}})
 
 
@@ -633,18 +678,13 @@ func _duel_reserve(bezit: Dictionary) -> Dictionary:
 	return uit
 
 
-## Vertaal een uitgespeelde duel-staat naar MATCH_RESULT + battlereport.
-## a = bord-P1, b = bord-P2; cp_a/cp_b = campagne-CP bij de start van het duel.
-## Gedeeld door de bot-duels én het mens-duel op het echte bord (F3.4b).
-func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
-		s: GameState, winnaar_kant: int) -> bool:
+## De uitkomst van een uitgespeeld duel per bord-kant ("1" en "2"): winnaar,
+## methode, verliezen, ingezette reserve, CP-verschil (met het winsttarief) en
+## buit. Gedeeld door de campagne (verwerk_duel_uitslag) en de datarun van de
+## campagne-arena (F7.1a). cp_1/cp_2 = het CP-saldo bij de start.
+static func duel_uitkomst(s: GameState, winnaar_kant: int, cp_1: int, cp_2: int, vol_team: bool) -> Dictionary:
 	# Methode bepalen (zoals de arena-metrics). V0 (3 augustus): een duel kent
-	# alleen haven en eliminatie, dus er is geen "tiebreak"-default meer. Kwam
-	# er toch geen winnaar van het bord, dan is dat een fout in de
-	# uitputtingsklok en niet een uitslag die we stil moeten wegboeken.
-	if winnaar_kant == -1:
-		push_error("SoloDriver: duel %d zonder winnaar teruggekregen (V0: een duel kent geen gelijkspel)" % idx)
-		return false
+	# alleen haven en eliminatie (opgeven telt als eliminatie, zie beneden).
 	var methode := "eliminatie"
 	if Rules.count_pawns_in_haven(s, winnaar_kant) >= s.rules.pawns_in_haven_to_win:
 		methode = "haven"
@@ -654,43 +694,38 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 		methode = "resign"
 	# Verliezen per type = geëlimineerde pionnen (voor het battlereport; onder
 	# het vol-team-model kosten die geen pool meer — de inzet doet dat).
-	var verliezen: Dictionary = {str(a): {"inf": 0, "cav": 0, "art": 0}, str(b): {"inf": 0, "cav": 0, "art": 0}}
+	var verliezen: Dictionary = {"1": {"inf": 0, "cav": 0, "art": 0}, "2": {"inf": 0, "cav": 0, "art": 0}}
 	for pawn in s.pawns.values():
 		if not pawn.is_eliminated:
 			continue
-		var eigenaar: String = str(a) if pawn.owner_id == Constants.PLAYER_1 else str(b)
+		var eigenaar: String = "1" if pawn.owner_id == Constants.PLAYER_1 else "2"
 		var sleutel: String = ["inf", "cav", "art"][pawn.unit_type]
 		verliezen[eigenaar][sleutel] = int(verliezen[eigenaar][sleutel]) + 1
 	# Vol-team-model: ingezette reinforcements = alle ooit-gespawnde pionnen =
 	# totaal pionnen van dit type - de startopstelling (comp_override).
 	var inzet: Dictionary = {}
-	if c.rules.vol_team_start:
-		inzet = {str(a): {"inf": 0, "cav": 0, "art": 0}, str(b): {"inf": 0, "cav": 0, "art": 0}}
-		var totaal: Dictionary = {str(a): [0, 0, 0], str(b): [0, 0, 0]}
+	if vol_team:
+		inzet = {"1": {"inf": 0, "cav": 0, "art": 0}, "2": {"inf": 0, "cav": 0, "art": 0}}
+		var totaal: Dictionary = {"1": [0, 0, 0], "2": [0, 0, 0]}
 		for pawn in s.pawns.values():
-			var eigenaar: String = str(a) if pawn.owner_id == Constants.PLAYER_1 else str(b)
+			var eigenaar: String = "1" if pawn.owner_id == Constants.PLAYER_1 else "2"
 			totaal[eigenaar][pawn.unit_type] += 1
-		for kant in [[a, Constants.PLAYER_1], [b, Constants.PLAYER_2]]:
+		for kant in [["1", Constants.PLAYER_1], ["2", Constants.PLAYER_2]]:
 			var comp: Array = s.doctrine_data_of(int(kant[1])).comp
 			for t in 3:
-				inzet[str(kant[0])][["inf", "cav", "art"][t]] = maxi(0, int(totaal[str(kant[0])][t]) - int(comp[t]))
+				inzet[kant[0]][["inf", "cav", "art"][t]] = maxi(0, int(totaal[kant[0]][t]) - int(comp[t]))
 	# CP-delta: eindsaldo - startsaldo, plus het winst-tarief (D13).
-	var winnaar_id: int = -1
-	if winnaar_kant == Constants.PLAYER_1:
-		winnaar_id = a
-	elif winnaar_kant == Constants.PLAYER_2:
-		winnaar_id = b
 	var cp_delta: Dictionary = {
-		str(a): int(s.cp.get(Constants.PLAYER_1, cp_a)) - cp_a,
-		str(b): int(s.cp.get(Constants.PLAYER_2, cp_b)) - cp_b,
+		"1": int(s.cp.get(Constants.PLAYER_1, cp_1)) - cp_1,
+		"2": int(s.cp.get(Constants.PLAYER_2, cp_2)) - cp_2,
 	}
-	if winnaar_id != -1:
+	if winnaar_kant == Constants.PLAYER_1 or winnaar_kant == Constants.PLAYER_2:
 		var tarief: int = 0
 		if methode == "haven":
 			tarief = int(s.rules.campaign.get("cp_haven", 8))
 		elif methode == "eliminatie":
 			tarief = int(s.rules.campaign.get("cp_eliminatie", 4))
-		cp_delta[str(winnaar_id)] = int(cp_delta[str(winnaar_id)]) + tarief
+		cp_delta[str(winnaar_kant)] = int(cp_delta[str(winnaar_kant)]) + tarief
 	# C15-buit in de campagne (7 september). In het duel groeit de reserve
 	# door buit en krimpt hij door spawns; de campagne boekt alleen de inzet
 	# af. Zonder de buit erbij te boeken zakt de campagnepool onder nul zodra
@@ -699,26 +734,75 @@ func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
 	# bezit" en de campagne muurvast stond). Spawnen is de enige uitgave en
 	# buit de enige inkomst, dus buit = eindreserve - startreserve + inzet.
 	var buit: Dictionary = {}
-	if c.rules.vol_team_start:
-		for kant in [[a, Constants.PLAYER_1], [b, Constants.PLAYER_2]]:
-			var sid: String = str(kant[0])
+	if vol_team:
+		for kant in [["1", Constants.PLAYER_1], ["2", Constants.PLAYER_2]]:
 			var kosten: int = 0
 			for t in 3:
-				kosten += int(inzet[sid][["inf", "cav", "art"][t]]) * s.spawn_kosten(t)
+				kosten += int(inzet[kant[0]][["inf", "cav", "art"][t]]) * s.spawn_kosten(t)
 			var pt: int = s.pool_total(int(kant[1])) - _duel_startpunten(s, int(kant[1])) + kosten
 			if pt > 0:
-				buit[sid] = pt
+				buit[kant[0]] = pt
+	return {"winnaar_kant": winnaar_kant, "methode": methode, "verliezen": verliezen,
+		"inzet": inzet, "cp_delta": cp_delta, "buit": buit, "cycli": s.cycle}
+
+
+## Een regel voor duels.jsonl (F7.1a, de data van het duel-orakel): de invoer
+## van het duel (facties, reserve per type, CP, honger) en de uitkomst per kant.
+static func duel_record(fa: int, fb: int, rules: RulesConfig, cp_a: int, cp_b: int,
+		u: Dictionary, ai: String, ms: int) -> Dictionary:
+	var pools: Dictionary = (rules.campaign as Dictionary).get("pools", {})
+	return {"fa": fa, "fb": fb, "ra": pools.get("1", {}), "rb": pools.get("2", {}),
+		"cpa": cp_a, "cpb": cp_b, "honger": rules.honger_vanaf_cyclus, "ai": ai,
+		"w": int(u.winnaar_kant), "m": String(u.methode), "cycli": int(u.cycli),
+		"inzet": u.inzet, "cpd": u.cp_delta, "buit": u.buit, "verl": u.verliezen, "ms": ms}
+
+
+## Vertaal een uitgespeelde duel-staat naar MATCH_RESULT + battlereport.
+## a = bord-P1, b = bord-P2; cp_a/cp_b = campagne-CP bij de start van het duel.
+## Gedeeld door de bot-duels én het mens-duel op het echte bord (F3.4b).
+func verwerk_duel_uitslag(idx: int, a: int, b: int, cp_a: int, cp_b: int,
+		s: GameState, winnaar_kant: int) -> bool:
+	# V0 (3 augustus): een duel kent alleen haven en eliminatie, dus er is geen
+	# "tiebreak"-default meer. Kwam er toch geen winnaar van het bord, dan is
+	# dat een fout in de uitputtingsklok en niet een uitslag die we stil moeten
+	# wegboeken.
+	if winnaar_kant == -1:
+		push_error("SoloDriver: duel %d zonder winnaar teruggekregen (V0: een duel kent geen gelijkspel)" % idx)
+		return false
+	return _boek_uitkomst(idx, a, b, duel_uitkomst(s, winnaar_kant, cp_a, cp_b, c.rules.vol_team_start))
+
+
+## Een duel-uitkomst (per kant "1"/"2", zie duel_uitkomst) boeken: het
+## battlereport in de feed en MATCH_RESULT door de reducer. Gedeeld door een
+## uitgespeeld duel en een getrokken duel uit het orakel.
+func _boek_uitkomst(idx: int, a: int, b: int, u: Dictionary) -> bool:
+	var winnaar_kant: int = int(u.winnaar_kant)
+	var ids := {"1": a, "2": b}
+	var methode: String = u.methode
+	var verliezen: Dictionary = {str(a): u.verliezen["1"], str(b): u.verliezen["2"]}
+	var inzet: Dictionary = {}
+	if not (u.inzet as Dictionary).is_empty():
+		inzet = {str(a): u.inzet["1"], str(b): u.inzet["2"]}
+	var cp_delta: Dictionary = {str(a): u.cp_delta["1"], str(b): u.cp_delta["2"]}
+	var buit: Dictionary = {}
+	for kant in u.buit:
+		buit[str(ids[kant])] = u.buit[kant]
+	var winnaar_id: int = -1
+	if winnaar_kant == Constants.PLAYER_1:
+		winnaar_id = a
+	elif winnaar_kant == Constants.PLAYER_2:
+		winnaar_id = b
 	duels_gespeeld += 1
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
-		"cp_delta": cp_delta, "inzet": inzet, "buit": buit, "cycli": s.cycle})
+		"cp_delta": cp_delta, "inzet": inzet, "buit": buit, "cycli": int(u.cycli)})
 	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta, inzet, buit), -1)
 
 
 ## Startreserve van een duel-kant in punten, uit de expliciete typed pool die
 ## duel_rules_voor meegaf: dezelfde omrekening als GameState.init_pools
 ## (soldaat 1 / ruiter 2 / kanon 3).
-func _duel_startpunten(s: GameState, kant: int) -> int:
+static func _duel_startpunten(s: GameState, kant: int) -> int:
 	var tabel = s.rules.campaign.get("pools", null)
 	if not (tabel is Dictionary) or not tabel.has(str(kant)):
 		return 0
@@ -743,28 +827,50 @@ func _speel_duel(idx: int, a: int, b: int) -> void:
 	var cp_a: int = c.cp_van(a)
 	var cp_b: int = c.cp_van(b)
 	var rules := duel_rules_voor(a, b, bot_duel_honger_vanaf)
+	if duel_modus == "orakel" and orakel != null:
+		var pools: Dictionary = (rules.campaign as Dictionary).get("pools", {})
+		var u: Dictionary = orakel.trek(int(c.spelers[a].doctrine), int(c.spelers[b].doctrine),
+			pools.get("1", {}), pools.get("2", {}), cp_a, cp_b, _rng.fork("orakel_%d" % _duel_teller))
+		if not u.is_empty():
+			bezig_met = ""
+			_boek_uitkomst(idx, a, b, u)
+			if duel_log != null:
+				duel_log.append(duel_record(int(c.spelers[a].doctrine), int(c.spelers[b].doctrine), rules,
+					cp_a, cp_b, u, "orakel", 0))
+			return
+		# Leeg orakel: dan toch echt spelen (de push_error staat in DuelOrakel.trek).
 	var seed_v: int = _rng.fork("duel_%d" % _duel_teller).randi_range(1, 1 << 30)
-	var eind_staat: GameState
-	var winnaar_kant: int
-	if duel_ai == "l1" or duel_ai == "l2":
-		var runner := AgentRunner.new(_maak_duel_agent(), _maak_duel_agent(),
-			int(c.spelers[a].doctrine), int(c.spelers[b].doctrine), seed_v, rules)
-		runner.max_steps = duel_max_steps
-		runner.run()
-		eind_staat = runner.state()
-		winnaar_kant = runner.winner
-	else:
-		var ai_script = AIEasyScript if duel_ai == "easy" else AIMediumScript
-		var runner := MatchRunner.new(ai_script.new(), ai_script.new(),
-			int(c.spelers[a].doctrine), int(c.spelers[b].doctrine), seed_v, rules)
-		runner.max_steps = duel_max_steps
-		while not runner.done:
-			runner.step()
-		eind_staat = runner.state()
-		winnaar_kant = runner.winner
+	var t0 := Time.get_ticks_msec()
+	var uit: Array = speel_duel_staat(duel_ai, int(c.spelers[a].doctrine), int(c.spelers[b].doctrine),
+		seed_v, rules, duel_max_steps)
+	var eind_staat: GameState = uit[0]
+	var winnaar_kant: int = int(uit[1])
+	var ms: int = Time.get_ticks_msec() - t0
 	bezig_met = ""
 	verwerk_duel_uitslag(idx, a, b, cp_a, cp_b, eind_staat, winnaar_kant)
+	if duel_log != null and winnaar_kant != -1:
+		duel_log.append(duel_record(int(c.spelers[a].doctrine), int(c.spelers[b].doctrine), rules,
+			cp_a, cp_b, duel_uitkomst(eind_staat, winnaar_kant, cp_a, cp_b, c.rules.vol_team_start),
+			duel_ai, ms))
 
 
-func _maak_duel_agent() -> Agent:
-	return AgentL2.new() if duel_ai == "l2" else AgentL1.new()
+## Speel een duel uit met bots van niveau `ai` ("l1"/"l2" via AgentRunner,
+## "easy"/"medium" via MatchRunner). Geeft [eindstaat, winnaar-kant]. Gedeeld
+## door de campagne en de datarun van de campagne-arena (F7.1a).
+static func speel_duel_staat(ai: String, fa: int, fb: int, seed_v: int, rules: RulesConfig,
+		max_steps: int) -> Array:
+	if ai == "l1" or ai == "l2":
+		var runner := AgentRunner.new(_duel_agent_voor(ai), _duel_agent_voor(ai), fa, fb, seed_v, rules)
+		runner.max_steps = max_steps
+		runner.run()
+		return [runner.state(), runner.winner]
+	var ai_script = AIEasyScript if ai == "easy" else AIMediumScript
+	var mr := MatchRunner.new(ai_script.new(), ai_script.new(), fa, fb, seed_v, rules)
+	mr.max_steps = max_steps
+	while not mr.done:
+		mr.step()
+	return [mr.state(), mr.winner]
+
+
+static func _duel_agent_voor(ai: String) -> Agent:
+	return AgentL2.new() if ai == "l2" else AgentL1.new()

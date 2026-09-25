@@ -1,0 +1,9 @@
+{
+  "soort": "duels",
+  "duels": 60,
+  "base_seed": 7000,
+  "duel_ai": "easy",
+  "honger": 10,
+  "max_steps": 3000,
+  "cp_max": 24
+}

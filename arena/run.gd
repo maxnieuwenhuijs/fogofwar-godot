@@ -47,6 +47,12 @@ func _ready() -> void:
 	if args.has("--fuzz") or args.has("--fuzz-selftest"):
 		_fuzz(args)
 		return
+	if args.has("--campagnetrain"):
+		_campagnetrain(args)
+		return
+	if args.has("--campagne"):
+		_campagne(args)
+		return
 	var config_pad := _arg(args, "--config", "res://arena/arena_configs/v42_matrix_l2.json")
 	var out_map := _arg(args, "--out", "res://results/run")
 	var seed_offset := int(_arg(args, "--seed-offset", "0"))
@@ -183,6 +189,39 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 ## F1.4 — fuzz-vangnet: `-- --fuzz [games] [seed]` (nachtrun) of
 ## `-- --fuzz-selftest` (sabotage-run: de checks MOETEN de ingebouwde
 ## mutatie vangen — test-de-tester). Repro's bij schendingen in results/fuzz/.
+## F7.1a: de campagne-arena (arena/campagne_arena.gd, plan in
+## docs/F7-campagnetrainer.md): volledige bot-campagnes of losse campagne-duels.
+func _campagne(args: PackedStringArray) -> void:
+	var config_pad := _arg(args, "--config", "res://arena/arena_configs/campagne_duels.json")
+	var out_map := _arg(args, "--out", "res://results/campagne")
+	var seed_offset := int(_arg(args, "--seed-offset", "0"))
+	var config = JSON.parse_string(FileAccess.get_file_as_string(config_pad))
+	if not (config is Dictionary):
+		push_error("Campagne-arena: config onleesbaar: %s" % config_pad)
+		get_tree().quit(1)
+		return
+	var uit: Dictionary = CampagneArena.run(config, out_map, seed_offset, _git_sha())
+	print("[CAMPAGNE] klaar: %d campagnes, %d duels -> %s (%.1f s)" % [
+		int(uit.campagnes), int(uit.duels), String(uit.pad), float(uit.duur)])
+	get_tree().quit(0)
+
+
+## F7.2b: de campagnetrainer (scripts/training/campagne_trainer.gd). Via
+## preload: dan werkt hij ook voordat de editor de klasse heeft ingeschreven.
+func _campagnetrain(args: PackedStringArray) -> void:
+	var config_pad := _arg(args, "--config", "res://arena/arena_configs/campagne_train.json")
+	var out_map := _arg(args, "--out", "res://results/campagnetrain_%s" % Time.get_datetime_string_from_system().replace(":", "").replace("-", ""))
+	var config = JSON.parse_string(FileAccess.get_file_as_string(config_pad))
+	if not (config is Dictionary):
+		push_error("Campagnetrainer: config onleesbaar: %s" % config_pad)
+		get_tree().quit(1)
+		return
+	var uit: Dictionary = preload("res://scripts/training/campagne_trainer.gd").train(config, out_map, _git_sha())
+	print("[TRAIN] %d generaties, %d adopties -> %s" % [int(uit.get("generaties", 0)),
+		int(uit.get("adopties", 0)), out_map])
+	get_tree().quit(0)
+
+
 func _fuzz(args: PackedStringArray) -> void:
 	var selftest := args.has("--fuzz-selftest")
 	var vlag := "--fuzz-selftest" if selftest else "--fuzz"

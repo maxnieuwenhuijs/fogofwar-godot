@@ -1,5 +1,61 @@
 # Fog of War — Work In Progress & Context
 
+## 25 september -- F7: de campagnetrainer (hoe bots handelen in het menu) + hub-saldi
+
+Max: "ook hier moeten we een campagne trainer strategie maken voor de bots, hoe
+te handelen in de campaign menu". Plan: `docs/F7-campagnetrainer.md`.
+
+- **Gemeten:** een `easy`-campagneduel duurt ~40 s (L2 ~48 s, dus geen winst),
+  een headless campagne met 16 bots en echte duels ~10 minuten (584 s, 19
+  duels). Trainen op echte duels is onhaalbaar.
+- **F7.1a campagne-arena** (`arena/campagne_arena.gd` achter `--campagne` in
+  `arena/run.gd`, launcher `campagne_arena.ps1 [-Duels N]`, rapport
+  `tools/campagne/rapport.py`): volledige bot-campagnes met per team eigen
+  gewichten of verstand (`campagne_hand.json`, `campagne_validatie.json`) en
+  losse duels over de invoerruimte (`campagne_duels.json`: factiepaar,
+  reserve per soort, CP). Beide schrijven `duels.jsonl`. De duel-uitkomst is
+  uit `verwerk_duel_uitslag` getild: `SoloDriver.duel_uitkomst` (per kant),
+  `duel_record`, `duel_regels`, `speel_duel_staat`, `_boek_uitkomst`.
+- **F7.1b duel-orakel** (`scripts/training/duel_orakel.gd`,
+  `tools/campagne/maak_orakel.py` -> `data/duel_orakel.json`): trekt een ECHT
+  gespeeld duel uit hetzelfde factiepaar met ongeveer hetzelfde reserve- en
+  CP-verschil (emmers van 3 punten en 6 CP, steeds wijder tot er 8 zijn). De
+  inzet schaalt als AANDEEL van de reserve in punten (eerst schaalde hij per
+  soort: dan raakte de verliezer nooit leeg en duurden campagnes 100+ rondes).
+  `SoloDriver.duel_modus = "orakel"`: 10 campagnes met 16 bots in 0,7 s,
+  3-6 rondes en 15-17 duels (echt: 7 rondes, 19 duels). Het script meet op
+  een controle-set de Brier-score tegen een model dat alleen het factiepaar
+  kent. Nog GEEN echte data: dat is de datarun hieronder.
+- **F7.2a verstand** (`CampaignAgent.verstand`, `VERSTAND`): w_matchup (de
+  raad kiest het paar met de winkans uit het orakel), w_don_nood (geef waar
+  een gift de winkans het meest optilt), w_geef (vrijgevigheid x (1+w), de
+  gierigaard blijft 0), w_houden (houd meer als je zelf vecht), w_ruil (ruil
+  CP boven een reserve; bots ruilden tot nu toe nooit). Leeg verstand = alles
+  als voorheen. Bots lezen voorraad en CP uit het publieke grootboek
+  (`saldo_uit_ledger`); de cview draagt nu ook de factie (openbaar).
+  `data/campagne_verstand.json` (ontbreekt nog) wordt bij elke campagne
+  geladen.
+- **F7.2b trainer** (`scripts/training/campagne_trainer.gd`, `--campagnetrain`,
+  `campagne_arena.ps1`/`campagne_train.ps1`, paneelkader "Campagnebots"):
+  gespiegelde ES over de vijf knoppen, kandidaat-team tegen kampioen-team op
+  het orakel (teams gewisseld per seed), adoptie na een controle op verse
+  seeds (>= 53%), elke 5 generaties de check tegen 5 generaties terug en
+  tegen de handbots.
+- **Hub (Max):** onder elk schild versterkingen (tent) en CP (medaille); van de
+  vijand "?" (D12, doden zien alles). De tijdlijn en de chat lopen als een
+  chat: oud boven, nieuw onder, het venster scrolt mee. De loting staat nu
+  voor de fasewissel die ze veroorzaakt.
+- **Gevonden, niet opgelost:** `CState.pool_totaal_van` telt STUKS, terwijl de
+  reserve sinds C11 in PUNTEN rekent en per soort negatief kan staan (ruiters
+  gespawnd uit soldatenpunten). De uitvalcheck (C3) gebruikt die stukstelling:
+  wie op 0 punten staat kan "actief" blijven, of andersom. Rapport en hub
+  tellen punten. Beslissing voor Max (regel C3/C11).
+- **Voor Max, in deze volgorde, als de duel-training klaar is:** paneel
+  "Campagne-duels meten" (120 minuten geeft ~5.500 duels met 31 processen),
+  dan "Campagnebots trainen" (60 minuten of meer), dan de kampioen op echte
+  duels: `.\campagne_arena.ps1 -Config arena/arena_configs/campagne_validatie.json`
+  (getraind tegen hand, teams gewisseld; `rapport.py` geeft de winkans).
+
 ## 25 september -- Quick chat volgens het campagneontwerp
 
 Max: "de quick chats slaan niet echt op wat we hebben bedacht voor de campagne

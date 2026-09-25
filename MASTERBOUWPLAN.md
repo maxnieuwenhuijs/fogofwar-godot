@@ -1005,6 +1005,16 @@ server-logs van dat event.
   (drama-metriek), burgeroorlog-frequentie + vrijloting-effect, poolfactor-validatie (kampioen houdt
   10–25% pool over). Data mag nu alsnog naar `arena_runs`/`arena_games`-tabellen als de rapportage-jobs dat
   vraagt (B10). **CHECK:** één nachtrun produceert het campagne-dashboard.
+- ◐ **F7.1a (25 september):** de campagne-arena staat (`arena/campagne_arena.gd`,
+  `campagne_arena.ps1`, `tools/campagne/rapport.py`): bot-campagnes met per team
+  eigen gewichten, duel-log per duel, metrics (winkans per team, rondes, duels,
+  burgeroorlog, testament naar de vijand, donaties, ruil, kampioenpool). Het
+  campagne-dashboard volgt als er data is.
+- ◐ **F7.2 (25 september, `docs/F7-campagnetrainer.md`):** gebouwd, wacht op
+  data. Duel-orakel (`DuelOrakel`, `maak_orakel.py`), verstand in
+  `CampaignAgent` (matchup, gift waar hij telt, geven, houden, ruilen), trainer
+  (`--campagnetrain`, `campagne_train.ps1`, paneel). Eerst de datarun, dan
+  trainen, dan nameten op echte duels.
 - ☐ **F7.2** Campagnegewichten-evolutie (bouwplan §7.4: populatie 24/doctrine, round-robin met
   kleurwissel + vaste seeds, top 25% op Elo, mutatie+crossover; reproduceerbaar via `(git_sha,
   rules_config, seed)`), apart van matchgewichten. **CHECK:** kampioen gen N verslaat gen N−5 (>55%) op

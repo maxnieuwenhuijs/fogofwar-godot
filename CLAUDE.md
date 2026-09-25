@@ -180,6 +180,18 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 
 ## Commando's
 
+- **Campagnetrainer (F7.2, 25 september, `docs/F7-campagnetrainer.md`):** hoe
+  bots handelen in het campagnemenu, los van de duelgewichten. Duel-data:
+  `.\campagne_arena.ps1 [-Duels N]` (`--campagne` in arena/run.gd, config
+  `campagne_duels.json`), orakel: `python tools/campagne/maak_orakel.py
+  results/campagne_*` -> `data/duel_orakel.json`, trainen:
+  `.\campagne_train.ps1 -Minuten 60` (`--campagnetrain`) ->
+  `data/campagne_verstand.json` (apart committen), nameten op echte duels:
+  `campagne_arena.ps1 -Config arena/arena_configs/campagne_validatie.json`,
+  rapport: `python tools/campagne/rapport.py results/<run>`. Paneelkader
+  "Campagnebots". Leeg verstand = de bots van juli, byte-identiek. Nieuwe
+  scripts in de arena via preload, niet via class_name (headless kent een
+  nieuwe klasse pas als de editor hem inschreef).
 - **Campaign Hub (23 september, pdf `Campaign_hub` + map
   `Campaign_HUB_UI`):** `scripts/ui/campaign/campaign_hub.gd` bouwt het
   staande frame van de ontwerper in ontwerp-eenheden (564 x 981) maal S =

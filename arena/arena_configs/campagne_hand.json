@@ -1,0 +1,20 @@
+{
+  "soort": "campagnes",
+  "campagnes": 1,
+  "base_seed": 5000,
+  "spelers": 16,
+  "duel_ai": "easy",
+  "honger": 10,
+  "max_steps": 3000,
+  "teams": [
+    {
+      "naam": "hand",
+      "gewichten": {}
+    },
+    {
+      "naam": "hand",
+      "gewichten": {}
+    }
+  ],
+  "wissel": false
+}

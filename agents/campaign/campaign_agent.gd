@@ -20,10 +20,89 @@ var rng: SeededRng = SeededRng.new(7)
 ## toezegging; zonder toezeggingen trekt hij niets extra, dus zonder mens
 ## speelt alles precies als voorheen.
 var toezeggingen: Dictionary = {}
+## F7.2a verstand (docs/F7-campagnetrainer.md §2): getrainde gewichten die voor
+## alle bots gelden, bovenop het karakter. Leeg = alles speelt precies als
+## voorheen (geen extra trekkingen, dezelfde keuzes). Sleutels (zie VERSTAND):
+##   w_matchup   de raad kiest het PAAR, met de winkans uit het duel-orakel erbij
+##   w_don_nood  geef aan de vechter wiens winkans een gift het meest optilt
+##   w_geef      geef naar verhouding meer of minder: vrijgevigheid x (1 + w_geef),
+##               dus de gierigaard (0) blijft gierig: karakter blijft karakter
+##   w_houden    houd meer voor jezelf als je deze ronde zelf vecht
+##   w_ruil      ruil CP boven een reserve om in versterkingen (0 = nooit)
+var verstand: Dictionary = {}
+## Het duel-orakel voor de winkans (DuelOrakel; null = die termen vallen weg).
+var orakel = null
+
+## De sleutels van het verstand met hun grenzen (voor de trainer).
+const VERSTAND := {
+	"w_matchup": [-2.0, 4.0],
+	"w_don_nood": [0.0, 4.0],
+	"w_geef": [-0.9, 2.0],
+	"w_houden": [0.0, 1.0],
+	"w_ruil": [0.0, 1.0],
+}
+const VERSTAND_PAD := "res://data/campagne_verstand.json"
+static var _verstand_cache = null
 
 
 func _w(sleutel: String, standaard: float = 0.0) -> float:
 	return float(profiel.get(sleutel, standaard))
+
+
+func _v(sleutel: String) -> float:
+	return float(verstand.get(sleutel, 0.0))
+
+
+## Het getrainde verstand uit data/campagne_verstand.json ({} als het er niet
+## is: dan spelen de bots met alleen hun karakter).
+static func laad_verstand(pad: String = VERSTAND_PAD) -> Dictionary:
+	if _verstand_cache != null and pad == VERSTAND_PAD:
+		return _verstand_cache
+	var uit := {}
+	if FileAccess.file_exists(pad):
+		var data = JSON.parse_string(FileAccess.get_file_as_string(pad))
+		if data is Dictionary and data.get("gewichten") is Dictionary:
+			uit = data.gewichten
+	if pad == VERSTAND_PAD:
+		_verstand_cache = uit
+	return uit
+
+
+## Saldo van eender wie uit het publieke grootboek: voorraad per soort en CP.
+static func saldo_uit_ledger(cview: Dictionary, speler: int) -> Dictionary:
+	var pool := {"inf": 0, "cav": 0, "art": 0}
+	var cp := 0
+	for e in cview.ledger:
+		if int(e.speler) == speler:
+			pool.inf += int(e.inf)
+			pool.cav += int(e.cav)
+			pool.art += int(e.art)
+			cp += int(e.get("cp", 0))
+	return {"pool": pool, "cp": cp}
+
+
+## De reserve die mee het duel in gaat, zoals de driver hem bouwt
+## (_duel_reserve: per soort, samen hooguit `cap` stuks), extra geld erbij.
+static func duel_reserve(pool: Dictionary, cap: int = 15, extra_inf: int = 0) -> Dictionary:
+	var ruimte := cap
+	var uit := {"inf": 0, "cav": 0, "art": 0}
+	for sleutel in ["inf", "cav", "art"]:
+		var bezit: int = maxi(0, int(pool.get(sleutel, 0)) + (extra_inf if sleutel == "inf" else 0))
+		var n: int = mini(bezit, ruimte)
+		uit[sleutel] = n
+		ruimte -= n
+	return uit
+
+
+## Winkans van `wie` tegen `tegen` volgens het orakel, met `extra` soldaten
+## bij `wie` (een gift). 0,5 zonder orakel.
+func winkans(cview: Dictionary, wie: int, tegen: int, extra: int = 0) -> float:
+	if orakel == null:
+		return 0.5
+	var a: Dictionary = saldo_uit_ledger(cview, wie)
+	var b: Dictionary = saldo_uit_ledger(cview, tegen)
+	return orakel.winkans(int(cview.spelers[str(wie)].doctrine), int(cview.spelers[str(tegen)].doctrine),
+		duel_reserve(a.pool, 15, extra), duel_reserve(b.pool), maxi(0, int(a.cp)), maxi(0, int(b.cp)))
 
 
 ## Publieke boekhouding: pool-totaal van eender wie, uit het cview-ledger.
@@ -71,24 +150,40 @@ func kies_nominatie(cview: Dictionary) -> Dictionary:
 	# Vijand: zwakste (kleine pool) vs de tank laten bloeden (grote pool).
 	var beste_vijand: int = vijand_kandidaten[0]
 	var beste_vs: float = -1e18
+	var vs_score: Dictionary = {}
 	for kandidaat in vijand_kandidaten:
 		var pool := float(pool_uit_ledger(cview, kandidaat))
 		var score: float = _w("w_zwakste_vijand") * -pool + _w("w_tank") * pool \
 			+ rng.randf() * temp * 10.0
+		vs_score[kandidaat] = score
 		if score > beste_vs:
 			beste_vs = score
 			beste_vijand = kandidaat
 	# Eigen: sterkste sturen, zelf gaan (berserker), risico-afslag bij armoede.
 	var beste_eigen: int = eigen_kandidaten[0]
 	var beste_es: float = -1e18
+	var es_score: Dictionary = {}
 	for kandidaat in eigen_kandidaten:
 		var pool := float(pool_uit_ledger(cview, kandidaat))
 		var score: float = _w("w_sterkste_eigen") * pool + rng.randf() * temp * 10.0
 		if kandidaat == speler_id:
 			score += _w("w_zelf") * 20.0 - _w("risico_afslag") * maxf(0.0, 25.0 - pool)
+		es_score[kandidaat] = score
 		if score > beste_es:
 			beste_es = score
 			beste_eigen = kandidaat
+	# Verstand (F7.2a): kies het PAAR, met de winkans uit het orakel erbij.
+	var w_m := _v("w_matchup")
+	if w_m != 0.0 and orakel != null:
+		var beste_paar: float = -1e18
+		for e in eigen_kandidaten:
+			for v in vijand_kandidaten:
+				var score: float = float(es_score[e]) + float(vs_score[v]) \
+					+ w_m * 20.0 * (winkans(cview, e, v) - 0.5)
+				if score > beste_paar:
+					beste_paar = score
+					beste_eigen = e
+					beste_vijand = v
 	# Toegezegd in de quick chat (Stuur X!, Pak X!): nakomen of niet.
 	var stuur := _nagekomen("stuur", eigen_kandidaten)
 	if not stuur.is_empty():
@@ -105,6 +200,14 @@ func kies_donaties(cview: Dictionary) -> Array:
 	var vrijgevigheid: float = _w("vrijgevigheid")
 	if vrijgevigheid <= 0.01:
 		return []
+	# Verstand: naar verhouding meer of minder geven, en meer houden als je
+	# zelf vecht. Met een leeg verstand verandert hier niets.
+	vrijgevigheid = clampf(vrijgevigheid * (1.0 + _v("w_geef")), 0.0, 1.0)
+	if _v("w_houden") > 0.0:
+		for duel in cview.duels:
+			if int(duel.p1) == speler_id or int(duel.p2) == speler_id:
+				vrijgevigheid *= clampf(1.0 - _v("w_houden"), 0.0, 1.0)
+				break
 	var mijn_team: int = int(cview.spelers[str(speler_id)].team)
 	var doelen: Array = []
 	for duel in cview.duels:
@@ -113,6 +216,16 @@ func kies_donaties(cview: Dictionary) -> Array:
 			if id != speler_id and int(cview.spelers[str(id)].team) == mijn_team \
 					and String(cview.spelers[str(id)].status) == "actief":
 				doelen.append(id)
+	# Verstand: de vechter wiens winkans een gift het meest optilt eerst
+	# (w_don_nood weegt dat tegen de volgorde van de duels).
+	var w_nood := _v("w_don_nood")
+	if w_nood > 0.0 and orakel != null and doelen.size() > 1:
+		var gift: int = maxi(1, int(floor(int(cview.eigen_pool.inf) * vrijgevigheid)))
+		var waarde: Dictionary = {}
+		for i in doelen.size():
+			var f: int = int(doelen[i])
+			waarde[f] = w_nood * 100.0 * _gift_winst(cview, f, gift) - float(i)
+		doelen.sort_custom(func(a, b) -> bool: return float(waarde[a]) > float(waarde[b]))
 	# Toegezegd in de quick chat (Versterking nodig!, Doneer aan X!): die
 	# teamgenoot eerst, ook als hij deze ronde niet vecht.
 	var beloofd: Array = []
@@ -152,6 +265,37 @@ func kies_donaties(cview: Dictionary) -> Array:
 	if inf + cav + art + cp_gift == 0:
 		return []
 	return [CActions.make_donate(doel, inf, cav, art, cp_gift)]
+
+
+## Wat `gift` soldaten extra aan de winkans van vechter `f` doen (tegen zijn
+## tegenstander van deze ronde); 0 als hij niet vecht.
+func _gift_winst(cview: Dictionary, f: int, gift: int) -> float:
+	for duel in cview.duels:
+		if bool(duel.get("klaar", false)):
+			continue
+		var tegen: int = -1
+		if int(duel.p1) == f:
+			tegen = int(duel.p2)
+		elif int(duel.p2) == f:
+			tegen = int(duel.p1)
+		if tegen >= 0:
+			return winkans(cview, f, tegen, gift) - winkans(cview, f, tegen)
+	return 0.0
+
+
+## F7.2a: CP ruilen voor versterkingen (C11-ruil, in het donatievenster).
+## Alleen met verstand (w_ruil > 0): wat boven een reserve uitkomt, in hele
+## ruilen van `koers` CP. De reserve krimpt naarmate w_ruil groeit (24 CP bij
+## een klein beetje, 0 bij 1).
+func kies_ruil(cview: Dictionary, koers: int) -> int:
+	var w := _v("w_ruil")
+	if w <= 0.0 or koers <= 0:
+		return 0
+	var reserve: int = int(round(24.0 * clampf(1.0 - w, 0.0, 1.0)))
+	var over: int = int(cview.eigen_cp) - reserve
+	if over < koers:
+		return 0
+	return (over / koers) * koers
 
 
 ## Testament: max helft, max 2 ontvangers; loyaliteit bepaalt team of vijand.

@@ -1,0 +1,12 @@
+{
+  "minuten": 60,
+  "orakel": "res://data/duel_orakel.json",
+  "kandidaten": 8,
+  "seeds": 60,
+  "controle_seeds": 200,
+  "base_seed": 900000,
+  "sigma": 0.35,
+  "spelers": 16,
+  "adoptie": 0.53,
+  "uit": "res://data/campagne_verstand.json"
+}
