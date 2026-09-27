@@ -1,5 +1,23 @@
 # Fog of War — Work In Progress & Context
 
+## 27 september (middag) -- factiezoeker voor de Leeuw + controlemeting
+
+- Zoeker (08:29-12:55, 6 generaties, achtergrond nacht_20260927_0559):
+  voorstel Leeuw budget 8 -> 9, comp [12,4,2] -> [11,5,1] (startcompensatie
+  +6 pt / +5 CP blijft). `results/facties_20260927_082952/voorstel.json`.
+- Controle op de volle matrix (4320 partijen per variant, tegen de
+  nachtmatrix van 27 september):
+  - `leeuw_zoeker` (budget 9 + [11,5,1]): Beer 54,7, Varken 53,1, Wolf
+    51,0, Krokodil 48,3, **Leeuw 46,5**, Muis 46,5. **Band 46,5-54,7, 8,2
+    pp**, de smalste tot nu toe. Muis zakt 6,4.
+  - `leeuw_1151` (alleen de ruil, budget 8): **Leeuw 32,2** (-8,7). Het
+    kanon eruit kost de Leeuw veel (zijn perk is artilleriedracht 7); de
+    ruil werkt alleen samen met het extra budget.
+- NIET aangenomen: wacht op Max. Aannemen = C27 in het doctrines-blok,
+  CHANGELOG, goldens + golden_sims + uispel opnieuw.
+- 19:56 een TRAINING-NACHT gestart (Max: "start nog een master run") via
+  wacht_en_start + WMI, op de HUIDIGE regels (Leeuw budget 8, [12,4,2]).
+
 ## 27 september -- de campagne-UI kritisch nagelopen en strakker gemaakt
 
 Max: "kijk nog eens kritisch naar de hele ui campagne kan je het nog beter
