@@ -44,9 +44,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 24 september (C24 + C25 + C26, getrainde bots van 23 september,
-  4320 partijen): band 44,8-54,1%, spreiding 9,3 pp** (Leeuw 44,8 onder,
-  Muis 54,1 boven). Knoppen gemeten: versterkingspunt ~0,6 pp, start-CP
+  **Stand 27 september (C24 + C25 + C26, bots na twee trainingsnachten op
+  die regels, 2 x 3240 partijen): band 40,6-53,6%, spreiding 13 pp**
+  (Leeuw 40,3/40,9 onder, Beer 52,8/54,4 boven; Muis 53,8/52,9, Wolf
+  53,9/52,2, Krokodil 51,8/50,6, Varken 47,5/49,1). De anderen leerden
+  bij, de Leeuw haalde een adoptie in twee nachten: hij zakte 4 pp.
+  Daarvoor, 24 september met de bots van 23 september (4320 partijen):
+  band 44,8-54,1%, spreiding 9,3 pp (Leeuw 44,8 onder, Muis 54,1 boven). Knoppen gemeten: versterkingspunt ~0,6 pp, start-CP
   ~0,36 pp. Na C25: band 41,2-53,4% (12,2 pp);
   daarvoor met getrainde bots 36,6-59,2 (21 september). Schaal van de knoppen,
   23 september gemeten: kaart erbij ~23 pp, versterkingspunt ~0,6, ruiter
@@ -733,8 +737,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `9e0c375b…` geven (213 acties, cyclus 5, sinds
-  24 september, C26: de Leeuw +6 versterkingen en 5 CP; daarvoor `6b820e3f…`
+  eind-zobrist; seed 777 moet `4df2aeed…` geven (62 acties, cyclus 2, sinds
+  27 september: de Wolf-gewichten van de trainingsnachten van 25 en 26
+  september); daarvoor `9e0c375b…` (213, 5) sinds 24 september, C26: de
+  Leeuw +6 versterkingen en 5 CP; daarvoor `6b820e3f…`
   na C25, het Varken [12,4,2], en `b9c2ee75…` na C24,
   de Leeuw met 4 versterkingspunten; was `90650e1e…`
   (213, 5) sinds 21 september: de bot speelt met de Wolf-gewichten van de trainingsrun van

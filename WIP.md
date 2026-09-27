@@ -1,5 +1,28 @@
 # Fog of War — Work In Progress & Context
 
+## 27 september -- twee trainingsnachten op C24+C25+C26: de Leeuw zakt weer
+
+- **25 september** (07:55-16:03, via WMI): Varken, Beer, Wolf elk 1
+  adoptie, Muis/Leeuw/Krokodil 0, geen afgekapte partijen (noodstop 2500
+  werkt). Matrix erna `results/nacht_20260925_1603_v42_matrix_l2`.
+- **26 september** (Max, 22:06-05:59): Leeuw 1 (gen 21, verificatie 8,9
+  tegen 7,8), Wolf 1, rest 0. Matrix `results/nacht_20260927_0559_v42_matrix_l2`.
+- Gewichten apart gecommit (0163d09).
+- **Band** (25 / 27 sept): Beer 52,8/54,4, Muis 53,8/52,9, Wolf 53,9/52,2,
+  Krokodil 51,8/50,6, Varken 47,5/49,1, **Leeuw 40,3/40,9**. Samen
+  40,6-53,6, 13 pp; op 24 september met de oude bots 44,8-54,1 (9,3 pp).
+  De anderen leerden bij, de Leeuw nauwelijks: zijn trainer draait de
+  meeste generaties (20+ per nacht, korte partijen) maar vindt niets. Alle
+  facties zitten op een plateau (Muis en Krokodil twee nachten 0).
+- `-- simcheck` 0 afwijkingen (easy/medium gebruiken de getrainde
+  gewichten niet). `-- uispel 777` = `4df2aeed…` (62 acties, cyclus 2;
+  was `9e0c375b…`): de Wolf heeft twee keer geadopteerd.
+- Volgende knop voor de Leeuw: versterkingspunt ~0,6 pp, start-CP ~0,36
+  pp; 4 pp dicht je daar niet mee. Een kaart erbij is ~23 pp (te grof).
+  Kandidaten: een ruiter erbij (~18 pp per ruiter volgens de oude meting,
+  dus eerder een halve stap via een ruil kanon -> ruiter) of een
+  factiezoeker-run gericht op de Leeuw.
+
 ## 25 september -- varken-levering nagekeken: het ene probleem was een vals alarm
 
 Max plakte de uitvoer van `verwerk_levering.py` op `assets/new upload
