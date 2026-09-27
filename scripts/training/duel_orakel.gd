@@ -160,6 +160,7 @@ func trek(fa: int, fb: int, pool_a: Dictionary, pool_b: Dictionary, cp_a: int, c
 			"2": _inzet(rij, K_INZET_B, K_RB, pool_b, int(buit.get("2", 0)))},
 		# Je kunt niet meer CP kwijtraken dan je had.
 		"cp_delta": {"1": maxi(-cp_a, int(rij[K_CPD_A])), "2": maxi(-cp_b, int(rij[K_CPD_B]))},
+		"reserve": {"1": punten(pool_a), "2": punten(pool_b)},
 		"buit": buit,
 	}
 

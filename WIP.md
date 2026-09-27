@@ -1,5 +1,69 @@
 # Fog of War — Work In Progress & Context
 
+## 27 september -- de campagne-UI kritisch nagelopen en strakker gemaakt
+
+Max: "kijk nog eens kritisch naar de hele ui campagne kan je het nog beter
+maken en strakker?" Eerst elke toestand gefotografeerd met een nieuwe
+fixture (`-- shot campaign_hub [seed] [modus] [orakel=<pad>]`,
+`tools/hub_shot.gd`, 18 modi; met een orakel spoelt hij in seconden door),
+dan per plaatje nagelopen. Wat er mis was en wat het nu is:
+
+- **Hoofdknoppen vielen onder de vouw** (fasepaneel scrolde, met de grijze
+  standaardbalk). Nu een vaste voet `FaseVoet` onder het paneel: NAAR HET
+  BORD, KLAAR, NALATEN AAN ..., NIEUWE CAMPAGNE staan altijd in beeld;
+  bijzaken (blijven, niets nalaten, de andere paren) zijn tekstlinks.
+  Overloop toont een dunne inktlijn in plaats van de grijze balk.
+- **Tijdlijn stond seconden leeg** bij binnenkomst (de onderste kaartjes
+  kwamen tot 4 s later): nu een golf van hooguit 0,8 s.
+- **Duel**: was een lange zin met em-dash, "Blijf in de hub" groter dan de
+  hoofdknop, geen aftelling, zeven keer "nu op het bord". Nu JOUW DUEL,
+  jij tegen hem gespiegeld (schild, naam, factie, versterkingen/CP), een
+  regel uitleg, de rode knop met een aftelbalk van 2,5 s; de paren in een
+  eigen venster (`_toon_paren`).
+- **Testament**: was een OptionButton "Piet (team 0)" zonder te zien wat je
+  nalaat. Nu "de helft van je bezit" (exact de regel van de reducer,
+  `testament_fractie`) met een pijl naar je erfgenaam, en NALATEN AAN
+  <naam>. De erfgenaam kies je zoals in de raad: tik een schild in de
+  kolommen (gouden ring) of het schild in het paneel (volgende); eigen team
+  eerst, de vijand mag ook. Een raster met alle kandidaten liep bij 8+
+  spelers over.
+- **Burgeroorlog**: de BracketView van de veldtafel is weg (hij toonde elk
+  paar twee keer: `c.bracket` en `duels_deze_ronde` zijn dezelfde paren). Nu
+  BURGEROORLOG: JOUW DUEL met "Nog in de strijd: ...", of als jij niet aan
+  zet bent de paren van de knock-outronde.
+- **Donaties**: per teamgenoot zijn saldo en "kreeg x/10 · y/3 CP", de
+  plusjes uit bij de cap of als je niets hebt; KLAAR is de rode hoofdknop.
+- **Slagrapport-kaartje** telde gevallen pionnen ("-33"), vooral het
+  startleger dat elk duel terugkomt. Nu het netto reserve-verlies (inzet
+  min buit, punten) en drie figuurtjes voor het deel van de reserve; de
+  driver en het orakel geven daarvoor `reserve` mee in de uitkomst. Het
+  venster is nu twee kolommen (schild, WINNAAR, reserve ingezet, buit, CP,
+  gesneuveld) met de winmethode in woorden.
+- **Einde**: kampioen met de samenvatting ernaast en de top drie op een rij.
+- **Lid-venster, doelkeuze, uitleg**: het lid toont factie, stand, tegen
+  wie hij vecht en tent/medaille/ster ("?" voor de vijand, D12); "WIE
+  STUREN WE?" in plaats van "STUUR ...!"; de uitleg is zes blokjes met een
+  icoon in plaats van een lap tekst. Quick-chat-iconen staan niet meer
+  onder de hoekbeslagen. JIJ staat bovenop je eigen schild; de zandloper
+  draait zolang de bots werken.
+- **Keuzeschermen** (factie, hervatten, laden) waren nog de veldtafel van
+  juli: nu in de stijl van de hub (`_keuze_scherm`), gecentreerd.
+- **Grootboek**: de tent telde stukken (9) waar de hub punten toont (13);
+  nu overal versterkingspunten. Team als "jouw team"/"vijand" in blauw en
+  rood met de schilden van de hub. Bruno stond er twee keer in: 15 namen
+  voor 16 spelers (`Personalities.NAMEN` heeft er nu 20; de eerste 15 zijn
+  gelijk, dus bestaande campagnes veranderen alleen de dubbele Bruno).
+- Em-dashes uit de campagneteksten; 25 dode sleutels uit `strings.csv`, 31
+  nieuwe voor de panelen, de uitleg en het grootboek.
+
+Checks: `tests.ps1` 2531 geslaagd, 0 fout; alle 18 modi van
+`-- shot campaign_hub 42 <modus> orakel=<14 duels>` 0 fouten, plaatjes
+nagekeken. Voor/na-vel: `campagne_ui_voor_na.png` in de sessie-scratchpad
+(niet in git).
+
+Open voor Max (niet aangeraakt, is een regelvraag): `pool_totaal_van` telt
+voor de C3-eliminatie nog stukken, niet punten.
+
 ## 27 september -- twee trainingsnachten op C24+C25+C26: de Leeuw zakt weer
 
 - **25 september** (07:55-16:03, via WMI): Varken, Beer, Wolf elk 1

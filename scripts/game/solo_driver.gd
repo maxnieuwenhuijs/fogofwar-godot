@@ -742,8 +742,12 @@ static func duel_uitkomst(s: GameState, winnaar_kant: int, cp_1: int, cp_2: int,
 			var pt: int = s.pool_total(int(kant[1])) - _duel_startpunten(s, int(kant[1])) + kosten
 			if pt > 0:
 				buit[kant[0]] = pt
+	# De reserve waarmee elke kant het duel in ging (punten): het kaartje in de
+	# tijdlijn toont welk deel ervan verloren ging (27 september).
+	var reserve: Dictionary = {"1": _duel_startpunten(s, Constants.PLAYER_1),
+		"2": _duel_startpunten(s, Constants.PLAYER_2)}
 	return {"winnaar_kant": winnaar_kant, "methode": methode, "verliezen": verliezen,
-		"inzet": inzet, "cp_delta": cp_delta, "buit": buit, "cycli": s.cycle}
+		"inzet": inzet, "cp_delta": cp_delta, "buit": buit, "cycli": s.cycle, "reserve": reserve}
 
 
 ## Een regel voor duels.jsonl (F7.1a, de data van het duel-orakel): de invoer
@@ -793,9 +797,11 @@ func _boek_uitkomst(idx: int, a: int, b: int, u: Dictionary) -> bool:
 	elif winnaar_kant == Constants.PLAYER_2:
 		winnaar_id = b
 	duels_gespeeld += 1
+	var reserve: Dictionary = u.get("reserve", {})
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
-		"cp_delta": cp_delta, "inzet": inzet, "buit": buit, "cycli": int(u.cycli)})
+		"cp_delta": cp_delta, "inzet": inzet, "buit": buit, "cycli": int(u.cycli),
+		"reserve": {str(a): int(reserve.get("1", 0)), str(b): int(reserve.get("2", 0))}})
 	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta, inzet, buit), -1)
 
 

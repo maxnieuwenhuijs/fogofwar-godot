@@ -131,7 +131,11 @@ func _report(e: Dictionary, tijd: String) -> Control:
 	return kaart.wortel
 
 
-## Een kant van het slagrapport: portret met daaronder -N en drie figuurtjes.
+## Een kant van het slagrapport: portret, daaronder wat het duel hem aan
+## campagne-reserve kostte (ingezet min buit, in punten) en drie figuurtjes
+## voor het deel van zijn reserve dat verloren ging. Het veldleger telt niet
+## mee: dat staat elk duel weer vol op het bord (C10). Oude rapporten zonder
+## reserve tonen de gesneuvelde pionnen.
 func _zijde(sid: int, e: Dictionary) -> Control:
 	var kolom := VBoxContainer.new()
 	kolom.add_theme_constant_override("separation", _px(2))
@@ -139,16 +143,35 @@ func _zijde(sid: int, e: Dictionary) -> Control:
 	var p := _portret(sid, 40)
 	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	kolom.add_child(p)
-	var v: Dictionary = (e.get("verliezen", {}) as Dictionary).get(str(sid), {})
-	var verlies: int = int(v.get("inf", 0)) + int(v.get("cav", 0)) + int(v.get("art", 0))
 	var kleur: Color = HubAssets.BLAUW if _team(sid) == mijn_team else HubAssets.ROOD
+	var getal_tekst: String
+	var vol: int
+	var reserve: Dictionary = e.get("reserve", {})
+	if reserve.has(str(sid)):
+		var z: Dictionary = (e.get("inzet", {}) as Dictionary).get(str(sid), {})
+		var kosten: int = int(z.get("inf", 0)) + 2 * int(z.get("cav", 0)) + 3 * int(z.get("art", 0))
+		var netto: int = kosten - int((e.get("buit", {}) as Dictionary).get(str(sid), 0))
+		if netto > 0:
+			getal_tekst = "-%d" % netto
+		elif netto < 0:
+			getal_tekst = "+%d" % -netto
+		else:
+			getal_tekst = "0"
+		var start: int = maxi(1, int(reserve[str(sid)]))
+		vol = clampi(int(ceil(3.0 * float(maxi(0, netto)) / float(start))), 0, 3)
+		if netto <= 0:
+			vol = 0
+	else:
+		var v: Dictionary = (e.get("verliezen", {}) as Dictionary).get(str(sid), {})
+		var verlies: int = int(v.get("inf", 0)) + int(v.get("cav", 0)) + int(v.get("art", 0))
+		getal_tekst = ("-%d" % verlies) if verlies > 0 else "0"
+		vol = mini(verlies, 3)
 	var rij := _rij(1)
-	var getal := HubAssets.tekst("-%d" % verlies, _px(11), kleur, true)
+	var getal := HubAssets.tekst(getal_tekst, _px(11), kleur, true)
 	getal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rij.add_child(getal)
 	for i in 3:
-		var vol := i < mini(verlies, 3)
-		var fig := HubAssets.icoon("Battle_report_team_full" if vol else "Battle_report_team_empty",
+		var fig := HubAssets.icoon("Battle_report_team_full" if i < vol else "Battle_report_team_empty",
 			_u(15), kleur)
 		fig.custom_minimum_size = Vector2(_u(7), _u(15))
 		rij.add_child(fig)

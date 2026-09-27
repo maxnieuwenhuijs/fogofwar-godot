@@ -113,89 +113,20 @@ func _ready() -> void:
 			return
 		var shot_fouten := 0
 		if scherm == "campaign_hub":
-			var sdriver := SoloDriver.new(shot_seed, 0)
-			sdriver.duel_ai = "easy"
-			var shot_fase: String = String(shargs[shi + 3]) if shargs.size() > shi + 3 else ""
-			if shot_fase == "raad" or shot_fase == "donatie":
-				# Speel door (ook het mens-duel, gesimuleerd) tot de mens in de
-				# raad moet stemmen of moet doneren: zo is dat paneel te zien.
-				var doel_fase: int = CState.Fase.NOMINATIE if shot_fase == "raad" else CState.Fase.DONATIE
-				var guard := 0
-				while guard < 400 and sdriver.c.fase != CState.Fase.KLAAR:
-					guard += 1
-					if shot_fase == "raad" and sdriver.c.fase == CState.Fase.NOMINATIE and sdriver.c.ronde >= 2 \
-							and sdriver.c.nominatie_stemmen.is_empty():
-						# Alleen voor het plaatje (de staat wordt niet bewaard): de
-						# mens leeft nog en zijn team is aan de beurt in de raad.
-						sdriver.c.spelers[0].status = "actief"
-						sdriver.c.al_genomineerd.erase(0)
-						sdriver.c.nominatie_team = int(sdriver.c.spelers[0].team)
-						break
-					if shot_fase == "donatie" and sdriver.c.fase == CState.Fase.DONATIE and sdriver.c.ronde >= 2:
-						# Idem voor het donatiepaneel: de mens leeft en mag nog geven.
-						sdriver.c.spelers[0].status = "actief"
-						sdriver.c.donatie_klaar.erase(0)
-						break
-					if sdriver.wacht_op_mens():
-						if sdriver.c.fase == doel_fase:
-							break
-						match sdriver.c.fase:
-							CState.Fase.NOMINATIE:
-								var lijst_e: Array = sdriver.c.actieve_leden(int(sdriver.c.spelers[0].team))
-								var lijst_v: Array = sdriver.c.actieve_leden(1 - int(sdriver.c.spelers[0].team))
-								# Een teamgenoot vecht, niet de mens: die moet de raad halen.
-								sdriver.submit_mens_nominatie(int(lijst_e[lijst_e.size() - 1]), int(lijst_v[0]))
-							CState.Fase.DONATIE:
-								sdriver.submit_mens_klaar_met_doneren()
-							CState.Fase.TESTAMENT:
-								sdriver.submit_mens_testament([])
-							_:
-								var md: Dictionary = sdriver.mens_duel()
-								sdriver.call("_speel_duel", int(md.idx), int(md.p1), int(md.p2))
-					else:
-						sdriver.stap()
-				print("[SHOT] doorgespeeld tot ronde %d, fase %d" % [sdriver.c.ronde, sdriver.c.fase])
-			var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
-			hub.driver = sdriver
-			hub.mens_id = 0
-			add_child(hub)
-			await get_tree().create_timer(1.2).timeout
-			# Campaign Hub-ontwerp (23 september): titel, statusbalk, drie
-			# kolommen, tabbladen, fasepaneel en quick chat.
-			for node_naam in ["HubFrame", "Header", "Titel", "Vlag", "Tijdlijn", "FasePaneel",
-					"GrootboekKnop", "TeamLinks", "TeamRechts", "TabFase", "TabChat", "QC_Meer",
-					"HelpKnop", "InstellingenKnop"]:
-				if hub.find_child(node_naam, true, false) == null:
-					shot_fouten += 1
-					print("[SHOT] node ontbreekt: %s" % node_naam)
-			var kop: Label = hub.find_child("Header", true, false)
-			# i18n-proof: check op het vertaalde fragment i.p.v. hardcoded "Ronde".
-			if kop == null or not kop.text.contains(hub.tr("HUB_SUBTITLE").split("%d")[0].strip_edges()):
-				shot_fouten += 1
-				print("[SHOT] header toont geen ronde/round")
-			for kolom_naam in ["TeamLinks", "TeamRechts"]:
-				var tk: VBoxContainer = hub.find_child(kolom_naam, true, false)
-				if tk == null or tk.get_child_count() < 8:
-					shot_fouten += 1
-					print("[SHOT] %s mist teamleden (8)" % kolom_naam)
-			var tl: VBoxContainer = hub.find_child("Tijdlijn", true, false).get_child(0)
-			if tl.get_child_count() < 1:
-				shot_fouten += 1
-				print("[SHOT] tijdlijn is leeg")
-			# Quick chat: een bericht moet in de tijdlijn en het chat-tabblad landen.
-			var tl_voor := tl.get_child_count()
-			hub.call("_stuur_chat", "HUB_QC_VERTROUW", -1)
-			await get_tree().create_timer(0.3).timeout
-			if tl.get_child_count() <= tl_voor and not bool(hub.get("_bezig")):
-				shot_fouten += 1
-				print("[SHOT] quick chat kwam niet in de tijdlijn")
-			var shot_extra: String = String(shargs[shi + 3]) if shargs.size() > shi + 3 else ""
-			if shot_extra == "chat":
-				(hub.find_child("TabChat", true, false) as Button).pressed.emit()
-			elif shot_extra == "popup":
-				(hub.find_child("QC_Meer", true, false) as Button).pressed.emit()
-			await get_tree().create_timer(0.4).timeout
-		elif scherm == "ledger":
+			# 27 september: de hub-fixture woont in tools/hub_shot.gd (elke
+			# toestand van de campagne-UI; snelspoelen met orakel=<pad>).
+			var modus := ""
+			var orakel_pad := ""
+			for a in shargs.slice(shi + 3):
+				if String(a).begins_with("orakel="):
+					orakel_pad = String(a).substr(7)
+				elif modus == "":
+					modus = String(a)
+			var hub_fouten: int = await preload("res://tools/hub_shot.gd").run(self, shot_seed, modus, orakel_pad)
+			print("[SHOT] campaign_hub %s: %d fouten" % [modus if modus != "" else "basis", hub_fouten])
+			get_tree().quit(0 if hub_fouten == 0 else 1)
+			return
+		if scherm == "ledger":
 			var ldriver := SoloDriver.new(shot_seed, 0)
 			var lscherm: Control = load("res://scripts/ui/campaign/ledger_screen.gd").new()
 			add_child(lscherm)

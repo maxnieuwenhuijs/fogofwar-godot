@@ -15,10 +15,8 @@ HUB_PHASE_DUELS,The duels,De duels
 HUB_PHASE_TESTAMENT,Last will,Testament
 HUB_PHASE_CIVIL_WAR,CIVIL WAR,BURGEROORLOG
 HUB_PHASE_OVER,Campaign over,Campagne voorbij
-HUB_HEADER,Round %d — %s,Ronde %d — %s
 HUB_CHAMPION,CHAMPION: %s,KAMPIOEN: %s
 HUB_BALANCE,"You (%s, team %d): %d soldiers · %d cavalry · %d cannons · %d CP · %d points%s","Jij (%s, team %d): %d soldaten · %d cavalerie · %d kanonnen · %d CP · %d punten%s"
-HUB_ELIMINATED_SUFFIX,  [ELIMINATED — you now see everything],  [UITGEVALLEN — je ziet nu alles]
 HUB_TEAM_YOURS,YOUR TEAM,JOUW TEAM
 HUB_TEAM_ENEMY,THE ENEMY,DE VIJAND
 HUB_YOU_SUFFIX, (you), (jij)
@@ -28,21 +26,14 @@ HUB_MEMBER_BALANCE,%d·%d·%d · %d CP · %d pts,%d·%d·%d · %d CP · %d pt
 HUB_FEED_BARK,"R%d · %s: ""%s""","R%d · %s: ""%s"""
 HUB_DRAW,draw,remise
 HUB_WINS_SHORT,%s wins (%s),%s wint (%s)
-HUB_FEED_REPORT,"R%d · BATTLE REPORT: %s vs %s — %s, %d cycles","R%d · BATTLEREPORT: %s vs %s — %s, %d cycli"
 HUB_REPORT_TOOLTIP,Tap for the full battle report,Tik voor het volledige battlereport
-HUB_REPORT_DRAW,Draw — one tiebreak point each.,Remise — beide een tiebreak-punt.
-HUB_REPORT_WINS,%s wins by %s.,%s wint via %s.
-HUB_REPORT_HEADER,"%s vs %s, round %d — %s (%d cycles)","%s vs %s, ronde %d — %s (%d cycli)"
-HUB_REPORT_LOSSES,"%s: -%d soldiers, -%d cavalry, -%d cannons · CP %+d","%s: -%d soldaten, -%d cavalerie, -%d kanonnen · CP %+d"
-HUB_REPORT_TITLE,Battle report,Battlereport
 HUB_CLOSE,Close,Sluiten
 HUB_NOMINATE_TITLE,Your team nominates: pick the fighters.,Jouw team nomineert: kies de vechters.
 HUB_NAME_YOU,%s (you),%s (jij)
 HUB_VOTE_BTN,Vote,Stem
-HUB_DUEL_TITLE,"YOUR DUEL: you against %s. Everything you own goes onto the board — what you lose is gone, what you spare you keep.","JOUW DUEL: jij tegen %s. Je hele bezit gaat mee het bord op — wat je verliest ben je kwijt, wat je spaart neem je mee."
 HUB_DUEL_PLAY_BTN,Play the duel on the board,Speel het duel op het bord
 HUB_DUEL_PAIRS_TITLE,THE PAIRINGS THIS ROUND,DE PAREN VAN DEZE RONDE
-HUB_DUEL_AUTO,Your duel starts automatically in a moment...,Je duel begint zo vanzelf...
+HUB_DUEL_PAREN_LINK,See the other pairs (%d),Bekijk de andere paren (%d)
 HUB_DUEL_STAY_BTN,Stay in the hub for now,Blijf even in de hub
 HUB_DUEL_LOADING,Loading your duel against %s...,Je duel tegen %s wordt geladen...
 HUB_DONATE_TITLE,"Donate to a teammate (max 10 pawns / 3 CP per recipient), or keep it all.","Doneer aan een teamgenoot (max 10 pionnen / 3 CP per ontvanger), of houd alles."
@@ -51,12 +42,8 @@ HUB_UNIT_CAV,cav,cav
 HUB_UNIT_ART,art,art
 HUB_UNIT_CP,cp,cp
 HUB_DONATE_BTN,Donate,Doneer
-HUB_DONATE_DONE_BTN,Done donating,Klaar met doneren
-HUB_WILL_TITLE,You have fallen. Bequeath at most half to at most 2 recipients — the rest burns.,Je bent uitgevallen. Laat maximaal de helft na aan maximaal 2 ontvangers — de rest verbrandt.
-HUB_WILL_TARGET,%s (team %d),%s (team %d)
-HUB_WILL_HALF_BTN,Leave half to this player,Laat de helft na aan deze speler
 HUB_WILL_NONE_BTN,Leave nothing (everything burns),Laat niets na (alles verbrandt)
-LEDGER_TITLE,LEDGER — the campaign books,GROOTBOEK — de campagne-boekhouding
+LEDGER_TITLE,LEDGER: the campaign books,GROOTBOEK: de campagne-boekhouding
 LEDGER_CLOSE_BTN,Close,Sluiten
 LEDGER_EXPLAIN,"The books are public: every donation, every loss and every last will is on record. Tap a column to sort.","De boekhouding is openbaar: elke donatie, elk verlies en elk testament staat erin. Tik een kolom om te sorteren."
 LEDGER_COL_NAME,Name,Naam
@@ -65,17 +52,12 @@ LEDGER_COL_STATUS,Status,Status
 LEDGER_COL_INF,Inf.,Sold.
 LEDGER_COL_CAV,Cav.,Cav.
 LEDGER_COL_ART,Guns,Kan.
-LEDGER_COL_TOTAL,Total,Totaal
+LEDGER_COL_TOTAL,Reinforcement points,Versterkingspunten
 LEDGER_COL_CP,CP,CP
 LEDGER_COL_POINTS,Points,Punten
 LEDGER_YOU_SUFFIX,  (you),  (jij)
 LEDGER_STATUS_ACTIVE,active,actief
 LEDGER_STATUS_FALLEN,fallen,gevallen
-BRACKET_TITLE,CIVIL WAR: knockout for the championship,BURGEROORLOG: knock-out om het kampioenschap
-BRACKET_DONE,finished,afgerond
-BRACKET_NOW_PLAYING,NOW ON THE BOARD,NU OP HET BORD
-BRACKET_DUEL_ROW,%s  vs  %s · %s,%s  vs  %s · %s
-BRACKET_QUEUE_ROW,Waiting in line: %s  vs  %s,In de wachtrij: %s  vs  %s
 BRACKET_REMAINING,Still in the fight: %s,Nog in de strijd: %s
 CARD_DEFINE_TITLE,Define your cards,Definieer je kaarten
 CARD_DEFINE_HINT,Distribute %d points (min. 1 per stat). Press Confirm.,Verdeel %d punten (min. 1 per stat). Druk op Bevestigen.
@@ -307,7 +289,7 @@ HELP_FACTIONS_TRIANGLE,"[b]Balance triangle[/b]: cannons > soldiers (range), sol
 SOLO_NAME_SYSTEM,System,Systeem
 SOLO_FEED_RESUMED,Campaign resumed in round %d.,Campagne hervat in ronde %d.
 SOLO_NAME_LOTING,The Draw,De Loting
-SOLO_FEED_LOTING,Round 1: the draw decides the pairs — everyone to the board!,Ronde 1: het lot bepaalt de paren — iedereen het bord op!
+SOLO_FEED_LOTING,Round 1: the draw decides the pairs. Everyone to the board!,Ronde 1: het lot bepaalt de paren. Iedereen het bord op!
 SOLO_BUSY_BOT_DUEL,The bots are playing duel %d of %d: %s vs %s...,De bots spelen duel %d van %d: %s vs %s...
 BARK_LOYAL_NOM_TEAM_1,"For the team, %s. Make us proud.","Voor het team, %s. Maak ons trots."
 BARK_LOYAL_NOM_TEAM_2,"You are our spear, %s.","Jij bent onze speer, %s."
@@ -354,7 +336,6 @@ BARK_KAMIKAZE_WILL_ENEMY_1,Even my enemy fought more beautifully than my team.,Z
 HUB_END_CHAMPION,CHAMPION: %s,KAMPIOEN: %s
 HUB_END_SUMMARY,"%d rounds, %d duels. You finished with %d fame points (place %d of %d).","%d rondes, %d duels. Jij eindigde met %d roempunten (plek %d van %d)."
 HUB_END_LEDGER_BTN,View the full ledger,Bekijk het volledige grootboek
-HUB_END_NEW_BTN,Start a new campaign,Start een nieuwe campagne
 SOLO_FEED_DONATE,%s gives %s to %s,%s geeft %s aan %s
 SOLO_FEED_TESTAMENT,"%s bequeaths %s to %s","%s laat %s na aan %s"
 SOLO_UNIT_INF,soldiers,soldaten
@@ -373,8 +354,6 @@ MENU_SOLO_CAMPAIGN,"Campaign","Campagne"
 MENU_BACK,"Back","Terug"
 MENU_CAMP_DIFF_BODY,"How strong should your board opponents be? Fixed for the whole campaign.","Hoe sterk zijn je bord-tegenstanders? Vast voor de hele campagne."
 HUB_BALANCE_PT,"%s (team %d) - Field army: always full - Reinforcements: %d - CP: %d - Fame: %d%s","%s (team %d) - Veldleger: altijd vol - Versterkingen: %d - CP: %d - Roem: %d%s"
-HUB_ROW_SALDO,"%d reinf - %d CP - %d fame","%d vst - %d CP - %d roem"
-HUB_ROW_SALDO_GEHEIM,"? reinf - ? CP - %d fame","? vst - ? CP - %d roem"
 HUD_PLACE_TYPE_FLAG,"standard bearers","vaandeldragers"
 HUD_PLACE_TYPE_DRUM,"drummers","tamboers"
 HELP_COMBAT_LOOT_TITLE,[b]Colours and drums are loot[/b],[b]Vaandel en trommel zijn buit[/b]
@@ -395,7 +374,6 @@ PHASE_SPAWN_CONFIRM,"Confirm (%d spawns)","Bevestig (%d spawns)"
 PHASE_SPAWN_RESET,"Start over","Opnieuw kiezen"
 HUB_RESUME_TITLE,"CAMPAIGN IN PROGRESS","LOPENDE CAMPAGNE"
 HUB_RESUME_INFO,"You have a campaign in round %d (playing as %s). Continue, or start fresh with a new faction choice?","Je hebt een campagne in ronde %d (je speelt als %s). Doorgaan, of opnieuw beginnen met een nieuwe factiekeuze?"
-HUB_RESUME_CONTINUE,"Continue campaign","Doorgaan met deze campagne"
 HUB_RESUME_NEW,"Start a new campaign (choose faction)","Nieuwe campagne (kies je factie)"
 UI_FACTION_CARDS,%d cards × budget %d,%d kaarten × budget %d
 CARD_STAT_HP,HP,HP
@@ -498,7 +476,6 @@ HUB_TEAM_VOTES,TEAM VOTES,TEAMSTEMMEN
 HUB_VOTE_CAPS,VOTE,STEM
 HUB_DUEL_PLAY_CAPS,TO THE BOARD,NAAR HET BORD
 HUB_DONATE_SHORT,DONATE TO YOUR TEAM,DONEER AAN JE TEAM
-HUB_DONATE_HINT,"+1 gives a reinforcement point, +CP a command point (max 10 pt / 3 CP per receiver per round).","+1 geeft een versterkingspunt, +CP een commandopunt (max 10 pt / 3 CP per ontvanger per ronde)."
 HUB_QUICK_CHAT,QUICK CHAT,QUICK CHAT
 HUB_QC_STUUR_MIJ,SEND ME!,STUUR MIJ!
 HUB_QC_STUUR,SEND %s!,STUUR %s!
@@ -528,8 +505,37 @@ HUB_TIME_HOUR,%dh ago,%d uur geleden
 HUB_SETTINGS_TITLE,SETTINGS,INSTELLINGEN
 HUB_MAIN_MENU,Main menu,Hoofdmenu
 HUB_HELP_TITLE,HOW IT WORKS,ZO WERKT HET
-HUB_HELP_TEXT,"Every round has four phases. COUNCIL: the nominating team picks a fighter and an enemy target (tap the portraits in the columns, then VOTE). DONATIONS: give reinforcements or CP to teammates. DUELS: the pairs fight on the board; your own duel starts automatically. LAST WILL: whoever falls may leave half to others. QUICK CHAT: your team votes and donates after you, so ask first (Send me!, Go for X!, Need reinforcements!). Whoever says AGREED! usually keeps their word, but not always. Only your own team hears you, and the dead are silent. The timeline shows everything that happens, newest on top; tap a battle report for the details.","Elke ronde heeft vier fasen. RAAD: het nominerende team kiest een vechter en een vijandelijk doelwit (tik de portretten in de kolommen, dan STEM). DONATIES: geef versterkingen of CP aan teamgenoten. DUELS: de paren vechten op het bord; je eigen duel start vanzelf. TESTAMENT: wie valt mag de helft nalaten. QUICK CHAT: je team stemt en geeft na jou, dus vraag eerst (Stuur mij!, Pak X!, Versterking nodig!). Wie AKKOORD! zegt, houdt zich er meestal aan, maar niet altijd. Alleen je eigen team hoort je, en de doden zwijgen. De tijdlijn toont alles wat er gebeurt, nieuwste bovenaan; tik een slagrapport voor de details."
 HUB_STATUS_ACTIEF,Takes part this round,Doet mee deze ronde
 HUB_STATUS_STRIJD,Fighting now,Vecht nu
 HUB_STATUS_RUST,Resting this round,Rust deze ronde
 HUB_STATUS_DOOD,Fallen,Gevallen
+HUB_HELP_RAAD,"The nominating team picks a fighter and an enemy target: tap the portraits in the columns, then VOTE.","Het nominerende team kiest een vechter en een vijandelijk doelwit: tik de portretten in de kolommen aan, dan STEM."
+HUB_HELP_DONATIE,Give reinforcement points or CP to teammates who need them. DONE closes the round for you.,Geef versterkingspunten of CP aan teamgenoten die het nodig hebben. KLAAR sluit de ronde voor jou.
+HUB_HELP_DUELS,The pairs fight on the board. Your own duel starts by itself after a short countdown.,De paren vechten op het bord. Je eigen duel begint vanzelf na een korte aftelling.
+HUB_HELP_TESTAMENT,"Whoever falls may leave half of what they own to one player, friend or foe. The rest burns.","Wie valt mag de helft van zijn bezit nalaten aan een speler, vriend of vijand. De rest verbrandt."
+HUB_HELP_CHAT,"Your team votes and donates after you, so ask first (Send me!, Go for X!, Need reinforcements!). Whoever says AGREED! usually keeps their word, but not always. Only your own team hears you, and the dead are silent.","Je team stemt en geeft na jou, dus vraag eerst (Stuur mij!, Pak X!, Versterking nodig!). Wie AKKOORD! zegt, houdt zich er meestal aan, maar niet altijd. Alleen je eigen team hoort je, en de doden zwijgen."
+HUB_HELP_TIJDLIJN,"Everything that happens, newest at the bottom like a chat. Tap a battle report for the details and a portrait for the player.","Alles wat er gebeurt, nieuwste onderaan zoals in een chat. Tik een slagrapport voor de details en een portret voor de speler."
+LEDGER_TEAM_OWN,yours,jouw team
+LEDGER_TEAM_ENEMY,enemy,vijand
+HUB_RESUME_CONTINUE_CAPS,CONTINUE,DOORGAAN
+HUB_DUEL_KOP,YOUR DUEL,JOUW DUEL
+HUB_DUEL_UITLEG,"Your reserve goes with you onto the board. What you spawn is spent, what you capture you keep.","Je reserve gaat mee het bord op. Wat je inzet ben je kwijt, wat je buitmaakt neem je mee."
+HUB_WILL_UITLEG,"You have fallen. Leave half of what you own to one player, friend or foe: tap a shield. The rest burns.","Je bent gevallen. Laat de helft van je bezit na aan een speler, vriend of vijand: tik een schild aan. De rest verbrandt."
+HUB_WILL_HELFT,Half of what you own:,De helft van je bezit:
+HUB_WILL_NAAR,LEAVE IT TO %s,NALATEN AAN %s
+HUB_WILL_ERFGENAAM,HEIR,ERFGENAAM
+HUB_DONATE_HINT_KORT,"+1 gives a reinforcement point, +CP a command point. Each teammate can receive at most %d points and %d CP per round.","+1 geeft een versterkingspunt, +CP een commandopunt. Elke teamgenoot krijgt per ronde hooguit %d punten en %d CP."
+HUB_DONATE_ONTVANGEN,got %d/%d · %d/%d CP,kreeg %d/%d · %d/%d CP
+HUB_DONATE_KLAAR,DONE,KLAAR
+HUB_END_NEW_CAPS,NEW CAMPAIGN,NIEUWE CAMPAGNE
+HUB_RAPPORT_SUB,Round %d · %d cycles,Ronde %d · %d cycli
+HUB_RAPPORT_WINT,%s wins by %s,%s wint via %s
+HUB_RAPPORT_INZET,reserve spent,reserve ingezet
+HUB_RAPPORT_BUIT,spoils,buit
+HUB_RAPPORT_CP,command points,commandopunten
+HUB_RAPPORT_GESNEUVELD,fallen on the board,gesneuveld op het bord
+HUB_WINNAAR,WINNER,WINNAAR
+HUB_LID_VECHT,Fights %s this round,Vecht deze ronde tegen %s
+HUB_QC_WIE_STUUR,WHO SHOULD WE SEND?,WIE STUREN WE?
+HUB_QC_WIE_PAK,WHO DO WE GO FOR?,WIE PAKKEN WE?
+HUB_QC_WIE_DONEER,WHO SHOULD GET IT?,WIE MOET HET KRIJGEN?

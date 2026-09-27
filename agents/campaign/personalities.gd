@@ -103,8 +103,10 @@ const ARCHETYPES := {
 	},
 }
 
+# Minstens zoveel namen als spelers in een campagne (16): met 15 kwam Bruno
+# twee keer voor (27 september, het grootboek).
 const NAMEN := ["Bruno", "Vera", "Karel", "Iris", "Ludo", "Nora", "Piet", "Sasha",
-	"Timo", "Ada", "Rocco", "Mila", "Dirk", "Fenna", "Olaf"]
+	"Timo", "Ada", "Rocco", "Mila", "Dirk", "Fenna", "Olaf", "Wout", "Lotte", "Gijs", "Hanna", "Joost"]
 
 
 ## Deterministische lobby van `n` persoonlijkheden (rondlopend over de

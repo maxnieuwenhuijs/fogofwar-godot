@@ -202,7 +202,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   schermbreedte / 564; elementen in `assets/ui/campaign_hub/`, paden alleen
   via `HubAssets`; tijdlijnkaartjes per feed-soort in `HubFeedKaart`
   (`nominatie`- en `fase`-items zet de SoloDriver in de feed, alleen
-  presentatie). Check: `-- shot campaign_hub [seed] [chat|popup|raad]`.
+  presentatie). Check: `-- shot campaign_hub [seed] [modus]
+  [orakel=<pad>]` (fixture `tools/hub_shot.gd`; modi basis, raad, donatie,
+  testament, burgeroorlog, einde, chat, popup, doel, lid, rapport, help,
+  instellingen, grootboek, paren, factie, hervat, laden; met een
+  `duel_orakel.json` spoelt hij in seconden door; exit 1 bij fouten).
+  **Strakker (27 september):** de hoofdknop van elke fase staat in de voet
+  (`FaseVoet`, altijd in beeld), bijzaken zijn tekstlinks (`_link_knop`),
+  overloop toont een dunne inktlijn (`_inkt_balk`), keuzeschermen (factie,
+  hervatten, laden) gaan via `_keuze_scherm` in dezelfde stijl. Het
+  slagrapport-kaartje toont het netto reserve-verlies (inzet min buit) en
+  het deel van de reserve (`reserve` in het feed-rapport), niet het aantal
+  gevallen pionnen (dat was vooral het startleger). Het grootboek telt de
+  tent in versterkingspunten, net als de hub.
   **Quick chat (25 september):** een gesloten lijst van 14 campagnezinnen
   (raad, donaties, duels/testament, altijd; NIET de slagveldzinnen uit de pdf),
   team-only en verzegeld voor de doden; bots antwoorden AKKOORD!/NEE. naar

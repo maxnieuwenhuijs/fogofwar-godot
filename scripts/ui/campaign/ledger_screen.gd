@@ -63,7 +63,9 @@ static func rijen(c: CState, kolom: String, kijker: int = -1) -> Array:
 			"status": String(sp.status),
 			"inf": int(pool.inf) if zien else -1, "cav": int(pool.cav) if zien else -1,
 			"art": int(pool.art) if zien else -1,
-			"pool": c.pool_totaal_van(int(id)) if zien else -1,
+			# Versterkingspunten (soldaat 1, ruiter 2, kanon 3), hetzelfde getal
+			# als onder de tent in de hub (27 september; was het aantal stukken).
+			"pool": maxi(0, int(pool.inf) + 2 * int(pool.cav) + 3 * int(pool.art)) if zien else -1,
 			"cp": c.cp_van(int(id)) if zien else -1,
 			"punten": c.punten_van(int(id)), "saldo_zichtbaar": zien})
 	uit.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -220,6 +222,7 @@ func _herbouw() -> void:
 		_headers.add_child(_kop_knop(kol))
 	for kind in _tabel.get_children():
 		kind.queue_free()
+	var mijn_team: int = int(_c.spelers.get(_mens_id, {}).get("team", 0))
 	for rij in rijen(_c, _kolom, _mens_id):
 		var hbox := HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", CEL_RUIMTE)
@@ -229,17 +232,20 @@ func _herbouw() -> void:
 			kleur = UiAssets.DIEP_ROOD
 		elif dood:
 			kleur = UiAssets.OUD_BRUIN
-		# Portret (embleem zonder krans) vóór de naam; de doctrine komt apart
-		# uit de staat, rijen() blijft zoals de tests hem kennen.
+		# Het schild uit de hub vóór de naam (blauw = jouw team, rood = de
+		# vijand); de doctrine komt apart uit de staat, rijen() blijft zoals de
+		# tests hem kennen.
 		var doctrine: int = int(_c.spelers.get(int(rij.id), {}).get("doctrine", 0))
-		var portret := UiPortret.new(PORTRET)
-		portret.zonder_krans()
-		portret.zet(doctrine, "", dood)
+		var eigen: bool = int(rij.team) == mijn_team
+		var portret := HubAssets.portret(doctrine, eigen, dood, PORTRET)
 		portret.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hbox.add_child(portret)
 		hbox.add_child(_cel(String(rij.naam) + (tr("LEDGER_YOU_SUFFIX") if int(rij.id) == _mens_id else ""),
 			int(KOLOMMEN[0].breedte) - PORTRET - CEL_RUIMTE, kleur, false))
-		hbox.add_child(_cel(str(int(rij.team)), int(KOLOMMEN[1].breedte), kleur, true))
+		# Jouw team of de vijand, in de kleur van de kolommen in de hub.
+		var team_cel := _cel(tr("LEDGER_TEAM_OWN") if eigen else tr("LEDGER_TEAM_ENEMY"),
+			int(KOLOMMEN[1].breedte), kleur if dood else (HubAssets.BLAUW if eigen else HubAssets.ROOD), true)
+		hbox.add_child(team_cel)
 		var status_icoon := UiAssets.icoon_rect("dead" if dood else "alive", STATUS_ICOON, kleur)
 		status_icoon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hbox.add_child(status_icoon)

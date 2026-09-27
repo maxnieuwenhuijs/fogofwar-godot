@@ -35,6 +35,10 @@ var _tijdlijn: VBoxContainer
 var _scroll: ScrollContainer
 var _paneel: VBoxContainer
 var _paneel_scroll: ScrollContainer
+var _voet: HBoxContainer                 # de hoofdknoppen van de fase, altijd in beeld
+var _keuze_laag: Control = null          # het lopende keuzescherm (factie, hervatten, laden)
+var _auto_start_ms: int = 0              # wanneer de aftel van het mens-duel begon
+var _testament_doel: int = -1            # testament: aan wie
 var _tab_fase: Button
 var _tab_chat: Button
 var _tab: int = 0                        # 0 = fase, 1 = chat
@@ -72,11 +76,6 @@ const BOT_DUEL_AI := "easy"
 ## Vangnet tegen incidentele grind-duels tussen bots; het mens-duel op het
 ## echte bord behoudt cycluslimiet 0 (besluit 26 juli).
 const BOT_DUEL_HONGER_VANAF := 10
-
-## Duimmaat (contract §1) voor de keuzeschermen buiten het frame.
-const KNOP_HOOGTE := 84.0
-## Buitenrand van de keuzeschermen.
-const RAND := 20.0
 
 ## De quick chat (UI-spec 2b.2, intrige-voorstel P1): een gesloten lijst
 ## zinnen over de raad, de donaties en vertrouwen; geen slagveld-commando's,
@@ -155,109 +154,52 @@ func _vul_scherm(node: Control) -> void:
 	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
-## Label met variant uit het thema ("" = ivoor op de veldtafel), fontgrootte en autowrap.
-func _tekst(tekst: String, variant: String = "", grootte: int = 0, wrap: bool = true) -> Label:
-	var l := Label.new()
-	l.text = tekst
-	if variant != "":
-		l.theme_type_variation = variant
-	if grootte > 0:
-		l.add_theme_font_size_override("font_size", grootte)
-	if wrap:
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	return l
-
-
-## Icoon op een knop (wit icoon, het thema tint hem inkt of ivoor).
-static func _knop_icoon(b: Button, icoon_id: String, maat: int = 32) -> void:
-	if icoon_id == "":
-		return
-	var tex := UiAssets.icoon(icoon_id)
-	if tex == null:
-		return
-	b.icon = tex
-	b.expand_icon = false
-	b.add_theme_constant_override("icon_max_width", maat)
-
-
-## Een grote duimknop buiten het frame (keuzeschermen). De callable staat
-## achteraan zodat een meerregelige lambda het laatste argument is.
-func _grote_knop(tekst: String, naam: String, icoon_id: String, actie: Callable) -> Button:
-	var b := Button.new()
-	b.name = naam
-	b.text = tekst
-	b.theme_type_variation = "KnopBreed"
-	b.custom_minimum_size = Vector2(0, KNOP_HOOGTE)
-	b.add_theme_font_size_override("font_size", 22)
-	_knop_icoon(b, icoon_id)
-	b.pressed.connect(actie)
-	return b
-
-
-## Portret op de VELDTAFEL (keuzeschermen): perkamenten medaillon achter de
-## krans, want de inkt-gravure verdwijnt op donker hout.
-static func _portret_op_veldtafel(grootte: float, doctrine: int, kant: String, dood: bool) -> Control:
-	var houder := Control.new()
-	houder.custom_minimum_size = Vector2(grootte, grootte)
-	houder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var medaillon := Panel.new()
-	medaillon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	medaillon.anchor_left = 0.2
-	medaillon.anchor_right = 0.8
-	medaillon.anchor_top = 0.1
-	medaillon.anchor_bottom = 0.8
-	var stijl := StyleBoxFlat.new()
-	stijl.bg_color = Color(UiAssets.OUD_BRUIN, 0.9) if dood else UiAssets.PERKAMENT_LICHT
-	stijl.set_corner_radius_all(int(grootte))
-	stijl.set_border_width_all(0)
-	medaillon.add_theme_stylebox_override("panel", stijl)
-	houder.add_child(medaillon)
-	var portret := UiPortret.new(grootte)
-	portret.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	portret.zet(doctrine, kant, dood)
-	houder.add_child(portret)
-	return houder
-
-
-## Kolom met titel + uitleg op de veldtafel (factiekeuze, hervatkeuze).
-func _keuze_kolom(achtergrond: Control, naam: String, titel: String, uitleg: String) -> VBoxContainer:
-	var kolom := VBoxContainer.new()
-	kolom.name = naam
-	_vul_scherm(kolom)
-	kolom.offset_left = RAND
-	kolom.offset_right = -RAND
-	kolom.offset_top = 48
-	kolom.offset_bottom = -RAND
-	kolom.add_theme_constant_override("separation", 16)
-	achtergrond.add_child(kolom)
-	kolom.add_child(_tekst(titel, "LabelKop", 36))
-	kolom.add_child(_tekst(uitleg, "", 22))
-	return kolom
-
-
 ## 28 juli (Max): doorgaan of opnieuw: nooit meer stilletjes hervatten.
+## 27 september: in de stijl van de hub (frame, titelplaat, perkament).
 func _toon_hervat_keuze(oud_driver: SoloDriver) -> void:
-	var achtergrond := _veldtafel()
-	add_child(achtergrond)
+	var kolom := _keuze_scherm(tr("HUB_RESUME_TITLE"), "HervatKeuze")
+	var laag := _keuze_laag
 	var mijn: Dictionary = oud_driver.c.spelers.get(oud_driver.mens_id, {})
-	var kolom := _keuze_kolom(achtergrond, "HervatKeuze", tr("HUB_RESUME_TITLE"),
-		tr("HUB_RESUME_INFO") % [oud_driver.c.ronde,
-			Constants.doctrine_display_name(int(mijn.get("doctrine", 0)))])
-	var portret := _portret_op_veldtafel(140, int(mijn.get("doctrine", 0)), "blauw", false)
-	portret.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	kolom.add_child(portret)
-	kolom.add_child(_grote_knop(tr("HUB_RESUME_CONTINUE"), "HervatDoorgaan", "check", func() -> void:
-		achtergrond.queue_free()
-		driver = oud_driver
-		mens_id = driver.mens_id
-		_start()))
-	kolom.add_child(_grote_knop(tr("HUB_RESUME_NEW"), "HervatNieuw", "phase-setup", func() -> void:
-		achtergrond.queue_free()
+	_ruimte(kolom)
+	var kaart := PanelContainer.new()
+	kaart.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
+		Vector2(26, 26), Vector4(_u(18), _u(16), _u(18), _u(16))))
+	kolom.add_child(kaart)
+	var binnen := VBoxContainer.new()
+	binnen.add_theme_constant_override("separation", _px(10))
+	kaart.add_child(binnen)
+	var p := HubAssets.portret(int(mijn.get("doctrine", 0)), true, false, _u(110))
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	binnen.add_child(p)
+	var naam := _naamplaat(String(mijn.get("naam", "?")), 13)
+	naam.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	binnen.add_child(naam)
+	var uitleg := HubAssets.tekst(tr("HUB_RESUME_INFO") % [oud_driver.c.ronde,
+		Constants.doctrine_display_name(int(mijn.get("doctrine", 0)))], _px(11), HubAssets.INKT)
+	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	binnen.add_child(uitleg)
+	var knoppen := HBoxContainer.new()
+	knoppen.alignment = BoxContainer.ALIGNMENT_CENTER
+	knoppen.add_theme_constant_override("separation", _px(12))
+	kolom.add_child(knoppen)
+	var nieuw := _knop(tr("HUB_RESUME_NEW"), "phase-setup", func() -> void:
+		_sluit_keuze(laag)
 		if FileAccess.file_exists(SAVE_PAD):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PAD))
 		CampaignBridge.driver = null
 		CampaignBridge.feed_gezien = 0
-		_toon_factie_keuze()))
+		_toon_factie_keuze())
+	nieuw.name = "HervatNieuw"
+	knoppen.add_child(nieuw)
+	var door := _rode_knop(tr("HUB_RESUME_CONTINUE_CAPS"), "HervatDoorgaan", func() -> void:
+		_sluit_keuze(laag)
+		driver = oud_driver
+		mens_id = driver.mens_id
+		_start())
+	door.custom_minimum_size = Vector2(_u(180), _u(44))
+	knoppen.add_child(door)
+	_ruimte(kolom)
 
 
 func _start() -> void:
@@ -278,32 +220,90 @@ func _start() -> void:
 ## Factiekeuze bij een nieuwe campagne: zes regimentskaarten (UiFactieKaart)
 ## met portret, kaarten x budget, leger en pro/con. De keuze is definitief
 ## voor de hele campagne. De kaartdata komt uit de actieve regeltabel (C17).
+## 27 september: in de stijl van de hub (frame, titelplaat).
 func _toon_factie_keuze() -> void:
-	var achtergrond := _veldtafel()
-	add_child(achtergrond)
-	var kolom := _keuze_kolom(achtergrond, "FactieKeuze", tr("HUB_FACTION_TITLE"),
-		tr("HUB_FACTION_EXPLAIN"))
+	var kolom := _keuze_scherm(tr("HUB_FACTION_TITLE"), "FactieKeuze", tr("HUB_FACTION_EXPLAIN"))
+	var laag := _keuze_laag
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	kolom.add_child(scroll)
 	var lijst := VBoxContainer.new()
 	lijst.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lijst.add_theme_constant_override("separation", 12)
+	lijst.add_theme_constant_override("separation", _px(8))
 	scroll.add_child(lijst)
 	var tabel: RulesConfig = CRules.actieve_tabel()
 	for doctrine in Constants.DOCTRINE_DATA:
 		var kaart := UiFactieKaart.new(int(doctrine), tabel.doctrine_data(int(doctrine)))
 		kaart.name = "Factie_%d" % int(doctrine)
-		kaart.pressed.connect(_kies_factie.bind(int(doctrine), achtergrond))
+		kaart.pressed.connect(_kies_factie.bind(int(doctrine), laag))
 		lijst.add_child(kaart)
 
 
 func _kies_factie(doctrine: int, keuze_scherm: Control) -> void:
-	keuze_scherm.queue_free()
+	_sluit_keuze(keuze_scherm)
 	driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
 		mens_id, 16, SAVE_PAD, doctrine)
 	_start()
+
+
+## Een keuzescherm meteen uit de boom (dan staat het niet nog een frame naast
+## de hub die erna gebouwd wordt) en vrijgeven.
+func _sluit_keuze(laag: Control) -> void:
+	if laag != null and is_instance_valid(laag):
+		if laag.get_parent() != null:
+			laag.get_parent().remove_child(laag)
+		laag.queue_free()
+	if _keuze_laag == laag:
+		_keuze_laag = null
+
+
+## Een volledig scherm in de stijl van de hub (factiekeuze, hervatten, het
+## laadscherm): het hout eromheen, BG.png als frame, bovenin de titelplaat met
+## titel en (optioneel) een regel eronder. Geeft de inhoudskolom terug; het
+## scherm zelf staat in _keuze_laag.
+func _keuze_scherm(titel: String, naam: String, sub: String = "") -> VBoxContainer:
+	_vul_scherm(self)
+	var vp := get_viewport_rect().size
+	_s = minf(vp.x / HubAssets.ONTWERP.x, vp.y / HubAssets.ONTWERP.y)
+	var laag := Control.new()
+	laag.name = naam
+	laag.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(laag)
+	laag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	laag.add_child(_veldtafel())
+	var frame := Control.new()
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.position = Vector2((vp.x - _u(HubAssets.ONTWERP.x)) * 0.5, 0)
+	frame.size = Vector2(_u(HubAssets.ONTWERP.x), vp.y)
+	laag.add_child(frame)
+	var hoogte: float = vp.y / _s
+	var bg := HubAssets.plaat("bg/BG")
+	bg.size = frame.size
+	frame.add_child(bg)
+	var plaat := HubAssets.plaat("frames_box/Title_frame")
+	plaat.size = Vector2(_u(564), _u(78))
+	frame.add_child(plaat)
+	var t := HubAssets.tekst(titel, _px(17), HubAssets.INKT, true)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.position = Vector2(_u(30), _u(12 if sub != "" else 22))
+	t.size = Vector2(_u(504), _u(30))
+	frame.add_child(t)
+	if sub != "":
+		var u := HubAssets.tekst(sub, _px(9), HubAssets.INKT_ZACHT)
+		u.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		u.position = Vector2(_u(30), _u(46))
+		u.size = Vector2(_u(504), _u(18))
+		frame.add_child(u)
+	var kolom := VBoxContainer.new()
+	kolom.name = "Inhoud"
+	kolom.position = Vector2(_u(22), _u(96))
+	kolom.size = Vector2(_u(520), _u(hoogte - 116))
+	kolom.add_theme_constant_override("separation", _px(12))
+	frame.add_child(kolom)
+	_keuze_laag = laag
+	return kolom
 
 
 func _exit_tree() -> void:
@@ -344,8 +344,11 @@ func _herbouw() -> void:
 
 func _bouw_layout() -> void:
 	_vul_scherm(self)
-	if get_child_count() == 0:
-		add_child(_veldtafel())
+	if get_node_or_null("Veldtafel") == null:
+		var hout := _veldtafel()
+		hout.name = "Veldtafel"
+		add_child(hout)
+		move_child(hout, 0)
 	var vp := get_viewport_rect().size
 	_s = minf(vp.x / HubAssets.ONTWERP.x, vp.y / HubAssets.ONTWERP.y)
 	var hoogte: float = vp.y / _s            # in eenheden; >= 981
@@ -368,9 +371,16 @@ func _bouw_layout() -> void:
 	kader.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Phase_chat_frame_VERS2",
 		Vector2(34, 34), Vector4(_u(16), _u(12), _u(16), _u(12))))
 	_plaats(kader, 0, paneel_top, 564, paneel_onder - paneel_top)
+	var binnen := VBoxContainer.new()
+	binnen.add_theme_constant_override("separation", _px(6))
+	kader.add_child(binnen)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	kader.add_child(scroll)
+	# Scrollen mag (vinger of wiel), met een dunne inktlijn in plaats van de
+	# grijze standaardbalk.
+	_inkt_balk(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	binnen.add_child(scroll)
 	_paneel_scroll = scroll
 	_paneel = VBoxContainer.new()
 	_paneel.name = "FasePaneel"
@@ -378,6 +388,13 @@ func _bouw_layout() -> void:
 	_paneel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_paneel.add_theme_constant_override("separation", _px(5))
 	scroll.add_child(_paneel)
+	# De voet (27 september): de hoofdknoppen van de fase staan altijd in
+	# beeld, ook als de inhoud erboven moet scrollen.
+	_voet = HBoxContainer.new()
+	_voet.name = "FaseVoet"
+	_voet.alignment = BoxContainer.ALIGNMENT_CENTER
+	_voet.add_theme_constant_override("separation", _px(10))
+	binnen.add_child(_voet)
 	_bouw_quick_chat(paneel_onder + 2)
 
 
@@ -830,6 +847,25 @@ func _raad_open() -> bool:
 	return driver.c.fase == CState.Fase.NOMINATIE and driver.wacht_op_mens() and not _bezig
 
 
+## Moet de mens nu zijn testament opmaken?
+func _testament_open() -> bool:
+	return driver.c.fase == CState.Fase.TESTAMENT and driver.wacht_op_mens() and not _bezig \
+		and driver.c.pending_testamenten.has(mens_id)
+
+
+## Wie kan erven: elke levende speler behalve jijzelf, je eigen team eerst
+## (de vijand mag ook, dat is een keuze).
+func _erfgenamen() -> Array:
+	var c: CState = driver.c
+	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	var uit: Array = []
+	for team in [mijn_team, 1 - mijn_team]:
+		for sid in c.actieve_leden(team):
+			if int(sid) != mens_id:
+				uit.append(int(sid))
+	return uit
+
+
 func _kandidaten(team: int) -> Array:
 	var uit: Array = []
 	for sid in driver.c.actieve_leden(team):
@@ -872,8 +908,13 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 	p.position = Vector2(_u(25), 0)
 	p.size = Vector2(_u(72), _u(72))
 	var gekozen := (eigen and sid == _keuze_eigen) or (not eigen and sid == _keuze_vijand)
-	if _raad_open():
-		if not kandidaten.has(sid):
+	# Testament (27 september): je erfgenaam kies je net als in de raad door
+	# een schild in de kolommen aan te tikken.
+	var testament := _testament_open()
+	if testament:
+		gekozen = sid == _testament_doel
+	if _raad_open() or testament:
+		if _raad_open() and not kandidaten.has(sid):
 			p.modulate = Color(0.6, 0.6, 0.6, 0.8)
 		if gekozen:
 			var gloed := Panel.new()
@@ -889,7 +930,7 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 			b.add_child(gloed)
 	b.add_child(p)
 	if sid == mens_id:
-		# "JIJ" als donker plaatje onder aan je eigen portret.
+		# "JIJ" als donker lintje op je eigen schild.
 		var jij := PanelContainer.new()
 		jij.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var sb_jij := StyleBoxFlat.new()
@@ -901,7 +942,8 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 		var jij_l := HubAssets.tekst(tr("HUB_YOU_TAG"), _px(7), UiAssets.SELECTIE_GOUD, true)
 		jij_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		jij.add_child(jij_l)
-		jij.position = Vector2(_u(8), _u(56))
+		# Bovenaan het schild, over de ring (27 september: stond scheef ernaast).
+		jij.position = Vector2(_u(46), 0)
 		jij.size = Vector2(_u(30), _u(13))
 		b.add_child(jij)
 	# Versterkingen en CP onder het schild (25 september, Max: "per player wie
@@ -919,14 +961,19 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 				_keuze_vijand = sid
 			_ververs_teams()
 			_bouw_fase_paneel()
+		elif _testament_open() and _erfgenamen().has(sid):
+			_testament_doel = sid
+			_ververs_teams()
+			_bouw_fase_paneel()
 		else:
 			_toon_lid(sid))
 	return b
 
 
-## De regel onder een schild: tent + versterkingspunten, medaille + CP; "?"
-## voor wat je niet mag zien (D12, CView.mag_saldo_zien); leeg voor de doden.
-func _saldo_regel(c: CState, sid: int, dood: bool) -> HBoxContainer:
+## De regel met tent + versterkingspunten en medaille + CP: onder een schild
+## in de kolommen (ivoor) en op perkament (inkt). "?" voor wat je niet mag
+## zien (D12, CView.mag_saldo_zien); leeg voor de doden.
+func _saldo_regel(c: CState, sid: int, dood: bool, kleur: Color = HubAssets.IVOOR, maat: float = 9.0) -> HBoxContainer:
 	var rij := HBoxContainer.new()
 	rij.name = "Saldo"
 	rij.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -938,28 +985,106 @@ func _saldo_regel(c: CState, sid: int, dood: bool) -> HBoxContainer:
 	var pool: Dictionary = c.pool_van(sid)
 	var vst: String = str(maxi(0, int(pool.inf) + 2 * int(pool.cav) + 3 * int(pool.art))) if zien else "?"
 	var cp: String = str(c.cp_van(sid)) if zien else "?"
-	var tent := HubAssets.icoon("Donation_icon", _u(12), HubAssets.IVOOR)
+	var tent := HubAssets.icoon("Donation_icon", _u(maat + 3.0), kleur)
 	tent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	rij.add_child(tent)
-	var l_vst := HubAssets.tekst(vst, _px(9), HubAssets.IVOOR, true)
+	var l_vst := HubAssets.tekst(vst, _px(maat), kleur, true)
 	l_vst.name = "Versterkingen"
 	rij.add_child(l_vst)
 	var tussen := Control.new()
 	tussen.custom_minimum_size = Vector2(_u(6), 0)
 	tussen.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rij.add_child(tussen)
-	var medaille := UiAssets.icoon_rect("cp", _u(12), HubAssets.IVOOR)
+	var medaille := UiAssets.icoon_rect("cp", _u(maat + 3.0), kleur)
 	medaille.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	rij.add_child(medaille)
-	var l_cp := HubAssets.tekst(cp, _px(9), HubAssets.IVOOR, true)
+	var l_cp := HubAssets.tekst(cp, _px(maat), kleur, true)
 	l_cp.name = "Cp"
 	rij.add_child(l_cp)
 	return rij
 
 
+## Een naamplaatje (licht perkament, inkt-rand), zoals onder de schilden in de raad.
+func _naamplaat(tekst: String, grootte: float = 8.0) -> PanelContainer:
+	var plaat := PanelContainer.new()
+	plaat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#EFE2C4")
+	sb.border_color = HubAssets.INKT
+	sb.set_border_width_all(maxi(2, _px(1.2)))
+	sb.set_corner_radius_all(_px(3))
+	sb.content_margin_left = _u(8)
+	sb.content_margin_right = _u(8)
+	sb.content_margin_top = _u(1)
+	sb.content_margin_bottom = _u(1)
+	plaat.add_theme_stylebox_override("panel", sb)
+	var naam := HubAssets.tekst(tekst, _px(grootte), HubAssets.INKT, true)
+	naam.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plaat.add_child(naam)
+	return plaat
+
+
+## Een getal met teken: +3, -2, en 0 zonder teken.
+static func _teken(n: int) -> String:
+	if n > 0:
+		return "+%d" % n
+	if n < 0:
+		return "-%d" % -n
+	return "0"
+
+
+## Een lege ruimte die meegroeit: zet de inhoud van een keuzescherm in het midden.
+func _ruimte(kolom: VBoxContainer) -> void:
+	var r := Control.new()
+	r.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kolom.add_child(r)
+
+
+## Een dunne inktlijn als schuifbalk (in plaats van de grijze standaardbalk):
+## je ziet dat er meer is zonder dat het ontwerp eronder lijdt.
+func _inkt_balk(scroll: ScrollContainer) -> void:
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	var balk := scroll.get_v_scroll_bar()
+	balk.custom_minimum_size = Vector2(_u(4), 0)
+	balk.add_theme_stylebox_override("scroll", StyleBoxEmpty.new())
+	balk.add_theme_stylebox_override("scroll_focus", StyleBoxEmpty.new())
+	for staat in ["grabber", "grabber_highlight", "grabber_pressed"]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(HubAssets.INKT, 0.55 if staat == "grabber_pressed" else 0.35)
+		sb.set_corner_radius_all(_px(2))
+		sb.content_margin_left = _u(2)
+		sb.content_margin_right = _u(2)
+		balk.add_theme_stylebox_override(staat, sb)
+
+
+## Een kleine, platte tekstknop voor een bijzaak (Blijf in de hub, Laat niets na).
+func _link_knop(tekst: String, naam: String, actie: Callable) -> Button:
+	var b := Button.new()
+	b.name = naam
+	b.text = tekst
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	for staat in ["normal", "hover", "pressed", "focus", "hover_pressed", "disabled"]:
+		b.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
+	b.add_theme_font_size_override("font_size", _px(9))
+	b.add_theme_color_override("font_color", HubAssets.INKT_ZACHT)
+	b.add_theme_color_override("font_hover_color", HubAssets.INKT)
+	b.add_theme_color_override("font_pressed_color", HubAssets.INKT)
+	var f := UiAssets.font("tekst")
+	if f != null:
+		b.add_theme_font_override("font", f)
+	b.pressed.connect(actie)
+	return b
+
+
 ## In de raad: zet een geldige standaardkeuze klaar (jijzelf of de eerste
 ## kandidaat; het eerste doelwit), en ruim een ongeldige keuze op.
 func _kies_standaard() -> void:
+	if _testament_open():
+		var erf := _erfgenamen()
+		if not erf.has(_testament_doel):
+			_testament_doel = int(erf[0]) if not erf.is_empty() else -1
 	if not _raad_open():
 		return
 	var mijn_team: int = int(driver.c.spelers[mens_id].team)
@@ -992,7 +1117,9 @@ func _ververs_tijdlijn() -> void:
 	# animeren, oudste eerst; de rest staat er meteen.
 	var al_gezien: int = CampaignBridge.feed_gezien
 	var nieuw_totaal: int = clampi(driver.feed.size() - al_gezien, 1, ONTHUL_MAX)
-	var vertraging_per: float = minf(0.45, 4.0 / float(nieuw_totaal))
+	# Een snelle golf (27 september): alles binnen ~0,8 s, anders staat het
+	# zichtbare stuk onderaan seconden leeg.
+	var vertraging_per: float = minf(0.12, 0.8 / float(nieuw_totaal))
 	var bouwer := HubFeedKaart.new(driver.c, mens_id, _s)
 	while _feed_getoond < driver.feed.size():
 		var idx := _feed_getoond
@@ -1023,7 +1150,7 @@ func _ververs_tijdlijn() -> void:
 				kaart.modulate.a = 0.0
 				var tw := (kaart as Control).create_tween()
 				tw.tween_interval(0.15 + vertraging_per * float(nieuw_totaal - 1 - van_onder))
-				tw.tween_property(kaart, "modulate:a", 1.0, 0.3)
+				tw.tween_property(kaart, "modulate:a", 1.0, 0.25)
 	CampaignBridge.feed_gezien = maxi(CampaignBridge.feed_gezien, driver.feed.size())
 	_scroll_naar_onder(_scroll)
 
@@ -1037,27 +1164,119 @@ func _scroll_naar_onder(scroll: ScrollContainer) -> void:
 		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
 
 
-## F3.3-rest: MatchReport-detail: het hele battlereport in een pop-up.
+## F3.3-rest: het hele slagrapport in een pop-up (27 september: twee kolommen
+## met schild, naam en factie, en per kant wat het duel kostte en opleverde).
 func _toon_report(e: Dictionary) -> void:
 	var c: CState = driver.c
-	var regels: Array = []
-	var uitslag := tr("HUB_REPORT_DRAW")
-	if int(e.winnaar) != -1:
-		uitslag = tr("HUB_REPORT_WINS") % [String(c.spelers[int(e.winnaar)].naam), String(e.methode)]
-	regels.append(tr("HUB_REPORT_HEADER") % [
-		String(c.spelers[int(e.p1)].naam), String(c.spelers[int(e.p2)].naam),
-		int(e.ronde), uitslag, int(e.cycli)])
-	regels.append("")
-	var cp_delta: Dictionary = e.get("cp_delta", {})
-	for sid in [int(e.p1), int(e.p2)]:
-		var v: Dictionary = (e.verliezen as Dictionary).get(str(sid), {})
-		regels.append(tr("HUB_REPORT_LOSSES") % [
-			String(c.spelers[sid].naam), int(v.get("inf", 0)), int(v.get("cav", 0)),
-			int(v.get("art", 0)), int(cp_delta.get(str(sid), 0))])
-	var inhoud := _popup(tr("HUB_REPORT_TITLE").to_upper(), "Rapport")
-	var l := HubAssets.tekst("\n".join(regels), _px(10), HubAssets.INKT)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	inhoud.add_child(l)
+	var inhoud := _popup(tr("HUB_TAG_BATTLE_REPORT"), "Rapport")
+	var sub := HubAssets.tekst(tr("HUB_RAPPORT_SUB") % [int(e.ronde), int(e.cycli)], _px(10), HubAssets.INKT_ZACHT)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inhoud.add_child(sub)
+	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	var a: int = int(e.p1)
+	var b: int = int(e.p2)
+	if int(c.spelers[a].team) != mijn_team:
+		var t := a
+		a = b
+		b = t
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(12))
+	inhoud.add_child(rij)
+	rij.add_child(_rapport_kant(e, a))
+	var sabels := HubAssets.icoon("Inbattle_icon", _u(34), HubAssets.INKT)
+	sabels.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	sabels.custom_minimum_size = Vector2(_u(34), _u(70))
+	rij.add_child(sabels)
+	rij.add_child(_rapport_kant(e, b))
+	var w: int = int(e.get("winnaar", -1))
+	if w >= 0:
+		var slot := HubAssets.tekst(tr("HUB_RAPPORT_WINT") % [String(c.spelers[w].naam),
+			_methode_tekst(String(e.get("methode", "")))], _px(12), HubAssets.INKT, true)
+		slot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		inhoud.add_child(slot)
+
+
+## Een kant van het slagrapport: schild (goud lintje voor de winnaar), naam,
+## factie, en wat het duel kostte en opleverde: reserve ingezet, buit, CP en
+## wie er op het bord sneuvelde.
+func _rapport_kant(e: Dictionary, sid: int) -> Control:
+	var c: CState = driver.c
+	var sp: Dictionary = c.spelers[sid]
+	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	var kolom := VBoxContainer.new()
+	kolom.custom_minimum_size = Vector2(_u(180), 0)
+	kolom.add_theme_constant_override("separation", _px(3))
+	var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.team) == mijn_team,
+		String(sp.status) != "actief", _u(64))
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kolom.add_child(p)
+	var plaat := _naamplaat(String(sp.naam), 10)
+	plaat.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kolom.add_child(plaat)
+	var factie := HubAssets.tekst(Constants.doctrine_display_name(int(sp.get("doctrine", 0))).to_upper(),
+		_px(7), HubAssets.INKT_ZACHT, true)
+	factie.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(factie)
+	# WINNAAR of een lege regel: dan staan de regels van beide kanten gelijk.
+	var winnaar: bool = int(e.get("winnaar", -1)) == sid
+	var lint := HubAssets.tekst(tr("HUB_WINNAAR") if winnaar else " ", _px(8),
+		UiAssets.SELECTIE_GOUD.darkened(0.35), true)
+	lint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(lint)
+	var z: Dictionary = (e.get("inzet", {}) as Dictionary).get(str(sid), {})
+	var kosten: int = int(z.get("inf", 0)) + 2 * int(z.get("cav", 0)) + 3 * int(z.get("art", 0))
+	var buit: int = int((e.get("buit", {}) as Dictionary).get(str(sid), 0))
+	var cp: int = int((e.get("cp_delta", {}) as Dictionary).get(str(sid), 0))
+	kolom.add_child(_rapport_regel("hub:Donation_icon", tr("HUB_RAPPORT_INZET"), _teken(-kosten)))
+	kolom.add_child(_rapport_regel("hub:Donation_icon", tr("HUB_RAPPORT_BUIT"), _teken(buit)))
+	kolom.add_child(_rapport_regel("cp", tr("HUB_RAPPORT_CP"), _teken(cp)))
+	var v: Dictionary = (e.get("verliezen", {}) as Dictionary).get(str(sid), {})
+	var dood := HBoxContainer.new()
+	dood.alignment = BoxContainer.ALIGNMENT_CENTER
+	dood.add_theme_constant_override("separation", _px(3))
+	var kop := HubAssets.tekst(tr("HUB_RAPPORT_GESNEUVELD"), _px(7), HubAssets.INKT_ZACHT)
+	kolom.add_child(kop)
+	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for spec in [["unit-infantry", "inf"], ["unit-cavalry", "cav"], ["unit-artillery", "art"]]:
+		var n: int = int(v.get(String(spec[1]), 0))
+		var ic := UiAssets.icoon_rect(String(spec[0]), _u(14), HubAssets.INKT)
+		dood.add_child(ic)
+		dood.add_child(HubAssets.tekst(str(n), _px(9), HubAssets.INKT, true))
+	kolom.add_child(dood)
+	return kolom
+
+
+## Een regel in het rapport: icoon, wat het is, en het getal rechts.
+func _rapport_regel(icoon: String, label: String, waarde: String) -> Control:
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", _px(4))
+	var ic: TextureRect
+	if icoon.begins_with("hub:"):
+		ic = HubAssets.icoon(icoon.substr(4), _u(13), HubAssets.INKT)
+	else:
+		ic = UiAssets.icoon_rect(icoon, _u(13), HubAssets.INKT)
+	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(ic)
+	var l := HubAssets.tekst(label, _px(8), HubAssets.INKT_ZACHT)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rij.add_child(l)
+	rij.add_child(HubAssets.tekst(waarde, _px(10), HubAssets.INKT, true))
+	return rij
+
+
+## De winmethode in gewone taal.
+func _methode_tekst(m: String) -> String:
+	match m:
+		"haven":
+			return tr("HUB_METHOD_HARBOR")
+		"eliminatie":
+			return tr("HUB_METHOD_ELIMINATION")
+		"resign":
+			return tr("HUB_METHOD_RESIGN")
+		"honger":
+			return tr("HUB_METHOD_HUNGER")
+	return m
 
 
 # --- Pop-ups (quick chat, help, instellingen, lid, rapport) ------------------------
@@ -1125,7 +1344,7 @@ func _popup_knop(tekst: String, naam: String, actie: Callable) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size = Vector2(_u(200), _u(52))
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	HubAssets.knop(b, "buttons/Quickchat_pop-up_button", Vector2(40, 40), Vector4(_u(10), 0, _u(10), 0))
+	HubAssets.knop(b, "buttons/Quickchat_pop-up_button", Vector2(40, 40), Vector4(_u(24), 0, _u(24), 0))
 	b.add_theme_font_size_override("font_size", _px(11))
 	b.pressed.connect(actie)
 	return b
@@ -1177,17 +1396,21 @@ func _kies_doel(sleutel: String, wie: String) -> void:
 		if sleutel != "HUB_QC_DONEER" and c.al_genomineerd.has(sid):
 			continue
 		kandidaten.append(int(sid))
-	var inhoud := _popup(tr(sleutel).replace("%s", "..."), "QcDoel")
+	var titels := {"HUB_QC_STUUR": "HUB_QC_WIE_STUUR", "HUB_QC_PAK": "HUB_QC_WIE_PAK",
+		"HUB_QC_DONEER": "HUB_QC_WIE_DONEER"}
+	var inhoud := _popup(tr(String(titels.get(sleutel, sleutel))).replace("%s", "..."), "QcDoel")
 	if kandidaten.is_empty():
 		var leeg := HubAssets.tekst(tr("HUB_QC_NIEMAND"), _px(11), HubAssets.INKT_ZACHT)
 		leeg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		inhoud.add_child(leeg)
 		return
+	var midden := CenterContainer.new()
+	inhoud.add_child(midden)
 	var raster := GridContainer.new()
-	raster.columns = 4
+	raster.columns = mini(4, kandidaten.size())
 	raster.add_theme_constant_override("h_separation", _px(8))
 	raster.add_theme_constant_override("v_separation", _px(8))
-	inhoud.add_child(raster)
+	midden.add_child(raster)
 	for sid in kandidaten:
 		var doel: int = sid
 		var sp: Dictionary = c.spelers[doel]
@@ -1213,11 +1436,29 @@ func _kies_doel(sleutel: String, wie: String) -> void:
 		raster.add_child(b)
 
 
+## Zo werkt het: per onderdeel een icoon, een kop en een paar zinnen.
 func _toon_help() -> void:
 	var inhoud := _popup(tr("HUB_HELP_TITLE"), "Help")
-	var l := HubAssets.tekst(tr("HUB_HELP_TEXT"), _px(10), HubAssets.INKT)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	inhoud.add_child(l)
+	for spec in [["Nomination_icon", "HUB_PHASE_SHORT_NOMINATION", "HUB_HELP_RAAD"],
+			["Donation_icon", "HUB_PHASE_SHORT_DONATION", "HUB_HELP_DONATIE"],
+			["Inbattle_icon", "HUB_PHASE_SHORT_DUELS", "HUB_HELP_DUELS"],
+			["Testament_icon", "HUB_PHASE_SHORT_TESTAMENT", "HUB_HELP_TESTAMENT"],
+			["Chat_icon", "HUB_QUICK_CHAT", "HUB_HELP_CHAT"],
+			["Time_icon", "HUB_TIMELINE", "HUB_HELP_TIJDLIJN"]]:
+		var rij := HBoxContainer.new()
+		rij.add_theme_constant_override("separation", _px(10))
+		var ic := HubAssets.icoon(String(spec[0]), _u(22), HubAssets.INKT)
+		ic.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		rij.add_child(ic)
+		var kolom := VBoxContainer.new()
+		kolom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		kolom.add_theme_constant_override("separation", 0)
+		kolom.add_child(HubAssets.tekst(tr(String(spec[1])).to_upper(), _px(10), HubAssets.INKT, true))
+		var l := HubAssets.tekst(tr(String(spec[2])), _px(9), HubAssets.INKT)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kolom.add_child(l)
+		rij.add_child(kolom)
+		inhoud.add_child(rij)
 
 
 func _toon_instellingen() -> void:
@@ -1236,7 +1477,8 @@ func _toon_grootboek() -> void:
 	scherm.open(driver.c, mens_id)
 
 
-## Tik op een portret: naam, stand en (als je het mag zien) de saldi.
+## Tik op een schild: wie het is (factie, stand, tegen wie hij vecht) en wat
+## hij heeft; "?" voor wat je niet mag zien (D12).
 func _toon_lid(sid: int) -> void:
 	var c: CState = driver.c
 	var sp: Dictionary = c.spelers[sid]
@@ -1244,20 +1486,36 @@ func _toon_lid(sid: int) -> void:
 	var naam := String(sp.naam) + (tr("HUB_YOU_SUFFIX") if sid == mens_id else "")
 	var inhoud := _popup(naam, "LidInfo")
 	var status := _lid_status(c, sid)
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(16))
+	inhoud.add_child(rij)
 	var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.team) == mijn_team, status == "dood",
-		_u(110), status)
-	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	inhoud.add_child(p)
-	var regels: Array = [Constants.doctrine_display_name(int(sp.get("doctrine", 0))),
-		tr("HUB_STATUS_" + status.to_upper())]
+		_u(100), status)
+	rij.add_child(p)
+	var info := VBoxContainer.new()
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", _px(5))
+	rij.add_child(info)
+	info.add_child(HubAssets.tekst(Constants.doctrine_display_name(int(sp.get("doctrine", 0))).to_upper(),
+		_px(12), HubAssets.INKT, true))
+	info.add_child(HubAssets.tekst(tr("HUB_STATUS_" + status.to_upper()), _px(10), HubAssets.INKT_ZACHT))
+	for duel in c.duels_deze_ronde:
+		if not bool(duel.klaar) and (int(duel.p1) == sid or int(duel.p2) == sid):
+			var tegen: int = int(duel.p2) if int(duel.p1) == sid else int(duel.p1)
+			info.add_child(HubAssets.tekst(tr("HUB_LID_VECHT") % String(c.spelers[tegen].naam),
+				_px(10), HubAssets.INKT))
 	if status != "dood":
-		if CView.mag_saldo_zien(c, mens_id, sid):
-			regels.append(tr("HUB_ROW_SALDO") % [c.pool_totaal_van(sid), c.cp_van(sid), c.punten_van(sid)])
-		else:
-			regels.append(tr("HUB_ROW_SALDO_GEHEIM") % c.punten_van(sid))
-	var l := HubAssets.tekst("\n".join(regels), _px(11), HubAssets.INKT)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	inhoud.add_child(l)
+		var saldo := _saldo_regel(c, sid, false, HubAssets.INKT, 11.0)
+		saldo.alignment = BoxContainer.ALIGNMENT_BEGIN
+		var tussen := Control.new()
+		tussen.custom_minimum_size = Vector2(_u(6), 0)
+		saldo.add_child(tussen)
+		var ster := UiAssets.icoon_rect("score", _u(14), HubAssets.INKT)
+		ster.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		saldo.add_child(ster)
+		saldo.add_child(HubAssets.tekst(str(c.punten_van(sid)), _px(11), HubAssets.INKT, true))
+		info.add_child(saldo)
 
 
 # --- Quick chat -------------------------------------------------------------------
@@ -1362,9 +1620,10 @@ func _klok(idx: int) -> String:
 # --- Fasepaneel -------------------------------------------------------------------
 
 func _wis_paneel() -> void:
-	for kind in _paneel.get_children():
-		_paneel.remove_child(kind)
-		kind.queue_free()
+	for houder in [_paneel, _voet]:
+		for kind in houder.get_children():
+			houder.remove_child(kind)
+			kind.queue_free()
 
 
 ## Knop op het perkament van het fasepaneel (Button_quickchat). De callable
@@ -1440,21 +1699,21 @@ func _bouw_fase_paneel() -> void:
 	if c.fase == CState.Fase.KLAAR:
 		_paneel_einde(c)
 		return
-	if c.fase == CState.Fase.BURGEROORLOG:
-		var bv := BracketView.new()
-		bv.name = "BracketView"
-		bv.vul(c)
-		# BracketView is gemaakt voor de veldtafel (ivoor): op perkament in inkt.
-		for kind in bv.find_children("*", "Label", true, false):
-			(kind as Label).add_theme_color_override("font_color", HubAssets.INKT)
-		_paneel.add_child(bv)
 	if not driver.wacht_op_mens():
+		if c.fase == CState.Fase.BURGEROORLOG:
+			_paneel_burgeroorlog(c)
 		var rij := HBoxContainer.new()
 		rij.alignment = BoxContainer.ALIGNMENT_CENTER
 		rij.add_theme_constant_override("separation", _px(8))
 		rij.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		var zandloper := HubAssets.icoon("Phase_icon", _u(18), HubAssets.INKT)
 		zandloper.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		zandloper.pivot_offset = Vector2(_u(9), _u(9))
+		if _bezig:
+			# Zolang de bots bezig zijn draait de zandloper om.
+			var tw := zandloper.create_tween().set_loops()
+			tw.tween_property(zandloper, "rotation", PI, 0.5).from(0.0)
+			tw.tween_interval(0.35)
 		rij.add_child(zandloper)
 		_info_label = HubAssets.tekst(tr("HUB_BOTS_BUSY") if _bezig else tr("HUB_WAIT_NEXT_PHASE"), _px(11), HubAssets.INKT)
 		_info_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1473,6 +1732,8 @@ func _bouw_fase_paneel() -> void:
 
 
 ## 27 juli (Max): het campagne-eindscherm: kampioen, eindstand, opnieuw.
+## 27 september: kampioen met de samenvatting ernaast, de top drie op een rij
+## en de knoppen in de voet.
 func _paneel_einde(c: CState) -> void:
 	var kampioen: Dictionary = c.spelers.get(c.winnaar, {})
 	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
@@ -1481,30 +1742,63 @@ func _paneel_einde(c: CState) -> void:
 	kop.add_theme_constant_override("separation", _px(10))
 	if not kampioen.is_empty():
 		kop.add_child(HubAssets.portret(int(kampioen.get("doctrine", 0)),
-			int(kampioen.get("team", 0)) == mijn_team, false, _u(54)))
-	var titel := HubAssets.tekst(tr("HUB_END_CHAMPION") % String(kampioen.get("naam", "?")), _px(15), HubAssets.INKT, true)
+			int(kampioen.get("team", 0)) == mijn_team, false, _u(46)))
+	var tekst := VBoxContainer.new()
+	tekst.alignment = BoxContainer.ALIGNMENT_CENTER
+	tekst.add_theme_constant_override("separation", 0)
+	var titel := HubAssets.tekst(tr("HUB_END_CHAMPION") % String(kampioen.get("naam", "?")), _px(14), HubAssets.INKT, true)
 	titel.name = "EindTitel"
-	titel.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	kop.add_child(titel)
-	_paneel.add_child(kop)
+	tekst.add_child(titel)
 	var mijn_punten: int = c.punten_van(mens_id)
 	var plek: int = 1
 	for id in c.spelers:
 		if c.punten_van(int(id)) > mijn_punten:
 			plek += 1
-	_paneel_tekst(tr("HUB_END_SUMMARY") % [c.ronde, driver.duels_gespeeld, mijn_punten, plek, c.spelers.size()], 9)
-	var rij := HBoxContainer.new()
-	rij.add_theme_constant_override("separation", _px(10))
-	rij.add_child(_knop(tr("HUB_END_LEDGER_BTN"), "score", _toon_grootboek))
-	var opnieuw := _knop(tr("HUB_END_NEW_BTN"), "phase-setup", func() -> void:
+	var samen := HubAssets.tekst(tr("HUB_END_SUMMARY") % [c.ronde, driver.duels_gespeeld, mijn_punten, plek,
+		c.spelers.size()], _px(8), HubAssets.INKT_ZACHT)
+	samen.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	samen.custom_minimum_size = Vector2(_u(320), 0)
+	tekst.add_child(samen)
+	kop.add_child(tekst)
+	_paneel.add_child(kop)
+	# De top drie op roem: schild, plek en naam, roem.
+	var top: Array = LedgerScreen.rijen(c, "punten")
+	var podium := HBoxContainer.new()
+	podium.name = "Podium"
+	podium.alignment = BoxContainer.ALIGNMENT_CENTER
+	podium.add_theme_constant_override("separation", _px(22))
+	for i in mini(3, top.size()):
+		var sp: Dictionary = c.spelers.get(int(top[i].id), {})
+		var vak := HBoxContainer.new()
+		vak.add_theme_constant_override("separation", _px(4))
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.get("team", 0)) == mijn_team,
+			String(sp.get("status", "actief")) != "actief", _u(28))
+		p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		vak.add_child(p)
+		var info := VBoxContainer.new()
+		info.alignment = BoxContainer.ALIGNMENT_CENTER
+		info.add_theme_constant_override("separation", 0)
+		info.add_child(HubAssets.tekst("%d. %s" % [i + 1, String(top[i].naam)], _px(8),
+			HubAssets.ROOD if int(top[i].id) == mens_id else HubAssets.INKT, true))
+		var roem := HBoxContainer.new()
+		roem.add_theme_constant_override("separation", _px(3))
+		roem.add_child(UiAssets.icoon_rect("score", _u(10), HubAssets.INKT))
+		roem.add_child(HubAssets.tekst(str(int(top[i].punten)), _px(8), HubAssets.INKT, true))
+		info.add_child(roem)
+		vak.add_child(info)
+		podium.add_child(vak)
+	_paneel.add_child(podium)
+	var grootboek := _knop(tr("HUB_END_LEDGER_BTN"), "score", _toon_grootboek)
+	grootboek.name = "GrootboekEindKnop"
+	_voet.add_child(grootboek)
+	var opnieuw := _rode_knop(tr("HUB_END_NEW_CAPS"), "NieuweCampagneKnop", func() -> void:
 		if FileAccess.file_exists(SAVE_PAD):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PAD))
 		CampaignBridge.driver = null
 		CampaignBridge.feed_gezien = 0
 		get_tree().reload_current_scene())
-	opnieuw.name = "NieuweCampagneKnop"
-	rij.add_child(opnieuw)
-	_paneel.add_child(rij)
+	opnieuw.custom_minimum_size = Vector2(_u(200), _u(40))
+	_voet.add_child(opnieuw)
 
 
 ## De raad (pdf pagina 1): links jouw vechter -> het doelwit met naamplaatjes,
@@ -1634,54 +1928,165 @@ func _raad_keuze(c: CState, sid: int, eigen: bool, rol: String, badge: String, k
 
 
 ## F3.4b: het mens-duel speelt op het echte bord: de brug zet de config klaar.
-## UX (27 juli, Max): de mens heeft voorrang op de bot-simulaties, het paneel
-## toont wie-tegen-wie deze ronde, en het duel start na een korte aftel
-## vanzelf met een laadscherm. "Blijf in de hub" annuleert de auto-start.
+## UX (27 juli, Max): de mens heeft voorrang op de bot-simulaties, en het duel
+## start na een korte aftel vanzelf met een laadscherm; "Blijf in de hub"
+## annuleert de auto-start. 27 september: jij tegen hem met schild, naam,
+## factie en saldo; de rode knop met een aftelbalk in de voet; de andere paren
+## van de ronde klein eronder.
 func _paneel_duel(c: CState) -> void:
 	var d: Dictionary = driver.mens_duel()
 	if d.is_empty():
 		return
 	var vijand: int = int(d.p2) if int(d.p1) == mens_id else int(d.p1)
-	var mijn_team: int = int(c.spelers[mens_id].team)
-	_paneel_tekst(tr("HUB_DUEL_TITLE") % String(c.spelers[vijand].naam), 8.5)
-	var knoppen := HBoxContainer.new()
-	knoppen.alignment = BoxContainer.ALIGNMENT_CENTER
-	knoppen.add_theme_constant_override("separation", _px(10))
-	_paneel.add_child(knoppen)
+	var burgeroorlog: bool = c.fase == CState.Fase.BURGEROORLOG
+	var kop: String = tr("HUB_DUEL_KOP")
+	if burgeroorlog:
+		kop = "%s: %s" % [tr("HUB_PHASE_SHORT_CIVIL_WAR"), kop]
+	_paneel.add_child(_kop_met_sierlijn(kop, 10, 44))
+	_paneel.add_child(_vs_rij(c, vijand))
+	# In de burgeroorlog: wie er nog in de strijd is, in plaats van de uitleg.
+	_paneel_tekst(_nog_in_strijd(c) if burgeroorlog else tr("HUB_DUEL_UITLEG"), 7.5, HubAssets.INKT_ZACHT)
+	# De voet: de rode knop, met de aftel eronder zolang die loopt, en rechts
+	# de bijzaken als tekstknop (blijven, de andere paren bekijken).
+	var knop_kolom := VBoxContainer.new()
+	knop_kolom.add_theme_constant_override("separation", _px(3))
+	_voet.add_child(knop_kolom)
 	var speel := _rode_knop(tr("HUB_DUEL_PLAY_CAPS"), "SpeelDuelKnop", func() -> void:
 		_start_mens_duel(vijand))
-	speel.custom_minimum_size = Vector2(_u(190), _u(40))
-	knoppen.add_child(speel)
+	speel.custom_minimum_size = Vector2(_u(210), _u(40))
+	knop_kolom.add_child(speel)
+	var links := VBoxContainer.new()
+	links.alignment = BoxContainer.ALIGNMENT_CENTER
+	links.add_theme_constant_override("separation", 0)
+	_voet.add_child(links)
 	if _auto_stop_idx != int(d.idx):
-		var blijf := _knop(tr("HUB_DUEL_STAY_BTN"), "", func() -> void:
-			_auto_stop_idx = int(d.idx)
-			_bouw_fase_paneel())
-		blijf.name = "BlijfKnop"
-		knoppen.add_child(blijf)
-		_paneel_tekst(tr("HUB_DUEL_AUTO"), 8, HubAssets.INKT_ZACHT)
 		if _auto_start_idx != int(d.idx):
 			_auto_start_idx = int(d.idx)
+			_auto_start_ms = Time.get_ticks_msec()
 			_auto_start_duel(int(d.idx), vijand)
-	_paneel.add_child(_kop_met_sierlijn(tr("HUB_DUEL_PAIRS_TITLE"), 9, 40))
+		knop_kolom.add_child(Aftel.new(_auto_start_ms, 2500, _u(8)))
+		links.add_child(_link_knop(tr("HUB_DUEL_STAY_BTN"), "BlijfKnop", func() -> void:
+			_auto_stop_idx = int(d.idx)
+			_bouw_fase_paneel()))
+	# In de burgeroorlog staat de bracket er al boven.
+	if c.fase != CState.Fase.BURGEROORLOG and c.duels_deze_ronde.size() > 1:
+		links.add_child(_link_knop(tr("HUB_DUEL_PAREN_LINK") % (c.duels_deze_ronde.size() - 1),
+			"ParenKnop", _toon_paren))
+
+
+## De burgeroorlog terwijl jij niet aan zet bent (27 september, was de
+## BracketView van de veldtafel): de paren van deze knock-outronde en wie er
+## nog in de strijd is.
+func _paneel_burgeroorlog(c: CState) -> void:
+	_paneel.add_child(_kop_met_sierlijn(tr("HUB_PHASE_SHORT_CIVIL_WAR"), 10, 40))
+	var midden := CenterContainer.new()
+	_paneel.add_child(midden)
+	var raster := GridContainer.new()
+	raster.name = "Bracket"
+	raster.columns = 2
+	raster.add_theme_constant_override("h_separation", _px(22))
+	raster.add_theme_constant_override("v_separation", _px(4))
+	midden.add_child(raster)
 	for duel in c.duels_deze_ronde:
-		var rij := HBoxContainer.new()
-		rij.alignment = BoxContainer.ALIGNMENT_CENTER
-		rij.add_theme_constant_override("separation", _px(6))
-		var kleur: Color = HubAssets.INKT
-		if int(duel.p1) == mens_id or int(duel.p2) == mens_id:
-			kleur = HubAssets.ROOD
-		elif bool(duel.klaar):
-			kleur = HubAssets.INKT_ZACHT
-		for kant in [int(duel.p1), int(duel.p2)]:
-			var sp: Dictionary = c.spelers[kant]
-			rij.add_child(HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.team) == mijn_team,
-				String(sp.status) != "actief", _u(20)))
-		var status: String = tr("BRACKET_DONE") if bool(duel.klaar) else tr("BRACKET_NOW_PLAYING")
-		var r := HubAssets.tekst(tr("BRACKET_DUEL_ROW") % [String(c.spelers[int(duel.p1)].naam),
-			String(c.spelers[int(duel.p2)].naam), status], _px(9), kleur)
-		r.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		rij.add_child(r)
-		_paneel.add_child(rij)
+		raster.add_child(_paar_regel(c, duel))
+	_paneel_tekst(_nog_in_strijd(c), 7.5, HubAssets.INKT_ZACHT)
+
+
+## "Nog in de strijd: Max, Piet" (de levende deelnemers van de burgeroorlog).
+func _nog_in_strijd(c: CState) -> String:
+	var over: Array = []
+	for sid in c.spelers:
+		if String(c.spelers[sid].status) == "actief":
+			over.append(String(c.spelers[sid].naam))
+	return tr("BRACKET_REMAINING") % ", ".join(over)
+
+
+## Alle paren van deze ronde in een venster: twee schildjes met de namen, en
+## of het duel al gespeeld is (vinkje) of nog loopt (zandloper).
+func _toon_paren() -> void:
+	var c: CState = driver.c
+	var inhoud := _popup(tr("HUB_DUEL_PAIRS_TITLE"), "Paren")
+	var midden := CenterContainer.new()
+	inhoud.add_child(midden)
+	var raster := GridContainer.new()
+	raster.columns = 2
+	raster.add_theme_constant_override("h_separation", _px(22))
+	raster.add_theme_constant_override("v_separation", _px(8))
+	midden.add_child(raster)
+	for duel in c.duels_deze_ronde:
+		raster.add_child(_paar_regel(c, duel))
+
+
+## Jij tegen hem, gespiegeld om de sabels: schild met ernaast naam, factie en
+## saldo; de tekst staat aan de kant van de sabels.
+func _vs_rij(c: CState, vijand: int, portret: float = 54.0) -> HBoxContainer:
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(10))
+	rij.add_child(_duel_kant(c, mens_id, true, portret))
+	var sabels := HubAssets.icoon("Inbattle_icon", _u(30), HubAssets.INKT)
+	sabels.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(sabels)
+	rij.add_child(_duel_kant(c, vijand, false, portret))
+	return rij
+
+
+func _duel_kant(c: CState, sid: int, eigen: bool, portret: float) -> Control:
+	var sp: Dictionary = c.spelers[sid]
+	var kant := HBoxContainer.new()
+	kant.add_theme_constant_override("separation", _px(6))
+	var p := HubAssets.portret(int(sp.get("doctrine", 0)), eigen, false, _u(portret))
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var info := VBoxContainer.new()
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.custom_minimum_size = Vector2(_u(104), 0)
+	info.add_theme_constant_override("separation", _px(2))
+	var plaat := _naamplaat(String(sp.naam), 9)
+	plaat.size_flags_horizontal = Control.SIZE_SHRINK_END if eigen else Control.SIZE_SHRINK_BEGIN
+	info.add_child(plaat)
+	var factie := HubAssets.tekst(Constants.doctrine_display_name(int(sp.get("doctrine", 0))).to_upper(),
+		_px(7), HubAssets.INKT_ZACHT, true)
+	factie.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if eigen else HORIZONTAL_ALIGNMENT_LEFT
+	info.add_child(factie)
+	var saldo := _saldo_regel(c, sid, false, HubAssets.INKT, 8.0)
+	saldo.alignment = BoxContainer.ALIGNMENT_END if eigen else BoxContainer.ALIGNMENT_BEGIN
+	info.add_child(saldo)
+	if eigen:
+		kant.add_child(info)
+		kant.add_child(p)
+	else:
+		kant.add_child(p)
+		kant.add_child(info)
+	return kant
+
+
+## Een paar van deze ronde: twee schildjes met de namen (jouw paar in rood),
+## en of het al gespeeld is (vinkje) of nog loopt (zandloper).
+func _paar_regel(c: CState, duel: Dictionary) -> Control:
+	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	var van_mij: bool = int(duel.p1) == mens_id or int(duel.p2) == mens_id
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", _px(4))
+	for kant in [int(duel.p1), int(duel.p2)]:
+		var sp: Dictionary = c.spelers[kant]
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.team) == mijn_team,
+			String(sp.status) != "actief", _u(26))
+		p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rij.add_child(p)
+		var l := HubAssets.tekst(String(sp.naam), _px(10), HubAssets.ROOD if van_mij else HubAssets.INKT, van_mij)
+		l.custom_minimum_size = Vector2(_u(58), 0)
+		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		rij.add_child(l)
+	var klaar: bool = bool(duel.klaar)
+	var ic: TextureRect
+	if klaar:
+		ic = UiAssets.icoon_rect("check", _u(14), HubAssets.INKT)
+	else:
+		ic = HubAssets.icoon("Phase_icon", _u(14), HubAssets.INKT_ZACHT)
+	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(ic)
+	return rij
 
 
 func _auto_start_duel(idx: int, vijand: int) -> void:
@@ -1700,114 +2105,218 @@ func _start_mens_duel(vijand: int) -> void:
 	if _duel_start_bezig or not CampaignBridge.start_mens_duel():
 		return
 	_duel_start_bezig = true
-	var lader := _veldtafel()
-	var midden := CenterContainer.new()
-	_vul_scherm(midden)
-	lader.add_child(midden)
-	var kolom := VBoxContainer.new()
-	kolom.add_theme_constant_override("separation", 24)
-	midden.add_child(kolom)
-	var sabels := HubAssets.icoon("Inbattle_icon", 120, UiAssets.WARM_IVOOR)
-	sabels.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	kolom.add_child(sabels)
-	var tekst := _tekst(tr("HUB_DUEL_LOADING") % String(driver.c.spelers[vijand].naam), "LabelKop", 30)
-	tekst.custom_minimum_size = Vector2(900, 0)
-	tekst.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	kolom.add_child(tekst)
-	add_child(lader)
+	_toon_lader(vijand)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if is_inside_tree():
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 
 
+## Het laadscherm voor je duel, in de stijl van de hub (27 september): jij
+## tegen hem met schild, naam, factie en saldo, en de regel dat het laadt.
+func _toon_lader(vijand: int) -> void:
+	var kolom := _keuze_scherm(tr("HUB_DUEL_KOP"), "Lader")
+	_ruimte(kolom)
+	var kaart := PanelContainer.new()
+	kaart.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
+		Vector2(26, 26), Vector4(_u(18), _u(18), _u(18), _u(18))))
+	kolom.add_child(kaart)
+	var binnen := VBoxContainer.new()
+	binnen.add_theme_constant_override("separation", _px(14))
+	kaart.add_child(binnen)
+	binnen.add_child(_vs_rij(driver.c, vijand, 72.0))
+	var tekst := HubAssets.tekst(tr("HUB_DUEL_LOADING") % String(driver.c.spelers[vijand].naam),
+		_px(12), HubAssets.INKT, true)
+	tekst.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	binnen.add_child(tekst)
+	_ruimte(kolom)
+
+
+## C11-UX (Max): doneren = een plusje achter de naam. [+1] geeft 1
+## versterkingspunt (1 soldaat), [+CP] geeft 1 CP; caps bewaakt de reducer.
+## 27 september: per teamgenoot zijn saldo en wat hij deze ronde al kreeg; de
+## knoppen Ruil en KLAAR staan in de voet (KLAAR is de hoofdactie).
 func _paneel_donatie(c: CState) -> void:
-	# C11-UX (Max): doneren = een plusje achter de naam. [+1] geeft 1
-	# versterkingspunt (1 soldaat), [+CP] geeft 1 CP; caps bewaakt de reducer.
 	_paneel.add_child(_kop_met_sierlijn(tr("HUB_DONATE_SHORT"), 10, 40))
-	_paneel_tekst(tr("HUB_DONATE_HINT"), 7.5, HubAssets.INKT_ZACHT)
+	_paneel_tekst(tr("HUB_DONATE_HINT_KORT") % [c.rules.donatie_cap_pionnen, c.rules.donatie_cap_cp],
+		7.5, HubAssets.INKT_ZACHT)
 	var mijn_team: int = int(c.spelers[mens_id].team)
 	var mijn_pool: Dictionary = c.pool_van(mens_id)
-	var raster := GridContainer.new()
-	raster.columns = 2
-	raster.add_theme_constant_override("h_separation", _px(10))
-	raster.add_theme_constant_override("v_separation", _px(4))
-	_paneel.add_child(raster)
+	var mijn_cp: int = c.cp_van(mens_id)
 	for sid in c.actieve_leden(mijn_team):
 		if int(sid) == mens_id:
 			continue
-		var rij := HBoxContainer.new()
-		rij.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		rij.add_theme_constant_override("separation", _px(4))
-		var sp: Dictionary = c.spelers[int(sid)]
-		var portret := HubAssets.portret(int(sp.get("doctrine", 0)), true, false, _u(30))
-		portret.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		rij.add_child(portret)
-		var naam := HubAssets.tekst(String(sp.naam), _px(9), HubAssets.INKT, true)
-		naam.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		naam.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		naam.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		rij.add_child(naam)
 		var doel: int = int(sid)
+		var sp: Dictionary = c.spelers[doel]
+		var ontvangen: Dictionary = c.donaties_ontvangen.get(doel, {"pionnen": 0, "cp": 0})
+		var rij := HBoxContainer.new()
+		rij.add_theme_constant_override("separation", _px(8))
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), true, false, _u(32))
+		p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rij.add_child(p)
+		var info := VBoxContainer.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.add_theme_constant_override("separation", 0)
+		var naam := HubAssets.tekst(String(sp.naam), _px(9), HubAssets.INKT, true)
+		naam.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		info.add_child(naam)
+		var regel := HBoxContainer.new()
+		regel.add_theme_constant_override("separation", _px(8))
+		var saldo := _saldo_regel(c, doel, false, HubAssets.INKT, 7.5)
+		saldo.alignment = BoxContainer.ALIGNMENT_BEGIN
+		regel.add_child(saldo)
+		regel.add_child(HubAssets.tekst(tr("HUB_DONATE_ONTVANGEN") % [int(ontvangen.pionnen),
+			c.rules.donatie_cap_pionnen, int(ontvangen.cp), c.rules.donatie_cap_cp], _px(7), HubAssets.INKT_ZACHT))
+		info.add_child(regel)
+		rij.add_child(info)
 		var plus := _chat_knop(tr("HUB_PLUS_VST"), "Donation_icon", 9)
-		plus.custom_minimum_size = Vector2(_u(50), _u(32))
-		plus.disabled = int(mijn_pool.inf) <= 0
+		plus.custom_minimum_size = Vector2(_u(58), _u(32))
+		plus.disabled = int(mijn_pool.inf) <= 0 or int(ontvangen.pionnen) >= c.rules.donatie_cap_pionnen
 		plus.pressed.connect(func() -> void:
 			if driver.submit_mens_donatie(doel, 1, 0, 0, 0):
 				_ververs())
 		rij.add_child(plus)
-		var plus_cp := _chat_knop(tr("HUB_PLUS_CP"), "", 9)
-		plus_cp.custom_minimum_size = Vector2(_u(50), _u(32))
-		plus_cp.disabled = driver.c.cp_van(mens_id) <= 0
+		var plus_cp := _chat_knop(tr("HUB_PLUS_CP"), "ui:cp", 9)
+		plus_cp.custom_minimum_size = Vector2(_u(58), _u(32))
+		plus_cp.disabled = mijn_cp <= 0 or int(ontvangen.cp) >= c.rules.donatie_cap_cp
 		plus_cp.pressed.connect(func() -> void:
 			if driver.submit_mens_donatie(doel, 0, 0, 0, 1):
 				_ververs())
 		rij.add_child(plus_cp)
-		raster.add_child(rij)
-	var knoppen := HBoxContainer.new()
-	knoppen.add_theme_constant_override("separation", _px(10))
-	_paneel.add_child(knoppen)
+		_paneel.add_child(rij)
 	var koers: int = maxi(1, c.rules.ruil_cp_per_punt)
 	var ruil := _knop(tr("HUB_RUIL_BTN") % koers, "cp", func() -> void:
 		if driver.submit_mens_ruil(koers):
 			_ververs())
 	ruil.name = "RuilKnop"
-	ruil.disabled = c.cp_van(mens_id) < koers
-	knoppen.add_child(ruil)
-	var klaar := _knop(tr("HUB_DONATE_DONE_BTN"), "check", func() -> void:
+	ruil.disabled = mijn_cp < koers
+	_voet.add_child(ruil)
+	var klaar := _rode_knop(tr("HUB_DONATE_KLAAR"), "KlaarKnop", func() -> void:
 		driver.submit_mens_klaar_met_doneren()
 		_werk_door())
-	klaar.name = "KlaarKnop"
-	knoppen.add_child(klaar)
+	klaar.custom_minimum_size = Vector2(_u(160), _u(40))
+	_voet.add_child(klaar)
 
 
+## Het testament (27 september): wat de helft van je bezit is, en aan wie. De
+## erfgenaam kies je door een schild in de kolommen aan te tikken (of het schild
+## hier: volgende), net als in de raad; de vijand mag ook. In de voet
+## NALATEN AAN <naam> of niets nalaten.
 func _paneel_testament(c: CState) -> void:
 	_paneel.add_child(_kop_met_sierlijn(tr("HUB_TAG_TESTAMENT"), 10, 40))
-	_paneel_tekst(tr("HUB_WILL_TITLE"), 8)
-	var doelen := OptionButton.new()
-	doelen.name = "TestamentDoel"
-	doelen.custom_minimum_size = Vector2(0, _u(34))
-	doelen.add_theme_font_size_override("font_size", _px(10))
-	for id in c.spelers:
-		if int(id) != mens_id and String(c.spelers[id].status) == "actief":
-			doelen.add_item(tr("HUB_WILL_TARGET") % [c.spelers[id].naam, int(c.spelers[id].team)], int(id))
-	_paneel.add_child(doelen)
-	var knoppen := HBoxContainer.new()
-	knoppen.add_theme_constant_override("separation", _px(10))
-	_paneel.add_child(knoppen)
-	knoppen.add_child(_knop(tr("HUB_WILL_HALF_BTN"), "pool", func() -> void:
-		if doelen.selected < 0:
-			return
-		var bezit: Dictionary = c.pool_van(mens_id)
-		var verdeling: Array = [{
-			"naar": doelen.get_selected_id(),
-			"inf": int(floor(int(bezit.inf) * 0.5)),
-			"cav": int(floor(int(bezit.cav) * 0.5)),
-			"art": int(floor(int(bezit.art) * 0.5)),
-			"cp": int(floor(c.cp_van(mens_id) * 0.5)),
-		}]
-		driver.submit_mens_testament(verdeling)
-		_werk_door()))
-	knoppen.add_child(_knop(tr("HUB_WILL_NONE_BTN"), "", func() -> void:
+	_paneel_tekst(tr("HUB_WILL_UITLEG"), 7.5)
+	# Precies wat de reducer toestaat (testament_fractie per type, nooit onder nul).
+	var bezit: Dictionary = c.pool_van(mens_id)
+	var f: float = c.rules.testament_fractie
+	var helft := {"inf": maxi(0, int(floor(int(bezit.inf) * f))), "cav": maxi(0, int(floor(int(bezit.cav) * f))),
+		"art": maxi(0, int(floor(int(bezit.art) * f)))}
+	var helft_cp: int = maxi(0, int(floor(c.cp_van(mens_id) * f)))
+	var kandidaten := _erfgenamen()
+	if not kandidaten.has(_testament_doel):
+		_testament_doel = int(kandidaten[0]) if not kandidaten.is_empty() else -1
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(16))
+	_paneel.add_child(rij)
+	# Links wat je nalaat.
+	var wat := VBoxContainer.new()
+	wat.alignment = BoxContainer.ALIGNMENT_CENTER
+	wat.add_theme_constant_override("separation", _px(2))
+	var kop := HubAssets.tekst(tr("HUB_WILL_HELFT"), _px(8), HubAssets.INKT_ZACHT, true)
+	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wat.add_child(kop)
+	var getallen := HBoxContainer.new()
+	getallen.name = "Nalatenschap"
+	getallen.alignment = BoxContainer.ALIGNMENT_CENTER
+	getallen.add_theme_constant_override("separation", _px(4))
+	getallen.add_child(HubAssets.icoon("Donation_icon", _u(18), HubAssets.INKT))
+	getallen.add_child(HubAssets.tekst(str(int(helft.inf) + 2 * int(helft.cav) + 3 * int(helft.art)),
+		_px(14), HubAssets.INKT, true))
+	var tussen := Control.new()
+	tussen.custom_minimum_size = Vector2(_u(8), 0)
+	getallen.add_child(tussen)
+	getallen.add_child(UiAssets.icoon_rect("cp", _u(18), HubAssets.INKT))
+	getallen.add_child(HubAssets.tekst(str(helft_cp), _px(14), HubAssets.INKT, true))
+	wat.add_child(getallen)
+	rij.add_child(wat)
+	var pijl := HubAssets.icoon("Arrow_icon", _u(30))
+	pijl.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	pijl.custom_minimum_size = Vector2(_u(30), _u(48))
+	rij.add_child(pijl)
+	# Rechts de erfgenaam.
+	rij.add_child(_erfgenaam_keuze(c, kandidaten))
+	var niets := _link_knop(tr("HUB_WILL_NONE_BTN"), "NietsNalaten", func() -> void:
 		driver.submit_mens_testament([])
-		_werk_door()))
+		_werk_door())
+	niets.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_voet.add_child(niets)
+	if _testament_doel >= 0:
+		var naar: int = _testament_doel
+		var geef := _rode_knop(tr("HUB_WILL_NAAR") % String(c.spelers[naar].naam).to_upper(), "NalatenKnop", func() -> void:
+			driver.submit_mens_testament([{"naar": naar, "inf": int(helft.inf), "cav": int(helft.cav),
+				"art": int(helft.art), "cp": helft_cp}])
+			_werk_door())
+		geef.custom_minimum_size = Vector2(_u(230), _u(40))
+		_voet.add_child(geef)
+
+
+## De erfgenaam in het testamentpaneel: schild (tik = volgende kandidaat),
+## naamplaatje en ERFGENAAM, zoals de keuzes in de raad.
+func _erfgenaam_keuze(c: CState, kandidaten: Array) -> Control:
+	var kolom := VBoxContainer.new()
+	kolom.name = "Erfgenaam"
+	kolom.add_theme_constant_override("separation", _px(2))
+	var mijn_team: int = int(c.spelers[mens_id].team)
+	var knop := Button.new()
+	knop.flat = true
+	knop.focus_mode = Control.FOCUS_NONE
+	knop.custom_minimum_size = Vector2(_u(48), _u(48))
+	knop.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	for staat in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
+		knop.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
+	if _testament_doel >= 0:
+		var sp: Dictionary = c.spelers[_testament_doel]
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.team) == mijn_team, false, _u(48))
+		p.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		knop.add_child(p)
+	knop.pressed.connect(func() -> void:
+		if kandidaten.is_empty():
+			return
+		_testament_doel = int(kandidaten[(kandidaten.find(_testament_doel) + 1) % kandidaten.size()])
+		_ververs_teams()
+		_bouw_fase_paneel())
+	kolom.add_child(knop)
+	var plaat := _naamplaat(String(c.spelers[_testament_doel].naam) if _testament_doel >= 0 else "-", 8)
+	plaat.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kolom.add_child(plaat)
+	var rol := HubAssets.tekst(tr("HUB_WILL_ERFGENAAM"), _px(6.5), HubAssets.INKT_ZACHT, true)
+	rol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(rol)
+	return kolom
+
+
+## Een aftelbalk die van vol naar leeg loopt, gerekend vanaf `start_ms`: dan
+## loopt hij gewoon door als het paneel opnieuw wordt opgebouwd.
+class Aftel:
+	extends Control
+	var start_ms: int
+	var duur_ms: int
+	var _vul: TextureRect
+
+	func _init(p_start: int, p_duur: int, hoogte: float) -> void:
+		start_ms = p_start
+		duur_ms = maxi(1, p_duur)
+		name = "Aftel"
+		custom_minimum_size = Vector2(0, hoogte)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var achter := HubAssets.plaat("nominate/Loading_bar_BG")
+		achter.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(achter)
+		_vul = HubAssets.plaat("nominate/Loading_bar")
+		_vul.anchor_bottom = 1.0
+		add_child(_vul)
+
+	func _process(_delta: float) -> void:
+		var rest: float = clampf(1.0 - float(Time.get_ticks_msec() - start_ms) / float(duur_ms), 0.0, 1.0)
+		_vul.anchor_right = rest
+		_vul.offset_right = 0.0
