@@ -1,10 +1,10 @@
 Fog of War — trainings-matchup voor Leeuw
-Generaties: 21 · adopties: 1 · minuten: 437.9
-Buit op dragers (kandidaten, 756 potjes): 0.66 pt + 1.08 CP per potje veroverd, 0.55 eigen dragers per potje verloren
+Generaties: 21 · adopties: 0 · minuten: 426.0
+Buit op dragers (kandidaten, 756 potjes): 0.85 pt + 1.34 CP per potje veroverd, 0.61 eigen dragers per potje verloren
 Winrate van Leeuw tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   46.5%  (126 potjes)
-  vs Muis     26.6%  (126 potjes)
-  vs Leeuw    25.8%  (126 potjes)
-  vs Beer     23.2%  (126 potjes)
-  vs Wolf     11.8%  (126 potjes)
-  vs Krokodil  30.2%  (126 potjes)
+  vs Varken   58.1%  (126 potjes)
+  vs Muis     23.9%  (126 potjes)
+  vs Leeuw    19.4%  (126 potjes)
+  vs Beer     33.5%  (126 potjes)
+  vs Wolf     18.3%  (126 potjes)
+  vs Krokodil  27.3%  (126 potjes)
