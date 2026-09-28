@@ -1,5 +1,18 @@
 # Fog of War — Work In Progress & Context
 
+## 28 september -- C27 aangenomen: Leeuw budget 9, leger [11,5,1]
+
+- Max: "adopteer dan zijn we er wel toch". Alleen het doctrines-blok in
+  `rules_v42_campaign.json`; rules_version blijft 4.3.7. CHANGELOG C27,
+  CLAUDE.md (tabel + stand).
+- Trainingsnacht 27 september (op de regels van VOOR C27): Varken 2, Wolf
+  1, rest 0; gewichten apart gecommit (2041929). Matrix
+  `results/nacht_20260928_0431_v42_matrix_l2`.
+- Goldens opnieuw, golden_sims geijkt (leeuw-beer 202: 2/4/88, wolf-leeuw
+  404: 1/8/188), simcheck 0, uispel 777 = `a0561707…` (171, 4).
+- Volgende: een trainingsnacht OP C27 (de Leeuw-bot kent budget 9 en
+  [11,5,1] nog niet), dan de matrix als echte stand.
+
 ## 27 september (middag) -- factiezoeker voor de Leeuw + controlemeting
 
 - Zoeker (08:29-12:55, 6 generaties, achtergrond nacht_20260927_0559):

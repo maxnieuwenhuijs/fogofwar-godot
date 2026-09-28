@@ -1,5 +1,39 @@
 # Spelregels — CHANGELOG
 
+## C27 — 28 september 2026 (de Leeuw: kaartbudget 9, leger [11,5,1])
+
+*Voorstel van de factiezoeker (27 september, zes generaties, gericht op de
+Leeuw); controlemeting dezelfde middag; besluit Max: "adopteer dan zijn we er
+wel toch".*
+
+Na twee trainingsnachten op C24-C26 leerden de andere facties bij en de
+Leeuw nauwelijks: nachtmatrix 27 september **40,9%**, band 40,9-54,4 (13,5
+pp). De fijne knoppen (versterkingspunt ~0,6 pp, start-CP ~0,36 pp) dichten
+dat niet. De zoeker stelde voor: **kaartbudget 8 -> 9 en leger [12,4,2] ->
+[11,5,1]**. Controle op de volle matrix, 4320 partijen per variant, tegen de
+nachtmatrix van 27 september:
+
+| factie | 27 sept | budget 9 + [11,5,1] | alleen [11,5,1] |
+|---|---|---|---|
+| Beer | 54,4 | 54,7 | 54,4 |
+| Varken | 49,1 | 53,1 | 54,9 |
+| Wolf | 52,2 | 51,0 | 53,4 |
+| Krokodil | 50,6 | 48,3 | 52,6 |
+| **Leeuw** | 40,9 | **46,5** | 32,2 |
+| Muis | 52,9 | 46,5 | 52,4 |
+| spreiding | 13,5 | **8,2** | 22,7 |
+
+De ruil alleen kost de Leeuw 8,7 punten: zijn kanon (dracht 7) is te veel
+waard. Samen met het extra budget is het de smalste band tot nu toe. De Muis
+zakt 6,4 en staat nu met de Leeuw onderaan.
+
+**Wat verandert.** Alleen het `doctrines`-blok in `rules_v42_campaign.json`
+(Leeuw `budget` 9, `comp` [11,5,1]). Startcompensatie (`budget_bonus` pt 6,
+cp 5) blijft. `rules_version` blijft 4.3.7.
+
+Goldens opnieuw; twee sims verschuiven (leeuw-beer 202: cyclus 21 -> 4, 518
+-> 88 acties; wolf-leeuw 404: cyclus 7 -> 8, 185 -> 188).
+
 ## C26 — 24 september 2026 (de Leeuw krijgt 6 versterkingspunten en 5 CP)
 
 *Besluit Max, na vier varianten naast elkaar: "ja vast en nu trainen!"

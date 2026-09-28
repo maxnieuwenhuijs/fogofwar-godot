@@ -28,7 +28,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   |---|---|---|---|---|
   | Varken (enum MENS) | 3 | 7 | [12,4,2] (C25, 23 sept; was [11,5,3]) | - allrounder |
   | Muis | 5 | 5 | [16,4,0] | +1 stamina op elke pion, loopt door eigen pionnen |
-  | Leeuw | 2 | 8 | [12,4,2] | artilleriedracht 7 |
+  | Leeuw | 2 | 9 (C27, 28 sept; was 8) | [11,5,1] (C27; was [12,4,2]) | artilleriedracht 7 |
   | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-stamina max 4 |
   | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 stamina en springt over vijanden |
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
@@ -44,7 +44,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 27 september (C24 + C25 + C26, bots na twee trainingsnachten op
+  **Stand 28 september (C27: Leeuw budget 9, [11,5,1]; controlemeting 4320
+  partijen tegen de bots van 26 september): band 46,5-54,7%, spreiding
+  8,2 pp**, de smalste tot nu toe (Leeuw en Muis 46,5 onder, Beer 54,7
+  boven). Zonder het extra budget (alleen [11,5,1]) zakte de Leeuw naar
+  32,2: zijn kanon is te veel waard.
+  Daarvoor: **stand 27 september (C24 + C25 + C26, bots na twee trainingsnachten op
   die regels, 2 x 3240 partijen): band 40,6-53,6%, spreiding 13 pp**
   (Leeuw 40,3/40,9 onder, Beer 52,8/54,4 boven; Muis 53,8/52,9, Wolf
   53,9/52,2, Krokodil 51,8/50,6, Varken 47,5/49,1). De anderen leerden
@@ -749,9 +754,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `4df2aeed…` geven (62 acties, cyclus 2, sinds
-  27 september: de Wolf-gewichten van de trainingsnachten van 25 en 26
-  september); daarvoor `9e0c375b…` (213, 5) sinds 24 september, C26: de
+  eind-zobrist; seed 777 moet `a0561707…` geven (171 acties, cyclus 4, sinds
+  28 september: C27 plus de gewichten van de trainingsnacht van 27
+  september, Varken 2 en Wolf 1 adoptie); daarvoor `4df2aeed…` (62, 2) op
+  27 september (Wolf-gewichten van de nachten van 25 en 26 september);
+  daarvoor `9e0c375b…` (213, 5) sinds 24 september, C26: de
   Leeuw +6 versterkingen en 5 CP; daarvoor `6b820e3f…`
   na C25, het Varken [12,4,2], en `b9c2ee75…` na C24,
   de Leeuw met 4 versterkingspunten; was `90650e1e…`
