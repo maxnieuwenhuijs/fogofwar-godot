@@ -1,10 +1,10 @@
 Fog of War — trainings-matchup voor Muis
-Generaties: 5 · adopties: 0 · minuten: 514.0
-Buit op dragers (kandidaten, 180 potjes): 1.37 pt + 2.84 CP per potje veroverd, 0.73 eigen dragers per potje verloren
+Generaties: 7 · adopties: 0 · minuten: 656.8
+Buit op dragers (kandidaten, 252 potjes): 1.29 pt + 2.79 CP per potje veroverd, 0.83 eigen dragers per potje verloren
 Winrate van Muis tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   51.8%  (30 potjes)
-  vs Muis     78.0%  (30 potjes)
-  vs Leeuw    72.9%  (30 potjes)
-  vs Beer     47.7%  (30 potjes)
-  vs Wolf     39.6%  (30 potjes)
-  vs Krokodil  72.3%  (30 potjes)
+  vs Varken   61.2%  (42 potjes)
+  vs Muis     63.0%  (42 potjes)
+  vs Leeuw    71.2%  (42 potjes)
+  vs Beer     23.2%  (42 potjes)
+  vs Wolf     53.0%  (42 potjes)
+  vs Krokodil  55.9%  (42 potjes)
