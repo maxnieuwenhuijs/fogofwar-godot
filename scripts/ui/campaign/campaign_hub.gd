@@ -22,6 +22,9 @@ var mens_id: int = 0
 
 ## F3.4: vaste solo-savegame-slot; elke campagne-actie staat direct op schijf.
 const SAVE_PAD := "user://campaigns/solo/campagne.jsonl"
+## De kaarten van het spelregelscherm (29 september). Via preload: headless
+## kent een nieuwe klasse pas als de editor hem inschreef.
+const HubRegels := preload("res://scripts/ui/campaign/hub_regels.gd")
 
 var _s: float = 1.0                     # schaal: ontwerp-eenheid -> scherm-pixel
 var _frame: Control = null              # het staande frame (BG en alles erop)
@@ -239,6 +242,16 @@ func _toon_factie_keuze() -> void:
 		kaart.name = "Factie_%d" % int(doctrine)
 		kaart.pressed.connect(_kies_factie.bind(int(doctrine), laag))
 		lijst.add_child(kaart)
+	# Eerst weten hoe het werkt? De spelregels liggen er bovenop. Een
+	# perkamenten knop: een tekstlink verdwijnt op het donkere hout.
+	var regels := _knop(tr("HUB_RULES_LINK"), "", _toon_regels)
+	regels.name = "RegelsLink"
+	regels.icon = HubAssets.tex("icons/Info_icon")
+	regels.expand_icon = true
+	regels.add_theme_constant_override("icon_max_width", _px(16))
+	regels.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	regels.custom_minimum_size = Vector2(_u(290), _u(38))
+	kolom.add_child(regels)
 
 
 func _kies_factie(doctrine: int, keuze_scherm: Control) -> void:
@@ -411,7 +424,7 @@ func _bouw_titel() -> void:
 	_plaats(_header, 120, 44, 324, 18)
 	var help := _rond_knop("Info_icon", "HelpKnop")
 	_plaats(help, 458, 18, 40, 40)
-	help.pressed.connect(_toon_help)
+	help.pressed.connect(_toon_regels)
 	var instel := _rond_knop("Settings_icon", "InstellingenKnop")
 	_plaats(instel, 506, 18, 40, 40)
 	instel.pressed.connect(_toon_instellingen)
@@ -1042,8 +1055,9 @@ func _ruimte(kolom: VBoxContainer) -> void:
 
 
 ## Een dunne inktlijn als schuifbalk (in plaats van de grijze standaardbalk):
-## je ziet dat er meer is zonder dat het ontwerp eronder lijdt.
-func _inkt_balk(scroll: ScrollContainer) -> void:
+## je ziet dat er meer is zonder dat het ontwerp eronder lijdt. Op donker hout
+## (het spelregelscherm) in ivoor.
+func _inkt_balk(scroll: ScrollContainer, kleur: Color = HubAssets.INKT) -> void:
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var balk := scroll.get_v_scroll_bar()
 	balk.custom_minimum_size = Vector2(_u(4), 0)
@@ -1051,7 +1065,7 @@ func _inkt_balk(scroll: ScrollContainer) -> void:
 	balk.add_theme_stylebox_override("scroll_focus", StyleBoxEmpty.new())
 	for staat in ["grabber", "grabber_highlight", "grabber_pressed"]:
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(HubAssets.INKT, 0.55 if staat == "grabber_pressed" else 0.35)
+		sb.bg_color = Color(kleur, 0.55 if staat == "grabber_pressed" else 0.35)
 		sb.set_corner_radius_all(_px(2))
 		sb.content_margin_left = _u(2)
 		sb.content_margin_right = _u(2)
@@ -1436,29 +1450,27 @@ func _kies_doel(sleutel: String, wie: String) -> void:
 		raster.add_child(b)
 
 
-## Zo werkt het: per onderdeel een icoon, een kop en een paar zinnen.
-func _toon_help() -> void:
-	var inhoud := _popup(tr("HUB_HELP_TITLE"), "Help")
-	for spec in [["Nomination_icon", "HUB_PHASE_SHORT_NOMINATION", "HUB_HELP_RAAD"],
-			["Donation_icon", "HUB_PHASE_SHORT_DONATION", "HUB_HELP_DONATIE"],
-			["Inbattle_icon", "HUB_PHASE_SHORT_DUELS", "HUB_HELP_DUELS"],
-			["Testament_icon", "HUB_PHASE_SHORT_TESTAMENT", "HUB_HELP_TESTAMENT"],
-			["Chat_icon", "HUB_QUICK_CHAT", "HUB_HELP_CHAT"],
-			["Time_icon", "HUB_TIMELINE", "HUB_HELP_TIJDLIJN"]]:
-		var rij := HBoxContainer.new()
-		rij.add_theme_constant_override("separation", _px(10))
-		var ic := HubAssets.icoon(String(spec[0]), _u(22), HubAssets.INKT)
-		ic.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		rij.add_child(ic)
-		var kolom := VBoxContainer.new()
-		kolom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		kolom.add_theme_constant_override("separation", 0)
-		kolom.add_child(HubAssets.tekst(tr(String(spec[1])).to_upper(), _px(10), HubAssets.INKT, true))
-		var l := HubAssets.tekst(tr(String(spec[2])), _px(9), HubAssets.INKT)
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		kolom.add_child(l)
-		rij.add_child(kolom)
-		inhoud.add_child(rij)
+## Het spelregelscherm (29 september, Max: "een UI conforme spelregel scherm",
+## "simpele taal en zo weinig mogelijk tekst", "en iconen wel gebruiken"): de
+## ? in de titelbalk en de link op de factiekeuze. Alle campagneregels op
+## kaarten met iconen, in de stijl van de hub; sluiten met de X.
+func _toon_regels() -> void:
+	var kolom := _keuze_scherm(tr("HUB_RULES_TITLE"), "Spelregels")
+	var laag := _keuze_laag
+	var sluit := _rond_knop("Close_icon", "RegelsSluit")
+	sluit.position = Vector2(_u(506), _u(18))
+	sluit.size = Vector2(_u(40), _u(40))
+	kolom.get_parent().add_child(sluit)
+	sluit.pressed.connect(func() -> void: _sluit_keuze(laag))
+	var scroll := ScrollContainer.new()
+	scroll.name = "RegelsScroll"
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_inkt_balk(scroll, HubAssets.IVOOR)
+	kolom.add_child(scroll)
+	# Voor de eerste campagne (factiekeuze) is er nog geen driver: dan de standaardregels.
+	var regels: CRules = driver.c.rules if driver != null else CRules.new()
+	scroll.add_child(HubRegels.new(regels, _s).bouw())
 
 
 func _toon_instellingen() -> void:

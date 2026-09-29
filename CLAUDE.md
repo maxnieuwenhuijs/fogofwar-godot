@@ -220,9 +220,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`nominatie`- en `fase`-items zet de SoloDriver in de feed, alleen
   presentatie). Check: `-- shot campaign_hub [seed] [modus]
   [orakel=<pad>]` (fixture `tools/hub_shot.gd`; modi basis, raad, donatie,
-  testament, burgeroorlog, einde, chat, popup, doel, lid, rapport, help,
+  testament, burgeroorlog, einde, chat, popup, doel, lid, rapport, regels,
   instellingen, grootboek, paren, factie, hervat, laden; met een
   `duel_orakel.json` spoelt hij in seconden door; exit 1 bij fouten).
+  **Spelregels (29 september):** de ? in de titelbalk en de link "Hoe werkt
+  de campagne?" op de factiekeuze openen `_toon_regels`: acht kaarten met een
+  icoon per regel (`hub_regels.gd`, via preload), getallen uit `CRules` en
+  `RulesConfig.CAMPAIGN_DEFAULTS`. Simpele taal, zo weinig mogelijk tekst
+  (Max); nieuwe regel = een `_regel`/`_waarden`-regel plus een HUB_RULE_-tekst.
   **Strakker (27 september):** de hoofdknop van elke fase staat in de voet
   (`FaseVoet`, altijd in beeld), bijzaken zijn tekstlinks (`_link_knop`),
   overloop toont een dunne inktlijn (`_inkt_balk`), keuzeschermen (factie,

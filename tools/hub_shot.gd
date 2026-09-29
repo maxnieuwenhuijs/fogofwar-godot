@@ -5,9 +5,12 @@ extends RefCounted
 ## `-- shot campaign_hub [seed] [modus] [orakel=<pad>]` in tools/capture.gd.
 ##
 ## Modi: "" (ronde 1, jouw duel), raad, donatie, testament, burgeroorlog,
-## einde, chat, popup (quick chat), doel (Stuur wie?), lid, rapport, help,
+## einde, chat, popup (quick chat), doel (Stuur wie?), lid, rapport, regels
+## (het spelregelscherm, boven en onderaan: _shot_hub_regels_2.png),
 ## instellingen, grootboek, paren (de andere paren van de ronde), factie, hervat,
 ## laden.
+## Elke modus met "_nl" erachter (regels_nl) speelt in het Nederlands; de
+## taalkeuze van de speler blijft ongemoeid.
 ## Met orakel=<pad> (een duel_orakel.json) spoelt de campagne in seconden
 ## door; zonder orakel spelen de bots echte duels (minuten per ronde).
 ## Voor de plaatjes zet de fixture soms de staat recht (de mens weer levend
@@ -20,9 +23,17 @@ extends RefCounted
 const HUB := "res://scripts/ui/campaign/campaign_hub.gd"
 const ORAKEL := "res://scripts/training/duel_orakel.gd"
 
+## "_nl" als de modus in het Nederlands speelt: komt achter de bestandsnaam.
+static var _taal := ""
+
 
 static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) -> int:
 	var fouten := 0
+	_taal = ""
+	if modus.ends_with("_nl"):
+		_taal = "_nl"
+		modus = modus.trim_suffix("_nl")
+		TranslationServer.set_locale("nl")
 	var hub: Control = load(HUB).new()
 	if modus == "factie" or modus == "hervat":
 		host.add_child(hub)
@@ -32,6 +43,9 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 			kind.queue_free()
 		if modus == "factie":
 			hub.call("_toon_factie_keuze")
+			if hub.find_child("RegelsLink", true, false) == null:
+				fouten += 1
+				print("[SHOT] de link naar de spelregels ontbreekt op de factiekeuze")
 		else:
 			hub.call("_toon_hervat_keuze", SoloDriver.new(seed_val, 0))
 		await host.get_tree().create_timer(0.8).timeout
@@ -109,8 +123,8 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 				print("[SHOT] geen slagrapport om te tonen (speel door met modus raad)")
 			else:
 				hub.call("_toon_report", rapport)
-		"help":
-			hub.call("_toon_help")
+		"regels":
+			hub.call("_toon_regels")
 		"instellingen":
 			hub.call("_toon_instellingen")
 		"grootboek":
@@ -120,7 +134,29 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 		"laden":
 			hub.call("_toon_lader", _eerste_vijand(driver))
 	await host.get_tree().create_timer(0.8).timeout
+	if modus == "regels":
+		return await _regels(host, hub, fouten)
 	return await _bewaar(host, modus, fouten)
+
+
+## Het spelregelscherm: alle kaarten er, een plaatje bovenaan en een onderaan.
+static func _regels(host: Node, hub: Control, fouten: int) -> int:
+	var scroll: ScrollContainer = hub.find_child("RegelsScroll", true, false)
+	if scroll == null:
+		print("[SHOT] het spelregelscherm opent niet")
+		return await _bewaar(host, "regels", fouten + 1)
+	var kaarten := 0
+	for kind in scroll.find_children("Regelkaart_*", "", true, false):
+		kaarten += 1
+	print("[SHOT] spelregels: %d kaarten" % kaarten)
+	if kaarten < 8:
+		fouten += 1
+		print("[SHOT] spelregels: te weinig kaarten (8 verwacht)")
+	fouten = await _bewaar(host, "regels", fouten)
+	scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+	await host.get_tree().process_frame
+	await host.get_tree().process_frame
+	return await _bewaar(host, "regels_2", fouten)
 
 
 static func _nieuwe_driver(seed_val: int, orakel_pad: String) -> SoloDriver:
@@ -207,7 +243,7 @@ static func _eerste_vijand(driver: SoloDriver) -> int:
 
 static func _bewaar(host: Node, modus: String, fouten: int) -> int:
 	var tex := host.get_viewport().get_texture()
-	var naam := "res://_shot_hub_%s.png" % (modus if modus != "" else "basis")
+	var naam := "res://_shot_hub_%s%s.png" % [modus if modus != "" else "basis", _taal]
 	if tex != null and tex.get_image() != null:
 		tex.get_image().save_png(naam)
 		print("[SHOT] screenshot -> %s" % naam.get_file())

@@ -502,19 +502,53 @@ HUB_CHAT_EMPTY,"No messages yet. Ask your team something with the quick chat bel
 HUB_TIME_NOW,just now,zojuist
 HUB_TIME_MIN,%dm ago,%d min geleden
 HUB_TIME_HOUR,%dh ago,%d uur geleden
+HUB_RULES_TITLE,RULES,SPELREGELS
+HUB_RULES_LINK,How does the campaign work?,Hoe werkt de campagne?
+HUB_RULE_DOEL_KOP,THE GOAL,HET DOEL
+HUB_RULE_TEAMS,2 teams of %d,2 teams van %d
+HUB_RULE_KAMPIOEN,The last one standing is champion,"Wie als laatste overblijft, is kampioen"
+HUB_RULE_BEZIT_KOP,WHAT YOU OWN,JE BEZIT
+HUB_RULE_VERSTERKING,Reinforcements: extra troops for your duels,Versterkingen: extra troepen voor je duels
+HUB_RULE_CP,CP: +1 on a card,CP: +1 op een kaart
+HUB_RULE_ROEM,Fame: your score,Roem: je score
+HUB_RULE_VERBORGEN,What the enemy owns stays hidden: ?,"Wat de vijand heeft, zie je niet: ?"
+HUB_RULE_RONDE_KOP,A ROUND,EEN RONDE
+HUB_RULE_RAAD,your team picks who fights whom,je team kiest wie tegen wie vecht
+HUB_RULE_DONATIE,give to your team,geef aan je team
+HUB_RULE_DUELS,fight on the board,vechten op het bord
+HUB_RULE_TESTAMENT,the fallen leave a share,"wie viel, laat na"
+HUB_RULE_RONDE1,"Round 1: the draw picks the pairs, no donations","Ronde 1: het lot kiest de paren, geen donaties"
+HUB_RULE_DONEER_KOP,DONATING,DONEREN
+HUB_RULE_PER_RONDE,per teammate per round,per teamgenoot per ronde
+HUB_RULE_MAX,max %d,max %d
+HUB_RULE_RUIL,trade,ruilen
+HUB_RULE_ALLEEN_LEVENDEN,"Only the living give, only to their own team","Alleen levenden geven, alleen aan hun eigen team"
+HUB_RULE_DUEL_KOP,THE DUEL,HET DUEL
+HUB_RULE_LEGER,Your full army always starts on the board,Je hele leger staat altijd op het bord
+HUB_RULE_MEE,Reinforcements come along (max %d). Used is gone.,Versterkingen gaan mee (max %d). Ingezet is weg.
+HUB_RULE_BUIT,spoils,buit
+HUB_RULE_VAANDEL,flag,vaandel
+HUB_RULE_TROM,drum,trom
+HUB_RULE_HAVEN,harbor reached,haven bereikt
+HUB_RULE_UITSCHAKELEN,all defeated,alles verslagen
+HUB_RULE_VERLIES,lost,verloren
+HUB_RULE_VAL_KOP,WHEN YOU FALL,ALS JE VALT
+HUB_RULE_ERUIT,Lost with no reinforcements left: you are out,Verloren en geen versterkingen meer: je ligt eruit
+HUB_RULE_NALATEN,"Once: leave half to at most %d living players, friend or foe","Eén keer: laat de helft na aan max %d levenden, vriend of vijand"
+HUB_RULE_VERBRANDT,The rest burns. Nothing chosen: all of it burns,De rest verbrandt. Niets gekozen: alles verbrandt
+HUB_RULE_STIL,"After that: no more giving, voting or chatting","Daarna: niet meer doneren, stemmen of chatten"
+HUB_RULE_ALLES_ZIEN,But now you see everything: no more ?,Wel zie je nu alles: geen ? meer
+HUB_RULE_OORLOG,One team gone: the other team fights itself,Eén team weg: het andere team vecht onderling
+HUB_RULE_TEAMBONUS,"+%d fame for that whole team, the dead too","+%d roem voor dat hele team, ook de doden"
+HUB_RULE_KNOCKOUT,"Loser is out, everything burns","Verliezer ligt eruit, alles verbrandt"
+HUB_RULE_CHAT_TEAM,Only your team hears you,Alleen je team hoort je
+HUB_RULE_CHAT_AKKOORD,"AGREED! is usually kept, not always","AKKOORD! wordt meestal nagekomen, niet altijd"
 HUB_SETTINGS_TITLE,SETTINGS,INSTELLINGEN
 HUB_MAIN_MENU,Main menu,Hoofdmenu
-HUB_HELP_TITLE,HOW IT WORKS,ZO WERKT HET
 HUB_STATUS_ACTIEF,Takes part this round,Doet mee deze ronde
 HUB_STATUS_STRIJD,Fighting now,Vecht nu
 HUB_STATUS_RUST,Resting this round,Rust deze ronde
 HUB_STATUS_DOOD,Fallen,Gevallen
-HUB_HELP_RAAD,"The nominating team picks a fighter and an enemy target: tap the portraits in the columns, then VOTE.","Het nominerende team kiest een vechter en een vijandelijk doelwit: tik de portretten in de kolommen aan, dan STEM."
-HUB_HELP_DONATIE,Give reinforcement points or CP to teammates who need them. DONE closes the round for you.,Geef versterkingspunten of CP aan teamgenoten die het nodig hebben. KLAAR sluit de ronde voor jou.
-HUB_HELP_DUELS,The pairs fight on the board. Your own duel starts by itself after a short countdown.,De paren vechten op het bord. Je eigen duel begint vanzelf na een korte aftelling.
-HUB_HELP_TESTAMENT,"Whoever falls may leave half of what they own to one player, friend or foe. The rest burns.","Wie valt mag de helft van zijn bezit nalaten aan een speler, vriend of vijand. De rest verbrandt."
-HUB_HELP_CHAT,"Your team votes and donates after you, so ask first (Send me!, Go for X!, Need reinforcements!). Whoever says AGREED! usually keeps their word, but not always. Only your own team hears you, and the dead are silent.","Je team stemt en geeft na jou, dus vraag eerst (Stuur mij!, Pak X!, Versterking nodig!). Wie AKKOORD! zegt, houdt zich er meestal aan, maar niet altijd. Alleen je eigen team hoort je, en de doden zwijgen."
-HUB_HELP_TIJDLIJN,"Everything that happens, newest at the bottom like a chat. Tap a battle report for the details and a portrait for the player.","Alles wat er gebeurt, nieuwste onderaan zoals in een chat. Tik een slagrapport voor de details en een portret voor de speler."
 LEDGER_TEAM_OWN,yours,jouw team
 LEDGER_TEAM_ENEMY,enemy,vijand
 HUB_RESUME_CONTINUE_CAPS,CONTINUE,DOORGAAN

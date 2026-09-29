@@ -1,5 +1,30 @@
 # Fog of War — Work In Progress & Context
 
+## 29 september -- spelregelscherm voor de campagne (en: doneren als je dood bent)
+
+Max: "hoe werkt het ook alweer met doneren als je dood bent in de campagne",
+daarna "schrijf alles op ook in een UI conforme spelregel scherm", "simpele
+taal en zo weinig mogelijk tekst" en "iconen wel gebruiken".
+
+- **Het antwoord (uit `CReducer`):** doneren kan alleen een levende speler,
+  aan een levende teamgenoot. Wie valt (duel verloren en geen versterkingen
+  meer) krijgt een keer een testament: hooguit de helft van wat hij nog heeft
+  (per soort en CP, naar beneden) aan hooguit 2 levende spelers, eigen team
+  of vijand; de rest verbrandt, niets kiezen = alles verbrandt. Je valt pas
+  als je versterkingen op zijn, dus in de praktijk is het de helft van je CP
+  (en zonder CP is er geen testament). In de burgeroorlog geen testament: de
+  verliezer verbrandt alles. Daarna geen stem en geen chat, wel alles zien;
+  de teambonus (+2 roem) krijg je ook als dode.
+- **Het scherm:** `scripts/ui/campaign/hub_regels.gd` bouwt acht kaarten
+  (doel, bezit, een ronde, doneren, het duel, als je valt, burgeroorlog,
+  quick chat), per regel een icoon en een korte zin of icoon-getal-paren. De
+  getallen komen uit `CRules` en `RulesConfig.CAMPAIGN_DEFAULTS`, dus ze
+  lopen niet uit de pas met het spel. `_toon_regels` (via `_keuze_scherm`,
+  sluiten met de X) vervangt het uitleg-venster van 27 september; ook te
+  openen met "Hoe werkt de campagne?" op de factiekeuze.
+- Fixture: modus `regels` (plaatjes boven en onderaan), `factie` controleert
+  de link. 41 teksten erbij, 7 weg (de oude uitleg).
+
 ## 29 september -- C27 terug naar C26, bots leren CP beter inzetten
 
 - Max: "naar c26 en opnieuw trainen ook met campagne modus, want volgens
