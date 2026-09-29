@@ -1,5 +1,16 @@
 # Fog of War — Work In Progress & Context
 
+## 29 september -- trainingsnacht op C27 (10 uur): de Leeuw schiet door
+
+- Training 28 september 19:10 (600 min): Varken 2, Beer 1, Leeuw 1, rest 0.
+  Gewichten apart gecommit (74c7979). Fuzz 500/0, simcheck 0, uispel 777
+  ongewijzigd 0561707 (Muis en Wolf adopteerden niet).
+- Matrix 
+esults/nacht_20260929_0624_v42_matrix_l2 (3240): Leeuw 55,7,
+  Muis 53,4, Varken 51,0, Krokodil 48,4, Beer 47,3, Wolf 44,1. Band
+  44,1-55,7 (11,6 pp). Tegen de C27-controle met oude bots: Leeuw +9,2,
+  Muis +7,0, Beer -7,3, Wolf -6,9. Foutmarge ~+-3 pp per factie.
+
 ## 28 september -- C27 aangenomen: Leeuw budget 9, leger [11,5,1]
 
 - Max: "adopteer dan zijn we er wel toch". Alleen het doctrines-blok in

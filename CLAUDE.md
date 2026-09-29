@@ -44,7 +44,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 28 september (C27: Leeuw budget 9, [11,5,1]; controlemeting 4320
+  **Stand 29 september (C27, bots na een trainingsnacht van 10 uur op C27,
+  3240 partijen): band 44,1-55,7%, spreiding 11,6 pp** (Leeuw 55,7 nu
+  boven, Wolf 44,1 onder; Muis 53,4, Varken 51,0, Krokodil 48,4, Beer
+  47,3). De Leeuw-bot leerde zijn nieuwe leger (1 adoptie) en schoot 9
+  punten omhoog. Foutmarge per factie ongeveer +-3 pp.
+  Daarvoor: **stand 28 september (C27: Leeuw budget 9, [11,5,1]; controlemeting 4320
   partijen tegen de bots van 26 september): band 46,5-54,7%, spreiding
   8,2 pp**, de smalste tot nu toe (Leeuw en Muis 46,5 onder, Beer 54,7
   boven). Zonder het extra budget (alleen [11,5,1]) zakte de Leeuw naar
