@@ -28,7 +28,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   |---|---|---|---|---|
   | Varken (enum MENS) | 3 | 7 | [12,4,2] (C25, 23 sept; was [11,5,3]) | - allrounder |
   | Muis | 5 | 5 | [16,4,0] | +1 stamina op elke pion, loopt door eigen pionnen |
-  | Leeuw | 2 | 9 (C27, 28 sept; was 8) | [11,5,1] (C27; was [12,4,2]) | artilleriedracht 7 |
+  | Leeuw | 2 | 8 (C27 met 9 op 29 sept teruggedraaid) | [12,4,2] (idem; C27 was [11,5,1]) | artilleriedracht 7 |
   | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-stamina max 4 |
   | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 stamina en springt over vijanden |
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
@@ -44,7 +44,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 29 september (C27, bots na een trainingsnacht van 10 uur op C27,
+  **29 september: C27 teruggedraaid** (Leeuw weer budget 8, [12,4,2], +6 pt
+  en +5 CP; zie CHANGELOG), plus een bot-reparatie: `cp_bet_r*` muteert
+  optellend (vermenigvuldigen vanaf 0,01 kwam nooit bij een hele CP, dus
+  ronde 1 en 2 stonden voor elke factie op 0) en het CP-punt gaat naar de
+  stat van `cp_naar_*` (was hard HP). Volgende meting na de training
+  daarop (`tools/nacht_met_campagne.ps1`).
+  **Stand 29 september, voor de terugdraai (C27, bots na een trainingsnacht van 10 uur op C27,
   3240 partijen): band 44,1-55,7%, spreiding 11,6 pp** (Leeuw 55,7 nu
   boven, Wolf 44,1 onder; Muis 53,4, Varken 51,0, Krokodil 48,4, Beer
   47,3). De Leeuw-bot leerde zijn nieuwe leger (1 adoptie) en schoot 9
@@ -759,8 +765,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `a0561707…` geven (171 acties, cyclus 4, sinds
-  28 september: C27 plus de gewichten van de trainingsnacht van 27
+  eind-zobrist; seed 777 moet `533fd17e…` geven (171 acties, cyclus 4, sinds
+  29 september: C27 teruggedraaid, dezelfde partij met de C26-Leeuw in de
+  staat; de bot-reparatie van die dag is byte-identiek); daarvoor
+  `a0561707…` (171, 4) sinds 28 september: C27 plus de gewichten van de trainingsnacht van 27
   september, Varken 2 en Wolf 1 adoptie); daarvoor `4df2aeed…` (62, 2) op
   27 september (Wolf-gewichten van de nachten van 25 en 26 september);
   daarvoor `9e0c375b…` (213, 5) sinds 24 september, C26: de

@@ -87,18 +87,14 @@ func step() -> void:
 				continue
 			var bot = ai1 if pid == Constants.PLAYER_1 else ai2
 			# Leerbaar CP-beleid (cp_bet_r1..r3); de eerste `bet` kaarten
-			# krijgen daarna het extra budgetpunt op hp.
+			# krijgen daarna het extra budgetpunt op de stat van cp_naar_*.
 			var bet: int = bot.choose_cp_bet(_state)
 			if bet > 0:
 				Reducer.apply(_state, Actions.make_bet_cp(bet), pid)
 			var cards: Array = bot.generate_cards(_state)
-			for i in mini(bet, cards.size()):
-				cards[i].hp = int(cards[i].hp) + 1
-			var res: Dictionary = Reducer.apply(_state, Actions.make_define_cards(cards), pid)
+			var res: Dictionary = Reducer.apply(_state, Actions.make_define_cards(bot.kaarten_met_cp(_state, cards, bet)), pid)
 			if not res.ok and bet > 0:
 				# Terugvallen op de onverdikte set (bet is dan verbrand, D2).
-				for i in mini(bet, cards.size()):
-					cards[i].hp = int(cards[i].hp) - 1
 				Reducer.apply(_state, Actions.make_define_cards(cards), pid)
 	elif Phase.is_reveal(ph):
 		# Per-speler ACK (F0.4b); de runner bevestigt voor beide bots.

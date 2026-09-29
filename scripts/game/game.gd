@@ -2308,11 +2308,7 @@ func _ai_define_beurt() -> void:
 	if ai_bet > 0:
 		session.submit_bet_cp(_ai_id, ai_bet)
 	var ai_cards: Array = _ai.generate_cards(session.state)
-	for i in mini(ai_bet, ai_cards.size()):
-		ai_cards[i].hp = int(ai_cards[i].hp) + 1
-	if not session.submit_define_cards(_ai_id, ai_cards) and ai_bet > 0:
-		for i in mini(ai_bet, ai_cards.size()):
-			ai_cards[i].hp = int(ai_cards[i].hp) - 1
+	if not session.submit_define_cards(_ai_id, _ai.kaarten_met_cp(session.state, ai_cards, ai_bet)) and ai_bet > 0:
 		session.submit_define_cards(_ai_id, ai_cards)
 
 

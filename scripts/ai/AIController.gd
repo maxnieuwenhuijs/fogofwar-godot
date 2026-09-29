@@ -221,7 +221,46 @@ static func default_weights() -> Dictionary:
 		"cp_bet_r1": 0.01,
 		"cp_bet_r2": 0.01,
 		"cp_bet_r3": 3.0,
+		# Waar het CP-budgetpunt op een kaart heen gaat (leerbaar, 29
+		# september): het hoogste van de drie wint. Tot die dag ging het
+		# altijd naar HP, hard in de code; de default houdt dat gedrag.
+		"cp_naar_hp": 1.0,
+		"cp_naar_atk": 0.5,
+		"cp_naar_stam": 0.5,
 	}
+
+
+## Welke kaart-stat het CP-budgetpunt krijgt (cp_naar_*): "hp", "attack"
+## of "stamina".
+func cp_stat() -> String:
+	var hp: float = float(weights.get("cp_naar_hp", 1.0))
+	var atk: float = float(weights.get("cp_naar_atk", 0.5))
+	var stam: float = float(weights.get("cp_naar_stam", 0.5))
+	if atk > hp and atk >= stam:
+		return "attack"
+	if stam > hp and stam > atk:
+		return "stamina"
+	return "hp"
+
+
+## De eerste `bet` kaarten krijgen het CP-budgetpunt op de stat van
+## cp_stat(). Botst dat met een factiegrens (bv. Beer stamina max 4), dan
+## gaat het naar HP; is ook dat niet legaal, dan komt de HP-set terug en
+## vangt de aanroeper het af zoals voorheen (onverdikte set, D2).
+func kaarten_met_cp(state: GameState, cards: Array, bet: int) -> Array:
+	var stat: String = cp_stat()
+	var hp_set: Array = []
+	for poging in ([stat, "hp"] if stat != "hp" else ["hp"]):
+		var kopie: Array = []
+		for c in cards:
+			kopie.append((c as Dictionary).duplicate())
+		for i in mini(bet, kopie.size()):
+			kopie[i][poging] = int(kopie[i][poging]) + 1
+		if poging == "hp":
+			hp_set = kopie
+		if bet <= 0 or Validator.is_legal(state, Actions.make_define_cards(kopie), player_id).legal:
+			return kopie
+	return hp_set
 
 # =========================================================================
 # Setup: kaarten definiëren + koppelen

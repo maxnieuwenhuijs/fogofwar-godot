@@ -4080,6 +4080,9 @@ const CONV_GAMES := 12
 ## Leeuw-partijen af. Een afgekapte partij telde als gelijkspel (1 van de 3
 ## punten) en gaf juist de trage facties ruis. Nu gelijk aan de arena.
 const TRAIN_MAX_STEPS := 2500
+## Stapgrootte van de CP-inzet (cp_bet_r*) maal sigma: bij sigma 0,25 een
+## standaardafwijking van 1 CP per mutatie.
+const CP_BET_STAP := 4.0
 const VERIFY_FACTOR := 2
 const VERIFY_MARGE := 1.0
 const VERIFY_HELFT_MIN := 0.5
@@ -4151,6 +4154,12 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 		for _j in pop:
 			var w: Dictionary = {}
 			for k in champ_w:
+				if String(k).begins_with("cp_bet_r"):
+					# CP-inzet in hele punten (29 september): OPTELLEND muteren.
+					# Vermenigvuldigen vanaf 0,01 komt nooit bij een hele CP, dus
+					# ronde 1 en 2 bleven sinds augustus voor elke factie op 0.
+					w[k] = clampf(float(champ_w[k]) + train_rng.randfn(0.0, CP_BET_STAP * float(sigma[d])), 0.0, 6.0)
+					continue
 				var scaled: float = float(champ_w[k]) * exp(train_rng.randfn(0.0, float(sigma[d])))
 				if absf(scaled) < 0.01:
 					scaled = 0.01 if scaled >= 0.0 else -0.01
@@ -4841,11 +4850,7 @@ func _run_sim(n1: String, n2: String, d1: int, d2: int, sim_seed: int, sim_rules
 				if bet > 0:
 					GameSession.submit_bet_cp(pid, bet)
 				var cards: Array = bot.generate_cards(st)
-				for i in mini(bet, cards.size()):
-					cards[i].hp = int(cards[i].hp) + 1
-				if not GameSession.submit_define_cards(pid, cards) and bet > 0:
-					for i in mini(bet, cards.size()):
-						cards[i].hp = int(cards[i].hp) - 1
+				if not GameSession.submit_define_cards(pid, bot.kaarten_met_cp(st, cards, bet)) and bet > 0:
 					GameSession.submit_define_cards(pid, cards)
 		elif Phase.is_reveal(ph):
 			GameSession.acknowledge_reveal()

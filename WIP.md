@@ -1,5 +1,24 @@
 # Fog of War — Work In Progress & Context
 
+## 29 september -- C27 terug naar C26, bots leren CP beter inzetten
+
+- Max: "naar c26 en opnieuw trainen ook met campagne modus, want volgens
+  mij snappen de bots nog niet goed hoe belangrijk de CP en reinforcements
+  kunnen zijn". Leeuw weer budget 8, [12,4,2] (+6 pt / +5 CP blijft).
+  Rules, goldens, golden_sims uit 331bac3^. simcheck 0, uispel 777 =
+  `533fd17e` (zelfde partij, 171/4, alleen de staat-hash).
+- **Vermoeden klopt, twee gaten in de bots:** (1) `cp_bet_r1`/`r2` stonden
+  voor alle facties op 0,01 en de trainer muteerde multiplicatief
+  (x e^N(0;0,25)), dus die konden nooit een hele CP worden: iedereen zette
+  alleen in ronde 3 in, de Leeuw 1 CP per cyclus uit 15 start-CP. Nu
+  optellend (`CP_BET_STAP` 4 x sigma = 1 CP bij sigma 0,25, geklemd 0-6).
+  (2) Het CP-punt ging hard naar HP op vier plekken (l2_weights,
+  match_runner, game.gd, capture.gd): nu `AIController.kaarten_met_cp`
+  met leerbare `cp_naar_hp`/`_atk`/`_stam` (default HP; valt terug op HP
+  bij een factiegrens). Byte-identiek bewezen (uispel met en zonder).
+- `tools/nacht_met_campagne.ps1`: training_nacht (480 min) -> campagne-
+  datarun (campagne_arena, orakel) -> campagnetrainer (60 min).
+
 ## 29 september -- trainingsnacht op C27 (10 uur): de Leeuw schiet door
 
 - Training 28 september 19:10 (600 min): Varken 2, Beer 1, Leeuw 1, rest 0.

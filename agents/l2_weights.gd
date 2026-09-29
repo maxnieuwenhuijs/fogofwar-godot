@@ -65,9 +65,9 @@ func decide(view: Dictionary, legal: Array, _decide_rng: SeededRng) -> Dictionar
 		if cards.is_empty():
 			return legal[0]
 		var bet: int = int(view.get("own_cp_bet", 0))
-		for i in mini(bet, cards.size()):
-			cards[i].hp = int(cards[i].hp) + 1  # het CP-budgetpunt (D1)
-		var actie := Actions.make_define_cards(cards)
+		# Het CP-budgetpunt (D1) gaat naar de stat die cp_naar_* kiest
+		# (leerbaar sinds 29 september; default HP, zoals daarvoor altijd).
+		var actie := Actions.make_define_cards(ai.kaarten_met_cp(s, cards, bet))
 		if Validator.is_legal(s, actie, player_id).legal:
 			return actie
 		return legal[0]
