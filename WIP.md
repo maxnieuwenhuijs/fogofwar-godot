@@ -24,6 +24,12 @@ taal en zo weinig mogelijk tekst" en "iconen wel gebruiken".
   openen met "Hoe werkt de campagne?" op de factiekeuze.
 - Fixture: modus `regels` (plaatjes boven en onderaan), `factie` controleert
   de link. 41 teksten erbij, 7 weg (de oude uitleg).
+- **Moderne taal** (Max: "gebruik beetje moderne taal dit is niet echt
+  leesbaar"): elke regel herschreven zoals je het zou zeggen ("Blijf als
+  laatste over en je bent kampioen", "Wat je inzet, ben je kwijt", "Van de
+  vijand zie je alleen een ?"), geen woorden als levenden, nalaten of
+  nagekomen; tekst een tik groter (`KOP`/`TEKST`/`GETAL` in hub_regels.gd),
+  buit als twee eigen regels (vaandeldrager gepakt +2, tamboer gepakt +4).
 
 ## 29 september -- C27 terug naar C26, bots leren CP beter inzetten
 

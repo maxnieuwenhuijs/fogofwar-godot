@@ -506,43 +506,41 @@ HUB_RULES_TITLE,RULES,SPELREGELS
 HUB_RULES_LINK,How does the campaign work?,Hoe werkt de campagne?
 HUB_RULE_DOEL_KOP,THE GOAL,HET DOEL
 HUB_RULE_TEAMS,2 teams of %d,2 teams van %d
-HUB_RULE_KAMPIOEN,The last one standing is champion,"Wie als laatste overblijft, is kampioen"
-HUB_RULE_BEZIT_KOP,WHAT YOU OWN,JE BEZIT
-HUB_RULE_VERSTERKING,Reinforcements: extra troops for your duels,Versterkingen: extra troepen voor je duels
-HUB_RULE_CP,CP: +1 on a card,CP: +1 op een kaart
+HUB_RULE_KAMPIOEN,Be the last one standing and you're champion,Blijf als laatste over en je bent kampioen
+HUB_RULE_BEZIT_KOP,WHAT YOU HAVE,WAT JE HEBT
+HUB_RULE_VERSTERKING,Reinforcements: extra troops for your duel,Versterkingen: extra troepen voor je duel
+HUB_RULE_CP,CP: make a card 1 stronger,CP: maak een kaart 1 sterker
 HUB_RULE_ROEM,Fame: your score,Roem: je score
-HUB_RULE_VERBORGEN,What the enemy owns stays hidden: ?,"Wat de vijand heeft, zie je niet: ?"
-HUB_RULE_RONDE_KOP,A ROUND,EEN RONDE
-HUB_RULE_RAAD,your team picks who fights whom,je team kiest wie tegen wie vecht
-HUB_RULE_DONATIE,give to your team,geef aan je team
-HUB_RULE_DUELS,fight on the board,vechten op het bord
-HUB_RULE_TESTAMENT,the fallen leave a share,"wie viel, laat na"
-HUB_RULE_RONDE1,"Round 1: the draw picks the pairs, no donations","Ronde 1: het lot kiest de paren, geen donaties"
+HUB_RULE_VERBORGEN,The enemy's numbers show as ?,Van de vijand zie je alleen een ?
+HUB_RULE_RONDE_KOP,HOW A ROUND WORKS,ZO GAAT EEN RONDE
+HUB_RULE_RAAD,your team picks who fights who,je team kiest wie tegen wie vecht
+HUB_RULE_DONATIE,help your team with reinforcements or CP,help je team met versterkingen of CP
+HUB_RULE_DUELS,everyone fights on the board,iedereen vecht op het bord
+HUB_RULE_TESTAMENT,anyone who's out passes on half,"wie eruit ligt, geeft de helft door"
+HUB_RULE_RONDE1,"Round 1: random opponent, no donations yet","Ronde 1: je tegenstander wordt geloot, nog geen donaties"
 HUB_RULE_DONEER_KOP,DONATING,DONEREN
-HUB_RULE_PER_RONDE,per teammate per round,per teamgenoot per ronde
-HUB_RULE_MAX,max %d,max %d
-HUB_RULE_RUIL,trade,ruilen
-HUB_RULE_ALLEEN_LEVENDEN,"Only the living give, only to their own team","Alleen levenden geven, alleen aan hun eigen team"
+HUB_RULE_PER_RONDE,"max per teammate, per round","max per teamgenoot, per ronde"
+HUB_RULE_RUIL,swap CP,CP ruilen
+HUB_RULE_ALLEEN_LEVENDEN,"Only while you're still in, and only to your own team","Alleen als je nog meedoet, en alleen aan je eigen team"
 HUB_RULE_DUEL_KOP,THE DUEL,HET DUEL
-HUB_RULE_LEGER,Your full army always starts on the board,Je hele leger staat altijd op het bord
-HUB_RULE_MEE,Reinforcements come along (max %d). Used is gone.,Versterkingen gaan mee (max %d). Ingezet is weg.
-HUB_RULE_BUIT,spoils,buit
-HUB_RULE_VAANDEL,flag,vaandel
-HUB_RULE_TROM,drum,trom
-HUB_RULE_HAVEN,harbor reached,haven bereikt
-HUB_RULE_UITSCHAKELEN,all defeated,alles verslagen
+HUB_RULE_LEGER,You always start with your full army,Je start altijd met je hele leger
+HUB_RULE_MEE,Bring up to %d reinforcements. What you use is gone.,"Neem tot %d versterkingen mee. Wat je inzet, ben je kwijt."
+HUB_RULE_VAANDEL,standard bearer taken,vaandeldrager gepakt
+HUB_RULE_TROM,drummer taken,tamboer gepakt
+HUB_RULE_HAVEN,harbor reached,haven gehaald
+HUB_RULE_UITSCHAKELEN,everyone beaten,iedereen verslagen
 HUB_RULE_VERLIES,lost,verloren
-HUB_RULE_VAL_KOP,WHEN YOU FALL,ALS JE VALT
-HUB_RULE_ERUIT,Lost with no reinforcements left: you are out,Verloren en geen versterkingen meer: je ligt eruit
-HUB_RULE_NALATEN,"Once: leave half to at most %d living players, friend or foe","Eén keer: laat de helft na aan max %d levenden, vriend of vijand"
-HUB_RULE_VERBRANDT,The rest burns. Nothing chosen: all of it burns,De rest verbrandt. Niets gekozen: alles verbrandt
-HUB_RULE_STIL,"After that: no more giving, voting or chatting","Daarna: niet meer doneren, stemmen of chatten"
-HUB_RULE_ALLES_ZIEN,But now you see everything: no more ?,Wel zie je nu alles: geen ? meer
-HUB_RULE_OORLOG,One team gone: the other team fights itself,Eén team weg: het andere team vecht onderling
-HUB_RULE_TEAMBONUS,"+%d fame for that whole team, the dead too","+%d roem voor dat hele team, ook de doden"
-HUB_RULE_KNOCKOUT,"Loser is out, everything burns","Verliezer ligt eruit, alles verbrandt"
-HUB_RULE_CHAT_TEAM,Only your team hears you,Alleen je team hoort je
-HUB_RULE_CHAT_AKKOORD,"AGREED! is usually kept, not always","AKKOORD! wordt meestal nagekomen, niet altijd"
+HUB_RULE_VAL_KOP,WHEN YOU'RE OUT,ALS JE ERUIT LIGT
+HUB_RULE_ERUIT,Lose with no reinforcements left? You're out,Verlies je zonder versterkingen? Dan lig je eruit
+HUB_RULE_NALATEN,Give half of what you have to up to %d players (enemies too),Geef de helft van wat je hebt aan max %d spelers (vijand mag ook)
+HUB_RULE_VERBRANDT,You lose the rest. Pick nobody and you lose it all,"De rest ben je kwijt. Kies je niemand, dan ben je alles kwijt"
+HUB_RULE_STIL,"After that you can't donate, vote or chat","Daarna kun je niet meer doneren, stemmen of chatten"
+HUB_RULE_ALLES_ZIEN,"But you now see everything, the enemy too","Wel zie je nu alles, ook van de vijand"
+HUB_RULE_OORLOG,One team wiped out? Then the rest fight each other,Is een team weg? Dan vecht de rest tegen elkaar
+HUB_RULE_TEAMBONUS,"That team gets +%d fame, even players who are out","Dat team krijgt +%d roem, ook wie er al uit ligt"
+HUB_RULE_KNOCKOUT,"Lose and you're out, with nothing left",Verlies je? Dan lig je eruit en ben je alles kwijt
+HUB_RULE_CHAT_TEAM,Only your own team sees your messages,Alleen je eigen team ziet je berichten
+HUB_RULE_CHAT_AKKOORD,"AGREED? They usually keep their word, not always","AKKOORD? Meestal houden ze woord, niet altijd"
 HUB_SETTINGS_TITLE,SETTINGS,INSTELLINGEN
 HUB_MAIN_MENU,Main menu,Hoofdmenu
 HUB_STATUS_ACTIEF,Takes part this round,Doet mee deze ronde

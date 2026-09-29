@@ -11,8 +11,13 @@ extends RefCounted
 ## Iconen: "hub:<naam>" uit assets/ui/campaign_hub/icons, "ui:<id>" uit het
 ## UI-pack (UiAssets), "" = een lege plek van dezelfde breedte.
 
-const ICOON := 16.0
-const LABEL_BREED := 118.0
+const ICOON := 17.0
+const LABEL_BREED := 168.0
+## Lettermaten (ontwerp-eenheden): een tik groter dan de rest van de hub, want
+## hier lees je (29 september, Max: "niet echt leesbaar").
+const KOP := 13.0
+const TEKST := 11.0
+const GETAL := 12.0
 
 var _s: float
 var _r: CRules
@@ -58,8 +63,7 @@ func bouw() -> VBoxContainer:
 
 	k = _kaart(lijst, "Doneren", "hub:Donation_icon", tr("HUB_RULE_DONEER_KOP"))
 	_waarden(k, "", tr("HUB_RULE_PER_RONDE"), [
-		["hub:Donation_icon", tr("HUB_RULE_MAX") % _r.donatie_cap_pionnen],
-		["ui:cp", tr("HUB_RULE_MAX") % _r.donatie_cap_cp]])
+		["hub:Donation_icon", str(_r.donatie_cap_pionnen)], ["ui:cp", str(_r.donatie_cap_cp)]])
 	_waarden(k, "", tr("HUB_RULE_RUIL"), [
 		["ui:cp", str(maxi(1, _r.ruil_cp_per_punt))], ["hub:Arrow_icon", ""], ["hub:Donation_icon", "1"]])
 	_regel(k, "ui:alive", tr("HUB_RULE_ALLEEN_LEVENDEN"))
@@ -67,9 +71,8 @@ func bouw() -> VBoxContainer:
 	k = _kaart(lijst, "Duel", "hub:Inbattle_icon", tr("HUB_RULE_DUEL_KOP"))
 	_regel(k, "hub:Battle_report_team_full", tr("HUB_RULE_LEGER"))
 	_regel(k, "ui:spawn", tr("HUB_RULE_MEE") % _r.duel_spawn_totaal_max)
-	_waarden(k, "", tr("HUB_RULE_BUIT"), [
-		["", tr("HUB_RULE_VAANDEL")], ["hub:Donation_icon", "+%d" % int(_d.get("buit_vaandel_pt", 0))],
-		["", tr("HUB_RULE_TROM")], ["ui:cp", "+%d" % int(_d.get("buit_tamboer_cp", 0))]])
+	_waarden(k, "", tr("HUB_RULE_VAANDEL"), [["hub:Donation_icon", "+%d" % int(_d.get("buit_vaandel_pt", 0))]])
+	_waarden(k, "", tr("HUB_RULE_TROM"), [["ui:cp", "+%d" % int(_d.get("buit_tamboer_cp", 0))]])
 	_waarden(k, "hub:Active_icon", tr("HUB_RULE_HAVEN"), [
 		["ui:score", "+%d" % _r.punten_haven], ["ui:cp", "+%d" % int(_d.get("cp_haven", 0))]])
 	_waarden(k, "ui:act-melee", tr("HUB_RULE_UITSCHAKELEN"), [
@@ -107,7 +110,7 @@ func _kaart(ouder: Control, naam: String, icoon: String, titel: String) -> VBoxC
 	var kop := HBoxContainer.new()
 	kop.add_theme_constant_override("separation", _px(8))
 	kop.add_child(_icoon(icoon, 22.0))
-	var t := HubAssets.tekst(titel, _px(12), HubAssets.INKT, true)
+	var t := HubAssets.tekst(titel, _px(KOP), HubAssets.INKT, true)
 	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	kop.add_child(t)
 	binnen.add_child(kop)
@@ -120,10 +123,10 @@ func _regel(kaart: VBoxContainer, icoon: String, tekst: String, kop: String = ""
 	rij.add_theme_constant_override("separation", _px(8))
 	rij.add_child(_icoon(icoon, ICOON))
 	if kop != "":
-		var b := HubAssets.tekst(kop, _px(10), HubAssets.INKT, true)
+		var b := HubAssets.tekst(kop, _px(TEKST), HubAssets.INKT, true)
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		rij.add_child(b)
-	var l := HubAssets.tekst(tekst, _px(10), HubAssets.INKT)
+	var l := HubAssets.tekst(tekst, _px(TEKST), HubAssets.INKT)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -138,7 +141,7 @@ func _waarden(kaart: VBoxContainer, icoon: String, label: String, paren: Array) 
 	var rij := HBoxContainer.new()
 	rij.add_theme_constant_override("separation", _px(8))
 	rij.add_child(_icoon(icoon, ICOON))
-	var l := HubAssets.tekst(label, _px(10), HubAssets.INKT)
+	var l := HubAssets.tekst(label, _px(TEKST), HubAssets.INKT)
 	l.custom_minimum_size = Vector2(_u(LABEL_BREED), 0)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rij.add_child(l)
@@ -148,13 +151,13 @@ func _waarden(kaart: VBoxContainer, icoon: String, label: String, paren: Array) 
 		var stuk := HBoxContainer.new()
 		stuk.add_theme_constant_override("separation", _px(3))
 		if p_icoon == "":
-			var woord := HubAssets.tekst(p_tekst, _px(9), HubAssets.INKT_ZACHT)
+			var woord := HubAssets.tekst(p_tekst, _px(TEKST - 1.0), HubAssets.INKT_ZACHT)
 			woord.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			stuk.add_child(woord)
 		else:
-			stuk.add_child(_icoon(p_icoon, 15.0))
+			stuk.add_child(_icoon(p_icoon, ICOON))
 			if p_tekst != "":
-				var getal := HubAssets.tekst(p_tekst, _px(11), HubAssets.INKT, true)
+				var getal := HubAssets.tekst(p_tekst, _px(GETAL), HubAssets.INKT, true)
 				getal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 				stuk.add_child(getal)
 		rij.add_child(stuk)
