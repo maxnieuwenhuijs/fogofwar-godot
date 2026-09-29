@@ -1,5 +1,25 @@
 # Spelregels — CHANGELOG
 
+## C27 teruggedraaid — 29 september 2026 (de Leeuw terug naar C26)
+
+*Besluit Max: "naar c26. en opnieuw trainen ook met campagne modus, want
+volgens mij snappen de bots nog niet goed hoe belangrijk de CP en
+reinforcements kunnen zijn".*
+
+Na een trainingsnacht op C27 (10 uur) schoot de Leeuw door naar **55,7%**
+(nachtmatrix 29 september, band 44,1-55,7): budget 9 en [11,5,1] kwamen
+bovenop de startcompensatie van C24/C26 (+6 punten, +5 CP). De Leeuw speelt
+weer met **kaartbudget 8 en leger [12,4,2]**, compensatie +6 punten en +5
+CP (C26). Alleen het `doctrines`-blok in `rules_v42_campaign.json`;
+goldens en `golden_sims.json` terug naar de C26-stand (331bac3^).
+
+Tegelijk een bot-reparatie (geen regelwijziging) die Max' vermoeden
+bevestigt: de bots konden de CP-inzet in ronde 1 en 2 nooit leren (de
+trainer muteerde `cp_bet_r*` multiplicatief vanaf 0,01, sinds augustus
+voor elke factie 0), en het CP-budgetpunt ging hard naar HP. Nu optellend
+gemuteerd (`CP_BET_STAP`) en een leerbare stat (`cp_naar_hp`/`_atk`/
+`_stam`, default HP, dus byte-identiek tot de trainer iets vindt).
+
 ## C27 — 28 september 2026 (de Leeuw: kaartbudget 9, leger [11,5,1])
 
 *Voorstel van de factiezoeker (27 september, zes generaties, gericht op de
