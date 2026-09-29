@@ -1,5 +1,31 @@
 # Fog of War — Work In Progress & Context
 
+## 29 september -- masterplan: punten verdienen en krijgen (online)
+
+Max: "Bouw nu aan een masterplan voor online punten verdienen, en krijgen,
+sowieso de incentive als het team wint, maar ook als jij wint, zo dat je ook
+die burgeroorlog-tactieken triggert en onderling pesterij."
+
+- **Plan:** `docs/F6-punten-masterplan.md`, in het MASTERBOUWPLAN als F6.0.
+  Twee potten per campagne: de **teampot** (+20 voor het hele winnende team,
+  ook wie eruit ligt) en de **kroonpot** (kampioen +40, finale +20, dan
+  aflopend), plus +1 per roem, stunt (+5, een hoger geplaatste teamgenoot
+  verslaan), dank van de kampioen (+10), koningsmaker (+5) en laatste stand
+  (+5). "Het team is je toegangskaartje, de kroon is de hoofdprijs."
+- **Waarom het werkt:** bij de start is je team ongeveer twee keer zoveel waard
+  als je kroonkans; hoe dichter de overwinning, hoe meer je plek in de
+  burgeroorlog telt. De kroonfactor (kampioen ÷ teamwinst, v1: 2) stelt dat
+  kantelpunt in; de bots meten 1, 2 en 3 met de campagnetrainer (fitness
+  "eigen punten", na de F7-datarun).
+- **Pesterij** zonder nieuwe regels: de raad als wapen, doneren of houden,
+  testament; erbij: schaduwbracket met punten, vier rivaliteitszinnen in de
+  (team-only) quick chat, badges voor één seizoen. Punten zijn nooit
+  overdraagbaar; geen punten voor of tegen beloftes.
+- **Techniek:** uitslag en puntentabel in de core (GDScript, één waarheid
+  voor solo, trainer en worker), ladder en seizoen in Node, boekingen
+  append-only met een uniek sleutelpaar per campagne en reden.
+- Nog niets gebouwd. P1-P3 kunnen nu; negen besluiten met een default in §10.
+
 ## 29 september -- spelregelscherm voor de campagne (en: doneren als je dood bent)
 
 Max: "hoe werkt het ook alweer met doneren als je dood bent in de campagne",

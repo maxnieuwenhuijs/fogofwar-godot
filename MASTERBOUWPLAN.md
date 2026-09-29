@@ -976,6 +976,15 @@ server-logs van dat event.
 
 ## 10. FASE F6 — Meta
 
+- ☐ **F6.0 Punten verdienen en krijgen** (plan 29 september, `docs/F6-punten-masterplan.md`,
+  Max: "sowieso de incentive als het team wint, maar ook als jij wint, zo dat je ook die
+  burgeroorlog-tactieken triggert en onderling pesterij"). Per campagne een teampot (+20 voor
+  het hele winnende team, ook de doden) en een kroonpot (kampioen +40, dan aflopend), plus roem,
+  stunt, dank van de kampioen en koningsmaker; de kroonfactor (kampioen ÷ teamwinst) stuurt het
+  kantelpunt van samenwerken naar pesten. Levert de "campagnepunten" voor F6.2. Stappen P1-P9:
+  P1-P3 (uitslag + puntentabel in de core, solo-eindscherm, pesterij in solo) kunnen nu al; P4
+  meet drie tabellen met bots (na de F7-datarun); P6-P8 na F5.1. **CHECK:** zie de tabel in §9
+  van het plan.
 - ☐ **F6.1 Glicko-2** per queue (ranked 1v1 / campagneduels; solo telt niet — solo heeft een eigen bord,
   zie F6.3), placement via RD. **CHECK:** rating-unittests tegen referentie-implementatie; RD daalt met
   partijen.
@@ -1099,6 +1108,10 @@ Genummerd; het plan noemt ze op de plek waar ze vallen.
    wijziging — GEEN n8n of andere workflow-automation-tooling.** Alle geplande jobs worden gewone
    code: node-cron in de backend, systemd-timers/Taakplanner voor host-level. B5 is aangepast; alle
    n8n-verwijzingen in dit plan zijn vervangen.
+5. **Punten verdienen en krijgen** (F6.0): negen besluiten met een default in
+   `docs/F6-punten-masterplan.md` §10 (naam, kroonfactor, teampot voor de doden, dank en
+   koningsmaker, stunt, rivaliteitszinnen, inleg vanaf Goud, geen ladder voor privé en solo,
+   vertrekregel).
 
 ---
 
