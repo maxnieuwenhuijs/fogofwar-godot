@@ -220,7 +220,7 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`nominatie`- en `fase`-items zet de SoloDriver in de feed, alleen
   presentatie). Check: `-- shot campaign_hub [seed] [modus]
   [orakel=<pad>]` (fixture `tools/hub_shot.gd`; modi basis, raad, donatie,
-  testament, burgeroorlog, einde, chat, popup, doel, lid, rapport, regels,
+  testament, burgeroorlog, einde, punten, dank, terug, chat, popup, doel, lid, rapport, regels,
   instellingen, grootboek, paren, factie, hervat, laden; met een
   `duel_orakel.json` spoelt hij in seconden door; exit 1 bij fouten).
   **Spelregels (29 september):** de ? in de titelbalk en de link "Hoe werkt
@@ -236,6 +236,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   het deel van de reserve (`reserve` in het feed-rapport), niet het aantal
   gevallen pionnen (dat was vooral het startleger). Het grootboek telt de
   tent in versterkingspunten, net als de hub.
+  **Punten (F6.0, 29 september, `docs/F6-punten-masterplan.md`):** wat je
+  online per campagne verdient, in solo als voorproefje. `core/campaign/
+  uitslag.gd` (per speler: team gewonnen, roem, plek in de burgeroorlog,
+  stunts, laatste stand, dank, koningsmaker) en `puntentabel.gd` (tabel v1:
+  team +20, kampioen +40, finale +20, laatste vier +10, +1 per roem, stunt +5,
+  dank +10, koningsmaker +5, laatste stand +5); beide zonder class_name, dus
+  via preload. De reducer houdt `uitval`, `stunts`, `testament_naar`,
+  `bracket_grootte` en de dank bij; `DANK` is de enige actie na KLAAR (alleen
+  de kampioen, een keer, een gevallen teamgenoot of -1). Een bot-kampioen
+  bedankt meteen (`SoloDriver.bot_dank_keuze`: wie hem het meest gaf, anders
+  de meeste roem, de rat niemand). `CReducer.seed_volgorde` is de zaaiing als
+  losse functie: de hub tekent er vanaf ronde 3 "#1", "#2" mee bij je team.
+  Rivaliteitszinnen (`QC_RIVAAL`) antwoorden op de chat-rng, nooit op die van
+  de agent (anders verschuift de campagne). Checks: `test_f6_*` in
+  CampaignTests; `-- shot campaign_hub 42 einde|punten|dank|regels
+  orakel=<pad>`, met `_nl` erachter in het Nederlands.
   **Quick chat (25 september):** een gesloten lijst van 14 campagnezinnen
   (raad, donaties, duels/testament, altijd; NIET de slagveldzinnen uit de pdf),
   team-only en verzegeld voor de doden; bots antwoorden AKKOORD!/NEE. naar

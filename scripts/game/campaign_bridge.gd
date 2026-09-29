@@ -18,6 +18,11 @@ var _ctx: Dictionary = {}  # {idx, a, b, cp_a, cp_b} — a = de mens = bord-P1
 ## scene-wissel): alles daarna druppelt bij terugkomst gefaseerd binnen.
 var feed_gezien: int = 0
 
+## 29 september: de hub komt net terug van het bord. Besliste jouw duel de
+## campagne (de finale), dan hoort het eindscherm erbij (je punten, de dank)
+## en niet de factiekeuze voor een nieuwe campagne.
+var terug_van_bord: bool = false
+
 ## F3.4c — bot-duels simuleren op een thread terwijl de mens op het bord
 ## staat; rond_af wacht de thread af voordat het mens-resultaat boekt.
 var _sim_thread: Thread = null
@@ -65,6 +70,7 @@ func naam_vijand() -> String:
 ## minuten, bot-duels seconden).
 func rond_af(s: GameState, winnaar_kant: int) -> void:
 	duel_actief = false
+	terug_van_bord = true
 	_wacht_op_sim()
 	driver.verwerk_duel_uitslag(int(_ctx.idx), int(_ctx.a), int(_ctx.b),
 		int(_ctx.cp_a), int(_ctx.cp_b), s, winnaar_kant)

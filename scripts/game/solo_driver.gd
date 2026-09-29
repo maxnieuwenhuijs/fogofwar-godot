@@ -13,6 +13,9 @@ extends RefCounted
 
 const AIMediumScript := preload("res://scripts/ai/AIMedium.gd")
 const AIEasyScript := preload("res://scripts/ai/AIEasy.gd")
+## F6.0 (29 september): uitslag en punten (docs/F6-punten-masterplan.md).
+const _Uitslag := preload("res://core/campaign/uitslag.gd")
+const _Punten := preload("res://core/campaign/puntentabel.gd")
 
 ## Duel-botniveau: "l1"/"l2" (F1-agents op views via AgentRunner — de snelle
 ## arena-route, hub-standaard sinds de hang-fix van 27 juli), of legacy
@@ -56,6 +59,10 @@ const QC_WENS := {
 }
 ## Deze zinnen gaan over de spreker zelf (doel = spreker).
 const QC_OVER_ZELF := ["HUB_QC_STUUR_MIJ", "HUB_QC_NODIG", "HUB_QC_NALATEN"]
+## Rivaliteit (F6.0-P3): je teamgenoten zijn je finalisten, dus de pesterij
+## blijft in je eigen team. Vier plagen, een sust.
+const QC_RIVAAL := ["HUB_QC_KROON", "HUB_QC_WACHT", "HUB_QC_ONTHOUD", "HUB_QC_CADEAUTJE",
+	"HUB_QC_EERST_VIJAND"]
 ## bot-id -> {soort: [doel-ids]}: waar een bot deze ronde AKKOORD! op zei.
 var toezeggingen: Dictionary = {}
 var _toezeg_ronde: int = -1
@@ -189,7 +196,56 @@ func _pas_toe(action: Dictionary, speler: int) -> bool:
 		_feed_event(action, speler)
 		if c.fase != fase_voor:
 			_feed_fase(fase_voor)
+			if c.fase == CState.Fase.KLAAR:
+				_na_kroning()
 	return res.ok
+
+
+## F6.0: een bot-kampioen bedankt meteen na de kroning (de mens kiest zelf op
+## het eindscherm). Het staat gewoon in het log, dus hervatten en vouwen
+## geven dezelfde dank.
+func _na_kroning() -> void:
+	if c.winnaar < 0 or c.winnaar == mens_id or c.dank_af:
+		return
+	_pas_toe(CActions.make_dank(bot_dank_keuze()), c.winnaar)
+
+
+## Wie een bot-kampioen bedankt, leesbaar en zonder loting: de gevallen
+## teamgenoot die hem het meest gaf (donaties en testament); gaf niemand iets,
+## dan die met de meeste roem. De rat (loyaliteit onder 0,3) bedankt niemand.
+func bot_dank_keuze() -> int:
+	var kampioen: int = c.winnaar
+	var agent: CampaignAgent = agents.get(kampioen)
+	if agent != null and agent.gewicht("loyaliteit", 0.8) < 0.3:
+		return -1
+	var giften: Dictionary = _Uitslag.giften(c)
+	var team: int = int(c.spelers[kampioen].team)
+	var ids: Array = c.spelers.keys()
+	ids.sort()
+	var beste: int = -1
+	var beste_gift: int = -1
+	var beste_roem: int = -1
+	for sid in ids:
+		if int(sid) == kampioen or int(c.spelers[sid].team) != team:
+			continue
+		var gift: int = int((giften.get(int(sid), {}) as Dictionary).get(kampioen, 0))
+		var roem: int = c.punten_van(int(sid))
+		if gift > beste_gift or (gift == beste_gift and roem > beste_roem):
+			beste = int(sid)
+			beste_gift = gift
+			beste_roem = roem
+	return beste
+
+
+## De mens is kampioen en bedankt iemand (of niemand: -1).
+func submit_mens_dank(naar: int) -> bool:
+	return _pas_toe(CActions.make_dank(naar), mens_id)
+
+
+## De punten van deze campagne (F6.0), per speler: {id: {totaal, regels}}.
+## In solo een voorproefje: solo telt niet mee voor de ranglijst.
+func punten() -> Dictionary:
+	return _Punten.bereken(_Uitslag.van(c))
 
 
 ## Campagne-hub (23 september): een fasewissel is een eigen kaartje in de
@@ -229,6 +285,14 @@ func _feed_event(action: Dictionary, speler: int) -> void:
 			"cp": int(action.cp),
 			"tekst": tr("SOLO_FEED_RUIL") % [String(c.spelers[speler].naam),
 				int(action.cp), int(action.cp) / koers]})
+	elif t == CActions.DANK:
+		var naar: int = int(action.naar)
+		var tekst: String = tr("SOLO_FEED_DANK_NIEMAND") % String(c.spelers[speler].naam)
+		if naar >= 0:
+			tekst = tr("SOLO_FEED_DANK") % [String(c.spelers[speler].naam),
+				String(c.spelers[naar].naam), int(_Punten.TABEL.dank)]
+		feed.append({"type": "event", "soort": "dank", "speler": speler, "naar": naar,
+			"ronde": c.ronde, "tekst": tekst})
 	elif t == CActions.TESTAMENT:
 		for deel in (action.verdeling as Array):
 			var delen2: Array = []
@@ -287,6 +351,9 @@ func quick_chat(speler: int, sleutel: String, doel: int = -1) -> void:
 	if bots.is_empty():
 		return
 	_chat_rng.shuffle(bots)
+	if QC_RIVAAL.has(sleutel):
+		_rivaal_antwoord(int(bots[0]), sleutel, speler)
+		return
 	var soort: String = String(QC_WENS.get(sleutel, ""))
 	if soort != "":
 		_beantwoord_verzoek(bots, soort, doel)
@@ -310,6 +377,22 @@ func quick_chat(speler: int, sleutel: String, doel: int = -1) -> void:
 			_chat(int(bots[0]), "HUB_QC_AKKOORD" if ja else "HUB_QC_NEE", speler)
 		"HUB_QC_VERRADER":
 			_chat(int(bots[0]), "HUB_QC_VERRADER" if _chat_rng.randf() < 0.5 else "HUB_QC_NEE", -1)
+
+
+## Een teamgenoot kaatst terug, naar karakter (F6.0-P3). Wie trouw is sust
+## ("Eerst de vijand!"), de rat zegt hetzelfde terug, de rest dreigt of
+## onthoudt het. Sus jij, dan is een trouwe bot het met je eens.
+func _rivaal_antwoord(bot: int, sleutel: String, speler: int) -> void:
+	var loyaal: float = (agents[bot] as CampaignAgent).gewicht("loyaliteit", 0.8)
+	if sleutel == "HUB_QC_EERST_VIJAND":
+		_chat(bot, "HUB_QC_AKKOORD" if _chat_rng.randf() < loyaal else "HUB_QC_WACHT", speler)
+		return
+	var antwoord: String = "HUB_QC_WACHT" if _chat_rng.randf() < 0.5 else "HUB_QC_ONTHOUD"
+	if loyaal >= 0.8:
+		antwoord = "HUB_QC_EERST_VIJAND"
+	elif loyaal < 0.3:
+		antwoord = "HUB_QC_KROON"
+	_chat(bot, antwoord, speler)
 
 
 ## Een verzoek: wie het over zich hoort (Stuur X!) antwoordt eerst, daarna nog
@@ -798,10 +881,15 @@ func _boek_uitkomst(idx: int, a: int, b: int, u: Dictionary) -> bool:
 		winnaar_id = b
 	duels_gespeeld += 1
 	var reserve: Dictionary = u.get("reserve", {})
+	# F6.0: in de burgeroorlog is p1 de hogere plek; wint p2, dan is het een stunt.
+	# (Het mens-duel zet de mens altijd als a neer, dus kijk naar de bracket zelf.)
+	var stunt: bool = c.fase == CState.Fase.BURGEROORLOG and idx < c.duels_deze_ronde.size() \
+		and winnaar_id == int(c.duels_deze_ronde[idx].p2)
 	feed.append({"type": "report", "ronde": c.ronde, "p1": a, "p2": b,
 		"winnaar": winnaar_id, "methode": methode, "verliezen": verliezen,
 		"cp_delta": cp_delta, "inzet": inzet, "buit": buit, "cycli": int(u.cycli),
-		"reserve": {str(a): int(reserve.get("1", 0)), str(b): int(reserve.get("2", 0))}})
+		"reserve": {str(a): int(reserve.get("1", 0)), str(b): int(reserve.get("2", 0))},
+		"stunt": stunt})
 	return _pas_toe(CActions.make_match_result(idx, winnaar_id, methode, verliezen, cp_delta, inzet, buit), -1)
 
 

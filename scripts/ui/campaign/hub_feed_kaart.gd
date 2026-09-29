@@ -33,6 +33,7 @@ const LINT := {
 	"fase": [5, "Flag_icon", Color.WHITE],
 	"systeem": [5, "Phase_icon", Color.WHITE],
 	"chat": [4, "Chat_icon", HubAssets.GROEN],
+	"dank": [2, "WellPlayed_icon", Color.WHITE],
 }
 
 ## Barks die al een eigen kaartje hebben (de nominatie zelf): alleen in de chat.
@@ -128,6 +129,9 @@ func _report(e: Dictionary, tijd: String) -> Control:
 	if winnaar >= 0:
 		kaart.zin(tr("HUB_FEED_REPORT_WHO") % [_naam(winnaar), _methode(String(e.get("methode", "")))],
 			7, HubAssets.INKT_ZACHT)
+	if winnaar >= 0 and bool(e.get("stunt", false)):
+		# F6.0: in de burgeroorlog versloeg de lagere plek de hogere.
+		kaart.zin(tr("HUB_FEED_STUNT") % _naam(winnaar), 7.5, HubAssets.ROOD)
 	return kaart.wortel
 
 
@@ -211,6 +215,18 @@ func _event(e: Dictionary, tijd: String) -> Control:
 		mid.add_child(_pijl())
 		rij.add_child(mid)
 		rij.add_child(_portret(int(e.get("naar", wie)), 42))
+		kaart.midden.add_child(rij)
+		kaart.zin(String(e.get("tekst", "")), 7.5)
+		return kaart.wortel
+	if soort == "dank":
+		# F6.0: de kampioen bedankt een gevallen teamgenoot (of niemand).
+		var kaart := _kaart("dank", tr("HUB_TAG_DANK"), tijd)
+		var rij := _rij(8)
+		rij.add_child(_portret(wie, 42))
+		var naar: int = int(e.get("naar", -1))
+		if naar >= 0:
+			rij.add_child(_pijl())
+			rij.add_child(_portret(naar, 42))
 		kaart.midden.add_child(rij)
 		kaart.zin(String(e.get("tekst", "")), 7.5)
 		return kaart.wortel

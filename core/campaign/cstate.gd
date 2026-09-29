@@ -33,6 +33,15 @@ var donatie_klaar: Dictionary = {}     # speler-id -> true (venster gesloten voo
 var pending_testamenten: Array = []    # speler-ids die nog moeten nalaten
 var bracket: Array = []                # burgeroorlog: [[a, b], ...] per ronde
 
+# F6.0 (29 september): wat de punten nodig hebben (docs/F6-punten-masterplan.md).
+# Allemaal afgeleid door de reducer, dus een oud log vult ze gewoon bij het vouwen.
+var bracket_grootte: int = 0           # hoeveel spelers de lopende bracketronde begon
+var uitval: Dictionary = {}            # speler-id -> {"ronde", "burgeroorlog": bool, "over"}
+var stunts: Dictionary = {}            # speler-id -> keer dat hij een hogere plek versloeg
+var testament_naar: Dictionary = {}    # speler-id -> [ontvanger-ids] van zijn testament
+var dank_naar: int = -1                # wie de kampioen bedankte (-1 = niemand)
+var dank_af: bool = false              # de kampioen heeft gekozen (ook "niemand")
+
 
 # --- Opbouw -------------------------------------------------------------------
 
@@ -178,6 +187,12 @@ func to_dict() -> Dictionary:
 		"donatie_klaar": _int_keys_naar_str(donatie_klaar),
 		"pending_testamenten": pending_testamenten.duplicate(),
 		"bracket": bracket.duplicate(true),
+		"bracket_grootte": bracket_grootte,
+		"uitval": _int_keys_naar_str(uitval),
+		"stunts": _int_keys_naar_str(stunts),
+		"testament_naar": _int_keys_naar_str(testament_naar),
+		"dank_naar": dank_naar,
+		"dank_af": dank_af,
 	}
 
 
@@ -224,4 +239,19 @@ static func from_dict(d: Dictionary) -> CState:
 		s.pending_testamenten.append(int(id))
 	for paar in d.get("bracket", []):
 		s.bracket.append([int(paar[0]), int(paar[1])])
+	# F6.0: saves van voor 29 september missen deze sleutels -> leeg.
+	s.bracket_grootte = int(d.get("bracket_grootte", 0))
+	for key in d.get("uitval", {}):
+		var u: Dictionary = d.uitval[key]
+		s.uitval[int(String(key))] = {"ronde": int(u.get("ronde", 0)),
+			"burgeroorlog": bool(u.get("burgeroorlog", false)), "over": int(u.get("over", 0))}
+	for key in d.get("stunts", {}):
+		s.stunts[int(String(key))] = int(d.stunts[key])
+	for key in d.get("testament_naar", {}):
+		var lijst: Array = []
+		for id in d.testament_naar[key]:
+			lijst.append(int(id))
+		s.testament_naar[int(String(key))] = lijst
+	s.dank_naar = int(d.get("dank_naar", -1))
+	s.dank_af = bool(d.get("dank_af", false))
 	return s

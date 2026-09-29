@@ -541,6 +541,53 @@ HUB_RULE_TEAMBONUS,"That team gets +%d fame, even players who are out","Dat team
 HUB_RULE_KNOCKOUT,"Lose and you're out, with nothing left",Verlies je? Dan lig je eruit en ben je alles kwijt
 HUB_RULE_CHAT_TEAM,Only your own team sees your messages,Alleen je eigen team ziet je berichten
 HUB_RULE_CHAT_AKKOORD,"AGREED? They usually keep their word, not always","AKKOORD? Meestal houden ze woord, niet altijd"
+HUB_QC_GROEP_RIVAAL,RIVALRY,RIVALITEIT
+HUB_QC_KROON,THAT CROWN IS MINE!,DIE KROON IS VAN MIJ!
+HUB_QC_WACHT,JUST YOU WAIT!,WACHT MAAR AF!
+HUB_QC_ONTHOUD,I'LL REMEMBER THIS.,IK ONTHOUD DIT.
+HUB_QC_CADEAUTJE,NICE GIFT!,LEUK CADEAUTJE!
+HUB_QC_EERST_VIJAND,ENEMY FIRST!,EERST DE VIJAND!
+SOLO_FEED_DANK,%s thanks %s (+%d points),%s bedankt %s (+%d punten)
+SOLO_FEED_DANK_NIEMAND,%s thanks nobody.,%s bedankt niemand.
+HUB_TAG_DANK,THANKS,DANK
+HUB_FEED_STUNT,Upset! %s beats a higher seed.,Stunt! %s verslaat een hogere plek.
+HUB_PUNTEN_JOUW,YOUR POINTS,JOUW PUNTEN
+HUB_PUNTEN_BEKIJK,See how,Bekijk hoe
+HUB_PUNTEN_SUB,This is how they count online. Solo doesn't count for the ladder.,Zo tellen ze online. Solo telt niet mee voor de ranglijst.
+HUB_PUNTEN_TOTAAL,TOTAL,TOTAAL
+HUB_BADGES,BADGES,BADGES
+HUB_DANK_KOP,YOU'RE CHAMPION!,JE BENT KAMPIOEN!
+HUB_DANK_KIES,Thank one fallen teammate: they get +%d points.,Bedank een gevallen teamgenoot: die krijgt +%d punten.
+HUB_DANK_NIEMAND,Thank nobody,Niemand bedanken
+HUB_PT_UITGESPEELD,Played to the end,Campagne uitgespeeld
+HUB_PT_TEAM,Your team won,Je team won
+HUB_PT_ROEM,Fame,Roem
+HUB_PT_KAMPIOEN,Champion,Kampioen
+HUB_PT_FINALE,Lost the final,Finale verloren
+HUB_PT_HALVE,Last four,Laatste vier
+HUB_PT_EERDER,Civil war,Burgeroorlog
+HUB_PT_STUNT,Upset,Stunt
+HUB_PT_LAATSTE_STAND,Last stand,Laatste stand
+HUB_PT_DANK,Thanks from the champion,Dank van de kampioen
+HUB_PT_KONINGSMAKER,Kingmaker,Koningsmaker
+HUB_BADGE_KROONPRINS,Crown prince,Kroonprins
+HUB_BADGE_KONINGSMAKER,Kingmaker,Koningsmaker
+HUB_BADGE_SLUIPSCHUTTER,Sniper,Sluipschutter
+HUB_BADGE_LAATSTE_MAN,Last one standing,Laatste man
+HUB_BADGE_DUBBELSPEL,Double game,Dubbelspel
+HUB_SEED_TIP,#%d: your place in the civil war if your team wins now,#%d: je plek in de burgeroorlog als je team nu wint
+HUB_LID_PLEK,Civil war now: place %d of %d,Burgeroorlog nu: plek %d van %d
+HUB_RULE_SEED,#1 on a shield: your place if your team wins now,#1 bij een schild: je plek als je team nu wint
+HUB_RULE_PUNTEN_KOP,POINTS (ONLINE),PUNTEN (ONLINE)
+HUB_RULE_PT_TEAM,your team wins,je team wint
+HUB_RULE_PT_OOK_DOOD,also if you're out,ook als je eruit ligt
+HUB_RULE_PT_KAMPIOEN,champion,kampioen
+HUB_RULE_PT_FINALE,final / last four,finale / laatste vier
+HUB_RULE_PT_ROEM,per fame point,per roem
+HUB_RULE_PT_STUNT,beat a higher seed,versla een hogere plek
+HUB_RULE_PT_DANK,thanks from the champion,dank van de kampioen
+HUB_RULE_PT_KONINGSMAKER,your will made the champion,je testament maakte de kampioen
+HUB_RULE_PT_SOLO,Solo doesn't count for the ladder,Solo telt niet mee voor de ranglijst
 HUB_SETTINGS_TITLE,SETTINGS,INSTELLINGEN
 HUB_MAIN_MENU,Main menu,Hoofdmenu
 HUB_STATUS_ACTIEF,Takes part this round,Doet mee deze ronde

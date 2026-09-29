@@ -1,5 +1,40 @@
 # Fog of War — Work In Progress & Context
 
+## 29 september -- F6.0 P1-P3: punten in de core en in solo
+
+Max: "doe maar" (op P1-P3 uit het puntenplan).
+
+- **P1, de core.** De reducer houdt bij wat de punten nodig hebben: `uitval`
+  (ronde, burgeroorlog ja/nee, en in de burgeroorlog de grootte van de
+  bracketronde: de duels daarin zijn gelijktijdig), `stunts` (p2 wint van p1:
+  in de bracket is p1 altijd de hogere plek), `testament_naar`, en de dank.
+  Nieuwe actie `DANK`, de enige na de kroning. `core/campaign/uitslag.gd` en
+  `puntentabel.gd` rekenen puur op de eindstaat. "Laatste stand" is anders
+  dan in het plan stond: iedereen van het verliezende team die pas in de
+  laatste ronde viel (niet "de laatste 2"), om dezelfde reden. Plan
+  bijgewerkt.
+- **P2, solo.** Eindscherm: "JOUW PUNTEN 27 Bekijk hoe" (venster met elke
+  regel, het totaal en je badges) en de top drie op punten. Spelregels: een
+  kaart "Punten (online)" uit de puntentabel, plus de regel over de
+  #-plaatjes. Schaduwbracket: vanaf ronde 3 "#1", "#2" bij de levende schilden
+  van je team (de #1 in goud), bij de donaties en in het venster van een
+  teamgenoot.
+- **P3, pesterij.** Vijf zinnen in een groep RIVALITEIT (in de burgeroorlog
+  vooraan in de balk), bots antwoorden naar karakter op de chat-rng. Een stunt
+  staat in rood op het slagrapport. Ben jij kampioen, dan bedank je eerst een
+  gevallen teamgenoot (of niemand); een bot-kampioen doet dat zelf. De dank
+  komt als kaartje in de tijdlijn.
+- **Bug erbij gevonden (al ouder):** besliste jouw eigen duel de campagne
+  (en in de finale zit je altijd zelf), dan ging de hub na het bord naar de
+  factiekeuze en zag je het eindscherm nooit. Nu zet `CampaignBridge.rond_af`
+  de vlag `terug_van_bord` en pakt de hub dan ook een afgelopen campagne op.
+  Fixture-modus `terug` controleert het.
+- Checks: CampaignTests 343 (was 270; `test_f6_*`: het voorbeeld uit het plan
+  79/55/44/16/0, een mini-campagne door de reducer met elke regel, de
+  dank-regels, oude saves, giften, de bot-dank), SoloTests en de volle
+  batterij: zie de commit. Fixture: modi `punten` en `dank`, en `_nl` achter
+  elke modus voor Nederlands.
+
 ## 29 september -- masterplan: punten verdienen en krijgen (online)
 
 Max: "Bouw nu aan een masterplan voor online punten verdienen, en krijgen,

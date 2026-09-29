@@ -20,12 +20,14 @@ const EV_LEDGER := "cledger"        # {entry} — elke boeking is een event
 const EV_UITGEVALLEN := "cuit"      # {speler}
 const EV_BURGEROORLOG := "cbo"      # {deelnemers, bracket}
 const EV_KAMPIOEN := "ckampioen"    # {speler}
+const EV_DANK := "cdank"            # {speler, naar} — F6.0
 
 
 static func apply(c: CState, action: Dictionary, speler: int) -> Dictionary:
 	if not CActions.is_wellformed(action):
 		return _nee("Misvormde campagne-actie")
-	if c.fase == CState.Fase.KLAAR:
+	# Na de kroning kan alleen de kampioen nog iemand bedanken (F6.0).
+	if c.fase == CState.Fase.KLAAR and String(action.type) != CActions.DANK:
 		return _nee("De campagne is voorbij")
 	var events: Array = []
 	var fout := ""
@@ -46,6 +48,8 @@ static func apply(c: CState, action: Dictionary, speler: int) -> Dictionary:
 			fout = _do_testament(c, action, speler, events)
 		CActions.TICK_DEADLINE:
 			fout = _do_tick(c, events)
+		CActions.DANK:
+			fout = _do_dank(c, action, speler, events)
 		_:
 			return _nee("Onbekend actietype")
 	if fout != "":
@@ -329,6 +333,12 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 		_verbrand_alles(c, events, verliezer_bo)
 		c.spelers[verliezer_bo].status = "uitgevallen"
 		c.spelers[verliezer_bo].testament_af = true
+		# F6.0: p1 is in de bracket altijd de hogere plek (_seed_bracketronde),
+		# dus wint p2, dan is dat een stunt. "over" is de grootte van de
+		# bracketronde, niet de volgorde van de duels erin: die zijn gelijktijdig.
+		if winnaar == p2:
+			c.stunts[winnaar] = int(c.stunts.get(winnaar, 0)) + 1
+		c.uitval[verliezer_bo] = {"ronde": c.ronde, "burgeroorlog": true, "over": c.bracket_grootte}
 		_ev(events, EV_UITGEVALLEN, {"speler": verliezer_bo})
 	else:
 		for sid in [p1, p2]:
@@ -336,6 +346,7 @@ static func _do_match_result(c: CState, action: Dictionary, events: Array) -> St
 				continue
 			if c.pool_totaal_van(sid) <= 0 and String(c.spelers[sid].status) == "actief":
 				c.spelers[sid].status = "uitgevallen"
+				c.uitval[sid] = {"ronde": c.ronde, "burgeroorlog": false, "over": 0}
 				_ev(events, EV_UITGEVALLEN, {"speler": sid})
 				if c.cp_van(sid) > 0 or c.pool_totaal_van(sid) > 0:
 					c.pending_testamenten.append(sid)
@@ -394,12 +405,40 @@ static func _do_testament(c: CState, action: Dictionary, speler: int, events: Ar
 		if di + dc + da + dp > 0:
 			_boek_ev(c, events, "testament", speler, -di, -dc, -da, -dp, 0)
 			_boek_ev(c, events, "testament", naar, di, dc, da, dp, 0)
+			var ontvangers: Array = c.testament_naar.get(speler, [])
+			if not ontvangers.has(naar):
+				ontvangers.append(naar)
+			c.testament_naar[speler] = ontvangers
 	# De rest verbrandt.
 	_verbrand_alles(c, events, speler)
 	c.spelers[speler].testament_af = true
 	c.pending_testamenten.erase(speler)
 	if c.pending_testamenten.is_empty():
 		_volgende_ronde(c, events)
+	return ""
+
+
+# --- Dank van de kampioen (F6.0) ----------------------------------------------------
+
+## Na de kroning bedankt de kampioen één gevallen teamgenoot (of niemand, -1).
+## Eén keer. Het verandert niets aan het grootboek: het levert alleen punten op
+## (docs/F6-punten-masterplan.md).
+static func _do_dank(c: CState, action: Dictionary, speler: int, events: Array) -> String:
+	if c.fase != CState.Fase.KLAAR or c.winnaar < 0:
+		return "Bedanken kan pas na de kroning"
+	if speler != c.winnaar:
+		return "Alleen de kampioen bedankt"
+	if c.dank_af:
+		return "De kampioen heeft al bedankt"
+	var naar: int = int(action.naar)
+	if naar != -1:
+		var doel: Dictionary = c.spelers.get(naar, {})
+		if doel.is_empty() or naar == speler or int(doel.team) != int(c.spelers[speler].team) \
+				or String(doel.status) == "actief":
+			return "Bedanken kan alleen een gevallen teamgenoot"
+	c.dank_naar = naar
+	c.dank_af = true
+	_ev(events, EV_DANK, {"speler": speler, "naar": naar})
 	return ""
 
 
@@ -488,9 +527,10 @@ static func _start_burgeroorlog(c: CState, events: Array, winnend_team: int) -> 
 	_seed_bracketronde(c, events, deelnemers)
 
 
-## Seeding punten -> CP -> pool (desc); vrijloting voor de hoogste seed bij
-## oneven aantal; paren hoog-vs-laag.
-static func _seed_bracketronde(c: CState, events: Array, deelnemers: Array) -> void:
+## De zaaiing van de burgeroorlog: punten -> CP -> pool (aflopend), dan id.
+## Puur, dus ook bruikbaar voor het schaduwbracket in de hub (F6.0, V4): wie
+## nu bovenaan staat als zijn team vandaag zou winnen.
+static func seed_volgorde(c: CState, deelnemers: Array) -> Array:
 	var seeds: Array = deelnemers.duplicate()
 	seeds.sort_custom(func(a, b) -> bool:
 		var pa := c.punten_van(a)
@@ -506,6 +546,14 @@ static func _seed_bracketronde(c: CState, events: Array, deelnemers: Array) -> v
 		if la != lb:
 			return la > lb
 		return int(a) < int(b))
+	return seeds
+
+
+## Seeding (seed_volgorde); vrijloting voor de hoogste seed bij oneven aantal;
+## paren hoog-vs-laag (p1 is dus altijd de hogere plek).
+static func _seed_bracketronde(c: CState, events: Array, deelnemers: Array) -> void:
+	var seeds: Array = seed_volgorde(c, deelnemers)
+	c.bracket_grootte = seeds.size()
 	c.duels_deze_ronde = []
 	c.bracket = []
 	var start := 0

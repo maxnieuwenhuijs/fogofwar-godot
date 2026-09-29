@@ -1,6 +1,7 @@
 # Masterplan: punten verdienen en krijgen (online)
 
-> **Status: plan, 29 september 2026. Nog niets gebouwd, niets besloten.**
+> **Status: plan, 29 september 2026. P1 t/m P3 gebouwd (dezelfde dag, zie §9);
+> de getallen zijn nog niet besloten.**
 > Vraag van Max: "een masterplan voor online punten verdienen, en krijgen,
 > sowieso de incentive als het team wint, maar ook als jij wint, zo dat je ook
 > die burgeroorlog-tactieken triggert en onderling pesterij."
@@ -49,7 +50,7 @@ erfgenaam wordt kampioen.
 | Je viel met 3 of 4 over in de burgeroorlog | +10 | |
 | Je viel eerder in de burgeroorlog (5 of meer over) | +5 | |
 | Stunt: je verslaat een hoger geplaatste teamgenoot | +5 per keer | burgeroorlog |
-| Laatste stand: je hoort bij de laatste 2 van het verliezende team | +5 | 2 spelers |
+| Laatste stand: je viel pas in de laatste ronde van het verliezende team | +5 | wie in die ronde viel |
 | Dank: de kampioen kiest één gevallen teamgenoot | +10 | 1 speler |
 | Koningsmaker: je testament ging naar de latere kampioen | +5 | eigen team |
 
@@ -63,7 +64,7 @@ Ligt er maar één speler van het winnende team nog, dan is die meteen kampioen
 | Vera (Noord) | kampioen, 9 roem, versloeg in de halve finale de nummer 1 | 5 + 20 + 9 + 40 + 5 = **79** |
 | Karel (Noord) | verloor de finale, 10 roem | 5 + 20 + 10 + 20 = **55** |
 | Bruno (Noord) | lag er in ronde 3 uit, 4 roem, testament aan Vera, kreeg haar dank | 5 + 20 + 4 + 10 + 5 = **44** |
-| Ida (Zuid) | verloren team, bij de laatste twee, 6 roem | 5 + 6 + 5 = **16** |
+| Ida (Zuid) | verloren team, viel pas in de laatste ronde, 6 roem | 5 + 6 + 5 = **16** |
 | Otto (Zuid) | vertrok halverwege | **0** |
 
 Gemiddeld komt een speler zo op ongeveer 29 punten per campagne (schatting:
@@ -132,14 +133,17 @@ Lager = trouwer tot het eind. P4 meet 1, 2 en 3.
 
 ### Wat er klein bij komt (elk een knop, default aan in solo om te testen)
 
-1. **Schaduwbracket met punten** (V4 uit het intrige-voorstel). Vanaf ronde 3
-   toont de hub: "Als je team nu wint: jij plek 3, halve finale tegen Vera.
-   Kampioen = +40." Zonder dit paneel vergeet je dat je teamgenoten je
+1. **Schaduwbracket** (V4 uit het intrige-voorstel). Vanaf ronde 3 staat bij
+   elk levend schild van je team een plaatje "#1", "#2": de plek als de
+   burgeroorlog vandaag zou beginnen (de #1 in goud). Ook bij de donaties en
+   in het venster van een teamgenoot ("Burgeroorlog nu: plek 2 van 5"). Zo
+   zie je wie je volstopt. Zonder dit vergeet je dat je teamgenoten je
    finalisten zijn.
-2. **Rivaliteit in de quick chat.** Vier vaste zinnen, alleen voor je team:
-   "Die kroon is van mij!", "Wacht maar tot de burgeroorlog.", "Ik onthoud
-   dit.", "Bedankt voor het cadeautje!" Bots antwoorden naar karakter (de rat
-   kaatst altijd terug).
+2. **Rivaliteit in de quick chat.** Vier plaagzinnen en een om te sussen,
+   alleen voor je team: "Die kroon is van mij!", "Wacht maar af!", "Ik onthoud
+   dit.", "Leuk cadeautje!" en "Eerst de vijand!". In de burgeroorlog staan ze
+   vooraan. Bots antwoorden naar karakter: een trouwe bot sust, de rat zegt
+   het terug, de rest dreigt.
 3. **Stunt** (+5): de underdogs krijgen een reden om te plotten.
 4. **Dank van de kampioen** (+10, V16). Vóór je valt kun je het al vragen: "Als
    ik voor je val, bedank je me dan?" Afdwingen kan niet (het spel is notaris,
@@ -203,8 +207,9 @@ eindstaat: team, roem, wanneer je viel en hoeveel er toen nog over waren,
 stunts, testament, dank. Een pure functie: deterministisch, en hetzelfde bestand
 op de client en in de worker (één waarheid).
 
-- Nodig in `CState`: per speler `uitval` = {ronde, fase, over}, bijgehouden door
-  de reducer. Oude logs houden hem leeg en folden ongewijzigd.
+- Nodig in `CState`: per speler `uitval` = {ronde, burgeroorlog, over}, plus
+  `stunts`, `testament_naar`, `bracket_grootte` en de dank, allemaal bijgehouden
+  door de reducer. Een oud log vouwt naar dezelfde stand en vult ze gewoon.
 - Nieuwe actie `DANK`: alleen de kampioen, één keer, na de kroning (de reducer
   weigert nu alles na KLAAR, daar komt deze ene uitzondering bij).
 
@@ -255,9 +260,9 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
 
 | Stap | Wat | Wanneer | CHECK |
 |---|---|---|---|
-| **P1** | Uitslag en puntentabel in de core, `uitval` in CState, actie `DANK` | nu | Unit-tests per regel uit §2; het voorbeeld geeft precies 79 / 55 / 44 / 16 / 0; oude campagne-logs folden ongewijzigd |
-| **P2** | Solo: eindscherm met je punten per regel (iconen), spelregelkaart "Punten", schaduwbracket met punten vanaf ronde 3 | nu | `-- shot campaign_hub einde\|regels` 0 fouten; preview = puntentabel |
-| **P3** | Pesterij in solo: rivaliteitszinnen (met bot-antwoorden), stunt, dank kiezen op het eindscherm, koningsmaker, badges | nu | CampaignTests; bots antwoorden deterministisch per seed |
+| **P1** ✓ | Uitslag en puntentabel in de core, `uitval` in CState, actie `DANK` | gebouwd 29 sept | Unit-tests per regel uit §2; het voorbeeld geeft precies 79 / 55 / 44 / 16 / 0; oude campagne-logs folden ongewijzigd |
+| **P2** ✓ | Solo: eindscherm met je punten per regel (iconen), spelregelkaart "Punten", schaduwbracket vanaf ronde 3 | gebouwd 29 sept | `-- shot campaign_hub einde\|punten\|regels` 0 fouten; preview = puntentabel |
+| **P3** ✓ | Pesterij in solo: rivaliteitszinnen (met bot-antwoorden), stunt, dank kiezen op het eindscherm, koningsmaker, badges | gebouwd 29 sept | CampaignTests; bots antwoorden deterministisch per seed; `-- shot campaign_hub dank` |
 | **P4** | Bots op punten: fitness "eigen punten", drie tabellen meten | na de F7-datarun | Rapport met de metingen uit §8 per tabel; Max kiest |
 | **P5** | Tabel v1 vastzetten (`punten_versie` 1) | besluit Max | Max kiest |
 | **P6** | Server: tabellen, boekingen vanuit de worker | na F5.1 | Integratietest: campagne klaar → boekingen; dubbel insturen → niet dubbel; vervalst log → afgekeurd |

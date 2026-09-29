@@ -11,6 +11,8 @@ extends RefCounted
 ## Iconen: "hub:<naam>" uit assets/ui/campaign_hub/icons, "ui:<id>" uit het
 ## UI-pack (UiAssets), "" = een lege plek van dezelfde breedte.
 
+const _Punten := preload("res://core/campaign/puntentabel.gd")
+
 const ICOON := 17.0
 const LABEL_BREED := 168.0
 ## Lettermaten (ontwerp-eenheden): een tik groter dan de rest van de hub, want
@@ -90,6 +92,22 @@ func bouw() -> VBoxContainer:
 	_regel(k, "hub:Inbattle_icon", tr("HUB_RULE_OORLOG"))
 	_regel(k, "ui:score", tr("HUB_RULE_TEAMBONUS") % _r.punten_teambonus)
 	_regel(k, "hub:Dead_icon", tr("HUB_RULE_KNOCKOUT"))
+	_regel(k, "hub:Nomination_icon", tr("HUB_RULE_SEED"))
+
+	# F6.0: de punten, rechtstreeks uit de puntentabel.
+	var t: Dictionary = _Punten.TABEL
+	k = _kaart(lijst, "Punten", "ui:win-harbor", tr("HUB_RULE_PUNTEN_KOP"))
+	_waarden(k, "hub:Battle_report_team_full", tr("HUB_RULE_PT_TEAM"), [
+		["ui:win-harbor", "+%d" % int(t.team)], ["", tr("HUB_RULE_PT_OOK_DOOD")]])
+	_waarden(k, "ui:win-harbor", tr("HUB_RULE_PT_KAMPIOEN"), [["ui:win-harbor", "+%d" % int(t.kampioen)]])
+	_waarden(k, "hub:Inbattle_icon", tr("HUB_RULE_PT_FINALE"), [
+		["ui:win-harbor", "+%d" % int(t.finale)], ["", "/"], ["ui:win-harbor", "+%d" % int(t.halve)]])
+	_waarden(k, "ui:score", tr("HUB_RULE_PT_ROEM"), [["ui:win-harbor", "+%d" % int(t.per_roem)]])
+	_waarden(k, "ui:act-melee", tr("HUB_RULE_PT_STUNT"), [["ui:win-harbor", "+%d" % int(t.stunt)]])
+	_waarden(k, "hub:WellPlayed_icon", tr("HUB_RULE_PT_DANK"), [["ui:win-harbor", "+%d" % int(t.dank)]])
+	_waarden(k, "hub:Testament_icon", tr("HUB_RULE_PT_KONINGSMAKER"), [
+		["ui:win-harbor", "+%d" % int(t.koningsmaker)]])
+	_regel(k, "ui:hidden", tr("HUB_RULE_PT_SOLO"))
 
 	k = _kaart(lijst, "Chat", "hub:Chat_icon", tr("HUB_QUICK_CHAT"))
 	_regel(k, "hub:Chat_icon", tr("HUB_RULE_CHAT_TEAM"))

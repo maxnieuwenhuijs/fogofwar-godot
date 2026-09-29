@@ -5,10 +5,11 @@ extends RefCounted
 ## `-- shot campaign_hub [seed] [modus] [orakel=<pad>]` in tools/capture.gd.
 ##
 ## Modi: "" (ronde 1, jouw duel), raad, donatie, testament, burgeroorlog,
-## einde, chat, popup (quick chat), doel (Stuur wie?), lid, rapport, regels
+## einde, punten (het puntenvenster aan het eind), dank (jij als kampioen
+## kiest wie je bedankt), chat, popup (quick chat), doel (Stuur wie?), lid, rapport, regels
 ## (het spelregelscherm, boven en onderaan: _shot_hub_regels_2.png),
 ## instellingen, grootboek, paren (de andere paren van de ronde), factie, hervat,
-## laden.
+## laden, terug (terug van het bord na de beslissende finale: eindscherm).
 ## Elke modus met "_nl" erachter (regels_nl) speelt in het Nederlands; de
 ## taalkeuze van de speler blijft ongemoeid.
 ## Met orakel=<pad> (een duel_orakel.json) spoelt de campagne in seconden
@@ -50,8 +51,33 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 			hub.call("_toon_hervat_keuze", SoloDriver.new(seed_val, 0))
 		await host.get_tree().create_timer(0.8).timeout
 		return await _bewaar(host, modus, fouten)
+	if modus == "terug":
+		# Terug van het bord na een duel dat de campagne besliste: de hub moet
+		# het eindscherm tonen, niet de factiekeuze (29 september).
+		var klaar := _nieuwe_driver(seed_val, orakel_pad)
+		_spoel_door(klaar, "einde")
+		CampaignBridge.driver = klaar
+		CampaignBridge.terug_van_bord = true
+		host.add_child(hub)
+		await host.get_tree().create_timer(1.0).timeout
+		if hub.find_child("NieuweCampagneKnop", true, false) == null \
+				or hub.find_child("FactieKeuze", true, false) != null:
+			fouten += 1
+			print("[SHOT] terug van het bord toont geen eindscherm")
+		CampaignBridge.driver = null
+		return await _bewaar(host, modus, fouten)
 	var driver := _nieuwe_driver(seed_val, orakel_pad)
 	_spoel_door(driver, modus)
+	if modus == "dank":
+		# Voor het plaatje: jij bent de kampioen en hebt nog niemand bedankt.
+		var c0: CState = driver.c
+		c0.winnaar = 0
+		c0.spelers[0].status = "actief"
+		for sid in c0.spelers:
+			if int(sid) != 0 and int(c0.spelers[sid].team) == int(c0.spelers[0].team):
+				c0.spelers[sid].status = "uitgevallen"
+		c0.dank_af = false
+		c0.dank_naar = -1
 	if modus == "burgeroorlog":
 		# Een burgeroorlog waarin jij nog meedoet: anders spelen de bots hem uit
 		# voordat het plaatje er is.
@@ -125,6 +151,8 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 				hub.call("_toon_report", rapport)
 		"regels":
 			hub.call("_toon_regels")
+		"punten":
+			hub.call("_toon_punten")
 		"instellingen":
 			hub.call("_toon_instellingen")
 		"grootboek":
@@ -134,6 +162,11 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 		"laden":
 			hub.call("_toon_lader", _eerste_vijand(driver))
 	await host.get_tree().create_timer(0.8).timeout
+	# F6.0: wat er aan het eind moet staan.
+	var eind_node := {"einde": "JouwPunten", "punten": "Punten", "dank": "DankKiezer"}
+	if eind_node.has(modus) and hub.find_child(String(eind_node[modus]), true, false) == null:
+		fouten += 1
+		print("[SHOT] %s ontbreekt" % eind_node[modus])
 	if modus == "regels":
 		return await _regels(host, hub, fouten)
 	return await _bewaar(host, modus, fouten)
@@ -149,9 +182,9 @@ static func _regels(host: Node, hub: Control, fouten: int) -> int:
 	for kind in scroll.find_children("Regelkaart_*", "", true, false):
 		kaarten += 1
 	print("[SHOT] spelregels: %d kaarten" % kaarten)
-	if kaarten < 8:
+	if kaarten < 9:
 		fouten += 1
-		print("[SHOT] spelregels: te weinig kaarten (8 verwacht)")
+		print("[SHOT] spelregels: te weinig kaarten (9 verwacht)")
 	fouten = await _bewaar(host, "regels", fouten)
 	scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
 	await host.get_tree().process_frame
@@ -177,7 +210,7 @@ static func _spoel_door(driver: SoloDriver, modus: String) -> void:
 	var doel := {"raad": CState.Fase.NOMINATIE, "donatie": CState.Fase.DONATIE,
 		"rapport": CState.Fase.NOMINATIE, "lid": CState.Fase.NOMINATIE,
 		"doel": CState.Fase.NOMINATIE, "testament": CState.Fase.DONATIE}
-	if not doel.has(modus) and not (modus in ["burgeroorlog", "einde"]):
+	if not doel.has(modus) and not (modus in ["burgeroorlog", "einde", "punten", "dank"]):
 		return
 	var guard := 0
 	while guard < 2000 and driver.c.fase != CState.Fase.KLAAR:
@@ -185,7 +218,9 @@ static func _spoel_door(driver: SoloDriver, modus: String) -> void:
 		var c: CState = driver.c
 		if modus == "burgeroorlog" and c.fase == CState.Fase.BURGEROORLOG:
 			break
-		if doel.has(modus) and c.ronde >= 2 and c.fase == doel[modus]:
+		# Raad en donaties vanaf ronde 3: dan staat het schaduwbracket (#1, #2) erbij.
+		var vanaf: int = 2 if modus == "testament" else 3
+		if doel.has(modus) and c.ronde >= vanaf and c.fase == doel[modus]:
 			if modus == "testament":
 				# Voor het plaatje: de mens is net gevallen en mag nalaten.
 				c.spelers[0].status = "uitgevallen"

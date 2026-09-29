@@ -25,6 +25,20 @@ const SAVE_PAD := "user://campaigns/solo/campagne.jsonl"
 ## De kaarten van het spelregelscherm (29 september). Via preload: headless
 ## kent een nieuwe klasse pas als de editor hem inschreef.
 const HubRegels := preload("res://scripts/ui/campaign/hub_regels.gd")
+## F6.0 (29 september): uitslag en punten (docs/F6-punten-masterplan.md).
+const _Uitslag := preload("res://core/campaign/uitslag.gd")
+const _Punten := preload("res://core/campaign/puntentabel.gd")
+## Het icoon van een puntenregel en van een badge ("hub:" of "ui:").
+const PUNT_ICOON := {
+	"uitgespeeld": "hub:Phase_icon", "team": "hub:Battle_report_team_full", "roem": "ui:score",
+	"kampioen": "ui:win-harbor", "finale": "hub:Inbattle_icon", "halve": "hub:Inbattle_icon",
+	"eerder": "hub:Inbattle_icon", "stunt": "ui:act-melee", "laatste_stand": "hub:Active_icon",
+	"dank": "hub:WellPlayed_icon", "koningsmaker": "hub:Testament_icon",
+}
+const BADGE_ICOON := {
+	"kroonprins": "ui:win-harbor", "koningsmaker": "hub:Testament_icon", "sluipschutter": "ui:act-melee",
+	"laatste_man": "hub:Active_icon", "dubbelspel": "ui:hidden",
+}
 
 var _s: float = 1.0                     # schaal: ontwerp-eenheid -> scherm-pixel
 var _frame: Control = null              # het staande frame (BG en alles erop)
@@ -101,6 +115,12 @@ const QC := {
 	"HUB_QC_VERRADER": ["Dead_icon", ""],
 	"HUB_QC_AKKOORD": ["ui:check", ""],
 	"HUB_QC_NEE": ["Close_icon", ""],
+	# Rivaliteit (F6.0-P3): je teamgenoten zijn je finalisten.
+	"HUB_QC_KROON": ["ui:win-harbor", ""],
+	"HUB_QC_WACHT": ["Time_icon", ""],
+	"HUB_QC_ONTHOUD": ["ui:act-melee", ""],
+	"HUB_QC_CADEAUTJE": ["Donation_icon", ""],
+	"HUB_QC_EERST_VIJAND": ["Active_icon", ""],
 }
 ## De groepen in het pop-upvenster.
 const QC_GROEPEN := [
@@ -108,6 +128,8 @@ const QC_GROEPEN := [
 	["HUB_QC_GROEP_DONATIE", ["HUB_QC_NODIG", "HUB_QC_DONEER", "HUB_QC_BEDANKT", "HUB_QC_BLUT"]],
 	["HUB_QC_GROEP_DUEL", ["HUB_QC_SUCCES", "HUB_QC_GOED_GEVOCHTEN", "HUB_QC_NALATEN"]],
 	["HUB_QC_GROEP_ALTIJD", ["HUB_QC_VERTROUW", "HUB_QC_VERRADER", "HUB_QC_AKKOORD", "HUB_QC_NEE"]],
+	["HUB_QC_GROEP_RIVAAL", ["HUB_QC_KROON", "HUB_QC_WACHT", "HUB_QC_ONTHOUD", "HUB_QC_CADEAUTJE",
+		"HUB_QC_EERST_VIJAND"]],
 ]
 
 func _ready() -> void:
@@ -118,10 +140,13 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	theme = UiAssets.thema()
 	if driver == null and CampaignBridge.driver != null \
-			and CampaignBridge.driver.c.fase != CState.Fase.KLAAR:
+			and (CampaignBridge.driver.c.fase != CState.Fase.KLAAR or CampaignBridge.terug_van_bord):
 		# F3.4b: terug van het bord (of een andere scene-wissel): zelfde campagne.
+		# 29 september: ook als jouw duel de campagne besliste (de finale), dan
+		# zie je het eindscherm met je punten en de dank.
 		driver = CampaignBridge.driver
 		mens_id = driver.mens_id
+	CampaignBridge.terug_van_bord = false
 	if driver == null:
 		# Lopende solo-campagne? Dan is dat een KEUZE, geen stille hervatting
 		# (besluit Max, 28 juli: "ik word meteen een muis, dat wil ik niet").
@@ -701,8 +726,11 @@ func _qc_context() -> Array:
 			return uit
 		CState.Fase.DONATIE:
 			return [["HUB_QC_NODIG", mens_id], ["HUB_QC_BEDANKT", -1], ["HUB_QC_BLUT", -1]]
-		CState.Fase.DUELS, CState.Fase.BURGEROORLOG:
+		CState.Fase.DUELS:
 			return [["HUB_QC_SUCCES", -1], ["HUB_QC_GOED_GEVOCHTEN", -1], ["HUB_QC_VERTROUW", -1]]
+		CState.Fase.BURGEROORLOG:
+			# Nu vecht je tegen je eigen team: de plaagzinnen voorop.
+			return [["HUB_QC_KROON", -1], ["HUB_QC_ONTHOUD", -1], ["HUB_QC_GOED_GEVOCHTEN", -1]]
 		CState.Fase.TESTAMENT:
 			return [["HUB_QC_NALATEN", mens_id], ["HUB_QC_VERTROUW", -1], ["HUB_QC_VERRADER", -1]]
 	return [["HUB_QC_GOED_GEVOCHTEN", -1], ["HUB_QC_BEDANKT", -1], ["HUB_QC_AKKOORD", -1]]
@@ -900,13 +928,46 @@ func _ververs_teams() -> void:
 			houder.remove_child(kind)
 			kind.queue_free()
 		var kandidaten := _kandidaten(team)
+		var plekken: Dictionary = _plekken(c, mijn_team) if team == mijn_team else {}
 		for sid in c.spelers:
 			if int(c.spelers[sid].team) != team:
 				continue
-			houder.add_child(_team_lid(c, int(sid), team == mijn_team, kandidaten))
+			houder.add_child(_team_lid(c, int(sid), team == mijn_team, kandidaten, int(plekken.get(int(sid), 0))))
 
 
-func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
+## Het schaduwbracket (F6.0, V4): de plek van elk levend lid van je team als de
+## burgeroorlog vandaag zou beginnen. Vanaf ronde 3 en tot de kroning: dan zie
+## je wie er boven je staat, en wie je volstopt.
+func _plekken(c: CState, team: int) -> Dictionary:
+	var uit: Dictionary = {}
+	if c.ronde < 3 or c.fase == CState.Fase.KLAAR:
+		return uit
+	var volgorde: Array = CReducer.seed_volgorde(c, c.actieve_leden(team))
+	for i in volgorde.size():
+		uit[int(volgorde[i])] = i + 1
+	return uit
+
+
+## Een klein donker plaatje met "#2": de plek in het schaduwbracket.
+func _plek_plaatje(plek: int) -> PanelContainer:
+	var pil := PanelContainer.new()
+	pil.name = "Plek"
+	pil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.08, 0.06, 0.05, 0.85)
+	sb.border_color = UiAssets.SELECTIE_GOUD if plek == 1 else HubAssets.IVOOR
+	sb.set_border_width_all(maxi(1, _px(1)))
+	sb.set_corner_radius_all(_px(4))
+	sb.content_margin_left = _u(3)
+	sb.content_margin_right = _u(3)
+	pil.add_theme_stylebox_override("panel", sb)
+	var l := HubAssets.tekst("#%d" % plek, _px(7), UiAssets.SELECTIE_GOUD if plek == 1 else HubAssets.IVOOR, true)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pil.add_child(l)
+	return pil
+
+
+func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array, plek: int = 0) -> Control:
 	var sp: Dictionary = c.spelers[sid]
 	var b := Button.new()
 	b.name = "Lid_%d" % sid
@@ -959,6 +1020,13 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array) -> Control:
 		jij.position = Vector2(_u(46), 0)
 		jij.size = Vector2(_u(30), _u(13))
 		b.add_child(jij)
+	if plek > 0:
+		# Schaduwbracket: linksboven op het schild je plek als je team nu wint.
+		var pil := _plek_plaatje(plek)
+		pil.position = Vector2(_u(16), _u(2))
+		pil.size = Vector2(_u(24), _u(13))
+		b.add_child(pil)
+		b.tooltip_text = "%s  %s" % [String(sp.naam), tr("HUB_SEED_TIP") % plek]
 	# Versterkingen en CP onder het schild (25 september, Max: "per player wie
 	# hoeveel CP en reinforcements hebben, vlakbij hun schild"). D12: van de
 	# vijand zie je "?", tenzij je het mag zien (de doden zien alles).
@@ -1517,6 +1585,10 @@ func _toon_lid(sid: int) -> void:
 			var tegen: int = int(duel.p2) if int(duel.p1) == sid else int(duel.p1)
 			info.add_child(HubAssets.tekst(tr("HUB_LID_VECHT") % String(c.spelers[tegen].naam),
 				_px(10), HubAssets.INKT))
+	var plekken: Dictionary = _plekken(c, mijn_team)
+	if plekken.has(sid):
+		info.add_child(HubAssets.tekst(tr("HUB_LID_PLEK") % [int(plekken[sid]), plekken.size()],
+			_px(10), HubAssets.INKT))
 	if status != "dood":
 		var saldo := _saldo_regel(c, sid, false, HubAssets.INKT, 11.0)
 		saldo.alignment = BoxContainer.ALIGNMENT_BEGIN
@@ -1744,11 +1816,17 @@ func _bouw_fase_paneel() -> void:
 
 
 ## 27 juli (Max): het campagne-eindscherm: kampioen, eindstand, opnieuw.
-## 27 september: kampioen met de samenvatting ernaast, de top drie op een rij
-## en de knoppen in de voet.
+## 27 september: kampioen met de samenvatting ernaast en de knoppen in de voet.
+## 29 september (F6.0): je punten met "Bekijk hoe", de top drie op punten, en
+## ben jij kampioen, dan bedank je eerst een gevallen teamgenoot.
 func _paneel_einde(c: CState) -> void:
 	var kampioen: Dictionary = c.spelers.get(c.winnaar, {})
 	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	if c.winnaar == mens_id and not c.dank_af:
+		# Eerst bedanken; de titelbalk zegt al dat je kampioen bent.
+		_dank_kiezer(c)
+		_eind_voet()
+		return
 	var kop := HBoxContainer.new()
 	kop.alignment = BoxContainer.ALIGNMENT_CENTER
 	kop.add_theme_constant_override("separation", _px(10))
@@ -1761,45 +1839,26 @@ func _paneel_einde(c: CState) -> void:
 	var titel := HubAssets.tekst(tr("HUB_END_CHAMPION") % String(kampioen.get("naam", "?")), _px(14), HubAssets.INKT, true)
 	titel.name = "EindTitel"
 	tekst.add_child(titel)
-	var mijn_punten: int = c.punten_van(mens_id)
+	var mijn_roem: int = c.punten_van(mens_id)
 	var plek: int = 1
 	for id in c.spelers:
-		if c.punten_van(int(id)) > mijn_punten:
+		if c.punten_van(int(id)) > mijn_roem:
 			plek += 1
-	var samen := HubAssets.tekst(tr("HUB_END_SUMMARY") % [c.ronde, driver.duels_gespeeld, mijn_punten, plek,
+	var samen := HubAssets.tekst(tr("HUB_END_SUMMARY") % [c.ronde, driver.duels_gespeeld, mijn_roem, plek,
 		c.spelers.size()], _px(8), HubAssets.INKT_ZACHT)
 	samen.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	samen.custom_minimum_size = Vector2(_u(320), 0)
 	tekst.add_child(samen)
 	kop.add_child(tekst)
 	_paneel.add_child(kop)
-	# De top drie op roem: schild, plek en naam, roem.
-	var top: Array = LedgerScreen.rijen(c, "punten")
-	var podium := HBoxContainer.new()
-	podium.name = "Podium"
-	podium.alignment = BoxContainer.ALIGNMENT_CENTER
-	podium.add_theme_constant_override("separation", _px(22))
-	for i in mini(3, top.size()):
-		var sp: Dictionary = c.spelers.get(int(top[i].id), {})
-		var vak := HBoxContainer.new()
-		vak.add_theme_constant_override("separation", _px(4))
-		var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.get("team", 0)) == mijn_team,
-			String(sp.get("status", "actief")) != "actief", _u(28))
-		p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		vak.add_child(p)
-		var info := VBoxContainer.new()
-		info.alignment = BoxContainer.ALIGNMENT_CENTER
-		info.add_theme_constant_override("separation", 0)
-		info.add_child(HubAssets.tekst("%d. %s" % [i + 1, String(top[i].naam)], _px(8),
-			HubAssets.ROOD if int(top[i].id) == mens_id else HubAssets.INKT, true))
-		var roem := HBoxContainer.new()
-		roem.add_theme_constant_override("separation", _px(3))
-		roem.add_child(UiAssets.icoon_rect("score", _u(10), HubAssets.INKT))
-		roem.add_child(HubAssets.tekst(str(int(top[i].punten)), _px(8), HubAssets.INKT, true))
-		info.add_child(roem)
-		vak.add_child(info)
-		podium.add_child(vak)
-	_paneel.add_child(podium)
+	var punten: Dictionary = driver.punten()
+	_paneel.add_child(_punten_rij(int((punten.get(mens_id, {}) as Dictionary).get("totaal", 0))))
+	_paneel.add_child(_podium(c, punten))
+	_eind_voet()
+
+
+## De voet van het eindscherm: het grootboek en een nieuwe campagne.
+func _eind_voet() -> void:
 	var grootboek := _knop(tr("HUB_END_LEDGER_BTN"), "score", _toon_grootboek)
 	grootboek.name = "GrootboekEindKnop"
 	_voet.add_child(grootboek)
@@ -1811,6 +1870,175 @@ func _paneel_einde(c: CState) -> void:
 		get_tree().reload_current_scene())
 	opnieuw.custom_minimum_size = Vector2(_u(200), _u(40))
 	_voet.add_child(opnieuw)
+
+
+## "JOUW PUNTEN 44  Bekijk hoe" onder de kampioen.
+func _punten_rij(totaal: int) -> HBoxContainer:
+	var rij := HBoxContainer.new()
+	rij.name = "JouwPunten"
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(6))
+	var ic := _icoon_van("ui:win-harbor", 20.0)
+	rij.add_child(ic)
+	var kop := HubAssets.tekst(tr("HUB_PUNTEN_JOUW"), _px(9), HubAssets.INKT_ZACHT, true)
+	kop.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rij.add_child(kop)
+	var getal := HubAssets.tekst(str(totaal), _px(16), HubAssets.INKT, true)
+	getal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rij.add_child(getal)
+	var hoe := _link_knop(tr("HUB_PUNTEN_BEKIJK"), "PuntenBekijk", _toon_punten)
+	hoe.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(hoe)
+	return rij
+
+
+## De top drie op punten: schild, plek en naam, punten.
+func _podium(c: CState, punten: Dictionary) -> HBoxContainer:
+	var mijn_team: int = int(c.spelers.get(mens_id, {}).get("team", 0))
+	var ids: Array = punten.keys()
+	ids.sort_custom(func(a, b) -> bool:
+		var pa: int = int(punten[a].totaal)
+		var pb: int = int(punten[b].totaal)
+		if pa != pb:
+			return pa > pb
+		if c.punten_van(int(a)) != c.punten_van(int(b)):
+			return c.punten_van(int(a)) > c.punten_van(int(b))
+		return int(a) < int(b))
+	var podium := HBoxContainer.new()
+	podium.name = "Podium"
+	podium.alignment = BoxContainer.ALIGNMENT_CENTER
+	podium.add_theme_constant_override("separation", _px(22))
+	for i in mini(3, ids.size()):
+		var sid: int = int(ids[i])
+		var sp: Dictionary = c.spelers.get(sid, {})
+		var vak := HBoxContainer.new()
+		vak.add_theme_constant_override("separation", _px(4))
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), int(sp.get("team", 0)) == mijn_team,
+			String(sp.get("status", "actief")) != "actief", _u(28))
+		p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		vak.add_child(p)
+		var info := VBoxContainer.new()
+		info.alignment = BoxContainer.ALIGNMENT_CENTER
+		info.add_theme_constant_override("separation", 0)
+		info.add_child(HubAssets.tekst("%d. %s" % [i + 1, String(sp.get("naam", "?"))], _px(8),
+			HubAssets.ROOD if sid == mens_id else HubAssets.INKT, true))
+		var rij := HBoxContainer.new()
+		rij.add_theme_constant_override("separation", _px(3))
+		rij.add_child(_icoon_van("ui:win-harbor", 10.0))
+		rij.add_child(HubAssets.tekst(str(int(punten[sid].totaal)), _px(8), HubAssets.INKT, true))
+		info.add_child(rij)
+		vak.add_child(info)
+		podium.add_child(vak)
+	return podium
+
+
+## Jij bent kampioen: bedank een gevallen teamgenoot (die krijgt er punten
+## voor), of niemand. Pas daarna zie je je punten.
+func _dank_kiezer(c: CState) -> void:
+	_paneel.add_child(_kop_met_sierlijn(tr("HUB_DANK_KOP"), 10, 44))
+	_paneel_tekst(tr("HUB_DANK_KIES") % int(_Punten.TABEL.dank), 8.5)
+	var team: int = int(c.spelers[mens_id].team)
+	var midden := CenterContainer.new()
+	_paneel.add_child(midden)
+	var rij := HBoxContainer.new()
+	rij.name = "DankKiezer"
+	rij.add_theme_constant_override("separation", _px(6))
+	midden.add_child(rij)
+	var ids: Array = c.spelers.keys()
+	ids.sort()
+	for sid in ids:
+		if int(sid) == mens_id or int(c.spelers[sid].team) != team:
+			continue
+		var doel: int = int(sid)
+		var sp: Dictionary = c.spelers[doel]
+		var b := Button.new()
+		b.name = "Dank_%d" % doel
+		b.flat = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(_u(58), _u(54))
+		b.tooltip_text = String(sp.naam)
+		for staat in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
+			b.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
+		var p := HubAssets.portret(int(sp.get("doctrine", 0)), true, false, _u(40))
+		p.position = Vector2(_u(9), 0)
+		p.size = Vector2(_u(40), _u(40))
+		b.add_child(p)
+		var naam := HubAssets.tekst(String(sp.naam), _px(7), HubAssets.INKT, true)
+		naam.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		naam.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		naam.position = Vector2(0, _u(41))
+		naam.size = Vector2(_u(58), _u(12))
+		b.add_child(naam)
+		b.pressed.connect(func() -> void:
+			if driver.submit_mens_dank(doel):
+				_ververs())
+		rij.add_child(b)
+	var niemand := _link_knop(tr("HUB_DANK_NIEMAND"), "DankNiemand", func() -> void:
+		if driver.submit_mens_dank(-1):
+			_ververs())
+	niemand.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_paneel.add_child(niemand)
+
+
+## Het venster "Jouw punten": per regel een icoon, wat het is en de punten,
+## het totaal en je badges. In solo een voorproefje: telt niet voor de ranglijst.
+func _toon_punten() -> void:
+	var c: CState = driver.c
+	var mijn: Dictionary = driver.punten().get(mens_id, {"totaal": 0, "regels": []})
+	var inhoud := _popup(tr("HUB_PUNTEN_JOUW"), "Punten")
+	var sub := HubAssets.tekst(tr("HUB_PUNTEN_SUB"), _px(9), HubAssets.INKT_ZACHT)
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inhoud.add_child(sub)
+	for regel in mijn.regels:
+		var reden: String = String(regel[0])
+		inhoud.add_child(_punten_regel(String(PUNT_ICOON.get(reden, "ui:win-harbor")),
+			tr("HUB_PT_" + reden.to_upper()), "+%d" % int(regel[1]), false))
+	inhoud.add_child(_kop_met_sierlijn("", 1, 150))
+	inhoud.add_child(_punten_regel("ui:win-harbor", tr("HUB_PUNTEN_TOTAAL"), str(int(mijn.totaal)), true))
+	var badges: Array = _Punten.badges(_Uitslag.van(c).get(mens_id, {}))
+	if not badges.is_empty():
+		var kop := HubAssets.tekst(tr("HUB_BADGES"), _px(9), HubAssets.INKT_ZACHT, true)
+		kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		inhoud.add_child(kop)
+		var rij := HBoxContainer.new()
+		rij.alignment = BoxContainer.ALIGNMENT_CENTER
+		rij.add_theme_constant_override("separation", _px(14))
+		for badge in badges:
+			var chip := HBoxContainer.new()
+			chip.add_theme_constant_override("separation", _px(4))
+			chip.add_child(_icoon_van(String(BADGE_ICOON.get(badge, "ui:score")), 16.0))
+			var l := HubAssets.tekst(tr("HUB_BADGE_" + String(badge).to_upper()), _px(10), HubAssets.INKT, true)
+			l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			chip.add_child(l)
+			rij.add_child(chip)
+		inhoud.add_child(rij)
+
+
+## Een regel in het puntenvenster: icoon, wat het is, en de punten rechts.
+func _punten_regel(icoon: String, label: String, waarde: String, vet: bool) -> Control:
+	var rij := HBoxContainer.new()
+	rij.add_theme_constant_override("separation", _px(8))
+	rij.add_child(_icoon_van(icoon, 18.0))
+	var l := HubAssets.tekst(label, _px(11), HubAssets.INKT, vet)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rij.add_child(l)
+	var w := HubAssets.tekst(waarde, _px(14 if vet else 12), HubAssets.INKT, true)
+	w.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rij.add_child(w)
+	return rij
+
+
+## Icoon in inkt: "hub:<naam>" uit het hub-pack, "ui:<id>" uit het UI-pack.
+func _icoon_van(naam: String, maat: float, kleur: Color = HubAssets.INKT) -> TextureRect:
+	var ic: TextureRect
+	if naam.begins_with("hub:"):
+		ic = HubAssets.icoon(naam.substr(4), _u(maat), kleur)
+	else:
+		ic = UiAssets.icoon_rect(naam.trim_prefix("ui:"), _u(maat), kleur)
+	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return ic
 
 
 ## De raad (pdf pagina 1): links jouw vechter -> het doelwit met naamplaatjes,
@@ -2155,6 +2383,7 @@ func _paneel_donatie(c: CState) -> void:
 	var mijn_team: int = int(c.spelers[mens_id].team)
 	var mijn_pool: Dictionary = c.pool_van(mens_id)
 	var mijn_cp: int = c.cp_van(mens_id)
+	var plekken: Dictionary = _plekken(c, mijn_team)
 	for sid in c.actieve_leden(mijn_team):
 		if int(sid) == mens_id:
 			continue
@@ -2169,9 +2398,15 @@ func _paneel_donatie(c: CState) -> void:
 		var info := VBoxContainer.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.add_theme_constant_override("separation", 0)
+		var naam_rij := HBoxContainer.new()
+		naam_rij.add_theme_constant_override("separation", _px(5))
+		# Geen afkap: een afgekapt label krimpt in een HBox tot niets.
 		var naam := HubAssets.tekst(String(sp.naam), _px(9), HubAssets.INKT, true)
-		naam.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		info.add_child(naam)
+		naam_rij.add_child(naam)
+		if plekken.has(doel):
+			# Wie je volstopt, sla je straks misschien in de burgeroorlog.
+			naam_rij.add_child(_plek_plaatje(int(plekken[doel])))
+		info.add_child(naam_rij)
 		var regel := HBoxContainer.new()
 		regel.add_theme_constant_override("separation", _px(8))
 		var saldo := _saldo_regel(c, doel, false, HubAssets.INKT, 7.5)

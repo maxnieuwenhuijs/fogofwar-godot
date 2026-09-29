@@ -701,3 +701,180 @@ func test_qc_driver_antwoorden_en_log() -> void:
 	driver.quick_chat(0, "HUB_QC_VERTROUW")
 	assert_eq(driver.feed.size(), n, "de doden zwijgen")
 
+
+# --- F6.0: punten verdienen en krijgen (docs/F6-punten-masterplan.md) -----------
+
+const _Uitslag := preload("res://core/campaign/uitslag.gd")
+const _Punten := preload("res://core/campaign/puntentabel.gd")
+
+
+## Het rekenvoorbeeld uit het plan (§2) geeft precies 79 / 55 / 44 / 16 / 0.
+func test_f6_punten_voorbeeld_uit_het_plan() -> void:
+	var leeg := {"team": 0, "team_won": false, "roem": 0, "kampioen": false, "burgeroorlog_over": 0,
+		"stunts": 0, "laatste_stand": false, "dank": false, "koningsmaker": false, "testament_vijand": false}
+	var vera: Dictionary = leeg.duplicate()
+	vera.merge({"team_won": true, "roem": 9, "kampioen": true, "burgeroorlog_over": 1, "stunts": 1}, true)
+	var karel: Dictionary = leeg.duplicate()
+	karel.merge({"team_won": true, "roem": 10, "burgeroorlog_over": 2}, true)
+	var bruno: Dictionary = leeg.duplicate()
+	bruno.merge({"team_won": true, "roem": 4, "dank": true, "koningsmaker": true}, true)
+	var ida: Dictionary = leeg.duplicate()
+	ida.merge({"team": 1, "roem": 6, "laatste_stand": true}, true)
+	var otto: Dictionary = leeg.duplicate()
+	otto.merge({"team": 1, "roem": 3}, true)
+	var p: Dictionary = _Punten.bereken({0: vera, 1: karel, 2: bruno, 3: ida, 4: otto}, {},
+		{"vertrokken": [4]})
+	assert_eq(int(p[0].totaal), 79, "Vera: 5 + 20 + 9 + 40 + 5")
+	assert_eq(int(p[1].totaal), 55, "Karel: 5 + 20 + 10 + 20")
+	assert_eq(int(p[2].totaal), 44, "Bruno: 5 + 20 + 4 + 10 + 5")
+	assert_eq(int(p[3].totaal), 16, "Ida: 5 + 6 + 5")
+	assert_eq(int(p[4].totaal), 0, "wie vertrok krijgt niets")
+	var redenen: Array = []
+	for regel in p[0].regels:
+		redenen.append(String(regel[0]))
+	assert_eq(redenen, ["uitgespeeld", "team", "roem", "kampioen", "stunt"], "regels in vaste volgorde")
+	assert_eq(_Punten.badges(karel), ["kroonprins"])
+	assert_eq(_Punten.badges(bruno), ["koningsmaker"])
+	# Een andere tabel (P4 meet de kroonfactor): alleen de kampioen verandert.
+	var drie: Dictionary = _Punten.bereken({0: vera}, {"kampioen": 60})
+	assert_eq(int(drie[0].totaal), 99, "kroonfactor 3: kampioen 60")
+	# Een bot verdient niets.
+	var bot: Dictionary = _Punten.bereken({0: vera}, {}, {"bots": [0]})
+	assert_eq(int(bot[0].totaal), 0, "bots verdienen niets")
+
+
+## Een duelronde in de mini-campagne: het nominerende team stemt het paar, de
+## donaties sluiten, en het duel wordt geboekt. Met `uitval` verliest de
+## verliezer zijn hele voorraad (C3: dan ligt hij eruit).
+func _f6_duel(c: CState, winnaar: int, verliezer: int, uitval: bool) -> void:
+	var t: int = c.nominatie_team
+	var eigen: int = winnaar if int(c.spelers[winnaar].team) == t else verliezer
+	var vijand: int = verliezer if eigen == winnaar else winnaar
+	_stem_unaniem(c, eigen, vijand)
+	_sluit_donaties(c)
+	var verliezen: Dictionary = {}
+	if uitval:
+		var pool: Dictionary = c.pool_van(verliezer)
+		verliezen[str(verliezer)] = {"inf": int(pool.inf), "cav": int(pool.cav), "art": int(pool.art)}
+	assert_true(CReducer.apply(c, CActions.make_match_result(0, winnaar, "eliminatie", verliezen, {}), -1).ok,
+		"duel %d tegen %d geboekt" % [winnaar, verliezer])
+
+
+## Een hele mini-campagne door de reducer: elke puntenregel komt een keer langs.
+## Team 1 (3, 4, 5) valt; 2 valt voor team 0 en laat zijn CP na aan 1; in de
+## burgeroorlog verslaat 1 (de lagere plek) 0; de kampioen bedankt 2.
+func test_f6_uitslag_uit_een_mini_campagne() -> void:
+	var c := _mini()
+	_f6_duel(c, 0, 3, true)
+	assert_eq(c.fase, CState.Fase.TESTAMENT)
+	assert_true(CReducer.apply(c, CActions.make_testament([{"naar": 4, "cp": 5}]), 3).ok)
+	_f6_duel(c, 4, 2, true)
+	assert_true(CReducer.apply(c, CActions.make_testament([{"naar": 1, "cp": 5}]), 2).ok)
+	_f6_duel(c, 1, 4, true)
+	assert_true(CReducer.apply(c, CActions.make_tick_deadline(), -1).ok, "4 laat niets na")
+	_f6_duel(c, 0, 5, true)
+	assert_true(CReducer.apply(c, CActions.make_tick_deadline(), -1).ok, "5 laat niets na")
+	assert_eq(c.fase, CState.Fase.BURGEROORLOG, "team 1 is weg")
+	assert_eq(c.bracket_grootte, 2)
+	assert_eq(CReducer.seed_volgorde(c, c.actieve_leden(0)), [0, 1], "0 staat hoger (meer roem)")
+	assert_eq(int(c.duels_deze_ronde[0].p1), 0, "p1 is de hogere plek")
+	assert_true(CReducer.apply(c, CActions.make_match_result(0, 1, "eliminatie", {}, {}), -1).ok)
+	assert_eq(c.winnaar, 1, "de lagere plek wint: kampioen")
+	assert_eq(int(c.stunts.get(1, 0)), 1, "dat is een stunt")
+	assert_eq(int(c.uitval[0].over), 2, "0 viel in de finale")
+	assert_true(bool(c.uitval[0].burgeroorlog))
+	assert_eq(int(c.uitval[3].ronde), 1)
+	assert_eq(c.testament_naar.get(2, []), [1])
+	# Na de kroning: alleen de kampioen bedankt, een keer, een gevallen teamgenoot.
+	assert_false(CReducer.apply(c, CActions.make_tick_deadline(), -1).ok, "verder is het klaar")
+	assert_false(CReducer.apply(c, CActions.make_dank(2), 0).ok, "alleen de kampioen bedankt")
+	assert_false(CReducer.apply(c, CActions.make_dank(3), 1).ok, "geen vijand")
+	assert_false(CReducer.apply(c, CActions.make_dank(1), 1).ok, "niet jezelf")
+	assert_true(CReducer.apply(c, CActions.make_dank(2), 1).ok, "een gevallen teamgenoot")
+	assert_false(CReducer.apply(c, CActions.make_dank(0), 1).ok, "maar een keer")
+	var u: Dictionary = _Uitslag.van(c)
+	assert_true(bool(u[1].kampioen) and int(u[1].burgeroorlog_over) == 1)
+	assert_eq(int(u[0].burgeroorlog_over), 2, "finalist")
+	assert_true(bool(u[2].team_won), "ook wie eruit ligt wint met zijn team")
+	assert_true(bool(u[2].koningsmaker), "2 liet na aan de latere kampioen")
+	assert_true(bool(u[2].dank))
+	assert_false(bool(u[3].testament_vijand), "3 liet na aan zijn eigen team")
+	assert_true(bool(u[5].laatste_stand), "5 viel pas in de laatste ronde van team 1")
+	assert_false(bool(u[4].laatste_stand))
+	var p: Dictionary = _Punten.bereken(u)
+	assert_eq(int(p[1].totaal), 5 + 20 + 6 + 40 + 5, "kampioen: roem 2 + teambonus 2 + finale 2, plus een stunt")
+	assert_eq(int(p[0].totaal), 5 + 20 + 6 + 20, "finalist")
+	assert_eq(int(p[2].totaal), 5 + 20 + 2 + 10 + 5, "gevallen, maar dank en koningsmaker")
+	assert_eq(int(p[3].totaal), 5)
+	assert_eq(int(p[4].totaal), 5 + 2)
+	assert_eq(int(p[5].totaal), 5 + 5, "laatste stand")
+	# De nieuwe velden overleven opslaan en teruglezen.
+	var d: Dictionary = c.to_dict()
+	assert_eq(JSON.stringify(CState.from_dict(d).to_dict()), JSON.stringify(d), "roundtrip byte-identiek")
+
+
+func test_f6_niemand_bedanken_en_oude_saves() -> void:
+	var c := _mini()
+	for sid in [3, 4, 5]:
+		c.spelers[sid].status = "uitgevallen"
+		c.spelers[sid].testament_af = true
+	c._boek("punten", 0, 0, 0, 0, 0, 5)
+	CReducer._volgende_ronde(c, [])
+	while c.fase == CState.Fase.BURGEROORLOG:
+		var duel: Dictionary = c.duels_deze_ronde[0]
+		assert_true(CReducer.apply(c, CActions.make_match_result(0, int(duel.p1), "haven", {}, {}), -1).ok)
+	assert_eq(c.winnaar, 0)
+	assert_true(CReducer.apply(c, CActions.make_dank(-1), 0).ok, "niemand bedanken mag")
+	assert_true(c.dank_af)
+	assert_false(bool(_Uitslag.van(c)[1].dank))
+	# Een save van voor F6.0 mist de velden: leeg, en de uitslag rekent gewoon.
+	var d: Dictionary = c.to_dict()
+	for sleutel in ["uitval", "stunts", "testament_naar", "dank_naar", "dank_af", "bracket_grootte"]:
+		d.erase(sleutel)
+	var oud: CState = CState.from_dict(d)
+	assert_eq(oud.dank_naar, -1)
+	assert_false(oud.dank_af)
+	assert_eq(_Uitslag.van(oud).size(), 6, "uitslag voor iedereen")
+
+
+func test_f6_giften_uit_het_grootboek() -> void:
+	var c := _mini()
+	_stem_unaniem(c, 0, 3)
+	assert_true(CReducer.apply(c, CActions.make_donate(0, 2, 1, 0, 1), 1).ok)
+	assert_true(CReducer.apply(c, CActions.make_donate(2, 1, 0, 0, 0), 1).ok)
+	var g: Dictionary = _Uitslag.giften(c)
+	assert_eq(int(g[1][0]), 2 + 2 + 1, "2 soldaten, 1 ruiter (2) en 1 CP")
+	assert_eq(int(g[1][2]), 1)
+	assert_false(g.has(0), "0 gaf niets")
+
+
+## De bot-kampioen bedankt wie hem het meest gaf; zonder giften wie de meeste
+## roem heeft; de rat niemand.
+func test_f6_bot_kampioen_bedankt_leesbaar() -> void:
+	var driver := SoloDriver.new(4242, -1, 6)
+	var c: CState = driver.c
+	var kampioen: int = -1
+	var rat: int = -1
+	for sid in driver.agents:
+		var trouw: float = (driver.agents[sid] as CampaignAgent).gewicht("loyaliteit", 0.8)
+		if trouw >= 0.3 and kampioen < 0:
+			kampioen = int(sid)
+		elif trouw < 0.3 and rat < 0:
+			rat = int(sid)
+	assert_true(kampioen >= 0, "er is een bot die bedankt")
+	var team: int = int(c.spelers[kampioen].team)
+	var maten: Array = []
+	for sid in c.spelers:
+		if int(sid) != kampioen and int(c.spelers[sid].team) == team:
+			maten.append(int(sid))
+			c.spelers[sid].status = "uitgevallen"
+	c.fase = CState.Fase.KLAAR
+	c.winnaar = kampioen
+	c._boek("punten", int(maten[1]), 0, 0, 0, 0, 4)
+	assert_eq(driver.bot_dank_keuze(), int(maten[1]), "zonder giften: de meeste roem")
+	c._boek("donate", int(maten[0]), -2, 0, 0, 0, 0)
+	c._boek("donate", kampioen, 2, 0, 0, 0, 0)
+	assert_eq(driver.bot_dank_keuze(), int(maten[0]), "wie het meest gaf")
+	if rat >= 0:
+		c.winnaar = rat
+		assert_eq(driver.bot_dank_keuze(), -1, "de rat bedankt niemand")

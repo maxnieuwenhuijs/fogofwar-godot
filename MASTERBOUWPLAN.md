@@ -976,7 +976,7 @@ server-logs van dat event.
 
 ## 10. FASE F6 — Meta
 
-- ☐ **F6.0 Punten verdienen en krijgen** (plan 29 september, `docs/F6-punten-masterplan.md`,
+- ◐ **F6.0 Punten verdienen en krijgen** (plan 29 september, `docs/F6-punten-masterplan.md`,
   Max: "sowieso de incentive als het team wint, maar ook als jij wint, zo dat je ook die
   burgeroorlog-tactieken triggert en onderling pesterij"). Per campagne een teampot (+20 voor
   het hele winnende team, ook de doden) en een kroonpot (kampioen +40, dan aflopend), plus roem,
@@ -984,7 +984,10 @@ server-logs van dat event.
   kantelpunt van samenwerken naar pesten. Levert de "campagnepunten" voor F6.2. Stappen P1-P9:
   P1-P3 (uitslag + puntentabel in de core, solo-eindscherm, pesterij in solo) kunnen nu al; P4
   meet drie tabellen met bots (na de F7-datarun); P6-P8 na F5.1. **CHECK:** zie de tabel in §9
-  van het plan.
+  van het plan. **P1-P3 gebouwd (29 september):** `core/campaign/uitslag.gd` en
+  `puntentabel.gd` (via preload), `uitval`/`stunts`/`testament_naar`/dank in CState, actie DANK,
+  eindscherm met punten, spelregelkaart "Punten", #-plaatjes vanaf ronde 3, rivaliteit in de
+  quick chat.
 - ☐ **F6.1 Glicko-2** per queue (ranked 1v1 / campagneduels; solo telt niet — solo heeft een eigen bord,
   zie F6.3), placement via RD. **CHECK:** rating-unittests tegen referentie-implementatie; RD daalt met
   partijen.

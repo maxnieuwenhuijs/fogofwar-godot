@@ -16,6 +16,7 @@ const MATCH_RESULT := "match_result"  # {duel, winnaar, methode, verliezen:{"<id
 const EXCHANGE := "exchange"        # {cp} — C11: ruil CP naar versterkingen (2 CP = 1 soldaat)
 const TESTAMENT := "testament"      # {verdeling: [{naar, inf, cav, art, cp}]}
 const TICK_DEADLINE := "tick_deadline"  # {} — defaults afdwingen (ook in het log)
+const DANK := "dank"                # {naar} — F6.0: de kampioen bedankt een gevallen teamgenoot (-1 = niemand)
 
 const _FIELDS := {
 	NOMINATE: ["eigen", "vijand"],
@@ -26,6 +27,7 @@ const _FIELDS := {
 	MATCH_RESULT: ["duel", "winnaar", "methode", "verliezen", "cp_delta"],
 	TESTAMENT: ["verdeling"],
 	TICK_DEADLINE: [],
+	DANK: ["naar"],
 }
 
 
@@ -61,6 +63,11 @@ static func make_testament(verdeling: Array) -> Dictionary:
 
 static func make_tick_deadline() -> Dictionary:
 	return {"type": TICK_DEADLINE}
+
+## F6.0: na de kroning bedankt de kampioen één gevallen teamgenoot (die krijgt
+## er punten voor, docs/F6-punten-masterplan.md). -1 = niemand.
+static func make_dank(naar: int) -> Dictionary:
+	return {"type": DANK, "naar": naar}
 
 
 static func is_wellformed(a) -> bool:
