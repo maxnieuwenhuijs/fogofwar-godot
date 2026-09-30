@@ -30,9 +30,9 @@ var ruil_cp_per_punt: int = 2
 # Wolf 2 nachten 0 adopties -> CP-steun).
 var budget_bonus: Dictionary = {
 	"1": {"pt": 4, "cp": 0},    # Muis
-	"2": {"pt": 6, "cp": 5},    # Leeuw (C24 23 sept +4 punten; C26 24 sept +6 punten en 5 CP)
+	"2": {"pt": 6, "cp": 0},    # Leeuw (C24 23 sept +4 punten; C26 24 sept +6 punten en 5 CP; C28 30 sept CP weer 0)
 	"3": {"pt": 3, "cp": 0},    # Beer
-	"4": {"pt": 2, "cp": 4},    # Wolf
+	"4": {"pt": 5, "cp": 4},    # Wolf (C28 30 sept +5 punten, was +2)
 	"5": {"pt": 3, "cp": 0},    # Krokodil (9 augustus, zie hieronder)
 }
 # LET OP -- deze tabel staat op DRIE plekken en ze moeten gelijk blijven:

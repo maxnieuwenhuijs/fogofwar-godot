@@ -144,6 +144,32 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 30 september -- C28: de Leeuw geen extra CP, de Wolf +5 versterkingen
+
+Max, na de stand van zaken: "schroef de CP van de leeuw dan verder terug of
+reinforcements. en van de wolf iets op."
+
+- Eerst de trainingsdata van de nacht van 29 september apart gecommit
+  (84d0f62: Leeuw 3 adopties, Wolf 1). De matrix erna: Leeuw 60,1, Krokodil
+  52,9, Muis 51,8, Varken 48,4, Beer 45,8, Wolf 41,0.
+- Drie varianten tegelijk (`meet_variant.ps1`, 10 processen elk, via WMI los
+  van de app; 1800 partijen per variant, 11:22-14:36): a (Leeuw 6/0, Wolf
+  5/4) spreiding 14,4, b (3/0, 5/6) 16,2, c (0/0, 8/8) 17,4. Binnen de
+  foutmarge van elkaar. Tabel in de CHANGELOG (C28).
+- **Les:** de startcompensatie is als knop uitgeput. CP eraf kost de Leeuw
+  ~3 pp, zijn punten eraf daarna niets (hij spawnt ~5 eenheden). De Wolf
+  spawnt met +6 punten niet meer (10) en wint niet vaker; ook +4 CP niet.
+- **C28 = variant a** vastgezet met `zet_budget_bonus.py` (leeuw --pt 6 --cp
+  0, wolf --pt 5 --cp 4). Goldens opnieuw, wolf-leeuw 404 geijkt (7 -> 9
+  cycli, 185 -> 236), simcheck 0, uispel 777 `2cebd8da...` (165, 4; met
+  alleen de Wolf-gewichten van 29 september al `7882f116...`).
+- Max vroeg ook waarom het puntenplan 70% burgeroorlog wilde ("hangt toch
+  gewoon af van het verloop"): terecht, geen eis meer, alleen informatie
+  (bf733fd).
+- **Volgende:** een trainingsnacht op C28 (de andere facties hebben de
+  CP-reparatie nog niet geleerd; Max start). Staat de Leeuw daarna nog boven
+  de 55 of de Wolf onder de 45, dan een grovere knop.
+
 ## 30 september -- F6.0 P4: bots op punten (knoppen, trainer, meetketen)
 
 Max: "en?" (na P1-P3; de F7-datarun van 29 september lag er).

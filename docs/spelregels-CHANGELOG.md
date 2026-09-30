@@ -1,5 +1,42 @@
 # Spelregels — CHANGELOG
 
+## C28: 30 september 2026 (de Leeuw geen extra CP meer, de Wolf 5 versterkingspunten)
+
+*Max: "schroef de CP van de leeuw dan verder terug of reinforcements. en van
+de wolf iets op."*
+
+Na de trainingsnacht van 29 september op C26 met de CP-reparatie (Leeuw 3
+adopties, Wolf 1, de rest 0) stond de Leeuw op **60,1%** en de Wolf op
+**41,0%** (nachtmatrix 29 september, 900 partijen per factie buiten de
+spiegelpotjes, band 41,0-60,1). Drie varianten naast elkaar tegen dezelfde
+bots, 1800 partijen per variant (500 per factie, foutmarge ongeveer 4,4
+punten); startcompensatie als punten/CP:
+
+| factie | nu (Leeuw 6/5, Wolf 2/4) | a: Leeuw 6/0, Wolf 5/4 | b: Leeuw 3/0, Wolf 5/6 | c: Leeuw 0/0, Wolf 8/8 |
+|---|---|---|---|---|
+| Leeuw | 60,1 | 56,8 | 57,2 | 57,8 |
+| Krokodil | 52,9 | 50,6 | 48,6 | 48,8 |
+| Muis | 51,8 | 50,8 | 53,4 | 52,2 |
+| Varken | 48,4 | 50,0 | 51,6 | 51,8 |
+| Beer | 45,8 | 49,4 | 48,2 | 49,0 |
+| Wolf | 41,0 | 42,4 | 41,0 | 40,4 |
+| spreiding | 19,1 | **14,4** | 16,2 | 17,4 |
+
+De startcompensatie is een zwakke knop. De CP van de Leeuw eraf kost hem
+ongeveer 3 punten (sinds de reparatie zet hij ze in ronde 1 en 2 in); zijn
+versterkingspunten eraf doet daarna niets meer (hij spawnt gemiddeld maar 5
+eenheden per partij). De Wolf wordt niet beter van extra punten of CP: hij
+spawnt er niet meer door (gemiddeld 10) en wint niet vaker. De drie varianten
+liggen binnen de foutmarge van elkaar; a is de smalste en is wat Max vroeg.
+
+**Wat verandert.** `budget_bonus` op de drie plekken (`zet_budget_bonus.py`):
+Leeuw 6 punten en **0 CP** (was 5), Wolf **5 punten** (was 2) en 4 CP.
+`rules_version` blijft 4.3.7. Goldens opnieuw; een sim verschuift
+(wolf-leeuw 404: cyclus 7 -> 9, 185 -> 236 acties, de Wolf wint nog steeds).
+`-- uispel 777` = `2cebd8da...` (165 acties, cyclus 4); met alleen de
+Wolf-gewichten van 29 september was het `7882f116...` (165, 4), daarvoor
+`533fd17e...` (171, 4).
+
 ## C27 teruggedraaid — 29 september 2026 (de Leeuw terug naar C26)
 
 *Besluit Max: "naar c26. en opnieuw trainen ook met campagne modus, want

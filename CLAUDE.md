@@ -34,9 +34,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
 
   **Startcompensatie (C11-`budget_bonus`, geen kaartbudget):** Muis +4 punten,
-  Beer +3, Wolf +2 punten en 4 CP, **Krokodil +3** (C20, 9 augustus),
-  **Leeuw +6 punten en 5 CP** (C24 op 23 september +4, C26 op 24
-  september +6 en 5 CP). Zetten met
+  Beer +3, **Wolf +5 punten en 4 CP** (C28, 30 september; was +2 punten),
+  **Krokodil +3** (C20, 9 augustus), **Leeuw +6 punten en 0 CP** (C24 op
+  23 september +4, C26 op 24 september +6 en 5 CP, C28 op 30 september de
+  CP weer eraf). Zetten met
   `python tools/balans/zet_budget_bonus.py <factie> --pt N [--cp N]`: die
   schrijft alle drie de plekken tegelijk. Die tabel
   staat op DRIE plekken die gelijk moeten blijven — `CRules.budget_bonus`,
@@ -44,6 +45,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
+  **Stand 30 september (C28, de bots van de trainingsnacht van 29
+  september; drie varianten van 1800 partijen): band 42,4-56,8%, spreiding
+  14,4 pp** (Leeuw 56,8 boven, Wolf 42,4 onder; foutmarge ~4,4 per factie).
+  Daarvoor, nachtmatrix 29 september op C26 met de CP-reparatie (Leeuw 3
+  adopties, Wolf 1): band 41,0-60,1. **De startcompensatie is uitgeput als
+  knop:** de CP van de Leeuw eraf kost hem ~3 pp, zijn punten eraf daarna
+  niets meer (hij spawnt ~5 eenheden per partij), en de Wolf wint niet
+  vaker van extra punten of CP. Blijft het na een nacht op C28 zo scheef,
+  dan een grovere knop (kaartbudget, leger, perk).
   **29 september: C27 teruggedraaid** (Leeuw weer budget 8, [12,4,2], +6 pt
   en +5 CP; zie CHANGELOG), plus een bot-reparatie: `cp_bet_r*` muteert
   optellend (vermenigvuldigen vanaf 0,01 kwam nooit bij een hele CP, dus
@@ -805,7 +815,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `533fd17e…` geven (171 acties, cyclus 4, sinds
+  eind-zobrist; seed 777 moet `2cebd8da…` geven (165 acties, cyclus 4, sinds
+  30 september: C28 plus de Wolf-gewichten van de trainingsnacht van 29
+  september; met alleen die gewichten was het `7882f116…`, 165, 4);
+  daarvoor `533fd17e…` (171 acties, cyclus 4, sinds
   29 september: C27 teruggedraaid, dezelfde partij met de C26-Leeuw in de
   staat; de bot-reparatie van die dag is byte-identiek); daarvoor
   `a0561707…` (171, 4) sinds 28 september: C27 plus de gewichten van de trainingsnacht van 27
