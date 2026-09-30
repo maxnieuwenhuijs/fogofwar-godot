@@ -1112,7 +1112,15 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "ui_blad": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "ui_click": {
+   "duur": 7.0,
+   "invloed": 0.7
+  },
+  "ui_draai": {
    "duur": 7.0,
    "invloed": 0.7
   },
@@ -1124,9 +1132,25 @@
    "duur": 7.0,
    "invloed": 0.7
   },
+  "ui_munt": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "ui_open": {
    "duur": 7.0,
    "invloed": 0.6
+  },
+  "ui_plof": {
+   "duur": 7.0,
+   "invloed": 0.7
+  },
+  "ui_stempel": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "ui_tel": {
+   "duur": 7.0,
+   "invloed": 0.7
   },
   "ui_toggle": {
    "duur": 7.0,
@@ -1460,10 +1484,16 @@
   "timer_timeout": "A small bell on a desk struck once, a clear short ding. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_warning": "A fast series of ticks from an antique pocket watch, urgent, for one second. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_back": "A soft wooden panel sliding shut with a gentle tap at the end. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_blad": "A page of thick old parchment turned over in a leather-bound book, a soft short rustle that swells and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_click": "A single soft wooden button press, a muted tap on oak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_draai": "A single stiff parchment playing card flipped over on a wooden table, a quick paper flick and the soft tap of its edge landing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_error": "A short dull wooden knock, a blocked, refused sound. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_hover": "A very soft, tiny wooden tick, barely there. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_munt": "A small brass coin dropped onto an oak table, a clear short ring with one tiny bounce. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_open": "A parchment scroll unrolling quickly with a soft paper rustle. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_plof": "A small wooden peg popping into a hole in an old oak game board, a short soft round tok with a tiny upward lift. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_stempel": "A wooden hand stamp pressed firmly onto parchment with a little sealing wax, a dull solid thud with a short papery slap. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_tel": "A tiny brass counter bead clicking against another on an old abacus, a very short bright little tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_toggle": "A small wooden latch flipping over with a light double click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_canteen": "A small wooden keg dropped onto the ground, a hollow thump and a short roll. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_drum": "A small military snare drum dropped onto the ground: a hollow thump and a short rattle of the snare wires. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1762,10 +1792,16 @@
   "timer_timeout": "A small bell on a desk struck once, a clear short ding. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_warning": "A fast series of ticks from an antique pocket watch, urgent, for one second. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_back": "A soft wooden panel sliding shut with a gentle tap at the end. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_blad": "A page of thick old parchment turned over in a leather-bound book, a soft short rustle that swells and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_click": "A single soft wooden button press, a muted tap on oak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_draai": "A single stiff parchment playing card flipped over on a wooden table, a quick paper flick and the soft tap of its edge landing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_error": "A short dull wooden knock, a blocked, refused sound. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_hover": "A very soft, tiny wooden tick, barely there. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_munt": "A small brass coin dropped onto an oak table, a clear short ring with one tiny bounce. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_open": "A parchment scroll unrolling quickly with a soft paper rustle. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_plof": "A small wooden peg popping into a hole in an old oak game board, a short soft round tok with a tiny upward lift. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_stempel": "A wooden hand stamp pressed firmly onto parchment with a little sealing wax, a dull solid thud with a short papery slap. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_tel": "A tiny brass counter bead clicking against another on an old abacus, a very short bright little tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_toggle": "A small wooden latch flipping over with a light double click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_canteen": "A small wooden keg dropped onto the ground, a hollow thump and a short roll. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_drum": "A small military snare drum dropped onto the ground: a hollow thump and a short rattle of the snare wires. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",

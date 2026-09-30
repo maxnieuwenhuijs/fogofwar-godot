@@ -28,6 +28,15 @@ Max: "korte UI geluiden ook nodig toch voor alle animaties en ploffen etc".
   prompts in SOUND-WISHLIST sectie 1 (de studio leest ze als `prompt_bron`;
   een "Wanneer" langer dan 40 tekens las hij als prompt, dus die zijn kort).
   Vervangen: geluid-studio, "Genereer" en dan "Vervang synthetisch".
+- **In de studio (later die dag, Max: "staan de geluiden ook in de geluid
+  studio?"):** ze stonden er al (sectie Algemeen, 3 synthetisch elk), maar
+  alleen met de enkele wishlist-prompt en zonder duur. Nu zoals de rest sinds
+  18 september: in `HAND` van `maak_geluid_prompts.py`, en in
+  `geluid_studio.json` als reeks van vijf op 7 s (knip op stiltes staat dan
+  vanzelf aan). Gericht erin gezet, niet via de generator: in de werkmap
+  staan Max' eigen studio-instellingen (duur 12 of 2 s, eigen prompts), en een
+  generator-run zet de duur terug van elke rij waarvan alleen de instelling
+  is aangepast (de droogloop meldt 286 rijen die hij zou zetten).
 - **Fout gemaakt:** `--import` gedraaid terwijl de editor open stond (de check
   stond ervoor, maar in hetzelfde commando). De import slaagde; bij
   importfouten in de editor: sluiten en opnieuw openen.

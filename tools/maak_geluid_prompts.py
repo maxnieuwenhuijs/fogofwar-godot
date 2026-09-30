@@ -206,6 +206,14 @@ HAND = {
     "ui_error": ("A short dull wooden knock, a blocked, refused sound. " + SLOT, 0.4, 0.7),
     "ui_toggle": ("A small wooden latch flipping over with a light double click. " + SLOT, 0.4, 0.7),
     "ui_open": ("A parchment scroll unrolling quickly with a soft paper rustle. " + SLOT, 0.8, 0.6),
+    # de korte geluiden bij de UI-beweging (30 september, Max: "korte UI
+    # geluiden ook nodig toch voor alle animaties en ploffen")
+    "ui_plof": ("A small wooden peg popping into a hole in an old oak game board, a short soft round tok with a tiny upward lift. " + SLOT, 0.3, 0.7),
+    "ui_stempel": ("A wooden hand stamp pressed firmly onto parchment with a little sealing wax, a dull solid thud with a short papery slap. " + SLOT, 0.4, 0.6),
+    "ui_draai": ("A single stiff parchment playing card flipped over on a wooden table, a quick paper flick and the soft tap of its edge landing. " + SLOT, 0.4, 0.7),
+    "ui_tel": ("A tiny brass counter bead clicking against another on an old abacus, a very short bright little tick. " + SLOT, 0.2, 0.7),
+    "ui_munt": ("A small brass coin dropped onto an oak table, a clear short ring with one tiny bounce. " + SLOT, 0.5, 0.6),
+    "ui_blad": ("A page of thick old parchment turned over in a leather-bound book, a soft short rustle that swells and settles. " + SLOT, 0.6, 0.6),
     "card_stat_up": ("A small brass weight placed onto a balance scale, a bright short clink. " + SLOT, 0.4, 0.7),
     "card_stat_down": ("A small brass weight lifted off a balance scale, a soft short clink slightly lower in tone. " + SLOT, 0.4, 0.7),
     "card_confirm": ("A wax seal pressed firmly onto parchment, a soft thump with a short squish. " + SLOT, 0.7, 0.6),

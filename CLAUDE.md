@@ -1090,7 +1090,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   Placeholders uit `tools/maak_ui_geluiden.py` in `sounds/ui/` (manifest
   `synthetisch.json`, hout, perkament en messing), prompts in SOUND-WISHLIST
   sectie 1 (de "Wanneer" daar korter dan 40 tekens, anders leest de studio hem
-  als prompt), niveaus in CATEGORY_DB (-7 tot -15 dB). Check: `-- inkomcheck
+  als prompt) en in de geluid-studio als reeks van vijf op 7 s met knippen op
+  stiltes (`HAND` in `maak_geluid_prompts.py`; in `geluid_studio.json` gericht
+  gezet, want een generator-run zet de duur terug van elke rij waarvan in de
+  studio alleen de instelling is aangepast); vervangen met "Vervang
+  synthetisch", niveaus in CATEGORY_DB (-7 tot -15 dB). Check: `-- inkomcheck
   geluid` (geladen, de globale RNG blijft gelijk, en `Beweging.klanken()`
   telt wat er echt klinkt: normaal 13, rustig 5, uit 0).
 - **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
