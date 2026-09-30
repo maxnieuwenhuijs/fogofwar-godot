@@ -97,6 +97,15 @@ func _ready() -> void:
 		get_tree().quit(0 if inkom_fouten == 0 else 1)
 		return
 
+	if "klaarcheck" in OS.get_cmdline_user_args():
+		# 30 september: de loting en de klaarmelding voor de start van een
+		# campagne (tools/klaar_check.gd). `-- klaarcheck [solo|onthul|oefenen]`.
+		var kargs := OS.get_cmdline_user_args()
+		var kfasen: Array = kargs.slice(kargs.find("klaarcheck") + 1)
+		var klaar_fouten: int = await preload("res://tools/klaar_check.gd").run(self, kfasen)
+		get_tree().quit(0 if klaar_fouten == 0 else 1)
+		return
+
 	if "inkomfilm" in OS.get_cmdline_user_args():
 		# UI-beweging: plaatjes halverwege en aan het eind (met venster, tempo 0,5).
 		# `-- inkomfilm [uitmap]`, standaard user://inkomfilm.

@@ -77,6 +77,7 @@ func _run_all() -> void:
 		preload("res://tests/CannonTests.gd").new(),
 		preload("res://tests/V42AgentTests.gd").new(),
 		preload("res://tests/CampaignTests.gd").new(),
+		preload("res://tests/KlaarmeldingTests.gd").new(),
 		preload("res://tests/SoloTests.gd").new(),
 	]
 	for t in test_classes:

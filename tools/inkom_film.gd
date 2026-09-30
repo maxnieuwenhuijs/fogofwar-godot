@@ -27,6 +27,7 @@ static func run(host: Node, uit: String = "") -> int:
 	await _menu()
 	await _kaarten()
 	await _hub()
+	await _loting()
 	Beweging.zet_tempo(tempo_oud)
 	Beweging.forceer(-1)
 	print("[FILM] klaar: %s (%d fouten)" % [ProjectSettings.globalize_path(_uit), _fouten])
@@ -118,6 +119,7 @@ static func _hub() -> void:
 	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
 	hub.set("driver", driver)
 	hub.set("mens_id", 0)
+	hub.set("klaar_overslaan", true)   # de loting heeft een eigen reeks
 	_host.add_child(hub)
 	await _wacht(2.0)
 	hub.call("_cascade")   # de golf van de eerste opening nog eens, nu alles geladen is
@@ -125,5 +127,32 @@ static func _hub() -> void:
 	if orakel != "":
 		hub.call("_toon_punten")
 		await _reeks("punten", [0.1, 0.6, 1.2, 1.8, 2.6, 4.0])
+	hub.queue_free()
+	await _wacht(0.3)
+
+
+# --- De loting en de klaarmelding voor de start (30 september) ------------------
+
+static func _loting() -> void:
+	var driver := SoloDriver.new(42, 0)
+	driver.duel_ai = "easy"
+	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	_host.add_child(hub)
+	# Op tempo 0,3 duurt de onthulling ruim 12 s: ongeveer een plaatje per paar.
+	await _reeks("loting", [0.5, 2.0, 3.5, 5.0, 6.5, 8.0, 9.5, 11.0, 13.0])
+	var knop: Button = hub.find_child("KlaarmeldKnop", true, false)
+	if knop == null:
+		_fouten += 1
+		print("[FILM] KLAAR ging niet open na de loting")
+	else:
+		knop.pressed.emit()
+		await _reeks("klaar", [0.1, 0.4, 1.0, 2.5])
+	var d: Dictionary = driver.mens_duel()
+	if not d.is_empty():
+		hub.set("_auto_stop_idx", int(d.idx))
+	if CampaignBridge.driver == driver:
+		CampaignBridge.driver = null
 	hub.queue_free()
 	await _wacht(0.3)

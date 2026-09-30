@@ -960,6 +960,16 @@ rounds/nominations/votes-tabellen gevuld door de creducer; `TICK_DEADLINE` door 
 (defaults staan zo in het log). Live-8 en async-16 lobby's (async alleen privé, bouwplan §9.4).
 **CHECK:** campagne-integratietest: 16 gescripte clients spelen een campagne door incl. 3 no-shows →
 forfeits/defaults regelen het; fold(campaign_events) = eindstand.
+**Klaar voor de start (30 september, Max):** na de loting van ronde 1 komen de paren een voor een
+in beeld en meldt iedereen zich klaar; wie niet op tijd drukt ligt eruit, er wordt een nieuwe speler
+gezocht, anders valt er een bot in (bots zijn meteen klaar). De logica staat al:
+`core/campaign/klaarmelding.gd` (puur, tijd van buiten, `to_dict`/`from_dict`); de worker draait die
+met de serverklok (tik uit de deadline-job, `vervang` uit de matchmaking) en duwt `gebeurd` naar de
+clients. Het scherm staat in de hub (solo zonder klok; "Oefenen: start van een online campagne" in
+het menu Multiplayer speelt de rest na, `scripts/game/klaar_sim.gd`). Voorstel-duren
+`Klaarmelding.ONLINE`: 30 s klaar, 20 s voor een vervanger, 20 s zoeken. Open: erft een vervanger
+altijd de factie van de plek (nu wel), en hoe verhoudt dit zich tot de lobby-klaarmelding uit de
+ontwerpbrief (die zet klaar VOOR de factiekeuze).
 
 ### ☐ F5.2 — Teamchat, quick-chat, spookmodus
 Quick-chat als id-lijst (JSON, vertaalbaar), vrije tekst als lobby-instelling; chat-scheiding hard

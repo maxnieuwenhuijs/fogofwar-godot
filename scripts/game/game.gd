@@ -364,9 +364,12 @@ func _on_hoofdmenu_choice(index: int) -> void:
 
 ## F4.3g -- multiplayer-menu: oefenen via de online-weg (RemoteSession op een
 ## loopback met een bot), als rood of als blauw; "Online" komt met stap i.
+## 30 september: de start van een online campagne oefenen (de loting en de
+## klaarmelding met nagespeelde spelers; de campagne zelf komt met F5).
 func _show_multi_menu() -> void:
 	_overlay.show_choice(tr("MENU_MULTI"), tr("MENU_MULTI_BODY"),
-		[tr("MENU_MULTI_PRACTICE_RED"), tr("MENU_MULTI_PRACTICE_BLUE"), tr("MENU_MULTI_ONLINE"), tr("MENU_BACK")],
+		[tr("MENU_MULTI_PRACTICE_RED"), tr("MENU_MULTI_PRACTICE_BLUE"), tr("MENU_MULTI_ONLINE"),
+			tr("MENU_MULTI_CAMPAIGN_PRACTICE"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i == 0:
 				_start_oefenpotje(Constants.PLAYER_1)
@@ -374,6 +377,9 @@ func _show_multi_menu() -> void:
 				_start_oefenpotje(Constants.PLAYER_2)
 			elif i == 2:
 				_show_online_lobby()
+			elif i == 3:
+				CampaignBridge.klaar_oefenen = true
+				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn")
 			else:
 				_show_difficulty_menu())
 

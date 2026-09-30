@@ -23,6 +23,10 @@ var feed_gezien: int = 0
 ## en niet de factiekeuze voor een nieuwe campagne.
 var terug_van_bord: bool = false
 
+## 30 september: het menu Multiplayer vraagt de hub om de start van een online
+## campagne te oefenen (de klaarmelding met nagespeelde spelers, zonder save).
+var klaar_oefenen: bool = false
+
 ## F3.4c — bot-duels simuleren op een thread terwijl de mens op het bord
 ## staat; rond_af wacht de thread af voordat het mens-resultaat boekt.
 var _sim_thread: Thread = null

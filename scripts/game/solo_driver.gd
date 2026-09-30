@@ -37,6 +37,12 @@ var bot_duel_honger_vanaf: int = -1
 ## bot-klus er nu maalt. Leeg = geen langlopend werk.
 var bezig_met: String = ""
 
+## De mens meldde zich klaar na de loting (30 september, de klaarmelding van
+## de hub): dan komt dat scherm in deze campagne niet meer terug. Presentatie,
+## niet in het log: een hervatte campagne die nog geen duel speelde toont het
+## opnieuw.
+var klaar_gemeld: bool = false
+
 var c: CState = CState.new()
 var clog: CLog = CLog.new()
 var agents: Dictionary = {}          # speler-id -> CampaignAgent

@@ -250,7 +250,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   presentatie). Check: `-- shot campaign_hub [seed] [modus]
   [orakel=<pad>]` (fixture `tools/hub_shot.gd`; modi basis, raad, donatie,
   testament, burgeroorlog, einde, punten, dank, terug, chat, popup, doel, lid, rapport, regels,
-  instellingen, grootboek, paren, factie, hervat, laden; met een
+  instellingen, grootboek, paren, factie, hervat, laden, loting, klaar,
+  klaar_online, klaar_eruit; met een
   `duel_orakel.json` spoelt hij in seconden door; exit 1 bij fouten).
   **Spelregels (29 september):** de ? in de titelbalk en de link "Hoe werkt
   de campagne?" op de factiekeuze openen `_toon_regels`: acht kaarten met een
@@ -286,6 +287,33 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   team-only en verzegeld voor de doden; bots antwoorden AKKOORD!/NEE. naar
   karakter en komen een toezegging na met kans `loyaliteit`
   (`SoloDriver.quick_chat`, `CampaignAgent.toezeggingen`). Nooit in het log.
+- **De loting en de klaarmelding voor de start (30 september, Max: "eerst 1
+  voor 1 de matchup die geloot is wie tegen wie speelt en dan moet je ready up
+  drukken binnen bepaalde tijd. anders gekickt en nieuwe player zoeken, maar
+  met bots geen tijd wachten").** Na de loting van ronde 1 en voor het eerste
+  duel opent de hub `_toon_klaarmelding`: de acht paren komen een voor een
+  binnen (jouw team links, jouw paar als laatste met JOUW DUEL; "Alles tonen"
+  slaat over; Animaties uit of headless = meteen alles), dan KLAAR. Pas als
+  iedereen klaar is begint de campagne (stempel, dan de golf van de hub en de
+  aftel naar het bord; die aftel loopt nooit onder het scherm). De logica is
+  `core/campaign/klaarmelding.gd` (puur, tijd in ms van buiten, geen rng; via
+  preload): een bot is meteen klaar, een mens heeft `klaar_sec` (0 = geen klok:
+  solo), wie te laat is ligt eruit en de plek zoekt `zoek_sec` een nieuwe
+  speler (`vervang`: team, factie en tegenstander blijven, `vervang_sec` om te
+  drukken), anders valt er een bot in; `gebeurd` is de lijst voor het scherm.
+  Solo: jij zonder klok, de hub loot nu zelf in `_start` (de werk-thread deed
+  het daarvoor; zelfde paren, zelfde log). Na KLAAR `driver.klaar_gemeld`,
+  dus terug in de hub komt het niet terug; een hervatte campagne zonder
+  gespeeld duel begint er opnieuw mee. Klaarmelden schrijft niets in het log.
+  Online komt met F5.1 (de worker draait dezelfde functies met de serverklok);
+  tot dan speelt "Oefenen: start van een online campagne" (menu Multiplayer,
+  `CampaignBridge.klaar_oefenen`, geen save, buiten de brug) zeven mensen na
+  (`scripts/game/klaar_sim.gd`, eigen rng, 20/12/8 s, bots zichtbaar met BOT):
+  te laat is TE LAAT, op tijd eindigt het oefenen bij "iedereen klaar".
+  Checks: `-- klaarcheck [solo|onthul|oefenen]` (headless en met venster),
+  `KlaarmeldingTests`, `-- shot campaign_hub 42 loting|klaar|klaar_online|
+  klaar_eruit` (alle andere modi zetten `klaar_overslaan`), en een reeks in
+  `-- inkomfilm`.
 - Godot: `$env:GODOT_PATH`, anders
   `C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe`
   (console-variant `..._console.exe` voor terminal-output).

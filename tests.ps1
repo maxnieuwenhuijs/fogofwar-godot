@@ -19,7 +19,7 @@ $groepen = @(
     "AgentTests,V42AgentTests,AITests",
     "GoldenReplayTests,DeterminismTests,SerializerTests",
     "RulesTests,ValidatorTests,ReducerTests,ViewTests,ClientStateTests",
-    "SpawnTests,CpTests,CannonTests,ClockTests,CardTests,GameSessionTests,RulesConfigTests,RemoteSessionTests,UiAssetsTests,AudioTests"
+    "SpawnTests,CpTests,CannonTests,ClockTests,CardTests,GameSessionTests,RulesConfigTests,RemoteSessionTests,UiAssetsTests,AudioTests,KlaarmeldingTests"
 )
 $start = Get-Date
 $procs = @()

@@ -1,5 +1,56 @@
 # Fog of War — Work In Progress & Context
 
+## 30 september -- De loting en de klaarmelding voor de start van een campagne
+
+Max: "toon voordat een campagne begint ook met bots en online. Eerst 1 voor 1
+de matchup die geloot is wie tegen wie speelt en dan moet je ready up drukken
+binnen bepaalde tijd. anders gekickt en nieuwe player zoeken, maar met bots
+geen tijd wachten op speler etc."
+
+- **Het scherm** (`_toon_klaarmelding` in de hub, in de stijl van de
+  keuzeschermen): na de loting van ronde 1 en voor het eerste duel komen de
+  acht paren een voor een binnen (jouw team links, jouw paar als laatste met
+  JOUW DUEL in rood; "Alles tonen" slaat over; Animaties uit of headless =
+  meteen alles), met een klaar-streep per speler (vinkje of zandloper). Daarna
+  KLAAR (en Hoofdmenu). Als iedereen klaar is: "DE CAMPAGNE BEGINT" als
+  stempel, dan de golf van de hub en de aftel naar het bord.
+- **De logica** (`core/campaign/klaarmelding.gd`, puur, tijd van buiten, geen
+  rng, `to_dict`/`from_dict` ook uit JSON): bots meteen klaar; een mens heeft
+  `klaar_sec` (0 = geen klok); te laat = eruit, de plek zoekt `zoek_sec` een
+  nieuwe speler (die erft team, factie en tegenstander en krijgt
+  `vervang_sec`), anders een bot. Voorstel online: 30/20/20 s.
+- **Solo:** jij zonder klok, 15 bots meteen klaar; pas na jouw KLAAR begint
+  de campagne. De hub loot nu zelf in `_start` (de werk-thread deed het;
+  zelfde paren en zelfde log). Klaarmelden schrijft niets in het log;
+  `driver.klaar_gemeld` houdt het scherm weg als je terugkomt; een hervatte
+  campagne zonder gespeeld duel begint er opnieuw mee.
+- **Online** kan nog niet (de server kent alleen 1-tegen-1; de campagne op de
+  server is F5.1, zie het masterplan). Tot dan: "Oefenen: start van een
+  online campagne" in het menu Multiplayer, met zeven nagespeelde mensen
+  (`scripts/game/klaar_sim.gd`, eigen rng, 20/12/8 s, bots zichtbaar met BOT):
+  klok, eruit, zoeken, invallen; jij te laat = TE LAAT; geen save, buiten de
+  brug.
+- **Gevonden en gerepareerd:** de aftel naar het bord werd al gepland door
+  `_ververs()` voordat het scherm opende (je duel zou onder het scherm
+  starten): de klaarmelding opent nu eerst. De klok van KLAAR wacht met
+  venster dezelfde twee frames als de inkom (anders telde het zware bouwframe
+  mee). Een herbouw van de hub (andere venstermaat) legde het frame over een
+  open keuzescherm: dat blijft nu bovenop.
+- Teksten: 23 nieuwe sleutels (HUB_LOTING_*, HUB_READY_*,
+  MENU_MULTI_CAMPAIGN_PRACTICE) en MENU_MULTI_BODY; de vertalingen gebouwd
+  zonder `--import` (de editor stond open) met een eigen bouwer die
+  byte-identiek is aan de importer, en sleutel voor sleutel tegen HEAD
+  vergeleken (alleen die verschillen).
+- Checks: `-- klaarcheck` (solo, onthul, oefenen; headless en met venster),
+  `KlaarmeldingTests` (11 tests), alle hub-plaatjes 25 modi plus grootboek 0
+  fouten (vier nieuw: loting, klaar, klaar_online, klaar_eruit), inkomcheck,
+  uicheck, herstelcheck 777 en 4242 wolf 0, resumecheck 777 1 en 4242 2 0, naad,
+  koppel, beurtlicht, audiopaneel, simcheck 0, tests 2746/0 (82 nieuw); met
+  venster define (vier varianten), sleepcheck (en muis), audiopaneel,
+  inkomcheck, klaarcheck en play. uispel 777 geeft `2cebd8da` (165, 4), precies
+  de referentie die de andere sessie bij C28 mat (cb7d983, de Wolf 5
+  versterkingspunten); dit werk raakt het bordspel niet.
+
 ## 30 september -- UI-beweging: korte geluiden bij de animaties
 
 Max: "korte UI geluiden ook nodig toch voor alle animaties en ploffen etc".

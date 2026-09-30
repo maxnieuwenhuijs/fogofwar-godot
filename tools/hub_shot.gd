@@ -10,6 +10,11 @@ extends RefCounted
 ## (het spelregelscherm, boven en onderaan: _shot_hub_regels_2.png),
 ## instellingen, grootboek, paren (de andere paren van de ronde), factie, hervat,
 ## laden, terug (terug van het bord na de beslissende finale: eindscherm).
+## De start van een campagne (30 september): loting (de paren komen een voor
+## een; met venster halverwege), klaar (alles getoond, KLAAR open),
+## klaar_online (oefenen met nagespeelde spelers: jij klaar, een ander te laat
+## en eruit, het zoeken loopt), klaar_eruit (jij te laat: TE LAAT). Alle andere
+## modi slaan de klaarmelding over (klaar_overslaan) en tonen meteen de hub.
 ## Elke modus met "_nl" erachter (regels_nl) speelt in het Nederlands; de
 ## taalkeuze van de speler blijft ongemoeid.
 ## Met orakel=<pad> (een duel_orakel.json) spoelt de campagne in seconden
@@ -93,7 +98,14 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 			print("[SHOT] burgeroorlog met seed %d" % (seed_val + poging - 1))
 	hub.driver = driver
 	hub.mens_id = 0
+	var klaar_modus: bool = modus in ["loting", "klaar", "klaar_online", "klaar_eruit"]
+	hub.set("klaar_overslaan", not klaar_modus)
+	if modus in ["klaar_online", "klaar_eruit"]:
+		hub.set("_oefenen", true)
+		hub.set("km_sim_seed", 7)
 	host.add_child(hub)
+	if klaar_modus:
+		return await _klaar(host, hub, modus, fouten)
 	await host.get_tree().create_timer(1.2).timeout
 	for node_naam in ["HubFrame", "Header", "Titel", "Vlag", "Tijdlijn", "FasePaneel", "FaseVoet",
 			"GrootboekKnop", "TeamLinks", "TeamRechts", "TabFase", "TabChat", "QC_Meer",
@@ -169,6 +181,59 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 		print("[SHOT] %s ontbreekt" % eind_node[modus])
 	if modus == "regels":
 		return await _regels(host, hub, fouten)
+	return await _bewaar(host, modus, fouten)
+
+
+## De klaarmelding voor de start: de paren, KLAAR, en bij oefenen de klok die
+## doorspoelt (in stappen van een halve seconde, zoals de tik van het scherm).
+static func _klaar(host: Node, hub: Control, modus: String, fouten: int) -> int:
+	await host.get_tree().create_timer(0.3).timeout
+	var laag: Node = hub.find_child("Klaarmelding", true, false)
+	if laag == null:
+		print("[SHOT] de klaarmelding opent niet na de loting")
+		return await _bewaar(host, modus, fouten + 1)
+	var paren := laag.find_children("Paar_*", "", true, false).size()
+	if paren != 8:
+		fouten += 1
+		print("[SHOT] klaarmelding: %d paren (8 verwacht)" % paren)
+	if modus == "loting":
+		# Met venster halverwege de onthulling; headless staat alles er al.
+		await host.get_tree().create_timer(1.5).timeout
+		return await _bewaar(host, modus, fouten)
+	hub.call("_km_open_klaar")
+	if modus != "klaar":
+		var sim = hub.get("_km_sim")
+		if modus == "klaar_online" and sim != null and not (sim.mensen as Array).is_empty():
+			sim.maak_afk(int(sim.mensen[0]))
+		for stap in 43:   # 21,5 s: net voorbij de klok van 20 s
+			if hub.get("_km") == null:
+				break
+			hub.set("_km_klok_ms", int(hub.get("_km_klok_ms")) + 500)
+			if modus == "klaar_online" and stap == 3:
+				hub.call("_km_druk_klaar")
+			hub.call("_km_tik")
+	await host.get_tree().create_timer(0.8).timeout
+	match modus:
+		"klaar":
+			var knop: Button = hub.find_child("KlaarmeldKnop", true, false)
+			if knop == null or knop.disabled:
+				fouten += 1
+				print("[SHOT] KLAAR staat niet open")
+		"klaar_online":
+			var km = hub.get("_km")
+			var zoekt := 0
+			if km != null:
+				for st in km.stoelen:
+					if String(st.status) == "zoekt":
+						zoekt += 1
+			var regels: Node = hub.find_child("KlaarMeldingen", true, false)
+			if zoekt < 1 or regels == null or regels.get_child_count() < 1:
+				fouten += 1
+				print("[SHOT] oefenen: geen stoel die zoekt of geen regel eronder (%d)" % zoekt)
+		"klaar_eruit":
+			if hub.find_child("Eruit", true, false) == null:
+				fouten += 1
+				print("[SHOT] oefenen: te laat toont geen TE LAAT")
 	return await _bewaar(host, modus, fouten)
 
 

@@ -397,7 +397,7 @@ that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief
 die speler koppelt én handelt straks als eerste."
 END_BACK_TO_MENU,Back to the menu,Terug naar het menu
 END_REASON,Reason: %s,Reden: %s
-MENU_MULTI_BODY,"Practice the online route against a bot, as red or as blue (board turned), or play online against a person via the server.","Oefen de online-weg tegen een bot, als rood of als blauw (bord gedraaid), of speel online tegen een mens via de server."
+MENU_MULTI_BODY,"Practice the online route against a bot, as red or as blue (board turned), play online against a person via the server, or practice the start of an online campaign.","Oefen de online-weg tegen een bot, als rood of als blauw (bord gedraaid), speel online tegen een mens via de server, of oefen de start van een online campagne."
 MENU_MULTI_PRACTICE_RED,Practice online route (as red),Oefenen via de online-weg (als rood)
 MENU_MULTI_PRACTICE_BLUE,Practice online route (as blue),Oefenen via de online-weg (als blauw)
 MENU_MULTI_ONLINE,Online (via the server),Online (via de server)
@@ -622,3 +622,26 @@ HUB_LID_VECHT,Fights %s this round,Vecht deze ronde tegen %s
 HUB_QC_WIE_STUUR,WHO SHOULD WE SEND?,WIE STUREN WE?
 HUB_QC_WIE_PAK,WHO DO WE GO FOR?,WIE PAKKEN WE?
 HUB_QC_WIE_DONEER,WHO SHOULD GET IT?,WIE MOET HET KRIJGEN?
+HUB_LOTING_TITLE,THE DRAW,DE LOTING
+HUB_LOTING_SUB,Round 1: the lot decides who fights whom,Ronde 1: het lot bepaalt wie tegen wie speelt
+HUB_LOTING_BUSY,The lot draws the pairs...,Het lot trekt de paren...
+HUB_LOTING_SKIP,Show all,Alles tonen
+HUB_READY_CAPS,READY,KLAAR
+HUB_READY_COUNT,%d of %d ready,%d van %d klaar
+HUB_READY_BOTS,The bots are ready at once. The campaign begins when you are.,De bots zijn meteen klaar. De campagne begint zodra jij het bent.
+HUB_READY_TIME,%s left,nog %s
+HUB_READY_WAITING,Waiting for: %s,Wachten op: %s
+HUB_READY_SEARCHING,Searching...,Zoekt...
+HUB_READY_BOT_TAG,BOT,BOT
+HUB_READY_OUT,%s was not ready in time and is out. Looking for a new player.,%s was niet op tijd klaar en ligt eruit. Er wordt een nieuwe speler gezocht.
+HUB_READY_REPLACED,%s takes the place of %s,%s neemt de plek van %s over
+HUB_READY_BOT_FILL,No player found: a bot takes the place of %s,Geen speler gevonden: een bot neemt de plek van %s over
+HUB_READY_START,THE CAMPAIGN BEGINS,DE CAMPAGNE BEGINT
+HUB_READY_OUT_TITLE,TOO LATE,TE LAAT
+HUB_READY_OUT_BODY,You did not press READY in time. Your place goes to another player.,Je drukte niet op tijd op KLAAR. Je plek gaat naar een andere speler.
+HUB_READY_PRACTICE_TITLE,PRACTICE,OEFENEN
+HUB_READY_PRACTICE_END,"Everyone is ready: here the online campaign will begin. The campaign itself comes with the server; the other players here were stand-ins.","Iedereen is klaar: hier begint straks de online campagne. De campagne zelf komt met de server; de andere spelers waren hier nagespeeld."
+HUB_READY_AGAIN,AGAIN,NOG EEN KEER
+MENU_MULTI_CAMPAIGN_PRACTICE,Practice: start of an online campaign,Oefenen: start van een online campagne
+HUB_READY_SEARCH_ONE,One place is looking for a new player,Een plek zoekt een nieuwe speler
+HUB_READY_SEARCH_N,%d places are looking for a new player,%d plekken zoeken een nieuwe speler

@@ -82,6 +82,23 @@ var _cascade_gedaan: bool = false
 var _paneel_sleutel: String = ""   # ronde|fase|tab|wacht|bezig|dank: alleen een inkom bij verandering
 var _fase_sleutel: String = ""     # ronde|fase: het blad klinkt alleen bij een echte fasewissel
 var _ingediend: bool = false     # STEM/KLAAR/NALATEN: de eerste tik telt, tot het paneel ververst
+
+## De loting en de klaarmelding voor de start (30 september): zie _voor_de_start.
+const Klaarmelding := preload("res://core/campaign/klaarmelding.gd")
+const KlaarSim := preload("res://scripts/game/klaar_sim.gd")
+const KM_VOOR := 0.35            # het eerste paar komt na zoveel seconden
+const KM_STAP := 0.42            # tussen twee paren in de onthulling
+const KM_START_PAUZE := 1.3      # "DE CAMPAGNE BEGINT" staat zo lang in beeld
+const KM_ROOD_LICHT := Color("#E9A38F")  # eruit: rood dat op het donkere hout leesbaar blijft
+var klaar_overslaan: bool = false  # de screenshot-fixture en checks: meteen de hub
+var km_sim_seed: int = -1        # oefenen: -1 = elke keer anders, anders vast (plaatjes, checks)
+var _oefenen: bool = false       # oefenen: de start van een online campagne, met nagespeelde spelers
+var _km = null                   # Klaarmelding
+var _km_sim = null               # KlaarSim (alleen bij oefenen)
+var _km_laag: Control = null
+var _km_open: bool = false       # KLAAR staat open (de paren zijn getoond)
+var _km_gezien: int = 0          # hoeveel gebeurtenissen al op het scherm staan
+var _km_klok_ms: int = 0         # bovenop de echte klok (de fixture spoelt zo door)
 ## De laatst getoonde saldi in de statusbalk. Static: overleeft het bord, zodat
 ## een winst na een duel optelt.
 static var _status_gezien: Dictionary = {}
@@ -150,6 +167,13 @@ func _ready() -> void:
 	# ouder (capture-flow): zelf zetten is dezelfde Theme-resource en kost niets.
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	theme = UiAssets.thema()
+	if CampaignBridge.klaar_oefenen and driver == null:
+		# Oefenen (menu Multiplayer): de start van een online campagne met
+		# nagespeelde spelers. Altijd vers, zonder save, buiten de brug om.
+		CampaignBridge.klaar_oefenen = false
+		_oefenen = true
+		_toon_factie_keuze()
+		return
 	if driver == null and CampaignBridge.driver != null \
 			and (CampaignBridge.driver.c.fase != CState.Fase.KLAAR or CampaignBridge.terug_van_bord):
 		# F3.4b: terug van het bord (of een andere scene-wissel): zelfde campagne.
@@ -244,16 +268,33 @@ func _toon_hervat_keuze(oud_driver: SoloDriver) -> void:
 func _start() -> void:
 	driver.duel_ai = BOT_DUEL_AI
 	driver.bot_duel_honger_vanaf = BOT_DUEL_HONGER_VANAF
-	if CampaignBridge.driver != driver:
-		CampaignBridge.feed_gezien = 0  # verse of hervatte campagne: teller opnieuw
+	if _oefenen:
+		# Oefenen raakt de echte campagne niet: geen brug, geen save.
 		_feed_tijd.clear()
 		_chat_gezien = 0
 		_status_gezien.clear()
-	CampaignBridge.driver = driver
+	else:
+		if CampaignBridge.driver != driver:
+			CampaignBridge.feed_gezien = 0  # verse of hervatte campagne: teller opnieuw
+			_feed_tijd.clear()
+			_chat_gezien = 0
+			_status_gezien.clear()
+		CampaignBridge.driver = driver
+	# 30 september: de loting van ronde 1 meteen, hier (ze is licht), dan staan
+	# de paren er als de klaarmelding opent. Daarvoor deed de werk-thread haar.
+	var c: CState = driver.c
+	if c.rules.ronde1_loting and c.ronde == 1 and c.fase == CState.Fase.NOMINATIE \
+			and c.duels_deze_ronde.is_empty():
+		driver.stap()
 	_bouw_layout()
 	get_viewport().size_changed.connect(_herbouw)
+	# De klaarmelding voor _ververs: anders plant het duelpaneel al de aftel naar
+	# het bord en begint je duel onder het scherm. De golf komt als hij sluit.
+	var klaarmelding := _voor_de_start()
+	if klaarmelding:
+		_toon_klaarmelding()
 	_ververs()
-	if not _cascade_gedaan:
+	if not klaarmelding and not _cascade_gedaan:
 		_cascade_gedaan = true
 		_cascade()
 	_werk_door()
@@ -346,7 +387,7 @@ func _toon_factie_keuze() -> void:
 func _kies_factie(doctrine: int, keuze_scherm: Control) -> void:
 	_sluit_keuze(keuze_scherm)
 	driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
-		mens_id, 16, SAVE_PAD, doctrine)
+		mens_id, 16, "" if _oefenen else SAVE_PAD, doctrine)
 	_start()
 
 
@@ -464,6 +505,9 @@ func _herbouw() -> void:
 	oud.queue_free()
 	_feed_getoond = 0
 	_bouw_layout()
+	# Een open keuzescherm (klaarmelding, spelregels) blijft bovenop.
+	if _keuze_laag != null and is_instance_valid(_keuze_laag) and _keuze_laag.get_parent() == self:
+		move_child(_keuze_laag, -1)
 	_ververs()
 
 
@@ -2501,7 +2545,8 @@ func _paneel_duel(c: CState) -> void:
 	links.alignment = BoxContainer.ALIGNMENT_CENTER
 	links.add_theme_constant_override("separation", 0)
 	_voet.add_child(links)
-	if _auto_stop_idx != int(d.idx):
+	# Zolang de klaarmelding openstaat loopt er geen aftel: die start als hij sluit.
+	if _auto_stop_idx != int(d.idx) and not _km_bezig():
 		if _auto_start_idx != int(d.idx):
 			_auto_start_idx = int(d.idx)
 			_auto_start_ms = Time.get_ticks_msec()
@@ -2848,6 +2893,580 @@ func _erfgenaam_keuze(c: CState, kandidaten: Array) -> Control:
 	rol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	kolom.add_child(rol)
 	return kolom
+
+
+# --- De loting en de klaarmelding (voor de start van een campagne) ----------------
+
+## 30 september (Max: "toon voordat een campagne begint ook met bots en online.
+## Eerst 1 voor 1 de matchup die geloot is wie tegen wie speelt en dan moet je
+## ready up drukken binnen bepaalde tijd. anders gekickt en nieuwe player
+## zoeken, maar met bots geen tijd wachten op speler etc."). Na de loting van
+## ronde 1, voor het eerste duel: de paren komen een voor een binnen (het jouwe
+## als laatste), dan meldt iedereen zich klaar (core/campaign/klaarmelding.gd).
+## Solo: de bots zijn meteen klaar en jij hebt geen klok; na jouw KLAAR begint
+## de campagne (de golf van de hub, dan de aftel naar het bord). Oefenen (menu
+## Multiplayer): zeven nagespeelde mensen (scripts/game/klaar_sim.gd), een klok,
+## eruit zetten, zoeken en invallen, zoals het online wordt. Na KLAAR komt het
+## scherm in deze campagne niet meer terug (driver.klaar_gemeld); een hervatte
+## campagne die nog geen duel speelde begint er opnieuw mee.
+func _voor_de_start() -> bool:
+	if klaar_overslaan or driver == null or mens_id < 0 or driver.klaar_gemeld:
+		return false
+	var c: CState = driver.c
+	if not c.rules.ronde1_loting or c.ronde != 1 or c.fase != CState.Fase.DUELS \
+			or c.duels_deze_ronde.is_empty():
+		return false
+	for duel in c.duels_deze_ronde:
+		if bool(duel.klaar):
+			return false
+	return true
+
+
+func _km_nu() -> int:
+	return Time.get_ticks_msec() + _km_klok_ms
+
+
+func _km_bezig() -> bool:
+	return _km_laag != null and is_instance_valid(_km_laag)
+
+
+func _toon_klaarmelding() -> void:
+	var c: CState = driver.c
+	var spelers: Array = []
+	for sid in c.spelers.size():
+		var sp: Dictionary = c.spelers[sid]
+		spelers.append({"naam": String(sp.naam), "doctrine": int(sp.get("doctrine", 0)),
+			"team": int(sp.team), "soort": Klaarmelding.MENS if sid == mens_id else Klaarmelding.BOT})
+	var paren: Array = []
+	for duel in c.duels_deze_ronde:
+		paren.append([int(duel.p1), int(duel.p2)])
+	if _oefenen:
+		var gebruikt: Array = []
+		for sp in spelers:
+			gebruikt.append(String(sp.naam))
+		var bot_namen: Array = []
+		for n in Personalities.NAMEN:
+			if not gebruikt.has(n):
+				bot_namen.append(n)
+		_km_sim = KlaarSim.new(km_sim_seed if km_sim_seed >= 0 else int(Time.get_ticks_usec() % 1000000))
+		_km = _km_sim.maak(spelers, paren, mens_id, bot_namen)
+	else:
+		_km = Klaarmelding.new()
+		_km.setup(spelers, paren, Klaarmelding.SOLO)
+	var kolom := _keuze_scherm(tr("HUB_LOTING_TITLE"), "Klaarmelding", tr("HUB_LOTING_SUB"))
+	_km_laag = _keuze_laag
+	_km_open = false
+	_km_gezien = 0
+	var lijst := VBoxContainer.new()
+	lijst.name = "Paren"
+	lijst.add_theme_constant_override("separation", _px(5))
+	kolom.add_child(lijst)
+	# Jouw team links; jouw paar onderaan, dat komt als laatste.
+	var mijn_team: int = int(c.spelers[mens_id].team)
+	var volgorde: Array = []
+	var jouw: Array = []
+	for paar in paren:
+		var a: int = int(paar[0])
+		var b: int = int(paar[1])
+		if int(c.spelers[a].team) != mijn_team:
+			var t := a
+			a = b
+			b = t
+		if a == mens_id or b == mens_id:
+			jouw = [a, b]
+		else:
+			volgorde.append([a, b])
+	if not jouw.is_empty():
+		volgorde.append(jouw)
+	for i in volgorde.size():
+		lijst.add_child(_km_rij(i, int(volgorde[i][0]), int(volgorde[i][1]), volgorde[i] == jouw))
+	# De paren boven, alles wat je moet doen (stand, klok, knoppen) samen onder.
+	var vul := Control.new()
+	vul.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	kolom.add_child(vul)
+	var status := HubAssets.tekst(tr("HUB_LOTING_BUSY").to_upper(), _px(11), HubAssets.IVOOR, true)
+	status.name = "KlaarStatus"
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(status)
+	if float(_km.regels.klaar_sec) > 0.0:
+		# Online: de klok. Jouw tijd zolang je niet klaar bent, daarna die van
+		# wie het eerst iets moet (klaar drukken of gevonden worden).
+		var klok := VBoxContainer.new()
+		klok.name = "KlaarKlok"
+		klok.add_theme_constant_override("separation", _px(3))
+		klok.visible = false
+		var tijd := HubAssets.tekst("", _px(10), HubAssets.IVOOR, true)
+		tijd.name = "KlaarTijd"
+		tijd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		klok.add_child(tijd)
+		var balk := Aftel.new(Time.get_ticks_msec(), 1000, _u(8))
+		balk.name = "KlaarAftel"
+		balk.custom_minimum_size.x = _u(300)
+		balk.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		klok.add_child(balk)
+		var wacht := HubAssets.tekst("", _px(8), HubAssets.IVOOR)
+		wacht.name = "KlaarWacht"
+		wacht.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		wacht.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		wacht.modulate.a = 0.8
+		klok.add_child(wacht)
+		kolom.add_child(klok)
+	var meldingen := VBoxContainer.new()
+	meldingen.name = "KlaarMeldingen"
+	meldingen.add_theme_constant_override("separation", _px(2))
+	kolom.add_child(meldingen)
+	var voet := HBoxContainer.new()
+	voet.name = "KlaarVoet"
+	voet.alignment = BoxContainer.ALIGNMENT_CENTER
+	voet.add_theme_constant_override("separation", _px(12))
+	voet.custom_minimum_size = Vector2(0, _u(46))
+	kolom.add_child(voet)
+	var alles := _knop(tr("HUB_LOTING_SKIP"), "", _km_open_klaar)
+	alles.name = "KmAllesKnop"
+	alles.custom_minimum_size = Vector2(_u(200), _u(40))
+	alles.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	voet.add_child(alles)
+	_km_onthul()
+
+
+## Een paar: jouw teamgenoot (of jij) links, de vijand rechts, de sabels
+## ertussen; jouw paar in rood met JOUW DUEL.
+func _km_rij(i: int, links: int, rechts: int, jouw: bool) -> PanelContainer:
+	var rij := PanelContainer.new()
+	rij.name = "Paar_%d" % i
+	rij.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rij.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
+		Vector2(26, 26), Vector4(_u(12), _u(6), _u(12), _u(6))))
+	var binnen := HBoxContainer.new()
+	binnen.name = "Binnen"
+	binnen.alignment = BoxContainer.ALIGNMENT_CENTER
+	binnen.add_theme_constant_override("separation", _px(8))
+	rij.add_child(binnen)
+	binnen.add_child(_km_kant(links, true))
+	var midden := VBoxContainer.new()
+	midden.alignment = BoxContainer.ALIGNMENT_CENTER
+	midden.custom_minimum_size = Vector2(_u(52), 0)
+	midden.add_theme_constant_override("separation", _px(1))
+	var sabels := HubAssets.icoon("Inbattle_icon", _u(22), HubAssets.ROOD if jouw else HubAssets.INKT)
+	sabels.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	midden.add_child(sabels)
+	if jouw:
+		var tag := HubAssets.tekst(tr("HUB_DUEL_KOP"), _px(6.5), HubAssets.ROOD, true)
+		tag.name = "JouwDuel"
+		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		midden.add_child(tag)
+	binnen.add_child(midden)
+	binnen.add_child(_km_kant(rechts, false))
+	return rij
+
+
+## Een kant van een paar: de klaar-streep aan de buitenkant, dan naam en
+## factie, dan het schild. Zoekt de stoel een nieuwe speler, dan een leeg
+## rondje en "Zoekt...". Bij oefenen staat BOT bij een bot (online altijd
+## zichtbaar); solo niet, daar is iedereen behalve jij een bot.
+func _km_kant(sid: int, links: bool) -> HBoxContainer:
+	var st: Dictionary = _km.stoelen[sid]
+	var zoekt: bool = String(st.status) == Klaarmelding.ZOEKT
+	var kant := HBoxContainer.new()
+	kant.name = "Kant_%d" % sid
+	kant.set_meta("links", links)
+	kant.custom_minimum_size = Vector2(_u(200), 0)
+	kant.alignment = BoxContainer.ALIGNMENT_END if links else BoxContainer.ALIGNMENT_BEGIN
+	kant.add_theme_constant_override("separation", _px(6))
+	var merk := CenterContainer.new()
+	merk.name = "Merk_%d" % sid
+	merk.custom_minimum_size = Vector2(_u(18), _u(18))
+	match String(st.status):
+		Klaarmelding.KLAAR:
+			merk.add_child(UiAssets.icoon_rect("check", _u(15), HubAssets.INKT))
+		Klaarmelding.ZOEKT:
+			merk.add_child(HubAssets.tekst("...", _px(10), HubAssets.INKT_ZACHT, true))
+		_:
+			merk.add_child(HubAssets.icoon("Phase_icon", _u(15), HubAssets.INKT_ZACHT))
+	var info := VBoxContainer.new()
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", _px(1))
+	var plaat := _naamplaat(tr("HUB_READY_SEARCHING") if zoekt else String(st.naam), 9)
+	plaat.name = "KmNaam_%d" % sid
+	plaat.size_flags_horizontal = Control.SIZE_SHRINK_END if links else Control.SIZE_SHRINK_BEGIN
+	info.add_child(plaat)
+	var onder := HBoxContainer.new()
+	onder.alignment = BoxContainer.ALIGNMENT_END if links else BoxContainer.ALIGNMENT_BEGIN
+	onder.add_theme_constant_override("separation", _px(4))
+	var factie := HubAssets.tekst(Constants.doctrine_display_name(int(st.doctrine)).to_upper(), _px(6.5),
+		HubAssets.INKT_ZACHT, true)
+	onder.add_child(factie)
+	if _oefenen and String(st.soort) == Klaarmelding.BOT:
+		var bot := HubAssets.tekst(tr("HUB_READY_BOT_TAG"), _px(6.5), HubAssets.ROOD, true)
+		bot.name = "Bot_%d" % sid
+		onder.add_child(bot)
+	info.add_child(onder)
+	var mijn_team: int = int(_km.stoelen[mens_id].team)
+	var schild: Control = HubAssets.leeg_rondje(_u(42)) if zoekt \
+		else HubAssets.portret(int(st.doctrine), int(st.team) == mijn_team, false, _u(42))
+	schild.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if links:
+		kant.add_child(merk)
+		kant.add_child(info)
+		kant.add_child(schild)
+	else:
+		kant.add_child(schild)
+		kant.add_child(info)
+		kant.add_child(merk)
+	return kant
+
+
+## Een stoel veranderde (klaar, eruit, vervangen, bot): zijn kant opnieuw, op
+## dezelfde plek in het paar.
+func _km_ververs_kant(sid: int) -> Control:
+	var oud: Control = _km_laag.find_child("Kant_%d" % sid, true, false)
+	if oud == null:
+		return null
+	var ouder := oud.get_parent()
+	var idx := oud.get_index()
+	var nieuw := _km_kant(sid, bool(oud.get_meta("links", true)))
+	ouder.remove_child(oud)
+	oud.queue_free()
+	ouder.add_child(nieuw)
+	ouder.move_child(nieuw, idx)
+	return nieuw
+
+
+## De paren een voor een (met Animaties uit of headless meteen allemaal). De
+## rijen staan er meteen (dezelfde plek, niets verspringt); plof zet ze tot hun
+## beurt onzichtbaar. Daarna gaat KLAAR open.
+func _km_onthul() -> void:
+	if not Beweging.aan():
+		_km_open_klaar()
+		return
+	var tempo: float = maxf(Beweging.tempo(), 0.01)
+	var t := KM_VOOR
+	var lijst: Node = _km_laag.find_child("Paren", true, false)
+	var rijen: Array = lijst.get_children()
+	var starts: Array = []
+	for rij in rijen:
+		Beweging.plof(rij, t, 0.86)
+		Beweging.klank("ui_draai", t)
+		starts.append(t)
+		rij.set_meta("km_t", 1 << 40)   # nog niet geweest (Alles tonen in de eerste frames)
+		var tag := rij.find_child("JouwDuel", true, false) as Control
+		if tag != null:
+			Beweging.stempel(tag, t + 0.12, true)
+		t += KM_STAP
+	# Een inkom wacht met venster twee frames na het (zware) bouwframe, dus de
+	# klok van KLAAR ook: anders telt het bouwframe mee en gaat KLAAR open voordat
+	# de laatste paren er zijn.
+	if DisplayServer.get_name() != "headless":
+		await get_tree().process_frame
+		await get_tree().process_frame
+	if not _km_bezig() or _km_open:
+		return
+	var nu := Time.get_ticks_msec()
+	for i in rijen.size():
+		if is_instance_valid(rijen[i]):
+			(rijen[i] as Node).set_meta("km_t", nu + int(float(starts[i]) * 1000.0 / tempo))
+	get_tree().create_timer(t / tempo, true, false, true).timeout.connect(_km_open_klaar)
+
+
+## De paren staan er: KLAAR gaat open en de klok loopt. Ook via "Alles tonen"
+## (de paren die nog moesten komen ploffen dan meteen).
+func _km_open_klaar() -> void:
+	if _km_open or not _km_bezig():
+		return
+	_km_open = true
+	var nu_echt := Time.get_ticks_msec()
+	var lijst: Node = _km_laag.find_child("Paren", true, false)
+	if Beweging.aan() and lijst != null:
+		for rij in lijst.get_children():
+			if int(rij.get_meta("km_t", 0)) > nu_echt:
+				rij.set_meta("km_t", nu_echt)
+				Beweging.plof(rij, 0.0, 0.86)
+				var tag := rij.find_child("JouwDuel", true, false) as Control
+				if tag != null:
+					Beweging.stempel(tag, 0.1, true)
+	_km.open(_km_nu())
+	var voet: Node = _km_laag.find_child("KlaarVoet", true, false)
+	for k in voet.get_children():
+		voet.remove_child(k)
+		k.queue_free()
+	# Weg kan altijd: solo blijft de campagne bewaard (dit scherm komt terug),
+	# bij oefenen is er niets te bewaren.
+	var weg := _knop(tr("HUB_MAIN_MENU"), "", func() -> void:
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
+	weg.name = "KmWegKnop"
+	weg.custom_minimum_size = Vector2(_u(150), _u(40))
+	weg.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	weg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	voet.add_child(weg)
+	var knop := _rode_knop(tr("HUB_READY_CAPS"), "KlaarmeldKnop", _km_druk_klaar)
+	knop.custom_minimum_size = Vector2(_u(220), _u(46))
+	knop.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	voet.add_child(knop)
+	Beweging.plof(knop, 0.05, Beweging.POP_VAN, true, Vector2(0.5, 0.5), true)
+	Beweging.duw(knop)
+	var klok: Control = _km_laag.find_child("KlaarKlok", true, false)
+	if klok != null:
+		klok.visible = true
+	if float(_km.regels.klaar_sec) <= 0.0:
+		_km_melding(tr("HUB_READY_BOTS"), HubAssets.IVOOR)
+	var tikker := Timer.new()
+	tikker.name = "KmKlok"
+	tikker.wait_time = 0.1
+	tikker.ignore_time_scale = true
+	tikker.autostart = true
+	tikker.timeout.connect(_km_tik)
+	_km_laag.add_child(tikker)
+	_km_verwerk()
+
+
+func _km_tik() -> void:
+	if _km == null or not _km_bezig() or _km.gestart:
+		return
+	var nu := _km_nu()
+	if _km_sim != null:
+		_km_sim.stap(_km, nu)
+	_km.tik(nu)
+	_km_verwerk()
+
+
+func _km_druk_klaar() -> void:
+	if _km == null or not _km_open or not _km_bezig():
+		return
+	if not bool(_km.meld_klaar(mens_id, _km_nu()).ok):
+		return
+	var knop: Button = _km_laag.find_child("KlaarmeldKnop", true, false)
+	if knop != null:
+		knop.disabled = true
+		Beweging.stempel(knop)
+	_km_verwerk()
+
+
+## Wat er sinds de vorige keer gebeurde naar het scherm: de kant van die stoel
+## opnieuw, een regel eronder, en bij de start de stempel.
+func _km_verwerk() -> void:
+	if _km == null or not _km_bezig():
+		return
+	var nieuw: Array = _km.gebeurd.slice(_km_gezien)
+	_km_gezien = _km.gebeurd.size()
+	for e in nieuw:
+		var sid: int = int(e.stoel)
+		match String(e.soort):
+			"klaar":
+				var kant := _km_ververs_kant(sid)
+				if kant != null:
+					Beweging.stempel(kant.find_child("Merk_%d" % sid, true, false) as Control, 0.0, false,
+						sid == mens_id)
+				if sid != mens_id:
+					Beweging.klank("ui_tel", 0.0, 1.0 + 0.03 * float(_km.aantal_klaar()))
+			"eruit":
+				if sid == mens_id:
+					_km_eruit()
+					return
+				var kant2 := _km_ververs_kant(sid)
+				if kant2 != null:
+					Beweging.schud(kant2)
+				_km_melding(tr("HUB_READY_OUT") % String(e.naam), KM_ROOD_LICHT)
+			"vervangen":
+				var kant3 := _km_ververs_kant(sid)
+				if kant3 != null:
+					Beweging.plof(kant3, 0.0, 0.8, true, Vector2(0.5, 0.5), true)
+				_km_melding(tr("HUB_READY_REPLACED") % [String(e.naam), String(e.oud)], HubAssets.IVOOR)
+			"bot":
+				var kant4 := _km_ververs_kant(sid)
+				if kant4 != null:
+					Beweging.plof(kant4, 0.0, 0.8, true, Vector2(0.5, 0.5), true)
+				_km_melding(tr("HUB_READY_BOT_FILL") % String(e.oud), HubAssets.IVOOR)
+			"start":
+				_km_ververs_status()
+				_km_gestart()
+				return
+	_km_ververs_status()
+
+
+## Een regel onder de klok; de laatste drie blijven staan.
+func _km_melding(tekst: String, kleur: Color) -> void:
+	var box: Node = _km_laag.find_child("KlaarMeldingen", true, false)
+	if box == null:
+		return
+	var l := HubAssets.tekst(tekst, _px(8.5), kleur)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(l)
+	while box.get_child_count() > 3:
+		var oud := box.get_child(0)
+		box.remove_child(oud)
+		oud.queue_free()
+	Beweging.fade_in(l)
+
+
+func _km_ververs_status() -> void:
+	if not _km_bezig():
+		return
+	var status: Label = _km_laag.find_child("KlaarStatus", true, false)
+	if status != null and _km_open:
+		status.text = (tr("HUB_READY_COUNT") % [_km.aantal_klaar(), _km.stoelen.size()]).to_upper()
+	var klok: Control = _km_laag.find_child("KlaarKlok", true, false)
+	if klok == null:
+		return
+	var tijd: Label = klok.find_child("KlaarTijd", true, false)
+	var balk: Aftel = klok.find_child("KlaarAftel", true, false)
+	var wacht: Label = klok.find_child("KlaarWacht", true, false)
+	var klok_van: Array = _km_klok_van()
+	var eind: int = int(klok_van[0])
+	if eind <= 0 or _km.gestart:
+		tijd.text = ""
+		balk.visible = false
+	else:
+		var rest: int = maxi(0, eind - _km_nu())
+		var sec: int = int(ceil(rest / 1000.0))
+		tijd.text = tr("HUB_READY_TIME") % ("%d:%02d" % [sec / 60, sec % 60])
+		balk.visible = true
+		balk.duur_ms = maxi(1, int(float(klok_van[1]) * 1000.0))
+		balk.start_ms = eind - balk.duur_ms - _km_klok_ms
+	# Op wie er gewacht wordt (bij naam), en hoeveel plekken nog iemand zoeken.
+	var namen: Array = []
+	var zoeken := 0
+	for s in _km.niet_klaar():
+		if int(s) == mens_id:
+			continue
+		var st: Dictionary = _km.stoelen[s]
+		if String(st.status) == Klaarmelding.ZOEKT:
+			zoeken += 1
+		else:
+			namen.append(String(st.naam))
+	var delen: Array = []
+	if not namen.is_empty():
+		delen.append(tr("HUB_READY_WAITING") % ", ".join(namen))
+	if zoeken == 1:
+		delen.append(tr("HUB_READY_SEARCH_ONE"))
+	elif zoeken > 1:
+		delen.append(tr("HUB_READY_SEARCH_N") % zoeken)
+	wacht.text = "\n".join(delen)
+
+
+## Welke klok er telt: [eind_ms, duur_sec]. Jouw eigen zolang je moet drukken,
+## anders die van wie het eerst iets moet.
+func _km_klok_van() -> Array:
+	var st: Dictionary = _km.stoelen[mens_id]
+	if String(st.status) == Klaarmelding.WACHT and int(st.deadline_ms) > 0:
+		return [int(st.deadline_ms), float(_km.regels.klaar_sec)]
+	var eind := 0
+	var duur := 0.0
+	for s in _km.stoelen.size():
+		var ander: Dictionary = _km.stoelen[s]
+		var d := 0
+		var lengte := 0.0
+		if String(ander.status) == Klaarmelding.WACHT:
+			d = int(ander.deadline_ms)
+			lengte = float(_km.regels.vervang_sec if String(ander.vorige) != "" else _km.regels.klaar_sec)
+		elif String(ander.status) == Klaarmelding.ZOEKT:
+			d = int(ander.zoek_tot_ms)
+			lengte = float(_km.regels.zoek_sec)
+		if d > 0 and (eind == 0 or d < eind):
+			eind = d
+			duur = lengte
+	return [eind, duur]
+
+
+## Iedereen is klaar: de stempel, even laten staan, dan de hub (solo) of het
+## einde van het oefenen.
+func _km_gestart() -> void:
+	if not _km_bezig():
+		return
+	var knop: Button = _km_laag.find_child("KlaarmeldKnop", true, false)
+	if knop != null:
+		knop.disabled = true
+	var weg: Button = _km_laag.find_child("KmWegKnop", true, false)
+	if weg != null:
+		weg.disabled = true
+	var frame := _km_laag.get_child(1) as Control
+	var plaat := PanelContainer.new()
+	plaat.name = "KlaarStart"
+	plaat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plaat.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
+		Vector2(26, 26), Vector4(_u(20), _u(12), _u(20), _u(12))))
+	var t := HubAssets.tekst(tr("HUB_READY_START"), _px(20), HubAssets.ROOD, true)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plaat.add_child(t)
+	plaat.position = Vector2(_u(92), _u(300))
+	plaat.size = Vector2(_u(380), _u(64))
+	frame.add_child(plaat)
+	Beweging.stempel(plaat)
+	var tempo: float = maxf(Beweging.tempo(), 0.01) if Beweging.aan() else 1.0
+	get_tree().create_timer(KM_START_PAUZE / tempo, true, false, true).timeout.connect(func() -> void:
+		if not is_inside_tree() or not _km_bezig():
+			return
+		if _oefenen:
+			_km_oefen_einde()
+		else:
+			_km_sluit())
+
+
+## Solo: het scherm weg, de hub bouwt zich op en de aftel naar het bord loopt.
+func _km_sluit() -> void:
+	driver.klaar_gemeld = true
+	var laag := _km_laag
+	_km_laag = null
+	_km = null
+	_km_sim = null
+	if _keuze_laag == laag:
+		_keuze_laag = null
+	if laag != null and is_instance_valid(laag):
+		Beweging.spook_weg(laag)
+	if not _cascade_gedaan:
+		_cascade_gedaan = true
+		_cascade()
+	_bouw_fase_paneel()
+
+
+## Jij drukte niet op tijd (alleen met een klok: online, oefenen).
+func _km_eruit() -> void:
+	var laag := _km_laag
+	_km_laag = null
+	_km = null
+	_km_sim = null
+	_sluit_keuze(laag)
+	var kolom := _keuze_scherm(tr("HUB_READY_OUT_TITLE"), "Eruit")
+	_km_eind_kaart(kolom, tr("HUB_READY_OUT_BODY"))
+
+
+## Oefenen: iedereen was klaar. Hier begint straks de online campagne.
+func _km_oefen_einde() -> void:
+	var laag := _km_laag
+	_km_laag = null
+	_km = null
+	_km_sim = null
+	_sluit_keuze(laag)
+	var kolom := _keuze_scherm(tr("HUB_READY_PRACTICE_TITLE"), "OefenEinde")
+	_km_eind_kaart(kolom, tr("HUB_READY_PRACTICE_END"))
+
+
+func _km_eind_kaart(kolom: VBoxContainer, tekst: String) -> void:
+	_ruimte(kolom)
+	var kaart := PanelContainer.new()
+	kaart.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
+		Vector2(26, 26), Vector4(_u(18), _u(16), _u(18), _u(16))))
+	kolom.add_child(kaart)
+	var uitleg := HubAssets.tekst(tekst, _px(11), HubAssets.INKT)
+	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kaart.add_child(uitleg)
+	var knoppen := HBoxContainer.new()
+	knoppen.alignment = BoxContainer.ALIGNMENT_CENTER
+	knoppen.add_theme_constant_override("separation", _px(12))
+	kolom.add_child(knoppen)
+	if _oefenen:
+		var opnieuw := _knop(tr("HUB_READY_AGAIN"), "", func() -> void:
+			CampaignBridge.klaar_oefenen = true
+			get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
+		opnieuw.name = "KmOpnieuwKnop"
+		opnieuw.custom_minimum_size = Vector2(_u(180), _u(40))
+		knoppen.add_child(opnieuw)
+	var menu := _rode_knop(tr("HUB_MAIN_MENU").to_upper(), "KmMenuKnop", func() -> void:
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn"))
+	menu.custom_minimum_size = Vector2(_u(180), _u(44))
+	knoppen.add_child(menu)
+	_ruimte(kolom)
 
 
 ## Een aftelbalk die van vol naar leeg loopt, gerekend vanaf `start_ms`: dan
