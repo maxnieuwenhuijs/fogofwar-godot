@@ -1,5 +1,51 @@
 # Fog of War — Work In Progress & Context
 
+## 30 september -- F6.0 P4: bots op punten (knoppen, trainer, meetketen)
+
+Max: "en?" (na P1-P3; de F7-datarun van 29 september lag er).
+
+- **De nacht van 29 september (F7):** het orakel uit 1860 gemeten duels is
+  bruikbaar (Brier 0,169). De campagnetrainer haalde in 17 generaties 3
+  adopties; het verstand leerde vooral "kies goede matchups" (`w_matchup`
+  0,63) en wint 52-54% van de handbots (doel >55%). Nog niet op echte duels
+  nagemeten; staat lokaal aan (`data/campagne_verstand.json`, niet gecommit).
+- **Twee knoppen van eigenbelang** (`w_sparen`, `w_rivaal`, maal de druk =
+  1 - vijand/eigen). `CampaignAgent.zaai_plekken` rekent de zaaiplek zoals
+  `CReducer.seed_volgorde` (roem, CP, pool, id), uit de teamsaldi van de view.
+  Rivaal: bij w x druk >= 0,5 geen versterkingen voor wie boven je staat
+  (eronder achteraan in de rij), en in de raad een bonus op hem plus een
+  omgekeerde matchup-term (liefst tegen een vijand waar hij van verliest).
+  Op 0 dezelfde keuzes en evenveel trekkingen (getest).
+- **Fitness "punten"** in de campagnetrainer (`meet`, `speel_punten`):
+  gemengde stoelen om en om, per seed ook omgedraaid; adoptie vraagt ook een
+  positief gemiddeld verschil (de rooktest had een kandidaat die vaker won
+  maar gemiddeld verloor). `sleutels`: de teamtrainer laat de nieuwe knoppen
+  met rust, dus zijn loting blijft gelijk. `start`: de puntentrainers beginnen
+  bij het teamverstand en schrijven dat meteen weg, anders meet een meting na
+  een nacht zonder adoptie de handbots.
+- **Arena:** `verstand_pad` per team, `per_stoel`, en per campagne `punten`
+  per stoel (met `tabel`), `burgeroorlog_spelers`, `donatie_rondes`; met
+  `meet_raad` speelt hij het log na en telt hij wie de raad stuurde
+  (roemleider, winkans onder 40% volgens het orakel).
+- **Meetketen voor Max:** `tools/punten_meting.ps1` en de paneelknop "Punten
+  meten (3 tabellen)" (kader Campagnebots, derde rij; het paneel is 42 px
+  hoger). Drie trainers tegelijk (een kern elk), dan vijf metingen van 1000
+  campagnes, dan `tools/campagne/punten_rapport.py` -> `rapport.md`.
+- **Proef zonder training:** eigenbelang loont niet (44-48% van de campagnes,
+  0 tot -0,5 punt per stoel, bij elke kroonfactor) en kost het team niets
+  (49-52% teamwinst).
+- **Nulmeting** (`results/punten_20260930_0934`, 1000 campagnes elk):
+  burgeroorlog 60% met de handbots (gem 3,2 spelers, 58% met 3+),
+  43% met het teamverstand (gem 2,8, 42% met 3+). Het plan wil 70%
+  en meestal 3+. In 57% van de campagnes houdt het winnende team met het
+  teamverstand een speler over: die wordt kampioen zonder strijd. Dat is de
+  eerste knoop, niet de kroonfactor.
+- Checks: CampaignTests 403 (was 343; `test_p4_*`: zaaiplek = reducer, druk,
+  knoppen op 0 veranderen niets, rivaal en sparen doen wat ze zeggen, de
+  puntenfitness is symmetrisch en de arena telt, trainer-sleutels en start;
+  met een nep-orakel in de test, een campagne van 16 in milliseconden), de
+  volle batterij 2664 geslaagd, 0 mislukt (was 2604).
+
 ## 29 september -- F6.0 P1-P3: punten in de core en in solo
 
 Max: "doe maar" (op P1-P3 uit het puntenplan).

@@ -878,3 +878,192 @@ func test_f6_bot_kampioen_bedankt_leesbaar() -> void:
 	if rat >= 0:
 		c.winnaar = rat
 		assert_eq(driver.bot_dank_keuze(), -1, "de rat bedankt niemand")
+
+
+# --- F6.0-P4: bots op punten (docs/F6-punten-masterplan.md hoofdstuk 8) --------
+
+## De zaaiplek die een bot rekent is die van de reducer: roem, CP, pool, id.
+func test_p4_zaai_plekken_zoals_de_reducer() -> void:
+	var c := _mini()
+	c._boek("punten", 2, 0, 0, 0, 0, 3)  # 2 de meeste roem
+	c._boek("cp", 1, 0, 0, 0, 4, 0)      # 1 meer CP dan 0
+	c._boek("donate", 4, 2, 0, 0, 0, 0)  # 4 twee soldaten meer dan 3 en 5
+	for team in [0, 1]:
+		var kijker: int = 0 if team == 0 else 3
+		var plekken: Dictionary = CampaignAgent.zaai_plekken(CView.for_player(c, kijker), team)
+		var volgorde: Array = CReducer.seed_volgorde(c, c.actieve_leden(team))
+		for i in volgorde.size():
+			assert_eq(int(plekken[int(volgorde[i])]), i + 1, "plek %d van team %d" % [i + 1, team])
+	assert_eq(CReducer.seed_volgorde(c, c.actieve_leden(0)), [2, 1, 0])
+	assert_eq(CReducer.seed_volgorde(c, c.actieve_leden(1)), [4, 3, 5], "gelijk: laagste id eerst")
+	assert_eq(_qc_bot(0, 1.0, 1).plek(CView.for_player(c, 0), 0), 3)
+
+
+## Druk: 0 zolang de vijand minstens zo groot is, 1 als hij weg is.
+func test_p4_druk() -> void:
+	var c := _mini()
+	var bot := _qc_bot(1, 1.0, 1)
+	assert_eq(bot.druk(CView.for_player(c, 1)), 0.0, "even groot: geen druk")
+	c.spelers[5].status = "uitgevallen"
+	assert_true(absf(bot.druk(CView.for_player(c, 1)) - 1.0 / 3.0) < 0.001, "3 tegen 2: een derde")
+	c.spelers[4].status = "uitgevallen"
+	assert_true(absf(bot.druk(CView.for_player(c, 1)) - 2.0 / 3.0) < 0.001, "3 tegen 1: twee derde")
+	c.spelers[3].status = "uitgevallen"
+	assert_eq(bot.druk(CView.for_player(c, 1)), 1.0, "de vijand is weg")
+	var d := _mini()
+	d.spelers[0].status = "uitgevallen"
+	d.spelers[2].status = "uitgevallen"
+	assert_eq(bot.druk(CView.for_player(d, 1)), 0.0, "de vijand is groter: geen druk, niet negatief")
+
+
+## De eigenbelang-knoppen op 0 (of afwezig): dezelfde keuzes en precies
+## evenveel trekkingen. Zo speelt een verstand van voor P4 als voorheen.
+func test_p4_eigenbelang_op_nul_verandert_niets() -> void:
+	var c := _mini()
+	c._boek("punten", 0, 0, 0, 0, 0, 5)
+	c.spelers[5].status = "uitgevallen"  # er is druk
+	var basis := {"w_geef": 0.3, "w_houden": 0.2, "w_ruil": 0.4}
+	var nul := basis.duplicate()
+	nul["w_sparen"] = 0.0
+	nul["w_rivaal"] = 0.0
+	for seed_val in [1, 2, 3, 4]:
+		var a := _qc_bot(1, 1.0, seed_val)
+		var b := _qc_bot(1, 1.0, seed_val)
+		a.verstand = basis
+		b.verstand = nul
+		var cview: Dictionary = CView.for_player(c, 1)
+		assert_eq(a.kies_nominatie(cview), b.kies_nominatie(cview), "zelfde stem")
+		assert_eq(a.rng.randf(), b.rng.randf(), "evenveel trekkingen")
+	_stem_unaniem(c, 0, 3)
+	for seed_val in [1, 2]:
+		var a := _qc_bot(1, 1.0, seed_val)
+		var b := _qc_bot(1, 1.0, seed_val)
+		a.verstand = basis
+		b.verstand = nul
+		var cview: Dictionary = CView.for_player(c, 1)
+		assert_eq(a.kies_donaties(cview), b.kies_donaties(cview), "zelfde donaties")
+		assert_eq(a.rng.randf(), b.rng.randf(), "evenveel trekkingen")
+
+
+## w_rivaal: geen versterkingen voor wie boven je staat, wel voor wie onder je
+## staat. Zonder druk (de vijand even groot) geeft hij gewoon.
+func test_p4_rivaal_geeft_niet_aan_wie_boven_hem_staat() -> void:
+	var c := _mini()
+	c._boek("punten", 0, 0, 0, 0, 0, 5)  # 0 staat boven 1
+	c._boek("punten", 2, 0, 0, 0, 0, 9)  # 2 staat boven 0
+	_stem_unaniem(c, 0, 3)
+	assert_eq(c.fase, CState.Fase.DONATIE)
+	var rivaal := {"w_rivaal": 2.0}
+	var een := _qc_bot(1, 1.0, 3)
+	een.verstand = rivaal
+	assert_eq(int(een.kies_donaties(CView.for_player(c, 1))[0].naar), 0, "zonder druk: gewoon aan de vechter")
+	c.spelers[5].status = "uitgevallen"
+	c.spelers[4].status = "uitgevallen"
+	assert_eq(een.kies_donaties(CView.for_player(c, 1)), [], "1 geeft niets aan 0: die staat boven hem")
+	var twee := _qc_bot(2, 1.0, 3)
+	twee.verstand = rivaal
+	var gift: Array = twee.kies_donaties(CView.for_player(c, 2))
+	assert_eq(gift.size(), 1)
+	assert_eq(int(gift[0].naar), 0, "2 geeft wel aan 0: die staat onder hem")
+	var trouw := _qc_bot(1, 1.0, 3)
+	assert_eq(int(trouw.kies_donaties(CView.for_player(c, 1))[0].naar), 0, "zonder w_rivaal: aan de vechter")
+
+
+## w_sparen: naarmate de oorlog gewonnen raakt geef je minder weg.
+func test_p4_sparen_geeft_minder() -> void:
+	var c := _mini()
+	_stem_unaniem(c, 0, 3)
+	var gewoon := _qc_bot(1, 1.0, 3)
+	var spaarder := _qc_bot(1, 1.0, 3)
+	spaarder.verstand = {"w_sparen": 1.0}
+	assert_eq(spaarder.kies_donaties(CView.for_player(c, 1)), gewoon.kies_donaties(CView.for_player(c, 1)),
+		"zonder druk: evenveel")
+	c.spelers[5].status = "uitgevallen"
+	c.spelers[4].status = "uitgevallen"
+	var g: Array = gewoon.kies_donaties(CView.for_player(c, 1))
+	var s: Array = spaarder.kies_donaties(CView.for_player(c, 1))
+	var stuks := func(lijst: Array) -> int:
+		return 0 if lijst.is_empty() else int(lijst[0].inf) + int(lijst[0].cav)
+	assert_true(stuks.call(s) < stuks.call(g), "met druk geeft de spaarder minder (%d tegen %d)" % [
+		stuks.call(s), stuks.call(g)])
+
+
+## w_rivaal in de raad: wie boven je staat, stuur je het duel in.
+func test_p4_rivaal_stuurt_de_leider_de_raad_in() -> void:
+	var c := _mini()
+	c._boek("punten", 0, 0, 0, 0, 0, 5)  # 0 is de roemleider
+	c.spelers[5].status = "uitgevallen"
+	c.spelers[4].status = "uitgevallen"
+	for seed_val in [1, 2, 3, 4, 5]:
+		var bot := _qc_bot(1, 1.0, seed_val)
+		bot.verstand = {"w_rivaal": 2.0}
+		assert_eq(int(bot.kies_nominatie(CView.for_player(c, 1)).eigen), 0, "1 stuurt de leider (seed %d)" % seed_val)
+		var leider := _qc_bot(0, 1.0, seed_val)
+		leider.verstand = {"w_rivaal": 2.0}
+		assert_eq(leider.kies_nominatie(CView.for_player(c, 0)), _qc_bot(0, 1.0, seed_val).kies_nominatie(
+			CView.for_player(c, 0)), "de leider zelf heeft geen rivaal en stemt gewoon")
+
+
+## Een klein nep-orakel voor de tests: wie meer reserve heeft wint vaker, de
+## verliezer zet alles in en verliest het. Op een pad, want de arena laadt het
+## orakel van een pad.
+func _p4_orakel() -> String:
+	var rijen: Array = []
+	for ra in [0, 3, 6, 9, 12, 15]:
+		for rb in [0, 3, 6, 9, 12, 15]:
+			var p: float = clampf(0.5 + 0.1 * float(ra - rb) / 3.0, 0.1, 0.9)
+			for i in 10:
+				var w: int = 1 if float(i) < p * 10.0 else 2
+				var inzet_a: int = ra if w == 2 else ra / 2
+				var inzet_b: int = rb if w == 1 else rb / 2
+				rijen.append([0, 0, ra, rb, 0, 0, w, "eliminatie", 5,
+					inzet_a, 0, 0, inzet_b, 0, 0, 0, 0, 0, 0,
+					inzet_a if w == 2 else 0, 0, 0, inzet_b if w == 1 else 0, 0, 0,
+					ra, 0, 0, rb, 0, 0])
+	var pad := "user://p4_test_orakel.json"
+	var f := FileAccess.open(pad, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"rijen": rijen, "duels": rijen.size()}))
+	f.close()
+	return pad
+
+
+## De puntenfitness: hetzelfde verstand in beide helften geeft precies de
+## helft en geen verschil (de stoelen wisselen per seed), en de arena telt de
+## punten per stoel, de burgeroorlog en de raad.
+func test_p4_puntenfitness_en_arena() -> void:
+	var speel := {"spelers": 16, "duel_modus": "orakel", "orakel": _p4_orakel(), "duel_log": false,
+		"max_stappen": 400, "tabel": {"kampioen": 60}, "meet_raad": true}
+	var v := {"w_geef": 0.2, "w_houden": 0.1}
+	var p: Dictionary = CampagneTrainer.speel_punten(speel, v, v, [11])
+	assert_eq(int(p.n), 2, "twee campagnes per seed, beide uitgespeeld")
+	assert_eq(float(p.kans), 0.5, "zelfde verstand: precies de helft")
+	assert_eq(float(p.verschil), 0.0, "en geen verschil")
+	var uit: Dictionary = CampagneArena.speel_campagne(speel, 11,
+		[{"naam": "a", "verstand": v}, {"naam": "b", "verstand": v}])
+	var s: Dictionary = uit.samenvatting
+	assert_true(bool(s.klaar), "uitgespeeld")
+	assert_eq((s.punten as Dictionary).size(), 16, "punten voor elke stoel")
+	assert_true(int(s.punten[str(int(s.winnaar))]) >= 85, "de kampioen: 5 + 20 + 60 van deze tabel")
+	assert_true(int(s.nominaties) > 0, "de raad koos duels")
+	assert_true(int(s.leider_gestuurd) <= int(s.nominaties) and int(s.leider_slecht) <= int(s.leider_gestuurd)
+		and int(s.slecht_gestuurd) <= int(s.nominaties), "de tellingen passen in elkaar")
+	assert_true(int(s.donatie_rondes) > 0, "er waren donatierondes")
+	if bool(s.burgeroorlog):
+		assert_true(int(s.burgeroorlog_spelers) >= 2, "een burgeroorlog heeft minstens twee spelers")
+
+
+## De trainer: welke knoppen hij standaard verschuift, en waar hij begint.
+func test_p4_trainer_sleutels_en_start() -> void:
+	var team: Array = CampagneTrainer.standaard_sleutels("team")
+	var punten: Array = CampagneTrainer.standaard_sleutels("punten")
+	assert_false(team.has("w_sparen") or team.has("w_rivaal"), "de teamtrainer laat het eigenbelang met rust")
+	assert_true(punten.has("w_sparen") and punten.has("w_rivaal"), "de puntentrainer niet")
+	assert_eq(punten.size(), CampaignAgent.VERSTAND.size())
+	var pad := "user://p4_test_start.json"
+	var f := FileAccess.open(pad, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"versie": 1, "gewichten": {"w_matchup": 0.7, "w_rivaal": 0.5}}))
+	f.close()
+	var start: Dictionary = CampagneTrainer._start({"start": pad}, "user://bestaat_niet_p4.json")
+	assert_eq(float(start.w_matchup), 0.7, "zonder uitvoer begint hij bij het startverstand")
+	assert_eq(float(start.w_rivaal), 0.5)
+	assert_eq(float(start.w_sparen), 0.0, "ontbrekende knoppen op 0")

@@ -72,9 +72,13 @@ anders leert hij de gaten in het orakel in plaats van de campagne.
   de kampioen team B; dezelfde seeds nog eens met de teams gewisseld. Score =
   hoe vaak het team van de kandidaat de oorlog wint (de kampioen komt uit dat
   team). Dit leert hoe een TEAM moet handelen.
-- **Eigen belang (daarna, P3):** gemengde teams (vier stoelen kandidaat, vier
-  kampioen) en dan de kans dat de kampioen van de campagne uit de
-  kandidaatgroep komt. Dit leert wanneer geven je eigen finalist bewapent.
+- **Eigen belang (gebouwd 30 september als F6.0-P4):** fitness `"punten"`.
+  Gemengde teams (vier stoelen kandidaat, vier kampioen, om en om, per seed ook
+  andersom) en dan welke helft gemiddeld meer punten haalt volgens de
+  puntentabel (`docs/F6-punten-masterplan.md` hoofdstuk 8). De kroon weegt
+  daarin het zwaarst, dus dit leert ook wanneer geven je eigen finalist
+  bewapent. Twee knoppen erbij, alleen voor deze fitness: `w_sparen` en
+  `w_rivaal`.
 - **Zoeker:** CMA-lite zoals de duel-trainer (populatie 16-24, relatieve
   adoptiepoort, convergentiecheck), reproduceerbaar via (git-sha, regels, seed).
 - **CHECK (masterplan F7.2):** de kampioen van generatie N verslaat die van

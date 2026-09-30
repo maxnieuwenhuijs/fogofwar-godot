@@ -254,6 +254,50 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
   Geen eindeloze sweeps.
 - **Eerst nodig**: het duel-orakel uit de F7-datarun.
 
+### Gebouwd (P4, 30 september)
+
+- **Twee knoppen van eigenbelang** in het verstand van de campagnebots:
+  `w_sparen` (minder weggeven) en `w_rivaal` (teamgenoten die boven je staan
+  in de zaaiing krijgen geen versterkingen meer, en in de raad stuur je ze het
+  duel in, liefst tegen een vijand waar ze van verliezen). Beide wegen met de
+  druk: 1 min vijand gedeeld door eigen team, dus 0 zolang de vijand even groot
+  is. Op 0 speelt alles precies als voorheen.
+- **Fitness "eigen punten"** zoals hierboven, met een verschil: per seed nog
+  eens met de helften omgedraaid (de stoelen verschillen in factie), en een
+  campagne telt als de kandidaat-helft gemiddeld meer punten haalde. Adoptie
+  vraagt ook een positief gemiddeld verschil.
+- **De drie tabellen** schalen de hele kroonpot mee: kampioen 20, 40, 60,
+  finale de helft, halve finale een kwart, eerder een achtste.
+- **Starten (Max):** `tools/punten_meting.ps1` of de paneelknop "Punten meten
+  (3 tabellen)": drie trainers tegelijk vanaf het teamverstand, dan vijf
+  metingen van 1000 campagnes (hand, team, k1, k2, k3) en een rapport met de
+  doelen van hierboven (`rapport.md`).
+
+### Eerste metingen (30 september, op het orakel van 29 september)
+
+- **Proef zonder training** (200 campagnes per regel, gemengde stoelen tegen
+  het teamverstand): geen van de met de hand gekozen varianten loont. Sparen,
+  rivaal en beide samen halen in 44 tot 48% van de campagnes meer punten dan
+  de trouwe helft, gemiddeld 0 tot 0,5 punt minder per stoel, bij elke
+  kroonfactor. Als heel team kost het ook niets: 49 tot 52% teamwinst.
+- **Nulmeting** (1000 campagnes, alle stoelen hetzelfde verstand):
+
+  | | handbots | teamverstand |
+  |---|---|---|
+  | burgeroorlog | 60% | 43% |
+  | spelers erin (gem) | 3,2 | 2,8 |
+  | daarvan 3 of meer | 58% | 42% |
+  | winnend team houdt 1 speler over | 40% | 57% |
+  | donaties per donatieronde (punten) | 1,1 | 1,0 |
+  | raad stuurt de roemleider | 48% | 58% |
+  | rondes (gem) | 8,1 | 8,9 |
+
+- **Wat dat zegt:** de burgeroorlog haalt het doel (70%, meestal 3 of meer)
+  nu al niet, ook zonder puntenbots. Het winnende team dunt zo uit dat de
+  laatste man vaak zonder strijd kampioen wordt. Dan maakt de kroonfactor weinig
+  uit: zonder burgeroorlog is er geen zaaiing om voor te pesten. Eerst die knoop
+  (een regelvraag voor Max), dan pas de tabel kiezen.
+
 ---
 
 ## 9. Bouwstappen
@@ -263,7 +307,7 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
 | **P1** ✓ | Uitslag en puntentabel in de core, `uitval` in CState, actie `DANK` | gebouwd 29 sept | Unit-tests per regel uit §2; het voorbeeld geeft precies 79 / 55 / 44 / 16 / 0; oude campagne-logs folden ongewijzigd |
 | **P2** ✓ | Solo: eindscherm met je punten per regel (iconen), spelregelkaart "Punten", schaduwbracket vanaf ronde 3 | gebouwd 29 sept | `-- shot campaign_hub einde\|punten\|regels` 0 fouten; preview = puntentabel |
 | **P3** ✓ | Pesterij in solo: rivaliteitszinnen (met bot-antwoorden), stunt, dank kiezen op het eindscherm, koningsmaker, badges | gebouwd 29 sept | CampaignTests; bots antwoorden deterministisch per seed; `-- shot campaign_hub dank` |
-| **P4** | Bots op punten: fitness "eigen punten", drie tabellen meten | na de F7-datarun | Rapport met de metingen uit §8 per tabel; Max kiest |
+| **P4** ◐ | Bots op punten: fitness "eigen punten", drie tabellen meten | gebouwd 30 sept, de nacht start Max | Rapport met de metingen uit §8 per tabel; Max kiest |
 | **P5** | Tabel v1 vastzetten (`punten_versie` 1) | besluit Max | Max kiest |
 | **P6** | Server: tabellen, boekingen vanuit de worker | na F5.1 | Integratietest: campagne klaar → boekingen; dubbel insturen → niet dubbel; vervalst log → afgekeurd |
 | **P7** | Ladder: seizoen, leagues, inleg, ranglijsten, fun-borden (F6.2, F6.3) | na P6 | Seizoenswissel-job op een testseizoen; `-- shot leaderboard` |

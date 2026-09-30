@@ -29,6 +29,12 @@ var toezeggingen: Dictionary = {}
 ##               dus de gierigaard (0) blijft gierig: karakter blijft karakter
 ##   w_houden    houd meer voor jezelf als je deze ronde zelf vecht
 ##   w_ruil      ruil CP boven een reserve om in versterkingen (0 = nooit)
+## F6.0-P4 (30 september), eigenbelang voor de burgeroorlog. Beide wegen met de
+## druk (0 zolang de vijand minstens zo groot is als je team, 1 als hij weg
+## is): vroeg help je je team, vlak voor de burgeroorlog jezelf.
+##   w_sparen    geef minder weg naarmate de oorlog gewonnen raakt
+##   w_rivaal    werk tegen teamgenoten die boven je staan in de zaaiing: geen
+##               versterkingen voor ze, en stuur ze in de raad het duel in
 var verstand: Dictionary = {}
 ## Het duel-orakel voor de winkans (DuelOrakel; null = die termen vallen weg).
 var orakel = null
@@ -40,7 +46,11 @@ const VERSTAND := {
 	"w_geef": [-0.9, 2.0],
 	"w_houden": [0.0, 1.0],
 	"w_ruil": [0.0, 1.0],
+	"w_sparen": [0.0, 1.0],
+	"w_rivaal": [0.0, 2.0],
 }
+## De knoppen van het eigenbelang (F6.0-P4): alleen de puntentrainer verschuift ze.
+const VERSTAND_EIGENBELANG := ["w_sparen", "w_rivaal"]
 const VERSTAND_PAD := "res://data/campagne_verstand.json"
 static var _verstand_cache = null
 
@@ -114,6 +124,61 @@ static func pool_uit_ledger(cview: Dictionary, speler: int) -> int:
 	return som
 
 
+## Hoe dicht de oorlog bij winst is voor mijn team (F6.0-P4): 0 zolang de
+## vijand minstens zo groot is als mijn team, 1 als hij weg is (1 - vijand/eigen).
+func druk(cview: Dictionary) -> float:
+	var mijn_team: int = int(cview.spelers[str(speler_id)].team)
+	var eigen := 0
+	var vijand := 0
+	for id_str in cview.spelers:
+		var sp: Dictionary = cview.spelers[id_str]
+		if String(sp.status) != "actief":
+			continue
+		if int(sp.team) == mijn_team:
+			eigen += 1
+		else:
+			vijand += 1
+	return clampf(1.0 - float(vijand) / float(maxi(1, eigen)), 0.0, 1.0)
+
+
+## De plekken in de zaaiing van de burgeroorlog als die vandaag begon, binnen
+## een team: {id: plek} met 1 = bovenaan. Roem, dan CP, dan pool, dan id, net
+## als CReducer.seed_volgorde. Het eigen team ziet die saldi (team-only).
+static func zaai_plekken(cview: Dictionary, team: int) -> Dictionary:
+	var leden: Array = []
+	var score: Dictionary = {}
+	for id_str in cview.spelers:
+		var sp: Dictionary = cview.spelers[id_str]
+		if int(sp.team) != team or String(sp.status) != "actief":
+			continue
+		var id := int(String(id_str))
+		leden.append(id)
+		var cp = sp.get("cp", 0)
+		var pool = sp.get("pool", null)
+		var stuks: int = 0
+		if pool is Dictionary:
+			stuks = int(pool.get("inf", 0)) + int(pool.get("cav", 0)) + int(pool.get("art", 0))
+		else:
+			stuks = pool_uit_ledger(cview, id)
+		score[id] = [int(sp.get("punten", 0)), 0 if cp is String else int(cp), stuks]
+	leden.sort_custom(func(a, b) -> bool:
+		var sa: Array = score[a]
+		var sb: Array = score[b]
+		for i in 3:
+			if int(sa[i]) != int(sb[i]):
+				return int(sa[i]) > int(sb[i])
+		return a < b)
+	var uit: Dictionary = {}
+	for i in leden.size():
+		uit[leden[i]] = i + 1
+	return uit
+
+
+## Mijn plek in de zaaiing van mijn team (zaai_plekken).
+func plek(cview: Dictionary, id: int) -> int:
+	return int(zaai_plekken(cview, int(cview.spelers[str(id)].team)).get(id, 0))
+
+
 ## Een gewicht uit het profiel (ook voor de driver: antwoorden in de quick chat).
 func gewicht(sleutel: String, standaard: float = 0.0) -> float:
 	return _w(sleutel, standaard)
@@ -172,14 +237,37 @@ func kies_nominatie(cview: Dictionary) -> Dictionary:
 		if score > beste_es:
 			beste_es = score
 			beste_eigen = kandidaat
+	# F6.0-P4: wie boven me staat in de zaaiing mag het duel in (hij riskeert
+	# zijn reserves, ik rust), zwaarder naarmate de oorlog gewonnen raakt.
+	var rivalen: Array = []
+	var w_r := _v("w_rivaal")
+	if w_r > 0.0:
+		var d := druk(cview)
+		if d > 0.0:
+			var plekken: Dictionary = zaai_plekken(cview, mijn_team)
+			var mijn_plek: int = int(plekken.get(speler_id, 0))
+			for e in eigen_kandidaten:
+				if e != speler_id and int(plekken.get(e, 0)) < mijn_plek:
+					rivalen.append(e)
+					es_score[e] = float(es_score[e]) + w_r * d * 20.0
+			if not rivalen.is_empty() and orakel == null:
+				var beste_r: float = -1e18
+				for e in eigen_kandidaten:
+					if float(es_score[e]) > beste_r:
+						beste_r = float(es_score[e])
+						beste_eigen = e
 	# Verstand (F7.2a): kies het PAAR, met de winkans uit het orakel erbij.
+	# Een rivaal (P4) liefst tegen een vijand waar hij van verliest.
 	var w_m := _v("w_matchup")
-	if w_m != 0.0 and orakel != null:
+	if (w_m != 0.0 or not rivalen.is_empty()) and orakel != null:
 		var beste_paar: float = -1e18
+		var d_r: float = druk(cview) if not rivalen.is_empty() else 0.0
 		for e in eigen_kandidaten:
 			for v in vijand_kandidaten:
-				var score: float = float(es_score[e]) + float(vs_score[v]) \
-					+ w_m * 20.0 * (winkans(cview, e, v) - 0.5)
+				var kans: float = winkans(cview, e, v)
+				var score: float = float(es_score[e]) + float(vs_score[v]) + w_m * 20.0 * (kans - 0.5)
+				if rivalen.has(e):
+					score -= w_r * d_r * 20.0 * (kans - 0.5)
 				if score > beste_paar:
 					beste_paar = score
 					beste_eigen = e
@@ -203,6 +291,12 @@ func kies_donaties(cview: Dictionary) -> Array:
 	# Verstand: naar verhouding meer of minder geven, en meer houden als je
 	# zelf vecht. Met een leeg verstand verandert hier niets.
 	vrijgevigheid = clampf(vrijgevigheid * (1.0 + _v("w_geef")), 0.0, 1.0)
+	# F6.0-P4: vlak voor de burgeroorlog houd je meer voor jezelf.
+	var d_eigen: float = 0.0
+	if _v("w_sparen") > 0.0 or _v("w_rivaal") > 0.0:
+		d_eigen = druk(cview)
+	if _v("w_sparen") > 0.0:
+		vrijgevigheid *= clampf(1.0 - _v("w_sparen") * d_eigen, 0.0, 1.0)
 	if _v("w_houden") > 0.0:
 		for duel in cview.duels:
 			if int(duel.p1) == speler_id or int(duel.p2) == speler_id:
@@ -226,6 +320,19 @@ func kies_donaties(cview: Dictionary) -> Array:
 			var f: int = int(doelen[i])
 			waarde[f] = w_nood * 100.0 * _gift_winst(cview, f, gift) - float(i)
 		doelen.sort_custom(func(a, b) -> bool: return float(waarde[a]) > float(waarde[b]))
+	# F6.0-P4: wie boven me staat in de zaaiing, tref ik straks in de
+	# burgeroorlog. Die schuiven achteraan, en bij genoeg druk vallen ze af.
+	if _v("w_rivaal") > 0.0 and d_eigen > 0.0 and not doelen.is_empty():
+		var plekken: Dictionary = zaai_plekken(cview, mijn_team)
+		var mijn_plek: int = int(plekken.get(speler_id, 0))
+		var vrienden: Array = []
+		var rivalen: Array = []
+		for f in doelen:
+			if int(plekken.get(int(f), 0)) < mijn_plek:
+				rivalen.append(f)
+			else:
+				vrienden.append(f)
+		doelen = vrienden if _v("w_rivaal") * d_eigen >= 0.5 else vrienden + rivalen
 	# Toegezegd in de quick chat (Versterking nodig!, Doneer aan X!): die
 	# teamgenoot eerst, ook als hij deze ronde niet vecht.
 	var beloofd: Array = []

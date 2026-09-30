@@ -44,7 +44,7 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
 # Nooit hoger dan het scherm; wat er niet op past, scrolt (25 september: er
 # kwam een kader bij voor de campagnebots).
-$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1216, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
+$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1258, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
 $form.AutoScroll = $true
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
@@ -577,7 +577,7 @@ $kadModellen.Controls.Add($btnRetexture)
 # --- 8. Campagnebots: hoe de bots handelen in het campagnemenu (F7.2,
 # docs/F7-campagnetrainer.md). Eerst duels meten (de data van het orakel),
 # dan trainen op dat orakel. De trainer schrijft data/campagne_verstand.json.
-$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 952 124
+$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 952 166
 Maak-Uitleg $kadCampagne "Eerst duels meten (orakel), dan trainen. Niet naast een training."
 $numCampMeet = Maak-Getal $kadCampagne 205 60 5 600 "minuten"
 $null = Maak-Knop $kadCampagne "Campagne-duels meten" {
@@ -615,9 +615,38 @@ $btnCampTrain.Add_Click({
 $kadCampagne.Controls.Add($btnCampTrain)
 $kadCampagne.Controls.Add($numCampTrain)
 $kadCampagne.Controls.Add($lblCampTrain)
+# Derde rij (F6.0-P4, 30 september): bots op hun EIGEN punten laten spelen,
+# drie puntentabellen naast elkaar, daarna meten en een rapport
+# (tools/punten_meting.ps1, docs/F6-punten-masterplan.md hoofdstuk 8).
+$btnPunten = New-Object System.Windows.Forms.Button
+$btnPunten.Text = "Punten meten (3 tabellen)"
+$btnPunten.Location = New-Object System.Drawing.Point(12, 122)
+$btnPunten.Size = New-Object System.Drawing.Size(185, 34)
+$btnPunten.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$numPunten = New-Object System.Windows.Forms.NumericUpDown
+$numPunten.Location = New-Object System.Drawing.Point(205, 127)
+$numPunten.Size = New-Object System.Drawing.Size(52, 26)
+$numPunten.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$numPunten.Minimum = 10
+$numPunten.Maximum = 900
+$numPunten.Value = 420
+$lblPunten = New-Object System.Windows.Forms.Label
+$lblPunten.Text = "minuten (trainers tegelijk)"
+$lblPunten.Location = New-Object System.Drawing.Point(259, 131)
+$lblPunten.Size = New-Object System.Drawing.Size(160, 18)
+$lblPunten.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$btnPunten.Add_Click({
+    if (-not (Bevestig-BijDrukte)) { return }
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$repo\tools\punten_meting.ps1",
+        "-Minuten", [int]$numPunten.Value)
+})
+$kadCampagne.Controls.Add($btnPunten)
+$kadCampagne.Controls.Add($numPunten)
+$kadCampagne.Controls.Add($lblPunten)
 
 # --- 9. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 1082 86
+$kadStop = Maak-Kader "Noodrem" 1124 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots

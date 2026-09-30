@@ -19,6 +19,15 @@ extends RefCounted
 #     "duel_modus": "orakel" (met "orakel": "res://data/duel_orakel.json")
 #     trekt de duels uit het duel-orakel in plaats van ze uit te spelen: een
 #     campagne kost dan milliseconden (F7.1b).
+#     Een team kan zijn verstand ook uit een bestand halen: "verstand_pad":
+#     "res://data/campagne_verstand_k2.json" (F6.0-P4).
+#     F6.0-P4, punten: elke regel draagt "punten" ({stoel: totaal}) volgens
+#     de puntentabel, met "tabel" in de config als afwijking van tabel v1
+#     (bv {"kampioen": 20}), en "burgeroorlog_spelers" en "donatie_rondes".
+#     "meet_raad": true speelt daarna het campagnelog na en telt wie de raad
+#     stuurde (nominaties, leider_gestuurd, leider_slecht, slecht_gestuurd:
+#     de roemleider van het team, en een winkans onder de 40% volgens het
+#     orakel). Dat kost ongeveer een derde extra, dus alleen in metingen.
 #     Uitvoer: campagnes.jsonl (een regel per campagne) en duels.jsonl.
 #
 #   "soort": "duels"  losse campagne-duels over de invoerruimte (de data van het
@@ -36,6 +45,10 @@ extends RefCounted
 ## Via preload, niet via de klassenaam: dan werkt de arena ook voordat de
 ## editor de klasse heeft ingeschreven.
 const _Orakel := preload("res://scripts/training/duel_orakel.gd")
+const _Uitslag := preload("res://core/campaign/uitslag.gd")
+const _Punten := preload("res://core/campaign/puntentabel.gd")
+## Onder deze winkans is een duel een slechte matchup (meet_raad).
+const SLECHTE_KANS := 0.4
 
 
 static func run(config: Dictionary, out_map: String, seed_offset: int, git_sha: String) -> Dictionary:
@@ -87,8 +100,11 @@ static func _run_campagnes(config: Dictionary, out_map: String, seed_offset: int
 
 
 ## Een campagne met alleen bots; `indeling` = [team 0, team 1], elk
-## {"naam", "gewichten"}. Geeft {samenvatting, duels}.
-static func speel_campagne(config: Dictionary, seed_val: int, indeling: Array) -> Dictionary:
+## {"naam", "gewichten"}. Geeft {samenvatting, duels}. `per_stoel`
+## ({stoel: verstand}, F6.0-P4) gaat over het verstand van het team heen:
+## zo speelt de trainer gemengde teams.
+static func speel_campagne(config: Dictionary, seed_val: int, indeling: Array,
+		per_stoel: Dictionary = {}) -> Dictionary:
 	var t0 := Time.get_ticks_msec()
 	var driver := SoloDriver.new(seed_val, -1, int(config.get("spelers", 16)), "")
 	driver.duel_ai = String(config.get("duel_ai", "easy"))
@@ -110,6 +126,10 @@ static func speel_campagne(config: Dictionary, seed_val: int, indeling: Array) -
 		# verstand uit data/campagne_verstand.json dat de driver al zette).
 		if team_cfg.has("verstand"):
 			agent.verstand = team_cfg.verstand
+		elif team_cfg.has("verstand_pad"):
+			agent.verstand = CampaignAgent.laad_verstand(String(team_cfg.verstand_pad))
+		if per_stoel.has(sid):
+			agent.verstand = per_stoel[sid]
 	# De bots mogen het orakel raadplegen voor hun winkans (F7.2a).
 	var bots_orakel = driver.orakel
 	if bots_orakel == null and FileAccess.file_exists(_Orakel.STANDAARD):
@@ -139,6 +159,7 @@ static func speel_campagne(config: Dictionary, seed_val: int, indeling: Array) -
 	var test_n := 0
 	var test_vijand := 0
 	var burgeroorlog := false
+	var donatie_rondes := 0
 	for e in driver.feed:
 		var t := String(e.get("type", ""))
 		if t == "event":
@@ -157,12 +178,31 @@ static func speel_campagne(config: Dictionary, seed_val: int, indeling: Array) -
 						test_vijand += 1
 		elif t == "fase" and int(e.get("naar", -1)) == CState.Fase.BURGEROORLOG:
 			burgeroorlog = true
+		elif t == "fase" and int(e.get("naar", -1)) == CState.Fase.DONATIE:
+			donatie_rondes += 1
 	samenvatting["donaties"] = don_n
 	samenvatting["donatie_pt"] = don_pt
 	samenvatting["ruil"] = ruil_n
 	samenvatting["testamenten"] = test_n
 	samenvatting["testament_naar_vijand"] = test_vijand
 	samenvatting["burgeroorlog"] = burgeroorlog
+	samenvatting["donatie_rondes"] = donatie_rondes
+	# F6.0-P4: de punten per stoel (plan docs/F6-punten-masterplan.md §8) en
+	# hoeveel spelers de burgeroorlog haalden (de kampioen telt mee).
+	if c.fase == CState.Fase.KLAAR:
+		var uitslag: Dictionary = _Uitslag.van(c)
+		var punten := {}
+		var in_oorlog := 0
+		var lp: Dictionary = _Punten.bereken(uitslag, config.get("tabel", {}))
+		for sid in lp:
+			punten[str(sid)] = int(lp[sid].totaal)
+		for sid in uitslag:
+			if int(uitslag[sid].burgeroorlog_over) >= 1:
+				in_oorlog += 1
+		samenvatting["punten"] = punten
+		samenvatting["burgeroorlog_spelers"] = in_oorlog if burgeroorlog else 0
+	if bool(config.get("meet_raad", false)):
+		samenvatting.merge(_raad_metingen(driver, bots_orakel))
 	if kampioen >= 0:
 		# In punten (C11: soldaat 1, ruiter 2, kanon 3), niet in stuks: de
 		# getypeerde voorraad kan per soort negatief staan (ruiters gespawnd
@@ -170,6 +210,48 @@ static func speel_campagne(config: Dictionary, seed_val: int, indeling: Array) -
 		samenvatting["kampioen_pool"] = _Orakel.punten(c.pool_van(kampioen))
 		samenvatting["kampioen_cp"] = c.cp_van(kampioen)
 	return {"samenvatting": samenvatting, "duels": driver.duel_log if driver.duel_log != null else []}
+
+
+## F6.0-P4: de raad onder de loep (plan §8: "hoe vaak de teamgenoot met de
+## meeste roem in een slechte matchup wordt gestuurd"). Speelt het campagnelog
+## na op de beginstand en kijkt bij elk duel dat een raad koos wie hij stuurde:
+## de roemleider van zijn team (de #1 als de burgeroorlog nu begon), en met
+## welke winkans volgens het orakel (onder SLECHTE_KANS = een slechte matchup).
+static func _raad_metingen(driver: SoloDriver, orakel) -> Dictionary:
+	var uit := {"nominaties": 0, "leider_gestuurd": 0, "leider_slecht": 0, "slecht_gestuurd": 0}
+	var c: CState = CState.from_dict(driver.clog.meta.begin)
+	for e in driver.clog.entries:
+		var voor: int = c.duels_deze_ronde.size()
+		var res: Dictionary = CReducer.apply(c, e.action, int(e.speler))
+		if not bool(res.ok):
+			push_error("CampagneArena: het log speelt niet na op seq %d (%s)" % [int(e.seq), String(res.error)])
+			break
+		if String((e.action as Dictionary).get("type", "")) != CActions.NOMINATE \
+				or c.duels_deze_ronde.size() <= voor:
+			continue
+		# Deze stem sloot een nominatie: het nieuwe duel is {eigen, vijand}
+		# van de raad die nu aan zet was.
+		var duel: Dictionary = c.duels_deze_ronde.back()
+		var eigen: int = int(duel.p1)
+		var team: int = int(c.spelers[eigen].team)
+		var leider: int = int(CReducer.seed_volgorde(c, c.actieve_leden(team))[0])
+		var slecht: bool = orakel != null and _winkans(c, orakel, eigen, int(duel.p2)) < SLECHTE_KANS
+		uit.nominaties += 1
+		if slecht:
+			uit.slecht_gestuurd += 1
+		if eigen == leider:
+			uit.leider_gestuurd += 1
+			if slecht:
+				uit.leider_slecht += 1
+	return uit
+
+
+## Winkans van `a` tegen `b` volgens het orakel, zoals een bot hem ziet
+## (CampaignAgent.winkans): de reserve zoals de driver hem bouwt, en de CP.
+static func _winkans(c: CState, orakel, a: int, b: int) -> float:
+	return orakel.winkans(int(c.spelers[a].doctrine), int(c.spelers[b].doctrine),
+		CampaignAgent.duel_reserve(c.pool_van(a)), CampaignAgent.duel_reserve(c.pool_van(b)),
+		maxi(0, c.cp_van(a)), maxi(0, c.cp_van(b)))
 
 
 static func _archetype(driver: SoloDriver, sid: int) -> String:

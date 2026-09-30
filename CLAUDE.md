@@ -212,6 +212,25 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   "Campagnebots". Leeg verstand = de bots van juli, byte-identiek. Nieuwe
   scripts in de arena via preload, niet via class_name (headless kent een
   nieuwe klasse pas als de editor hem inschreef).
+- **Puntenbots (F6.0-P4, 30 september, `docs/F6-punten-masterplan.md` hoofdstuk
+  8):** twee knoppen van eigenbelang in het verstand, `w_sparen` (minder
+  weggeven) en `w_rivaal` (geen versterkingen voor wie boven je staat in de
+  zaaiing, en hem in de raad het duel in sturen), beide maal de druk (1 -
+  vijand/eigen, 0 zolang de vijand even groot is); de zaaiplek rekent
+  `CampaignAgent.zaai_plekken` zoals `CReducer.seed_volgorde`. Fitness
+  `"punten"` in de campagnetrainer: gemengde stoelen (per team vier en vier,
+  per seed ook andersom), score = welke helft gemiddeld meer punten haalt;
+  alleen die trainer verschuift de twee knoppen (`sleutels`), de teamtrainer
+  loot dus als voorheen. Configs `campagne_punten_k1..3.json` (kampioen 20, 40,
+  60; de kroonpot schaalt mee; `start` = het teamverstand, meteen weggeschreven
+  naar `uit`). Starten (Max, B13): `.\tools\punten_meting.ps1 [-Minuten 420]
+  [-Campagnes 1000] [-AlleenMeten]` of paneelknop "Punten meten (3 tabellen)":
+  drie trainers tegelijk, dan vijf metingen (hand, team, k1-k3; arena met
+  `verstand_pad`, `tabel`, `meet_raad`), dan `python
+  tools/campagne/punten_rapport.py results/punten_<stempel>` -> `rapport.md`
+  met de doelen uit het plan. De uitvoer `data/campagne_verstand_k*.json` is
+  meetmateriaal, geen spelverstand (het spel laadt alleen
+  `campagne_verstand.json`); apart committen.
 - **Campaign Hub (23 september, pdf `Campaign_hub` + map
   `Campaign_HUB_UI`):** `scripts/ui/campaign/campaign_hub.gd` bouwt het
   staande frame van de ontwerper in ontwerp-eenheden (564 x 981) maal S =

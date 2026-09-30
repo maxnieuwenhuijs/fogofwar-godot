@@ -1,0 +1,27 @@
+{
+  "soort": "campagnes",
+  "campagnes": 1000,
+  "base_seed": 960000,
+  "spelers": 16,
+  "duel_modus": "orakel",
+  "orakel": "res://data/duel_orakel.json",
+  "duel_log": false,
+  "meet_raad": true,
+  "tabel": {
+    "kampioen": 40,
+    "finale": 20,
+    "halve": 10,
+    "eerder": 5
+  },
+  "teams": [
+    {
+      "naam": "k2",
+      "verstand_pad": "res://data/campagne_verstand_k2.json"
+    },
+    {
+      "naam": "k2",
+      "verstand_pad": "res://data/campagne_verstand_k2.json"
+    }
+  ],
+  "wissel": false
+}
