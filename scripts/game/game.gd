@@ -499,6 +499,7 @@ func _online_meedoen() -> void:
 	rij.add_child(terug)
 	$UI.add_child(midden)
 	BEWEGING.inkom_scherm(null, midden)   # UI-beweging: alleen beeld
+	BEWEGING.klank("ui_open")
 	invoer.grab_focus()
 	terug.pressed.connect(func() -> void:
 		midden.queue_free()
@@ -663,6 +664,7 @@ func _show_audio_panel() -> void:
 	_audio_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_audio_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	# UI-beweging: het paneel ploft, de rijen komen erna (alleen beeld).
+	BEWEGING.klank("ui_open")
 	BEWEGING.inkom_scherm(null, _audio_panel)
 	BEWEGING.inkom_rij(vbox.get_children(), 0.04)
 
@@ -751,7 +753,7 @@ func _build_help_button() -> void:
 	geef_op.pressed.connect(_on_resign_pressed)
 	$UI.add_child(geef_op)
 	# UI-beweging: de knoppenkolom ploft na elkaar in (de rust-alpha 0,9 blijft).
-	BEWEGING.plof(help, 0.05)
+	BEWEGING.plof(help, 0.05, BEWEGING.POP_VAN, true, Vector2(0.5, 0.5), true)   # een plof voor de kolom
 	BEWEGING.plof(sfeer, 0.10)
 	BEWEGING.plof(geef_op, 0.15)
 
@@ -786,7 +788,7 @@ func _bouw_context_knop() -> void:
 	# ploft alleen als hij echt verschijnt.
 	_context_knop.visibility_changed.connect(func() -> void:
 		if _context_knop.visible:
-			BEWEGING.plof(_context_knop, 0.0, 0.8))
+			BEWEGING.plof(_context_knop, 0.0, 0.8, true, Vector2(0.5, 0.5), true))
 
 
 func _update_context_knop() -> void:

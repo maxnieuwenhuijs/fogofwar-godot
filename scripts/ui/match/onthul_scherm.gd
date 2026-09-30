@@ -194,7 +194,7 @@ func _inkom(hand_boven: Control, hand_onder: Control) -> void:
 	Beweging.inkom_rij(_draaiers(hand_onder), 0.10, 0.05)
 	for ster in [hand_boven.find_child("Initiatief", true, false), hand_onder.find_child("Initiatief", true, false)]:
 		if ster != null:
-			Beweging.plof(ster as Control, 0.30, 0.6, false)
+			Beweging.plof(ster as Control, 0.30, 0.6, false, Vector2(0.5, 0.5), true)
 	Beweging.plof(_knop, 0.35, 0.9, false)
 
 

@@ -33,6 +33,17 @@ extends RefCounted
 ##  7. Nooit de globale RNG.
 ##  8. Alles is binnen 0,45 s na het openen klaar (een beloning binnen 0,7 s).
 ##
+## Geluid (30 september, Max: "korte UI geluiden ook nodig toch voor alle
+## animaties en ploffen"): `klank()` speelt een kort geluid bij een animatie,
+## alleen als de beweging aan staat, en nooit uit de globale RNG (variant en
+## toon komen uit een eigen RNG; Audio.play doet anders randi/randf). Een
+## stempel bonst op het moment van inslag, omdraaien zwiept, "+1" klinkt als een
+## munt, nee-schud klopt twee keer, optellen tikt mee en loopt op in toon.
+## Rijen, golven en de duw zijn stil (anders wordt het een ratel); de schermen
+## kiezen zelf waar een plof of een blad bij hoort. Categorieen ui_plof,
+## ui_stempel, ui_draai, ui_tel, ui_munt, ui_error, ui_blad (placeholders uit
+## tools/maak_ui_geluiden.py; echte opnames via de geluid-studio).
+##
 ## Standen (user://settings.cfg [ui] beweging): normaal = alles; rustig =
 ## alleen alpha op 60% van de duur, indrukken is kort donkerder; uit = niets.
 ## De dev-knop `ui_tempo` (sfeer-paneel) is de speed_scale: 0 uit, 0,5
@@ -92,6 +103,8 @@ static var _heeft_ratio: int = -1       # lui: kent Control pivot_offset_ratio?
 static var _echte_muis: bool = true
 static var _laatste_invoer_ms: int = 0
 static var _weg_frame: int = -100
+static var _rng_klank: RandomNumberGenerator = null   # eigen RNG voor variant en toon
+static var _klanken: int = 0                          # wat klank() echt afspeelde (voor de check)
 ## Waar de stand staat; de check wijst een eigen bestand aan.
 static var instellingen_pad: String = "user://settings.cfg"
 
@@ -183,6 +196,30 @@ static func rustig() -> bool:
 
 static func _duur(d: float) -> float:
 	return d * RUSTIG_FACTOR if _stand == RUSTIG else d
+
+
+## Een kort UI-geluid bij een animatie, `vertraging` na nu (in beeld-tijd, dus
+## gedeeld door het tempo). Alleen als de beweging aan staat (rustig telt mee:
+## minder beweging is niet minder geluid), nooit headless, en nooit uit de
+## globale RNG. `toon` 0 = een kleine willekeurige variatie.
+static func klank(cat: String, vertraging: float = 0.0, toon: float = 0.0) -> void:
+	if not aan():
+		return
+	var n: int = Audio.variant_aantal(cat)
+	if n <= 0:
+		return
+	if _rng_klank == null:
+		_rng_klank = RandomNumberGenerator.new()
+		_rng_klank.seed = 30092026
+	var variant := _rng_klank.randi_range(0, n - 1)
+	var pitch := toon if toon > 0.0 else _rng_klank.randf_range(0.96, 1.04)
+	Audio.play(cat, maxf(0.0, vertraging) / maxf(_tempo, 0.01), variant, pitch)
+	_klanken += 1
+
+
+## Hoeveel geluiden klank() tot nu toe echt afspeelde (de inkomcheck telt mee).
+static func klanken() -> int:
+	return _klanken
 
 
 # --- Invoer (UiThema._input) ----------------------------------------------------
@@ -429,9 +466,11 @@ static func schuif_in(n: Control, van: Vector2, vertraging: float = 0.0,
 ## Keuze of nieuw element ploft erin. `met_alfa` false voor nodes waarvan de
 ## modulate een tint draagt (iconen, portretten): dan alleen schaal.
 static func plof(c: Control, vertraging: float = 0.0, van: float = POP_VAN,
-		met_alfa: bool = true, ratio: Vector2 = Vector2(0.5, 0.5)) -> void:
+		met_alfa: bool = true, ratio: Vector2 = Vector2(0.5, 0.5), geluid: bool = false) -> void:
 	if not _mag(c):
 		return
+	if geluid:
+		klank("ui_plof", vertraging)
 	if met_alfa:
 		fade_in(c, vertraging, POP_DUUR * 0.6)
 	if vol():
@@ -498,7 +537,10 @@ static func flits(c: CanvasItem, kleur: Color, duur: float = FLITS_DUUR) -> void
 ## "Kan niet": vier kleine zwaaien om het midden en terug (draai, dus ook in een
 ## container veilig).
 static func schud(c: Control) -> void:
-	if not _mag(c) or not vol():
+	if not _mag(c):
+		return
+	klank("ui_error")   # ook bij rustig: minder beweging, niet minder feedback
+	if not vol():
 		return
 	_spil(c)
 	var rust: float = _rust(c, "rotation", "rot")
@@ -515,8 +557,12 @@ static func schud(c: Control) -> void:
 ## Stempel: van groot met een draai erop drukken en naveren. `verberg` houdt het
 ## ding tot de stempel valt op een schaal van bijna niets (nooit via modulate:
 ## die wordt gemeten). Alleen schaal en draai.
-static func stempel(c: Control, vertraging: float = 0.0, verberg: bool = false) -> void:
-	if not _mag(c) or not vol():
+static func stempel(c: Control, vertraging: float = 0.0, verberg: bool = false, geluid: bool = true) -> void:
+	if not _mag(c):
+		return
+	if geluid:
+		klank("ui_stempel", vertraging + STEMPEL_IN)
+	if not vol():
 		return
 	_spil(c)
 	var rs: Vector2 = _rust(c, "scale", "schaal")
@@ -541,6 +587,8 @@ static func stempel(c: Control, vertraging: float = 0.0, verberg: bool = false) 
 ## (bv. de rug weg), en weer open met een veertje. Uit of rustig: meteen
 ## `halverwege`, zonder draai.
 static func draai_om(c: Control, halverwege: Callable, vertraging: float = 0.0) -> void:
+	if _mag(c):
+		klank("ui_draai", vertraging)   # ook bij rustig
 	if not _mag(c) or not vol():
 		if halverwege.is_valid():
 			halverwege.call()
@@ -562,7 +610,7 @@ static func draai_om(c: Control, halverwege: Callable, vertraging: float = 0.0) 
 ## `fmt` maakt van een int de tekst (standaard str). Niet op labels die een
 ## check leest (de regel "teksten meteen goed").
 static func tel_op(l: Label, van: int, naar: int, duur: float = TEL_DUUR,
-		fmt: Callable = Callable(), vertraging: float = 0.0) -> void:
+		fmt: Callable = Callable(), vertraging: float = 0.0, tik: String = "") -> void:
 	if l == null or not is_instance_valid(l):
 		return
 	var tekst := func(v: int) -> String:
@@ -572,6 +620,13 @@ static func tel_op(l: Label, van: int, naar: int, duur: float = TEL_DUUR,
 		return
 	var tw := _tween(l, "tekst", true)
 	l.text = tekst.call(van)
+	if tik != "":
+		# Hooguit 8 tikjes, op de momenten dat het getal ze passeert (QUAD out:
+		# waarde v op tijd 1 - sqrt(1 - v)), elk iets hoger.
+		var n: int = mini(absi(naar - van), 8)
+		for j in n:
+			var v: float = float(j + 1) / float(n)
+			klank(tik, vertraging + duur * (1.0 - sqrt(1.0 - v)), 1.0 + 0.035 * float(j))
 	if vertraging > 0.0:
 		tw.tween_interval(vertraging)
 	tw.tween_method(func(f: float) -> void: l.text = tekst.call(int(round(f))),
@@ -610,6 +665,7 @@ static func zweef(tekst: String, bij: Control, ouder: Control, kleur: Color = Co
 		grootte: int = 28) -> void:
 	if not _mag(ouder) or bij == null or not is_instance_valid(bij) or not bij.is_inside_tree():
 		return
+	klank("ui_munt")
 	var l := Label.new()
 	l.name = "Zweef"
 	l.text = tekst

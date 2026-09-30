@@ -169,6 +169,14 @@ const CATEGORY_DB := {
 	"ui_error": -5.0,
 	"ui_open": -7.0,
 	"ui_toggle": -6.0,
+	# UI-beweging (30 september): korte geluiden bij de animaties, stil want het
+	# zijn bijgeluiden (placeholders uit tools/maak_ui_geluiden.py).
+	"ui_plof": -11.0,
+	"ui_stempel": -7.0,
+	"ui_draai": -13.0,
+	"ui_tel": -15.0,
+	"ui_munt": -9.0,
+	"ui_blad": -13.0,
 	"card_confirm": -4.0,
 	"card_deal": -6.0,
 	"card_select": -6.0,

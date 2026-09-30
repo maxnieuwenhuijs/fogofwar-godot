@@ -8,12 +8,12 @@ extends RefCounted
 ## settings-bestand, zodat de stand van de speler blijft staan.
 ##
 ## Fasen (zonder argument: allemaal): module, knoppen, schermen, kaart, hub,
-## beloning (die alleen met data/duel_orakel.json), instelling.
+## beloning (die alleen met data/duel_orakel.json), instelling, geluid.
 ## Exit 1 bij een fout; de grep op "SCRIPT ERROR" hoort erbij.
 
 const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 const CHECK_CFG := "user://settings_inkomcheck.cfg"
-const FASEN := ["module", "knoppen", "schermen", "kaart", "hub", "beloning", "instelling"]
+const FASEN := ["module", "knoppen", "schermen", "kaart", "hub", "beloning", "instelling", "geluid"]
 
 static var _fouten := 0
 static var _host: Node = null
@@ -50,6 +50,8 @@ static func run(host: Node, fasen: Array = []) -> int:
 				await _beloning()
 			"instelling":
 				await _instelling()
+			"geluid":
+				await _geluid()
 			_:
 				_fouten += 1
 				print("[INKOM] onbekende fase: %s (bekend: %s)" % [fase, ", ".join(FASEN)])
@@ -200,8 +202,15 @@ static func _module() -> void:
 	Beweging.schud(g)
 	Beweging.stempel(g, 0.0, true)
 	_ok(g.scale == Vector2.ONE and g.rotation == 0.0 and g.modulate.a < 0.5, "rustig: geen schaal of draai, wel alpha")
-	await _wacht(0.4)
-	_ok(is_equal_approx(g.modulate.a, 1.0), "rustig: alpha terug")
+	# Wachten tot de tweens klaar zijn (plafond 2 s): met venster en een drukke
+	# machine duren de twee vasthoud-frames soms langer dan de hele fade, en
+	# dan was een vaste 0,4 s een lot. De duur zelf meet inkom_rij hieronder.
+	var t_rustig := Time.get_ticks_msec()
+	await _wacht(0.2)
+	while Beweging.bezig() > 0 and Time.get_ticks_msec() - t_rustig < 2000:
+		await _frame()
+	_ok(is_equal_approx(g.modulate.a, 1.0), "rustig: alpha terug (%.3f na %d ms)" % [
+		g.modulate.a, Time.get_ticks_msec() - t_rustig])
 	Beweging.zet_stand(Beweging.NORMAAL)
 
 	# optellen: de eindtekst is exact; uit is meteen
@@ -810,3 +819,74 @@ static func _instelling() -> void:
 	Beweging.zet_stand(Beweging.NORMAAL)
 	hub.queue_free()
 	await _wacht(0.2)
+
+
+# --- Fase geluid: de korte UI-geluiden bij de animaties ------------------------------
+
+const UI_GELUIDEN := ["ui_plof", "ui_stempel", "ui_draai", "ui_tel", "ui_munt", "ui_error", "ui_blad"]
+
+
+static func _geluid() -> void:
+	print("[INKOM] fase geluid")
+	var ontbreekt: Array = []
+	for cat in UI_GELUIDEN:
+		if Audio.variant_aantal(cat) <= 0:
+			ontbreekt.append(cat)
+	_ok(ontbreekt.is_empty(), "alle %d UI-geluiden geladen%s" % [UI_GELUIDEN.size(),
+		"" if ontbreekt.is_empty() else " (mist: %s)" % ", ".join(ontbreekt)])
+	# klank trekt nooit uit de globale RNG (Audio.play zou anders randi/randf doen)
+	seed(4242)
+	var a := randi()
+	seed(4242)
+	var k0 := Beweging.klanken()
+	for cat in UI_GELUIDEN:
+		Beweging.klank(cat, 0.0)
+		Beweging.klank(cat, 0.05, 1.1)
+	var b := randi()
+	_ok(a == b, "klank laat de globale RNG met rust")
+	_ok(Beweging.klanken() - k0 == 2 * UI_GELUIDEN.size(),
+		"klank speelt elk geluid af (%d van %d)" % [Beweging.klanken() - k0, 2 * UI_GELUIDEN.size()])
+	# in de helpers: stempel, schud, omdraaien, plof, tellen met tikjes, zweven
+	var wortel := Control.new()
+	_host.add_child(wortel)
+	var c := _blok(wortel, "C", Vector2(200, 200))
+	var l := Label.new()
+	wortel.add_child(l)
+	var met_geluid := func() -> int:
+		var voor := Beweging.klanken()
+		Beweging.stempel(c)
+		Beweging.schud(c)
+		Beweging.draai_om(c, Callable())
+		Beweging.plof(c, 0.0, Beweging.POP_VAN, true, Vector2(0.5, 0.5), true)
+		Beweging.tel_op(l, 0, 20, 0.3, Callable(), 0.0, "ui_tel")
+		Beweging.zweef("+1", c, wortel)
+		return Beweging.klanken() - voor
+	seed(99)
+	var x := randi()
+	seed(99)
+	var n_vol: int = met_geluid.call()
+	var y := randi()
+	_ok(x == y, "de helpers met geluid laten de globale RNG ook met rust")
+	# stempel, schud, draai, plof en munt een keer, tellen 0 -> 20 hooguit 8 tikjes
+	_ok(n_vol == 13, "normaal: de helpers spelen 13 geluiden (%d)" % n_vol)
+	await _wacht(0.8)
+	_ok(l.text == "20" and wortel.find_children("Zweef", "", true, false).is_empty(),
+		"na het geluid: tekst exact, zweef weg")
+	# rustig: minder beweging, niet minder feedback; alleen optellen valt weg
+	# (de tekst springt meteen naar het eind, dus ook geen tikjes)
+	Beweging.zet_stand(Beweging.RUSTIG)
+	var n_rustig: int = met_geluid.call()
+	Beweging.zet_stand(Beweging.NORMAAL)
+	_ok(n_rustig == 5, "rustig: 5 geluiden, geen tikjes (%d)" % n_rustig)
+	await _wacht(0.8)
+	# uit: niets (klank doet dan niets, en ook geen RNG)
+	Beweging.forceer(0)
+	seed(7)
+	var p := randi()
+	seed(7)
+	var n_uit: int = met_geluid.call()
+	var q := randi()
+	Beweging.forceer(1)
+	_ok(p == q and n_uit == 0, "uit: geen geluid (%d) en geen RNG" % n_uit)
+	wortel.queue_free()
+	await _frame()

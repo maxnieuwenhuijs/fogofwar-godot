@@ -425,7 +425,8 @@ func open_for_define() -> void:
 		# UI-beweging: het CP-zegel stempelt als de kaart landt.
 		_cards[i].stempel_cp(0.45 + DEAL_STAP * float(i))
 	# De bevestigknop ploft als de laatste kaart ligt, en duwt als je wacht.
-	Beweging.plof(_confirm_button, 0.45 + DEAL_STAP * float(maxi(0, _cards.size() - 1)), 0.92, false)
+	Beweging.plof(_confirm_button, 0.45 + DEAL_STAP * float(maxi(0, _cards.size() - 1)), 0.92, false,
+		Vector2(0.5, 0.5), true)
 	Beweging.duw(_confirm_button)
 
 

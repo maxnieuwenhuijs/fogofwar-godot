@@ -80,6 +80,7 @@ var _qc_meer: Button = null
 var _groep_nu: String = ""       # de groep die _plaats meegeeft (golf bij de eerste opening)
 var _cascade_gedaan: bool = false
 var _paneel_sleutel: String = ""   # ronde|fase|tab|wacht|bezig|dank: alleen een inkom bij verandering
+var _fase_sleutel: String = ""     # ronde|fase: het blad klinkt alleen bij een echte fasewissel
 var _ingediend: bool = false     # STEM/KLAAR/NALATEN: de eerste tik telt, tot het paneel ververst
 ## De laatst getoonde saldi in de statusbalk. Static: overleeft het bord, zodat
 ## een winst na een duel optelt.
@@ -266,6 +267,7 @@ func _start() -> void:
 func _cascade() -> void:
 	if not Beweging.aan() or _frame == null:
 		return
+	Beweging.klank("ui_blad")
 	for kind in _frame.get_children():
 		if not (kind is Control) or not kind.has_meta("hub_groep"):
 			continue
@@ -978,7 +980,7 @@ func _zet_status(k: String, v: int) -> void:
 	if oud == null or int(oud) == v:
 		l.text = str(v)
 		return
-	Beweging.tel_op(l, int(oud), v, 0.45)
+	Beweging.tel_op(l, int(oud), v, 0.45, Callable(), 0.0, "ui_tel")
 	if v > int(oud):
 		Beweging.punch(l, 1.3)
 	else:
@@ -1971,6 +1973,11 @@ func _na_fase_paneel() -> void:
 		if not eerste:
 			Beweging.inkom_rij(_paneel.get_children())
 			Beweging.inkom_rij(_voet.get_children(), 0.06)
+		var fase_sleutel := "%d|%d" % [c.ronde, c.fase]
+		if fase_sleutel != _fase_sleutel:
+			if _fase_sleutel != "":
+				Beweging.klank("ui_blad")   # een nieuwe fase: het blad slaat om (een tabwissel niet)
+			_fase_sleutel = fase_sleutel
 		if c.fase == CState.Fase.KLAAR and _tab == 0:
 			_beloon_einde()
 	if driver.wacht_op_mens() and not _bezig:
@@ -2006,7 +2013,7 @@ func _beloon_einde() -> void:
 	if rij != null and rij.get_child_count() >= 3 and rij.get_child(2) is Label:
 		var getal := rij.get_child(2) as Label
 		var totaal := int(getal.text)
-		Beweging.tel_op(getal, 0, totaal, 0.5, Callable(), 0.15)
+		Beweging.tel_op(getal, 0, totaal, 0.5, Callable(), 0.15, "ui_tel")
 		Beweging.stempel(getal, 0.62)
 	var podium := _paneel.find_child("Podium", true, false)
 	if podium != null:
@@ -2031,15 +2038,17 @@ func _na_popup(naam: String, inhoud: Control) -> void:
 				var n := int(w.text)
 				if w.text.begins_with("+"):
 					Beweging.tel_op(w, 0, n, 0.3, plus_fmt, 0.05 + 0.04 * float(i))
+					# een tikje per regel, oplopend (de regels zelf tellen stil)
+					Beweging.klank("ui_tel", 0.05 + 0.04 * float(i), 1.0 + 0.05 * float(i))
 					i += 1
 				else:
-					Beweging.tel_op(w, 0, n, 0.3, Callable(), 0.25)
+					Beweging.tel_op(w, 0, n, 0.3, Callable(), 0.25, "ui_tel")
 					Beweging.stempel(w, 0.45)
 			var badges := inhoud.get_child(inhoud.get_child_count() - 1)
 			if badges is HBoxContainer and badges.get_child_count() > 0 and badges.get_child(0) is HBoxContainer:
 				var k := 0
 				for chip in badges.get_children():
-					Beweging.plof(chip as Control, 0.45 + 0.06 * float(k), 0.6)
+					Beweging.plof(chip as Control, 0.45 + 0.06 * float(k), 0.6, true, Vector2(0.5, 0.5), true)
 					k += 1
 		"Rapport":
 			var teken_fmt := func(v: int) -> String:

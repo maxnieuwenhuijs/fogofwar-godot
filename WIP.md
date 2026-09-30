@@ -1,5 +1,48 @@
 # Fog of War — Work In Progress & Context
 
+## 30 september -- UI-beweging: korte geluiden bij de animaties
+
+Max: "korte UI geluiden ook nodig toch voor alle animaties en ploffen etc".
+
+- **`Beweging.klank(cat, vertraging, toon)`**: alleen als de beweging aan
+  staat (rustig telt mee: minder beweging is niet minder feedback), nooit
+  headless, variant en toon uit een eigen RNG (Audio.play doet anders
+  `randi`/`randf_range`, en de globale RNG hoort bij uispel).
+- **In de helpers:** stempel bonst op de inslag, draai_om zwiept, zweef is een
+  munt, schud klopt twee keer (`ui_error`), tel_op tikt mee met het getal
+  (hooguit 8 tikjes op de momenten dat de waarde ze passeert, elk iets hoger);
+  plof alleen als de aanroeper het vraagt.
+- **Waar:** het blad bij de hub-golf, bij een echte fase- of rondewissel (een
+  tabwissel heeft al `ui_toggle`) en van menu naar menu; een plof voor de
+  hoekknoppen (een keer), de contextknop, het initiatief, de bevestigknop die
+  klaar is en de badges; tikjes in de statusbalk en bij de punten; open-geluid
+  bij het geluidspaneel en online-meedoen. Rijen, de tijdlijn en de duw blijven
+  stil.
+- **Geluiden:** `tools/maak_ui_geluiden.py` maakt placeholders (hout,
+  perkament, messing) in `sounds/ui/`: ui_plof, ui_stempel, ui_draai, ui_tel,
+  ui_munt, ui_blad (3 varianten elk, manifest `synthetisch.json`). `ui_error`
+  heeft al een echte opname (`sounds/studio/ui_error.wav`, de take van 18
+  september; de oude in `sounds/ui/` was toen al weg). Mijn eerste
+  placeholders met die naam zaten die in de weg en zijn weer weg (het recept
+  staat achter `--ook-error`). Niveaus in CATEGORY_DB (-7 tot -15 dB),
+  prompts in SOUND-WISHLIST sectie 1 (de studio leest ze als `prompt_bron`;
+  een "Wanneer" langer dan 40 tekens las hij als prompt, dus die zijn kort).
+  Vervangen: geluid-studio, "Genereer" en dan "Vervang synthetisch".
+- **Fout gemaakt:** `--import` gedraaid terwijl de editor open stond (de check
+  stond ervoor, maar in hetzelfde commando). De import slaagde; bij
+  importfouten in de editor: sluiten en opnieuw openen.
+- Checks: inkomcheck 8 fasen (nieuw: geluid, alles geladen, de globale RNG
+  blijft gelijk na klank en na de helpers, en de teller `Beweging.klanken()` per
+  stand: normaal 13, rustig 5, uit 0), geluidcheck (alle zeven met hun niveau,
+  geen nieuwe "niemand speelt af"), uicheck, uispel 777 (7882f116, 165 acties,
+  ongewijzigd), herstelcheck 777 en 4242 wolf 0, resumecheck 777 1 en 4242 2 0,
+  naad, koppel, beurtlicht, audiopaneel, simcheck 0, tests 2664/0; met venster
+  define (vier varianten), sleepcheck (en muis), audiopaneel, inkomcheck en
+  play. De inkomcheck met venster struikelde een keer op "rustig: alpha terug":
+  een vaste 0,4 s onder zware belasting (een timer die net na een lang frame
+  start, loopt te vroeg af). Die stap wacht nu op de tweens, met een plafond van
+  2 s.
+
 ## 30 september -- UI-beweging 3-9: schermen, kaarten, hub, beloningen, Animaties
 
 Vervolg op 1+2 (zelfde dag). Alles alleen beeld; de headless checks blijven

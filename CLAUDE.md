@@ -1078,6 +1078,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `-- inkomfilm [map]` (met venster, plaatjes halverwege op tempo 0,3). Een
   inkom houdt zijn beginstand twee frames vast en start dan: het bouwframe van
   een scherm is zwaar, en anders zette de tween die lange delta in een stap.
+  **Geluid bij de animaties** (Max: "korte UI geluiden ook nodig toch voor
+  alle animaties en ploffen"): `Beweging.klank(cat, vertraging, toon)` speelt
+  alleen als de beweging aan staat (rustig telt mee), nooit headless, en
+  kiest variant en toon uit een EIGEN RNG (Audio.play trekt anders uit de
+  globale). Een stempel bonst op de inslag (`ui_stempel`), omdraaien zwiept
+  (`ui_draai`), "+1" is een munt (`ui_munt`), nee-schud klopt (`ui_error`, de
+  echte opname in sounds/studio), optellen tikt mee en loopt op (`ui_tel`),
+  ploffen die ertoe doen (`ui_plof`) en een blad bij de hub-golf, een nieuwe
+  fase en menu naar menu (`ui_blad`). Rijen, de tijdlijn en de duw zijn stil.
+  Placeholders uit `tools/maak_ui_geluiden.py` in `sounds/ui/` (manifest
+  `synthetisch.json`, hout, perkament en messing), prompts in SOUND-WISHLIST
+  sectie 1 (de "Wanneer" daar korter dan 40 tekens, anders leest de studio hem
+  als prompt), niveaus in CATEGORY_DB (-7 tot -15 dB). Check: `-- inkomcheck
+  geluid` (geladen, de globale RNG blijft gelijk, en `Beweging.klanken()`
+  telt wat er echt klinkt: normaal 13, rustig 5, uit 0).
 - **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
   [factie]`** (capture.tscn, 18 september, Max: "voor infantry attack pig
   klopt de orientatie niet"). Bouwt per type en archetype een PawnView

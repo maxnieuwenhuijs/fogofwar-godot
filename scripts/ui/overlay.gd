@@ -107,6 +107,7 @@ func show_choice(title: String, body: String, options: Array, cb: Callable = Cal
 		# staan en de inhoud wisselt. Dezelfde titel (spawn kopen): niets.
 		Beweging.wissel(_midden)
 		Beweging.inkom_rij(_buttons.get_children(), 0.03)
+		Beweging.klank("ui_blad")
 
 
 ## UI-beweging: de titel stempelt erop (winst op het eindscherm).

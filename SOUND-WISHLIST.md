@@ -68,9 +68,22 @@ tabel onderaan, dan heb je alle varianten in een generatie.
 | `ui_click` | `ui_click.wav` | 3 | Elke menuknop, koppel-tap | ✓ |
 | `ui_back` | `ui_back.wav` | 2 | Uitleg sluiten | ✓ |
 | `ui_hover` | `ui_hover.wav` | 1 | Muis over een menuknop | ✓ |
-| `ui_error` | `ui_error.wav` | 1 | Pion die niet kan handelen | ✓ |
+| `ui_error` | `ui_error.wav` | 1 | Pion kan niet; knop schudt nee | ✓ |
 | `ui_toggle` | `ui_toggle.wav` | 1 | Speluitleg-tab wisselen | ✓ |
 | `ui_open` | `ui_open.wav` | 2 | Overlay/uitleg opent | ✓ |
+| `ui_plof` | `ui_plof.wav` | 3 | Iets ploft erin (knop klaar, badge) | synthetisch |
+| `ui_stempel` | `ui_stempel.wav` | 3 | Stempel: CP, REVEALED, STEM, winst | synthetisch |
+| `ui_draai` | `ui_draai.wav` | 3 | Kaart draait om (onthulling) | synthetisch |
+| `ui_tel` | `ui_tel.wav` | 3 | Getal telt op (tikjes, stijgend) | synthetisch |
+| `ui_munt` | `ui_munt.wav` | 3 | "+1" zweeft omhoog (donatie, dank) | synthetisch |
+| `ui_blad` | `ui_blad.wav` | 3 | Hub-golf, nieuwe fase, menu-wissel | synthetisch |
+
+De zes onderste (30 september) horen bij de UI-beweging
+(`scripts/ui/ui_beweging.gd`, `Beweging.klank`); houd de "Wanneer" hier korter
+dan 40 tekens, anders leest de geluid-studio hem als prompt. Tot de echte
+opnames er zijn: placeholders uit `tools/maak_ui_geluiden.py` (hout, perkament,
+messing; manifest `sounds/ui/synthetisch.json`). Een echte opname op dezelfde
+naam wint.
 
 ## 2. Kaarten definiëren & koppelen
 
@@ -604,6 +617,12 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `ui_error` ⭐ | 2 | dull hollow wooden thunk, muffled negative knock, no tone |
 | `ui_toggle` ⭐ | 1 | small brass latch flipping, crisp metal click, antique fitting |
 | `ui_open` ⭐ | 1 | rolled parchment unfurling with a soft wooden case lid opening, short |
+| `ui_plof` ⭐ | 3 | A small wooden peg popping into a hole in an old oak game board: one short, soft, round tok with a tiny upward lift, dry and close, no reverb. |
+| `ui_stempel` ⭐ | 3 | A wooden hand stamp pressed firmly onto parchment with a little sealing wax: one dull, solid thud with a short papery slap, dry and close. |
+| `ui_draai` ⭐ | 3 | A single stiff parchment playing card flipped over on a wooden table: a quick short paper flick and the soft tap of its edge landing. |
+| `ui_tel` ⭐ | 3 | One tiny brass counter bead clicking against another on an old abacus: a very short, bright little tick, dry. |
+| `ui_munt` ⭐ | 3 | A single small brass coin dropped onto an oak table: a clear short ring with one tiny bounce, dry and close. |
+| `ui_blad` ⭐ | 3 | One page of thick old parchment turned over in a leather-bound book: a soft short rustle that swells and settles, dry and close. |
 | `card_stat_up` ⭐ | 3 | small brass weight set on a balance scale, short bright metallic tick, rising |
 | `card_stat_down` ⭐ | 3 | small brass weight lifted off a balance scale, short dull metallic tick, falling |
 | `card_confirm` ⭐ | 2 | thick parchment card slapped onto a wooden table, wax seal press, firm |
