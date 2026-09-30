@@ -1049,6 +1049,35 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   thema over het hele spel en schermen kiezen vormen met
   `theme_type_variation` (lijst bij THEMA-VARIANTEN in dat bestand). Nieuwe
   png's onder `assets/ui/` eerst `--import`-en. Zie `assets/ui/LEESMIJ.md`.
+- **UI-beweging: inkom en microinteracties (30 september, Max: "geef ieder
+  scherm en alles een subtiele inkom animatie en microinteractions").** Een
+  module, `scripts/ui/ui_beweging.gd` (via preload): ERIN (scherm, rijen,
+  schuiven), TIK (elke knop deukt in en veert terug via de haak in
+  `UiThema._bij_nieuwe_node`, hover alleen met een echte muis; plof, punch,
+  stempel, schud, tel_op, duw, zweef, draai_om) en WEG (`spook_weg`). Tokens en
+  huisregels bovenin de module en in `assets/ui/LEESMIJ.md`. De regels die
+  de checks heel houden: **alleen beeld** (nooit `visible`, teksten,
+  add_child of submits uitstellen, niets in `_animaties_bezig`), **nooit de
+  root van een CardView** of `CpZegel.modulate`/size (`-- define`,
+  `-- sleepcheck`), in containers alleen alpha en een schaal die op de rust
+  eindigt, elke tween `set_ignore_time_scale` (hitstop), **headless doet
+  alles niets** (dus uispel, herstelcheck en resumecheck blijven gelijk). Waar:
+  overlay (vers, menu naar menu of dezelfde titel: niets bij spawn kopen),
+  factiekeuze, uitleg, onthulscherm (de kaarten van de tegenstander draaien
+  om), HUD (fase-icoon, beurtwissel, hartslag in de laatste seconden),
+  kaarten (statpunt springt, nee-schud, CP-zegel stempelt bij het landen),
+  de hub (golf bij de eerste opening, fasepaneel alleen bij een nieuwe
+  sleutel, pop-ups met spook-uitgang, grootboek, klikgeluid, STEM/KLAAR/
+  NALATEN gaan na de eerste tik uit: dat dicht de oude dubbeltik-race met de
+  bot-thread) en beloningen (punten tellen op, stempels, "+1" dat zweeft).
+  Instelling: Animaties normaal / rustig / uit (bord-menu en hub, in
+  `user://settings.cfg [ui] beweging`; uit maakt ook uitdelen en tijdlijn
+  direct), dev-knop `ui_tempo` in het sfeer-paneel. Check: `-- inkomcheck
+  [module|knoppen|schermen|kaart|hub|beloning|instelling]` (forceert de
+  beweging ook headless, eigen cfg; met venster ook echte klikken); kijken:
+  `-- inkomfilm [map]` (met venster, plaatjes halverwege op tempo 0,3). Een
+  inkom houdt zijn beginstand twee frames vast en start dan: het bouwframe van
+  een scherm is zwaar, en anders zette de tween die lange delta in een stap.
 - **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
   [factie]`** (capture.tscn, 18 september, Max: "voor infantry attack pig
   klopt de orientatie niet"). Bouwt per type en archetype een PawnView

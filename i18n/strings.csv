@@ -433,6 +433,10 @@ MENU_AUDIO_MUSIC,"Music","Muziek"
 MENU_AUDIO_SFX,"Effects","Effecten"
 MENU_AUDIO_AMBIENT,"Ambience","Omgeving"
 MENU_AUDIO_HINT,"During play, M mutes everything at once.","Tijdens het spel dempt M alles in een keer."
+MENU_MOTION,"Animations: %s","Animaties: %s"
+MENU_MOTION_NORMAL,"normal","normaal"
+MENU_MOTION_CALM,"calm","rustig"
+MENU_MOTION_OFF,"off","uit"
 HUB_TITLE,Campaign Hub,Campagne-hub
 HUB_SUBTITLE,ROUND %d   %s,RONDE %d   %s
 HUB_PHASE_SHORT_NOMINATION,COUNCIL,RAAD

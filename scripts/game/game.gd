@@ -233,13 +233,17 @@ func _on_resign_pressed() -> void:
 	var ph: int = session.state.phase
 	if ph == Phase.Type.GAME_OVER or ph == Phase.Type.PRE_GAME:
 		return
-	var dlg := ConfirmationDialog.new()
-	dlg.dialog_text = tr("MENU_RESIGN_CONFIRM")
-	dlg.ok_button_text = tr("MENU_RESIGN_OK")
-	dlg.cancel_button_text = tr("MENU_RESIGN_CANCEL")
-	dlg.confirmed.connect(func() -> void: session.submit_resign(_human_id))
-	$UI.add_child(dlg)
-	dlg.popup_centered()
+	# Een dialoog, hergebruikt (30 september: er kwam er een bij per druk, en
+	# die bleven hangen). Een eigen venster: de hoekknoppen liggen boven de
+	# overlay, dus de overlay hiervoor gebruiken zou een open keuze wegvegen.
+	if _opgeef_dialoog == null or not is_instance_valid(_opgeef_dialoog):
+		_opgeef_dialoog = ConfirmationDialog.new()
+		_opgeef_dialoog.confirmed.connect(func() -> void: session.submit_resign(_human_id))
+		$UI.add_child(_opgeef_dialoog)
+	_opgeef_dialoog.dialog_text = tr("MENU_RESIGN_CONFIRM")
+	_opgeef_dialoog.ok_button_text = tr("MENU_RESIGN_OK")
+	_opgeef_dialoog.cancel_button_text = tr("MENU_RESIGN_CANCEL")
+	_opgeef_dialoog.popup_centered()
 
 
 func _stop_phase_timer() -> void:
@@ -494,6 +498,7 @@ func _online_meedoen() -> void:
 	terug.custom_minimum_size = Vector2(200, 52)
 	rij.add_child(terug)
 	$UI.add_child(midden)
+	BEWEGING.inkom_scherm(null, midden)   # UI-beweging: alleen beeld
 	invoer.grab_focus()
 	terug.pressed.connect(func() -> void:
 		midden.queue_free()
@@ -565,8 +570,10 @@ func _show_campagne_difficulty() -> void:
 
 func _show_settings_menu() -> void:
 	var taal_optie: String = "Language: English" if Constants.get_language() == "nl" else "Taal: Nederlands"
+	# Animaties: normaal / rustig / uit (UI-beweging, 30 september): tik = de volgende stand.
+	var beweging_optie: String = tr("MENU_MOTION") % tr(BEWEGING.stand_sleutel(BEWEGING.stand()))
 	_overlay.show_choice(tr("MENU_SETTINGS"), "",
-		[taal_optie, tr("MENU_AUDIO"), tr("MENU_DIFF_TUNER"), tr("MENU_BACK")],
+		[taal_optie, tr("MENU_AUDIO"), beweging_optie, tr("MENU_DIFF_TUNER"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i == 0:
 				Constants.set_language("en" if Constants.get_language() == "nl" else "nl")
@@ -574,6 +581,9 @@ func _show_settings_menu() -> void:
 			elif i == 1:
 				_show_audio_panel()
 			elif i == 2:
+				BEWEGING.zet_stand(BEWEGING.volgende_stand())
+				_show_settings_menu()
+			elif i == 3:
 				get_tree().change_scene_to_file("res://scenes/tools/ModelTuner.tscn")
 			else:
 				_show_difficulty_menu())
@@ -652,6 +662,9 @@ func _show_audio_panel() -> void:
 	_audio_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_audio_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_audio_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	# UI-beweging: het paneel ploft, de rijen komen erna (alleen beeld).
+	BEWEGING.inkom_scherm(null, _audio_panel)
+	BEWEGING.inkom_rij(vbox.get_children(), 0.04)
 
 
 func _on_audio_slider(value: float, soort: String, val_label: Label) -> void:
@@ -737,8 +750,13 @@ func _build_help_button() -> void:
 	geef_op.modulate = Color(1.0, 1.0, 1.0, 0.9)
 	geef_op.pressed.connect(_on_resign_pressed)
 	$UI.add_child(geef_op)
+	# UI-beweging: de knoppenkolom ploft na elkaar in (de rust-alpha 0,9 blijft).
+	BEWEGING.plof(help, 0.05)
+	BEWEGING.plof(sfeer, 0.10)
+	BEWEGING.plof(geef_op, 0.15)
 
 
+var _opgeef_dialoog: ConfirmationDialog = null
 var _help_resume_timer: bool = false
 var _help_time_left: float = 0.0
 var _context_knop: Button
@@ -764,6 +782,11 @@ func _bouw_context_knop() -> void:
 	_context_knop.offset_bottom = -24.0
 	_context_knop.pressed.connect(_on_context_knop)
 	$UI.add_child(_context_knop)
+	# UI-beweging: set_visible met dezelfde waarde stuurt geen signaal, dus dit
+	# ploft alleen als hij echt verschijnt.
+	_context_knop.visibility_changed.connect(func() -> void:
+		if _context_knop.visible:
+			BEWEGING.plof(_context_knop, 0.0, 0.8))
 
 
 func _update_context_knop() -> void:
@@ -4083,6 +4106,7 @@ func _on_game_over(winner_id: int) -> void:
 				CampaignBridge.rond_af(session.state, winner_id)
 				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"),
 			UiAssets.team_kleur(winner_id), false, [], EINDE_SCHERM_SCRIPT.win_icoon(session.state, winner_id))
+		_stempel_bij_winst(winner_id)
 		return
 	if session.is_online():
 		# F4.3g: online alleen winnaar + reden en terug naar het menu; de
@@ -4094,6 +4118,7 @@ func _on_game_over(winner_id: int) -> void:
 			[tr("END_BACK_TO_MENU")],
 			func(_i: int) -> void: _verlaat_online(),
 		)
+		_stempel_bij_winst(winner_id)
 		return
 	_overlay.show_choice(
 		tr("END_WINNER") % _player_name(winner_id),
@@ -4102,6 +4127,14 @@ func _on_game_over(winner_id: int) -> void:
 		func(_i: int) -> void: _show_difficulty_menu(),
 		UiAssets.team_kleur(winner_id), false, [], EINDE_SCHERM_SCRIPT.win_icoon(session.state, winner_id),
 	)
+	_stempel_bij_winst(winner_id)
+
+
+## UI-beweging: gewonnen? Dan stempelt de titel van het eindscherm erop (naast
+## de fanfare). Alleen beeld: het scherm en de knop staan er al.
+func _stempel_bij_winst(winner_id: int) -> void:
+	if winner_id == _human_id and _overlay != null:
+		_overlay.stempel_titel()
 
 
 ## F4.3g -- terug naar het menu na een online partij: sessie los, camera
@@ -4252,11 +4285,14 @@ func _update_piece_counts() -> void:
 	var blue: int = state.get_alive_pawns_for(Constants.PLAYER_2).size()
 	var total_red: int = _leger_totaal(state, Constants.PLAYER_1)
 	var total_blue: int = _leger_totaal(state, Constants.PLAYER_2)
+	var oud_telling: String = _count_label.text
 	_count_label.text = HUD_BALK_SCRIPT.telling_bbcode(red, total_red, blue, total_blue)
 	# F2.6 (v4.2): eigen reserve + CP-saldo (D12: die van de AI blijven geheim).
 	if state.rules.campaign_actief():
 		_count_label.text += HUD_BALK_SCRIPT.reserve_bbcode(
 			state.pool_total(_human_id), int(state.cp.get(_human_id, 0)))
+	if oud_telling != "" and oud_telling != _count_label.text:
+		BEWEGING.punch(_count_label, 1.05, Vector2(0.0, 0.5))   # UI-beweging: links uitgelijnd
 
 
 func _deselect() -> void:

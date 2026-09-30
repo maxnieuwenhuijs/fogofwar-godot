@@ -26,6 +26,11 @@ var _scroll: ScrollContainer
 var _tab_buttons: Array = []
 var _tab_groep: ButtonGroup
 var _tabs: Array = []  # [{title, text}]
+var _dim: ColorRect = null
+var _midden: CenterContainer = null
+
+## UI-beweging (30 september): de inkom van het paneel (scripts/ui/ui_beweging.gd).
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 
 
 func _ready() -> void:
@@ -50,6 +55,8 @@ func _ready() -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
+	_dim = dim
+	_midden = center
 
 	var panel := PanelContainer.new()
 	panel.name = "PaneelPapier"
@@ -101,7 +108,7 @@ func _ready() -> void:
 		var idx := i
 		b.pressed.connect(func() -> void:
 			Audio.play("ui_toggle")
-			_select_tab(idx))
+			_select_tab(idx, true))
 		tab_row.add_child(b)
 		_tab_buttons.append(b)
 
@@ -139,15 +146,20 @@ func _ready() -> void:
 ## (bv. om het menu waar je vandaan kwam terug te tonen).
 func open(back: Callable = Callable()) -> void:
 	_back = back
+	var vers := not visible
 	Audio.play("ui_open")
 	visible = true
 	move_to_front()
 	_select_tab(0)
+	if vers:
+		# Verdween er net een ander scherm (menu), dan blijft de waas staan.
+		Beweging.inkom_scherm(null if Beweging.vervangt() else _dim, _midden)
 
 
 func _close() -> void:
 	Audio.play("ui_back")
 	visible = false
+	Beweging.meld_weg()
 	closed.emit()
 	if _back.is_valid():
 		var cb := _back
@@ -155,7 +167,7 @@ func _close() -> void:
 		cb.call()
 
 
-func _select_tab(index: int) -> void:
+func _select_tab(index: int, animeer: bool = false) -> void:
 	if index < 0 or index >= _tabs.size():
 		return
 	for i in _tab_buttons.size():
@@ -164,6 +176,8 @@ func _select_tab(index: int) -> void:
 	_body.text = _tabs[index].text
 	if _scroll != null:
 		_scroll.scroll_vertical = 0
+		if animeer:
+			Beweging.wissel(_scroll)
 
 
 func _build_tab_content() -> void:

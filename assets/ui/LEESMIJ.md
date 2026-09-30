@@ -38,6 +38,43 @@ Controleren wat er ligt en wat mist: `<godot> --headless --path .
 res://tools/capture.tscn -- uicheck` (statusbord: elk icoon-id, embleem,
 kaartdeel, knop en font, plus of het thema bouwt).
 
+## Beweging (30 september)
+
+Elke inkom en elke microinteractie komt uit `scripts/ui/ui_beweging.gd`
+(via `const Beweging := preload(...)`). Drie patronen:
+
+- **ERIN**: een scherm of laag komt binnen (`inkom_scherm`, `inkom_rij`,
+  `schuif_in`, `wissel`, `fade_in`).
+- **TIK**: reactie op aanraken, keuze of waarde (elke knop via de haak in
+  `UiThema`, plus `plof`, `punch`, `dip`, `stempel`, `schud`, `tel_op`,
+  `duw`, `zweef`, `draai_om`, `naar_schaal`).
+- **WEG**: alleen voor losse lagen (`spook_weg`: voor de logica meteen weg,
+  voor het oog in 0,12 s).
+
+| Token | Waarde | Gebruik |
+|---|---|---|
+| indrukken | 0,08 s QUAD out, naar 0,94-0,985 (grote knoppen minder) | elke knop |
+| terugveren | 0,22 s BACK out | loslaten |
+| hover | 0,12 s, 1,02-1,05, alleen met een echte muis | desktop |
+| scherm in | schaal 0,94 naar 1 in 0,26 s BACK, alpha 0,16 s, waas 0,18 s | overlay, uitleg, pop-ups |
+| rijen | 0,20 s per item, 0,035 s ertussen, samen hooguit 0,20 s | lijsten |
+| plof | 0,24 s BACK, vanaf 0,6-0,85 | keuze, nieuw icoon |
+| punch / dip | 0,07 s naar 1,25 (0,85), 0,16 s BACK terug | getallen |
+| stempel | van 1,45 met -8 graden, 0,10 + 0,14 s | CP-zegel, STEM, winst |
+| tel op | tot 0,5 s, de laatste tekst exact | punten, saldi |
+| duw | een zachte puls na 6 s niets doen, dan elke 8 s | de knop die op jou wacht |
+
+Huisregels (bovenin de module): alleen beeld bovenop een staat die al klopt
+(nooit `visible`, teksten of submits uitstellen); nooit de root van een
+CardView, `Kaartlaag.modulate`, `CpZegel.modulate`/`size` of de
+statkolommen; in containers alleen alpha en een schaal die op de rust
+eindigt; elke tween negeert de time_scale; headless niets (tenzij een check
+forceert); alles binnen 0,45 s klaar.
+
+Standen: Instellingen > Animaties (normaal / rustig / uit, in
+`user://settings.cfg [ui] beweging`); dev-knop `ui_tempo` in het
+sfeer-paneel. Controle: `-- inkomcheck [fase]`.
+
 ## Wat er (nog) niet in zit
 
 - **Acht iconen uit de spec** zijn niet geleverd: vote, nomination, donation,

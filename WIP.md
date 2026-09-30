@@ -1,5 +1,63 @@
 # Fog of War — Work In Progress & Context
 
+## 30 september -- UI-beweging 3-9: schermen, kaarten, hub, beloningen, Animaties
+
+Vervolg op 1+2 (zelfde dag). Alles alleen beeld; de headless checks blijven
+gelijk.
+
+- **Schermen van het bord.** Overlay: vers geopend ploft het paneel en komen
+  de knoppen na elkaar; menu naar menu wisselt alleen de inhoud (de waas blijft
+  staan); dezelfde titel in hetzelfde frame (spawn kopen) beweegt niets.
+  `ui_open` klinkt alleen nog bij een verse opening, hover-geluid alleen met een
+  echte muis. Vervangregel (`meld_weg`/`vervangt`): verdwijnt er een scherm en
+  komt er in hetzelfde of het volgende frame een ander, dan blijft de waas
+  dicht (geen flits van het bord). Factiekeuze, uitleg (tabwissel vloeit
+  over), geluidspaneel en online-meedoen komen binnen; de hoekknoppen ploffen na
+  elkaar in, de contextknop ploft als hij verschijnt. Opgeven: een dialoog, nu
+  hergebruikt (er kwam er een bij per druk).
+- **Onthulscherm en HUD.** Een wrapper `Draai` om elke kaart: de kaarten van
+  de tegenstander liggen eerst met de rug boven en draaien om, met de
+  REVEALED-stempel erop; die van jou komen in een rij. Fase-icoon ploft,
+  prompt wisselt bij een beurtwissel, de timer slaat een hartslag per seconde
+  in de laatste vijf, de telling springt op als hij verandert.
+- **Kaarten.** Statpunt: het getal dat stijgt springt op, de gever zakt; kan
+  het niet, dan schudt de knop nee. Het CP-zegel is verstopt tot zijn kaart
+  landt en stempelt dan (alleen schaal en draai: `-- define cp` meet alpha en
+  maat). Kiezen veert (`_inhoud` 1,0 naar 1,04), de gouden rand faadt in; de
+  eerste opbouw animeert nooit. De bevestigknop ploft als de laatste kaart
+  ligt en duwt na 6 s wachten.
+- **Hub.** Golf bij de eerste opening (24 stukken, klaar binnen 0,45 s; niet
+  bij een herbouw); fasepaneel alleen bij een nieuwe sleutel (ronde, fase, tab,
+  wie aan zet, bots bezig, dank); keuze-plof op het schild en de ring;
+  statusbalk telt op met een punch (over het bord heen, dus winst na een duel
+  telt op); pop-ups ploffen, een tik op het perkament sluit niet, sluiten is een
+  spook-uitgang; keuzeschermen en grootboek komen binnen; klikgeluid in alle
+  helpers. **STEM, KLAAR, NALATEN en NIETS gaan na de eerste tik meteen uit**
+  (met een stempel): dat dicht de oude dubbeltik-race met de bot-thread.
+- **Beloningen.** Punten tellen regel voor regel op en het totaal stempelt,
+  badges ploffen, in het slagrapport tellen inzet, buit en CP op en stempelt de
+  winnaar, een donatie of dank laat "+1" (of "+10") omhoog zweven, en bij winst
+  op het bord stempelt de titel van het eindscherm.
+- **Instelling Animaties** normaal / rustig / uit in het instellingenmenu en de
+  hub-instellingen (`MENU_MOTION*`); uit maakt ook het uitdelen en de
+  tijdlijn-fade direct (alleen met venster).
+- **Vasthouden (les van de film):** het frame waarin een scherm gebouwd wordt
+  is zwaar (zes kaarten, de hub), en een tween zette die lange delta in een
+  stap: de omdraai was voorbij voor je hem zag. Elke inkom legt nu meteen zijn
+  beginstand vast en start pas twee frames later; indrukken, punch en schud
+  niet. Headless niet.
+- **`-- inkomcheck`** heeft nu zeven fasen (module, knoppen, schermen, kaart,
+  hub, beloning, instelling); **`-- inkomfilm [map]`** schiet met venster
+  plaatjes halverwege (tempo 0,3).
+- **Open:** de `.translation`-bestanden zijn opnieuw gebouwd maar niet
+  gecommit, want ze dragen ook de big-bro-teksten die de andere sessie nog in
+  strings.csv heeft staan. Committen samen met dat werk.
+- Checks: inkomcheck 7 fasen PASS (headless en met venster), alle 22
+  hub-shots en het grootboek 0 fouten, uicheck, herstelcheck 777 en 4242 wolf
+  (0), resumecheck 777 1 en 4242 2 (0), naadcheck, koppelcheck, beurtlicht,
+  audiopaneel, simcheck (0), define (alle varianten), sleepcheck (en muis),
+  play, uispel 777 `7882f116...` (165, gelijk aan zonder), batterij 2664 geslaagd, 0 mislukt.
+
 ## 30 september -- UI-beweging 1+2: fundament, elke knop deukt in en veert terug
 
 Max: "geef ieder scherm en alles een subtiele inkom animatie en

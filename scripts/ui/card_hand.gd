@@ -11,6 +11,8 @@ signal drag_dropped(index: int, pos: Vector2)
 signal drag_cancelled(index: int)
 
 const CARD_VIEW_SCENE := preload("res://scenes/ui/card_view.tscn")
+## UI-beweging (30 september): stempel en bevestigknop bij het uitdelen.
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 ## De maat waarin de hand rekent (posities, tussenruimte, overlap): de halve
 ## kaart. De kaart zelf tekent op UiAssets.KAART_MAAT (645x989) en wordt met
 ## KAART_SCHAAL maal de schaalfactor van de layout getoond.
@@ -412,10 +414,19 @@ func open_for_define() -> void:
 	visible = true
 	_set_phase(Constants.UiPhase.DEFINE)
 	# Kaarten uitdelen: ze vliegen een voor een vanaf onderen in, en per kaart
-	# een korte deal-klap met dezelfde oplopende delay.
-	_layout_fan(true, true)
+	# een korte deal-klap met dezelfde oplopende delay. Animaties uit: meteen
+	# op hun plek (de klapjes blijven).
+	if Beweging.uit_gekozen():
+		_layout_fan(false, false)
+	else:
+		_layout_fan(true, true)
 	for i in _cards.size():
 		Audio.play("card_deal", DEAL_STAP * float(i))
+		# UI-beweging: het CP-zegel stempelt als de kaart landt.
+		_cards[i].stempel_cp(0.45 + DEAL_STAP * float(i))
+	# De bevestigknop ploft als de laatste kaart ligt, en duwt als je wacht.
+	Beweging.plof(_confirm_button, 0.45 + DEAL_STAP * float(maxi(0, _cards.size() - 1)), 0.92, false)
+	Beweging.duw(_confirm_button)
 
 
 func _set_phase(new_phase: int) -> void:

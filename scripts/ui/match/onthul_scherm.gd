@@ -52,6 +52,11 @@ var _uitleg: Label
 var _knop: Button
 var _cb: Callable = Callable()
 var _sessie: Object = null
+var _dim: ColorRect = null
+var _midden: CenterContainer = null
+
+## UI-beweging (30 september): inkom en omdraaien (scripts/ui/ui_beweging.gd).
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 
 
 func _init() -> void:
@@ -70,11 +75,13 @@ func _init() -> void:
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
+	_dim = dim
 	var midden := CenterContainer.new()
 	midden.name = "Midden"
 	midden.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	midden.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(midden)
+	_midden = midden
 	var paneel := PanelContainer.new()
 	paneel.name = "Paneel"
 	paneel.theme_type_variation = "PaneelVeldtafel"
@@ -146,17 +153,62 @@ func open(state: GameState, t1: Dictionary, t2: Dictionary, initiative_winner: i
 	var boven: Array = state.cards_revealed.get(tegenstander, [])
 	var onder: Array = state.cards_revealed.get(mens_id, [])
 	var schaal := _kaart_schaal(maxi(boven.size(), onder.size()))
-	_handen.add_child(_bouw_hand(state, tegenstander, boven, _totalen(t1, t2, tegenstander),
-		initiative_winner == tegenstander, naam_van, schaal))
-	_handen.add_child(_bouw_hand(state, mens_id, onder, _totalen(t1, t2, mens_id),
-		initiative_winner == mens_id, naam_van, schaal))
+	var hand_boven := _bouw_hand(state, tegenstander, boven, _totalen(t1, t2, tegenstander),
+		initiative_winner == tegenstander, naam_van, schaal)
+	var hand_onder := _bouw_hand(state, mens_id, onder, _totalen(t1, t2, mens_id),
+		initiative_winner == mens_id, naam_van, schaal)
+	_handen.add_child(hand_boven)
+	_handen.add_child(hand_onder)
+	var vers := not visible
 	if not visible:
 		Audio.play("ui_open")
 	visible = true
+	if vers:
+		_inkom(hand_boven, hand_onder)
 
 
 func sluit() -> void:
 	visible = false
+
+
+## UI-beweging: de waas en het paneel komen binnen, de kaarten van de
+## tegenstander draaien van rug naar voorkant (een voor een, met de stempel
+## erop), die van jou komen in een rij, en het initiatief-icoon en de knop
+## ploffen. Alleen beeld: de knop werkt meteen, en geen check kijkt hierin.
+func _inkom(hand_boven: Control, hand_onder: Control) -> void:
+	if not Beweging.aan():
+		return
+	Beweging.inkom_scherm(null if Beweging.vervangt() else _dim, _midden)
+	var i := 0
+	for draai in _draaiers(hand_boven):
+		var kaart: CardView = (draai as Control).get_child(0) as CardView
+		var v := 0.12 + 0.07 * float(i)
+		if Beweging.vol():
+			kaart.set_verborgen(true)
+		var toon := func() -> void:
+			if is_instance_valid(kaart):
+				kaart.set_verborgen(false)
+				kaart.stempel_onthuld(0.10)
+		Beweging.draai_om(draai, toon, v)
+		i += 1
+	Beweging.inkom_rij(_draaiers(hand_onder), 0.10, 0.05)
+	for ster in [hand_boven.find_child("Initiatief", true, false), hand_onder.find_child("Initiatief", true, false)]:
+		if ster != null:
+			Beweging.plof(ster as Control, 0.30, 0.6, false)
+	Beweging.plof(_knop, 0.35, 0.9, false)
+
+
+## De draaiers (de houder-wrapper om elke kaart) van een hand, van links naar rechts.
+func _draaiers(hand: Control) -> Array:
+	var uit: Array = []
+	var rij := hand.get_node_or_null("Kaarten")
+	if rij == null:
+		return uit
+	for houder in rij.get_children():
+		var draai := (houder as Node).get_node_or_null("Draai")
+		if draai != null:
+			uit.append(draai)
+	return uit
 
 
 # --- Opbouw per hand ----------------------------------------------------------------
@@ -228,13 +280,20 @@ func _kaart_houder(hp: int, stamina: int, attack: int, speler: int, doctrine: in
 	houder.name = "Kaart%d" % (index + 1)
 	houder.custom_minimum_size = UiAssets.KAART_MAAT * schaal
 	houder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# UI-beweging: een vrije wrapper om de kaart (de houder staat in een HBox,
+	# die zijn schaal zou terugzetten); die draait om bij de onthulling.
+	var draai := Control.new()
+	draai.name = "Draai"
+	draai.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	draai.size = UiAssets.KAART_MAAT * schaal
+	houder.add_child(draai)
 	var kaart := CardView.maak(hp, stamina, attack, speler, doctrine, budget)
 	kaart.card_index = index
 	kaart.set_kaart_aantal(aantal)
 	kaart.set_onthuld(true)
 	kaart.scale = Vector2.ONE * schaal
 	kaart.position = -UiAssets.KAART_MAAT * 0.5 * (1.0 - schaal)
-	houder.add_child(kaart)
+	draai.add_child(kaart)
 	return houder
 
 

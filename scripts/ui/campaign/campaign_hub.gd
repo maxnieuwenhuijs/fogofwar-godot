@@ -25,6 +25,8 @@ const SAVE_PAD := "user://campaigns/solo/campagne.jsonl"
 ## De kaarten van het spelregelscherm (29 september). Via preload: headless
 ## kent een nieuwe klasse pas als de editor hem inschreef.
 const HubRegels := preload("res://scripts/ui/campaign/hub_regels.gd")
+## UI-beweging (30 september): inkom en microinteracties (scripts/ui/ui_beweging.gd).
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 ## F6.0 (29 september): uitslag en punten (docs/F6-punten-masterplan.md).
 const _Uitslag := preload("res://core/campaign/uitslag.gd")
 const _Punten := preload("res://core/campaign/puntentabel.gd")
@@ -74,6 +76,14 @@ var _chat_e: Dictionary = {}    # feed-index -> bericht, voor het tabblad tijden
 var _qc_label: Label = null
 var _qc_knoppen: Array = []     # de drie knoppen in de balk (inhoud per fase)
 var _qc_meer: Button = null
+# UI-beweging (30 september):
+var _groep_nu: String = ""       # de groep die _plaats meegeeft (golf bij de eerste opening)
+var _cascade_gedaan: bool = false
+var _paneel_sleutel: String = ""   # ronde|fase|tab|wacht|bezig|dank: alleen een inkom bij verandering
+var _ingediend: bool = false     # STEM/KLAAR/NALATEN: de eerste tik telt, tot het paneel ververst
+## De laatst getoonde saldi in de statusbalk. Static: overleeft het bord, zodat
+## een winst na een duel optelt.
+static var _status_gezien: Dictionary = {}
 
 ## Zoveel nieuwe kaartjes faden onderaan de tijdlijn in; oudere staan er meteen.
 const ONTHUL_MAX := 12
@@ -237,12 +247,64 @@ func _start() -> void:
 		CampaignBridge.feed_gezien = 0  # verse of hervatte campagne: teller opnieuw
 		_feed_tijd.clear()
 		_chat_gezien = 0
+		_status_gezien.clear()
 	CampaignBridge.driver = driver
 	_bouw_layout()
 	get_viewport().size_changed.connect(_herbouw)
 	_ververs()
+	if not _cascade_gedaan:
+		_cascade_gedaan = true
+		_cascade()
 	_werk_door()
 	_tik_klok()
+
+
+## UI-beweging: bij de eerste opening bouwt de hub zich op als een golf van
+## boven naar onder (klaar binnen 0,45 s): titelbalk en statusbalk vallen in,
+## de kolommen komen van de zijkanten, tabs, fasekader en quick chat rijzen op.
+## De BG blijft staan. Een herbouw (andere venstermaat) doet dit niet opnieuw.
+func _cascade() -> void:
+	if not Beweging.aan() or _frame == null:
+		return
+	for kind in _frame.get_children():
+		if not (kind is Control) or not kind.has_meta("hub_groep"):
+			continue
+		var c := kind as Control
+		var van := Vector2.ZERO
+		var v := 0.0
+		var veer := false
+		match String(c.get_meta("hub_groep")):
+			"titel":
+				if c == _vlag:
+					van = Vector2(0, -30)
+					v = 0.10
+					veer = true
+				elif c.name == "GrootboekKnop":
+					van = Vector2(0, -10)
+					v = 0.04
+				else:
+					van = Vector2(0, -14)
+			"kolom":
+				var x: float = c.position.x / _s
+				if x < 130.0:
+					van = Vector2(-18, 0)
+					v = 0.08
+				elif x >= 429.0:   # de vijandkolom staat op 430 (afronding van x * S / S)
+					van = Vector2(18, 0)
+					v = 0.08
+				else:
+					van = Vector2(0, 10)
+					v = 0.12
+			"tabs":
+				van = Vector2(0, 14)
+				v = 0.14
+			"kader":
+				van = Vector2(0, 14)
+				v = 0.16
+			"qc":
+				van = Vector2(0, 14)
+				v = 0.18
+		Beweging.schuif_in(c, van * _s, v, Beweging.SCHUIF_DUUR, veer)
 
 
 ## Factiekeuze bij een nieuwe campagne: zes regimentskaarten (UiFactieKaart)
@@ -341,7 +403,28 @@ func _keuze_scherm(titel: String, naam: String, sub: String = "") -> VBoxContain
 	kolom.add_theme_constant_override("separation", _px(12))
 	frame.add_child(kolom)
 	_keuze_laag = laag
+	if naam != "Lader":
+		# De lader staat er maar twee frames (dan komt het bord): geen inkom.
+		Audio.play("ui_open")
+		_inkom_keuze.call_deferred(laag)
 	return kolom
+
+
+## UI-beweging: een keuzescherm (factie, hervatten, spelregels) schuift op en
+## de inhoud komt in rijen (deferred: de bouwer vult de kolom na _keuze_scherm).
+## Het hout blijft staan; sluiten blijft direct (dat is de dubbeltik-bewaking).
+func _inkom_keuze(laag: Control) -> void:
+	if not Beweging.aan() or not is_instance_valid(laag) or not laag.is_inside_tree() \
+			or laag.get_child_count() < 2:
+		return
+	var frame := laag.get_child(1) as Control
+	Beweging.schuif_in(frame, Vector2(0, 26) * _s)
+	var kolom := frame.get_node_or_null("Inhoud")
+	if kolom != null:
+		Beweging.inkom_rij(kolom.get_children(), 0.10)
+	var kaarten: Array = laag.find_children("Factie_*", "", true, false)
+	kaarten.append_array(laag.find_children("Regelkaart_*", "", true, false))
+	Beweging.inkom_rij(kaarten, 0.14)
 
 
 func _exit_tree() -> void:
@@ -364,6 +447,8 @@ func _px(v: float) -> int:
 func _plaats(kind: Control, x: float, y: float, b: float, h: float, ouder: Control = null) -> Control:
 	kind.position = Vector2(_u(x), _u(y))
 	kind.size = Vector2(_u(b), _u(h))
+	if _groep_nu != "":
+		kind.set_meta("hub_groep", _groep_nu)
 	(ouder if ouder != null else _frame).add_child(kind)
 	return kind
 
@@ -399,9 +484,13 @@ func _bouw_layout() -> void:
 	add_child(_frame)
 	_plaats(HubAssets.plaat("bg/BG"), 0, 0, 564, hoogte)
 	var kolom_onder: float = 706.0 + extra
+	_groep_nu = "kolom"
 	_bouw_kolommen(kolom_onder)
+	_groep_nu = "titel"
 	_bouw_titel()
+	_groep_nu = "tabs"
 	_bouw_tabs(kolom_onder + 4)
+	_groep_nu = "kader"
 	var paneel_top: float = kolom_onder + 50
 	var paneel_onder: float = 936.0 + extra
 	var kader := PanelContainer.new()
@@ -433,7 +522,9 @@ func _bouw_layout() -> void:
 	_voet.alignment = BoxContainer.ALIGNMENT_CENTER
 	_voet.add_theme_constant_override("separation", _px(10))
 	binnen.add_child(_voet)
+	_groep_nu = "qc"
 	_bouw_quick_chat(paneel_onder + 2)
+	_groep_nu = ""
 
 
 ## Titelbalk + statusbalk + de factievlag die er overheen hangt.
@@ -524,11 +615,13 @@ func _bouw_vlag() -> Control:
 
 
 ## Ronde knop met een gekleurd icoon (? en tandwiel in de titelbalk).
-func _rond_knop(icoon: String, naam: String) -> Button:
+func _rond_knop(icoon: String, naam: String, geluid: String = "ui_click") -> Button:
 	var b := Button.new()
 	b.name = naam
 	b.flat = true
 	b.focus_mode = Control.FOCUS_NONE
+	if geluid != "":
+		b.pressed.connect(func() -> void: Audio.play(geluid))
 	for staat in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
 		b.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
 	var bol := HubAssets.plaat("team_enemy_holder/Your_enemy_team_holder_status_BG")
@@ -616,11 +709,15 @@ func _bouw_tabs(y: float) -> void:
 	_tab_fase = _tab_knop("Phase_icon", "TabFase")
 	_plaats(_tab_fase, 12, y, 262, 44)
 	_tab_fase.pressed.connect(func() -> void:
+		if _tab != 0:
+			Audio.play("ui_toggle")
 		_tab = 0
 		_bouw_fase_paneel())
 	_tab_chat = _tab_knop("Chat_icon", "TabChat")
 	_plaats(_tab_chat, 290, y, 262, 44)
 	_tab_chat.pressed.connect(func() -> void:
+		if _tab != 1:
+			Audio.play("ui_toggle")
 		_tab = 1
 		_bouw_fase_paneel())
 
@@ -678,6 +775,7 @@ func _chat_knop(tekst: String, icoon: String, grootte: float) -> Button:
 	b.text = tekst
 	b.focus_mode = Control.FOCUS_NONE
 	b.clip_text = true
+	b.pressed.connect(func() -> void: Audio.play("ui_click"))
 	HubAssets.knop(b, "buttons/Small_button_quickchat", Vector2(30, 30), Vector4(_u(6), 0, _u(6), 0))
 	if grootte > 0:
 		b.add_theme_font_size_override("font_size", _px(grootte))
@@ -861,14 +959,30 @@ func _ververs() -> void:
 	# kanon 3; de soldaat-teller kan daardoor negatief staan). De tent toont
 	# het totaal in punten, ruiter en kanon hoeveel er in de voorraad zitten.
 	var pool: Dictionary = c.pool_van(mens_id)
-	_status["inf"].text = str(maxi(0, int(pool.inf) + 2 * int(pool.cav) + 3 * int(pool.art)))
-	_status["cav"].text = str(maxi(0, int(pool.cav)))
-	_status["art"].text = str(maxi(0, int(pool.art)))
-	_status["cp"].text = str(c.cp_van(mens_id))
-	_status["roem"].text = str(c.punten_van(mens_id))
+	_zet_status("inf", maxi(0, int(pool.inf) + 2 * int(pool.cav) + 3 * int(pool.art)))
+	_zet_status("cav", maxi(0, int(pool.cav)))
+	_zet_status("art", maxi(0, int(pool.art)))
+	_zet_status("cp", c.cp_van(mens_id))
+	_zet_status("roem", c.punten_van(mens_id))
 	_ververs_teams()
 	_ververs_tijdlijn()
 	_bouw_fase_paneel()
+
+
+## Een getal in de statusbalk. Veranderd (ook sinds je op het bord stond): het
+## loopt naar de nieuwe waarde en springt even op (erbij) of zakt (eraf).
+func _zet_status(k: String, v: int) -> void:
+	var l: Label = _status[k]
+	var oud = _status_gezien.get(k)
+	_status_gezien[k] = v
+	if oud == null or int(oud) == v:
+		l.text = str(v)
+		return
+	Beweging.tel_op(l, int(oud), v, 0.45)
+	if v > int(oud):
+		Beweging.punch(l, 1.3)
+	else:
+		Beweging.dip(l)
 
 
 ## Staat van een lid voor de badge: dood, vecht nu, doet mee deze ronde, rust.
@@ -979,6 +1093,7 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array, plek: int = 
 		b.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
 	var status := _lid_status(c, sid)
 	var p := HubAssets.portret(int(sp.get("doctrine", 0)), eigen, status == "dood", _u(72), status)
+	p.name = "Portret"
 	p.position = Vector2(_u(25), 0)
 	p.size = Vector2(_u(72), _u(72))
 	var gekozen := (eigen and sid == _keuze_eigen) or (not eigen and sid == _keuze_vijand)
@@ -992,6 +1107,7 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array, plek: int = 
 			p.modulate = Color(0.6, 0.6, 0.6, 0.8)
 		if gekozen:
 			var gloed := Panel.new()
+			gloed.name = "Gloed"
 			gloed.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			var sb := StyleBoxFlat.new()
 			sb.bg_color = Color(UiAssets.SELECTIE_GOUD, 0.25)
@@ -1040,15 +1156,45 @@ func _team_lid(c: CState, sid: int, eigen: bool, kandidaten: Array, plek: int = 
 				_keuze_eigen = sid
 			else:
 				_keuze_vijand = sid
+			Audio.play("ui_toggle")
 			_ververs_teams()
 			_bouw_fase_paneel()
+			_pop_lid(sid)
+			_pop_keuze("RaadEigen" if eigen else "RaadVijand")
 		elif _testament_open() and _erfgenamen().has(sid):
 			_testament_doel = sid
+			Audio.play("ui_toggle")
 			_ververs_teams()
 			_bouw_fase_paneel()
+			_pop_lid(sid)
+			_pop_keuze("Erfgenaam")
 		else:
 			_toon_lid(sid))
 	return b
+
+
+## UI-beweging: het net gekozen schild in de kolommen ploft, met zijn gouden ring.
+func _pop_lid(sid: int) -> void:
+	for kolom in [_team_links, _team_rechts]:
+		var b: Node = kolom.get_node_or_null("Lid_%d" % sid)
+		if b == null:
+			continue
+		var p := b.get_node_or_null("Portret") as Control
+		if p != null:
+			Beweging.plof(p, 0.0, 0.85, false)
+		var g := b.get_node_or_null("Gloed") as Control
+		if g != null:
+			Beweging.plof(g, 0.0, 0.7)
+
+
+## UI-beweging: het schild in het fasepaneel (raad of testament) ploft na een keuze.
+func _pop_keuze(naam: String) -> void:
+	var kolom := _paneel.find_child(naam, true, false)
+	if kolom == null or kolom.get_child_count() == 0:
+		return
+	var knop := kolom.get_child(0)
+	if knop.get_child_count() > 0:
+		Beweging.plof(knop.get_child(0) as Control, 0.0, 0.85, false)
 
 
 ## De regel met tent + versterkingspunten en medaille + CP: onder een schild
@@ -1156,6 +1302,7 @@ func _link_knop(tekst: String, naam: String, actie: Callable) -> Button:
 	var f := UiAssets.font("tekst")
 	if f != null:
 		b.add_theme_font_override("font", f)
+	b.pressed.connect(func() -> void: Audio.play("ui_click"))
 	b.pressed.connect(actie)
 	return b
 
@@ -1228,11 +1375,14 @@ func _ververs_tijdlijn() -> void:
 						_toon_report(e))
 			_tijdlijn.add_child(kaart)
 			var van_onder: int = driver.feed.size() - 1 - idx
-			if vers and van_onder < ONTHUL_MAX:
+			if vers and van_onder < ONTHUL_MAX and not Beweging.uit_gekozen():
 				kaart.modulate.a = 0.0
 				var tw := (kaart as Control).create_tween()
-				tw.tween_interval(0.15 + vertraging_per * float(nieuw_totaal - 1 - van_onder))
+				var wacht: float = 0.15 + vertraging_per * float(nieuw_totaal - 1 - van_onder)
+				tw.tween_interval(wacht)
 				tw.tween_property(kaart, "modulate:a", 1.0, 0.25)
+				# UI-beweging: het kaartje komt ook een tikje omhoog uit de onderkant.
+				Beweging.plof(kaart as Control, wacht, 0.97, false, Vector2(0.5, 1.0))
 	CampaignBridge.feed_gezien = maxi(CampaignBridge.feed_gezien, driver.feed.size())
 	_scroll_naar_onder(_scroll)
 
@@ -1367,7 +1517,10 @@ func _methode_tekst(m: String) -> String:
 ## met messing hoeken, titel met sierlijn en rechtsboven de sluitknop. Geeft
 ## de inhouds-kolom terug. Tik naast het perkament sluit ook.
 func _popup(titel: String, naam: String = "Popup") -> VBoxContainer:
+	var was_open: bool = _frame.get_node_or_null("Popup") != null
 	_sluit_popup()
+	if not was_open:
+		Audio.play("ui_open")
 	var waas := ColorRect.new()
 	waas.name = "Popup"
 	waas.color = Color(0, 0, 0, 0.6)
@@ -1375,10 +1528,15 @@ func _popup(titel: String, naam: String = "Popup") -> VBoxContainer:
 	waas.position = Vector2.ZERO
 	waas.size = _frame.size
 	_frame.add_child(waas)
+	var vel := PanelContainer.new()
+	# Een tik naast het perkament sluit; niet binnen zijn rust-rechthoek, ook
+	# niet terwijl het nog inploft (dan is er rand vrij).
 	waas.gui_input.connect(func(ev: InputEvent) -> void:
 		if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
+			if Rect2(vel.position, vel.size).has_point((ev as InputEventMouseButton).position):
+				return
+			Audio.play("ui_back")
 			_sluit_popup())
-	var vel := PanelContainer.new()
 	vel.name = naam
 	vel.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Quickchat_pop-up_frame",
 		Vector2(70, 70), Vector4(_u(26), _u(26), _u(26), _u(30))))
@@ -1395,7 +1553,7 @@ func _popup(titel: String, naam: String = "Popup") -> VBoxContainer:
 	inhoud.add_theme_constant_override("separation", _px(8))
 	kolom.add_child(inhoud)
 	# Plaatsen zodra de maat bekend is: gecentreerd, sluitknop op de hoek.
-	var sluit := _rond_knop("Close_icon", "PopupSluit")
+	var sluit := _rond_knop("Close_icon", "PopupSluit", "ui_back")
 	sluit.size = Vector2(_u(52), _u(52))
 	waas.add_child(sluit)
 	sluit.pressed.connect(_sluit_popup)
@@ -1406,16 +1564,31 @@ func _popup(titel: String, naam: String = "Popup") -> VBoxContainer:
 		sluit.position = vel.position + Vector2(m.x - _u(40), -_u(14))
 	vel.minimum_size_changed.connect(plaats)
 	plaats.call_deferred()
+	# UI-beweging: de waas faadt (alleen zijn eigen kleur), het perkament ploft
+	# zodra het staat (na plaats: deferred, in dezelfde volgorde) en de inhoud
+	# die de bouwer erin zet komt in rijen.
+	Beweging.fade_in(waas, 0.0, Beweging.DIM_DUUR, true)
+	_popup_erin.call_deferred(waas, vel, sluit, inhoud)
 	return inhoud
 
 
+func _popup_erin(waas: Control, vel: Control, sluit: Control, inhoud: Control) -> void:
+	if not is_instance_valid(waas) or waas.has_meta("ub_weg"):
+		return
+	Beweging.inkom_scherm(null, vel)
+	Beweging.plof(sluit, 0.08)
+	Beweging.inkom_rij(inhoud.get_children(), 0.05)
+	_na_popup(String(vel.name), inhoud)
+
+
+## Een pop-up gaat weg: voor de logica meteen (de naam "Popup" is vrij, geen
+## invoer meer), voor het oog in 0,12 s (Beweging.spook_weg).
 func _sluit_popup() -> void:
 	if _frame == null:
 		return
 	var oud := _frame.get_node_or_null("Popup")
 	if oud != null:
-		_frame.remove_child(oud)
-		oud.queue_free()
+		Beweging.spook_weg(oud as Control)
 
 
 ## Grote perkamenten knop in een pop-up (Quickchat_pop-up_button).
@@ -1428,6 +1601,7 @@ func _popup_knop(tekst: String, naam: String, actie: Callable) -> Button:
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	HubAssets.knop(b, "buttons/Quickchat_pop-up_button", Vector2(40, 40), Vector4(_u(24), 0, _u(24), 0))
 	b.add_theme_font_size_override("font_size", _px(11))
+	b.pressed.connect(func() -> void: Audio.play("ui_click"))
 	b.pressed.connect(actie)
 	return b
 
@@ -1513,6 +1687,7 @@ func _kies_doel(sleutel: String, wie: String) -> void:
 		naam.size = Vector2(_u(104), _u(18))
 		b.add_child(naam)
 		b.pressed.connect(func() -> void:
+			Audio.play("ui_click")
 			_sluit_popup()
 			_stuur_chat(sleutel, doel))
 		raster.add_child(b)
@@ -1543,12 +1718,22 @@ func _toon_regels() -> void:
 
 func _toon_instellingen() -> void:
 	var inhoud := _popup(tr("HUB_SETTINGS_TITLE"), "Instellingen")
+	# Animaties: normaal / rustig / uit (30 september); tik = de volgende stand.
+	var beweging := _popup_knop(_beweging_tekst(), "InstBeweging", func() -> void: pass)
+	beweging.pressed.connect(func() -> void:
+		Beweging.zet_stand(Beweging.volgende_stand())
+		beweging.text = _beweging_tekst())
+	inhoud.add_child(beweging)
 	inhoud.add_child(_popup_knop(tr("HUB_LEDGER_BTN").to_upper(), "InstGrootboek", func() -> void:
 		_sluit_popup()
 		_toon_grootboek()))
 	inhoud.add_child(_popup_knop(tr("HUB_MAIN_MENU").to_upper(), "InstHoofdmenu", func() -> void:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")))
 	inhoud.add_child(_popup_knop(tr("HUB_CLOSE").to_upper(), "InstSluit", _sluit_popup))
+
+
+func _beweging_tekst() -> String:
+	return (tr("MENU_MOTION") % tr(Beweging.stand_sleutel(Beweging.stand()))).to_upper()
 
 
 func _toon_grootboek() -> void:
@@ -1724,6 +1909,7 @@ func _knop(tekst: String, icoon_id: String, actie: Callable) -> Button:
 		b.icon = UiAssets.icoon(icoon_id)
 		b.expand_icon = true
 		b.add_theme_constant_override("icon_max_width", _px(16))
+	b.pressed.connect(func() -> void: Audio.play("ui_click"))
 	b.pressed.connect(actie)
 	return b
 
@@ -1751,6 +1937,7 @@ func _rode_knop(tekst: String, naam: String, actie: Callable) -> Button:
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	b.add_child(l)
+	b.pressed.connect(func() -> void: Audio.play("ui_click"))
 	b.pressed.connect(actie)
 	return b
 
@@ -1766,6 +1953,109 @@ func _paneel_tekst(tekst: String, grootte: float = 10, kleur: Color = HubAssets.
 func _bouw_fase_paneel() -> void:
 	if _frame == null:
 		return
+	_ingediend = false
+	_bouw_fase_paneel_inhoud()
+	_na_fase_paneel()
+
+
+## UI-beweging: het paneel wordt na elke tik en elke bot-batch herbouwd; alleen
+## als de sleutel (ronde, fase, tab, wie aan zet, bots bezig, dank) verandert
+## komen de regels en de voet in rijen binnen. De eerste opbouw niet (dan rijst
+## het hele kader al op in de golf). Daarna de duw op de hoofdknop.
+func _na_fase_paneel() -> void:
+	var c: CState = driver.c
+	var sleutel := "%d|%d|%d|%s|%s|%s" % [c.ronde, c.fase, _tab, driver.wacht_op_mens(), _bezig, c.dank_af]
+	if sleutel != _paneel_sleutel:
+		var eerste := _paneel_sleutel == ""
+		_paneel_sleutel = sleutel
+		if not eerste:
+			Beweging.inkom_rij(_paneel.get_children())
+			Beweging.inkom_rij(_voet.get_children(), 0.06)
+		if c.fase == CState.Fase.KLAAR and _tab == 0:
+			_beloon_einde()
+	if driver.wacht_op_mens() and not _bezig:
+		for naam in ["StemKnop", "KlaarKnop", "NalatenKnop"]:
+			var knop := _frame.find_child(naam, true, false) as Control
+			if knop != null:
+				Beweging.duw(knop)
+
+
+## De eerste tik op STEM, KLAAR, NALATEN of NIETS telt: alle knoppen in het
+## paneel en de voet gaan meteen uit (dat is de feedback, en het dicht de
+## dubbeltik terwijl de bot-thread al rekent), en de knop krijgt een stempel.
+## Het herbouwde paneel zet het terug.
+func _dien_in(naam: String) -> bool:
+	if _ingediend:
+		return false
+	_ingediend = true
+	for houder in [_paneel, _voet]:
+		for b in (houder as Node).find_children("*", "BaseButton", true, false):
+			(b as BaseButton).disabled = true
+	var knop := _frame.find_child(naam, true, false) as Control
+	if knop != null:
+		# Na button_up (dat komt na pressed en zou de stempel terugveren).
+		(func() -> void: Beweging.stempel(knop)).call_deferred()
+	return true
+
+
+# --- UI-beweging: beloningsmomenten (stap 8) ---------------------------------
+
+## Het eindpaneel: je punten tellen op en de stempel valt; het podium komt in rijen.
+func _beloon_einde() -> void:
+	var rij := _paneel.find_child("JouwPunten", true, false)
+	if rij != null and rij.get_child_count() >= 3 and rij.get_child(2) is Label:
+		var getal := rij.get_child(2) as Label
+		var totaal := int(getal.text)
+		Beweging.tel_op(getal, 0, totaal, 0.5, Callable(), 0.15)
+		Beweging.stempel(getal, 0.62)
+	var podium := _paneel.find_child("Podium", true, false)
+	if podium != null:
+		Beweging.inkom_rij(podium.get_children(), 0.30, 0.08)
+
+
+## Beloningen in een pop-up: het puntenvenster telt regel voor regel op en het
+## totaal stempelt; in het slagrapport tellen inzet, buit en CP op en stempelt
+## de winnaar. Alles binnen 0,7 s (de hub-shots kijken na 0,8 s).
+func _na_popup(naam: String, inhoud: Control) -> void:
+	if not Beweging.vol():
+		return
+	match naam:
+		"Punten":
+			var plus_fmt := func(v: int) -> String:
+				return "+%d" % v
+			var i := 0
+			for kind in inhoud.get_children():
+				if not (kind is HBoxContainer) or kind.get_child_count() != 3 or not (kind.get_child(2) is Label):
+					continue
+				var w := kind.get_child(2) as Label
+				var n := int(w.text)
+				if w.text.begins_with("+"):
+					Beweging.tel_op(w, 0, n, 0.3, plus_fmt, 0.05 + 0.04 * float(i))
+					i += 1
+				else:
+					Beweging.tel_op(w, 0, n, 0.3, Callable(), 0.25)
+					Beweging.stempel(w, 0.45)
+			var badges := inhoud.get_child(inhoud.get_child_count() - 1)
+			if badges is HBoxContainer and badges.get_child_count() > 0 and badges.get_child(0) is HBoxContainer:
+				var k := 0
+				for chip in badges.get_children():
+					Beweging.plof(chip as Control, 0.45 + 0.06 * float(k), 0.6)
+					k += 1
+		"Rapport":
+			var teken_fmt := func(v: int) -> String:
+				return _teken(v)
+			for regel in inhoud.find_children("*", "HBoxContainer", true, false):
+				if regel.get_child_count() == 3 and regel.get_child(2) is Label and regel.get_child(0) is TextureRect:
+					var w := regel.get_child(2) as Label
+					var n := int(w.text)
+					if n != 0:
+						Beweging.tel_op(w, 0, n, 0.35, teken_fmt, 0.15)
+			var laatste := inhoud.get_child(inhoud.get_child_count() - 1)
+			if laatste is Label:
+				Beweging.stempel(laatste as Label, 0.35)
+
+
+func _bouw_fase_paneel_inhoud() -> void:
 	_wis_paneel()
 	_info_label = null
 	_ververs_quick_chat()
@@ -2108,7 +2398,7 @@ func _paneel_nominatie(c: CState) -> void:
 	balk.add_child(vul)
 	voortgang.add_child(balk)
 	var stem := _rode_knop(tr("HUB_VOTE_CAPS"), "StemKnop", func() -> void:
-		if _keuze_eigen >= 0 and _keuze_vijand >= 0:
+		if _keuze_eigen >= 0 and _keuze_vijand >= 0 and _dien_in("StemKnop"):
 			driver.submit_mens_nominatie(_keuze_eigen, _keuze_vijand)
 			_werk_door())
 	stem.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -2141,8 +2431,11 @@ func _raad_keuze(c: CState, sid: int, eigen: bool, rol: String, badge: String, k
 			_keuze_eigen = volgende
 		else:
 			_keuze_vijand = volgende
+		Audio.play("ui_toggle")
 		_ververs_teams()
-		_bouw_fase_paneel())
+		_bouw_fase_paneel()
+		_pop_lid(volgende)
+		_pop_keuze("RaadEigen" if eigen else "RaadVijand"))
 	kolom.add_child(knop)
 	var plaat := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
@@ -2439,8 +2732,9 @@ func _paneel_donatie(c: CState) -> void:
 	ruil.disabled = mijn_cp < koers
 	_voet.add_child(ruil)
 	var klaar := _rode_knop(tr("HUB_DONATE_KLAAR"), "KlaarKnop", func() -> void:
-		driver.submit_mens_klaar_met_doneren()
-		_werk_door())
+		if _dien_in("KlaarKnop"):
+			driver.submit_mens_klaar_met_doneren()
+			_werk_door())
 	klaar.custom_minimum_size = Vector2(_u(160), _u(40))
 	_voet.add_child(klaar)
 
@@ -2493,16 +2787,18 @@ func _paneel_testament(c: CState) -> void:
 	# Rechts de erfgenaam.
 	rij.add_child(_erfgenaam_keuze(c, kandidaten))
 	var niets := _link_knop(tr("HUB_WILL_NONE_BTN"), "NietsNalaten", func() -> void:
-		driver.submit_mens_testament([])
-		_werk_door())
+		if _dien_in("NietsNalaten"):
+			driver.submit_mens_testament([])
+			_werk_door())
 	niets.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_voet.add_child(niets)
 	if _testament_doel >= 0:
 		var naar: int = _testament_doel
 		var geef := _rode_knop(tr("HUB_WILL_NAAR") % String(c.spelers[naar].naam).to_upper(), "NalatenKnop", func() -> void:
-			driver.submit_mens_testament([{"naar": naar, "inf": int(helft.inf), "cav": int(helft.cav),
-				"art": int(helft.art), "cp": helft_cp}])
-			_werk_door())
+			if _dien_in("NalatenKnop"):
+				driver.submit_mens_testament([{"naar": naar, "inf": int(helft.inf), "cav": int(helft.cav),
+					"art": int(helft.art), "cp": helft_cp}])
+				_werk_door())
 		geef.custom_minimum_size = Vector2(_u(230), _u(40))
 		_voet.add_child(geef)
 
@@ -2530,8 +2826,11 @@ func _erfgenaam_keuze(c: CState, kandidaten: Array) -> Control:
 		if kandidaten.is_empty():
 			return
 		_testament_doel = int(kandidaten[(kandidaten.find(_testament_doel) + 1) % kandidaten.size()])
+		Audio.play("ui_toggle")
 		_ververs_teams()
-		_bouw_fase_paneel())
+		_bouw_fase_paneel()
+		_pop_lid(_testament_doel)
+		_pop_keuze("Erfgenaam"))
 	kolom.add_child(knop)
 	var plaat := _naamplaat(String(c.spelers[_testament_doel].naam) if _testament_doel >= 0 else "-", 8)
 	plaat.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

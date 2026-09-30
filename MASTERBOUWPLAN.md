@@ -702,6 +702,12 @@ met PNG; de headless F3.2-campagnerun gekoppeld aan de UI (driver-integratietest
 verschijnt minstens één keer).
 **MAX:** volledige solo-campagne handmatig spelen begin→kampioen zonder netwerk (dé F3-acceptatie).
 
+**☑ 30 september: UI-beweging** (Max: "geef ieder scherm en alles een subtiele inkom animatie en
+microinteractions"). Een module (`scripts/ui/ui_beweging.gd`) voor inkom, microinteracties en
+beloningsmomenten op alle schermen, knoppen, kaarten, HUD en de hub; het bord niet. Instelling
+Animaties normaal/rustig/uit. Check `-- inkomcheck`; alle bestaande checks ongewijzigd (headless doet
+de beweging niets). Details: CLAUDE.md en `assets/ui/LEESMIJ.md`.
+
 ### ☑ F3.4 — Persistentie & hervatten
 
 **Werk:** savegame = campagne-event-log + match-logs (`user://campaigns/<id>/`); hervatten = fold; "durf

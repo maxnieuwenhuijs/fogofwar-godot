@@ -81,6 +81,7 @@ const WEG_NAAR := 0.96
 const FLITS_DUUR := 0.5          # kleurflits die terugvalt naar de rust
 const ZWEEF_DUUR := 0.6          # "+1" dat omhoog zweeft en vervaagt
 const RUSTIG_FACTOR := 0.6       # rustig: zoveel van de duur, alleen alpha
+const VASTHOUD_FRAMES := 2       # een inkom start pas na het (vaak zware) bouwframe
 
 # --- Schakelaar ---------------------------------------------------------------------
 static var _stand: int = NORMAAL
@@ -125,6 +126,23 @@ static func zet_stand(s: int) -> void:
 ## De volgende stand in het rondje normaal -> rustig -> uit -> normaal.
 static func volgende_stand() -> int:
 	return NORMAAL if _stand == UIT else _stand - 1
+
+
+## De vertaalsleutel van een stand (MENU_MOTION_NORMAL, _CALM, _OFF).
+static func stand_sleutel(s: int) -> String:
+	match s:
+		UIT:
+			return "MENU_MOTION_OFF"
+		RUSTIG:
+			return "MENU_MOTION_CALM"
+	return "MENU_MOTION_NORMAL"
+
+
+## Koos de speler "uit"? Dan gaan ook het uitdelen van de waaier en de fade
+## van de tijdlijn direct. Headless nooit (dan blijven de checks gelijk,
+## wat er ook in de settings van de speler staat).
+static func uit_gekozen() -> bool:
+	return _stand == UIT and (_forceer == 1 or not _is_headless())
 
 
 static func zet_tempo(t: float) -> void:
@@ -213,7 +231,7 @@ static func bezig() -> int:
 		return 0
 	var n := 0
 	for tw in tree.get_processed_tweens():
-		if tw.has_meta("ub") and not tw.has_meta("ub_lus") and tw.is_running():
+		if tw.has_meta("ub") and not tw.has_meta("ub_lus") and tw.is_valid():
 			n += 1
 	return n
 
@@ -227,7 +245,13 @@ static func _mag(c: Object) -> bool:
 
 
 ## Een verse tween op dit kanaal; de vorige op hetzelfde kanaal stopt.
-static func _tween(node: Node, kanaal: String) -> Tween:
+## `vasthouden` (voor alles wat binnenkomt): de beginstand staat meteen, maar de
+## tween start pas VASTHOUD_FRAMES frames later. Het frame waarin een scherm
+## gebouwd wordt is vaak zwaar (kaarten, de hub), en een tween zet die lange
+## delta anders in een stap: dan is de inkom voorbij voor je hem ziet. Directe
+## feedback (indrukken, punch, schud) houdt niet vast. Headless niet (daar
+## tekent niets en wachten de checks zelf).
+static func _tween(node: Node, kanaal: String, vasthouden: bool = false) -> Tween:
 	var sleutel := "ub_tw_" + kanaal
 	_stop_kanaal(node, kanaal)
 	var tw := node.create_tween()
@@ -235,7 +259,20 @@ static func _tween(node: Node, kanaal: String) -> Tween:
 	tw.set_speed_scale(_tempo)
 	tw.set_meta("ub", true)
 	node.set_meta(sleutel, tw)
+	if vasthouden and not _is_headless():
+		tw.pause()
+		_speel_na_frames(tw, VASTHOUD_FRAMES)
 	return tw
+
+
+static func _speel_na_frames(tw: Tween, frames: int) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or frames <= 0:
+		if tw.is_valid():
+			tw.play()
+		return
+	# Elke stap een nieuwe lambda (een one-shot mag zichzelf niet opnieuw verbinden).
+	tree.process_frame.connect(func() -> void: _speel_na_frames(tw, frames - 1), CONNECT_ONE_SHOT)
 
 
 static func _stop_kanaal(node: Node, kanaal: String) -> void:
@@ -252,7 +289,8 @@ static func _loopt(node: Node, kanaal: String) -> bool:
 	if not node.has_meta(sleutel):
 		return false
 	var tw = node.get_meta(sleutel)
-	return tw is Tween and (tw as Tween).is_valid() and (tw as Tween).is_running()
+	# Geldig telt ook een tween die nog vastgehouden wordt (gepauzeerd).
+	return tw is Tween and (tw as Tween).is_valid()
 
 
 ## De rust van een eigenschap: vastgelegd zolang er op dit kanaal iets loopt,
@@ -293,7 +331,7 @@ static func _schaal_van(c: Control, van: float, vertraging: float, duur: float,
 		trans: int = Tween.TRANS_BACK, ratio: Vector2 = Vector2(0.5, 0.5)) -> void:
 	_spil(c, ratio)
 	var rust: Vector2 = _rust(c, "scale", "schaal")
-	var tw := _tween(c, "schaal")
+	var tw := _tween(c, "schaal", true)
 	c.scale = rust * van
 	if vertraging > 0.0:
 		tw.tween_interval(vertraging)
@@ -312,7 +350,7 @@ static func fade_in(c: CanvasItem, vertraging: float = 0.0, duur: float = RIJ_DU
 		return
 	var prop := "self_modulate" if eigen else "modulate"
 	var rust: Color = _rust(c, prop, "alfa")
-	var tw := _tween(c, "alfa")
+	var tw := _tween(c, "alfa", true)
 	var start := rust
 	start.a = rust.a * van_alfa
 	c.set(prop, start)
@@ -377,7 +415,7 @@ static func schuif_in(n: Control, van: Vector2, vertraging: float = 0.0,
 	if not vol():
 		return
 	var rust: Vector2 = _rust(n, "position", "pos")
-	var tw := _tween(n, "pos")
+	var tw := _tween(n, "pos", true)
 	n.position = rust + van
 	if vertraging > 0.0:
 		tw.tween_interval(vertraging)
@@ -483,8 +521,8 @@ static func stempel(c: Control, vertraging: float = 0.0, verberg: bool = false) 
 	_spil(c)
 	var rs: Vector2 = _rust(c, "scale", "schaal")
 	var rr: float = _rust(c, "rotation", "rot")
-	var tw := _tween(c, "schaal")
-	var tw_rot := _tween(c, "rot")
+	var tw := _tween(c, "schaal", true)
+	var tw_rot := _tween(c, "rot", true)
 	if verberg:
 		c.scale = rs * 0.01
 	if vertraging > 0.0:
@@ -509,7 +547,7 @@ static func draai_om(c: Control, halverwege: Callable, vertraging: float = 0.0) 
 		return
 	_spil(c)
 	var rust: Vector2 = _rust(c, "scale", "schaal")
-	var tw := _tween(c, "schaal")
+	var tw := _tween(c, "schaal", true)
 	if vertraging > 0.0:
 		tw.tween_interval(vertraging)
 	tw.tween_property(c, "scale", Vector2(0.0, rust.y), DRAAI_DICHT).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
@@ -532,7 +570,7 @@ static func tel_op(l: Label, van: int, naar: int, duur: float = TEL_DUUR,
 	if not _mag(l) or not vol() or van == naar:
 		l.text = tekst.call(naar)
 		return
-	var tw := _tween(l, "tekst")
+	var tw := _tween(l, "tekst", true)
 	l.text = tekst.call(van)
 	if vertraging > 0.0:
 		tw.tween_interval(vertraging)

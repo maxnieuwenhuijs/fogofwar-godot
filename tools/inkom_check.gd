@@ -7,12 +7,13 @@ extends RefCounted
 ## de beweging ook headless (`Beweging.forceer(1)`) en gebruikt een eigen
 ## settings-bestand, zodat de stand van de speler blijft staan.
 ##
-## Fasen (zonder argument: allemaal): module, knoppen.
+## Fasen (zonder argument: allemaal): module, knoppen, schermen, kaart, hub,
+## beloning (die alleen met data/duel_orakel.json), instelling.
 ## Exit 1 bij een fout; de grep op "SCRIPT ERROR" hoort erbij.
 
 const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 const CHECK_CFG := "user://settings_inkomcheck.cfg"
-const FASEN := ["module", "knoppen"]
+const FASEN := ["module", "knoppen", "schermen", "kaart", "hub", "beloning", "instelling"]
 
 static var _fouten := 0
 static var _host: Node = null
@@ -39,6 +40,16 @@ static func run(host: Node, fasen: Array = []) -> int:
 				await _module()
 			"knoppen":
 				await _knoppen()
+			"schermen":
+				await _schermen()
+			"kaart":
+				await _kaart()
+			"hub":
+				await _hub()
+			"beloning":
+				await _beloning()
+			"instelling":
+				await _instelling()
 			_:
 				_fouten += 1
 				print("[INKOM] onbekende fase: %s (bekend: %s)" % [fase, ", ".join(FASEN)])
@@ -430,3 +441,372 @@ static func _echte_klik(knop: Button, uitleg: Node, plek: Vector2, wat: String) 
 	if (uitleg as Control).visible:
 		uitleg.call("_close")
 	await _wacht(0.3)
+
+
+# --- Fase schermen: de modale schermen van het bord ------------------------------
+
+static func _schermen() -> void:
+	print("[INKOM] fase schermen")
+	var game: Node = load("res://scenes/game/game.tscn").instantiate()
+	_host.add_child(game)
+	await _wacht(0.8)
+	var overlay: Control = game.get("_overlay")
+	var midden: Control = overlay.get_node("Center")
+	var dim: Control = overlay.get_node("Dim")
+	var knoppen: Node = overlay.get("_buttons")
+	# 1. het hoofdmenu kwam binnen en staat in rust
+	_ok(_gelijk(midden.scale, Vector2.ONE) and is_equal_approx(dim.modulate.a, 1.0) and _alle_rust(knoppen),
+		"hoofdmenu: na 0,8 s in rust")
+	# 2. menu naar menu: de waas blijft staan, de inhoud wisselt
+	overlay.call("_pick", 0)
+	var waas_bleef := is_equal_approx(dim.modulate.a, 1.0)
+	var wisselt := midden.scale.x < 0.999 or not _alle_rust(knoppen)
+	await _wacht(0.5)
+	_ok(waas_bleef and wisselt and _gelijk(midden.scale, Vector2.ONE) and _alle_rust(knoppen),
+		"menu naar menu: waas blijft, inhoud wisselt, daarna rust")
+	# 3. dezelfde titel opnieuw in hetzelfde frame (spawn kopen): niets beweegt
+	var titel: String = (overlay.get("_title") as Label).text
+	overlay.hide()
+	overlay.call("show_choice", titel, "", ["a", "b"], Callable())
+	_ok(_gelijk(midden.scale, Vector2.ONE) and _alle_rust(knoppen), "zelfde titel in hetzelfde frame: niets beweegt")
+	await _wacht(0.3)
+	# 4. een scherm dat een ander vervangt: de factie-achtergrond flitst niet
+	overlay.hide()
+	var factie: Control = game.get("_factie_keuze")
+	factie.call("open", "Titel", "Uitleg", false, func(_i: int) -> void: pass)
+	var achter: Control = factie.get("_achtergrond")
+	_ok(is_equal_approx(achter.modulate.a, 1.0), "vervangt: de achtergrond van de factiekeuze blijft dicht")
+	await _wacht(0.6)
+	_ok(_alle_rust(factie.get("_lijst")), "factiekeuze: de lijst staat in rust")
+	factie.call("sluit")
+	await _wacht(0.1)
+	# 5. de uitleg: paneel in, tabwissel laat de inhoud overvloeien
+	var uitleg: Control = game.get("_instructions")
+	uitleg.call("open")
+	var um: Control = uitleg.get("_midden")
+	var klein := um.scale.x < 0.999
+	await _wacht(0.5)
+	_ok(klein and _gelijk(um.scale, Vector2.ONE), "uitleg: ploft en staat in rust")
+	uitleg.call("_select_tab", 1, true)
+	var scroll: Control = uitleg.get("_scroll")
+	var vloeit := scroll.modulate.a < 0.999
+	await _wacht(0.35)
+	_ok(vloeit and is_equal_approx(scroll.modulate.a, 1.0) and _gelijk(scroll.scale, Vector2.ONE),
+		"uitleg: tabwissel vloeit over en eindigt in rust")
+	uitleg.call("_close")
+	await _wacht(0.1)
+	# 6. het geluidspaneel: de 4 schuiven staan er meteen, het paneel ploft
+	game.call("_show_audio_panel")
+	var paneel: Control = game.get("_audio_panel")
+	var schuiven: int = paneel.find_children("*", "HSlider", true, false).size()
+	await _wacht(0.5)
+	_ok(schuiven == 4 and _gelijk(paneel.scale, Vector2.ONE) and is_equal_approx(paneel.modulate.a, 1.0),
+		"geluidspaneel: 4 schuiven meteen, daarna in rust")
+	paneel.visible = false
+	# 7. de hoekknoppen ploften in en houden hun alpha 0,9
+	var help: Control = null
+	var sfeer: Control = null
+	for k in game.get_node("UI").get_children():
+		if k is Button and (k as Button).theme_type_variation == "KnopRond":
+			help = k
+		elif k is Button and (k as Button).theme_type_variation == "KnopVierkant" and sfeer == null:
+			sfeer = k
+	_ok(help != null and _gelijk(help.scale, Vector2.ONE) and sfeer != null and is_equal_approx(sfeer.modulate.a, 0.9),
+		"hoekknoppen in rust, sfeer-knop houdt alpha 0,9")
+	game.queue_free()
+	await _wacht(0.2)
+
+
+## Staan alle zichtbare kinderen in rust (alpha 1, schaal 1, draai 0)?
+static func _alle_rust(ouder: Node) -> bool:
+	for k in ouder.get_children():
+		if k is Control and (k as Control).visible and not (k as Node).is_queued_for_deletion():
+			var c := k as Control
+			if not (_gelijk(c.scale, Vector2.ONE) and is_equal_approx(c.modulate.a, 1.0) and is_zero_approx(c.rotation)):
+				return false
+	return true
+
+
+# --- Fase kaart: uitdelen met stempel, statpunten, nee, onthulling ---------------
+
+static func _kaart() -> void:
+	print("[INKOM] fase kaart")
+	var game: Node = load("res://scenes/game/game.tscn").instantiate()
+	_host.add_child(game)
+	await _wacht(0.8)
+	game.call("_start_match", 1)
+	await _wacht(0.2)
+	game.call("_confirm_placement")
+	await _wacht(0.8)
+	if Phase.is_define(GameSession.state.phase) and not (game.get("_card_hand") as Control).visible:
+		game.call("_on_cp_choice", 1)
+	await _wacht(0.1)
+	var hand: CardHand = game.get("_card_hand")
+	var views: Array = hand.get_card_views()
+	_ok(views.size() >= 2, "waaier open met kaarten (%d)" % views.size())
+	if views.size() < 2:
+		game.queue_free()
+		return
+	var zegel: Control = (views[0] as Node).find_child("CpZegel", true, false)
+	var verstopt := zegel.scale.x < 0.5
+	await _wacht(1.4)
+	var zegels_rust := true
+	for v in views:
+		var z: Control = (v as Node).find_child("CpZegel", true, false)
+		if not (_gelijk(z.scale, Vector2.ONE) and is_zero_approx(z.rotation)):
+			zegels_rust = false
+	_ok(verstopt and zegels_rust and zegel.modulate.a >= 0.99, "CP-zegel verstopt tot hij landt, stempelt, eindigt in rust")
+	# statpunt: het getal dat stijgt springt op, de gever zakt, daarna rust
+	var kaart: CardView = views[0]
+	var hp: Label = kaart.find_child("HpValue", true, false)
+	var voor: int = kaart.data.hp
+	kaart.call("_adjust_stat", &"hp", 1)
+	await _wacht(0.04)
+	var veranderd: bool = kaart.data.hp != voor
+	var sprong := hp != null and hp.scale.x > 1.0
+	await _wacht(0.4)
+	_ok(not veranderd or (sprong and _gelijk(hp.scale, Vector2.ONE)), "statpunt: springt op en valt terug")
+	# nee: blijf plussen tot het niet meer kan, dan schudt de knop
+	var plus: Button = kaart.find_child("HpPlus", true, false)
+	var schudde := false
+	for i in 12:
+		var v0: int = kaart.data.hp
+		kaart.call("_adjust_stat", &"hp", 1)
+		if kaart.data.hp == v0:
+			await _wacht(0.06)
+			schudde = plus != null and not is_zero_approx(plus.rotation)
+			break
+	await _wacht(0.4)
+	_ok(schudde and plus != null and is_zero_approx(plus.rotation), "kan niet: de plus schudt nee en staat weer recht")
+	# de kaartwortels staan waar de hand ze zet (geen beweging op de root)
+	var wortels_ok := true
+	for v in views:
+		if (v as Control).has_meta("ub_tw_schaal") or (v as Control).has_meta("ub_rust_scale"):
+			wortels_ok = false
+	_ok(wortels_ok, "geen UI-beweging op de wortel van een kaart")
+	# onthulling: bevestig, de bot definieert, het onthulscherm komt
+	hand.call("_on_confirm_pressed")
+	var onthul: Control = null
+	for i in 60:
+		await _wacht(0.1)
+		onthul = game.get("_onthul_scherm")
+		if onthul != null and onthul.visible:
+			break
+	_ok(onthul != null and onthul.visible, "onthulscherm open")
+	if onthul != null and onthul.visible:
+		await _wacht(0.05)
+		var draaiers: Array = onthul.find_children("Draai", "", true, false)
+		var eerste_bezig := false
+		for d in draaiers:
+			if (d as Control).scale.x < 0.999:
+				eerste_bezig = true
+		await _wacht(1.3)
+		var alles_rust := true
+		var rug := false
+		for d in draaiers:
+			if not (_gelijk((d as Control).scale, Vector2.ONE) and is_equal_approx((d as Control).modulate.a, 1.0)):
+				alles_rust = false
+			var cv: CardView = (d as Node).get_child(0)
+			if (cv.find_child("Rug", true, false) as Control).visible:
+				rug = true
+			var st: Control = cv.find_child("Onthuld", true, false)
+			if st.visible and not _gelijk(st.scale, Vector2.ONE * UiAssets.KAART_ONTHULD_SCHAAL):
+				alles_rust = false
+		_ok(draaiers.size() >= 2 and eerste_bezig and alles_rust and not rug,
+			"onthulling: kaarten draaien om en staan daarna open en in rust (%d)" % draaiers.size())
+	game.queue_free()
+	await _wacht(0.2)
+
+
+# --- Fase hub: golf, fasepaneel, dubbeltik, pop-ups, grootboek, beloning ----------
+
+static func _hub() -> void:
+	print("[INKOM] fase hub")
+	var hs = load("res://tools/hub_shot.gd")
+	var orakel := "res://data/duel_orakel.json" if FileAccess.file_exists("res://data/duel_orakel.json") else ""
+	var driver = hs._nieuwe_driver(42, orakel)
+	hs._spoel_door(driver, "raad")
+	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	_host.add_child(hub)
+	# Meteen meten: _ready bouwt de hub en start de golf, en het eerste frame
+	# daarna is headless zo lang dat de golf dan al klaar kan zijn.
+	var frame: Control = hub.get("_frame")
+	var schuift := 0
+	for k in frame.get_children():
+		if k.has_meta("hub_groep") and (k as Node).has_meta("ub_rust_position"):
+			schuift += 1
+	# Met venster start de golf twee frames na het (zware) bouwframe (vasthouden),
+	# en op een drukke machine duurt dat bouwframe zelf soms langer dan een vaste
+	# wachttijd. Dus: wachten tot er geen UI-tween meer loopt (plafond 3 s).
+	var t0 := Time.get_ticks_msec()
+	await _wacht(0.5)
+	while Beweging.bezig() > 0 and Time.get_ticks_msec() - t0 < 3000:
+		await _frame()
+	var ms := Time.get_ticks_msec() - t0
+	var rust := true
+	for k in frame.get_children():
+		if k.has_meta("ub_rust_position"):
+			rust = false
+	_ok(schuift >= 8 and rust and ms < 3000, "hub: de golf loopt (%d stukken) en staat na %d ms in rust" % [schuift, ms])
+	# hetzelfde paneel nog eens: geen nieuwe inkom (dat gebeurt na elke tik)
+	var voor: int = Beweging.bezig()
+	hub.call("_bouw_fase_paneel")
+	_ok(Beweging.bezig() <= voor, "dezelfde sleutel: geen nieuwe inkom")
+	# pop-up: erin, dicht voor de logica meteen, spook na 0,3 s weg
+	hub.call("_toon_instellingen")
+	await _wacht(0.05)
+	var waas: Control = frame.get_node_or_null("Popup")
+	var vel: Control = waas.find_child("Instellingen", false, false) if waas != null else null
+	await _wacht(0.4)
+	_ok(vel != null and _gelijk(vel.scale, Vector2.ONE) and is_equal_approx(vel.modulate.a, 1.0), "pop-up ploft en staat in rust")
+	if waas != null and vel != null:
+		var klik := InputEventMouseButton.new()
+		klik.button_index = MOUSE_BUTTON_LEFT
+		klik.pressed = true
+		klik.position = vel.position + vel.size * 0.5
+		waas.gui_input.emit(klik)
+		_ok(frame.get_node_or_null("Popup") != null, "een tik op het perkament sluit niet")
+	hub.call("_sluit_popup")
+	_ok(frame.get_node_or_null("Popup") == null, "sluiten: de naam Popup is meteen vrij")
+	await _wacht(0.3)
+	var spook := false
+	for k in frame.get_children():
+		if String(k.name).begins_with("Popup"):
+			spook = true
+	_ok(not spook, "sluiten: na 0,3 s geen spook meer")
+	# grootboek: 16 rijen, in rust
+	hub.call("_toon_grootboek")
+	await _wacht(0.55)
+	var tabel: Node = hub.find_child("GrootboekTabel", true, false)
+	var rijen := 0
+	if tabel != null:
+		for r in tabel.get_children():
+			if not r.is_queued_for_deletion():
+				rijen += 1
+	_ok(rijen == 16 and tabel != null and _alle_rust(tabel), "grootboek: 16 rijen in rust na 0,55 s (%d)" % rijen)
+	var boek: Node = hub.find_child("Grootboek", true, false)
+	if boek != null and boek.get_parent() != null:
+		boek.get_parent().queue_free()
+	await _wacht(0.1)
+	# dubbeltik op STEM: de eerste telt, de rest van het paneel gaat uit
+	var stem: Button = hub.find_child("StemKnop", true, false)
+	if stem != null and not stem.disabled:
+		stem.pressed.emit()
+		var dicht: bool = bool(hub.get("_ingediend")) and stem.disabled
+		stem.pressed.emit()
+		_ok(dicht, "STEM: meteen uit na de eerste tik, de tweede telt niet")
+		for i in 100:
+			await _wacht(0.1)
+			if not bool(hub.get("_bezig")):
+				break
+	else:
+		print("[INKOM]   (geen STEM te drukken in deze stand)")
+	await _wacht(0.3)
+	hub.queue_free()
+	await _wacht(0.2)
+
+
+# --- Fase beloning: punten en eindscherm ---------------------------------------
+
+static func _beloning() -> void:
+	print("[INKOM] fase beloning")
+	var hs = load("res://tools/hub_shot.gd")
+	var orakel := "res://data/duel_orakel.json" if FileAccess.file_exists("res://data/duel_orakel.json") else ""
+	if orakel == "":
+		print("[INKOM]   (geen duel_orakel.json: fase beloning overgeslagen)")
+		return
+	var driver = hs._nieuwe_driver(42, orakel)
+	hs._spoel_door(driver, "einde")
+	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	_host.add_child(hub)
+	await _wacht(1.1)
+	var rij: Node = hub.find_child("JouwPunten", true, false)
+	var mijn: Dictionary = driver.punten().get(0, {"totaal": 0})
+	_ok(rij == null or (rij.get_child(2) as Label).text == str(int(mijn.totaal)),
+		"eindpaneel: je punten staan na het optellen exact goed")
+	hub.call("_toon_punten")
+	await _wacht(0.85)
+	var popup: Node = hub.find_child("Punten", true, false)
+	var totaal_ok := false
+	if popup != null:
+		for l in popup.find_children("*", "Label", true, false):
+			if (l as Label).text == str(int(mijn.totaal)):
+				totaal_ok = true
+	_ok(popup != null and totaal_ok, "puntenvenster: het totaal staat na 0,85 s exact goed")
+	_ok(hub.find_children("Zweef", "", true, false).is_empty(), "geen zweef-labels achtergebleven")
+	hub.queue_free()
+	await _wacht(0.2)
+
+
+# --- Fase instelling: Animaties normaal / rustig / uit ----------------------------
+
+static func _instelling() -> void:
+	print("[INKOM] fase instelling")
+	# op schijf en terug (het eigen check-bestand, niet dat van de speler)
+	Beweging.zet_stand(Beweging.UIT)
+	Beweging.zet_stand(Beweging.NORMAAL)
+	Beweging.zet_stand(Beweging.RUSTIG)
+	var cfg := ConfigFile.new()
+	cfg.load(CHECK_CFG)
+	Beweging.zet_stand(Beweging.NORMAAL)
+	var bewaard: String = String(cfg.get_value("ui", "beweging", "?"))
+	Beweging.laad()
+	_ok(bewaard == "rustig" and Beweging.stand() == Beweging.NORMAAL, "stand op schijf (%s) en terug geladen" % bewaard)
+	# het rondje normaal -> rustig -> uit -> normaal
+	var rondje: Array = []
+	for i in 3:
+		Beweging.zet_stand(Beweging.volgende_stand())
+		rondje.append(Beweging.stand())
+	_ok(rondje == [Beweging.RUSTIG, Beweging.UIT, Beweging.NORMAAL], "rondje normaal, rustig, uit, normaal")
+	# uit: niets beweegt, en ook het uitdelen en de tijdlijn gaan direct
+	var wortel := Control.new()
+	_host.add_child(wortel)
+	var a := _blok(wortel, "A", Vector2(100, 100))
+	Beweging.zet_stand(Beweging.UIT)
+	Beweging.plof(a)
+	Beweging.inkom_scherm(null, a)
+	_ok(a.scale == Vector2.ONE and is_equal_approx(a.modulate.a, 1.0) and not a.has_meta("ub_rust_scale")
+		and Beweging.uit_gekozen(), "uit: geen beweging, en uit_gekozen voor waaier en tijdlijn")
+	Beweging.zet_stand(Beweging.NORMAAL)
+	_ok(not Beweging.uit_gekozen(), "normaal: waaier en tijdlijn bewegen gewoon")
+	wortel.queue_free()
+	# de knop in het instellingenmenu van het bord
+	var game: Node = load("res://scenes/game/game.tscn").instantiate()
+	_host.add_child(game)
+	await _wacht(0.8)
+	game.call("_show_settings_menu")
+	var overlay: Node = game.get("_overlay")
+	var knoppen: Array = (overlay.get("_buttons") as Node).get_children()
+	var verwacht: String = game.tr("MENU_MOTION") % game.tr(Beweging.stand_sleutel(Beweging.NORMAAL))
+	var tekst_ok: bool = knoppen.size() == 5 and (knoppen[2] as Button).text == verwacht
+	overlay.call("_pick", 2)
+	var na: Array = (overlay.get("_buttons") as Node).get_children()
+	var verwacht_na: String = game.tr("MENU_MOTION") % game.tr(Beweging.stand_sleutel(Beweging.RUSTIG))
+	var gewisseld: bool = Beweging.stand() == Beweging.RUSTIG and na.size() == 5 and (na[2] as Button).text == verwacht_na
+	_ok(tekst_ok and gewisseld, "bord-menu: '%s' en tikken zet hem op rustig" % verwacht)
+	Beweging.zet_stand(Beweging.NORMAAL)
+	game.queue_free()
+	await _wacht(0.2)
+	# de knop in de instellingen van de hub
+	var hs = load("res://tools/hub_shot.gd")
+	var driver = hs._nieuwe_driver(42, "")
+	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	_host.add_child(hub)
+	await _wacht(0.3)
+	hub.call("_toon_instellingen")
+	await _wacht(0.1)
+	var knop: Button = hub.find_child("InstBeweging", true, false)
+	var voor: String = knop.text if knop != null else ""
+	if knop != null:
+		knop.pressed.emit()
+	_ok(knop != null and Beweging.stand() == Beweging.RUSTIG and knop.text != voor and knop.text == knop.text.to_upper(),
+		"hub-instellingen: '%s' wordt '%s'" % [voor, knop.text if knop != null else "?"])
+	Beweging.zet_stand(Beweging.NORMAAL)
+	hub.queue_free()
+	await _wacht(0.2)

@@ -43,6 +43,11 @@ var _telling: RichTextLabel = null
 var _fase_icoon: TextureRect = null
 var _fase_id: String = ""
 var _timer_rood: bool = false
+var _beurt_speler: int = -1   # UI-beweging: de prompt wisselt alleen bij een echte beurtwissel
+var _timer_sec: int = -1      # UI-beweging: een hartslag per hele seconde
+
+## UI-beweging (30 september): microinteracties (scripts/ui/ui_beweging.gd).
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 
 
 func _init() -> void:
@@ -106,9 +111,13 @@ func _stijl_labels() -> void:
 func ververs(phase: int, prompt_gezet: bool) -> void:
 	var id := UiAssets.fase_icoon_id(phase)
 	if id != _fase_id:
+		var eerste := _fase_id == ""
 		_fase_id = id
 		_fase_icoon.texture = UiAssets.icoon(id) if id != "" else null
 		_fase_icoon.visible = _fase_icoon.texture != null
+		if not eerste:
+			# de modulate is de inkt-tint: alleen schaal
+			Beweging.plof(_fase_icoon, 0.0, 0.55, false)
 	if prompt_gezet and _prompt != null:
 		_prompt.add_theme_color_override("font_color", UiAssets.INKT)
 	_zet_timer_rood(false)
@@ -118,11 +127,20 @@ func ververs(phase: int, prompt_gezet: bool) -> void:
 func zet_beurt(player_id: int) -> void:
 	if _prompt != null:
 		_prompt.add_theme_color_override("font_color", UiAssets.team_kleur(player_id))
+		if player_id != _beurt_speler and _beurt_speler != -1:
+			Beweging.wissel(_prompt, Vector2(0.0, 0.5))   # links uitgelijnd: spil links
+		_beurt_speler = player_id
 
 
 ## Elke frame uit de timer-tak van _process: de laatste seconden diep rood.
 func zet_timer(seconden_over: float) -> void:
-	_zet_timer_rood(int(ceil(seconden_over)) <= TIMER_ROOD_VANAF)
+	var sec := int(ceil(seconden_over))
+	_zet_timer_rood(sec <= TIMER_ROOD_VANAF)
+	if sec != _timer_sec:
+		_timer_sec = sec
+		if sec > 0 and sec <= TIMER_ROOD_VANAF and _top != null:
+			# een hartslag per seconde, op de maat van timer_tick
+			Beweging.punch(_top, 1.06, Vector2(0.0, 0.5))
 
 
 func _zet_timer_rood(aan: bool) -> void:

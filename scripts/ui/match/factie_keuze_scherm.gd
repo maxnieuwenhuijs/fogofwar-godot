@@ -36,6 +36,10 @@ var _scroll: ScrollContainer
 var _lijst: VBoxContainer
 var _cb: Callable = Callable()
 var _met_verrassing: bool = false
+var _achtergrond: PanelContainer = null
+
+## UI-beweging (30 september): de inkom van de lijst (scripts/ui/ui_beweging.gd).
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 
 
 func _init() -> void:
@@ -48,6 +52,10 @@ func _init() -> void:
 	achtergrond.theme_type_variation = "PaneelDonker"
 	achtergrond.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(achtergrond)
+	_achtergrond = achtergrond
+	visibility_changed.connect(func() -> void:
+		if not visible:
+			Beweging.meld_weg())
 	var marge := MarginContainer.new()
 	marge.add_theme_constant_override("margin_left", 40)
 	marge.add_theme_constant_override("margin_right", MARGE_RECHTS)
@@ -86,11 +94,18 @@ func open(titel: String, uitleg: String, met_verrassing: bool, cb: Callable) -> 
 	_uitleg.visible = uitleg != ""
 	_met_verrassing = met_verrassing
 	_cb = cb
+	var vers := not visible
+	var vervangt := Beweging.vervangt()
 	_bouw_lijst()
 	if not visible:
 		Audio.play("ui_open")
 	visible = true
 	_scroll.scroll_vertical = 0
+	# UI-beweging: de achtergrond is ondoorzichtig, dus alleen faden (en niet als
+	# er net een ander scherm verdween: dan zou het bord erdoor flitsen).
+	if vers and not vervangt:
+		Beweging.fade_in(_achtergrond, 0.0, Beweging.DIM_DUUR)
+	Beweging.inkom_rij([_titel, _uitleg] + _lijst.get_children(), 0.04)
 
 
 func sluit() -> void:

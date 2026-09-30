@@ -106,6 +106,12 @@ var _gekoppeld: TextureRect
 var _rug: TextureRect
 var _tap_area: Button
 var _buttons: Array[Button] = []
+var _staat_klaar: bool = false   # UI-beweging: de eerste opbouw animeert nooit
+
+## UI-beweging (30 september): microinteracties op de kaart (scripts/ui/ui_beweging.gd).
+## Nooit de root van de kaart, Kaartlaag.modulate, CpZegel modulate/size of de
+## statkolommen: die meten -- define en -- sleepcheck.
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 
 
 func _ready() -> void:
@@ -122,6 +128,7 @@ func _ready() -> void:
 	_pas_team_toe()
 	_pas_doctrine_toe()
 	_refresh()
+	_staat_klaar = true
 
 
 ## Losse weergavekaart (onthulscherm, rapporten): niet bewerkbaar, het
@@ -195,6 +202,20 @@ func set_kaart_aantal(aantal: int) -> void:
 func set_cp_inzet(aan: bool) -> void:
 	_cp_inzet = aan
 	_update_staat()
+
+
+## UI-beweging: het CP-zegel stempelt op de kaart (bij het uitdelen, als hij
+## landt). Alleen schaal en draai, dus alpha en maat blijven wat -- define cp meet.
+func stempel_cp(vertraging: float = 0.0) -> void:
+	if _cp_inzet:
+		Beweging.stempel(_cp_zegel, vertraging, true)
+
+
+## UI-beweging: de REVEALED-stempel valt (na het omdraaien op het onthulscherm);
+## zijn rust (schaal 0,85 en schuin) blijft.
+func stempel_onthuld(vertraging: float = 0.0) -> void:
+	if _onthuld_rect != null and _onthuld_rect.visible:
+		Beweging.stempel(_onthuld_rect, vertraging)
 
 
 ## De REVEALED-stempel.
@@ -489,8 +510,17 @@ func _update_staat() -> void:
 		button.visible = _editable and open
 	_lint.visible = _selectable and not gekoppeld and open
 	_gekoppeld.visible = gekoppeld and open
+	var gloed_was: bool = _gloed.visible
 	_gloed.visible = _selected and not gekoppeld and open
-	_inhoud.scale = Vector2.ONE * (GESELECTEERD_SCHAAL if _gloed.visible else 1.0)
+	# UI-beweging: kiezen veert (1,0 naar 1,04 met een veertje), de gouden rand
+	# faadt in; de eerste opbouw zet het meteen.
+	var inhoud_doel := Vector2.ONE * (GESELECTEERD_SCHAAL if _gloed.visible else 1.0)
+	if _staat_klaar:
+		Beweging.naar_schaal(_inhoud, inhoud_doel)
+		if _gloed.visible and not gloed_was:
+			Beweging.fade_in(_gloed, 0.0, 0.12)
+	else:
+		_inhoud.scale = inhoud_doel
 	_kaartlaag.modulate = Color(GEKOPPELD_DIM, GEKOPPELD_DIM, GEKOPPELD_DIM) if gekoppeld else Color.WHITE
 	_tap_area.visible = _selectable and not gekoppeld and open
 	_onthuld_rect.visible = _onthuld and open
@@ -544,9 +574,11 @@ func _adjust_stat(field: StringName, delta: int) -> void:
 	if not _editable:
 		return
 	var changed := false
+	var ander: StringName = &""   # UI-beweging: waar het punt vandaan kwam of heen ging
 	if delta > 0:
 		# +stat: haal een punt weg bij de grootste andere stat (>1).
 		var donor := _biggest_other(field, 1)
+		ander = donor
 		var cap: int = data.budget - 2 * Constants.MIN_STAT
 		# Beer: stamina-limiet bij definitie (knop heet nog speed_max).
 		if field == &"stamina" and data.speed_max > 0:
@@ -563,11 +595,42 @@ func _adjust_stat(field: StringName, delta: int) -> void:
 				receiver = &"hp" if field != &"hp" else &"attack"
 			data.set(field, int(data.get(field)) - 1)
 			data.set(receiver, int(data.get(receiver)) + 1)
+			ander = receiver
 			changed = true
 	if changed:
 		Audio.play("card_stat_up" if delta > 0 else "card_stat_down")
 		_refresh()
 		stats_changed.emit()
+		# UI-beweging: het getal dat erbij krijgt springt op, de gever zakt even.
+		Beweging.punch(_waarde_label(field if delta > 0 else ander))
+		Beweging.dip(_waarde_label(ander if delta > 0 else field))
+	else:
+		# Kan niet (ondergrens of plafond): de knop schudt nee.
+		var i := _stat_index(field)
+		if i >= 0 and i + (0 if delta > 0 else 3) < _buttons.size():
+			Beweging.schud(_buttons[i + (0 if delta > 0 else 3)])
+
+
+func _waarde_label(field: StringName) -> Label:
+	match field:
+		&"hp":
+			return _hp_value
+		&"stamina":
+			return _sta_value
+		&"attack":
+			return _atk_value
+	return null
+
+
+func _stat_index(field: StringName) -> int:
+	match field:
+		&"hp":
+			return 0
+		&"stamina":
+			return 1
+		&"attack":
+			return 2
+	return -1
 
 
 func _other_fields(field: StringName) -> Array:

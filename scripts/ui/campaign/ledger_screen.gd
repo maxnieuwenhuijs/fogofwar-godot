@@ -85,6 +85,10 @@ static func rijen(c: CState, kolom: String, kijker: int = -1) -> Array:
 	return uit
 
 
+## UI-beweging (30 september): inkom, sorteren en sluiten (scripts/ui/ui_beweging.gd).
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
+
+
 ## Bouw het scherm over de hele oppervlakte; sluiten = queue_free.
 func open(c: CState, mens_id: int) -> void:
 	_c = c
@@ -141,7 +145,10 @@ func open(c: CState, mens_id: int) -> void:
 	sluit.custom_minimum_size = Vector2(220, 84)
 	sluit.add_theme_font_size_override("font_size", 22)
 	sluit.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	sluit.pressed.connect(func() -> void: queue_free())
+	# UI-beweging: voor de logica meteen weg, voor het oog in 0,12 s.
+	sluit.pressed.connect(func() -> void:
+		Audio.play("ui_back")
+		Beweging.spook_weg(self))
 	kop.add_child(sluit)
 	inhoud.add_child(kop)
 	var uitleg := Label.new()
@@ -164,6 +171,12 @@ func open(c: CState, mens_id: int) -> void:
 	_tabel.add_theme_constant_override("separation", 6)
 	scroll.add_child(_tabel)
 	_herbouw()
+	# UI-beweging: het hout faadt over de hub, het blad ploft, de rijen komen
+	# erna (samen binnen 0,45 s: de shot kijkt na 0,5 s en telt 16 rijen).
+	Audio.play("ui_open")
+	Beweging.fade_in(achtergrond, 0.0, Beweging.DIM_DUUR)
+	Beweging.inkom_scherm(null, wortel)
+	Beweging.inkom_rij(_tabel.get_children(), 0.04, 0.2 / 15.0)
 
 
 ## Kolomkop, zo breed als zijn kolom. Tekstkolommen (naam, team) zijn de
@@ -182,7 +195,11 @@ func _kop_knop(kol: Dictionary) -> Control:
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(func() -> void:
 		_kolom = sleutel
-		_herbouw())
+		Audio.play("ui_toggle")
+		_herbouw()
+		# UI-beweging: de rijen komen kort opnieuw binnen (de oude, al
+		# vrijgegeven rijen slaat inkom_rij over).
+		Beweging.inkom_rij(_tabel.get_children(), 0.0, 0.01))
 	if tex == null:
 		b.text = tr(String(kol.titel))
 		b.add_theme_font_size_override("font_size", 18)

@@ -97,6 +97,16 @@ func _ready() -> void:
 		get_tree().quit(0 if inkom_fouten == 0 else 1)
 		return
 
+	if "inkomfilm" in OS.get_cmdline_user_args():
+		# UI-beweging: plaatjes halverwege en aan het eind (met venster, tempo 0,5).
+		# `-- inkomfilm [uitmap]`, standaard user://inkomfilm.
+		var fargs := OS.get_cmdline_user_args()
+		var fi := fargs.find("inkomfilm")
+		var fmap: String = String(fargs[fi + 1]) if fargs.size() > fi + 1 else ""
+		var film_fouten: int = await preload("res://tools/inkom_film.gd").run(self, fmap)
+		get_tree().quit(0 if film_fouten == 0 else 1)
+		return
+
 	if "arena" in OS.get_cmdline_user_args():
 		# Meet-toernooi (géén training): speelt elke doctrine-matchup en print een
 		# winrate-matrix "wie wint tegen wie" met het huidige opgeslagen profiel.
