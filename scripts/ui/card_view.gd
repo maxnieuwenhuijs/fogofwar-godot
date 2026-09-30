@@ -334,6 +334,9 @@ func _bouw() -> void:
 		_tap_area.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
 	_tap_area.visible = false
 	_tap_area.pressed.connect(func() -> void: tapped.emit(self))
+	# UI-beweging: het tikvlak doet niet mee met indrukken (de kaart heeft zijn
+	# eigen lift, en een krimpend tikvlak mist tikken op de rand).
+	_tap_area.set_meta("ub_uit", true)
 	_inhoud.add_child(_tap_area)
 	_uniek(_tap_area)
 	# Kaartrug: over alles heen.

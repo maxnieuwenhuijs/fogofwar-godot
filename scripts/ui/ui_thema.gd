@@ -18,15 +18,27 @@ extends Node
 ##
 ## Draait ook headless (tests, capture-modi): de textures laden gewoon, er
 ## wordt alleen niets getekend.
+##
+## UI-beweging (30 september): laadt de stand van Animaties uit settings.cfg en
+## geeft elke invoer door aan de bewegingsmodule (echte muis of touch, en
+## wanneer er voor het laatst iets gebeurde). Consumeert nooit iets.
+
+const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 
 
 func _ready() -> void:
 	if OS.has_environment("FOW_WORKER"):
+		set_process_input(false)
 		return  # server-worker (F4.4a): geen schermen, en assets/ui staat niet op de droplet
+	Beweging.laad()
 	var venster := get_window()
 	if venster != null:
 		venster.theme = UiAssets.thema()
 	get_tree().node_added.connect(_bij_nieuwe_node)
+
+
+func _input(event: InputEvent) -> void:
+	Beweging.zie_invoer(event)
 
 
 ## Is deze node de wortel van een thema-erfketen (ouder is geen Control/Window)?
@@ -38,6 +50,8 @@ static func is_thema_wortel(node: Node) -> bool:
 
 
 func _bij_nieuwe_node(node: Node) -> void:
+	if node is BaseButton:
+		Beweging.koppel_knop(node)   # UI-beweging: elke knop deukt in en veert terug
 	if not is_thema_wortel(node):
 		return
 	var thema := UiAssets.thema()

@@ -88,6 +88,15 @@ func _ready() -> void:
 		get_tree().quit(0 if fouten == 0 else 1)
 		return
 
+	if "inkomcheck" in OS.get_cmdline_user_args():
+		# UI-beweging (30 september): inkomanimaties en microinteracties zijn
+		# alleen beeld (tools/inkom_check.gd). `-- inkomcheck [fase...]`.
+		var iargs := OS.get_cmdline_user_args()
+		var ifasen: Array = iargs.slice(iargs.find("inkomcheck") + 1)
+		var inkom_fouten: int = await preload("res://tools/inkom_check.gd").run(self, ifasen)
+		get_tree().quit(0 if inkom_fouten == 0 else 1)
+		return
+
 	if "arena" in OS.get_cmdline_user_args():
 		# Meet-toernooi (géén training): speelt elke doctrine-matchup en print een
 		# winrate-matrix "wie wint tegen wie" met het huidige opgeslagen profiel.

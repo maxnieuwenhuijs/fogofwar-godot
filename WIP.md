@@ -1,5 +1,39 @@
 # Fog of War — Work In Progress & Context
 
+## 30 september -- UI-beweging 1+2: fundament, elke knop deukt in en veert terug
+
+Max: "geef ieder scherm en alles een subtiele inkom animatie en
+microinteractions" (met gameanimation.info, gamineai, JD Dev, Jonas Tyroller,
+Medium en Proto.io). Zijn keuzes: schermen, knoppen, kaarten en HUD (het bord
+niet), speels met een klein veertje, een spelersinstelling Animaties
+normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
+(`~/.claude/plans/geef-ieder-scherm-en-enchanted-prism.md`).
+
+- **`scripts/ui/ui_beweging.gd`** (via preload): de bewegingstaal op een
+  plek. ERIN (inkom_scherm, inkom_rij, schuif_in, wissel, fade_in), TIK
+  (indrukken 0,08 s, terugveren 0,22 s BACK, plof, punch, dip, stempel,
+  schud, tel_op, duw, zweef, draai_om, naar_schaal) en WEG (spook_weg: voor
+  de logica meteen weg, voor het oog in 0,12 s). Standen in
+  `user://settings.cfg [ui] beweging`; dev-knop `ui_tempo` in het
+  sfeer-paneel. Headless doet alles niets, tenzij een check forceert.
+- **Elke knop** via `UiThema._bij_nieuwe_node`. Lessen: bij het loslaten
+  komt `pressed` VOOR `button_up`, dus button_up kan op een knop vallen die
+  al uit de boom is (menu naar menu); een knop die uitgezet wordt terwijl
+  hij ingedrukt staat krijgt geen button_up (vangnet op `draw`, alleen na
+  een echte druk: dan staat press_attempt al aan bij button_down).
+- **`-- inkomcheck [fase]`** (tools/inkom_check.gd): module (25) en knoppen
+  (14, met venster ook echte klikken). Les: het eerste frame na het
+  opstarten heeft een grote delta, en een timer gaat af in process_timers,
+  voor de tweens van datzelfde frame; de check wacht na elke timer een frame.
+- **uispel 777 staat nu op `7882f116...` (165 acties, cyclus 4)** in deze
+  werkmap, niet meer op `533fd17e...`: met en zonder de UI-beweging precies
+  gelijk (gemeten door mijn hunks er even uit te halen). Waarschijnlijk de
+  gewichten van 84d0f62 of het ongecommitte geluidswerk van de andere sessie.
+- Checks: inkomcheck PASS (headless en met venster), uicheck, herstelcheck
+  777 en 4242 wolf (0 verschillen), resumecheck 777 1 en 4242 2 (0),
+  naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
+  batterij 2664 geslaagd, 0 mislukt.
+
 ## 30 september -- F6.0 P4: bots op punten (knoppen, trainer, meetketen)
 
 Max: "en?" (na P1-P3; de F7-datarun van 29 september lag er).
