@@ -990,8 +990,8 @@ server-logs van dat event.
   quick chat. **P4 gebouwd (30 september):** knoppen `w_sparen`/`w_rivaal` in het verstand,
   fitness "punten" (gemengde stoelen) in de campagnetrainer, meetketen `tools/punten_meting.ps1`
   (paneelknop "Punten meten (3 tabellen)"); de nacht start Max. Eerste metingen: eigenbelang
-  loont nog niet, en de burgeroorlog komt maar in 43% van de campagnes (teamverstand; doel
-  70%): eerst dat.
+  loont nog niet, en de burgeroorlog komt in 43% van de campagnes (teamverstand). Dat is geen
+  eis (Max: "hangt toch gewoon af van het verloop"), alleen informatie.
 - ☐ **F6.1 Glicko-2** per queue (ranked 1v1 / campagneduels; solo telt niet — solo heeft een eigen bord,
   zie F6.3), placement via RD. **CHECK:** rating-unittests tegen referentie-implementatie; RD daalt met
   partijen.

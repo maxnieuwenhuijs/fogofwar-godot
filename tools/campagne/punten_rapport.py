@@ -14,9 +14,9 @@ alle stoelen hetzelfde verstand: hand, team, k1, k2, k3) en train_<naam>/train.l
 - de punten: gemiddeld per stoel, van de kampioen en van het verliezende team
 
 en toetst de doelen uit §8 tegen de meting "team" (bots die alleen op
-teamwinst trainden): donaties minstens 60% daarvan, een burgeroorlog in
-minstens 70% van de campagnes en meestal met 3 of meer spelers, campagnes
-hooguit 20% langer.
+teamwinst trainden): donaties minstens 60% daarvan, campagnes hooguit 20%
+langer. De burgeroorlog (hoe vaak, met hoeveel) staat erbij als informatie,
+niet als eis (Max, 30 september: "hangt toch gewoon af van het verloop").
 """
 import json
 import re
@@ -178,12 +178,11 @@ def main():
             lengte = m["rondes"] / t["rondes"] - 1.0 if t["rondes"] > 0 else 0.0
             doelen = [
                 (f"donaties {pct(don)} van team", don >= 0.6),
-                (f"burgeroorlog {pct(m['bo'])}", m["bo"] >= 0.7),
-                (f"3 of meer in {pct(m['bo_3plus'])}", m["bo_3plus"] >= 0.5),
                 (f"lengte {lengte * 100.0:+.0f}%", lengte <= 0.2),
             ]
             regels.append(f"- **{naam}** (kampioen {int(tabellen[naam].get('kampioen', 40))}): " + ", ".join(
-                f"{tekst} {'ok' if ok else 'NIET'}" for tekst, ok in doelen))
+                f"{tekst} {'ok' if ok else 'NIET'}" for tekst, ok in doelen)
+                + f"; ter info: burgeroorlog {pct(m['bo'])}, met 3 of meer {pct(m['bo_3plus'])}")
         if not any(n.startswith("k") for n in metingen):
             regels.append("Nog geen meting van een puntentabel (k1, k2, k3).")
     else:

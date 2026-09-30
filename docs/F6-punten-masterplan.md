@@ -248,8 +248,12 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
   teamgenoot met de meeste roem in een slechte matchup wordt gestuurd,
   testament naar de vijand, teamwinst links en rechts, lengte van de campagne.
 - **Doelen**: donaties minstens 60% van wat bots doen die alleen op teamwinst
-  trainen; een burgeroorlog in minstens 70% van de campagnes, met meestal 3 of
-  meer spelers; campagnes hooguit 20% langer.
+  trainen; campagnes hooguit 20% langer. Hoe vaak er een burgeroorlog komt en
+  met hoeveel spelers meten we wel, maar dat is **geen eis** (Max, 30
+  september: "hangt toch gewoon af van het verloop"). Het getal zegt alleen hoe
+  vaak de kroonpot een echte strijd is: zonder burgeroorlog krijgt de laatste
+  man van het winnende team hem vanzelf. (Tot 30 september stond hier "in
+  minstens 70%, meestal met 3 of meer"; dat getal was een gok.)
 - **Budget**: één trainingsnacht per tabel (Max start, B13), dan een besluit.
   Geen eindeloze sweeps.
 - **Eerst nodig**: het duel-orakel uit de F7-datarun.
@@ -292,11 +296,13 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
   | raad stuurt de roemleider | 48% | 58% |
   | rondes (gem) | 8,1 | 8,9 |
 
-- **Wat dat zegt:** de burgeroorlog haalt het doel (70%, meestal 3 of meer)
-  nu al niet, ook zonder puntenbots. Het winnende team dunt zo uit dat de
-  laatste man vaak zonder strijd kampioen wordt. Dan maakt de kroonfactor weinig
-  uit: zonder burgeroorlog is er geen zaaiing om voor te pesten. Eerst die knoop
-  (een regelvraag voor Max), dan pas de tabel kiezen.
+- **Wat dat zegt:** met het teamverstand wordt in ruim de helft van de
+  campagnes de laatste man van het winnende team kampioen zonder strijd. In
+  die campagnes beloont de kroonpot vooral overleven, niet de zaaiing of het
+  pesten. Dat hoort bij het verloop van een oorlog en is geen fout (Max); het
+  betekent wel dat de kroonfactor minder uitmaakt dan het plan dacht. Mensen
+  met punten op het spel zullen zichzelf waarschijnlijk vaker sparen dan de
+  bots, dus in echte campagnes ligt het getal eerder hoger.
 
 ---
 
