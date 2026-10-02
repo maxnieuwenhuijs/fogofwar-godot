@@ -21,23 +21,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `golden_sims.json` regenereren). Lees factie-data NOOIT rechtstreeks uit
   `Constants.doctrine_data()` in speel-code; ga via `rules.doctrine_data()`,
   `c.rules.doctrine_data()` of `Agent.doctrine_data_uit_view()`.
-- **De facties zelf (C19, 8 augustus 2026)** — dit is wat er NU gespeeld wordt.
-  `constants.gd` draagt nog de kale tabel van juli; die is alleen de terugval:
+- **De facties zelf (C19, 8 augustus 2026; laatst bijgesteld in C29, 2
+  oktober):** dit is wat er NU gespeeld wordt. `constants.gd` draagt nog de
+  kale tabel van juli; die is alleen de terugval:
 
   | factie | kaarten | budget | leger [inf,cav,art] | perk |
   |---|---|---|---|---|
-  | Varken (enum MENS) | 3 | 7 | [12,4,2] (C25, 23 sept; was [11,5,3]) | - allrounder |
+  | Varken (enum MENS) | 3 | 7 | [12,4,2] | - allrounder |
   | Muis | 5 | 5 | [16,4,0] | +1 stamina op elke pion, loopt door eigen pionnen |
-  | Leeuw | 2 | 8 (C27 met 9 op 29 sept teruggedraaid) | [12,4,2] (idem; C27 was [11,5,1]) | artilleriedracht 7 |
+  | Leeuw | 2 | 8 | [12,4,2] | - (C29: dracht 7 eraf) de minste maar sterkste kaarten |
   | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-stamina max 4 |
   | Wolf | 3 | 7 | [11,8,3] | gratis stap na melee, cavalerie +2 stamina en springt over vijanden |
   | Krokodil (enum VOS) | 3 | 6 | [13,5,3] | koppeling geheim tot de eerste schade |
 
   **Startcompensatie (C11-`budget_bonus`, geen kaartbudget):** Muis +4 punten,
-  Beer +3, **Wolf +5 punten en 4 CP** (C28, 30 september; was +2 punten),
-  **Krokodil +3** (C20, 9 augustus), **Leeuw +6 punten en 0 CP** (C24 op
-  23 september +4, C26 op 24 september +6 en 5 CP, C28 op 30 september de
-  CP weer eraf). Zetten met
+  Beer +3, Wolf +5 punten en 4 CP (C28), Krokodil +3 (C20), Leeuw +6 punten
+  en 0 CP (C24, C26, C28). Zetten met
   `python tools/balans/zet_budget_bonus.py <factie> --pt N [--cp N]`: die
   schrijft alle drie de plekken tegelijk. Die tabel
   staat op DRIE plekken die gelijk moeten blijven — `CRules.budget_bonus`,
@@ -45,56 +44,27 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 30 september (C28, de bots van de trainingsnacht van 29
-  september; drie varianten van 1800 partijen): band 42,4-56,8%, spreiding
-  14,4 pp** (Leeuw 56,8 boven, Wolf 42,4 onder; foutmarge ~4,4 per factie).
-  Daarvoor, nachtmatrix 29 september op C26 met de CP-reparatie (Leeuw 3
-  adopties, Wolf 1): band 41,0-60,1. **De startcompensatie is uitgeput als
-  knop:** de CP van de Leeuw eraf kost hem ~3 pp, zijn punten eraf daarna
-  niets meer (hij spawnt ~5 eenheden per partij), en de Wolf wint niet
-  vaker van extra punten of CP. Blijft het na een nacht op C28 zo scheef,
-  dan een grovere knop (kaartbudget, leger, perk).
-  **29 september: C27 teruggedraaid** (Leeuw weer budget 8, [12,4,2], +6 pt
-  en +5 CP; zie CHANGELOG), plus een bot-reparatie: `cp_bet_r*` muteert
-  optellend (vermenigvuldigen vanaf 0,01 kwam nooit bij een hele CP, dus
-  ronde 1 en 2 stonden voor elke factie op 0) en het CP-punt gaat naar de
-  stat van `cp_naar_*` (was hard HP). Volgende meting na de training
-  daarop (`tools/nacht_met_campagne.ps1`).
-  **Stand 29 september, voor de terugdraai (C27, bots na een trainingsnacht van 10 uur op C27,
-  3240 partijen): band 44,1-55,7%, spreiding 11,6 pp** (Leeuw 55,7 nu
-  boven, Wolf 44,1 onder; Muis 53,4, Varken 51,0, Krokodil 48,4, Beer
-  47,3). De Leeuw-bot leerde zijn nieuwe leger (1 adoptie) en schoot 9
-  punten omhoog. Foutmarge per factie ongeveer +-3 pp.
-  Daarvoor: **stand 28 september (C27: Leeuw budget 9, [11,5,1]; controlemeting 4320
-  partijen tegen de bots van 26 september): band 46,5-54,7%, spreiding
-  8,2 pp**, de smalste tot nu toe (Leeuw en Muis 46,5 onder, Beer 54,7
-  boven). Zonder het extra budget (alleen [11,5,1]) zakte de Leeuw naar
-  32,2: zijn kanon is te veel waard.
-  Daarvoor: **stand 27 september (C24 + C25 + C26, bots na twee trainingsnachten op
-  die regels, 2 x 3240 partijen): band 40,6-53,6%, spreiding 13 pp**
-  (Leeuw 40,3/40,9 onder, Beer 52,8/54,4 boven; Muis 53,8/52,9, Wolf
-  53,9/52,2, Krokodil 51,8/50,6, Varken 47,5/49,1). De anderen leerden
-  bij, de Leeuw haalde een adoptie in twee nachten: hij zakte 4 pp.
-  Daarvoor, 24 september met de bots van 23 september (4320 partijen):
-  band 44,8-54,1%, spreiding 9,3 pp (Leeuw 44,8 onder, Muis 54,1 boven). Knoppen gemeten: versterkingspunt ~0,6 pp, start-CP
-  ~0,36 pp. Na C25: band 41,2-53,4% (12,2 pp);
-  daarvoor met getrainde bots 36,6-59,2 (21 september). Schaal van de knoppen,
-  23 september gemeten: kaart erbij ~23 pp, versterkingspunt ~0,6, ruiter
-  eruit plus kanon eruit (Varken) -9,7.
-  Gemeten na C20 op verse seeds (2160 partijen): band **44,7-56,7%, spreiding
-  11,9 procentpunt**. Daarvoor 42,4-55,0 / 12,6 over 6480 partijen; in juli 48.
-  C20 gaf Krokodil +2,3 en liet de band verder zoals hij was. Beer is nu met
-  56,7% de bovenkant.
-  (Een eerder gemeld "4,4" kwam uit 1152 partijen met een foutmarge van ±3,6 per
-  factie: te klein voor die uitspraak. Vuistregel: onder ~2000 partijen geen
-  conclusies over een paar procentpunt.) **Muis en Beer hebben nul artillerie**, en `kent_type()`
-  verbiedt ze er dus ook een te spawnen: geen kanon-model, geen gibs, geen
+  **Stand 2 oktober (C29, de bots van de trainingsnacht van 29 september,
+  1800 partijen):** Leeuw 48,8, Krokodil 49,0, Muis 52,2, Varken 57,0, Beer
+  50,2, Wolf 42,8 (foutmarge ~4,4 per factie; het Varken is waarschijnlijk
+  toeval). De echte stand is altijd de nachtmatrix na een trainingsnacht op
+  de geldende regels. De geschiedenis (C20-C29, met elke meting) staat in
+  `docs/spelregels-CHANGELOG.md` en WIP.md, niet meer hier.
+  **Welke knop hoeveel doet** (gemeten, per factie anders): kaartbudget
+  14-27 pp per punt (Krokodil 6 -> 7: +27; Leeuw 8 -> 7: -18), cavalerie
+  ~18 per ruiter, de stamina op de ruiter 10-20 per punt, de dracht 7 van de
+  Leeuw ~8, een kanon minder voor de Leeuw ~1, infanterie en legergrootte
+  vrijwel niets. **De startcompensatie is uitgeput als knop:** CP ~0,4-0,6
+  pp per CP en alleen bij wie hem inzet, versterkingspunten doen niets bij
+  wie weinig spawnt (de Leeuw ~3-5 per partij), de Wolf wint niet vaker van
+  extra punten of CP. Vuistregel: onder ~2000 partijen geen conclusies over
+  een paar procentpunt. **Bots (29 september):** `cp_bet_r*` muteert
+  optellend en het CP-punt gaat naar de stat van `cp_naar_*` (leerbaar);
+  daarvoor konden de bots de CP-inzet in ronde 1 en 2 nooit leren.
+  **Muis en Beer hebben nul artillerie**, en `kent_type()` verbiedt ze er
+  dus ook een te spawnen: geen kanon-model, geen gibs, geen
   `cannon_die_<factie>` voor die twee. Controleer de actuele stand altijd met
-  `-- facties`, nooit door `constants.gd` te lezen. Welke knop hoeveel doet:
-  kaartbudget ~27 procentpunt per punt (gemeten op 2160 partijen: Krokodil
-  6 → 7 gaf +26,9), cavalerie ~18 per ruiter, infanterie en
-  legergrootte vrijwel niets, artillerie -21 voor een renner en neutraal voor
-  een slachter.
+  `-- facties`, nooit door `constants.gd` te lezen.
 - **V0 — GEEN GELIJKSPEL (4.3.0)**: een duel eindigt op de **haven** of op
   **totale eliminatie**. Geen remise, geen tiebreak, geen cycluslimiet. In
   plaats daarvan de **honger**: vanaf `honger_vanaf_cyclus` (10, gelijk in
@@ -843,7 +813,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `2cebd8da…` geven (165 acties, cyclus 4, sinds
+  eind-zobrist; seed 777 moet `5919d2c8…` geven (165 acties, cyclus 4, sinds
+  2 oktober: C29, dezelfde partij, alleen de regels in de staat-hash);
+  daarvoor `2cebd8da…` (165, 4, sinds
   30 september: C28 plus de Wolf-gewichten van de trainingsnacht van 29
   september; met alleen die gewichten was het `7882f116…`, 165, 4);
   daarvoor `533fd17e…` (171 acties, cyclus 4, sinds

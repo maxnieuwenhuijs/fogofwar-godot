@@ -77,7 +77,7 @@ DOCTRINE_1_NAME,Mouse,Muis
 DOCTRINE_1_PRO,"The most cards in the game, +1 stamina on every mouse, moves through own pawns (swarm)","De meeste kaarten van het spel, +1 stamina op elke muis, beweegt door eigen pionnen (zwerm)"
 DOCTRINE_1_CON,"The lowest card budget: weak stats, and no cannons","Het laagste kaartbudget: zwakke stats, en geen kanonnen"
 DOCTRINE_2_NAME,Lion,Leeuw
-DOCTRINE_2_PRO,"The highest card budget: monster cards, and cannons with range 7","Het hoogste kaartbudget: monsterkaarten, en kanonnen met dracht 7"
+DOCTRINE_2_PRO,"The highest card budget: monster cards, the strongest in the game","Het hoogste kaartbudget: monsterkaarten, de sterkste kaarten van het spel"
 DOCTRINE_2_CON,"Only two cards per round, so rarely more than a handful of pawns awake","Maar twee kaarten per ronde, dus zelden meer dan een handvol pionnen wakker"
 DOCTRINE_3_NAME,Bear,Beer
 DOCTRINE_3_PRO,Every link grants a free +1 HP: pawns nothing gets through,Elke koppeling gratis +1 HP: pionnen waar niets doorheen komt

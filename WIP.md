@@ -220,9 +220,14 @@ niet?"
   kanon minder doet niets (-1,4); zijn kracht zit in de DRACHT (zonder dracht
   7: -8,0, schoten 24 -> 21). Varianten d/e/f in
   `arena/arena_configs/varianten/` (`rules_c29_*`, `v437_matrix_c29_*`).
-- **Besluit bij Max:** f haalt de perk weg die zijn identiteit is ("kanonnen
-  met dracht 7"); hij houdt dan de twee monsterkaarten. De Wolf (42) blijft
-  onderaan: eerst een trainingsnacht.
+- **Besluit Max: f, "Dracht 7 eraf" = C29.** Doctrines-blok Leeuw
+  `art_range_bonus` 0, `DOCTRINE_2_PRO` zonder dracht (vertaling gebouwd
+  uit HEAD plus alleen die regel, want strings.csv draagt nog twee open
+  regels van de andere sessie), goldens opnieuw, leeuw-beer 202 en
+  wolf-leeuw 404 geijkt, simcheck 0, uispel 777 `5919d2c8...`. CLAUDE.md:
+  de stand opgeschoond tot de stand van nu plus de knoppentabel; de
+  geschiedenis staat in de CHANGELOG. De Wolf (42) blijft onderaan: eerst
+  trainen.
 
 ## 30 september -- C28: de Leeuw geen extra CP, de Wolf +5 versterkingen
 

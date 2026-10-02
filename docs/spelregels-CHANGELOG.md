@@ -1,5 +1,37 @@
 # Spelregels — CHANGELOG
 
+## C29: 2 oktober 2026 (de Leeuw zonder dracht 7)
+
+*Max: "maar dan moeten we toch iets meer afpakken niet?" en daarna de keuze
+"Dracht 7 eraf".*
+
+Na C28 stond de Leeuw nog op 56,8. Hij speelt een schietspel: 24 schoten per
+partij, twee keer zoveel als het Varken met hetzelfde leger, 100% winst door
+uitschakeling, 3,4 spawns. Drie varianten bovenop C28 naast elkaar (1800
+partijen elk, dezelfde bots van 29 september, foutmarge ~4,4 per factie):
+
+| factie | C28 | budget 8 -> 7 | een kanon minder [13,4,1] | geen dracht 7 |
+|---|---|---|---|---|
+| Leeuw | 56,8 | 39,2 | 55,4 | **48,8** |
+| Krokodil | 50,6 | 52,0 | 48,2 | 49,0 |
+| Muis | 50,8 | 57,2 | 55,2 | 52,2 |
+| Varken | 50,0 | 52,0 | 52,2 | 57,0 |
+| Beer | 49,4 | 52,8 | 48,8 | 50,2 |
+| Wolf | 42,4 | 46,8 | 40,2 | 42,8 |
+| spreiding | 14,4 | 18,0 | 15,2 | 14,2 |
+
+Zijn kracht zat in de dracht, niet in het aantal kanonnen. Het Varken op 57
+is waarschijnlijk toeval (het tweelingleger; een enkele matchup kan geen 7
+punten geven).
+
+**Wat verandert.** Alleen het `doctrines`-blok in `rules_v42_campaign.json`:
+Leeuw `art_range_bonus` 0 (de kale tabel in `constants.gd` houdt 1, die
+speelt niemand). De perk-tekst in het spel (`DOCTRINE_2_PRO`) zegt nu
+"monsterkaarten, de sterkste kaarten van het spel". `rules_version` blijft
+4.3.7. Goldens opnieuw; twee sims verschuiven (leeuw-beer 202: cyclus 21 ->
+20, 518 -> 494; wolf-leeuw 404: cyclus 9 -> 3, 236 -> 59). `-- uispel 777` =
+`5919d2c8...` (dezelfde 165 acties, alleen de regels in de staat-hash).
+
 ## C28: 30 september 2026 (de Leeuw geen extra CP meer, de Wolf 5 versterkingspunten)
 
 *Max: "schroef de CP van de leeuw dan verder terug of reinforcements. en van

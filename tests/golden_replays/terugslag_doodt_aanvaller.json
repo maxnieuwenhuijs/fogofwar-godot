@@ -66,7 +66,7 @@
 			"hash": "db14e7473b75e3941774d7341a42c287e86c2f91bc606e1dab21f01f7b2fc315",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1790772256.815
+			"ts": 1790962491.716
 		}
 	],
 	"final_hash": "db14e7473b75e3941774d7341a42c287e86c2f91bc606e1dab21f01f7b2fc315",
@@ -250,7 +250,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-09-30T14:44:16",
+		"created": "2026-10-02T19:34:51",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
