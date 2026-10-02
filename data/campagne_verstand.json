@@ -1,0 +1,29 @@
+{
+	"gewichten": {
+		"w_don_nood": 0.0,
+		"w_geef": 0.053,
+		"w_houden": 0.027,
+		"w_matchup": 0.633,
+		"w_ruil": 0.125
+	},
+	"meta": {
+		"config": {
+			"adoptie": 0.53,
+			"base_seed": 900000.0,
+			"controle_seeds": 200.0,
+			"kandidaten": 8.0,
+			"minuten": 60.0,
+			"orakel": "res://data/duel_orakel.json",
+			"seeds": 60.0,
+			"sigma": 0.35,
+			"spelers": 16.0,
+			"uit": "res://data/campagne_verstand.json"
+		},
+		"controle_winkans": 0.54,
+		"generatie": 13,
+		"git_sha": "32807f1",
+		"orakel": "res://data/duel_orakel.json",
+		"ts": "2026-09-29T23:31:18"
+	},
+	"versie": 1
+}
