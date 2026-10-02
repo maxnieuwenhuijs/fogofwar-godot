@@ -6,9 +6,15 @@
 #    het campagnemenu) tegen de kampioen, op het orakel. Een adoptie schrijft
 #    data/campagne_verstand.json (apart committen, net als de duelgewichten).
 # Log: results/<naam>/train.log. Max start dit zelf (B13).
+#
+# -OrakelMappen results\campagne_X[,results\campagne_Y]: het orakel alleen uit
+# deze metingen (2 oktober: na een regelwijziging horen de duels van de oude
+# regels er niet meer in). -Config: een andere trainer-config.
 param(
     [int]$Minuten = 60,
-    [string]$Naam = ""
+    [string]$Naam = "",
+    [string[]]$OrakelMappen = @(),
+    [string]$Config = "arena/arena_configs/campagne_train.json"
 )
 $repo = $PSScriptRoot
 Set-Location $repo
@@ -22,9 +28,15 @@ New-Item -ItemType Directory -Force -Path $uit | Out-Null
 $zonderBom = New-Object System.Text.UTF8Encoding $false
 
 # 1. Het orakel uit alle metingen die er liggen.
-$mappen = @(Get-ChildItem (Join-Path $repo "results") -Directory -Filter "campagne_*" |
-    Where-Object { Test-Path (Join-Path $_.FullName "duels.jsonl") } |
-    ForEach-Object { $_.FullName })
+$OrakelMappen = @($OrakelMappen | ForEach-Object { $_ -split "," } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+if ($OrakelMappen.Count -gt 0) {
+    $mappen = @($OrakelMappen | Where-Object { Test-Path (Join-Path $_ "duels.jsonl") } |
+        ForEach-Object { (Resolve-Path $_).Path })
+} else {
+    $mappen = @(Get-ChildItem (Join-Path $repo "results") -Directory -Filter "campagne_*" |
+        Where-Object { Test-Path (Join-Path $_.FullName "duels.jsonl") } |
+        ForEach-Object { $_.FullName })
+}
 if ($mappen.Count -eq 0) {
     Write-Host "[CAMPAGNETRAIN] nog geen duel-metingen: eerst 'Campagne-duels meten' (campagne_arena.ps1)."
     exit 1
@@ -33,7 +45,7 @@ Write-Host "[CAMPAGNETRAIN] orakel uit $($mappen.Count) meting(en)"
 & python tools/campagne/maak_orakel.py @mappen --uit data/duel_orakel.json 2>&1 | Tee-Object -FilePath "$uit/orakel.txt"
 
 # 2. De trainer, met de minuten van het paneel.
-$cfg = Get-Content "arena/arena_configs/campagne_train.json" -Raw | ConvertFrom-Json
+$cfg = Get-Content $Config -Raw | ConvertFrom-Json
 $cfg.minuten = $Minuten
 $cfgPad = Join-Path $repo "$uit/config.json"
 [IO.File]::WriteAllText($cfgPad, ($cfg | ConvertTo-Json), $zonderBom)

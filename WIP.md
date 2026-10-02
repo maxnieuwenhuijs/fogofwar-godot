@@ -195,6 +195,32 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 2 oktober -- de trainingsmarathon van 48 uur (tot zaterdag 4 oktober)
+
+Max: "doe daarna de monster training 48 u lang met ook campagne daarin
+meenemen en zorgen dat de bots helemaal ready zijn ... Start zelf de
+training, kijk naar de percentages en evt de factiezoeker combineren zelf om
+de ideale balans te gaan vinden. 48 uur lang knallen ik houd de PC wel
+draaiende."
+
+- **Opschonen vooraf:** C29 vastgezet (b2fd57c), de campagnedata van 29
+  september apart gecommit (59257f9), de stand in CLAUDE.md teruggebracht tot
+  nu plus de knoppentabel.
+- **Een cyclus** (`tools/marathon_cyclus.ps1`, ~11 uur, via WMI los van de
+  app): A. duel-training 420 min (zes kernen) plus de nachtmatrix; B. op de
+  vrije kernen een verse datarun (20 x 60 duels op de regels van nu), het
+  orakel ALLEEN daaruit (`campagne_train.ps1 -OrakelMappen`, nieuw: oude duels
+  van andere regels horen er niet in), de campagnetrainer (120 min) en
+  daarna de puntenbots (`punten_meting.ps1`, 300 min); C. de campagnebots
+  nameten op echte duels (`campagne_validatie`, 24 processen).
+- **Tussen de cycli:** de nachtmatrix lezen, trainingsdata apart committen,
+  en een factie buiten 45-55 gericht onderzoeken (factiezoeker met de
+  nachtmatrix als achtergrond, dan een controlemeting); een regelwijziging
+  alleen als de meting hem draagt.
+- **L4 (neuraal netwerk):** een proef op vrije kernen in een latere cyclus,
+  op de dan geldende L2-bots; alleen gebruiken als hij L2 aantoonbaar
+  verslaat (22 september: gelijk, 49%).
+
 ## 2 oktober -- C29-metingen: waar zit de kracht van de Leeuw?
 
 Max: "Zijn versterkingspunten afpakken deed daarna niets meer: hij spawnt
