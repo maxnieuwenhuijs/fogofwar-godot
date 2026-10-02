@@ -195,6 +195,35 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 2 oktober -- C29-metingen: waar zit de kracht van de Leeuw?
+
+Max: "Zijn versterkingspunten afpakken deed daarna niets meer: hij spawnt
+maar zo'n 5 eenheden per partij. maar dan moeten we toch iets meer afpakken
+niet?"
+
+- **Wat de Leeuw gebruikt** (C28-meting van 30 september): hij schiet 24 keer
+  per partij, twee keer zoveel als het Varken met precies hetzelfde leger
+  [12,4,2]; wint 100% door uitschakeling; geen charges; 3,4 spawns.
+- **Drie varianten bovenop C28** (`meet_variant.ps1`, 10 processen elk, via
+  WMI, 13:46-16:50, 1800 partijen per variant, ijkpunt de C28-meting met
+  dezelfde bots van 29 september):
+
+  | | Leeuw | Krok | Muis | Varken | Beer | Wolf | spreiding |
+  |---|---|---|---|---|---|---|---|
+  | C28 (nu) | 56,8 | 50,6 | 50,8 | 50,0 | 49,4 | 42,4 | 14,4 |
+  | d: budget 8 -> 7 | 39,2 | 52,0 | 57,2 | 52,0 | 52,8 | 46,8 | 18,0 |
+  | e: [12,4,2] -> [13,4,1] | 55,4 | 48,2 | 55,2 | 52,2 | 48,8 | 40,2 | 15,2 |
+  | f: art_range_bonus 1 -> 0 | 48,8 | 49,0 | 52,2 | 57,0 | 50,2 | 42,8 | 14,2 |
+
+  Foutmarge ~4,4 per factie (500 partijen tegen andere facties).
+- **Les:** een budgetpunt kost de Leeuw 18 pp (groter dan de 14 van C27); een
+  kanon minder doet niets (-1,4); zijn kracht zit in de DRACHT (zonder dracht
+  7: -8,0, schoten 24 -> 21). Varianten d/e/f in
+  `arena/arena_configs/varianten/` (`rules_c29_*`, `v437_matrix_c29_*`).
+- **Besluit bij Max:** f haalt de perk weg die zijn identiteit is ("kanonnen
+  met dracht 7"); hij houdt dan de twee monsterkaarten. De Wolf (42) blijft
+  onderaan: eerst een trainingsnacht.
+
 ## 30 september -- C28: de Leeuw geen extra CP, de Wolf +5 versterkingen
 
 Max, na de stand van zaken: "schroef de CP van de leeuw dan verder terug of
