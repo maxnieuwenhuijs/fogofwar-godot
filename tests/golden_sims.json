@@ -1,6 +1,6 @@
 {
 	"_uitleg": "Vaste sim-seeds met vastgelegde uitkomsten (F0.4a). Elke core-wijziging hoort deze exact te reproduceren: 'capture.tscn -- simcheck' draait ze allemaal en exit 1 bij afwijking. Wijkt een uitkomst bewust af (regelwijziging), dan hoort daar een CHANGELOG-entry + bijgewerkte baseline bij. medium-medium ontbreekt bewust: die kan zonder klok oneindig patstellen. 31 juli (C17): de baseline draait op de CAMPAGNE-regels, want dat is de enige regelset. Een los 1v1 is dezelfde economie maal potje_factor.",
-	"gemeten_op": "C29 (2 oktober): de Leeuw zonder dracht 7 (art_range_bonus 0 in het doctrines-blok); leeuw-beer 202 (cyclus 21 -> 20, 518 -> 494) en wolf-leeuw 404 (cyclus 9 -> 3, 236 -> 59) verschuiven, de winnaars blijven. Daarvoor C28 (30 september): Leeuw 6 versterkingspunten en 0 CP, Wolf 5 versterkingspunten. Regelwijziging, dus opnieuw geijkt; vijf sims zeggen niets over balans, daarvoor de nachtrun.",
+	"gemeten_op": "C30 (3 oktober): het Varken een ruiter minder, leger [12,3,2]; mens-vos 101 verschuift (winnaar 1 -> 2, cyclus 17, 458 -> 448 acties). Daarvoor C29 (2 oktober): de Leeuw zonder dracht 7. Regelwijziging, dus opnieuw geijkt; vijf sims zeggen niets over balans, daarvoor de nachtrun.",
 	"sims": [
 		{
 			"p1": "easy",
@@ -18,9 +18,9 @@
 			"d1": "mens",
 			"d2": "vos",
 			"seed": 101,
-			"winner": 1,
+			"winner": 2,
 			"cyclus": 17,
-			"acties": 458
+			"acties": 448
 		},
 		{
 			"p1": "easy",

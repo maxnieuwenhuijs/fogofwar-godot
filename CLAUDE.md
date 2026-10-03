@@ -21,13 +21,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `golden_sims.json` regenereren). Lees factie-data NOOIT rechtstreeks uit
   `Constants.doctrine_data()` in speel-code; ga via `rules.doctrine_data()`,
   `c.rules.doctrine_data()` of `Agent.doctrine_data_uit_view()`.
-- **De facties zelf (C19, 8 augustus 2026; laatst bijgesteld in C29, 2
+- **De facties zelf (C19, 8 augustus 2026; laatst bijgesteld in C30, 3
   oktober):** dit is wat er NU gespeeld wordt. `constants.gd` draagt nog de
   kale tabel van juli; die is alleen de terugval:
 
   | factie | kaarten | budget | leger [inf,cav,art] | perk |
   |---|---|---|---|---|
-  | Varken (enum MENS) | 3 | 7 | [12,4,2] | - allrounder |
+  | Varken (enum MENS) | 3 | 7 | [12,3,2] (C30) | - allrounder |
   | Muis | 5 | 5 | [16,4,0] | +1 stamina op elke pion, loopt door eigen pionnen |
   | Leeuw | 2 | 8 | [12,4,2] | - (C29: dracht 7 eraf) de minste maar sterkste kaarten |
   | Beer | 3 | 7 | [19,3,0] | +1 HP per koppeling, kaart-stamina max 4 |
@@ -44,10 +44,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 2 oktober (C29, de bots van de trainingsnacht van 29 september,
-  1800 partijen):** Leeuw 48,8, Krokodil 49,0, Muis 52,2, Varken 57,0, Beer
-  50,2, Wolf 42,8 (foutmarge ~4,4 per factie; het Varken is waarschijnlijk
-  toeval). De echte stand is altijd de nachtmatrix na een trainingsnacht op
+  **Stand 3 oktober (C30, de duelbots midden in marathoncyclus 2, 1440
+  partijen):** Varken 50,5, Muis 52,8, Krokodil 49,5, Wolf 50,2, Beer 47,2,
+  Leeuw 49,8: band 47,2-52,8, spreiding 5,5 (foutmarge ~4,9 per factie), de
+  smalste tot nu toe. De echte stand is altijd de nachtmatrix na een trainingsnacht op
   de geldende regels. De geschiedenis (C20-C29, met elke meting) staat in
   `docs/spelregels-CHANGELOG.md` en WIP.md, niet meer hier.
   **Welke knop hoeveel doet** (gemeten, per factie anders): kaartbudget
@@ -813,7 +813,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `5919d2c8…` geven (165 acties, cyclus 4, sinds
+  eind-zobrist; seed 777 moet `8efa28eb…` geven (165 acties, cyclus 4, sinds
+  3 oktober: C30 plus de Wolf-gewichten van marathoncyclus 2); daarvoor
+  `5919d2c8…` (165, 4, sinds
   2 oktober: C29, dezelfde partij, alleen de regels in de staat-hash);
   daarvoor `2cebd8da…` (165, 4, sinds
   30 september: C28 plus de Wolf-gewichten van de trainingsnacht van 29

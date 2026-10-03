@@ -1,5 +1,36 @@
 # Spelregels — CHANGELOG
 
+## C30: 3 oktober 2026 (het Varken een ruiter minder, leger [12,3,2])
+
+*Marathon van 48 uur (Max: "kijk naar de percentages en evt de factiezoeker
+combineren zelf om de ideale balans te gaan vinden").*
+
+Na C29 werd het Varken de bovenkant (57,6 in de nachtmatrix van 3 oktober,
+57,0 in de C29-variantmeting). De duels zijn steen-papier-schaar: het Varken
+won 94-98% van de Beer en 83-85% van de Muis. De factiezoeker (gericht op het
+Varken, 4 generaties) stelde een ruiter minder voor. Controle met drie
+varianten tegelijk, dezelfde bots (de duelbots midden in cyclus 2), 1440
+partijen per variant, foutmarge ~4,9 per factie:
+
+| factie | C29 (ijkpunt) | Varken [12,3,2] | Varken [12,4,1] |
+|---|---|---|---|
+| Varken | 58,0 | **50,5** | 44,2 |
+| Muis | 53,2 | 52,8 | 53,5 |
+| Krokodil | 49,2 | 49,5 | 50,0 |
+| Wolf | 47,2 | 50,2 | 50,8 |
+| Beer | 46,5 | 47,2 | 47,5 |
+| Leeuw | 45,8 | 49,8 | 54,0 |
+| spreiding | 12,2 | **5,5** | 9,8 |
+
+De smalste band tot nu toe (47,2-52,8; het vorige record was 8,2). Een kanon
+minder schiet door.
+
+**Wat verandert.** Alleen het `doctrines`-blok in `rules_v42_campaign.json`:
+Varken `comp` [12,3,2] (was [12,4,2] sinds C25). `rules_version` blijft
+4.3.7. Goldens opnieuw; een sim verschuift (mens-vos 101: winnaar 1 -> 2,
+cyclus 17, 458 -> 448 acties). `-- uispel 777` = `8efa28eb...` (165 acties,
+cyclus 4; ook de Wolf-adoptie van cyclus 2 zit erin).
+
 ## C29: 2 oktober 2026 (de Leeuw zonder dracht 7)
 
 *Max: "maar dan moeten we toch iets meer afpakken niet?" en daarna de keuze

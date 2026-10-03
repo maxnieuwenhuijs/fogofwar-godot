@@ -195,6 +195,22 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 3 oktober (middag) -- C30: het Varken een ruiter minder
+
+- **Factiezoeker** (gericht op het Varken, `--procs 4`, achtergrond de
+  C29-variantmeting, 07:30-11:40): nulmeting Varken 56,7; in generatie 3 een
+  ruiter minder ([12,3,2], score 0,850 -> 0,874), generatie 4 niets beters.
+  Generatie 5 gestopt (budget op).
+- **Controle** (drie varianten tegelijk met dezelfde bots, 8 processen elk,
+  1440 partijen, 11:40-15:37): C29 spreiding 12,2 (Varken 58,0); Varken
+  [12,3,2] spreiding 5,5 (alles 47,2-52,8); Varken [12,4,1] 9,8 (Varken 44,2,
+  doorgeschoten). Tabel in de CHANGELOG.
+- **C30 vastgezet:** goldens opnieuw, mens-vos 101 geijkt (winnaar 1 -> 2),
+  simcheck 0, uispel 777 `8efa28eb...`.
+- Duel-training cyclus 2 (verse seeds, 07:29-15:21): Leeuw 1 en Wolf 1
+  adoptie; de matrix van cyclus 2 meet nog C29 (hij las zijn regels voor
+  C30 in).
+
 ## 3 oktober -- marathon cyclus 1 (C29): wat er gebeurde en wat het leerde
 
 - **Duelbots (19:52-03:38):** alleen de Leeuw adopteerde, in generatie 1
