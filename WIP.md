@@ -195,6 +195,36 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 3 oktober -- marathon cyclus 1 (C29): wat er gebeurde en wat het leerde
+
+- **Duelbots (19:52-03:38):** alleen de Leeuw adopteerde, in generatie 1
+  (verificatie 9,9 tegen 7,7); daarna haalde geen kandidaat het ijkpunt meer.
+  In de matrix won die nieuwe Leeuw-bot 36,3 tegen 48,8 met zijn oude bot (en
+  in elk duel minder): een valse adoptie. Gewichten teruggezet.
+- **Oorzaak (be95d06):** ELKE trainingspartij speelde op seed 0. Een
+  kandidaat werd steeds op dezelfde handvol partijen gemeten, en de
+  verificatie (6 facties, kant om en om, 12 per helft) bestond uit 6
+  verschillende partijen die dubbel telden. Nu verse seeds per generatie,
+  gepaard voor alle kandidaten, en een verse verificatiereeks die de kampioen
+  elke generatie ook speelt. Waarschijnlijk ook de reden voor het plateau
+  van de afgelopen weken.
+- **Matrix na de nacht** (`nacht_20261003_0338`, met de valse Leeuw-bot):
+  Varken 57,6, Muis 54,7, Krokodil 54,1, Wolf 49,1, Beer 48,2, Leeuw 36,3. De
+  duels zijn extreme steen-papier-schaar: Varken wint 94-98% van de Beer en
+  83-85% van de Muis, verliest 94-95% van de Krokodil.
+- **Campagnebots:** orakel uit 1200 verse C29-duels (Brier 0,173); het oude
+  verstand wint daarop nog maar 50,5% van de handbots, het nieuwe (2
+  adopties) ook niet meer. De nameting op echte duels was veel te traag (15
+  van 96 campagnes in twee uur) en is gestopt: een paar procent meet je zo
+  niet.
+- **Puntenbots (P4, klaar):** k1/k2/k3 0/2/1 adopties; bij geen enkele
+  kroonfactor pesterij of minder doneren. Tabel v1 blijft.
+- **Fout van mij:** de factiezoeker start alle kandidaten tegelijk, elk met
+  `--procs` processen; `--procs 20` gaf 120 Godots op 32 threads en maakte
+  alles traag. Herstart met `--procs 4` (24 processen), naast cyclus 2.
+- **Cyclus 2 (07:30):** duel-training 420 min op C29 met de verse seeds,
+  daarna de matrix; de factiezoeker (Varken) tot ~11:30.
+
 ## 2 oktober -- de trainingsmarathon van 48 uur (tot zaterdag 4 oktober)
 
 Max: "doe daarna de monster training 48 u lang met ook campagne daarin

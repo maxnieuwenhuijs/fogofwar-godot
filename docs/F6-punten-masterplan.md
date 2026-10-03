@@ -304,6 +304,16 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
   met punten op het spel zullen zichzelf waarschijnlijk vaker sparen dan de
   bots, dus in echte campagnes ligt het getal eerder hoger.
 
+### De meting met getrainde puntenbots (3 oktober, C29)
+
+Drie trainers van 5 uur (kampioen 20, 40, 60), daarna 1000 campagnes per
+verstand: 0, 2 en 1 adopties, en de bots spelen bij elke tabel vrijwel als
+bots die alleen op teamwinst trainden (donaties 0,9-1,1 per ronde,
+burgeroorlog 44-46%, slechte matchups 9-10%, 8,8-9,1 rondes). Wat ze leren is
+gericht geven (`w_don_nood`) en matchups kiezen, niet sparen of rivalen
+pesten (`w_rivaal` 0,00-0,04). Voor bots maakt de kroonfactor dus niet uit;
+**tabel v1 blijft**. Of mensen wel gaan pesten zegt dit niet: dat is P9.
+
 ---
 
 ## 9. Bouwstappen
@@ -313,7 +323,7 @@ test: als bots op punten ineens niets meer doneren, klopt de tabel niet.
 | **P1** ✓ | Uitslag en puntentabel in de core, `uitval` in CState, actie `DANK` | gebouwd 29 sept | Unit-tests per regel uit §2; het voorbeeld geeft precies 79 / 55 / 44 / 16 / 0; oude campagne-logs folden ongewijzigd |
 | **P2** ✓ | Solo: eindscherm met je punten per regel (iconen), spelregelkaart "Punten", schaduwbracket vanaf ronde 3 | gebouwd 29 sept | `-- shot campaign_hub einde\|punten\|regels` 0 fouten; preview = puntentabel |
 | **P3** ✓ | Pesterij in solo: rivaliteitszinnen (met bot-antwoorden), stunt, dank kiezen op het eindscherm, koningsmaker, badges | gebouwd 29 sept | CampaignTests; bots antwoorden deterministisch per seed; `-- shot campaign_hub dank` |
-| **P4** ◐ | Bots op punten: fitness "eigen punten", drie tabellen meten | gebouwd 30 sept, de nacht start Max | Rapport met de metingen uit §8 per tabel; Max kiest |
+| **P4** ✓ | Bots op punten: fitness "eigen punten", drie tabellen meten | gemeten 3 okt (marathon) | Geen pesterij bij kampioen 20, 40 of 60; tabel v1 blijft (`results/punten_20261002_2315/rapport.md`) |
 | **P5** | Tabel v1 vastzetten (`punten_versie` 1) | besluit Max | Max kiest |
 | **P6** | Server: tabellen, boekingen vanuit de worker | na F5.1 | Integratietest: campagne klaar → boekingen; dubbel insturen → niet dubbel; vervalst log → afgekeurd |
 | **P7** | Ladder: seizoen, leagues, inleg, ranglijsten, fun-borden (F6.2, F6.3) | na P6 | Seizoenswissel-job op een testseizoen; `-- shot leaderboard` |
