@@ -195,6 +195,22 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 3 oktober (avond) -- L4-proef: het netwerk verliest van L2; cyclus 3 op C30
+
+- **L4-proef** (`tools/l4/l4_proef.ps1`, 8 processen, 16:13-21:27): L2
+  tegen L2 met beslislog (576 partijen), scorenetwerk (imitatie 53,5%, top3
+  79,9%, uitslag 76,1%) en waardenetwerk (uitslag 78,0%), netcheck PASS
+  (pariteit -5,233475), dan L4 tegen L2 in beide kleuren: **L4 wint 40,3%
+  +- 4,0** (rood 38,2, blauw 42,4; met elke factie onder de 50). En ruim
+  een seconde per beslissing op een volle machine. Het netwerk maakt de bots
+  niet beter; L4 blijft geparkeerd. (L2 trainde tijdens de meting door, dus
+  het imiteerde een iets oudere L2; dat verklaart geen 10 punten.)
+- **Cyclus 3 op C30** (17:36): datarun 1200 duels -> orakel -> campagnetrainer
+  14 generaties, 2 adopties: `w_don_nood` 0,44, `w_geef` 0,24, `w_matchup`
+  0,61, `w_rivaal` 0. Op C30 leren de campagnebots vooral gericht doneren.
+  Duel-training tot ~01:00 (al adopties: Varken gen 3, Leeuw gen 7), dan de
+  matrix.
+
 ## 3 oktober (middag) -- C30: het Varken een ruiter minder
 
 - **Factiezoeker** (gericht op het Varken, `--procs 4`, achtergrond de
