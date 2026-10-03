@@ -1,10 +1,10 @@
 Fog of War — trainings-matchup voor Wolf
-Generaties: 18 · adopties: 1 · minuten: 503.3
-Buit op dragers (kandidaten, 648 potjes): 1.00 pt + 1.45 CP per potje veroverd, 0.77 eigen dragers per potje verloren
+Generaties: 14 · adopties: 0 · minuten: 431.9
+Buit op dragers (kandidaten, 504 potjes): 0.94 pt + 1.80 CP per potje veroverd, 0.74 eigen dragers per potje verloren
 Winrate van Wolf tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   45.4%  (108 potjes)
-  vs Muis     39.3%  (108 potjes)
-  vs Leeuw    64.7%  (108 potjes)
-  vs Beer     58.6%  (108 potjes)
-  vs Wolf     40.9%  (108 potjes)
-  vs Krokodil  50.5%  (108 potjes)
+  vs Varken   52.3%  (84 potjes)
+  vs Muis     31.7%  (84 potjes)
+  vs Leeuw    78.8%  (84 potjes)
+  vs Beer     56.0%  (84 potjes)
+  vs Wolf     42.0%  (84 potjes)
+  vs Krokodil  58.8%  (84 potjes)

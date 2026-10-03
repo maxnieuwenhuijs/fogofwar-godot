@@ -1,0 +1,39 @@
+{
+	"gewichten": {
+		"w_don_nood": 0.178,
+		"w_geef": 0.041,
+		"w_houden": 0.05,
+		"w_matchup": 0.819,
+		"w_rivaal": 0.038,
+		"w_ruil": 0.131,
+		"w_sparen": 0.018
+	},
+	"meta": {
+		"config": {
+			"adoptie": 0.53,
+			"base_seed": 910000.0,
+			"controle_seeds": 200.0,
+			"fitness": "punten",
+			"kandidaten": 8.0,
+			"minuten": 300.0,
+			"orakel": "res://data/duel_orakel.json",
+			"seeds": 60.0,
+			"sigma": 0.35,
+			"spelers": 16.0,
+			"start": "res://data/campagne_verstand.json",
+			"tabel": {
+				"eerder": 8.0,
+				"finale": 30.0,
+				"halve": 15.0,
+				"kampioen": 60.0
+			},
+			"uit": "res://data/campagne_verstand_k3.json"
+		},
+		"controle_winkans": 0.538,
+		"generatie": 26,
+		"git_sha": "d40d893",
+		"orakel": "res://data/duel_orakel.json",
+		"ts": "2026-10-03T02:03:14"
+	},
+	"versie": 1
+}

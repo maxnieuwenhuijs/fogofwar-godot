@@ -11,21 +11,29 @@
 	"meta": {
 		"config": {
 			"adoptie": 0.53,
-			"base_seed": 900000.0,
+			"base_seed": 910000.0,
 			"controle_seeds": 200.0,
+			"fitness": "punten",
 			"kandidaten": 8.0,
-			"minuten": 120.0,
+			"minuten": 300.0,
 			"orakel": "res://data/duel_orakel.json",
 			"seeds": 60.0,
 			"sigma": 0.35,
 			"spelers": 16.0,
-			"uit": "res://data/campagne_verstand.json"
+			"start": "res://data/campagne_verstand.json",
+			"tabel": {
+				"eerder": 3.0,
+				"finale": 10.0,
+				"halve": 5.0,
+				"kampioen": 20.0
+			},
+			"uit": "res://data/campagne_verstand_k1.json"
 		},
-		"controle_winkans": 0.53,
-		"generatie": 20,
+		"controle_winkans": 0.5,
+		"generatie": 0,
 		"git_sha": "d40d893",
 		"orakel": "res://data/duel_orakel.json",
-		"ts": "2026-10-02T23:01:42"
+		"ts": "2026-10-02T23:15:44"
 	},
 	"versie": 1
 }
