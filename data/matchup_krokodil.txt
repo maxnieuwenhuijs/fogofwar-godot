@@ -1,10 +1,10 @@
 Fog of War — trainings-matchup voor Krokodil
-Generaties: 10 · adopties: 0 · minuten: 444.5
-Buit op dragers (kandidaten, 360 potjes): 1.32 pt + 2.49 CP per potje veroverd, 0.78 eigen dragers per potje verloren
+Generaties: 8 · adopties: 0 · minuten: 448.2
+Buit op dragers (kandidaten, 288 potjes): 1.22 pt + 2.64 CP per potje veroverd, 0.76 eigen dragers per potje verloren
 Winrate van Krokodil tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   54.8%  (60 potjes)
-  vs Muis     49.7%  (60 potjes)
-  vs Leeuw    39.5%  (60 potjes)
-  vs Beer     38.0%  (60 potjes)
-  vs Wolf     52.1%  (60 potjes)
-  vs Krokodil  55.6%  (60 potjes)
+  vs Varken   56.6%  (48 potjes)
+  vs Muis     30.9%  (48 potjes)
+  vs Leeuw    56.2%  (48 potjes)
+  vs Beer     29.7%  (48 potjes)
+  vs Wolf     40.7%  (48 potjes)
+  vs Krokodil  64.8%  (48 potjes)
