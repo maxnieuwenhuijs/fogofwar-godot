@@ -35,7 +35,16 @@ $log = "results/marathon_$stamp.log"
 function Log([string]$msg) {
     $regel = "{0:yyyy-MM-dd HH:mm:ss} {1}" -f (Get-Date), $msg
     Write-Host $regel
-    Add-Content -Encoding utf8 -Path $log -Value $regel
+    # Een meelezer kan het bestand even vasthouden (2 oktober: de stappen na
+    # de datarun ontbraken in het log); dan een paar keer opnieuw proberen.
+    for ($poging = 0; $poging -lt 10; $poging++) {
+        try {
+            [IO.File]::AppendAllText((Join-Path $repo $log), $regel + "`r`n", [Text.Encoding]::UTF8)
+            return
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
 }
 
 function Start-Los([string]$script, [string[]]$argumenten) {

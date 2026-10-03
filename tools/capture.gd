@@ -4170,7 +4170,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 	print("[TRAIN] Budget %.1f min · populatie %d · %d potjes per kandidaat · %d facties · PARALLEL (%d threads)" % [
 		minutes, pop, games, doctrines.size(), pop])
 	print("[TRAIN] Eén generatie = %d potjes (kandidaten + dubbele verificatie); parallel op eigen threads..." % [
-		pop * games + games * VERIFY_FACTOR * 2])
+		pop * games + games * VERIFY_FACTOR * 4])
 	while Time.get_ticks_msec() - t0 < deadline:
 		gen += 1
 		var d: int = faction if faction >= 0 else doctrines[(gen - 1) % doctrines.size()]
@@ -4200,6 +4200,10 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 		#    Tegenstander-facties gebalanceerd (geschud rondje) i.p.v. willekeurig.
 		var doc_order: Array = doctrines.duplicate()
 		train_rng.shuffle(doc_order)
+		# 3 oktober: elke generatie verse seeds (gelijk voor alle kandidaten, dus
+		# nog steeds gepaard). Tot dan speelde alles op seed 0 en leerde de
+		# trainer een vaste handvol partijen uit zijn hoofd.
+		var gen_seed: int = train_rng.randi_range(1, 1 << 30)
 		var schedule: Array = []
 		for g in games:
 			# Potje 0: vast ijkpunt (baseline); potje 1: de huidige kampioen;
@@ -4212,7 +4216,8 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 			else:
 				opp_profile = pool[train_rng.randi_range(0, pool.size() - 1)]
 			var opp_d: int = doc_order[g % doc_order.size()]
-			schedule.append({"opp_w": opp_profile[opp_d], "opp_d": opp_d, "cand_is_p1": g % 2 == 0})
+			schedule.append({"opp_w": opp_profile[opp_d], "opp_d": opp_d, "cand_is_p1": g % 2 == 0,
+				"seed": gen_seed + g})
 		# Fitness PARALLEL: één thread per kandidaat (pop threads tegelijk).
 		# Meer threads (per potje) bleek AVERECHTS: te veel GDScript-threads
 		# vechten om de allocator en maken het 4× trager. pop (6) is de sweet spot.
@@ -4224,6 +4229,7 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 					"cand_w": candidates[j].w, "cand_d": d,
 					"opp_w": schedule[g].opp_w, "opp_d": schedule[g].opp_d,
 					"cand_is_p1": schedule[g].cand_is_p1,
+					"seed": int(schedule[g].seed),
 				})
 			var thread := Thread.new()
 			thread.start(_eval_games_threaded.bind(jobs))
@@ -4282,15 +4288,19 @@ func _run_training(minutes: float, pop: int, games: int, faction: int = -1, trai
 		#    (deterministische) reeks, dus dit blijft "beter dan nu".
 		var n_half: int = games * VERIFY_FACTOR
 		var n_verify: int = n_half * 2
-		if not verify_ref.has(d):
-			verify_ref[d] = {
-				"champ": _verify_round(champ_w, d, profile, doctrines, n_half),
-				"base": _verify_round(champ_w, d, baseline, doctrines, n_half),
-			}
+		# 3 oktober: verse verificatieseeds per generatie; de kampioen speelt
+		# dezelfde verse reeks als referentie (gepaard), elke generatie opnieuw.
+		# Kost 2 x n_half potjes extra, maar een adoptie moet nu op een reeks
+		# winnen die hij nooit eerder zag.
+		var verify_seed: int = train_rng.randi_range(1, 1 << 30)
+		verify_ref[d] = {
+			"champ": _verify_round(champ_w, d, profile, doctrines, n_half, verify_seed),
+			"base": _verify_round(champ_w, d, baseline, doctrines, n_half, verify_seed + 50000),
+		}
 		var ref: Dictionary = verify_ref[d]
 		var ref_tot: float = float(ref.champ) + float(ref.base)
-		var verify_champ: float = _verify_round(mean, d, profile, doctrines, n_half)
-		var verify_base: float = _verify_round(mean, d, baseline, doctrines, n_half)
+		var verify_champ: float = _verify_round(mean, d, profile, doctrines, n_half, verify_seed)
+		var verify_base: float = _verify_round(mean, d, baseline, doctrines, n_half, verify_seed + 50000)
 		var verify: float = verify_champ + verify_base
 		var adopted: bool = verify >= ref_tot + VERIFY_MARGE \
 			and verify_champ >= float(ref.champ) - VERIFY_HELFT_MIN \
@@ -4494,7 +4504,7 @@ func _run_arena(per: int, level: String) -> void:
 ## uitdager-gewichten tegen één tegenstander-profiel; tegenstander-facties
 ## round-robin, kant om en om. Retour: behaalde punten (win=1, gelijk=0.5).
 func _verify_round(cand_w: Dictionary, cand_d: int, opp_profile: Dictionary,
-		doctrines: Array, games: int) -> float:
+		doctrines: Array, games: int, seed_basis: int = 0) -> float:
 	# Hooguit VERIFY_THREADS threads tegelijk: meer GDScript-threads vechten om
 	# de allocator en maken het trager (gemeten 19 september: 12 tegelijk
 	# verdubbelde de generatietijd, 14,6 -> 28,8 min). De potjes worden dus in
@@ -4506,10 +4516,13 @@ func _verify_round(cand_w: Dictionary, cand_d: int, opp_profile: Dictionary,
 		var threads: Array = []
 		for g in range(g0, mini(games, g0 + VERIFY_THREADS)):
 			var opp_d: int = doctrines[g % doctrines.size()]
+			# Kant: eerst elke factie als P1, dan als P2 (g % 2 gaf bij 6 facties
+			# en 12 potjes zes dubbele paren).
 			var vjobs: Array = [{
 				"cand_w": cand_w, "cand_d": cand_d,
 				"opp_w": opp_profile[opp_d], "opp_d": opp_d,
-				"cand_is_p1": g % 2 == 0,
+				"cand_is_p1": (g / doctrines.size()) % 2 == 0,
+				"seed": seed_basis + g,
 			}]
 			var thread := Thread.new()
 			thread.start(_eval_games_threaded.bind(vjobs))
@@ -4568,7 +4581,8 @@ func _eval_games_threaded(jobs: Array) -> Dictionary:
 	var tally: Dictionary = {}
 	var buit: Dictionary = {"pt": 0, "cp": 0, "verloren": 0}
 	for job in jobs:
-		var uit: Dictionary = _train_match(job.cand_w, job.cand_d, job.opp_w, job.opp_d, job.cand_is_p1)
+		var uit: Dictionary = _train_match(job.cand_w, job.cand_d, job.opp_w, job.opp_d, job.cand_is_p1,
+			int(job.get("seed", 0)))
 		var s: float = float(uit.score)
 		fit += s
 		for bk in ["pt", "cp", "verloren"]:
@@ -4585,7 +4599,8 @@ func _eval_games_threaded(jobs: Array) -> Dictionary:
 ## kandidaat wint, 0.5 = gelijk, 0.0 = verlies (onder v4.2 de campagne-
 ## fitness uit CampagneFitness), pt/cp = wat de kandidaat op dragers
 ## veroverde, verloren = zijn eigen neergelegde dragers (C15, 7 september).
-func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int, cand_is_p1: bool) -> Dictionary:
+func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int, cand_is_p1: bool,
+		seed_val: int = 0) -> Dictionary:
 	var ca = TRAIN_AI.new()
 	ca.weights = cand_w.duplicate()
 	var oa = TRAIN_AI.new()
@@ -4594,7 +4609,7 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	var a2 = oa if cand_is_p1 else ca
 	var d1: int = cand_d if cand_is_p1 else opp_d
 	var d2: int = opp_d if cand_is_p1 else cand_d
-	var runner := MatchRunner.new(a1, a2, d1, d2, 0, _train_rules)
+	var runner := MatchRunner.new(a1, a2, d1, d2, seed_val, _train_rules)
 	# Patstellingen kosten anders tot 2500 stappen per potje; echte partijen zijn
 	# rond ~350 klaar. De tiebreak (materiaal → haven) geeft hetzelfde leersignaal.
 	runner.max_steps = TRAIN_MAX_STEPS
