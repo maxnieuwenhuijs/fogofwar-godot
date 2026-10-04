@@ -1,10 +1,10 @@
 Fog of War — trainings-matchup voor Varken
-Generaties: 11 · adopties: 1 · minuten: 434.6
-Buit op dragers (kandidaten, 396 potjes): 1.19 pt + 2.51 CP per potje veroverd, 0.46 eigen dragers per potje verloren
+Generaties: 13 · adopties: 4 · minuten: 429.3
+Buit op dragers (kandidaten, 468 potjes): 1.34 pt + 2.38 CP per potje veroverd, 0.71 eigen dragers per potje verloren
 Winrate van Varken tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   38.9%  (66 potjes)
-  vs Muis     46.4%  (66 potjes)
-  vs Leeuw    28.4%  (66 potjes)
-  vs Beer     64.1%  (66 potjes)
-  vs Wolf     19.1%  (66 potjes)
-  vs Krokodil  29.5%  (66 potjes)
+  vs Varken   42.9%  (78 potjes)
+  vs Muis     51.4%  (78 potjes)
+  vs Leeuw    21.5%  (78 potjes)
+  vs Beer     63.2%  (78 potjes)
+  vs Wolf     20.4%  (78 potjes)
+  vs Krokodil  20.3%  (78 potjes)
