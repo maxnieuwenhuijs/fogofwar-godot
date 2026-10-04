@@ -1,10 +1,10 @@
 Fog of War — trainings-matchup voor Beer
-Generaties: 10 · adopties: 1 · minuten: 435.2
-Buit op dragers (kandidaten, 360 potjes): 0.97 pt + 1.93 CP per potje veroverd, 0.91 eigen dragers per potje verloren
+Generaties: 6 · adopties: 2 · minuten: 235.8
+Buit op dragers (kandidaten, 216 potjes): 0.95 pt + 1.98 CP per potje veroverd, 0.81 eigen dragers per potje verloren
 Winrate van Beer tegen elke tegenstander-factie (alle trainingspotjes):
-  vs Varken   37.6%  (60 potjes)
-  vs Muis     57.5%  (60 potjes)
-  vs Leeuw    39.5%  (60 potjes)
-  vs Beer     49.3%  (60 potjes)
-  vs Wolf     43.3%  (60 potjes)
-  vs Krokodil  74.1%  (60 potjes)
+  vs Varken   59.0%  (36 potjes)
+  vs Muis     52.8%  (36 potjes)
+  vs Leeuw    43.1%  (36 potjes)
+  vs Beer     35.7%  (36 potjes)
+  vs Wolf     51.6%  (36 potjes)
+  vs Krokodil  84.9%  (36 potjes)
