@@ -1,11 +1,11 @@
 {
 	"gewichten": {
-		"w_don_nood": 0.168,
-		"w_geef": 0.027,
-		"w_houden": 0.042,
-		"w_matchup": 0.7,
+		"w_don_nood": 0.443,
+		"w_geef": 0.238,
+		"w_houden": 0.08,
+		"w_matchup": 0.608,
 		"w_rivaal": 0.0,
-		"w_ruil": 0.14,
+		"w_ruil": 0.135,
 		"w_sparen": 0.0
 	},
 	"meta": {
@@ -21,11 +21,11 @@
 			"spelers": 16.0,
 			"uit": "res://data/campagne_verstand.json"
 		},
-		"controle_winkans": 0.53,
-		"generatie": 20,
-		"git_sha": "d40d893",
+		"controle_winkans": 0.54,
+		"generatie": 14,
+		"git_sha": "c7f0186",
 		"orakel": "res://data/duel_orakel.json",
-		"ts": "2026-10-02T23:01:42"
+		"ts": "2026-10-03T21:16:49"
 	},
 	"versie": 1
 }
