@@ -4605,6 +4605,14 @@ func _train_match(cand_w: Dictionary, cand_d: int, opp_w: Dictionary, opp_d: int
 	ca.weights = cand_w.duplicate()
 	var oa = TRAIN_AI.new()
 	oa.weights = opp_w.duplicate()
+	# 4 oktober: loten tussen gelijkwaardige topzetten, net als de arena
+	# (tie_break_loting). Zonder dit deed de seed niets: de MatchRunner seedt
+	# alleen de rng waarmee de bots loten, dus elke (gewichten, tegenstander,
+	# kant) was een vaste partij en de trainer leerde die uit zijn hoofd,
+	# terwijl de matrix met loting meet (L2 loot bij bijna de helft van zijn
+	# zetten).
+	ca.tie_break_loting = true
+	oa.tie_break_loting = true
 	var a1 = ca if cand_is_p1 else oa
 	var a2 = oa if cand_is_p1 else ca
 	var d1: int = cand_d if cand_is_p1 else opp_d
