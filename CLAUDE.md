@@ -44,10 +44,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 3 oktober (C30, de duelbots midden in marathoncyclus 2, 1440
-  partijen):** Varken 50,5, Muis 52,8, Krokodil 49,5, Wolf 50,2, Beer 47,2,
-  Leeuw 49,8: band 47,2-52,8, spreiding 5,5 (foutmarge ~4,9 per factie), de
-  smalste tot nu toe. De echte stand is altijd de nachtmatrix na een trainingsnacht op
+  **Stand 4 oktober (C30, na de marathon; de eerste bots die met loting
+  trainden, 3240 partijen):** Beer 59,3, Leeuw 55,7, Varken 52,2, Muis 51,6,
+  Krokodil 40,7, Wolf 40,6 (spreiding 18,8). Op 3 oktober, met de bots van
+  toen, was C30 nog 47,2-52,8 (5,5). **De balans draait mee met de bots:**
+  de duels zijn extreme steen-papier-schaar (Beer wint 95% van de Krokodil,
+  Varken 94% van de Beer), en een adoptie kan een factie 10-15 punten
+  verschuiven (de Beer met een adoptie van 43,8 naar 59,3). Stel de regels
+  niet bij op een enkele nachtmatrix; pas ingrijpen als een factie twee of
+  drie nachten op rij buiten de band blijft. De echte stand is altijd de nachtmatrix na een trainingsnacht op
   de geldende regels. De geschiedenis (C20-C29, met elke meting) staat in
   `docs/spelregels-CHANGELOG.md` en WIP.md, niet meer hier.
   **Welke knop hoeveel doet** (gemeten, per factie anders): kaartbudget

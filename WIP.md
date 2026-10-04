@@ -195,6 +195,46 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 4 oktober -- marathon klaar: de balans draait mee met de bots
+
+- **Cyclus 4** (C30, 04:07-11:42): de eerste training met loting in de
+  trainer (0dc3f59). Nu verschilt de referentie van dezelfde kampioen per
+  generatie (Wolf 16,8 en daarna 13,6), dus het zijn echt nieuwe partijen.
+  Adopties: Varken 4, Leeuw 3, Beer 1, Krokodil 1, Wolf 1, Muis 0 (gestopt
+  in zijn vijfde generatie van 2 uur). Data apart (951045c).
+- **Laatste matrix** (`nacht_20261004_1142`, 3240 partijen, fuzz 500/0):
+  Beer 59,3, Leeuw 55,7, Varken 52,2, Muis 51,6, Krokodil 40,7, Wolf 40,6
+  (spreiding 18,8). De Beer ging met EEN adoptie van 43,8 naar 59,3.
+- **Twee nachten op C30 naast elkaar** (elk 3240 partijen, +-3,3):
+
+  | factie | na cyclus 3 | na cyclus 4 |
+  |---|---|---|
+  | Varken | 47,3 | 52,2 |
+  | Muis | 51,4 | 51,6 |
+  | Leeuw | 60,9 | 55,7 |
+  | Beer | 43,8 | 59,3 |
+  | Wolf | 50,3 | 40,6 |
+  | Krokodil | 46,2 | 40,7 |
+
+  Alleen de Muis staat stil. Wie boven zit wisselt per nacht (Leeuw, dan
+  Beer); de Krokodil zakt wel drie metingen op rij (53,6 op C29, 46,2, 40,7).
+- **Variant c31_a** (de Leeuw een ruiter minder, [12,3,2], tegen de bots van
+  cyclus 4, 1440 partijen): Leeuw 55,7 -> 51,5, maar de spreiding blijft 19,0
+  (Beer 61,2, Wolf 42,2, Krokodil 42,5). Niet aangenomen.
+- **De les van de marathon:** de duels blijven extreme steen-papier-schaar
+  (Beer wint 95% van de Krokodil, Varken 94% van de Beer, Krokodil 94% van
+  het Varken). Een veranderde bot-strategie draait een paar van die duels om
+  en verschuift een factie 10-15 punten. De smalle band van C30 (5,5) was een
+  momentopname met bepaalde bots. Daarom geen C31 op een enkele meting:
+  regels bijstellen na elke trainingsnacht is najagen. Beter: de balans meten
+  over meerdere botgeneraties (of tegen een pool van oude kampioenen), en
+  pas ingrijpen als een factie over twee of drie nachten buiten de band blijft.
+- **Wat de marathon opleverde:** C29 (Leeuw zonder dracht 7) en C30 (Varken
+  [12,3,2]); de duel-trainer gerepareerd (verse seeds be95d06 en loting
+  0dc3f59: tot 3 oktober leerde hij een vaste handvol partijen uit zijn
+  hoofd); campagnebots op C30 (gericht doneren); P4 klaar (geen pesterij bij
+  welke kroonfactor ook); L4 verliest van L2 (40,3%) en blijft geparkeerd.
+
 ## 3 oktober (avond) -- L4-proef: het netwerk verliest van L2; cyclus 3 op C30
 
 - **L4-proef** (`tools/l4/l4_proef.ps1`, 8 processen, 16:13-21:27): L2
