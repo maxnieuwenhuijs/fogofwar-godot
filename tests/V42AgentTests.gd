@@ -38,8 +38,20 @@ func test_l1_spawnt_en_biedt_onder_v42() -> void:
 	assert_true(cp > 0, "L1 biedt CP in ronde 3 (%d)" % cp)
 
 
+## L2 met de standaardgewichten in plaats van het getrainde profiel. Het
+## bieden is leerbaar (cp_bet_r1..r3): op 4 oktober leerde de Beer in ronde 3
+## minder te bieden (0,26, afgerond 0), en toen bood in deze partij niemand
+## meer. De test bewaakt het mechanisme, niet wat een trainingsnacht koos.
+func _l2_standaard() -> AgentL2:
+	var a := AgentL2.new()
+	a._ai = AIMediumScript.new()
+	a._ai.weights = AIController.default_weights().duplicate()
+	a._profiel_geladen = true
+	return a
+
+
 func test_l2_spawnt_en_biedt_onder_v42() -> void:
-	var uit: Dictionary = _speel(AgentL2.new(), AgentL2.new(), 4243)
+	var uit: Dictionary = _speel(_l2_standaard(), _l2_standaard(), 4243)
 	assert_eq(uit.runner.illegal_count, 0, "geen illegale L2-keuzes onder v4.2")
 	var spelers: Dictionary = uit.regel.spelers
 	var spawns: int = int(spelers["1"].spawns) + int(spelers["2"].spawns)

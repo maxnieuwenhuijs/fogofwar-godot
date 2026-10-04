@@ -195,7 +195,7 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
-## 4 oktober -- marathon klaar: de balans draait mee met de bots
+## 4 oktober -- marathon klaar (48 uur, vijf cycli): de balans draait mee met de bots
 
 - **Cyclus 4** (C30, 04:07-11:42): de eerste training met loting in de
   trainer (0dc3f59). Nu verschilt de referentie van dezelfde kampioen per
@@ -205,22 +205,36 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
 - **Laatste matrix** (`nacht_20261004_1142`, 3240 partijen, fuzz 500/0):
   Beer 59,3, Leeuw 55,7, Varken 52,2, Muis 51,6, Krokodil 40,7, Wolf 40,6
   (spreiding 18,8). De Beer ging met EEN adoptie van 43,8 naar 59,3.
-- **Twee nachten op C30 naast elkaar** (elk 3240 partijen, +-3,3):
+- **Cyclus 5** (C30, 200 min, 14:03-19:00, daarna de matrix tot 20:50):
+  Beer 2, Wolf 2, Varken 1, Krokodil 1, Leeuw 0, Muis 0 adopties (cedb219).
+  Matrix `nacht_20261004_1900`: band 44,7-56,7, **spreiding 12,0**, 0
+  afgekapt, fuzz schoon. uispel 777 nu `09344a90...` (de Wolf-gewichten),
+  simcheck 0 afwijkingen.
+- **Drie nachten op C30 naast elkaar** (elk 3240 partijen, +-3,3):
 
-  | factie | na cyclus 3 | na cyclus 4 |
-  |---|---|---|
-  | Varken | 47,3 | 52,2 |
-  | Muis | 51,4 | 51,6 |
-  | Leeuw | 60,9 | 55,7 |
-  | Beer | 43,8 | 59,3 |
-  | Wolf | 50,3 | 40,6 |
-  | Krokodil | 46,2 | 40,7 |
+  | factie | na cyclus 3 | na cyclus 4 | na cyclus 5 | gemiddeld |
+  |---|---|---|---|---|
+  | Varken | 47,3 | 52,2 | 47,9 | 49,1 |
+  | Muis | 51,4 | 51,6 | 48,1 | 50,4 |
+  | Leeuw | 60,9 | 55,7 | 55,3 | 57,3 |
+  | Beer | 43,8 | 59,3 | 56,7 | 53,3 |
+  | Wolf | 50,3 | 40,6 | 47,3 | 46,1 |
+  | Krokodil | 46,2 | 40,7 | 44,7 | 43,9 |
 
-  Alleen de Muis staat stil. Wie boven zit wisselt per nacht (Leeuw, dan
-  Beer); de Krokodil zakt wel drie metingen op rij (53,6 op C29, 46,2, 40,7).
+  De spreiding per nacht springt (17,1, 18,8, 12,0), maar twee dingen staan
+  drie nachten vast: **de Leeuw zit erboven (steeds 55 of meer) en de
+  Krokodil eronder (steeds 46 of minder).** Volgens de eigen regel ("pas
+  ingrijpen als een factie twee of drie nachten buiten de band blijft") is
+  dat de volgende regelstap, niet de Beer of de Wolf die per nacht wisselen.
 - **Variant c31_a** (de Leeuw een ruiter minder, [12,3,2], tegen de bots van
   cyclus 4, 1440 partijen): Leeuw 55,7 -> 51,5, maar de spreiding blijft 19,0
-  (Beer 61,2, Wolf 42,2, Krokodil 42,5). Niet aangenomen.
+  (Beer 61,2, Wolf 42,2, Krokodil 42,5). Niet aangenomen: binnen de ruis
+  (1,4 sigma) en geen smallere band. Hij blijft de kandidaat voor de Leeuw.
+- **Volgende stap (voor Max):** de factiezoeker gericht op de Krokodil
+  (`--facties 5 --achtergrond results/nacht_20261004_1900_v42_matrix_l2/games.jsonl
+  --procs 4`), en c31_a nog een keer meten tegen de bots van cyclus 5. Pas
+  daarna een C31, en dan met een trainingsnacht erachteraan. De marathon zelf
+  stopte na 48 uur op C30.
 - **De les van de marathon:** de duels blijven extreme steen-papier-schaar
   (Beer wint 95% van de Krokodil, Varken 94% van de Beer, Krokodil 94% van
   het Varken). Een veranderde bot-strategie draait een paar van die duels om

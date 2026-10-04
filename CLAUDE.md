@@ -44,15 +44,18 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   — want anders dan het doctrines-blok wordt hij níét uit het regels-bestand
   gelezen. `CampaignTests.test_c19_budget_bonus_overal_gelijk` bewaakt dat.
 
-  **Stand 4 oktober (C30, na de marathon; de eerste bots die met loting
-  trainden, 3240 partijen):** Beer 59,3, Leeuw 55,7, Varken 52,2, Muis 51,6,
-  Krokodil 40,7, Wolf 40,6 (spreiding 18,8). Op 3 oktober, met de bots van
-  toen, was C30 nog 47,2-52,8 (5,5). **De balans draait mee met de bots:**
-  de duels zijn extreme steen-papier-schaar (Beer wint 95% van de Krokodil,
-  Varken 94% van de Beer), en een adoptie kan een factie 10-15 punten
+  **Stand 4 oktober (C30, einde van de marathon, bots van cyclus 5, 3240
+  partijen):** Beer 56,7, Leeuw 55,3, Muis 48,1, Varken 47,9, Wolf 47,3,
+  Krokodil 44,7 (spreiding 12,0). Drie nachten op C30 gemiddeld: Leeuw
+  57,3, Beer 53,3, Muis 50,4, Varken 49,1, Wolf 46,1, Krokodil 43,9 (tabel
+  in WIP 4 oktober). **De balans draait mee met de bots:** de duels zijn
+  extreme steen-papier-schaar (Beer wint 93-95% van de Krokodil, Varken
+  94-98% van de Beer), en een adoptie kan een factie 10-15 punten
   verschuiven (de Beer met een adoptie van 43,8 naar 59,3). Stel de regels
   niet bij op een enkele nachtmatrix; pas ingrijpen als een factie twee of
-  drie nachten op rij buiten de band blijft. De echte stand is altijd de nachtmatrix na een trainingsnacht op
+  drie nachten op rij buiten de band blijft. Dat doen nu de Leeuw (steeds
+  55 of meer) en de Krokodil (steeds 46 of minder); kandidaat voor de Leeuw
+  is een ruiter minder ([12,3,2], c31_a: -4 tegen de bots van cyclus 4). De echte stand is altijd de nachtmatrix na een trainingsnacht op
   de geldende regels. De geschiedenis (C20-C29, met elke meting) staat in
   `docs/spelregels-CHANGELOG.md` en WIP.md, niet meer hier.
   **Welke knop hoeveel doet** (gemeten, per factie anders): kaartbudget
@@ -818,7 +821,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `8efa28eb…` geven (165 acties, cyclus 4, sinds
+  eind-zobrist; seed 777 moet `09344a90…` geven (165 acties, cyclus 4, sinds
+  4 oktober: de Wolf-gewichten van marathoncyclus 4 en 5, cedb219);
+  daarvoor `8efa28eb…` (165, 4, sinds
   3 oktober: C30 plus de Wolf-gewichten van marathoncyclus 2); daarvoor
   `5919d2c8…` (165, 4, sinds
   2 oktober: C29, dezelfde partij, alleen de regels in de staat-hash);
