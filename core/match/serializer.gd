@@ -96,6 +96,20 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		for pid in state.doctrine_commits:
 			commits_d[str(pid)] = int(state.doctrine_commits[pid])
 		out["doctrine_commits"] = commits_d
+	# 4.3.8 steen-papier-schaar: alleen aanwezig als er iets afwijkt van de
+	# rust, zodat elk snapshot buiten zo'n ronde byte- en hash-identiek blijft.
+	# De lopende keuzes staan apart (sps_keuzes): die zijn blind voor de ander.
+	if state.sps_nodig or state.sps_winnaar != -1 or state.sps_poging != 0 or not state.sps_vorige.is_empty():
+		var vorige_d: Dictionary = {}
+		for pid in state.sps_vorige:
+			vorige_d[str(pid)] = int(state.sps_vorige[pid])
+		out["sps"] = {"nodig": state.sps_nodig, "winnaar": state.sps_winnaar,
+			"poging": state.sps_poging, "vorige": vorige_d}
+	if not state.sps_keuzes.is_empty():
+		var keuzes_d: Dictionary = {}
+		for pid in state.sps_keuzes:
+			keuzes_d[str(pid)] = int(state.sps_keuzes[pid])
+		out["sps_keuzes"] = keuzes_d
 	return out
 
 
@@ -177,4 +191,13 @@ static func state_from_dict(d: Dictionary) -> GameState:
 	s._next_card_id = int(d.get("next_card_id", 0))
 	for k in d.get("doctrine_commits", {}):
 		s.doctrine_commits[int(String(k))] = int(d.doctrine_commits[k])
+	var sps_d = d.get("sps", null)
+	if sps_d is Dictionary:
+		s.sps_nodig = bool(sps_d.get("nodig", false))
+		s.sps_winnaar = int(sps_d.get("winnaar", -1))
+		s.sps_poging = int(sps_d.get("poging", 0))
+		for k in sps_d.get("vorige", {}):
+			s.sps_vorige[int(String(k))] = int(sps_d.vorige[k])
+	for k in d.get("sps_keuzes", {}):
+		s.sps_keuzes[int(String(k))] = int(d.sps_keuzes[k])
 	return s

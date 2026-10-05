@@ -1,5 +1,29 @@
 # Spelregels — CHANGELOG
 
+## 4.3.8: 5 oktober 2026 (steen-papier-schaar bij een volledig gelijk bod)
+
+*Besluit Max (cloud-sessie 5 oktober, lokaal gebouwd): "rock paper scissor bij
+gelijk spel bid". Pas helemaal achteraan, na het Aanval- en het stamina-bod;
+bots geseed en reproduceerbaar; aan als regelversie.*
+
+**Wat verandert.** Onder het campaign-blok: zijn beide biedingen gelijk en
+hebben beide spelers kaarten onthuld, dan beslist steen-papier-schaar het
+initiatief in plaats van "cyclus 1/ronde 1: speler 1, anders de vorige
+houder". Knop `campaign.initiatief_sps` (default aan, expliciet in
+`rules_v42_campaign.json` en `v42_default.json`); met de knop uit 4.3.7.
+Spec: `docs/spelregels-v4.2.md`, Deel B "4.3.8". Een volledig gelijk bod is
+niet zeldzaam: in de golden-sims (spiegelpartijen, dezelfde hand) was 33 van
+de 48 reveals gelijk; elke ronde met een lege hand telt ook als gelijk, maar
+die houdt de oude terugval.
+
+**Gevolgen.** Regelversie 4.3.8 en een nieuwe sleutel in het campaign-blok:
+de campagne-goldens (`cp_inzet`, `kanon_act`, `spawn_geblokkeerd`) zijn
+opnieuw gemaakt, plus een nieuwe golden `sps_gelijk_bod` met alleen
+expliciete keuzes. De twaalf goldens zonder campagne zijn ongewijzigd. De
+uispel-referentie verschuift (de regels zitten in de staat-hash). De balans
+is niet gemeten (B18: gepaard meten, knop aan tegen uit). De core-hash
+verandert: server en client samen uitrollen.
+
 ## C30: 3 oktober 2026 (het Varken een ruiter minder, leger [12,3,2])
 
 *Marathon van 48 uur (Max: "kijk naar de percentages en evt de factiezoeker

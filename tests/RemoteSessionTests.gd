@@ -22,6 +22,7 @@ func _class_name() -> String:
 const TOEGESTAAN_AFWIJKEND: Array[String] = [
 	"pawns", "all_cards", "cards_defined", "pools", "cp", "cp_bets", "cp_bet_done",
 	"spawn_totaal", "spawn_commits", "doctrine_commits", "rules", "next_pawn_id", "next_card_id",
+	"sps_keuzes",  # 4.3.8: de vijandelijke keuze is blind tot de uitslag
 ]
 
 
@@ -81,7 +82,7 @@ func _speel_stap(sess: SessionInterface, p: int, rng: SeededRng) -> bool:
 		Actions.CHOOSE_DOCTRINE: return sess.submit_choose_doctrine(p, int(a.doctrine))
 		Actions.PLACE: return sess.submit_placement(p, a.placements)
 		Actions.DEFINE_CARDS: return sess.submit_define_cards(p, a.cards)
-		Actions.ACK_REVEAL: return sess.submit_ack_reveal(p)
+		Actions.ACK_REVEAL: return sess.submit_ack_reveal(p, int(a.get("sps", -1)))
 		Actions.LINK: return sess.submit_link(p, int(a.card_id), int(a.pawn_id))
 		Actions.MOVE: return sess.submit_move(p, int(a.pawn_id), a.target)
 		Actions.MELEE: return sess.submit_attack(p, int(a.attacker_id), int(a.defender_id))

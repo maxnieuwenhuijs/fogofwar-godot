@@ -51,6 +51,22 @@ var _handen: VBoxContainer
 var _uitleg: Label
 var _knop: Button
 var _cb: Callable = Callable()
+## 4.3.8 steen-papier-schaar bij een gelijk bod: drie knoppen onder de handen.
+## sps_modus: "" (gewone onthulling), "kies", "wacht" of "uitslag" (game.gd
+## zet hem via toon_sps, alleen uit de staat).
+const SPS_KNOP_MAAT := Vector2(300, 96)
+var sps_modus: String = ""
+var _sps_rij: HBoxContainer
+var _sps_knoppen: Array = []
+var _cb_kies: Callable = Callable()
+## De winnaar die het scherm nu toont (titel en initiatief-icoon).
+var toonde_winnaar: int = -2
+## Invoerpauze na een standwissel: de tweede tik van een dubbeltik mag niet
+## als keuze in de volgende ronde of als Doorgaan landen. Alleen met een echt
+## venster (headless en de checks blijven tijdloos).
+const SPS_INVOER_PAUZE_MS := 350
+var _invoer_vanaf_ms: int = 0
+var _sps_stand: String = ""
 var _sessie: Object = null
 var _dim: ColorRect = null
 var _midden: CenterContainer = null
@@ -130,6 +146,24 @@ func _init() -> void:
 		_knop.expand_icon = false
 		_knop.add_theme_constant_override("icon_max_width", KNOP_ICOON)
 	_knop.pressed.connect(_op_doorgaan)
+	# Steen, papier, schaar: tekstknoppen (geen emoji; iconen kan de ontwerper
+	# later leveren). Standaard verborgen.
+	_sps_rij = HBoxContainer.new()
+	_sps_rij.name = "SteenPapierSchaar"
+	_sps_rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	_sps_rij.add_theme_constant_override("separation", 18)
+	_sps_rij.visible = false
+	for k in 3:
+		var b := Button.new()
+		b.name = ["Steen", "Papier", "Schaar"][k]
+		b.theme_type_variation = "KnopBreed"
+		b.custom_minimum_size = SPS_KNOP_MAAT
+		b.add_theme_font_size_override("font_size", KNOP_FONT)
+		b.focus_mode = Control.FOCUS_NONE
+		b.pressed.connect(_op_sps.bind(k))
+		_sps_rij.add_child(b)
+		_sps_knoppen.append(b)
+	kolom.add_child(_sps_rij)
 	kolom.add_child(_knop)
 
 
@@ -141,11 +175,20 @@ func open(state: GameState, t1: Dictionary, t2: Dictionary, initiative_winner: i
 		naam_van: Callable, cb: Callable, sessie: Object = null) -> void:
 	_cb = cb
 	_volg_sessie(sessie)
+	toonde_winnaar = initiative_winner
 	var tegenstander: int = Constants.PLAYER_1 if mens_id == Constants.PLAYER_2 else Constants.PLAYER_2
-	_titel.text = _tekst("PHASE_REVEAL_TITLE", [String(naam_van.call(initiative_winner))])
-	_titel.add_theme_color_override("font_color", UiAssets.team_kleur(initiative_winner))
+	if initiative_winner == -1:
+		# 4.3.8: volledig gelijk bod, er wordt nog gekozen (steen-papier-schaar).
+		_titel.text = tr("SPS_TITEL")
+		_titel.add_theme_color_override("font_color", UiAssets.INKT)
+	else:
+		_titel.text = _tekst("PHASE_REVEAL_TITLE", [String(naam_van.call(initiative_winner))])
+		_titel.add_theme_color_override("font_color", UiAssets.team_kleur(initiative_winner))
 	_uitleg.text = tr("REVEAL_UI_UITLEG")
 	_knop.text = tr("MENU_CONTINUE")
+	sps_modus = ""
+	_sps_rij.visible = false
+	_knop.visible = true
 	# Vorige onthulling opruimen (het scherm gaat elke ronde opnieuw open).
 	for kind in _handen.get_children():
 		_handen.remove_child(kind)
@@ -169,6 +212,67 @@ func open(state: GameState, t1: Dictionary, t2: Dictionary, initiative_winner: i
 
 func sluit() -> void:
 	visible = false
+
+
+## 4.3.8 steen-papier-schaar. modus "kies": de drie knoppen (cb_kies.call(k));
+## "wacht": je eigen keuze, wachten op de ander; "uitslag": beide keuzes en
+## Doorgaan. vorige = de laatste uitslag {speler: keuze}; bij een gelijke ronde
+## (poging > 0) zegt de uitleg "allebei X: nog een keer". Alleen beeld.
+func toon_sps(modus: String, eigen: int, vorige: Dictionary, poging: int, mens_id: int,
+		naam_van: Callable, cb_kies: Callable) -> void:
+	sps_modus = modus
+	_cb_kies = cb_kies
+	var stand := "%s|%d" % [modus, poging]
+	if stand != _sps_stand:
+		_sps_stand = stand
+		if DisplayServer.get_name() != "headless":
+			_invoer_vanaf_ms = Time.get_ticks_msec() + SPS_INVOER_PAUZE_MS
+	_sps_rij.visible = modus == "kies"
+	_knop.visible = modus == "uitslag"
+	for b in _sps_knoppen:
+		(b as Button).disabled = false
+		(b as Button).text = tr(["SPS_STEEN", "SPS_PAPIER", "SPS_SCHAAR"][_sps_knoppen.find(b)])
+	match modus:
+		"kies":
+			if poging > 0 and vorige.has(mens_id):
+				_uitleg.text = _tekst("SPS_GELIJK", [_keuze_naam(int(vorige[mens_id]))])
+			else:
+				_uitleg.text = tr("SPS_UITLEG")
+		"wacht":
+			_uitleg.text = _tekst("SPS_WACHT", [_keuze_naam(eigen)])
+		"uitslag":
+			var p1 := Constants.PLAYER_1
+			var p2 := Constants.PLAYER_2
+			_uitleg.text = _tekst("SPS_UITSLAG", [String(naam_van.call(p1)), _keuze_naam(int(vorige.get(p1, -1))),
+				String(naam_van.call(p2)), _keuze_naam(int(vorige.get(p2, -1)))])
+
+
+## Hoeveel sps-knoppen er nu te drukken zijn (render_digest).
+func sps_knoppen_aan() -> int:
+	if not visible or not _sps_rij.visible:
+		return 0
+	var n := 0
+	for b in _sps_knoppen:
+		if not (b as Button).disabled:
+			n += 1
+	return n
+
+
+func _keuze_naam(k: int) -> String:
+	if k < 0 or k > 2:
+		return "?"
+	return tr(["SPS_STEEN", "SPS_PAPIER", "SPS_SCHAAR"][k]).to_lower()
+
+
+func _op_sps(k: int) -> void:
+	if Time.get_ticks_msec() < _invoer_vanaf_ms:
+		return   # nog de tik van de vorige stand
+	# Na de eerste tik uit: geen dubbele keuze (online is het indienen asynchroon).
+	for b in _sps_knoppen:
+		(b as Button).disabled = true
+	Audio.play("ui_click")
+	if _cb_kies.is_valid():
+		_cb_kies.call(k)
 
 
 ## UI-beweging: de waas en het paneel komen binnen, de kaarten van de
@@ -348,6 +452,8 @@ func _bij_fase(nieuw: int, _oud: int) -> void:
 
 
 func _op_doorgaan() -> void:
+	if sps_modus != "" and Time.get_ticks_msec() < _invoer_vanaf_ms:
+		return   # de tweede tik van een keuze is geen Doorgaan
 	Audio.play("ui_click")
 	visible = false
 	if _cb.is_valid():

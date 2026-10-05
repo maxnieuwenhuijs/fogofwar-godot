@@ -48,6 +48,12 @@ var placements_done: Dictionary = {}
 # Per-speler reveal-bevestiging (F0.4b): de fase gaat pas door als beide
 # spelers geackt hebben (het oude single-ack-gat is hiermee dicht).
 var reveal_acks: Dictionary = {}
+## 4.3.8 steen-papier-schaar bij een volledig gelijk bod (Rules.sps_*).
+var sps_nodig: bool = false        # deze reveal wordt met steen-papier-schaar beslist
+var sps_keuzes: Dictionary = {}    # speler -> 0 steen / 1 papier / 2 schaar; blind tot beide binnen
+var sps_winnaar: int = -1          # -1 = nog niet beslist
+var sps_poging: int = 0            # het aantal gelijke rondes tot nu
+var sps_vorige: Dictionary = {}    # speler -> keuze bij de laatste uitslag (openbaar, voor het scherm)
 
 # Wolf-doctrine: pion die na zijn melee nog een optionele gratis stap tegoed heeft.
 var pending_wolf_step_pawn: int = -1
@@ -564,6 +570,11 @@ func clone() -> GameState:
 	copy.doctrine_commits = doctrine_commits.duplicate()
 	copy.placements_done = placements_done.duplicate()
 	copy.reveal_acks = reveal_acks.duplicate()
+	copy.sps_nodig = sps_nodig
+	copy.sps_keuzes = sps_keuzes.duplicate()
+	copy.sps_winnaar = sps_winnaar
+	copy.sps_poging = sps_poging
+	copy.sps_vorige = sps_vorige.duplicate()
 	copy.pending_wolf_step_pawn = pending_wolf_step_pawn
 	copy.clocks = clocks.duplicate(true)
 	copy.turn_deadline = turn_deadline

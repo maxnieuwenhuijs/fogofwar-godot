@@ -38,6 +38,8 @@ const EV_CP_EARNED := "cp_earned"             # F2.3/D13: {player_id, reden, amo
 	# voor de campagnelaag; NIET in-match uitgeefbaar (saldo blijft onaangeraakt).
 const EV_DOCTRINE_COMMITTED := "doctrine_committed"   # F4.0: {player_id} (de keuze blijft blind)
 const EV_DOCTRINES_REVEALED := "doctrines_revealed"   # F4.0: {doctrines} — simultane onthulling.
+const EV_SPS_GEKOZEN := "sps_gekozen"         # 4.3.8: {player_id} (de keuze zelf blijft blind tot de uitslag)
+const EV_SPS_UITSLAG := "sps_uitslag"         # 4.3.8: {keuzes {"1","2"}, winner (-1 = gelijk), poging}
 	# LET OP (F4): de CHOOSE_DOCTRINE-actie in het rauwe log draagt de keuze;
 	# de event-stream naar de tegenstander redigeert die tot dit reveal-event.
 
@@ -60,7 +62,7 @@ static func apply(state: GameState, action: Dictionary, player_id: int, now_ms: 
 		Actions.DEFINE_CARDS:
 			_do_define(state, action, player_id, events)
 		Actions.ACK_REVEAL:
-			_do_ack_reveal(state, player_id, events)
+			_do_ack_reveal(state, action, player_id, events)
 		Actions.LINK:
 			_do_link(state, action, player_id, events)
 		Actions.MOVE:
@@ -224,18 +226,51 @@ static func _enter_reveal(state: GameState, events: Array) -> void:
 		})
 	_set_phase(state, Phase.reveal_for_round(state.round_number), events)
 	# Initiatief is deterministisch; hier alvast berekend voor het reveal-event.
+	# 4.3.8: bij een volledig gelijk bod (en kaarten aan beide kanten) beslist
+	# steen-papier-schaar; dan is de winnaar in het event -1 tot er gekozen is.
+	_sps_leeg(state)
 	var init: Dictionary = Rules.compute_initiative(state)
+	state.sps_nodig = Rules.sps_nodig_voor(state, init)
 	_ev(events, EV_CARDS_REVEALED, {
 		"totals_p1": init.totals_p1,
 		"totals_p2": init.totals_p2,
-		"winner": init.winner,
+		"winner": -1 if state.sps_nodig else init.winner,
 	})
 
 
 ## Per-speler ACK (F0.4b-gedragsverbetering): de fase gaat pas door als
 ## BEIDE spelers bevestigd hebben. compute_initiative is deterministisch,
 ## dus bij de tweede ack veilig opnieuw te berekenen.
-static func _do_ack_reveal(state: GameState, player_id: int, events: Array) -> void:
+##
+## 4.3.8, steen-papier-schaar: zolang er gekozen wordt (Rules.sps_open) is een
+## ack een KEUZE (action.sps, of kaal: de engine kiest geseed). Zijn beide
+## keuzes binnen, dan de uitslag; de acks gaan terug op false. Bij gelijk volgt
+## een nieuwe poging, bij een winnaar een tweede ronde kale acks die de uitslag
+## bevestigt en het koppelen opent (een moment voor het scherm).
+static func _do_ack_reveal(state: GameState, action: Dictionary, player_id: int, events: Array) -> void:
+	if Rules.sps_open(state):
+		var keuze: int = int(action.get("sps", -1))
+		if keuze < 0:
+			keuze = _sps_auto(state, player_id)
+		state.sps_keuzes[player_id] = keuze
+		state.reveal_acks[player_id] = true
+		_ev(events, EV_SPS_GEKOZEN, {"player_id": player_id})
+		if not (state.sps_keuzes.has(Constants.PLAYER_1) and state.sps_keuzes.has(Constants.PLAYER_2)):
+			_ev(events, EV_STATE, {})
+			return  # wachten op de keuze van de ander
+		var k1: int = int(state.sps_keuzes[Constants.PLAYER_1])
+		var k2: int = int(state.sps_keuzes[Constants.PLAYER_2])
+		var w: int = Rules.sps_winnaar(k1, k2)
+		_ev(events, EV_SPS_UITSLAG, {"keuzes": {"1": k1, "2": k2}, "winner": w, "poging": state.sps_poging})
+		state.sps_vorige = {Constants.PLAYER_1: k1, Constants.PLAYER_2: k2}
+		state.sps_keuzes = {}
+		state.reveal_acks = {Constants.PLAYER_1: false, Constants.PLAYER_2: false}
+		if w == -1:
+			state.sps_poging += 1
+		else:
+			state.sps_winnaar = w
+		_ev(events, EV_STATE, {})
+		return
 	state.reveal_acks[player_id] = true
 	if not (state.reveal_acks.get(Constants.PLAYER_1, false)
 			and state.reveal_acks.get(Constants.PLAYER_2, false)):
@@ -243,7 +278,34 @@ static func _do_ack_reveal(state: GameState, player_id: int, events: Array) -> v
 	var init: Dictionary = Rules.compute_initiative(state)
 	state.initiative_player = init.winner
 	state.last_initiative_winner = init.winner
+	_sps_leeg(state)
 	_begin_linking(state, events)
+
+
+## De sps-velden terug op nul (bij de reveal en vlak voor het koppelen).
+static func _sps_leeg(state: GameState) -> void:
+	state.sps_nodig = false
+	state.sps_keuzes = {}
+	state.sps_winnaar = -1
+	state.sps_poging = 0
+	state.sps_vorige = {}
+
+
+## De keuze van de engine voor een kale ack tijdens het kiezen: geseed uit wat
+## de KIEZER zelf ziet (zijn eigen view), dus reproduceerbaar (fold, server en
+## replay kiezen hetzelfde) en geen orakel: een kale ack verraadt niets over de
+## verborgen staat van de tegenstander (pools, CP, Krokodil-koppelingen), want
+## die zit niet in het zaad. Onafhankelijk van de ack-volgorde (acks, klokken
+## en de sps-velden zelf doen niet mee) en van de regels. JSON sorteert de
+## sleutels, net als Zobrist. Voorspelbaar voor wie de view van de kiezer kent;
+## wie zelf kiest heeft daar geen last van.
+static func _sps_auto(state: GameState, speler: int) -> int:
+	var d: Dictionary = MatchLog._jsonify(View.for_player(state, speler))
+	for k in ["reveal_acks", "turn_deadline", "clocks", "rules", "sps_nodig", "sps_winnaar",
+			"sps_poging", "sps_vorige", "own_sps_keuze", "enemy_sps_gekozen"]:
+		d.erase(k)
+	var h: String = ("%s|%d|%d" % [JSON.stringify(d).sha256_text(), speler, state.sps_poging]).sha256_text()
+	return h.substr(0, 8).hex_to_int() % 3
 
 
 static func _begin_linking(state: GameState, events: Array) -> void:
@@ -820,9 +882,22 @@ static func _do_claim_timeout(state: GameState, _claimant: int, now_ms: int, eve
 				_merge_sub_apply(state, Actions.make_spawn([]), speler, now_ms, events)
 		return
 	if Phase.is_reveal(ph):
-		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
-			if not state.reveal_acks.get(speler, false):
-				_merge_sub_apply(state, Actions.make_ack_reveal(), speler, now_ms, events)
+		if not Rules.sps_aan(state):
+			# Exact het oude pad (4.1 / 4.3.7): een ack per achterblijver.
+			for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+				if not state.reveal_acks.get(speler, false):
+					_merge_sub_apply(state, Actions.make_ack_reveal(), speler, now_ms, events)
+			return
+		# 4.3.8: met steen-papier-schaar kan de reveal meerdere ack-rondes
+		# duren (keuze, eventueel opnieuw, bevestiging). Een claim maakt DEZE
+		# reveal in een keer af (de engine kiest geseed voor wie te laat is),
+		# maar nooit de volgende: elke ronde heeft zijn eigen reveal-fase.
+		var rondes := 0
+		while state.phase == ph and rondes < 12:
+			for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+				if state.phase == ph and not state.reveal_acks.get(speler, false):
+					_merge_sub_apply(state, Actions.make_ack_reveal(), speler, now_ms, events)
+			rondes += 1
 		return
 	if Phase.is_linking(ph):
 		# Eén automatische koppeling voor de trage beurtspeler; de deadline

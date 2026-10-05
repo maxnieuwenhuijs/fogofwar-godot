@@ -32,6 +32,8 @@ signal cycle_started(cycle_number: int)
 signal game_over(winner_id: int)
 signal error_occurred(player_id: int, message: String)
 signal doctrines_revealed(doctrines: Dictionary)  # F4.0: beide keuzes tegelijk onthuld
+signal sps_gekozen(player_id: int)                 # 4.3.8: iemand koos (welke keuze blijft blind)
+signal sps_uitslag(keuzes: Dictionary, winner: int, poging: int)  # 4.3.8: {"1","2"}; winner -1 = gelijk
 
 var state: GameState = null
 
@@ -65,7 +67,9 @@ func submit_default_placement(_player_id: int) -> bool:
 func submit_define_cards(_player_id: int, _cards_data: Array, _cp_bet: int = 0) -> bool:
 	return _niet_ondersteund("submit_define_cards")
 
-func submit_ack_reveal(_player_id: int) -> bool:
+## sps (4.3.8): -1 = een kale ack (bevestigen; tijdens het kiezen kiest de
+## engine geseed), 0/1/2 = steen/papier/schaar bij een gelijk bod.
+func submit_ack_reveal(_player_id: int, _sps: int = -1) -> bool:
 	return _niet_ondersteund("submit_ack_reveal")
 
 ## Compat-shim: bevestigt de reveal voor BEIDE spelers. Alleen zinvol als
@@ -182,6 +186,10 @@ func _relay_events(events: Array) -> void:
 				cycle_started.emit(ev.payload.cycle)
 			Reducer.EV_DOCTRINES_REVEALED:
 				doctrines_revealed.emit(ev.payload.doctrines)
+			Reducer.EV_SPS_GEKOZEN:
+				sps_gekozen.emit(ev.payload.player_id)
+			Reducer.EV_SPS_UITSLAG:
+				sps_uitslag.emit(ev.payload.keuzes, ev.payload.winner, ev.payload.poging)
 
 
 func _niet_ondersteund(naam: String) -> bool:

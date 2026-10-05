@@ -661,7 +661,9 @@ static func compute_bid(cards: Array, budget: int, stat: String) -> float:
 	return float(total - n) / float(n * (budget - 3))
 
 ## Deterministisch: bod op Attack → bod op Speed → Ronde 1/Cyclus 1: Speler 1,
-## anders de vorige initiatiefhouder. (De steen-papier-schaar-tiebreaker uit v1 verviel in v4.1.)
+## anders de vorige initiatiefhouder. Onder het campaign-blok (4.3.8) beslist
+## bij een volledig gelijk bod steen-papier-schaar (sps_*); `gelijk` zegt of
+## beide biedingen gelijk waren, en zolang er gekozen wordt is winner -1.
 static func compute_initiative(state: GameState) -> Dictionary:
 	var cards_p1: Array = state.cards_revealed[Constants.PLAYER_1]
 	var cards_p2: Array = state.cards_revealed[Constants.PLAYER_2]
@@ -675,6 +677,7 @@ static func compute_initiative(state: GameState) -> Dictionary:
 	totals_p2["bid"] = bid_p2
 	var result := {
 		"winner": -1,
+		"gelijk": false,
 		"totals_p1": totals_p1,
 		"totals_p2": totals_p2,
 	}
@@ -690,8 +693,51 @@ static func compute_initiative(state: GameState) -> Dictionary:
 			result.winner = Constants.PLAYER_1
 		elif speed_p2 > speed_p1 + EPS:
 			result.winner = Constants.PLAYER_2
-		elif state.cycle == 1 and state.round_number == 1:
-			result.winner = Constants.PLAYER_1
 		else:
-			result.winner = state.last_initiative_winner
+			result.gelijk = true
+			if state.sps_nodig:
+				result.winner = state.sps_winnaar   # -1 zolang er gekozen wordt
+			elif state.cycle == 1 and state.round_number == 1:
+				result.winner = Constants.PLAYER_1
+			else:
+				result.winner = state.last_initiative_winner
 	return result
+
+
+# =========================================================================
+# 4.3.8 Steen-papier-schaar bij een volledig gelijk bod (Max, 5 oktober)
+# =========================================================================
+# 0 = steen, 1 = papier, 2 = schaar. Papier slaat steen, schaar slaat papier,
+# steen slaat schaar. In de code heet het sps (de F0.0-check grept op het
+# andere woord, B9).
+
+## Staat de regel aan? Alleen onder het campaign-blok, en met de knop.
+static func sps_aan(state: GameState) -> bool:
+	if state.rules == null or not state.rules.campaign_actief():
+		return false
+	return bool((state.rules.campaign as Dictionary).get("initiatief_sps",
+		RulesConfig.CAMPAIGN_DEFAULTS["initiatief_sps"]))
+
+
+## Moet deze reveal met steen-papier-schaar beslist worden? Een volledig
+## gelijk bod, de regel aan, en beide spelers hebben kaarten onthuld (een ronde
+## met lege handen houdt de oude terugval: geen keuze om niets).
+static func sps_nodig_voor(state: GameState, init: Dictionary) -> bool:
+	return bool(init.get("gelijk", false)) and sps_aan(state) \
+		and not (state.cards_revealed.get(Constants.PLAYER_1, []) as Array).is_empty() \
+		and not (state.cards_revealed.get(Constants.PLAYER_2, []) as Array).is_empty()
+
+
+## Wordt er nu gekozen? (reveal, sps nodig, nog geen winnaar)
+static func sps_open(state: GameState) -> bool:
+	return Phase.is_reveal(state.phase) and state.sps_nodig and state.sps_winnaar == -1
+
+
+## Wie wint met deze twee keuzes? 1 of 2, of -1 bij gelijk.
+static func sps_winnaar(k1: int, k2: int) -> int:
+	match (k1 - k2 + 3) % 3:
+		1:
+			return Constants.PLAYER_1
+		2:
+			return Constants.PLAYER_2
+	return -1

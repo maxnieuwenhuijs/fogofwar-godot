@@ -26,7 +26,7 @@ func _dispatch(engine, player: int, a: Dictionary) -> bool:
 		Actions.DEFINE_CARDS:
 			return engine.submit_define_cards(player, a.cards)
 		Actions.ACK_REVEAL:
-			return engine.submit_ack_reveal(player)
+			return engine.submit_ack_reveal(player, int(a.get("sps", -1)))
 		Actions.LINK:
 			return engine.submit_link(player, a.card_id, a.pawn_id)
 		Actions.MOVE:
@@ -49,6 +49,7 @@ func test_action_json_roundtrip_all_types() -> void:
 		Actions.make_place([{"type": 0, "pos": Vector2i(3, 9)}, {"type": 2, "pos": Vector2i(5, 10)}]),
 		Actions.make_define_cards([{"hp": 3, "stamina": 2, "attack": 2}]),
 		Actions.make_ack_reveal(),
+		Actions.make_ack_reveal(2, 0),
 		Actions.make_link(4, 17),
 		Actions.make_move(3, Vector2i(5, 6)),
 		Actions.make_melee(3, 25),

@@ -195,6 +195,67 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 5 oktober -- de vier taken uit de cloud-overdracht gebouwd
+
+Een cloud-sessie ontwierp vier taken op een checkout van 28 augustus en haalde
+ze weer weg (commit e9313a3 op origin/claude/new-session-6kviaa,
+`CONTEXT-cloud-5okt.md`). Lokaal gebouwd op de actuele code, elk plan eerst
+door een lezer tegen de code gezet en door een criticus nagelopen; taak 4
+daarna nog door een review met vier invalshoeken en een scepticus per
+bevinding.
+
+- **1. Crash "previously freed" in `_shed_one` (33240f7).** De echte bron
+  was niet een opgeruimde pion maar het bloedstraaltje: een wond kort voor de
+  dood (de terugslag op de aanvaller, dan een AI-kill) hangt een mesh in het
+  skelet die zichzelf ~0,5 s later opruimt, terwijl het ledemaat 0,1-0,4 s na
+  de dood de oude meshlijst las. Nu haalt `_shed_first_limb` de meshes pas
+  dan op, en alleen van het model van het moment van sterven (instance-id).
+  `-- stompcheck`, `-- stompcheck wond`, `-- stompcheck wissel`: PASS.
+- **2. Geluid (f256db5).** Max: "dB per sound effect luistert niet naar de
+  algemene game sound settings". Lokaal bestond het paneel al (de cloud zag
+  het niet); de lekken waren: een geluid dat al klonk schaalde niet mee, M liet
+  vertraagde geluiden doorgaan, en tuner, geluid-studio en spel schreven
+  elkaars dB weg in sound_tuning.json (dat ook maar een keer gelezen werd).
+  Nu faders op bussen SFX/Music/Ambient (alles x de eigen schuif), Master op 0
+  dB met een begrenzer als vangnet, M zet Master stil, sound_tuning.json
+  herladen bij een wijziging en alleen eigen wijzigingen bewaren.
+  `-- audiopaneel` PASS, AudioTests 32/0, uispel ongewijzigd. Let op: jouw
+  "alles" staat op 10%, en een paar effecten heb je op +12 dB gezet
+  (body_hit_floor, de kanonkreten van muis en varken, ongecommit); bij 100%
+  komen die boven 0 dBFS uit (nu begrensd in plaats van geknipt), bij 10%
+  klinken ze juist naar verhouding harder. Open vraag: die +12 terug naar
+  ~+4?
+- **3. Model-tuner "alle varianten" (2bcc405).** Een factie, infanterie
+  vooraan, cavalerie, artillerie achteraan, elk vijf archetypen; typen die de
+  factie volgens de actieve tabel niet kent blijven weg (Muis en Beer: geen
+  kanon). Plus: de opstellingen sluiten elkaar echt uit. `-- tunercheck` 0
+  fouten (15/10/15/10/15/15).
+- **4. Steen-papier-schaar bij een volledig gelijk bod (4.3.8).** Zie
+  CHANGELOG en spelregels Deel B. Defaults die ik koos: alleen als beide
+  spelers kaarten onthulden (een ronde met lege handen houdt de oude
+  terugval, want dat is in het eindspel heel gewoon); na een winnaar een
+  bevestigingsronde (een moment voor het scherm); een keuze draagt zijn
+  poging (landt nooit in een volgende ronde); een kale ack laat de engine
+  kiezen, geseed op de VIEW van de kiezer (na de review: eerst op de hele
+  staat, en dan was een kale ack een orakel op de verborgen staat van de
+  tegenstander, bv. de Krokodil-koppelingen). Review-reparaties ook: de
+  timeout-lus en `acknowledge_reveal` blijven binnen hun eigen reveal (ze
+  namen de volgende lege reveal mee, ook zonder campagne), een invoerpauze
+  tegen dubbeltikken, de inkom van de kaarten blijft, knoppen terug na een
+  mislukte keuze online.
+  Checks: testsuite 2912/0 (SpsTests nieuw), `-- spscheck` (gelijk bod door de
+  echte UI, elk moment live gelijk aan hersteld), simcheck 0, naadcheck,
+  herstelcheck 777 en 4242 wolf, resumecheck 777 1 en 4242 2, play, vosview,
+  fuzz 300 met 0 schendingen, pakket-proef OK (core-hash 1b8fdd01: server en
+  client samen uitrollen). Goldens: de drie campagne-goldens opnieuw, nieuw
+  `sps_gelijk_bod`; de twaalf zonder campagne ongewijzigd. uispel 777 =
+  `5862e4c9...` (dezelfde partij). Niet gedraaid: `npm test` (lokale MySQL
+  stond uit) en de balans (gepaard meten volgens B18).
+  **Nog te doen:** de vertalingen (`i18n/strings.{nl,en}.translation`) zijn
+  niet opnieuw gebouwd, want de Godot-editor stond open: de editor laten
+  scannen of hem sluiten en `--import` draaien, dan de twee bestanden
+  committen. Tot die tijd toont het scherm de sleutels (SPS_TITEL enz.).
+
 ## 5 oktober -- lessen van de marathon voorlopig vastgelegd
 
 - `docs/lessen-trainingsmarathon.md`: de lessen van 2-4 oktober, elk door een

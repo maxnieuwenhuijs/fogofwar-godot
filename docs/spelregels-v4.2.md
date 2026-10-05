@@ -114,7 +114,9 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 - **Initiatief:** hoogste Aanval-bod wint (ε = 0.000001). Gelijk → hoogste
   stamina-bod. Ook gelijk → in cyclus 1/ronde 1 Speler 1, anders de vorige
   initiatiefhouder. Volledig deterministisch; er is geen loting en geen
-  steen-papier-schaar. `Rules.gd:453-485`
+  steen-papier-schaar. `Rules.gd:453-485` *(Onder het campaign-blok geldt
+  sinds 4.3.8 bij een volledig gelijk bod steen-papier-schaar; zie Deel B,
+  "4.3.8".)*
 - Initiatief wordt elke ronde opnieuw berekend; de houder van ronde 3 begint de
   actiefase. De "vorige houder" blijft over cyclusgrenzen bewaard.
   `GameSession.gd:114-118,220, GameState.gd:9`
@@ -501,4 +503,33 @@ de attack-plus is de band 45-54% over 5400 partijen (zie de CHANGELOG). In
 config meer. Zonder de knop (4.1, oude configs) verandert er niets.
 Implementatie: `Reducer._do_link`, na de factie-bonussen en voor de
 (lege) ondergrens.
+
+## 4.3.8: steen-papier-schaar bij een volledig gelijk bod
+
+*Besluit Max, 5 oktober 2026: "rock paper scissor bij gelijk spel bid".
+Wanneer: pas helemaal achteraan (eerst het Aanval-bod, dan het stamina-bod).
+Bots: geseed, reproduceerbaar. Oplevering: aan, als regelversie.*
+
+Zijn bij de reveal het Aanval-bod EN het stamina-bod gelijk, en hebben
+beide spelers kaarten onthuld, dan beslist steen-papier-schaar wie het
+initiatief krijgt (die koppelt als eerste, en in ronde 3 handelt die als
+eerste). Steen slaat schaar, schaar slaat papier, papier slaat steen; kiezen
+beide hetzelfde, dan nog een keer. Dat vervangt de terugval "cyclus 1/ronde
+1: speler 1, anders de vorige houder". Een ronde waarin een speler GEEN
+kaarten onthult (geen vrije pionnen) houdt de oude terugval: geen keuze om
+niets (default van 5 oktober, voor Max om te bevestigen).
+
+- Knop `campaign.initiatief_sps` (default aan); met de knop uit blijft het
+  4.3.7. Zonder campaign-blok (4.1) bestaat de regel niet.
+- Actie: `ack_reveal` met het optionele veld `sps` (0 steen, 1 papier, 2
+  schaar) en `poging` (voor welke ronde: een keuze landt nooit in een
+  volgende). Een kale ack tijdens het kiezen laat de engine kiezen, geseed op
+  de staat (zonder acks, klokken, sps-velden en regels), dus reproduceerbaar;
+  zo spelen bots, trainer, arena en de timeout zonder aanpassing door.
+- Volgorde: beide kiezen (blind), dan de uitslag (event `sps_uitslag`, beide
+  keuzes), dan een tweede ronde kale acks die de uitslag bevestigt en het
+  koppelen opent. Een timeout-claim maakt de hele reveal in een keer af.
+- Fog: de view toont van de ander alleen DAT hij koos (`enemy_sps_gekozen`),
+  nooit wat, tot de uitslag.
+- In de code heet het sps (de F0.0-check grept op het andere woord, B9/B19).
 

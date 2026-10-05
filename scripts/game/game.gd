@@ -1288,6 +1288,9 @@ func _sessie_verbindingen() -> Array:
 		["game_over", _on_game_over],
 		["doctrines_revealed", _on_doctrines_revealed],
 		["state_updated", _on_state_updated],
+		["sps_gekozen", _on_sps_gekozen],
+		["sps_uitslag", _on_sps_uitslag],
+		["error_occurred", _on_sessie_fout],
 	]
 
 
@@ -1394,7 +1397,11 @@ func _toon_fase_vanaf_staat() -> void:
 		else:
 			_update_hud(tr("HUD_WAIT_OPPONENT"))
 	elif Phase.is_reveal(st.phase):
-		if bool(st.reveal_acks.get(me, false)):
+		var sps_modus := _sps_modus(st)
+		if sps_modus == "kies" or sps_modus == "wacht" or sps_modus == "uitslag":
+			var init_sps: Dictionary = Rules.compute_initiative(st)
+			_toon_reveal(init_sps.totals_p1, init_sps.totals_p2, int(init_sps.winner))
+		elif bool(st.reveal_acks.get(me, false)):
 			_update_hud(tr("HUD_WAIT_OPPONENT"))
 		else:
 			var init: Dictionary = Rules.compute_initiative(st)
@@ -1519,6 +1526,13 @@ func render_digest() -> Dictionary:
 			"zichtbaar": overlay_zichtbaar,
 			"titel": String(_overlay._title.text) if overlay_zichtbaar else "",
 			"knoppen": _overlay._buttons.get_child_count() if overlay_zichtbaar else 0,
+		},
+		# 4.3.8: het onthulscherm en zijn steen-papier-schaar-stand (zonder namen:
+		# live en hersteld heten de spelers anders).
+		"onthul": {
+			"zichtbaar": _onthul_scherm != null and _onthul_scherm.visible,
+			"sps": _onthul_scherm.sps_modus if (_onthul_scherm != null and _onthul_scherm.visible) else "",
+			"knoppen": _onthul_scherm.sps_knoppen_aan() if _onthul_scherm != null else 0,
 		},
 		"prompt": "" if overlay_zichtbaar else _prompt_label.text,
 		"topbalk": _top_label.text,
@@ -2371,28 +2385,142 @@ func _toon_reveal(t1: Dictionary, t2: Dictionary, initiative_winner: int) -> voi
 		_fase_overgang_bezig = false
 		if session.state == null:
 			return
+	# Na het wachten kan de reveal al voorbij zijn (online inhalen).
+	if not Phase.is_reveal(session.state.phase):
+		return
 	_update_hud(tr("PHASE_REVEAL"))
 	# Trommelroffel bij de onthulling. (initiative-bugel staat nu uit.)
 	Audio.play("reveal")
 	# Audio.play("initiative", 0.6)
-	# UI-assetpack (3 september): beide handen als echte kaarten op de veldtafel
-	# in plaats van de tekst-overlay; het scherm hangt direct boven de overlay.
-	if _onthul_scherm == null:
-		_onthul_scherm = ONTHUL_SCHERM_SCRIPT.new()
-		$UI.add_child(_onthul_scherm)
-		$UI.move_child(_onthul_scherm, _overlay.get_index() + 1)
+	_sps_verstuurd = -1
+	_zorg_onthul_scherm()
+	if _sps_modus(session.state) != "":
+		# Steen-papier-schaar: een keer opbouwen via _sync_sps (met de inkom).
+		_onthul_scherm.sluit()
+		_sync_sps()
+		return
 	_onthul_scherm.open(session.state, t1, t2, initiative_winner, _human_id, _player_name,
 		func(_i: int) -> void: _continue_after_reveal(), session)
 
 
+## UI-assetpack (3 september): beide handen als echte kaarten op de veldtafel
+## in plaats van de tekst-overlay; het scherm hangt direct boven de overlay.
+func _zorg_onthul_scherm() -> void:
+	if _onthul_scherm == null:
+		_onthul_scherm = ONTHUL_SCHERM_SCRIPT.new()
+		$UI.add_child(_onthul_scherm)
+		$UI.move_child(_onthul_scherm, _overlay.get_index() + 1)
+
+
 func _continue_after_reveal() -> void:
 	_overlay.hide()
+	# Eerst dicht, dan indienen: een steen-papier-schaar-uitslag die daarbij
+	# synchroon binnenkomt opent hem zelf weer (_sync_sps), en een harnas dat
+	# dit rechtstreeks aanroept laat geen scherm open dat hersteld niet bestaat.
+	if _onthul_scherm != null:
+		_onthul_scherm.sluit()
+	_sps_verstuurd = -1
 	if _ai != null:
 		session.acknowledge_reveal()  # offline: de shim ackt voor beide kanten
 	else:
+		var m_voor := _sps_modus(session.state)
+		var poging_voor: int = session.state.sps_poging
 		session.submit_ack_reveal(_human_id)  # F4.3c: online alleen de eigen ack
 		if Phase.is_reveal(session.state.phase):
+			# Wachten, tenzij er synchroon een nieuwe stand binnenkwam (een
+			# uitslag of een nieuwe poging): die heeft _sync_sps al getekend.
+			var m := _sps_modus(session.state)
+			var onderweg: bool = m == m_voor and session.state.sps_poging == poging_voor
+			if m == "" or m == "bevestigd" or (onderweg and m != "wacht"):
+				_update_hud(tr("HUD_WAIT_OPPONENT"))
+
+
+# --- Steen-papier-schaar bij een gelijk bod (4.3.8, 5 oktober) ----------------
+
+## Voor welke poging de mens al koos (-1 = geen): de knoppen gaan na de eerste
+## tik uit, ook online waar het indienen asynchroon is.
+var _sps_verstuurd: int = -1
+
+
+## De stand van de mens, alleen uit de staat: "" (geen steen-papier-schaar),
+## "kies", "wacht" (gekozen, de ander nog niet), "uitslag" (winnaar bekend,
+## nog niet bevestigd) of "bevestigd".
+func _sps_modus(st: GameState) -> String:
+	if st == null or not Phase.is_reveal(st.phase) or not st.sps_nodig:
+		return ""
+	var gedaan: bool = bool(st.reveal_acks.get(_human_id, false))
+	if st.sps_winnaar == -1:
+		return "wacht" if gedaan else "kies"
+	return "bevestigd" if gedaan else "uitslag"
+
+
+## Zet het onthulscherm in de stand van de staat. Idempotent: live, na een
+## event en bij herstel dezelfde weg (F4.3e).
+func _sync_sps() -> void:
+	var st: GameState = session.state
+	var modus := _sps_modus(st)
+	if modus == "":
+		return
+	if modus == "bevestigd":
+		if _onthul_scherm != null:
+			_onthul_scherm.sluit()
+		_update_hud(tr("HUD_WAIT_OPPONENT"))
+		return
+	_zorg_onthul_scherm()
+	var init: Dictionary = Rules.compute_initiative(st)
+	# Een keer opbouwen (dan speelt de inkom), en opnieuw alleen als de winnaar
+	# wisselt (de uitslag: titel en initiatief-icoon), niet bij elke stand.
+	if not _onthul_scherm.visible or _onthul_scherm.toonde_winnaar != int(init.winner):
+		_onthul_scherm.open(st, init.totals_p1, init.totals_p2, int(init.winner), _human_id, _player_name,
+			func(_i: int) -> void: _continue_after_reveal(), session)
+	_onthul_scherm.toon_sps(modus, int(st.sps_keuzes.get(_human_id, -1)), st.sps_vorige,
+		st.sps_poging, _human_id, _player_name, _kies_sps)
+	if modus == "kies" and _sps_verstuurd == st.sps_poging:
+		for b in _onthul_scherm._sps_knoppen:
+			(b as Button).disabled = true   # al gekozen, het antwoord is onderweg
+	match modus:
+		"kies":
+			_update_hud(tr("HUD_SPS_KIES"))
+		"wacht":
 			_update_hud(tr("HUD_WAIT_OPPONENT"))
+		"uitslag":
+			_update_hud(tr("PHASE_REVEAL"))
+
+
+## De mens kiest. Offline kiest de engine meteen geseed voor de bot (een kale
+## ack namens de bot, achter de naad _ai != null); online alleen de eigen keuze.
+func _kies_sps(k: int) -> void:
+	var st: GameState = session.state
+	if not Rules.sps_open(st) or bool(st.reveal_acks.get(_human_id, false)) or _sps_verstuurd == st.sps_poging:
+		return
+	_sps_verstuurd = st.sps_poging
+	if not session.submit_ack_reveal(_human_id, k):
+		_sps_verstuurd = -1
+		_sync_sps()
+		return
+	if _ai != null and Rules.sps_open(session.state) and not bool(session.state.reveal_acks.get(_ai_id, false)):
+		session.submit_ack_reveal(_ai_id)
+	_sync_sps()
+
+
+func _on_sps_gekozen(_player_id: int) -> void:
+	if session.state != null and Phase.is_reveal(session.state.phase) and _onthul_scherm != null:
+		_sync_sps()
+
+
+func _on_sps_uitslag(_keuzes: Dictionary, _winner: int, _poging: int) -> void:
+	if session.state != null and Phase.is_reveal(session.state.phase):
+		_sync_sps()
+
+
+## Een geweigerde of verloren eigen actie (online: 422, transportfout). Was het
+## een steen-papier-schaar-keuze, dan de knoppen terug.
+func _on_sessie_fout(player_id: int, _melding: String) -> void:
+	if player_id != _human_id or session.state == null:
+		return
+	if _sps_modus(session.state) == "kies" and _sps_verstuurd >= 0:
+		_sps_verstuurd = -1
+		_sync_sps()
 
 
 # --- Linking (mens interactief, AI automatisch) -----------------------------

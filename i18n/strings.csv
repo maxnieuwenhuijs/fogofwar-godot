@@ -386,6 +386,15 @@ HUD_UI_DOCTRINE_UITLEG,"Locked in for the whole match. After this you pick your 
 HUD_UI_RESERVE_TEKST,"Reserve %d · CP %d","Reserve %d · CP %d"
 REVEAL_UI_BOD,bid %d%% · attack %d · stamina %d,bod %d%% · aanval %d · stamina %d
 REVEAL_UI_UITLEG,"The highest attack bid takes the initiative: that player links and acts first.","Het hoogste aanval-bod krijgt het initiatief: die speler koppelt én handelt straks als eerste."
+SPS_TITEL,"Tied bid: rock, paper, scissors","Gelijk bod: steen, papier, schaar"
+SPS_UITLEG,"Attack and stamina bids are equal. Choose: the winner links and acts first.","Aanval- en stamina-bod zijn gelijk. Kies: de winnaar koppelt en handelt als eerste."
+SPS_STEEN,Rock,Steen
+SPS_PAPIER,Paper,Papier
+SPS_SCHAAR,Scissors,Schaar
+SPS_WACHT,You chose %s. Waiting for your opponent...,Je koos %s. Wachten op de tegenstander...
+SPS_GELIJK,Both chose %s: again!,Allebei %s: nog een keer!
+SPS_UITSLAG,%s: %s · %s: %s,%s: %s · %s: %s
+HUD_SPS_KIES,"Tied bid: choose rock, paper or scissors","Gelijk bod: kies steen, papier of schaar"
 HUB_UI_FEED_EVENT,R%d · %s,R%d · %s
 HUB_UI_SALDI_KORT,%s (team %d)%s,%s (team %d)%s
 HUD_COLOR_RED,Red,Rood

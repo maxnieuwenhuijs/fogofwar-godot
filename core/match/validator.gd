@@ -34,6 +34,15 @@ static func is_legal(state: GameState, action: Dictionary, player_id: int) -> Di
 				return _nee("Niet in reveal fase")
 			if state.reveal_acks.get(player_id, false):
 				return _nee("Al bevestigd")
+			# 4.3.8: een keuze (sps) alleen zolang er gekozen wordt, 0..2, en
+			# voor deze poging (een oude tik landt nooit in een nieuwe ronde).
+			if action.has("sps"):
+				if not Rules.sps_open(state):
+					return _nee("Geen steen-papier-schaar open")
+				if int(action.sps) < 0 or int(action.sps) > 2:
+					return _nee("Ongeldige keuze")
+				if action.has("poging") and int(action.poging) != state.sps_poging:
+					return _nee("Die keuze hoort bij een andere ronde")
 			return _ok()
 		Actions.LINK:
 			return _check_link(state, action, player_id)
@@ -545,7 +554,12 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 		return out
 	if Phase.is_reveal(state.phase):
 		if not state.reveal_acks.get(player_id, false):
+			# De kale ack vooraan: L1 neemt legal[0] en laat de engine kiezen
+			# (altijd steen zou uit te buiten zijn); daarna de drie keuzes.
 			out.append(Actions.make_ack_reveal())
+			if Rules.sps_open(state):
+				for k in 3:
+					out.append(Actions.make_ack_reveal(k, state.sps_poging))
 		return out
 	if Phase.is_linking(state.phase):
 		if state.current_player != player_id:

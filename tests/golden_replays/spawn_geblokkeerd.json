@@ -77,10 +77,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5fe94e4b940d2b1781f94b67bcc76ae11278f4c81bc8eedfb18b0aa75767fb2d",
+			"hash": "e86c6babb2ccac451a6db6db0722a129796d00caaad07653dc454b6ddd6198cd",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1791034789.417
+			"ts": 1791227341.108
 		},
 		{
 			"action": {
@@ -116,10 +116,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "fcc3d09c5b41fa95457587d213fcba46ad7ca8d8f1f4373a9945f3c4cf44bd2a",
+			"hash": "873f917e02a245abd1a8c89c5bff818894b186e711f9b4eb9db4353b76020afc",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1791034789.417
+			"ts": 1791227341.108
 		},
 		{
 			"action": {
@@ -196,13 +196,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5e8b78293e4ff5e58ceb4af9808f82a98da42b53fcdfcab74ff72c283e467bc9",
+			"hash": "d33225b8111e9fd4e3f406bd9337cf550d4366d5c273f3ab713d71b1cc092ae3",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1791034789.418
+			"ts": 1791227341.109
 		}
 	],
-	"final_hash": "5e8b78293e4ff5e58ceb4af9808f82a98da42b53fcdfcab74ff72c283e467bc9",
+	"final_hash": "d33225b8111e9fd4e3f406bd9337cf550d4366d5c273f3ab713d71b1cc092ae3",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -380,6 +380,7 @@
 				"cp_refund": "none",
 				"cp_start": 10,
 				"cp_start_mode": "vast",
+				"initiatief_sps": true,
 				"kanon_actie_kost": {
 					"roll": 1,
 					"shoot": 1
@@ -429,7 +430,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.7",
+			"rules_version": "4.3.8",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"stat_bonus": {},
@@ -467,7 +468,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-10-03T15:39:49",
+		"created": "2026-10-05T21:09:01",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -626,6 +627,7 @@
 					"cp_refund": "none",
 					"cp_start": 10,
 					"cp_start_mode": "vast",
+					"initiatief_sps": true,
 					"kanon_actie_kost": {
 						"roll": 1,
 						"shoot": 1
@@ -675,7 +677,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.7",
+				"rules_version": "4.3.8",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"stat_bonus": {},
@@ -697,6 +699,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.7"
+		"rules_version": "4.3.8"
 	}
 }

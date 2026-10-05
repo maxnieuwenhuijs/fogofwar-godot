@@ -113,6 +113,17 @@ een MatchLog-entry) en elke 50 acties een snapshot.
   rij, byte-identieke eindstaat. Een online client stuurt NOOIT een losse
   `bet_cp`; de engine laat hem toe (offline, arena, goldens) en de stream
   redigeert hem, maar de rij-telling verraadt dan de inzet.
+- **Steen-papier-schaar (4.3.8).** Bij een volledig gelijk bod kent
+  `ack_reveal` het optionele veld **`sps`** (0 steen, 1 papier, 2 schaar)
+  met **`poging`** (`{type: "ack_reveal", sps: 1, poging: 0}`); alleen legaal
+  zolang er gekozen wordt, en de poging moet kloppen. Een kale ack laat dan
+  de server geseed kiezen (ook het timeout-pad); na de uitslag bevestigt een
+  tweede ronde kale acks. De keuze zelf staat alleen in `payload.action`
+  (server-only) en in het client-event `sps_uitslag` (pas als beide keuzes
+  binnen zijn); `sps_gekozen {player_id}` zegt alleen DAT iemand koos (dat
+  verraadt de rij al). Wie kaal ackt, laat de keuze aan de server: die is
+  reproduceerbaar uit de staat en dus in principe voorspelbaar voor wie de
+  hele staat kent; een speler die zelf kiest heeft daar geen last van.
 - **Wat een client wél mag afleiden (bekend, geaccepteerd):** dat de vijand
   in CYCLE_SPAWN een lege pool had (de spawn-gate sluit dan meteen op jouw
   eigen inzet, dus de fasewissel zit in je eigen rij), en dat een match-id
@@ -146,7 +157,10 @@ en de lokale `Validator` (highlights). De client past NOOIT zelf
 `Reducer.apply` toe: kaart-ids zijn server-toegewezen. Vier publieke sleutels
 zijn er sinds F4.3d bijgekomen omdat een client ze nodig heeft en ze geen
 geheim dragen: `last_initiative_winner` (tiebreak bij een gelijk bod),
-`eind_reden`, `turn_deadline` en `clocks` (beide banken). Views komen als
+`eind_reden`, `turn_deadline` en `clocks` (beide banken). Sinds 4.3.8 ook de
+steen-papier-schaar-stand: `sps_nodig`, `sps_winnaar`, `sps_poging`,
+`sps_vorige` (de laatste uitslag), `own_sps_keuze` en `enemy_sps_gekozen`
+(alleen DAT, nooit de keuze). Views komen als
 JSON-tekst binnen: elk getal kan een float zijn en object-sleutels zijn
 gesorteerd (Godot alfabetisch, Node numeriek), dus `uit_view` cast alles en
 zet pionnen en kaarten weer op id-volgorde. Events gaan door

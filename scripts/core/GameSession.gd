@@ -59,8 +59,8 @@ func submit_define_cards(player_id: int, cards_data: Array, cp_bet: int = 0) -> 
 
 ## Per-speler reveal-bevestiging (F0.4b): de fase gaat pas door als beide
 ## spelers geackt hebben. Stil bij weigering (het oude ack-pad was ook stil).
-func submit_ack_reveal(player_id: int) -> bool:
-	var action := Actions.make_ack_reveal()
+func submit_ack_reveal(player_id: int, sps: int = -1) -> bool:
+	var action := Actions.make_ack_reveal(sps, state.sps_poging if sps >= 0 else -1)
 	var res: Dictionary = Reducer.apply(state, action, player_id)
 	if not res.ok:
 		return false
@@ -69,10 +69,19 @@ func submit_ack_reveal(player_id: int) -> bool:
 	return true
 
 ## Compat-shim voor de huidige single-ack-UI: bevestigt voor BEIDE spelers,
-## zodat offline gedrag identiek blijft aan vóór F0.4b.
+## zodat offline gedrag identiek blijft aan vóór F0.4b. Met steen-papier-
+## schaar (4.3.8) duurt een reveal soms meer rondes; dan kiest de engine
+## geseed voor beide kanten en loopt dit door tot het koppelen (begrensd).
+## game.gd laat de mens bij een gelijk bod eerst zelf kiezen.
 func acknowledge_reveal() -> void:
-	submit_ack_reveal(Constants.PLAYER_1)
-	submit_ack_reveal(Constants.PLAYER_2)
+	# Binnen DEZE reveal (elke ronde heeft zijn eigen reveal-fase): zonder
+	# steen-papier-schaar precies een rondje, net als voor 4.3.8.
+	var fase: int = state.phase
+	var rondes := 0
+	while state.phase == fase and Phase.is_reveal(fase) and rondes < 12:
+		submit_ack_reveal(Constants.PLAYER_1)
+		submit_ack_reveal(Constants.PLAYER_2)
+		rondes += 1
 
 func submit_link(player_id: int, card_id: int, pawn_id: int) -> bool:
 	return _apply_action(player_id, Actions.make_link(card_id, pawn_id))

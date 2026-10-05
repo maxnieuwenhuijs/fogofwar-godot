@@ -40,6 +40,7 @@ const TOEGESTAAN_AFWIJKEND: Array[String] = [
 	"pools", "cp", "cp_bets", "cp_bet_done", "spawn_totaal",  # vijandelijke saldi zijn '?'
 	"spawn_commits",    # vijandelijke inzet is blind
 	"doctrine_commits", # vijandelijke keuze is blind
+	"sps_keuzes",       # 4.3.8: de vijandelijke steen-papier-schaar-keuze is blind tot de uitslag
 	"rules",            # campaign.pools is in de view geredigeerd
 	"next_pawn_id", "next_card_id",  # afgeleid uit de hoogste zichtbare id
 ]

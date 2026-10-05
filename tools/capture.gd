@@ -3744,11 +3744,11 @@ func _ready() -> void:
 			await get_tree().process_frame
 			await get_tree().process_frame
 			var rs: GameState = r_lb.state
-			var sleutel := "%s|%d|%d|%d|%d|%s|%s|%s|%s|%s" % [Phase.to_string_phase(rs.phase), rs.cycle,
+			var sleutel := "%s|%d|%d|%d|%d|%s|%s|%s|%s|%s|%d|%d" % [Phase.to_string_phase(rs.phase), rs.cycle,
 				rs.round_number, rs.current_player, rs.pending_wolf_step_pawn,
 				str(rs.doctrine_commits.has(r_seat)), str(rs.placements_done.get(r_seat, false)),
 				str(rs.cards_defined.get(r_seat, []).size() > 0), str(rs.reveal_acks.get(r_seat, false)),
-				str(rs.spawn_done.get(r_seat, false))]
+				str(rs.spawn_done.get(r_seat, false)), rs.sps_poging, rs.sps_winnaar]
 			if sleutel != r_sleutel:
 				r_sleutel = sleutel
 				r_momenten += 1
@@ -3824,10 +3824,10 @@ func _ready() -> void:
 			await get_tree().process_frame
 			await get_tree().process_frame
 			var st: GameState = GameSession.state
-			var sleutel := "%s|%d|%d|%d|%d|%s|%s|%s|%s" % [Phase.to_string_phase(st.phase), st.cycle,
+			var sleutel := "%s|%d|%d|%d|%d|%s|%s|%s|%s|%d|%d" % [Phase.to_string_phase(st.phase), st.cycle,
 				st.round_number, st.current_player, st.pending_wolf_step_pawn,
 				str(st.placements_done.get(1, false)), str(st.cards_defined.get(1, []).size() > 0),
-				str(st.reveal_acks.get(1, false)), str(st.spawn_done.get(1, false))]
+				str(st.reveal_acks.get(1, false)), str(st.spawn_done.get(1, false)), st.sps_poging, st.sps_winnaar]
 			if sleutel != laatste_sleutel:
 				laatste_sleutel = sleutel
 				momenten += 1
@@ -3861,6 +3861,85 @@ func _ready() -> void:
 		print("[HERSTEL] %s: seed=%d momenten=%d verschillen=%d canary=%d acties=%d fasen=%s" % [
 			"PASS" if hok else "FAIL", h_seed, momenten + 1, verschillen, canary, h_acties, ", ".join(fasen_lijst)])
 		get_tree().quit(0 if hok else 1)
+		return
+	elif "spscheck" in args:
+		# 4.3.8 (5 oktober): steen-papier-schaar door de echte UI, met een
+		# geforceerd gelijk bod (beide Muis, dezelfde kaarten: bod 0/0), en op
+		# elk moment een herstelde scene op alleen de fog-view ernaast. Zonder
+		# bot in game.gd (de online-situatie, zoals naadcheck): de tegenstander
+		# kiest buiten game.gd om. Momenten: kies, wacht, gelijk (opnieuw
+		# kiezen), uitslag, bevestigd, koppelen.
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.MUIS
+		game._start_match(1)
+		await get_tree().create_timer(0.2).timeout
+		game._confirm_placement()
+		await get_tree().create_timer(0.3).timeout
+		game._ai = null
+		var sf := 0
+		var sv := 0
+		var st: GameState = GameSession.state
+		var kaarten: Array = []
+		for i in Validator.expected_define_count(st, 1):
+			kaarten.append({"hp": int(st.doctrine_data_of(1).budget) - 2, "stamina": 1, "attack": 1})
+		# De mens definieert hier buiten de kaart-UI om: de CP-vraag van de
+		# define-fase dicht (= 0 inzetten) en de hand weg, zoals na een echte define.
+		game._overlay.hide()
+		game._card_hand.visible = false
+		GameSession.submit_define_cards(1, kaarten)
+		GameSession.submit_define_cards(2, kaarten.duplicate(true))
+		await get_tree().create_timer(0.5).timeout
+		var stappen: Array = [
+			["kies", 3, -1],
+			["wacht", 0, -1],
+			["kies", 3, -1],      # allebei steen: nog een keer
+			["uitslag", 0, 1],    # papier slaat steen
+			["", 0, 1],           # bevestigd: het scherm is dicht
+		]
+		for i in stappen.size():
+			st = GameSession.state
+			var d: Dictionary = game.render_digest()
+			var verwacht: Array = stappen[i]
+			var ok: bool = Phase.is_reveal(st.phase) and String(d.onthul.sps) == String(verwacht[0]) \
+				and int(d.onthul.knoppen) == int(verwacht[1]) and st.sps_winnaar == int(verwacht[2]) \
+				and bool(d.onthul.zichtbaar) == (String(verwacht[0]) != "")
+			print("[SPS] moment %d: modus '%s' knoppen %d poging %d winnaar %d zichtbaar %s %s" % [
+				i + 1, String(d.onthul.sps), int(d.onthul.knoppen), st.sps_poging, st.sps_winnaar,
+				str(d.onthul.zichtbaar), "OK" if ok else "FOUT (verwacht %s)" % str(verwacht)])
+			if not ok:
+				sf += 1
+			if i == 0 and not OS.has_feature("headless") and DisplayServer.get_name() != "headless":
+				var tex := get_viewport().get_texture()
+				if tex != null and tex.get_image() != null:
+					await get_tree().create_timer(0.6).timeout
+					tex.get_image().save_png("res://_shot_sps.png")
+					print("[SPS] screenshot -> _shot_sps.png")
+			var h: Dictionary = await _herstel_vergelijk(game, st, i + 1)
+			sv += int(h.verschillen) + int(h.canary)
+			match i:
+				0:
+					game._kies_sps(0)                       # de mens: steen
+					if bool(GameSession.state.reveal_acks.get(2, false)):
+						sf += 1
+						print("[SPS] FOUT: game.gd koos namens speler 2 (naad)")
+				1:
+					GameSession.submit_ack_reveal(2, 0)     # de ander ook steen: gelijk
+				2:
+					game._kies_sps(1)                       # papier
+					GameSession.submit_ack_reveal(2, 0)     # steen
+				3:
+					game._continue_after_reveal()           # Doorgaan: de eigen bevestiging
+			await get_tree().create_timer(0.3).timeout
+		GameSession.submit_ack_reveal(2)                    # de ander bevestigt
+		await get_tree().create_timer(0.3).timeout
+		st = GameSession.state
+		var ok_eind: bool = Phase.is_linking(st.phase) and st.initiative_player == 1
+		print("[SPS] koppelen: fase %s, initiatief %d %s" % [Phase.to_string_phase(st.phase), st.initiative_player,
+			"OK" if ok_eind else "FOUT"])
+		if not ok_eind:
+			sf += 1
+		print("[SPS] %s: %d fout(en), %d herstel-verschil(len)" % ["PASS" if sf + sv == 0 else "FAIL", sf, sv])
+		get_tree().quit(0 if sf + sv == 0 else 1)
 		return
 	elif "naadcheck" in args:
 		# F4.3c — de bot-naad. Na de opstelling gaat de AI op null: vanaf dan
@@ -5126,6 +5205,7 @@ func _make_goldens() -> void:
 	_golden_spawn_geblokkeerd(dir)
 	_golden_cp_inzet(dir)
 	_golden_kanon_act(dir)
+	_golden_sps(dir)
 	print("[GOLDENS] klaar")
 
 
@@ -5279,6 +5359,33 @@ func _golden_cp_inzet(dir: String) -> void:
 		[Actions.make_bet_cp(1), 1],
 		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 2}]), 1],
 		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 1}]), 2],
+	])
+
+
+func _golden_sps(dir: String) -> void:
+	# 4.3.8 (5 oktober): steen-papier-schaar bij een volledig gelijk bod. Beide
+	# dezelfde kaart (bod 0/0), dan allebei steen (gelijk, poging 1), dan papier
+	# tegen steen (P1 wint), twee kale bevestigingen: het koppelen begint bij P1.
+	# Alleen expliciete keuzes: een geseede kale keuze verschuift bij elke
+	# staatswijziging, en dat hoort niet in een golden.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.phase = Phase.Type.SETUP_1_DEFINE
+	s.current_player = 1
+	s._spawn_pawn(1, Vector2i(5, 9))
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s.init_pools()
+	var b1: int = int(s.doctrine_data_of(1).budget)
+	var b2: int = int(s.doctrine_data_of(2).budget)
+	_golden_opnemen(dir + "sps_gelijk_bod.json", s, [
+		[Actions.make_define_cards([{"hp": b1 - 2, "stamina": 1, "attack": 1}]), 1],
+		[Actions.make_define_cards([{"hp": b2 - 2, "stamina": 1, "attack": 1}]), 2],
+		[Actions.make_ack_reveal(0, 0), 1],
+		[Actions.make_ack_reveal(0, 0), 2],
+		[Actions.make_ack_reveal(1, 1), 1],
+		[Actions.make_ack_reveal(0, 1), 2],
+		[Actions.make_ack_reveal(), 1],
+		[Actions.make_ack_reveal(), 2],
 	])
 
 

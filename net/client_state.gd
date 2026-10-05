@@ -55,6 +55,20 @@ static func uit_view(view: Dictionary) -> GameState:
 		for k in clocks:
 			var bank = clocks[k]
 			s.clocks[int(String(k))] = {"bank_ms": int(bank.get("bank_ms", 0)) if bank is Dictionary else 0}
+	# 4.3.8 steen-papier-schaar: de openbare stand en de EIGEN keuze; die van
+	# de ander blijft weg (blind tot de uitslag).
+	s.sps_nodig = bool(view.get("sps_nodig", false))
+	s.sps_winnaar = int(view.get("sps_winnaar", -1))
+	s.sps_poging = int(view.get("sps_poging", 0))
+	s.sps_keuzes = {}
+	var eigen_sps: int = int(view.get("own_sps_keuze", -1))
+	if eigen_sps >= 0:
+		s.sps_keuzes[viewer] = eigen_sps
+	s.sps_vorige = {}
+	var vorige = view.get("sps_vorige", {})
+	if vorige is Dictionary:
+		for k in vorige:
+			s.sps_vorige[int(String(k))] = int(vorige[k])
 	return s
 
 
@@ -80,6 +94,7 @@ static func tegenstander_status(view: Dictionary) -> Dictionary:
 		"enemy_has_chosen": bool(view.get("enemy_has_chosen", false)),
 		"enemy_has_defined": bool(view.get("enemy_has_defined", false)),
 		"enemy_has_spawned": bool(view.get("enemy_has_spawned", false)),
+		"enemy_sps_gekozen": bool(view.get("enemy_sps_gekozen", false)),
 	}
 
 

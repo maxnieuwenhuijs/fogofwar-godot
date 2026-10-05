@@ -12,6 +12,7 @@
   }
  },
  "campaign": {
+  "initiatief_sps": true,
   "budget_bonus": {
    "1": {
     "cp": 0,

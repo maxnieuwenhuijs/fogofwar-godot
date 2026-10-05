@@ -162,7 +162,23 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		# hierboven toont in PRE_GAME nog de startdefaults, niet de commits.
 		"own_doctrine_commit": int(state.doctrine_commits.get(player_id, -1)),
 		"enemy_has_chosen": state.doctrine_commits.has(enemy),
+		# 4.3.8 steen-papier-schaar: de stand is openbaar, de lopende keuze van
+		# de ander nooit (alleen DAT hij koos; dat zegt reveal_acks ook al).
+		# sps_vorige is de laatste uitslag, die al in sps_uitslag stond.
+		"sps_nodig": state.sps_nodig,
+		"sps_winnaar": state.sps_winnaar,
+		"sps_poging": state.sps_poging,
+		"sps_vorige": _sps_vorige_d(state),
+		"own_sps_keuze": int(state.sps_keuzes.get(player_id, -1)),
+		"enemy_sps_gekozen": state.sps_keuzes.has(enemy),
 	}
+
+
+static func _sps_vorige_d(state: GameState) -> Dictionary:
+	var uit: Dictionary = {}
+	for pid in state.sps_vorige:
+		uit[str(pid)] = int(state.sps_vorige[pid])
+	return uit
 
 
 ## F4.0c/F4.2b — de event-stream naar een client. De redactie is een
@@ -198,6 +214,9 @@ const CLIENT_EVENTS: Array[String] = [
 	Reducer.EV_PHASE, Reducer.EV_CYCLE_STARTED, Reducer.EV_HONGER,
 	Reducer.EV_GAME_OVER, Reducer.EV_SPAWN_COMMITTED, Reducer.EV_SPAWNS_REVEALED,
 	Reducer.EV_CP_EARNED, Reducer.EV_DOCTRINE_COMMITTED, Reducer.EV_DOCTRINES_REVEALED,
+	# 4.3.8: sps_gekozen draagt alleen een player_id (de rij en reveal_acks
+	# verraden dat al); de keuzes staan pas in sps_uitslag, als beide binnen zijn.
+	Reducer.EV_SPS_GEKOZEN, Reducer.EV_SPS_UITSLAG,
 ]
 
 

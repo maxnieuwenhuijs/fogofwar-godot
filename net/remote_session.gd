@@ -262,8 +262,8 @@ func submit_define_cards(player_id: int, cards_data: Array, cp_bet: int = 0) -> 
 	# verklappende losse inzet.
 	return _verstuur(player_id, Actions.make_define_cards(cards_data, cp_bet))
 
-func submit_ack_reveal(player_id: int) -> bool:
-	return _verstuur(player_id, Actions.make_ack_reveal())
+func submit_ack_reveal(player_id: int, sps: int = -1) -> bool:
+	return _verstuur(player_id, Actions.make_ack_reveal(sps, state.sps_poging if sps >= 0 else -1))
 
 func submit_link(player_id: int, card_id: int, pawn_id: int) -> bool:
 	return _verstuur(player_id, Actions.make_link(card_id, pawn_id))

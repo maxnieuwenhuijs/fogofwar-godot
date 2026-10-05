@@ -82,8 +82,8 @@ var campaign = null
 
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
-## rules_version naar 4.3.5 (C15-buit en C21-aura bovenop V0); zonder blok speelt de
-## engine exact 4.1.x.
+## rules_version naar 4.3.8 (4.3.7 met initiatief_sps uit); zonder blok speelt
+## de engine exact 4.1.x.
 const CAMPAIGN_DEFAULTS := {
 	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
 	"cp_haven": 8, "cp_eliminatie": 4, "cp_raadstem": 1,
@@ -115,6 +115,12 @@ const CAMPAIGN_DEFAULTS := {
 	"aura_bereik": 1,
 	"aura_tamboer_stamina": 1,
 	"aura_vaandel_attack": 1,
+	# 4.3.8 (Max, 5 oktober: "rock paper scissor bij gelijk spel bid"): zijn
+	# het Aanval-bod EN het stamina-bod gelijk, en hebben beide spelers kaarten
+	# onthuld, dan beslist steen-papier-schaar wie het initiatief krijgt (in
+	# plaats van "cyclus 1 ronde 1: speler 1, anders de vorige houder"). In de
+	# code heet het sps: de F0.0-check grept op het andere woord.
+	"initiatief_sps": true,
 	# C17 (besluit Max, 31 juli): EEN REGELSET, en dat is de campagne. "De 1v1 is
 	# gewoon een afgeleide van de campagne: in plaats van meerdere duels speel je
 	# er een, en dus heb je iets gedowngrade CP en reinforcements, meer niet."
@@ -355,8 +361,11 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# vervangt de cycluslimiet. Dat raakt ELKE partij, met of zonder
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
-		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") 				or c.rules_version == "4.3.0" or c.rules_version == "4.3.1" or c.rules_version == "4.3.2" or c.rules_version == "4.3.3" or c.rules_version == "4.3.4" or c.rules_version == "4.3.5" or c.rules_version == "4.3.6":
-			c.rules_version = "4.3.7"
+		# 4.3.8 (5 oktober): steen-papier-schaar bij een volledig gelijk bod;
+		# met de knop uit blijft het 4.3.7. Het label volgt altijd de knop.
+		var oud: Array = ["4.3.0", "4.3.1", "4.3.2", "4.3.3", "4.3.4", "4.3.5", "4.3.6", "4.3.7", "4.3.8"]
+		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") or oud.has(c.rules_version):
+			c.rules_version = "4.3.8" if bool(blok.get("initiatief_sps", true)) else "4.3.7"
 	else:
 		c.campaign = null
 	return c

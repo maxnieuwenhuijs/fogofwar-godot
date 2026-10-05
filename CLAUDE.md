@@ -136,6 +136,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   op, ook die van de vijand (`PawnView.wind_richting`, geloot in
   `game._loot_wind`; online uit het match-id zodat beide stoelen dezelfde
   wind zien; puur visueel, geen staat). Controle: `-- windcheck [factie]`.
+- **Steen-papier-schaar bij een volledig gelijk bod (4.3.8, 5 oktober, Max:
+  "rock paper scissor bij gelijk spel bid").** Onder het campaign-blok: zijn
+  het Aanval- en het stamina-bod gelijk en hebben beide spelers kaarten
+  onthuld, dan beslist steen-papier-schaar het initiatief (knop
+  `campaign.initiatief_sps`, default aan; uit = 4.3.7). `ack_reveal` met
+  `sps` (0/1/2) en `poging`; een kale ack laat de engine geseed kiezen
+  (`Reducer._sps_auto`), dus bots, trainer, arena en timeouts lopen
+  ongewijzigd door; na de uitslag een tweede ronde kale acks. De view toont
+  van de ander alleen DAT hij koos. UI: `game._sync_sps` (idempotent, uit de
+  staat) en drie knoppen op het onthulscherm. In de code heet het sps: de
+  F0.0-check grept op het oude woord (B9/B19). Tests: `SpsTests`, golden
+  `sps_gelijk_bod`, `-- spscheck` (gelijk bod door de echte UI, elk moment
+  live tegen hersteld). Spec: spelregels-v4.2.md Deel B "4.3.8".
 - **De stat heet STAMINA, niet speed (Max, 17 september: "het is belangrijk,
   de term is stamina niet speed, dat moet overal goed worden meegenomen").**
   Elke tekst die de speler ziet (kaart, HUD, onthulscherm, uitleg,
@@ -760,7 +773,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   die nooit gezet is, en daar kijken `verduister_later` en de checks naar.
   Check: `-- stompcheck [closeup]` (musketdood met gedwongen ledemaat: het
   ledemaat en de rest van het lijf dragen vlees; `_shot_stomp.png`);
-  `-- gibshot [musket|melee|sabel]` voor het plaatje.
+  `-- gibshot [musket|melee|sabel]` voor het plaatje. **5 oktober (crash
+  "previously freed" in `_shed_one`):** het ledemaat laat 0,1-0,4 s na de
+  dood los; `_shed_first_limb` haalt de meshes pas dan op, en alleen van het
+  model van het moment van sterven (instance-id). Bron: het bloedstraaltje van
+  een wond kort voor de dood hangt in het skelet en ruimt zichzelf op.
+  `-- stompcheck wond` (de kortste straal, met de check dat hij bij de dood
+  hing) en `-- stompcheck wissel` (model wisselen tijdens het sterven).
 - **Past deze teamjas op dit model?** `python tools/uv_check.py <model>.glb
   <png's...>` -- leest de UV's uit de glb, tekent ze als driehoeken en meet
   hoeveel van dat gebied in de png beschilderd is. Passend = boven de 95%, een
@@ -832,7 +851,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `09344a90…` geven (165 acties, cyclus 4, sinds
+  eind-zobrist; seed 777 moet `5862e4c9…` geven (165 acties, cyclus 4, sinds
+  5 oktober: 4.3.8, steen-papier-schaar; dezelfde partij, alleen de nieuwe
+  regelknop in de staat-hash); daarvoor `09344a90…` (165, 4, sinds
   4 oktober: de Wolf-gewichten van marathoncyclus 4 en 5, cedb219);
   daarvoor `8efa28eb…` (165, 4, sinds
   3 oktober: C30 plus de Wolf-gewichten van marathoncyclus 2); daarvoor
@@ -1212,7 +1233,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `_shot_audiopaneel.png`). De vier volumes (alles, muziek, effecten,
   omgeving) wonen in de autoload `Audio` (`vol_*`, `zet_volume`, `volume`)
   en in `user://settings.cfg` onder `[audio]`, naast de taal. Toets M dempt
-  daarnaast alles tijdelijk.
+  daarnaast alles tijdelijk. **Sinds 5 oktober** (Max: "dB per sound effect
+  luistert niet naar de algemene game sound settings") zijn het FADERS op
+  runtime-bussen `SFX`/`Music`/`Ambient` onder Master (alles x de eigen
+  schuif); volume_db draagt alleen master_db + de dB per categorie, dus ook
+  wat al klinkt schaalt mee. Master staat op 0 dB met een begrenzer als
+  vangnet; M zet de Master-bus stil. Lees een niveau met `Audio.niveau_db`,
+  nooit volume_db alleen. `sounds/sound_tuning.json` wordt opnieuw gelezen
+  als hij op schijf veranderde, en bewaren schrijft alleen de eigen
+  wijzigingen (studio en tuner schreven elkaars dB weg).
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek
@@ -1221,14 +1250,24 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   de UI: paneelhoogte en sleepgreep, of elke tab kan scrollen, en hij DRUKT de
   knoppen in -- "alle modellen" moet 90 pionnen zetten (6 facties x 3 types x
   5 archetypen), "alles rood" moet ze alle 90 rood maken, en "bord" moet
-  Board.tscn laden met zijn eigen camera UIT.
+  Board.tscn laden met zijn eigen camera UIT. Sinds 5 oktober ook "alle
+  varianten": per factie 5 x het aantal typen uit de ACTIEVE tabel
+  (Varken, Leeuw, Wolf, Krokodil 15; Muis en Beer 10), infanterie voor
+  cavalerie voor artillerie, alles in beeld boven het paneel, alles blauw, het
+  slider-doel en de melding bij een type dat de factie niet kent.
 - **Model-tuner, wat je ermee kunt** (hoofdmenu): losse model + referentiestuk,
   `formatie` (twee facties tegenover elkaar), `alle modellen` (negentig pionnen:
   rijen zijn de zes facties, kolommen zijn infanterie, cavalerie en artillerie
   met elk base/spd/hp/atk/mix, met een gaatje tussen de type-groepen; hiermee
   beoordeel je de SCHAAL tussen facties en tussen types), `Team` (rood vs blauw, alles rood, alles blauw)
   en `bord` (het echte Board.tscn eronder met zijn textures en licht, zodat je
-  ziet wat de speler ziet). Het onderste paneel is sleepbaar aan de greep
+  ziet wat de speler ziet). **`alle varianten`** (5 oktober, Max: "vooraan
+  alle infantry, daarachter de cav en daarachter alle kanon-varianten"): EEN
+  factie (de keuze linksboven) in drie rijen naar achteren, elk
+  base/spd/hp/atk/mix; typen die de factie volgens de actieve tabel niet kent
+  blijven weg; kleur via Team; de sliders sturen het model uit de dropdowns;
+  `-- shot varianten [factie] [rood|blauw]`. De opstellingen sluiten elkaar
+  uit (`_modi_uit`). Het onderste paneel is sleepbaar aan de greep
   bovenin; de hoogte wordt onthouden in `user://tuner_ui.cfg`.
 - Worden lijken en gibs donker, doorzichtig en zakken ze weg? `-- debrischeck
   [factie]` (bouwt een pion, maakt hem debris, wacht de ingestelde tijd uit en

@@ -67,8 +67,17 @@ static func make_define_cards(cards: Array, cp_bet: int = 0) -> Dictionary:
 		a["cp_bet"] = cp_bet
 	return a
 
-static func make_ack_reveal() -> Dictionary:
-	return {"type": ACK_REVEAL}
+## 4.3.8: met `sps` (0 steen, 1 papier, 2 schaar) een keuze bij een gelijk
+## bod; `poging` zegt voor welke ronde die keuze is (een keuze landt nooit in
+## een volgende ronde). Kaal (-1) = bevestigen, of tijdens het kiezen: de
+## engine kiest geseed. Een kale ack blijft byte-identiek in logs en goldens.
+static func make_ack_reveal(sps: int = -1, poging: int = -1) -> Dictionary:
+	var a := {"type": ACK_REVEAL}
+	if sps >= 0:
+		a["sps"] = sps
+		if poging >= 0:
+			a["poging"] = poging
+	return a
 
 static func make_link(card_id: int, pawn_id: int) -> Dictionary:
 	return {"type": LINK, "card_id": card_id, "pawn_id": pawn_id}
@@ -144,6 +153,10 @@ static func is_wellformed(a) -> bool:
 			if not (c is Dictionary) or not c.has("hp") or not c.has("stamina") or not c.has("attack"):
 				return false
 	if a.has("amount") and not (a.amount is int):
+		return false
+	if a.has("sps") and not (a.sps is int):
+		return false
+	if a.has("poging") and not (a.poging is int):
 		return false
 	# Union-validatie CANNON_ACT (D14): per sub-waarde zijn andere velden verplicht.
 	if t == CANNON_ACT:
