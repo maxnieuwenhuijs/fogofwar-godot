@@ -788,10 +788,33 @@ func _ready() -> void:
 			print("[AUDIO] %-9s schuif %.0f%% -> Audio.volume %.2f %s" % [soort, 25.0 + 10.0 * i, gezet, "OK" if absf(gezet - bedoeld) <= 0.001 else "FOUT"])
 		var verwacht_db: float = Audio.master_db + float(Audio.MUSIC_DB.get(Audio._music_cat, -16.0)) \
 			+ Audio.volume_naar_db(Audio.vol_alles * Audio.vol_muziek)
-		var ok_laag: bool = absf(Audio._music_player.volume_db - verwacht_db) < 0.01
+		var muziek_db: float = Audio.niveau_db(Audio._music_player)
+		var ok_laag: bool = absf(muziek_db - verwacht_db) < 0.01
 		if not ok_laag:
 			ap_fouten += 1
-		print("[AUDIO] muzieklaag %.2f dB, verwacht %.2f %s" % [Audio._music_player.volume_db, verwacht_db, "OK" if ok_laag else "FOUT"])
+		print("[AUDIO] muzieklaag %.2f dB, verwacht %.2f %s" % [muziek_db, verwacht_db, "OK" if ok_laag else "FOUT"])
+		# 5 oktober: de schuiven zijn faders op bussen. Een effect dat AL klinkt
+		# schaalt mee, en M zet de Master-bus stil.
+		if Audio.enabled and Audio.variant_aantal("inf_select") > 0:
+			var ap_next: int = Audio._next
+			Audio.play("inf_select", 0.0, 0, 1.0)
+			var ap_fx: AudioStreamPlayer = Audio._pool[(Audio._next - 1 + Audio._pool.size()) % Audio._pool.size()]
+			Audio.zet_volume("effecten", 0.2, false)
+			var fx_verwacht: float = Audio.master_db + Audio.mix_niveau("inf_select") \
+				+ Audio.volume_naar_db(Audio.vol_alles * Audio.vol_effecten)
+			var ok_fx: bool = Audio._next != ap_next and String(ap_fx.bus) == Audio.BUS_EFFECTEN \
+				and absf(Audio.niveau_db(ap_fx) - fx_verwacht) < 0.01
+			if not ok_fx:
+				ap_fouten += 1
+			print("[AUDIO] effect al spelend %.2f dB op bus %s, verwacht %.2f %s" % [Audio.niveau_db(ap_fx), String(ap_fx.bus), fx_verwacht, "OK" if ok_fx else "FOUT"])
+			ap_fx.stop()
+		Audio.set_enabled(false)
+		var ok_m: bool = AudioServer.is_bus_mute(0)
+		Audio.set_enabled(true)
+		ok_m = ok_m and not AudioServer.is_bus_mute(0)
+		if not ok_m:
+			ap_fouten += 1
+		print("[AUDIO] M dempt Master: %s" % ("OK" if ok_m else "FOUT"))
 		var ap_cfg := ConfigFile.new()
 		var ok_cfg: bool = ap_cfg.load("user://settings_check.cfg") == OK \
 			and absf(float(ap_cfg.get_value("audio", "muziek", -1.0)) - 0.35) < 0.001

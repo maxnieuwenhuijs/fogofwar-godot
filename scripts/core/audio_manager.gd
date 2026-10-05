@@ -92,14 +92,24 @@ const BANK := {
 ## Volumes van de speler (instellingenmenu, 8 september; Max: "audio
 ## controllers in settings, belangrijk"): lineair 0..1, bovenop master_db
 ## en de per-categorie dB. `alles` schaalt de andere drie. Bewaard in
-## user://settings.cfg onder [audio], naast de taal. Toets M dempt daarnaast
-## alles tijdelijk (enabled), dat staat hier los van.
+## user://settings.cfg onder [audio], naast de taal.
+## Sinds 5 oktober (Max: "dB per sound effect luistert niet naar de algemene
+## game sound settings") zijn het FADERS op eigen bussen: SFX (effecten),
+## Music (muziek) en Ambient (omgeving), elk op alles x de eigen schuif, onder
+## Master. Daardoor schaalt ook een geluid dat al klinkt mee, en zet toets M
+## de Master-bus stil (ook wat nog met een vertraging in de wachtrij stond).
+## De dB per categorie (CATEGORY_DB + sounds/sound_tuning.json) blijft het
+## verschil TUSSEN geluiden; de faders gaan daar overheen. Master zelf staat
+## op 0 dB met een begrenzer als vangnet tegen knippen boven 0 dBFS.
 var vol_alles: float = 1.0
 var vol_muziek: float = 1.0
 var vol_effecten: float = 1.0
 var vol_omgeving: float = 1.0
 var instellingen_pad: String = "user://settings.cfg"
 const VOLUME_SOORTEN: Array = ["alles", "muziek", "effecten", "omgeving"]
+const BUS_EFFECTEN := "SFX"
+const BUS_MUZIEK := "Music"
+const BUS_OMGEVING := "Ambient"
 const CATEGORY_DB := {
 	"cannon_fire": 0.0,
 	"cannon_air": -6.0,
@@ -256,20 +266,41 @@ func _ready() -> void:
 	# per start. De spelers-pool blijft bestaan, dus play() blijft veilig.
 	if not OS.has_environment("FOW_WORKER"):
 		_laad_banken()
+	_zorg_voor_bussen()
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
-		player.bus = "Master"
+		player.bus = BUS_EFFECTEN
 		add_child(player)
 		_pool.append(player)
 	_music_player = AudioStreamPlayer.new()
-	_music_player.bus = "Master"
+	_music_player.bus = BUS_MUZIEK
 	_music_player.finished.connect(func() -> void: _loop_layer(_music_player, _music_cat))
 	add_child(_music_player)
 	_ambient_player = AudioStreamPlayer.new()
-	_ambient_player.bus = "Master"
+	_ambient_player.bus = BUS_OMGEVING
 	_ambient_player.finished.connect(func() -> void: _loop_layer(_ambient_player, _ambient_cat))
 	add_child(_ambient_player)
 	_laad_volumes()
+	pas_lagen_toe()   # ook zonder settings.cfg: faders en Master-mute staan goed
+
+
+## De bussen SFX, Music en Ambient onder Master, alleen als ze er nog niet zijn
+## (een latere default_bus_layout.tres met dezelfde namen wordt hergebruikt).
+## Op Master een begrenzer, alleen als die nog geen effecten heeft: hij grijpt
+## pas in als de uitgang echt zou knippen, dus de balans tussen geluiden blijft.
+## Geen RNG en geen bestand: alles runtime.
+func _zorg_voor_bussen() -> void:
+	for naam in [BUS_EFFECTEN, BUS_MUZIEK, BUS_OMGEVING]:
+		if AudioServer.get_bus_index(naam) != -1:
+			continue
+		AudioServer.add_bus()
+		var idx: int = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(idx, naam)
+		AudioServer.set_bus_send(idx, "Master")
+	if AudioServer.get_bus_effect_count(0) == 0:
+		var begrenzer := AudioEffectHardLimiter.new()
+		begrenzer.ceiling_db = -0.3
+		AudioServer.add_bus_effect(0, begrenzer)
 
 
 # --- Volumes van de speler (instellingenmenu) --------------------------------
@@ -294,9 +325,8 @@ func volume(soort: String) -> float:
 	return 1.0
 
 
-## Zet een volume (0..1), pas het meteen toe op de lopende muziek- en
-## ambience-laag (losse effecten pakken het bij hun volgende afspeel) en
-## bewaar het. Onbekende soort = niets.
+## Zet een volume (0..1), pas het meteen toe op de faders (dus ook op wat al
+## klinkt) en bewaar het. Onbekende soort = niets.
 func zet_volume(soort: String, waarde: float, bewaar: bool = true) -> void:
 	var w: float = clampf(waarde, 0.0, 1.0)
 	match soort:
@@ -315,17 +345,38 @@ func zet_volume(soort: String, waarde: float, bewaar: bool = true) -> void:
 		_bewaar_volumes()
 
 
-## De lopende lagen op het huidige volume zetten.
+## De faders op de huidige volumes zetten (alles x de eigen schuif, dezelfde
+## formule als voor 5 oktober in volume_db), M op de Master-bus, en het
+## basisniveau van de lopende lagen (zonder schuif: dat doet de fader).
 func pas_lagen_toe() -> void:
+	_zet_fader(BUS_EFFECTEN, vol_alles * vol_effecten)
+	_zet_fader(BUS_MUZIEK, vol_alles * vol_muziek)
+	_zet_fader(BUS_OMGEVING, vol_alles * vol_omgeving)
+	AudioServer.set_bus_mute(0, not enabled)
 	if _music_player != null:
-		_music_player.volume_db = master_db + float(MUSIC_DB.get(_music_cat, -16.0)) + _laag_volume_db(_music_player)
+		_music_player.volume_db = master_db + float(MUSIC_DB.get(_music_cat, -16.0))
 	if _ambient_player != null:
-		_ambient_player.volume_db = master_db + float(MUSIC_DB.get(_ambient_cat, -16.0)) + _laag_volume_db(_ambient_player)
+		_ambient_player.volume_db = master_db + float(MUSIC_DB.get(_ambient_cat, -16.0))
 
 
-func _laag_volume_db(player: AudioStreamPlayer) -> float:
-	var eigen: float = vol_omgeving if player == _ambient_player else vol_muziek
-	return volume_naar_db(vol_alles * eigen)
+func _zet_fader(bus: String, lineair: float) -> void:
+	var idx := AudioServer.get_bus_index(bus)
+	if idx >= 0:
+		AudioServer.set_bus_volume_db(idx, volume_naar_db(lineair))
+
+
+## Het echte niveau van een speler: zijn volume_db plus de faders langs de
+## send-keten tot en met Master. Voor de checks (AudioTests, -- audiopaneel):
+## lees nooit volume_db alleen voor een niveau.
+func niveau_db(player: AudioStreamPlayer) -> float:
+	var uit: float = player.volume_db
+	var idx := AudioServer.get_bus_index(player.bus)
+	var stappen := 0
+	while idx > 0 and stappen < 16:
+		uit += AudioServer.get_bus_volume_db(idx)
+		idx = AudioServer.get_bus_index(AudioServer.get_bus_send(idx))
+		stappen += 1
+	return uit + AudioServer.get_bus_volume_db(0)
 
 
 func _laad_volumes() -> void:
@@ -458,6 +509,11 @@ func play_melee(category: String, wapen: String, doctrine: int, delay: float = 0
 const GELUID_TUNING_PAD := "res://sounds/sound_tuning.json"
 var _snd_tuning: Dictionary = {}
 var _snd_geladen: bool = false
+var _snd_gekeken_ms: int = -100000
+var _snd_mtime: int = 0
+## Wijzigingen uit dit proces die nog niet bewaard zijn: categorie -> regel,
+## of null voor gewist. Bij bewaren gaan alleen DEZE over de versie op schijf.
+var _snd_eigen: Dictionary = {}
 
 
 ## AUTO-VONDST (28 juli): elk bestand in sounds/ dat exact zo heet als een
@@ -573,11 +629,21 @@ func _vind_losse_bestanden() -> Dictionary:
 	return gevonden
 
 
-func _laad_snd_tuning() -> void:
-	if _snd_geladen:
+## Leest sounds/sound_tuning.json, en opnieuw als het bestand op schijf
+## veranderde (5 oktober): de geluid-studio schrijft hetzelfde bestand, en een
+## dB die je daar zet hoor je zo zonder herstart. Hooguit een keer per seconde
+## naar de wijzigtijd kijken. Geen RNG.
+func _laad_snd_tuning(forceer: bool = false) -> void:
+	var nu: int = Time.get_ticks_msec()
+	if _snd_geladen and not forceer and nu - _snd_gekeken_ms < 1000:
+		return
+	_snd_gekeken_ms = nu
+	var mtime: int = FileAccess.get_modified_time(GELUID_TUNING_PAD) if FileAccess.file_exists(GELUID_TUNING_PAD) else 0
+	if _snd_geladen and not forceer and mtime == _snd_mtime:
 		return
 	_snd_geladen = true
-	if not FileAccess.file_exists(GELUID_TUNING_PAD):
+	_snd_mtime = mtime
+	if mtime == 0 and not FileAccess.file_exists(GELUID_TUNING_PAD):
 		return
 	var f := FileAccess.open(GELUID_TUNING_PAD, FileAccess.READ)
 	if f == null:
@@ -585,6 +651,12 @@ func _laad_snd_tuning() -> void:
 	var d = JSON.parse_string(f.get_as_text())
 	if d is Dictionary:
 		_snd_tuning = d
+		# eigen, nog niet bewaarde wijzigingen blijven gelden
+		for cat in _snd_eigen:
+			if _snd_eigen[cat] == null:
+				_snd_tuning.erase(cat)
+			else:
+				_snd_tuning[cat] = _snd_eigen[cat]
 
 
 func volume_correctie(category: String) -> float:
@@ -654,19 +726,27 @@ func mix_niveau(category: String) -> float:
 func wis_geluid_tuning(category: String) -> void:
 	_laad_snd_tuning()
 	_snd_tuning.erase(category)
+	_snd_eigen[category] = null
 	bewaar_geluid_tuning()
 
 
 func zet_geluid_tuning(category: String, db: float, vertraging: float) -> void:
 	_laad_snd_tuning()
 	_snd_tuning[category] = {"db": db, "vertraging": vertraging}
+	_snd_eigen[category] = {"db": db, "vertraging": vertraging}
 	bewaar_geluid_tuning()
 
 
+## Bewaar: eerst de versie op schijf opnieuw lezen (de studio kan er intussen
+## in geschreven hebben), dan alleen de eigen wijzigingen erover, dan schrijven.
 func bewaar_geluid_tuning() -> void:
+	_laad_snd_tuning(true)
 	var f := FileAccess.open(GELUID_TUNING_PAD, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(_snd_tuning, "\t"))
+		f.close()
+		_snd_eigen.clear()
+		_snd_mtime = FileAccess.get_modified_time(GELUID_TUNING_PAD)
 
 
 ## Speel met de afgestelde vertraging erbij (voor bonzen die op een animatie
@@ -705,8 +785,7 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	_next = (_next + 1) % _pool.size()
 	var idx: int = (variant % variants.size()) if variant >= 0 else (randi() % variants.size())
 	player.stream = variants[idx]
-	player.volume_db = master_db + volume_naar_db(vol_alles * vol_effecten) \
-		+ mix_db(category) + volume_correctie(category)
+	player.volume_db = master_db + mix_db(category) + volume_correctie(category)
 	player.pitch_scale = pitch if pitch > 0.0 else randf_range(0.96, 1.04)
 	player.play()
 
@@ -734,6 +813,9 @@ func play_footsteps(step_count: int, duration: float, category: String = "step")
 
 func set_enabled(on: bool) -> void:
 	enabled = on
+	# M zet de Master-bus stil: ook wat al klinkt en wat nog met een vertraging
+	# in de wachtrij stond (play() kijkt naar enabled, de timer niet).
+	AudioServer.set_bus_mute(0, not on)
 	# Mute pauzeert ook de muziek-/ambience-lagen (positie blijft staan).
 	if _music_player != null:
 		_music_player.stream_paused = not on
@@ -775,7 +857,7 @@ func _start_layer(player: AudioStreamPlayer, category: String) -> void:
 	if variants.is_empty():
 		return
 	player.stream = variants[randi() % variants.size()]
-	player.volume_db = master_db + float(MUSIC_DB.get(category, -16.0)) + _laag_volume_db(player)
+	player.volume_db = master_db + float(MUSIC_DB.get(category, -16.0))
 	player.stream_paused = not enabled
 	player.play()
 

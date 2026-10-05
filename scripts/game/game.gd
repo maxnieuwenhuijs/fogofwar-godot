@@ -648,8 +648,11 @@ func _show_audio_panel() -> void:
 		val.add_theme_font_size_override("font_size", 22)
 		row.add_child(val)
 		slider.value_changed.connect(_on_audio_slider.bind(String(soort[0]), val))
-		# Loslaten = een proefgeluid, zodat je hoort wat je instelde.
-		slider.drag_ended.connect(func(_veranderd: bool) -> void: Audio.play("inf_select"))
+		# Loslaten = een proefgeluid, zodat je hoort wat je instelde. Alleen
+		# bij alles en effecten: een effect volgt de muziek- en omgevingsschuif
+		# niet (5 oktober), en die lagen hoor je zelf al (de fader werkt live).
+		if String(soort[0]) == "alles" or String(soort[0]) == "effecten":
+			slider.drag_ended.connect(func(_veranderd: bool) -> void: Audio.play("inf_select"))
 		vbox.add_child(row)
 	var hint := Label.new()
 	hint.text = tr("MENU_AUDIO_HINT")
