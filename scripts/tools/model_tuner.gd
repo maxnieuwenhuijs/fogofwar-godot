@@ -251,8 +251,46 @@ func _ready() -> void:
 					if "maten" in OS.get_cmdline_user_args():
 						var m3 := mi as MeshInstance3D
 						print("[STOMP] %s: instantie-aabb %s mesh-aabb %s skelet %s" % [m3.name, str(m3.get_aabb().size), str(m3.mesh.get_aabb().size), str(m3.skeleton)])
+			# `wond` (5 oktober): de crash "previously freed" in _shed_one. Een
+			# wond vlak voor de dood hangt een bloedstraaltje in het skelet dat
+			# zichzelf opruimt; met de kortste straal (0,085 s) is het altijd weg
+			# voordat het ledemaat loslaat (0,1-0,4 s). Eerst tellen, dan de wond.
+			if "wond" in OS.get_cmdline_user_args():
+				PawnView.set_fx("wound_delay", 0.0)
+				PawnView.set_fx("wound_straal_op", 0.01)
+				PawnView.set_fx("wound_straal_duur", 0.05)
+				_pawn.play_wound(Vector3(0.3, 0.0, 1.0).normalized())
+				if _pawn._piece.find_children("Straal", "MeshInstance3D", true, false).is_empty():
+					print("[STOMP] FOUT: reproductie ongeldig, geen bloedstraal in het lijf")
+					st_fouten += 1
 			_pawn.play_death(Vector3(0.3, 0.0, 1.0).normalized(), 0.75, "shot")
+			if "wissel" in OS.get_cmdline_user_args():
+				# `wissel`: het model van een stervende pion wordt vervangen
+				# voordat het ledemaat loslaat. Het nieuwe model mag niets kwijt.
+				await get_tree().create_timer(0.05).timeout
+				_pawn._char_key = ""
+				_pawn.set_character(_fac_btn.get_selected_id(), _type_btn.get_selected_id(), _current_card())
+				var st_nieuw_voor := 0
+				for mi in _pawn._piece.find_children("*", "MeshInstance3D", true, false):
+					if (mi as MeshInstance3D).visible:
+						st_nieuw_voor += 1
+				await get_tree().create_timer(0.6).timeout
+				var st_nieuw_na := 0
+				for mi in _pawn._piece.find_children("*", "MeshInstance3D", true, false):
+					if (mi as MeshInstance3D).visible:
+						st_nieuw_na += 1
+				print("[STOMP] wissel: zichtbare delen van het nieuwe model %d -> %d" % [st_nieuw_voor, st_nieuw_na])
+				if st_nieuw_na < st_nieuw_voor:
+					print("[STOMP] FOUT: het nieuwe model verloor een ledemaat")
+					st_fouten += 1
+				print("[STOMP] %s: %d fout(en)" % ["PASS" if st_fouten == 0 else "FAIL", st_fouten])
+				get_tree().quit(1 if st_fouten > 0 else 0)
+				return
 			await get_tree().create_timer(0.55).timeout  # het ledemaat laat na 0,1-0,4 s los
+			if "wond" in OS.get_cmdline_user_args():
+				if not _pawn._piece.find_children("Straal", "MeshInstance3D", true, false).is_empty():
+					print("[STOMP] FOUT: reproductie ongeldig, de bloedstraal hangt er nog")
+					st_fouten += 1
 			if not OS.has_feature("headless") and DisplayServer.get_name() != "headless":
 				get_viewport().get_texture().get_image().save_png("res://_shot_stomp.png")
 			var st_live_na := 0

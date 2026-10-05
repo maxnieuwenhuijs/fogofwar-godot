@@ -2498,13 +2498,25 @@ func _shed_parts(dir: Vector3, kind: String = "melee") -> void:
 	if randf() < fx("limb_shed_chance", 0.4):
 		# Het ledemaat laat pas even NA de klap los, terwijl het lijf al inzakt
 		# (en dus nooit exact tegelijk met het hoedje).
+		# Geen lijst meegeven (crash "previously freed" in _shed_one, 5
+		# oktober): in die 0,1-0,4 s kan een mesh uit de lijst al weg zijn.
+		# Het bloedstraaltje van een wond kort voor de dood hangt in het skelet
+		# en ruimt zichzelf op (_bloedstraaltje, tot ~0,5 s na de wond), en een
+		# modelwissel geeft alle oude meshes vrij. Wel de identiteit van het
+		# model van nu meegeven: na een wissel rukken we niets van het nieuwe af.
 		var tw := create_tween()
 		tw.tween_interval(randf_range(0.1, 0.4))
-		tw.tween_callback(_shed_first_limb.bind(live, dir))
+		tw.tween_callback(_shed_first_limb.bind(dir, _piece.get_instance_id()))
 
 
-## Ruk het eerste aanwezige losse ledemaat af (willekeurige volgorde).
-func _shed_first_limb(live: Array, dir: Vector3) -> void:
+## Ruk het eerste aanwezige losse ledemaat af (willekeurige volgorde). De
+## meshes worden hier pas opgehaald, van het model dat er NU staat, en alleen
+## als dat nog het model van het moment van sterven is.
+func _shed_first_limb(dir: Vector3, stuk_id: int) -> void:
+	if not is_instance_valid(_piece) or _piece.get_instance_id() != stuk_id \
+			or not _piece.is_inside_tree():
+		return
+	var live: Array = _piece.find_children("*", "MeshInstance3D", true, false)
 	var limbs: Array = ["arml", "armr", "legl", "legr"]
 	limbs.shuffle()
 	for limb in limbs:
@@ -2524,6 +2536,8 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 	# "arml" en "legr" matchen (Max, 29 juli).
 	var targets: Array = []
 	for mi in live:
+		if not is_instance_valid(mi):
+			continue
 		if _kale_deelnaam(String(mi.name)).contains(part_name) and (mi as MeshInstance3D).visible:
 			targets.append(mi)
 	if targets.is_empty():
@@ -2540,7 +2554,7 @@ func _shed_one(live: Array, part_name: String, dir: Vector3, violence: float, ti
 		# Wat er van het lijf overblijft krijgt het vlees-materiaal: door het
 		# gat waar het ledemaat zat kijk je nu op rood, met spatten eromheen.
 		for mi in live:
-			if (mi as MeshInstance3D).visible:
+			if is_instance_valid(mi) and (mi as MeshInstance3D).visible:
 				_zet_vlees(mi as MeshInstance3D)
 		# Bloed spuit uit het gat waar het ledemaat zat, van het lijf af.
 		var out: Vector3 = (start as Vector3) - global_position
