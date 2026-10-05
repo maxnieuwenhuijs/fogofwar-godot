@@ -55,6 +55,13 @@ Zijn kracht zat in de dracht, niet in het aantal kanonnen. Het Varken op 57
 is waarschijnlijk toeval (het tweelingleger; een enkele matchup kan geen 7
 punten geven).
 
+*Correctie (5 oktober):* dat was geen toeval. Een paar is een vijfde van de
+partijen van een factie, dus een paar dat 35 pp schuift geeft 7 punten. In
+de gepaarde meting waren de vier andere Varken-paren partij voor partij
+gelijk; de hele +7 kwam uit Varken tegen Leeuw (4 naar 39 van de 100): zonder
+dracht 7 verloor de Leeuw zijn overwicht op het Varken. Zie
+`docs/lessen-trainingsmarathon.md`.
+
 **Wat verandert.** Alleen het `doctrines`-blok in `rules_v42_campaign.json`:
 Leeuw `art_range_bonus` 0 (de kale tabel in `constants.gd` houdt 1, die
 speelt niemand). De perk-tekst in het spel (`DOCTRINE_2_PRO`) zegt nu

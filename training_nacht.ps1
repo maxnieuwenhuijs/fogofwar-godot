@@ -35,7 +35,10 @@ foreach ($f in @("mens", "muis", "leeuw", "beer", "wolf", "vos")) {
     Out-File (Join-Path $logmap "pijplijn.log") -Encoding utf8
 
 # Wachten tot ALLE trainers klaar zijn (budget stopt nieuwe generaties;
-# een lopende generatie maakt zichzelf af, dus dit kan ~15 min uitlopen).
+# een lopende generatie maakt zichzelf af). Dat loopt fors uit: in de
+# marathon van oktober werd 420 min 455-523 min en 200 min 297 min, meestal
+# door de Muis (een generatie duurt bij hem 90-130 min). Reken met budget
+# plus een Muis-generatie (docs/lessen-trainingsmarathon.md).
 $procs | Wait-Process
 "[NACHT] trainers klaar om $(Get-Date -Format HH:mm) - arena-meting starten" |
     Out-File (Join-Path $logmap "pijplijn.log") -Append -Encoding utf8

@@ -195,6 +195,25 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   naadcheck, koppelcheck, beurtlicht, audiopaneel, simcheck (0 afwijkingen),
   batterij 2664 geslaagd, 0 mislukt.
 
+## 5 oktober -- lessen van de marathon voorlopig vastgelegd
+
+- `docs/lessen-trainingsmarathon.md`: de lessen van 2-4 oktober, elk door een
+  aparte controle tegen de bron getoetst (workflow: acht bronnen, elke les
+  nagerekend op de games.jsonl, logs en commits). Besluit B18 (voorlopig) in
+  MASTERBOUWPLAN.md: hoe we balans meten en bijstellen.
+- Correcties op eerdere regels hieronder (gemarkeerd met "correctie 5
+  oktober"): het Varken adopteerde in cyclus 5 twee keer (commit cedb219 zegt
+  een); de trainer speelde vaste partijen tot 4 oktober 02:28 (de loting), niet
+  tot 3 oktober; "de campagnebots leren gericht doneren" is niet gemeten (de
+  knoppen verschoven, de checks tonen geen winst); "15 van 96 campagnes" was een
+  telfout door de schrijfbuffer van Godot (minstens 75 waren klaar), dus de
+  nameting op echte duels is nooit eerlijk gemeten.
+- Nieuw inzicht dat de campagne raakt: de bot-duels in de campagne spelen AIEasy
+  op standaardgewichten, en daarin wint de Wolf 92%. De duel-training bereikt de
+  campagne niet; de keuze easy of L2 (F7 paragraaf 6) ligt weer open.
+- Drie achtergebleven `tail -F`-processen van 2 oktober (die het marathonlog
+  vasthielden) opgeruimd.
+
 ## 4 oktober -- marathon klaar (48 uur, vijf cycli): de balans draait mee met de bots
 
 - **Cyclus 4** (C30, 04:07-11:42): de eerste training met loting in de
@@ -206,7 +225,9 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   Beer 59,3, Leeuw 55,7, Varken 52,2, Muis 51,6, Krokodil 40,7, Wolf 40,6
   (spreiding 18,8). De Beer ging met EEN adoptie van 43,8 naar 59,3.
 - **Cyclus 5** (C30, 200 min, 14:03-19:00, daarna de matrix tot 20:50):
-  Beer 2, Wolf 2, Varken 1, Krokodil 1, Leeuw 0, Muis 0 adopties (cedb219).
+  Beer 2, Wolf 2, Varken 2, Krokodil 1, Leeuw 0, Muis 0 adopties (cedb219;
+  correctie 5 oktober: het Varken adopteerde in generatie 2 en 5, de commit
+  zegt ten onrechte een).
   Matrix `nacht_20261004_1900`: band 44,7-56,7, **spreiding 12,0**, 0
   afgekapt, fuzz schoon. uispel 777 nu `09344a90...` (de Wolf-gewichten),
   simcheck 0 afwijkingen.
@@ -245,8 +266,9 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   pas ingrijpen als een factie over twee of drie nachten buiten de band blijft.
 - **Wat de marathon opleverde:** C29 (Leeuw zonder dracht 7) en C30 (Varken
   [12,3,2]); de duel-trainer gerepareerd (verse seeds be95d06 en loting
-  0dc3f59: tot 3 oktober leerde hij een vaste handvol partijen uit zijn
-  hoofd); campagnebots op C30 (gericht doneren); P4 klaar (geen pesterij bij
+  0dc3f59: tot 4 oktober 02:28 speelde hij vaste partijen, eerst op seed 0,
+  daarna zonder loting; correctie 5 oktober); campagnebots op C30 (knoppen
+  verschoven, geen aantoonbaar voordeel); P4 klaar (geen pesterij bij
   welke kroonfactor ook); L4 verliest van L2 (40,3%) en blijft geparkeerd.
 
 ## 3 oktober (avond) -- L4-proef: het netwerk verliest van L2; cyclus 3 op C30
@@ -261,7 +283,9 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   het imiteerde een iets oudere L2; dat verklaart geen 10 punten.)
 - **Cyclus 3 op C30** (17:36): datarun 1200 duels -> orakel -> campagnetrainer
   14 generaties, 2 adopties: `w_don_nood` 0,44, `w_geef` 0,24, `w_matchup`
-  0,61, `w_rivaal` 0. Op C30 leren de campagnebots vooral gericht doneren.
+  0,61, `w_rivaal` 0. (Correctie 5 oktober: "gericht doneren" is wat de
+  knoppen deden, niet gemeten winst; de checks gaven 50,0-51,0% tegen de
+  vorige kampioen en 48,3-52,5% tegen de handbots.)
   Duel-training tot ~01:00 (al adopties: Varken gen 3, Leeuw gen 7), dan de
   matrix.
 
@@ -302,7 +326,9 @@ normaal/rustig/uit, en klikgeluid ook in de hub. Plan in negen stappen
   verstand wint daarop nog maar 50,5% van de handbots, het nieuwe (2
   adopties) ook niet meer. De nameting op echte duels was veel te traag (15
   van 96 campagnes in twee uur) en is gestopt: een paar procent meet je zo
-  niet.
+  niet. (Correctie 5 oktober: het waren er 12 in de afgesloten bestanden en
+  minstens 75 in werkelijkheid; Godot buffert 4 KB en de arena flusht niet,
+  en de factiezoeker liep er met 120 Godots naast. Nooit eerlijk gemeten.)
 - **Puntenbots (P4, klaar):** k1/k2/k3 0/2/1 adopties; bij geen enkele
   kroonfactor pesterij of minder doneren. Tabel v1 blijft.
 - **Fout van mij:** de factiezoeker start alle kandidaten tegelijk, elk met

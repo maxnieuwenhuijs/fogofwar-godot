@@ -53,16 +53,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   94-98% van de Beer), en een adoptie kan een factie 10-15 punten
   verschuiven (de Beer met een adoptie van 43,8 naar 59,3). Stel de regels
   niet bij op een enkele nachtmatrix; pas ingrijpen als een factie twee of
-  drie nachten op rij buiten de band blijft. Dat doen nu de Leeuw (steeds
-  55 of meer) en de Krokodil (steeds 46 of minder); kandidaat voor de Leeuw
+  drie nachten op rij aan dezelfde kant zit (besluit B18, voorlopig; alle
+  getoetste lessen van de marathon in `docs/lessen-trainingsmarathon.md`).
+  Dat doen nu de Leeuw (steeds 55 of meer) en de Krokodil (steeds 46 of
+  minder); kandidaat voor de Leeuw
   is een ruiter minder ([12,3,2], c31_a: -4 tegen de bots van cyclus 4). De echte stand is altijd de nachtmatrix na een trainingsnacht op
   de geldende regels. De geschiedenis (C20-C29, met elke meting) staat in
   `docs/spelregels-CHANGELOG.md` en WIP.md, niet meer hier.
-  **Welke knop hoeveel doet** (gemeten, per factie anders): kaartbudget
-  14-27 pp per punt (Krokodil 6 -> 7: +27; Leeuw 8 -> 7: -18), cavalerie
-  ~18 per ruiter, de stamina op de ruiter 10-20 per punt, de dracht 7 van de
-  Leeuw ~8, een kanon minder voor de Leeuw ~1, infanterie en legergrootte
-  vrijwel niets. **De startcompensatie is uitgeput als knop:** CP ~0,4-0,6
+  **Welke knop hoeveel doet** (gemeten, per factie anders; tabel met bronnen
+  in `docs/lessen-trainingsmarathon.md`): kaartbudget 14-27 pp per punt
+  (Krokodil 6 -> 7: +27; Leeuw 8 -> 7: -18), een ruiter minder: Varken -7,5
+  (gepaard), Leeuw -4,2 (niet bewezen; de oude "~18 per ruiter" is van 8
+  augustus), een kanon minder: Varken -13,8, Leeuw ~-1, de stamina op de
+  ruiter 10-20 per punt, de dracht 7 van de Leeuw ~8, infanterie en
+  legergrootte vrijwel niets. Afpakken werkt alleen bij wat een factie echt
+  inzet: lees eerst haar profiel uit de matrix (shots, spawns, charges,
+  methode, cp_bet). **De startcompensatie is uitgeput als knop:** CP ~0,4-0,6
   pp per CP en alleen bij wie hem inzet, versterkingspunten doen niets bij
   wie weinig spawnt (de Leeuw ~3-5 per partij), de Wolf wint niet vaker van
   extra punten of CP. Vuistregel: onder ~2000 partijen geen conclusies over
@@ -197,7 +203,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `data/campagne_verstand.json` (apart committen), nameten op echte duels:
   `campagne_arena.ps1 -Config arena/arena_configs/campagne_validatie.json`,
   rapport: `python tools/campagne/rapport.py results/<run>`. Paneelkader
-  "Campagnebots". Leeg verstand = de bots van juli, byte-identiek. Nieuwe
+  "Campagnebots". Leeg verstand = de bots van juli, byte-identiek. **Let op
+  (5 oktober): de bot-duels in de campagne spelen AIEasy op
+  `default_weights()`, niet de getrainde L2-bots;** daarin wint de Wolf 92%
+  van zijn duels. De campagnebalans is dus niet de nachtmatrix, en het
+  verstand had in de marathon geen aantoonbaar voordeel (tegen de handbots
+  48,3-52,5%). Keuze easy of L2: F7 paragraaf 6. Nieuwe
   scripts in de arena via preload, niet via class_name (headless kent een
   nieuwe klasse pas als de editor hem inschreef).
 - **Puntenbots (F6.0-P4, 30 september, `docs/F6-punten-masterplan.md` hoofdstuk
