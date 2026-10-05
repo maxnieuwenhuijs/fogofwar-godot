@@ -1423,8 +1423,9 @@ func _ready() -> void:
 					if scrollbaar != tabc.get_child_count():
 						print("[TUNER] FOUT: niet elke tab kan scrollen; inhoud kan wegvallen")
 						tuner_fouten += 1
-				# De drie knoppen van 7 september indrukken. Alleen opbouwen zegt
-				# niets over wat er PAS bij het indrukken gebeurt.
+				# De knoppen van 7 september (en 'alle varianten' van 5 oktober)
+				# indrukken. Alleen opbouwen zegt niets over wat er PAS bij het
+				# indrukken gebeurt.
 				var knoppen: Dictionary = {}
 				for kn in t.find_children("*", "Button", true, false):
 					knoppen[String((kn as Button).text)] = kn
@@ -1465,6 +1466,127 @@ func _ready() -> void:
 						if alle.size() == 0 or rood != alle.size():
 							print("[TUNER] FOUT: team-keuze werkt niet door op alle pionnen")
 							tuner_fouten += 1
+					# Alle varianten van EEN factie (5 oktober): per factie 5 x het
+					# aantal typen uit de ACTIEVE tabel, alleen die factie,
+					# infanterie voor cavalerie voor artillerie, boven het paneel in
+					# beeld; alles blauw maakt ze blauw; de sliders volgen type +
+					# archetype; een type dat de factie niet kent geeft een melding.
+					if not knoppen.has("alle varianten"):
+						print("[TUNER] FOUT: knop 'alle varianten' ontbreekt")
+						tuner_fouten += 1
+					else:
+						t._zet_paneelhoogte(300.0, false)
+						(knoppen["alle varianten"] as Button).button_pressed = true
+						await get_tree().process_frame
+						await get_tree().process_frame
+						if (knoppen["alle modellen"] as Button).button_pressed:
+							print("[TUNER] FOUT: 'alle modellen' bleef aan naast 'alle varianten'")
+							tuner_fouten += 1
+						var tabel := CRules.actieve_tabel()
+						var vr: Vector2 = t.get_viewport().get_visible_rect().size
+						for fi in t._fac_btn.item_count:
+							var fid: int = t._fac_btn.get_item_id(fi)
+							t._fac_btn.select(fi)
+							t._fac_btn.item_selected.emit(fi)
+							await get_tree().process_frame
+							await get_tree().process_frame
+							var comp: Array = tabel.doctrine_data(fid).get("comp", [1, 1, 1])
+							var kent := 0
+							for tp in 3:
+								if tp < comp.size() and int(comp[tp]) > 0:
+									kent += 1
+							var pv_n: Array = t.find_children("*", "Node3D", true, false).filter(
+								func(n): return n is PawnView)
+							var vreemd := 0
+							var z_min: Dictionary = {}
+							var z_max: Dictionary = {}
+							var in_beeld := 0
+							for e in t._formation_pawns:
+								var tp_e: int = int(e.tp)
+								if int(e.fac) != fid or tp_e >= comp.size() or int(comp[tp_e]) <= 0:
+									vreemd += 1
+								var z: float = (e.pv as Node3D).position.z
+								z_min[tp_e] = minf(float(z_min.get(tp_e, 99.0)), z)
+								z_max[tp_e] = maxf(float(z_max.get(tp_e, -99.0)), z)
+								var sp: Vector2 = t._cam.unproject_position((e.pv as Node3D).global_position + Vector3(0, 0.5, 0))
+								if sp.x >= 0.0 and sp.x <= vr.x and sp.y >= 0.0 and sp.y <= vr.y - t._paneel_hoogte:
+									in_beeld += 1
+							var volgorde_ok := true
+							if z_min.has(0) and z_max.has(1) and not (float(z_max[1]) < float(z_min[0])):
+								volgorde_ok = false
+							if z_min.has(1) and z_max.has(2) and not (float(z_max[2]) < float(z_min[1])):
+								volgorde_ok = false
+							if z_min.has(0) and z_max.has(2) and not (float(z_max[2]) < float(z_min[0])):
+								volgorde_ok = false
+							print("[TUNER] alle varianten %s: %d pionnen (verwacht 5 x %d typen), %d in beeld boven het paneel" % [
+								Constants.doctrine_name(fid), pv_n.size(), kent, in_beeld])
+							if pv_n.size() != 5 * kent or t._formation_pawns.size() != 5 * kent:
+								print("[TUNER] FOUT: aantal klopt niet met de actieve tabel")
+								tuner_fouten += 1
+							if vreemd > 0:
+								print("[TUNER] FOUT: %d pion(nen) van een andere factie of een onbekend type" % vreemd)
+								tuner_fouten += 1
+							if not volgorde_ok:
+								print("[TUNER] FOUT: rijen niet infanterie voor cavalerie voor artillerie")
+								tuner_fouten += 1
+							if in_beeld != t._formation_pawns.size():
+								print("[TUNER] FOUT: niet alle varianten in beeld boven het paneel")
+								tuner_fouten += 1
+						if keuze != null:
+							keuze.select(2)
+							keuze.item_selected.emit(2)
+							await get_tree().process_frame
+							await get_tree().process_frame
+							var blauw := 0
+							for e in t._formation_pawns:
+								if (e.pv as PawnView).team == Constants.Team.BLUE:
+									blauw += 1
+							print("[TUNER] alle varianten alles blauw: %d van %d blauw" % [blauw, t._formation_pawns.size()])
+							if t._formation_pawns.is_empty() or blauw != t._formation_pawns.size():
+								print("[TUNER] FOUT: alles blauw werkt niet door in alle varianten")
+								tuner_fouten += 1
+							# terug naar rood: de charge-check verderop zoekt een rode ruiter
+							keuze.select(1)
+							keuze.item_selected.emit(1)
+							await get_tree().process_frame
+						# Slider-doel: Varken, cavalerie, atk.
+						var vi: int = t._fac_btn.get_item_index(Constants.Doctrine.MENS)
+						t._fac_btn.select(vi)
+						t._fac_btn.item_selected.emit(vi)
+						await get_tree().process_frame
+						await get_tree().process_frame
+						t._type_btn.select(Constants.UnitType.CAVALRY)
+						t._arch_btn.select(3)
+						t._arch_btn.item_selected.emit(3)
+						await get_tree().process_frame
+						var verwacht_key := ""
+						for e in t._formation_pawns:
+							if int(e.tp) == Constants.UnitType.CAVALRY and String(e.arch) == "atk":
+								verwacht_key = (e.pv as PawnView)._tune_key
+						var doel: String = t._tune_target_key()
+						print("[TUNER] alle varianten slider-doel varken cav atk: %s" % doel)
+						if doel == "" or doel != verwacht_key:
+							print("[TUNER] FOUT: de sliders sturen niet het cav-atk-model (%s, verwacht %s)" % [doel, verwacht_key])
+							tuner_fouten += 1
+						# Een type dat de factie niet kent: Muis + artillerie.
+						var mi: int = t._fac_btn.get_item_index(Constants.Doctrine.MUIS)
+						t._fac_btn.select(mi)
+						t._fac_btn.item_selected.emit(mi)
+						await get_tree().process_frame
+						await get_tree().process_frame
+						t._info.text = ""
+						t._type_btn.select(Constants.UnitType.ARTILLERY)
+						t._type_btn.item_selected.emit(Constants.UnitType.ARTILLERY)
+						await get_tree().process_frame
+						var muis_kent_art: bool = int((tabel.doctrine_data(Constants.Doctrine.MUIS).get("comp", [1, 1, 1]) as Array)[2]) > 0
+						if not muis_kent_art:
+							print("[TUNER] alle varianten muis + artillerie: doel '%s', melding '%s'" % [t._tune_target_key(), t._info.text.left(60)])
+							if t._tune_target_key() != "" or not t._info.text.contains("kent geen"):
+								print("[TUNER] FOUT: geen melding voor een type dat de factie niet kent")
+								tuner_fouten += 1
+						t._type_btn.select(0)
+						t._arch_btn.select(0)
+						t._fac_btn.select(1)
 					(knoppen["bord"] as Button).button_pressed = true
 					await get_tree().process_frame
 					await get_tree().process_frame

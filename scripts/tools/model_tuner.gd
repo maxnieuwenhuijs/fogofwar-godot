@@ -139,6 +139,12 @@ var _bord: Node3D = null                # de Board.tscn-instantie, als hij aan s
 var _tuner_vloer: Node3D = null         # de eigen 5x3 tegels + hulpkruis (uit als het bord aan is)
 var _legers_btn: Button = null          # bord + beide legers in de spel-opstelling
 var _alles_modus: bool = false          # staat de alle-facties-opstelling aan?
+var _varianten_btn: Button = null       # EEN factie, al zijn varianten in drie rijen
+var _varianten_modus: bool = false
+var _varianten_fac: int = -1            # voor welke factie de rijen nu staan
+var _varianten_typen: Array = []        # typen die die factie kent (actieve tabel)
+const VARIANT_KOL := 1.3
+const VARIANT_RIJ_Z: Array = [1.6, 0.0, -1.6]   # infanterie, cavalerie, artillerie; camera aan +z
 var _fx_spins: Dictionary = {}      # effect-sleutel -> SpinBox
 var _die_btn: OptionButton          # dood-clip keuze (death_pools-tuning)
 var _dp_spins: Dictionary = {}      # "delay"/"grow"/"size"/"forward" -> SpinBox
@@ -466,6 +472,16 @@ func _ready() -> void:
 			_view_btn.select(1)
 		if "formatie" in shot_args:
 			_formation_btn.set_pressed(true)
+		if "varianten" in shot_args:
+			# -- shot varianten [factie] [rood|blauw] [closeup|voorkant]
+			for d in Constants.DOCTRINE_DATA.keys():
+				if shot_args.has(Constants.doctrine_name(int(d)).to_lower()) or shot_args.has(Constants.doctrine_folder(int(d))):
+					_fac_btn.select(_fac_btn.get_item_index(int(d)))
+			if "blauw" in shot_args:
+				_team_btn.select(2)
+			elif "rood" in shot_args:
+				_team_btn.select(1)
+			_varianten_btn.set_pressed(true)
 		if "legers" in shot_args:
 			_legers_btn.set_pressed(true)
 			_type_btn.select(Constants.UnitType.CAVALRY)
@@ -611,6 +627,31 @@ func _apply_camera() -> void:
 	# Zes rijen facties passen niet in het formatie-kader, dus die krijgen meer.
 	var big := not _formation_pawns.is_empty()
 	var alles := _alles_modus or _legers_modus()
+	_cam.v_offset = 0.0
+	if big and _varianten_modus:
+		# Alle varianten: vijf kolommen en drie rijen precies in beeld, ook op
+		# een staand venster (keep_height: de breedte is daar de krapste maat),
+		# en boven het paneel onderin (v_offset schuift het beeld omhoog).
+		var vr: Vector2 = get_viewport().get_visible_rect().size
+		var aspect: float = vr.x / maxf(vr.y, 1.0)
+		var deel: float = clampf(_paneel_hoogte / maxf(vr.y, 1.0), 0.0, 0.8)
+		var nodig: Vector2 = Vector2(7.6, 6.0)   # spel-hoek: breedte, hoogte
+		match view:
+			1:
+				nodig = Vector2(7.0, 4.8)
+			2:
+				nodig = Vector2(7.2, 4.4)
+		_cam.size = maxf(nodig.y / (1.0 - deel), nodig.x / maxf(aspect, 0.2))
+		_cam.v_offset = -0.5 * deel * _cam.size
+		match view:
+			1:
+				_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.55, 0.0) + CAM_BASIS.z * 8.0)
+			2:
+				_cam.transform = Transform3D(Basis(), Vector3(0.0, 1.2, 3.6))
+				_cam.look_at(Vector3(0.0, 0.45, 0.0), Vector3.UP)
+			_:
+				_cam.transform = Transform3D(CAM_BASIS, Vector3(0.0, 0.6, 0.0) + CAM_BASIS.z * 8.0)
+		return
 	match view:
 		1:  # close-up: zelfde spel-hoek, strak op het model
 			_cam.size = (19.0 if alles else 8.5) if big else 1.5
@@ -748,6 +789,16 @@ func _build_ui() -> void:
 	_alles_btn.toggle_mode = true
 	_alles_btn.toggled.connect(_on_alles_toggled)
 	row1.add_child(_alles_btn)
+	# EEN factie, al zijn varianten (5 oktober, Max: "alle varianten van dezelfde
+	# factie naast elkaar, vooraan alle infantry, daarachter de cav en daarachter
+	# alle kanon-varianten"; "per factie rustig, niet letterlijk allemaal
+	# tegelijk"). De factie is de keuze linksboven, de kleur komt uit Team.
+	_varianten_btn = Button.new()
+	_varianten_btn.text = "alle varianten"
+	_varianten_btn.toggle_mode = true
+	_varianten_btn.tooltip_text = "De factie linksboven: infanterie vooraan, dan cavalerie, dan artillerie, elk base/spd/hp/atk/mix. Kleur: Team alles rood of alles blauw."
+	_varianten_btn.toggled.connect(_on_varianten_toggled)
+	row1.add_child(_varianten_btn)
 	# Het echte bord eronder, met zijn eigen textures en licht.
 	_bord_btn = Button.new()
 	_bord_btn.text = "bord"
@@ -1036,11 +1087,14 @@ func _team_voor(kant: int) -> int:
 			return Constants.Team.RED if kant == 0 else Constants.Team.BLUE
 
 
-## Bouw opnieuw op wat er NU staat: de alle-modellen-opstelling, de formatie,
-## of het losse model. Gebruikt door de team-keuze.
+## Bouw opnieuw op wat er NU staat: de alle-modellen-opstelling, alle varianten
+## van een factie, de formatie, bord + legers of het losse model. Gebruikt door
+## de team-keuze, de sliders en de wapen-spins.
 func _herbouw_huidige() -> void:
 	if _alles_btn != null and _alles_btn.button_pressed:
 		_bouw_alle_modellen()
+	elif _varianten_modus:
+		_bouw_varianten()
 	elif _legers_modus():
 		_bouw_legers()
 	elif _formation_btn != null and _formation_btn.button_pressed:
@@ -1049,11 +1103,26 @@ func _herbouw_huidige() -> void:
 		_reload_pawns()
 
 
+## Formatie, alle modellen, alle varianten en bord + legers sluiten elkaar uit
+## (5 oktober; daarvoor bleef 'alle modellen' half aan na 'formatie', en dan
+## herbouwde een slider weer de negentig). Gaat bord + legers uit, dan ook de
+## bord-camera terug, net als bij het uitzetten van die knop.
+func _modi_uit(behalve: Button) -> void:
+	var legers_was_aan: bool = _legers_btn != null and _legers_btn.button_pressed
+	for b in [_formation_btn, _alles_btn, _varianten_btn, _legers_btn]:
+		if b != null and b != behalve and (b as Button).button_pressed:
+			(b as Button).set_pressed_no_signal(false)
+	if behalve != _alles_btn:
+		_alles_modus = false
+	if behalve != _varianten_btn:
+		_varianten_modus = false
+	if legers_was_aan and behalve != _legers_btn and _view_btn != null and _view_btn.selected == 3:
+		_view_btn.select(0)
+
+
 func _on_alles_toggled(aan: bool) -> void:
-	if aan and _formation_btn != null and _formation_btn.button_pressed:
-		_formation_btn.set_pressed_no_signal(false)
-	if aan and _legers_btn != null and _legers_btn.button_pressed:
-		_legers_btn.set_pressed_no_signal(false)
+	if aan:
+		_modi_uit(_alles_btn)
 	if aan:
 		_bouw_alle_modellen()
 	else:
@@ -1129,6 +1198,84 @@ func _bouw_alle_modellen() -> void:
 	_apply_camera()
 
 
+func _on_varianten_toggled(aan: bool) -> void:
+	if aan:
+		_modi_uit(_varianten_btn)
+		_bouw_varianten()
+	else:
+		_clear_formation()
+		_varianten_modus = false
+		_reload_pawns()   # zet zelf de camera
+
+
+## Typen die de factie volgens de ACTIEVE tabel kent (rules_v42_campaign.json
+## over constants.gd heen: constants geeft de Beer nog drie kanonnen, en Muis
+## en Beer hebben er in het spel geen). Leest de json, dus alleen bij een
+## nieuwe factie aanroepen.
+func _typen_volgens_tabel(fac: int) -> Array:
+	var comp: Array = CRules.actieve_tabel().doctrine_data(fac).get("comp", [1, 1, 1])
+	var uit: Array = []
+	for tp in [0, 1, 2]:
+		if tp < comp.size() and int(comp[tp]) > 0:
+			uit.append(tp)
+	return uit
+
+
+## Alle varianten van EEN factie: drie rijen naar achteren (infanterie vooraan,
+## dan cavalerie, dan artillerie), elk base/spd/hp/atk/mix. Een type dat de
+## factie niet kent blijft weg; de rijen houden hun plek.
+func _bouw_varianten() -> void:
+	_clear_formation()
+	if _pawn != null and is_instance_valid(_pawn):
+		_pawn.queue_free()
+		_pawn = null
+	if _ref != null and is_instance_valid(_ref):
+		_ref.queue_free()
+		_ref = null
+	_alles_modus = false
+	_varianten_modus = true
+	var fac: int = _fac_btn.get_selected_id()
+	if fac != _varianten_fac or _varianten_typen.is_empty():
+		_varianten_typen = _typen_volgens_tabel(fac)
+	_varianten_fac = fac
+	var regels: Array = []
+	for tp in [0, 1, 2]:
+		if not _varianten_typen.has(tp):
+			regels.append("%s: kent de %s niet (actieve tabel)" % [Constants.unit_type_name(tp), Constants.doctrine_name(fac)])
+			continue
+		var terug: Array = []
+		var geen := 0
+		for ci in ARCHS.size():
+			var arch: String = ARCHS[ci]
+			var card = null
+			if ARCH_CARDS.has(arch):
+				var st: Array = ARCH_CARDS[arch]
+				card = Card.new(0, 0, 0, int(st[0]), int(st[1]), int(st[2]))
+			var pv: PawnView = PAWN_SCENE.instantiate()
+			pv.team = _team_voor(0)
+			pv.position = Vector3((float(ci) - 2.0) * VARIANT_KOL, 0.05, float(VARIANT_RIJ_Z[tp]))
+			add_child(pv)
+			pv.face_dir(Vector2i(0, 1))  # allemaal naar de camera
+			pv.set_unit_type(tp)
+			pv.set_character(fac, tp, card)
+			_formation_pawns.append({"pv": pv, "fac": fac, "tp": tp, "arch": arch,
+				"thuis": pv.position, "richting": Vector2i(0, 1)})
+			if pv._tune_key == "":
+				geen += 1
+			elif arch != "base" and not pv._tune_key.contains("_" + arch):
+				terug.append(arch)
+		var regel := "%s: 5 varianten" % Constants.unit_type_name(tp)
+		if geen > 0:
+			regel += ", %d nog zonder model (placeholder)" % geen
+		if not terug.is_empty():
+			regel += ", valt terug op base: %s" % ", ".join(terug)
+		regels.append(regel)
+	_info.text = "Alle varianten van %s: %d pionnen. Vooraan infanterie, dan cavalerie, dan artillerie; kolommen base/spd/hp/atk/mix.\n%s\nSliders tunen het model uit de dropdowns (type + archetype); een andere factie bouwt de rijen opnieuw." % [
+		Constants.doctrine_name(fac), _formation_pawns.size(), "\n".join(regels)]
+	_sync_sliders_from_tuning()
+	_apply_camera()
+
+
 ## Het echte bord eronder (Board.tscn): tegels, bordmodel en zijn eigen licht.
 ## Het bord is 11x11 tegels van 1x0.1x1 met de Board-node op (-5, 0, -5), dus de
 ## oorsprong is de middelste tegel en het tegeloppervlak ligt op y = 0,05 -- net
@@ -1200,6 +1347,7 @@ func _bouw_legers() -> void:
 		_ref.queue_free()
 		_ref = null
 	_alles_modus = false
+	_varianten_modus = false
 	if not _bord_btn.button_pressed:
 		_bord_btn.set_pressed(true)  # roept _zet_bord aan
 	var regels := RulesConfig.load_from_file("res://arena/arena_configs/v42_default.json")
@@ -1249,11 +1397,7 @@ func _bouw_legers() -> void:
 
 func _on_legers_toggled(aan: bool) -> void:
 	if aan:
-		if _formation_btn != null and _formation_btn.button_pressed:
-			_formation_btn.set_pressed_no_signal(false)
-		if _alles_btn != null and _alles_btn.button_pressed:
-			_alles_btn.set_pressed_no_signal(false)
-			_alles_modus = false
+		_modi_uit(_legers_btn)
 		_bouw_legers()
 	else:
 		_clear_formation()
@@ -1271,9 +1415,13 @@ func _test_aanvaller() -> Dictionary:
 		return {"pv": _pawn, "thuis": Vector3(0.0, 0.05, 0.0), "richting": Vector2i(0, 1)}
 	var fac := _fac_btn.get_selected_id()
 	var tp := _type_btn.get_selected_id()
+	var arch: String = ARCHS[_arch_btn.selected]
 	var beste: Dictionary = {}
 	for e in _formation_pawns:
 		if not is_instance_valid(e.pv) or int(e.fac) != fac or int(e.tp) != tp:
+			continue
+		# alle varianten: de pion van het archetype uit de dropdown
+		if _varianten_modus and String(e.get("arch", "base")) != arch:
 			continue
 		if beste.is_empty() or int(e.get("kant", 0)) < int(beste.get("kant", 0)):
 			beste = e
@@ -1419,8 +1567,16 @@ func _make_spin(parent: Node, minv: float, maxv: float, step: float, def: float,
 func _on_model_select_changed(_i: int) -> void:
 	if _formation_pawns.is_empty():
 		_reload_pawns()
+	elif _varianten_modus and _fac_btn.get_selected_id() != _varianten_fac:
+		_bouw_varianten()   # andere factie: de rijen opnieuw
 	else:
+		# Een losse pion van een clip- of gibs-knop mag het slider-doel niet
+		# kapen: in een opstelling sturen de dropdowns de sliders.
+		if _pawn != null and is_instance_valid(_pawn):
+			_pawn.queue_free()
+			_pawn = null
 		_sync_sliders_from_tuning()
+		_vul_geluidlijst()
 
 
 ## De tuning-sleutel van het model dat de sliders nu sturen: het losse
@@ -1496,8 +1652,16 @@ func _sync_sliders_from_tuning() -> void:
 		_hand_label.text = "In de hand (%s → %s): schaal" % [wat, _weapon_target_key()]
 	_updating = false
 	if not _formation_pawns.is_empty() and key == "":
-		_info.text = "Model %s/%s staat niet in de formatie — kies een van de vergeleken facties linksboven om te tunen." % [
-			_fac_name(), Constants.unit_type_name(_type_btn.get_selected_id())]
+		var tp_naam: String = Constants.unit_type_name(_type_btn.get_selected_id())
+		if _varianten_modus and not _varianten_typen.has(_type_btn.get_selected_id()):
+			_info.text = "De %s kent geen %s volgens de actieve factietabel; die rij staat er dus niet." % [
+				Constants.doctrine_name(_varianten_fac), tp_naam]
+		elif _varianten_modus:
+			_info.text = "%s %s: nog geen model geleverd (placeholder), niets te tunen." % [
+				Constants.doctrine_name(_varianten_fac), tp_naam]
+		else:
+			_info.text = "Model %s/%s staat niet in de formatie: kies een van de vergeleken facties linksboven om te tunen." % [
+				_fac_name(), tp_naam]
 
 
 ## Pas tuning toe op wat er staat: formatie herbouwen of het losse model.
@@ -1518,6 +1682,8 @@ func _on_weapon_changed(_v: float) -> void:
 		return
 	if _pawn == null and _formation_pawns.is_empty():
 		return
+	if _varianten_modus and not _varianten_typen.has(_type_btn.get_selected_id()):
+		return   # dat type staat er niet; anders schreef dit naar <factie>/musket
 	PawnView.set_model_tuning(_weapon_target_key(), {
 		"scale": snappedf(_weapon_spins["scale"].value, 0.01),
 		"pos": [snappedf(_weapon_spins["px"].value, 0.01),
@@ -1550,8 +1716,8 @@ func _current_card() -> Card:
 ## Formatie aan: vervang het tuning-model door 3 vs 3 (inf/cav/art) van de
 ## twee gekozen facties, tegenover elkaar op tegels — net als in het spel.
 func _on_formation_toggled(on: bool) -> void:
-	if on and _legers_btn != null and _legers_btn.button_pressed:
-		_legers_btn.set_pressed_no_signal(false)
+	if on:
+		_modi_uit(_formation_btn)
 	if on:
 		_build_formation()
 	else:
@@ -1605,8 +1771,7 @@ func _build_formation() -> void:
 
 
 func _reload_pawns() -> void:
-	if _formation_btn != null and _formation_btn.button_pressed:
-		_formation_btn.set_pressed_no_signal(false)
+	_modi_uit(null)
 	_clear_formation()
 	if _pawn != null:
 		_pawn.queue_free()
