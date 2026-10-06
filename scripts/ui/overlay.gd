@@ -91,11 +91,8 @@ func show_choice(title: String, body: String, options: Array, cb: Callable = Cal
 			button.add_theme_constant_override("icon_max_width", KNOP_ICOON)
 		var idx := i
 		button.pressed.connect(func() -> void: _pick(idx))
-		# Hover-geluid alleen met een echte muis: op de telefoon komt een tik als
-		# nagebootste muis binnen, en dan klonk elke tik dubbel.
-		button.mouse_entered.connect(func() -> void:
-			if Beweging.echte_muis():
-				Audio.play("ui_hover"))
+		# Het hover-geluid (alleen met een echte muis) en de schaduw doet de
+		# UI-beweging voor elke knop (Beweging.koppel_knop).
 		_buttons.add_child(button)
 	_cb = cb
 	if vers and not vervangt:

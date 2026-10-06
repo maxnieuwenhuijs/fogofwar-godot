@@ -1,5 +1,67 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- Landen met een stofwolkje, schaduw onder de knop en een plofje
+
+Max: "laat alles wat invliegt en verschijnt een beetje ploffen, met ook een
+wolke of schaduw dat je ziet en dan een geluidje afspelen beetje verschillende
+kan je dat maken bij alle animaties en hovers en kliks ook".
+
+- **Landen** (`scripts/ui/ui_beweging.gd`): plof, inschuiven, stempel,
+  omdraaien en de DINGEN in een rij (knoppen, panelen, plaatjes, meta
+  `ub_ding`; geen tekstregels of schuifjes) krijgen op het landingsmoment een
+  stofwolkje en een `ui_plof`. Het moment zit IN de tween als callback
+  (`PLOF_LAND` 37% van de duur bij BACK: daar passeert hij zijn doel;
+  `SCHUIF_LAND` 72% bij CUBIC), dus beeld en geluid vallen samen, ook met de
+  twee vastgehouden frames, en een afgebroken animatie landt niet. Wat
+  inschuift zonder veer deukt bij het landen even in (`_deuk`, grote stukken
+  minder).
+- **Het stof** is een eigen canvas-item ONDER dat van het ding
+  (`RenderingServer`, `draw_behind_parent`): geen node erbij, dus kindlijsten,
+  containers en render_digest blijven gelijk. Bij elke onderhoek een klontje
+  van twee of drie plukjes (lichte kern, donkere schaduwkant rechtsonder:
+  zichtbaar op hout en op perkament) dat naar buiten waait, opzwelt en
+  oplost; rondom bij een stempel, klein bij het indrukken. Eerst was het een
+  rij langs de hele onderrand: dat werden witte parels. De tint van een
+  getint icoon wordt eruit gedeeld (de rode sabels gaven rode spatjes). Eigen
+  rng; opgeruimd na `WOLK_DUUR` of zodra het ding de boom verlaat.
+- **Een knop:** indrukken = wolkje + `ui_knop` (nieuw: zacht houten tokje,
+  -15 dB, onder het klikgeluid van het scherm dat bij het loslaten komt);
+  hover met een echte muis = schaduw eronder (ovaal achter de knop, ingedrukt
+  0,35) + `ui_hover` (de overlay speelt zijn eigen hover-geluid niet meer).
+  Touch: geen hover, geen schaduw.
+- **Klank:** elke keer een andere variant dan de vorige, toon 0,93-1,07,
+  begrenzer `KLANK_MIN_MS` 45 ms per categorie (zes ploffen tegelijk = een),
+  een rij hooguit 4 plofjes oplopend in toon. Stof en schaduw alleen bij
+  normaal (rustig houdt het geluid), dev-knop `ui_wolk` in het sfeer-paneel.
+- **Aanroepers:** de hub-golf landt overal met stof maar klinkt alleen bij
+  vlag en kader; de tijdlijn hooguit vier per golf; het fasepaneel klinkt en
+  stuift alleen bij een nieuwe fase of tab, niet bij elke botbeurt; de
+  keuzeschermen schuiven stil in (ui_open klonk al); de gloed om een gekozen
+  schild is stil (het portret klinkt al); de kaarten op het onthulscherm zijn
+  dingen.
+- **ui_knop** (`tools/maak_ui_geluiden.py`, recept `r_knop`, drie varianten)
+  is zonder `--import` geimporteerd (editor open): een scriptje doet precies
+  wat de wav-importer doet (`AudioStreamWAV.load_from_file` met dezelfde
+  opties, `.sample` + `.md5` + `.import`); proef op ui_plof: de geluidsdata
+  byte-gelijk, alleen het willekeurige lokale id verschilt. Prompt in de
+  geluid-studio (HAND, gericht in `geluid_studio.json`) en SOUND-WISHLIST.
+- **Lek gevonden en dicht:** de tween van een wolkje hield `info` vast via
+  zijn lambda en `info` de tween: elk wolkje bleef bestaan (12 lekken in de
+  check). `_wolk_weg` haalt die sleutels eruit; `--verbose` meldt nu niets van
+  de UI-beweging (wel de muziekstreams van het bord bij het afsluiten, al zo).
+- **Check-zwakte opgelost:** de onthul-controle in `-- inkomcheck kaart` keek
+  per 0,1 s of het scherm open was en zag de rij onder `--verbose` al klaar;
+  nu elk frame.
+- Checks: `-- inkomcheck` met de nieuwe fase wolk (36 punten) en de geluid-fase
+  herschreven (het geluid zit nu in de tween, dus tellen na afloop, en elk op
+  een eigen blok: wat afgebroken wordt landt niet), headless en met venster; `--
+  inkomfilm <map> menu intro stof` (nieuw: reeksen kiezen, en de reeks stof met
+  hover, indrukken en een pop-up) en de plaatjes nagekeken. Verder: uicheck, uispel 777
+  5862e4c9 (ongewijzigd: 165 acties, cyclus 4), herstelcheck 777 en 4242 wolf 0
+  verschillen, resumecheck 777 1 en 4242 2 0, naad, koppel, beurtlicht,
+  audiopaneel, simcheck 0, klaarcheck headless en met venster, alle 25 hub-modi
+  en het grootboek 0 fouten (acht ook met venster), tests 2912/0.
+
 ## 6 oktober -- De weg naar het bord: zichtbare aftel en een duel-intro
 
 Max: "het gaat nog steeds snel, het begin is goed en dan zie je je duel en dan

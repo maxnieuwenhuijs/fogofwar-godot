@@ -16,6 +16,7 @@ messing uit die tijd, geen synth-piepjes.
     ui_tel      een klein messing tikje                 (getallen die optellen)
     ui_munt     een munt die op hout valt               ("+1" dat omhoog zweeft)
     ui_blad     een perkamenten blad dat omslaat        (hub-golf, fasewissel)
+    ui_knop     een zacht, dof houten tokje             (een knop veert terug; 6 oktober)
 
 Het "kan niet" (nee-schud) speelt `ui_error`: daar ligt al een echte opname
 (sounds/studio/ui_error.wav), dus die maakt dit script niet. Het recept
@@ -111,6 +112,14 @@ def r_error(k, rng):
     return een + twee * 0.9
 
 
+def r_knop(k, rng):
+    # een knop die terugveert op hout (6 oktober): een heel kort, zacht en dof
+    # houten tokje, lager en korter dan de plof, zodat hij onder een klik past
+    t = t_as(0.07)
+    tok = glij(t, 260 * k, 210 * k, 0.01) * env(t, 0.022, 0.0015)
+    return klik(t, rng, 500, 2600, 0.006) * 0.5 + tok * 0.7
+
+
 def r_blad(k, rng):
     # een perkamenten blad dat omslaat: zacht ruisen dat aanzwelt en wegzakt,
     # met een paar kraakjes van het papier
@@ -131,6 +140,7 @@ RECEPTEN = {
     "ui_tel": (r_tel, 3),
     "ui_munt": (r_munt, 3),
     "ui_blad": (r_blad, 3),
+    "ui_knop": (r_knop, 3),
 }
 
 

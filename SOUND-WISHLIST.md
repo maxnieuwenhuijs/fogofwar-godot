@@ -77,9 +77,10 @@ tabel onderaan, dan heb je alle varianten in een generatie.
 | `ui_tel` | `ui_tel.wav` | 3 | Getal telt op (tikjes, stijgend) | synthetisch |
 | `ui_munt` | `ui_munt.wav` | 3 | "+1" zweeft omhoog (donatie, dank) | synthetisch |
 | `ui_blad` | `ui_blad.wav` | 3 | Hub-golf, nieuwe fase, menu-wissel | synthetisch |
+| `ui_knop` | `ui_knop.wav` | 3 | Een knop indrukken (onder de klik) | synthetisch |
 
-De zes onderste (30 september) horen bij de UI-beweging
-(`scripts/ui/ui_beweging.gd`, `Beweging.klank`); houd de "Wanneer" hier korter
+De zeven onderste (30 september; `ui_knop` sinds 6 oktober) horen bij de
+UI-beweging (`scripts/ui/ui_beweging.gd`, `Beweging.klank`); houd de "Wanneer" hier korter
 dan 40 tekens, anders leest de geluid-studio hem als prompt. Tot de echte
 opnames er zijn: placeholders uit `tools/maak_ui_geluiden.py` (hout, perkament,
 messing; manifest `sounds/ui/synthetisch.json`). Een echte opname op dezelfde
@@ -623,6 +624,7 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `ui_tel` ⭐ | 3 | One tiny brass counter bead clicking against another on an old abacus: a very short, bright little tick, dry. |
 | `ui_munt` ⭐ | 3 | A single small brass coin dropped onto an oak table: a clear short ring with one tiny bounce, dry and close. |
 | `ui_blad` ⭐ | 3 | One page of thick old parchment turned over in a leather-bound book: a soft short rustle that swells and settles, dry and close. |
+| `ui_knop` ⭐ | 3 | A wooden game piece pressed down onto an oak board: a very short, soft and dull little tok, lower and quieter than a click, dry and close. |
 | `card_stat_up` ⭐ | 3 | small brass weight set on a balance scale, short bright metallic tick, rising |
 | `card_stat_down` ⭐ | 3 | small brass weight lifted off a balance scale, short dull metallic tick, falling |
 | `card_confirm` ⭐ | 2 | thick parchment card slapped onto a wooden table, wax seal press, firm |

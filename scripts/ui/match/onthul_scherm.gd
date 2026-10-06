@@ -390,6 +390,7 @@ func _kaart_houder(hp: int, stamina: int, attack: int, speler: int, doctrine: in
 	draai.name = "Draai"
 	draai.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	draai.size = UiAssets.KAART_MAAT * schaal
+	draai.set_meta("ub_ding", true)   # een kaart die landt: met een wolkje en een plofje
 	houder.add_child(draai)
 	var kaart := CardView.maak(hp, stamina, attack, speler, doctrine, budget)
 	kaart.card_index = index

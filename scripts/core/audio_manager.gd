@@ -187,6 +187,7 @@ const CATEGORY_DB := {
 	"ui_tel": -15.0,
 	"ui_munt": -9.0,
 	"ui_blad": -13.0,
+	"ui_knop": -15.0,   # 6 oktober: het tokje bij elke druk, onder het klikgeluid
 	"card_confirm": -4.0,
 	"card_deal": -6.0,
 	"card_select": -6.0,

@@ -214,6 +214,8 @@ HAND = {
     "ui_tel": ("A tiny brass counter bead clicking against another on an old abacus, a very short bright little tick. " + SLOT, 0.2, 0.7),
     "ui_munt": ("A small brass coin dropped onto an oak table, a clear short ring with one tiny bounce. " + SLOT, 0.5, 0.6),
     "ui_blad": ("A page of thick old parchment turned over in a leather-bound book, a soft short rustle that swells and settles. " + SLOT, 0.6, 0.6),
+    # 6 oktober: het tokje bij het indrukken van elke knop (onder het klikgeluid)
+    "ui_knop": ("A wooden game piece pressed down onto an oak board, a very short, soft and dull little tok, lower and quieter than a click. " + SLOT, 0.2, 0.7),
     "card_stat_up": ("A small brass weight placed onto a balance scale, a bright short clink. " + SLOT, 0.4, 0.7),
     "card_stat_down": ("A small brass weight lifted off a balance scale, a soft short clink slightly lower in tone. " + SLOT, 0.4, 0.7),
     "card_confirm": ("A wax seal pressed firmly onto parchment, a soft thump with a short squish. " + SLOT, 0.7, 0.6),

@@ -1132,6 +1132,10 @@
    "duur": 7.0,
    "invloed": 0.7
   },
+  "ui_knop": {
+   "duur": 7.0,
+   "invloed": 0.7
+  },
   "ui_munt": {
    "duur": 7.0,
    "invloed": 0.6
@@ -1489,6 +1493,7 @@
   "ui_draai": "A single stiff parchment playing card flipped over on a wooden table, a quick paper flick and the soft tap of its edge landing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_error": "A short dull wooden knock, a blocked, refused sound. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_hover": "A very soft, tiny wooden tick, barely there. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_knop": "A wooden game piece pressed down onto an oak board, a very short, soft and dull little tok, lower and quieter than a click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_munt": "A small brass coin dropped onto an oak table, a clear short ring with one tiny bounce. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_open": "A parchment scroll unrolling quickly with a soft paper rustle. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_plof": "A small wooden peg popping into a hole in an old oak game board, a short soft round tok with a tiny upward lift. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1797,6 +1802,7 @@
   "ui_draai": "A single stiff parchment playing card flipped over on a wooden table, a quick paper flick and the soft tap of its edge landing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_error": "A short dull wooden knock, a blocked, refused sound. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_hover": "A very soft, tiny wooden tick, barely there. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ui_knop": "A wooden game piece pressed down onto an oak board, a very short, soft and dull little tok, lower and quieter than a click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_munt": "A small brass coin dropped onto an oak table, a clear short ring with one tiny bounce. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_open": "A parchment scroll unrolling quickly with a soft paper rustle. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_plof": "A small wooden peg popping into a hole in an old oak game board, a short soft round tok with a tiny upward lift. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",

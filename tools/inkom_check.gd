@@ -8,12 +8,14 @@ extends RefCounted
 ## settings-bestand, zodat de stand van de speler blijft staan.
 ##
 ## Fasen (zonder argument: allemaal): module, knoppen, schermen, kaart, hub,
-## beloning (die alleen met data/duel_orakel.json), instelling, geluid.
+## beloning (die alleen met data/duel_orakel.json), instelling, geluid, wolk
+## (6 oktober: landen met een stofwolkje en een plofje, de schaduw onder een
+## knop bij hover, het wolkje en de tok bij een klik, de begrenzer).
 ## Exit 1 bij een fout; de grep op "SCRIPT ERROR" hoort erbij.
 
 const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 const CHECK_CFG := "user://settings_inkomcheck.cfg"
-const FASEN := ["module", "knoppen", "schermen", "kaart", "hub", "beloning", "instelling", "geluid"]
+const FASEN := ["module", "knoppen", "schermen", "kaart", "hub", "beloning", "instelling", "geluid", "wolk"]
 
 static var _fouten := 0
 static var _host: Node = null
@@ -52,6 +54,8 @@ static func run(host: Node, fasen: Array = []) -> int:
 				await _instelling()
 			"geluid":
 				await _geluid()
+			"wolk":
+				await _wolk()
 			_:
 				_fouten += 1
 				print("[INKOM] onbekende fase: %s (bekend: %s)" % [fase, ", ".join(FASEN)])
@@ -596,14 +600,16 @@ static func _kaart() -> void:
 	# onthulling: bevestig, de bot definieert, het onthulscherm komt
 	hand.call("_on_confirm_pressed")
 	var onthul: Control = null
-	for i in 60:
-		await _wacht(0.1)
+	# Elk frame kijken (6 oktober): met 0,1 s tussen de blikken was de rij soms
+	# al klaar voor de check hem zag (onder --verbose altijd).
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 6000:
+		await _frame()
 		onthul = game.get("_onthul_scherm")
 		if onthul != null and onthul.visible:
 			break
 	_ok(onthul != null and onthul.visible, "onthulscherm open")
 	if onthul != null and onthul.visible:
-		await _wacht(0.05)
 		var draaiers: Array = onthul.find_children("Draai", "", true, false)
 		var eerste_bezig := false
 		for d in draaiers:
@@ -823,11 +829,13 @@ static func _instelling() -> void:
 
 # --- Fase geluid: de korte UI-geluiden bij de animaties ------------------------------
 
-const UI_GELUIDEN := ["ui_plof", "ui_stempel", "ui_draai", "ui_tel", "ui_munt", "ui_error", "ui_blad"]
+const UI_GELUIDEN := ["ui_plof", "ui_stempel", "ui_draai", "ui_tel", "ui_munt", "ui_error", "ui_blad", "ui_knop"]
 
 
 static func _geluid() -> void:
 	print("[INKOM] fase geluid")
+	# de begrenzer: niets meer gepland uit eerdere fasen
+	await _wacht(1.1)
 	var ontbreekt: Array = []
 	for cat in UI_GELUIDEN:
 		if Audio.variant_aantal(cat) <= 0:
@@ -846,47 +854,255 @@ static func _geluid() -> void:
 	_ok(a == b, "klank laat de globale RNG met rust")
 	_ok(Beweging.klanken() - k0 == 2 * UI_GELUIDEN.size(),
 		"klank speelt elk geluid af (%d van %d)" % [Beweging.klanken() - k0, 2 * UI_GELUIDEN.size()])
-	# in de helpers: stempel, schud, omdraaien, plof, tellen met tikjes, zweven
+	await _wacht(0.2)
+	# In de helpers: stempel, schud, omdraaien, plof, tellen met tikjes, zweven.
+	# Elk op een eigen blok (een nieuwe animatie op hetzelfde kanaal breekt de
+	# vorige af, en wat afgebroken is landt niet). Het geluid van plof, stempel
+	# en omdraaien zit sinds 6 oktober IN de tween (op het moment van landen),
+	# dus tellen na afloop.
 	var wortel := Control.new()
 	_host.add_child(wortel)
-	var c := _blok(wortel, "C", Vector2(200, 200))
 	var l := Label.new()
 	wortel.add_child(l)
-	var met_geluid := func() -> int:
-		var voor := Beweging.klanken()
-		Beweging.stempel(c)
-		Beweging.schud(c)
-		Beweging.draai_om(c, Callable())
-		Beweging.plof(c, 0.0, Beweging.POP_VAN, true, Vector2(0.5, 0.5), true)
+	var met_geluid := func() -> void:
+		Beweging.stempel(_blok(wortel, "S", Vector2(100, 200)))
+		Beweging.schud(_blok(wortel, "H", Vector2(300, 200)))
+		Beweging.draai_om(_blok(wortel, "D", Vector2(500, 200)), Callable())
+		Beweging.plof(_blok(wortel, "P", Vector2(700, 200)), 0.0, Beweging.POP_VAN, true, Vector2(0.5, 0.5), true)
 		Beweging.tel_op(l, 0, 20, 0.3, Callable(), 0.0, "ui_tel")
-		Beweging.zweef("+1", c, wortel)
-		return Beweging.klanken() - voor
+		Beweging.zweef("+1", _blok(wortel, "Z", Vector2(100, 400)), wortel)
 	seed(99)
 	var x := randi()
 	seed(99)
-	var n_vol: int = met_geluid.call()
+	var k1 := Beweging.klanken()
+	met_geluid.call()
+	await _wacht(0.8)
+	var n_vol: int = Beweging.klanken() - k1
 	var y := randi()
-	_ok(x == y, "de helpers met geluid laten de globale RNG ook met rust")
+	_ok(x == y, "de helpers met geluid (en hun wolkjes) laten de globale RNG ook met rust")
 	# stempel, schud, draai, plof en munt een keer, tellen 0 -> 20 hooguit 8 tikjes
 	_ok(n_vol == 13, "normaal: de helpers spelen 13 geluiden (%d)" % n_vol)
-	await _wacht(0.8)
 	_ok(l.text == "20" and wortel.find_children("Zweef", "", true, false).is_empty(),
 		"na het geluid: tekst exact, zweef weg")
 	# rustig: minder beweging, niet minder feedback; alleen optellen valt weg
 	# (de tekst springt meteen naar het eind, dus ook geen tikjes)
 	Beweging.zet_stand(Beweging.RUSTIG)
-	var n_rustig: int = met_geluid.call()
+	var k2 := Beweging.klanken()
+	met_geluid.call()
 	Beweging.zet_stand(Beweging.NORMAAL)
-	_ok(n_rustig == 5, "rustig: 5 geluiden, geen tikjes (%d)" % n_rustig)
 	await _wacht(0.8)
+	var n_rustig: int = Beweging.klanken() - k2
+	_ok(n_rustig == 5, "rustig: 5 geluiden, geen tikjes (%d)" % n_rustig)
 	# uit: niets (klank doet dan niets, en ook geen RNG)
 	Beweging.forceer(0)
 	seed(7)
 	var p := randi()
 	seed(7)
-	var n_uit: int = met_geluid.call()
+	var k3 := Beweging.klanken()
+	met_geluid.call()
 	var q := randi()
 	Beweging.forceer(1)
+	await _wacht(0.8)
+	var n_uit: int = Beweging.klanken() - k3
 	_ok(p == q and n_uit == 0, "uit: geen geluid (%d) en geen RNG" % n_uit)
 	wortel.queue_free()
 	await _frame()
+
+
+# --- Fase wolk: landen met een stofwolkje, schaduw en tok (6 oktober) ---------------
+
+## Het laatste lopende wolkje bij deze node (leeg als er geen is).
+static func _wolk_van(node: Node) -> Dictionary:
+	var uit: Dictionary = {}
+	for w in Beweging.actieve_wolken():
+		if is_instance_valid(w["node"]) and w["node"] == node:
+			uit = w
+	return uit
+
+
+static func _wolk() -> void:
+	print("[INKOM] fase wolk")
+	var sterkte_oud: float = Beweging.wolk_sterkte()
+	Beweging.zet_wolk(1.0)
+	await _wacht(1.1)   # de begrenzer: niets meer gepland uit eerdere fasen
+	_ok(Beweging.wolk_aan(), "stof en schaduw staan aan bij normaal")
+	var wortel := Control.new()
+	wortel.size = Vector2(1080, 1920)
+	_host.add_child(wortel)
+	await _frame()
+	# plof: op het moment van landen een wolkje onder het ding en een plofje,
+	# uit een eigen rng
+	var blok := _blok(wortel, "W", Vector2(300, 600))
+	var kinderen: int = wortel.get_child_count()
+	seed(321)
+	var a := randi()
+	seed(321)
+	var w0: int = Beweging.wolken()
+	var k0: int = Beweging.klanken()
+	Beweging.plof(blok)
+	_ok(Beweging.wolken() == w0 and Beweging.klanken() == k0, "plof: nog niets voor het landen")
+	await _wacht(Beweging.POP_DUUR * 0.5 + 0.06)
+	var wolk := _wolk_van(blok)
+	_ok(Beweging.wolken() == w0 + 1 and not wolk.is_empty(), "plof: een wolkje bij het landen")
+	_ok(Beweging.klanken() == k0 + 1, "en een plofje, op het moment van landen")
+	var bron: Rect2 = wolk.get("bron", Rect2())
+	_ok(not wolk.is_empty() and String(wolk["waar"]) == "onder" and _gelijk(bron.size, blok.size),
+		"onder het ding, in zijn eigen ruimte (%s)" % str(bron))
+	_ok(wortel.get_child_count() == kinderen and blok.get_child_count() == 0,
+		"zonder node erbij: het stof is een canvas-item achter het ding")
+	var b := randi()
+	_ok(a == b, "wolkjes en plofjes trekken niet uit de globale rng")
+	await _wacht(Beweging.WOLK_DUUR + 0.15)
+	_ok(_wolk_van(blok).is_empty(), "en het wolkje ruimt zichzelf op")
+	# een node die de boom verlaat terwijl zijn wolkje loopt: meteen opgeruimd
+	var blok_weg := _blok(wortel, "Wweg", Vector2(300, 700))
+	Beweging.wolkje(blok_weg)
+	_ok(not _wolk_van(blok_weg).is_empty(), "wolkje direct (Beweging.wolkje)")
+	var voor_weg: int = Beweging.actieve_wolken().size()
+	blok_weg.free()
+	_ok(Beweging.actieve_wolken().size() == voor_weg - 1, "node weg: zijn wolkje meteen opgeruimd")
+	# inschuiven: een wolkje, een plofje en een deukje, dat in rust eindigt
+	var blok2 := _blok(wortel, "W2", Vector2(300, 900))
+	var w1: int = Beweging.wolken()
+	var k1: int = Beweging.klanken()
+	Beweging.schuif_in(blok2, Vector2(-200, 0))
+	await _wacht(Beweging.SCHUIF_DUUR * 0.8 + 0.04)
+	_ok(Beweging.wolken() == w1 + 1 and Beweging.klanken() == k1 + 1,
+		"inschuiven: een wolkje en een plofje bij het landen")
+	_ok(not _gelijk(blok2.scale, Vector2.ONE), "en een deukje (%s)" % str(blok2.scale))
+	await _wacht(0.4)
+	_ok(_gelijk(blok2.scale, Vector2.ONE) and _gelijk(blok2.position, Vector2(300, 900)), "dat eindigt in rust")
+	# stempel: het stof rondom, op de inslag
+	var blok3 := _blok(wortel, "W3", Vector2(600, 600))
+	var w2: int = Beweging.wolken()
+	Beweging.stempel(blok3, 0.0, false, false)
+	await _wacht(Beweging.STEMPEL_IN + 0.06)
+	var rondom := _wolk_van(blok3)
+	_ok(Beweging.wolken() == w2 + 1 and not rondom.is_empty() and String(rondom["waar"]) == "rondom",
+		"stempel: het stof rondom")
+	await _wacht(0.6)
+	# afgebroken: een plof die meteen een nieuwe plof krijgt landt maar een keer
+	var blok4 := _blok(wortel, "W4", Vector2(600, 900))
+	var w3: int = Beweging.wolken()
+	var k3: int = Beweging.klanken()
+	Beweging.plof(blok4)
+	Beweging.plof(blok4, 0.0, Beweging.POP_VAN, true, Vector2(0.5, 0.5), false)
+	await _wacht(0.4)
+	_ok(Beweging.wolken() == w3 + 1 and Beweging.klanken() == k3,
+		"afgebroken plof: niets; de tweede landt (zonder geluid) met een wolkje")
+	# rustig, sterkte 0 en uit: geen wolkjes; rustig wel het plofje
+	Beweging.zet_stand(Beweging.RUSTIG)
+	var w4: int = Beweging.wolken()
+	var k4: int = Beweging.klanken()
+	Beweging.plof(_blok(wortel, "W5", Vector2(300, 1100)))
+	await _wacht(0.35)
+	_ok(Beweging.wolken() == w4, "rustig: geen wolkjes")
+	_ok(Beweging.klanken() == k4 + 1, "rustig: wel het plofje")
+	Beweging.zet_stand(Beweging.NORMAAL)
+	Beweging.zet_wolk(0.0)
+	Beweging.plof(_blok(wortel, "W6", Vector2(300, 1200)), 0.0, Beweging.POP_VAN, true, Vector2(0.5, 0.5), false)
+	await _wacht(0.3)
+	_ok(Beweging.wolken() == w4, "sterkte 0: geen wolkjes")
+	Beweging.zet_wolk(1.0)
+	Beweging.forceer(0)
+	Beweging.plof(_blok(wortel, "W7", Vector2(300, 1300)), 0.0, Beweging.POP_VAN, true, Vector2(0.5, 0.5), false)
+	Beweging.forceer(1)
+	await _wacht(0.3)
+	_ok(Beweging.wolken() == w4, "uit: geen wolkjes")
+	# een knop: hover = schaduw eronder en een geluidje, indrukken = wolkje en tok
+	var muis := InputEventMouseMotion.new()
+	muis.device = 0
+	Beweging.zie_invoer(muis)
+	var rij := HBoxContainer.new()
+	rij.position = Vector2(200, 1500)
+	wortel.add_child(rij)
+	var knop := Button.new()
+	knop.text = "Knop"
+	knop.custom_minimum_size = Vector2(240, 80)
+	rij.add_child(knop)
+	Beweging.koppel_knop(knop)
+	await _wacht(0.1)
+	var k5: int = Beweging.klanken()
+	knop.mouse_entered.emit()
+	await _wacht(0.2)
+	_ok(Beweging.heeft_schaduw(knop) and Beweging.schaduw_alfa(knop) > 0.95,
+		"hover: een schaduw onder de knop (%.2f)" % Beweging.schaduw_alfa(knop))
+	_ok(rij.get_child_count() == 1 and knop.get_child_count() == 0, "zonder node erbij (kindlijsten gelijk)")
+	_ok(Beweging.klanken() == k5 + 1, "hover: een geluidje")
+	var k6: int = Beweging.klanken()
+	var w5: int = Beweging.wolken()
+	knop.button_down.emit()
+	await _wacht(0.05)
+	_ok(Beweging.wolken() == w5 + 1 and Beweging.klanken() == k6 + 1, "indrukken: een wolkje en een tok")
+	_ok(Beweging.schaduw_alfa(knop) < 0.6, "ingedrukt: minder schaduw (%.2f)" % Beweging.schaduw_alfa(knop))
+	knop.button_up.emit()
+	await _wacht(0.3)
+	_ok(_gelijk(knop.scale, Vector2.ONE), "losgelaten: de knop staat weer in rust")
+	_ok(not Beweging.heeft_schaduw(knop), "en zonder muis erop is de schaduw weg")
+	knop.mouse_entered.emit()
+	await _wacht(0.2)
+	knop.mouse_exited.emit()
+	await _wacht(0.3)
+	_ok(not Beweging.heeft_schaduw(knop) and _gelijk(knop.scale, Vector2.ONE), "van de knop af: schaduw weg, in rust")
+	knop.mouse_entered.emit()
+	await _wacht(0.2)
+	knop.visible = false
+	_ok(not Beweging.heeft_schaduw(knop), "verborgen: de schaduw meteen weg")
+	knop.visible = true
+	# touch komt als nagebootste muis binnen: geen hover, geen schaduw, geen geluid
+	Beweging.zie_invoer(InputEventScreenTouch.new())
+	await _wacht(0.1)
+	var k7: int = Beweging.klanken()
+	knop.mouse_entered.emit()
+	await _wacht(0.2)
+	_ok(not Beweging.heeft_schaduw(knop) and Beweging.klanken() == k7, "touch: geen schaduw en geen hovergeluid")
+	knop.mouse_exited.emit()
+	Beweging.zie_invoer(muis)
+	# een knop die met schaduw de boom verlaat: opgeruimd, geen fout
+	knop.mouse_entered.emit()
+	await _wacht(0.2)
+	rij.remove_child(knop)
+	_ok(not Beweging.heeft_schaduw(knop), "uit de boom: de schaduw meteen weg")
+	knop.free()
+	# de begrenzer: zes keer tegelijk hetzelfde geluid klinkt een keer
+	await _wacht(0.2)
+	var k8: int = Beweging.klanken()
+	for i in 6:
+		Beweging.klank("ui_plof")
+	_ok(Beweging.klanken() == k8 + 1, "zes keer tegelijk hetzelfde geluid: een keer (%d)" % (Beweging.klanken() - k8))
+	Beweging.klank("ui_plof", 0.1)
+	_ok(Beweging.klanken() == k8 + 2, "maar 0,1 s later wel")
+	# een rij: elk ding een wolkje (een tekstregel niet), een paar plofjes oplopend
+	await _wacht(0.3)
+	var lijst := VBoxContainer.new()
+	lijst.position = Vector2(600, 1000)
+	wortel.add_child(lijst)
+	var knoppen: Array = []
+	for i in 6:
+		var k := Button.new()
+		k.text = "Rij %d" % i
+		k.custom_minimum_size = Vector2(200, 48)
+		lijst.add_child(k)
+		knoppen.append(k)
+	var regel := Label.new()
+	regel.text = "een tekstregel"
+	lijst.add_child(regel)
+	await _frame()
+	var w6: int = Beweging.wolken()
+	var k9: int = Beweging.klanken()
+	Beweging.inkom_rij(knoppen + [regel])
+	await _wacht(Beweging.RIJ_MAX_SPREIDING + Beweging.RIJ_DUUR + 0.1)
+	_ok(Beweging.wolken() == w6 + 6, "een rij: elk ding een wolkje, de tekstregel niet (%d)" % (Beweging.wolken() - w6))
+	var rij_klanken: int = Beweging.klanken() - k9
+	_ok(rij_klanken >= 2 and rij_klanken <= Beweging.RIJ_KLANK_MAX,
+		"en een paar plofjes, niet zes (%d)" % rij_klanken)
+	await _wacht(0.3)
+	var w7: int = Beweging.wolken()
+	var k10: int = Beweging.klanken()
+	Beweging.inkom_rij(knoppen, 0.0, Beweging.RIJ_STAP, false, false)
+	await _wacht(Beweging.RIJ_MAX_SPREIDING + Beweging.RIJ_DUUR + 0.1)
+	_ok(Beweging.wolken() == w7 and Beweging.klanken() == k10, "een rij zonder geluid en stof: stil")
+	wortel.queue_free()
+	Beweging.zet_wolk(sterkte_oud)
+	await _wacht(0.6)
+	_ok(Beweging.actieve_wolken().is_empty() and Beweging.bezig() == 0, "aan het eind: geen wolkje en geen tween meer")

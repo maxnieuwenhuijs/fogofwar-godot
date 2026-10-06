@@ -1,9 +1,10 @@
 extends RefCounted
 
-## `-- inkomfilm [uitmap]` (capture.tscn, alleen met venster): plaatjes van de
-## UI-beweging halverwege en aan het eind, om te zien hoe het beweegt. Speelt op
-## een lager tempo (ui_tempo 0,3), zodat de tussenstanden vallen. Schrijft
-## <uitmap>/<reeks>_<n>.png; standaard user://inkomfilm.
+## `-- inkomfilm [uitmap] [reeks...]` (capture.tscn, alleen met venster): plaatjes
+## van de UI-beweging halverwege en aan het eind, om te zien hoe het beweegt.
+## Speelt op een lager tempo (ui_tempo 0,3), zodat de tussenstanden vallen.
+## Schrijft <uitmap>/<reeks>_<n>.png; standaard user://inkomfilm. Reeksen: menu,
+## kaarten, hub, loting, intro, stof (zonder: allemaal).
 
 const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 const TEMPO := 0.3
@@ -13,7 +14,7 @@ static var _uit := ""
 static var _fouten := 0
 
 
-static func run(host: Node, uit: String = "") -> int:
+static func run(host: Node, uit: String = "", reeksen: Array = []) -> int:
 	_host = host
 	_fouten = 0
 	_uit = uit if uit != "" else "user://inkomfilm"
@@ -24,11 +25,19 @@ static func run(host: Node, uit: String = "") -> int:
 	var tempo_oud: float = Beweging.tempo()
 	Beweging.forceer(1)
 	Beweging.zet_tempo(TEMPO)
-	await _menu()
-	await _kaarten()
-	await _hub()
-	await _loting()
-	await _duel_intro()
+	var alles := reeksen.is_empty()
+	if alles or reeksen.has("menu"):
+		await _menu()
+	if alles or reeksen.has("kaarten"):
+		await _kaarten()
+	if alles or reeksen.has("hub"):
+		await _hub()
+	if alles or reeksen.has("loting"):
+		await _loting()
+	if alles or reeksen.has("intro"):
+		await _duel_intro()
+	if alles or reeksen.has("stof"):
+		await _stof()
 	Beweging.zet_tempo(tempo_oud)
 	Beweging.forceer(-1)
 	print("[FILM] klaar: %s (%d fouten)" % [ProjectSettings.globalize_path(_uit), _fouten])
@@ -179,6 +188,49 @@ static func _duel_intro() -> void:
 		var vijand: int = int(d.p2) if int(d.p1) == 0 else int(d.p1)
 		hub.call("_toon_lader", vijand)
 		await _reeks("intro", [0.05, 0.3, 0.6, 1.0, 1.6, 2.4, 3.4])
+	if CampaignBridge.driver == driver:
+		CampaignBridge.driver = null
+	hub.queue_free()
+	await _wacht(0.3)
+
+
+# --- Stof, schaduw en de klik (6 oktober) -----------------------------------------
+
+## Een knop in de voet van de hub: hover (schaduw eronder), indrukken (wolkje),
+## dan een pop-up waarvan de rijen landen met stof.
+static func _stof() -> void:
+	var driver := SoloDriver.new(42, 0)
+	driver.duel_ai = "easy"
+	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	hub.set("klaar_overslaan", true)
+	_host.add_child(hub)
+	await _wacht(1.5)
+	var d: Dictionary = driver.mens_duel()
+	if not d.is_empty():
+		hub.set("_auto_stop_idx", int(d.idx))   # geen aftel naar het bord
+	var knop: BaseButton = null
+	for b in (hub.get("_voet") as Node).find_children("*", "BaseButton", true, false):
+		if (b as BaseButton).is_visible_in_tree() and not (b as BaseButton).disabled:
+			knop = b
+			break
+	if knop == null:
+		_fouten += 1
+		print("[FILM] geen knop in de voet")
+	else:
+		var muis := InputEventMouseMotion.new()
+		muis.device = 0
+		Beweging.zie_invoer(muis)
+		knop.mouse_entered.emit()
+		await _reeks("hover", [0.2, 0.7])
+		knop.button_down.emit()
+		await _reeks("klik", [0.03, 0.12, 0.3, 0.6])
+		knop.button_up.emit()
+		knop.mouse_exited.emit()
+		await _wacht(0.5)
+	hub.call("_toon_instellingen")
+	await _reeks("popup", [0.15, 0.35, 0.55, 0.8, 1.2, 2.0])
 	if CampaignBridge.driver == driver:
 		CampaignBridge.driver = null
 	hub.queue_free()

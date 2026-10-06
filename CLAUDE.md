@@ -1153,7 +1153,8 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`ui_draai`), "+1" is een munt (`ui_munt`), nee-schud klopt (`ui_error`, de
   echte opname in sounds/studio), optellen tikt mee en loopt op (`ui_tel`),
   ploffen die ertoe doen (`ui_plof`) en een blad bij de hub-golf, een nieuwe
-  fase en menu naar menu (`ui_blad`). Rijen, de tijdlijn en de duw zijn stil.
+  fase en menu naar menu (`ui_blad`). De duw is stil; rijen en de tijdlijn
+  ploffen sinds 6 oktober met een paar plofjes (zie Landen hieronder).
   Placeholders uit `tools/maak_ui_geluiden.py` in `sounds/ui/` (manifest
   `synthetisch.json`, hout, perkament en messing), prompts in SOUND-WISHLIST
   sectie 1 (de "Wanneer" daar korter dan 40 tekens, anders leest de studio hem
@@ -1164,6 +1165,35 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   synthetisch", niveaus in CATEGORY_DB (-7 tot -15 dB). Check: `-- inkomcheck
   geluid` (geladen, de globale RNG blijft gelijk, en `Beweging.klanken()`
   telt wat er echt klinkt: normaal 13, rustig 5, uit 0).
+  **Landen met stof en schaduw (6 oktober, Max: "laat alles wat invliegt en
+  verschijnt een beetje ploffen, met ook een wolke of schaduw dat je ziet en
+  dan een geluidje, beetje verschillend, bij alle animaties en hovers en
+  kliks").** Wat binnenkomt LANDT: plof, inschuiven (deukt dan even in),
+  stempel (stof rondom), omdraaien en de DINGEN in een rij (knoppen, panelen,
+  plaatjes, meta `ub_ding`; geen tekstregels) krijgen op het landingsmoment een
+  stofwolkje bij de onderhoeken en een `ui_plof`. Het geluid zit IN de tween
+  (callback op `PLOF_LAND` 37% bij BACK, `SCHUIF_LAND` 72% bij CUBIC), dus het
+  valt samen met wat je ziet en een afgebroken animatie landt niet. Een knop:
+  indrukken = wolkje + `ui_knop` (zacht houten tokje, -15 dB; het klikgeluid
+  van het scherm komt bij het loslaten), hover met een echte muis = schaduw
+  eronder + `ui_hover` (de overlay speelt zijn eigen hover-geluid niet meer).
+  Stof en schaduw zijn een EIGEN canvas-item onder dat van het ding
+  (`RenderingServer`, `draw_behind_parent`): geen node erbij, dus kindlijsten,
+  containers en render_digest blijven gelijk; de tint van een getint icoon
+  wordt eruit gedeeld (anders rood stof bij de rode sabels); opgeruimd na
+  `WOLK_DUUR` of zodra het ding de boom verlaat (`tree_exiting`). Klank: elke
+  keer een andere variant dan de vorige, begrenzer `KLANK_MIN_MS` 45 ms per
+  categorie (zes ploffen tegelijk = een), een rij hooguit `RIJ_KLANK_MAX` 4
+  plofjes oplopend in toon. Stof en schaduw alleen bij normaal (rustig houdt
+  het geluid), dev-knop `ui_wolk` in het sfeer-paneel (0 = uit, 2 = dubbel).
+  Aanroepers zetten `geluid`/`wolk` uit waar het scherm al klinkt of het te
+  druk wordt: de hub-golf klinkt alleen bij vlag en kader, de tijdlijn hooguit
+  vier per golf, het fasepaneel alleen bij een nieuwe fase of tab (niet bij
+  elke botbeurt). Check: `-- inkomcheck wolk` (36 punten: landingsmoment,
+  eigen rng, opruimen, deuk, stempel, afgebroken, rustig/sterkte/uit, hover,
+  touch, indrukken, begrenzer, rij); kijken: `-- inkomfilm <map> stof` (en
+  `menu`, `intro`). Lambda's die een Dictionary vangen die zelf de tween
+  vasthoudt lekken: `_wolk_weg` haalt die sleutels eruit.
 - **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
   [factie]`** (capture.tscn, 18 september, Max: "voor infantry attack pig
   klopt de orientatie niet"). Bouwt per type en archetype een PawnView

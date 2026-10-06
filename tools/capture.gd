@@ -108,11 +108,12 @@ func _ready() -> void:
 
 	if "inkomfilm" in OS.get_cmdline_user_args():
 		# UI-beweging: plaatjes halverwege en aan het eind (met venster, tempo 0,5).
-		# `-- inkomfilm [uitmap]`, standaard user://inkomfilm.
+		# `-- inkomfilm [uitmap] [reeks...]`, standaard user://inkomfilm en alles.
 		var fargs := OS.get_cmdline_user_args()
 		var fi := fargs.find("inkomfilm")
 		var fmap: String = String(fargs[fi + 1]) if fargs.size() > fi + 1 else ""
-		var film_fouten: int = await preload("res://tools/inkom_film.gd").run(self, fmap)
+		var freeksen: Array = fargs.slice(fi + 2) if fargs.size() > fi + 2 else []
+		var film_fouten: int = await preload("res://tools/inkom_film.gd").run(self, fmap, freeksen)
 		get_tree().quit(0 if film_fouten == 0 else 1)
 		return
 
