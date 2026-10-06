@@ -1,5 +1,60 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 2 en 3: kruitdamp en vuurmond, stof en aarde
+
+Vervolg op stap 1 (docs/VFX-studio.md). Max koos alle vier de groepen, eerst de
+effecten, daarna een stijl-studio voor shaders op alle 3D-objecten ("een studio
+om het allemaal uit te proberen, in moddif zien de modellen er mooier uit";
+wat "moddif" is heb ik gevraagd, gelezen als de Model-tuner met zijn
+neutralere licht).
+
+- **De fout met de textuur:** `PawnView.spawn_muzzle_fire` vraagt nu de
+  kanonvlam of de musketvlam, en de kruitdamp (`spawn_powder_smoke`,
+  `VFX.rook`, game `_spawn_smoke`) standaard het kruitvel ("musket"); de
+  koppel-pof vraagt zelf "white_smoke". Daarvoor kozen ze willekeurig uit hun
+  map. Ook de Model-tuner krijgt zo de juiste rook. Een eerste versie gaf in
+  `VFX.rook` nog een lege wens door en bleef dus wit: in de tuner gezien.
+- **Rook met de wind:** elke wolk drijft met `PawnView.wind_richting` mee,
+  verder naarmate hij langer hangt (knop `smoke_wind`, zonder extra trekje uit
+  de rng); de tuner heeft een windschuif.
+- **Kanon:** een rookring dwars op het schot die snel uitdijt en stilvalt
+  (`kanon_ring`; dichte beeldjes van het vel, niet de rafelige laatste) en een
+  dikke pluim die lang blijft hangen (`kanon_pluim`). **Musket:** een flitsje en
+  een wolkje dat bij het slot omhoog krult (`pan_flits`, tegelijk met het
+  schot: een vertraging zou de knal voor de vlam laten klinken). **Allebei:**
+  gloeiende propjes die vallen, op het bord blijven liggen en van geel naar
+  donkerrood doven (`propjes`).
+- **Stof en aarde:** een kring stof om de hoeven op de landing van een charge
+  (PawnView plant hem zelf in `play_charge` op t_land, zoals
+  `charge_tijdlijn`); stof achter een ruiter in galop of een kanon dat
+  verreden wordt (PawnView meet zijn eigen verplaatsing per frame, dus het
+  werkt overal zonder game.gd, waar de andere sessie aan de voetsporen werkt);
+  bij een kanonsinslag kluiten die in een waaier met de kogel mee wegspatten
+  en een stofwolk, en een krater met verkoold midden en een randje
+  opgeworpen aarde die na `krater_duur` vervaagt (textuur eenmalig in code
+  gemaakt, geen bestand). Knoppen `stof_landing`, `stof_galop`, `stof_alfa`,
+  `aarde_inslag`, `krater`, `krater_duur`. Het stof was eerst te klein en te
+  donker om op het bord te zien, daarna te wit; nu lichter zand met een eigen
+  dekking-knop.
+- **Nieuwe code trekt uit een eigen rng.** Proef: na het weghalen van de
+  willekeurige textuurkeuze (minder trekjes uit de globale rng) bleef uispel
+  exact gelijk; de bots en de engine hebben elk hun eigen rng, dus effecten
+  tijdens een partij verschuiven de uitkomst niet.
+- **Catalogus:** de wensen van kruit en stof zijn gebouwd (status spel), een
+  veld `schutter` (musket, kanon, ruiter) zet de juiste pion in de tuner;
+  recepten voor charge (via `charge_tijdlijn`, zoals het spel), galop,
+  rookring, pankruit en propjes. 19 effecten spelen af, 76 knoppen.
+- Lessen: een heredoc met backslashes ging weer mis (via een .py-bestand, zie
+  het geheugen); een lusvariabele uit `[-1.0, 1.0]` is ongetypeerd, dus
+  `var x := ... * kant` kan niet afgeleid worden (parse-fout); en nooit een
+  script wijzigen terwijl de regressie loopt (de testbatterij laadde even de
+  kapotte versie; die run is gestopt en opnieuw gedaan).
+- Checks: vfxcheck headless en met venster (19 effecten spelen af, 76 knoppen),
+  plaatjes van kanon- en musketschot, charge, galop en kanonsinslag nagekeken,
+  uispel 777 5862e4c9 (gelijk), herstelcheck 777 en 4242 wolf 0, resumecheck 777
+  1 en 4242 2 0, naad, koppel, beurtlicht, audiopaneel, inkomcheck, uicheck,
+  simcheck 0, tests 2912/0.
+
 ## 6 oktober -- VFX-studio stap 1: catalogus en VFX-tuner
 
 Max: "hoe kan ik die rook particles of stof opwaai particles en vfx het beste

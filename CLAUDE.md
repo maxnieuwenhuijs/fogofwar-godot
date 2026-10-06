@@ -1298,9 +1298,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   per effect een Engelse concept-prompt. Checks: `-- vfxcheck` (headless en
   met venster), plaatjes `-- vfxshot <id> [map] [tempo]`. Nieuwe effectcode
   trekt nooit uit de globale rng; de verhuisde code doet dat nog (dezelfde
-  volgorde, uispel gelijk). Volgende stappen: de vier groepen, dan een
-  stijl-studio (shaders voor alle 3D-objecten), dan de concept-webpagina
-  (Replicate: beelden en Seedance 2.5).
+  volgorde, uispel gelijk; proef 6 oktober: minder globale trekjes tijdens een
+  partij verschuiven uispel niet, bots en engine hebben een eigen rng).
+  Gebouwd (stap 2 en 3): de juiste vlam en kruitdamp (was willekeurig uit de
+  map), rook met de wind (`smoke_wind`), rookring en pluim bij het kanon,
+  kruitflits op de pan, gloeiende propjes, stof bij de landing van een
+  charge en achter ruiters en kanonnen (PawnView zelf: `play_charge` op
+  t_land, `_stof_process` op de eigen verplaatsing), opspattende aarde en
+  een krater bij een kanonsinslag (textuur in code). Volgende stappen: bloed
+  en inslag per materiaal, vuur en explosies, dan een stijl-studio (shaders
+  voor alle 3D-objecten), dan de concept-webpagina (Replicate: beelden en
+  Seedance 2.5).
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

@@ -43,6 +43,9 @@ const PIECE_SCENES: Dictionary = {
 ## Fallback-keten: exact archetype → base van dat type → geometrisch stuk
 ## (PIECE_SCENES) met een archetype-silhouet als placeholder.
 const Bestandsindex := preload("res://scripts/core/bestandsindex.gd")
+## De effecten van het bord (6 oktober, docs/VFX-studio.md): stof bij de landing
+## van een charge en achter een ruiter of kanon dat hard rijdt.
+const VFX := preload("res://scripts/vfx/vfx.gd")
 const MODELS_DIR := "res://assets/models/"
 ## Placeholder-silhouet zolang het .glb ontbreekt, in de visuele taal van
 ## MODEL-WISHLIST.md: dun/gestrekt = snel, laag/rond = taai, breed/gespierd =
@@ -266,9 +269,11 @@ static func _smoke_entry(wens: String = "") -> Dictionary:
 
 ## Vuurflits aan de loop met een texture uit assets/textures/fire/ (billboard,
 ## kort en fel; sheets spelen hun frames binnen de flits-duur af). false =
-## geen textures, de aanroeper tekent dan de klassieke bol-flits.
+## geen textures, de aanroeper tekent dan de klassieke bol-flits. Een kanon
+## vraagt de kanonvlam, een musket de musketvlam (6 oktober: daarvoor koos hij
+## willekeurig uit de map, en toonde een musket soms de kanonvlam).
 static func spawn_muzzle_fire(parent: Node3D, pos: Vector3, big: bool) -> bool:
-	var e := _vfx_entry(FIRE_TEX_DIR, 1.5)
+	var e := _vfx_entry(FIRE_TEX_DIR, 1.5, "cannon" if big else "musket")
 	if e.is_empty() or parent == null:
 		return false
 	var quad := MeshInstance3D.new()
@@ -339,11 +344,15 @@ static func _black_to_alpha(tex: Texture2D, boost: float = 2.3) -> Texture2D:
 
 
 ## Zwartkruit-rook aan de loop of op de inslag: billboard-flarden die vanuit
-## een klein wolkje ECHT uitzetten (rook-groei), opstijgen en vervagen.
+## een klein wolkje ECHT uitzetten (rook-groei), opstijgen en vervagen, en met
+## de wind van het potje meedrijven (rook-wind; 6 oktober).
 ## pos is in de lokale ruimte van parent. Knoppen: rook-aantal/-maat/-groei/
-## -duur. Zonder textures: grijze bol-wolkjes (zelfde gedrag).
+## -duur. Zonder textures: grijze bol-wolkjes (zelfde gedrag). `tex_wens`:
+## standaard de kruitdamp ("musket"); de koppel-pof vraagt "white_smoke"
+## (6 oktober: daarvoor koos de kruitdamp willekeurig en kreeg een schot soms
+## het witte koppelwolkje).
 static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: float,
-		dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0, tex_wens: String = "") -> void:
+		dir: Vector3 = Vector3.ZERO, life_mult: float = 1.0, tex_wens: String = "musket") -> void:
 	if parent == null:
 		return
 	var amount := int(clampf(float(count) * fx("smoke_amount", 1.0), 0.0, 24.0))
@@ -396,6 +405,9 @@ static func spawn_powder_smoke(parent: Node3D, pos: Vector3, count: int, size: f
 		if dir != Vector3.ZERO:
 			# Rook wappert met het schot mee, van de loop af (rook-drift).
 			drift += dir.normalized() * randf_range(0.3, 0.6) * fx("smoke_drift", 1.0)
+		# En drijft met de wind van het potje mee, verder naarmate hij langer
+		# hangt (rook-wind). Zonder eigen trekje uit de rng.
+		drift += parent.global_transform.basis.inverse() * wind_richting * fx("smoke_wind", 0.6) * life * 0.22
 		# Sprite sheets groeien zelf al in hun frames — de quad groeit dan
 		# maar beperkt mee; losse plaatjes krijgen de volle rook-groei.
 		var grow_target := fx("smoke_grow", 3.0)
@@ -824,6 +836,14 @@ func play_charge() -> void:
 	_anim.seek(0.0, true)
 	_last_clip_len = _anim.get_animation(clip).length / maxf(speed, 0.01)
 	_charge_compensatie_start(clip)
+	# Op de landing van de sprong (t_land uit het heup-profiel, zoals
+	# charge_tijdlijn) een kring stof om de hoeven (6 oktober, stof-landing).
+	var prof := charge_profiel()
+	var t_land: float = clampf((float(prof.get("t_land_clip", 0.0)) / maxf(speed, 0.01)) if not prof.is_empty() \
+		else _last_clip_len * 0.6, 0.1, _last_clip_len)
+	get_tree().create_timer(t_land).timeout.connect(func() -> void:
+		if is_inside_tree() and visible and get_parent() is Node3D:
+			VFX.stof_landing(get_parent() as Node3D, position))
 
 
 ## Root motion van de sprong-clip wegcompenseren (16 september, Max: "het
@@ -3443,8 +3463,38 @@ func _hang_vlagdoek(pool: Node3D) -> void:
 
 func _process(delta: float) -> void:
 	_idle_process(delta)
+	_stof_process(delta)
 	if _vlagdoek != null:
 		_richt_vlag()
+
+
+## Stof achter een ruiter in galop of een kanon dat verreden wordt (6 oktober,
+## stof-galop): gemeten aan de eigen verplaatsing, dus het werkt bij elke rit
+## (spel, tuner) zonder dat game.gd iets hoeft te melden. Een sprong naar een
+## andere plek (neerzetten) telt niet.
+var _stof_vorige := Vector3.INF
+var _stof_wacht := 0.0
+
+
+func _stof_process(delta: float) -> void:
+	if _unit_type != Constants.UnitType.CAVALRY and _unit_type != Constants.UnitType.ARTILLERY:
+		return
+	if delta <= 0.0 or not visible or not is_inside_tree():
+		_stof_vorige = Vector3.INF
+		return
+	var nu := position
+	if _stof_vorige == Vector3.INF:
+		_stof_vorige = nu
+		return
+	var stap := Vector3(nu.x - _stof_vorige.x, 0.0, nu.z - _stof_vorige.z)
+	_stof_vorige = nu
+	_stof_wacht -= delta
+	if stap.length() > 0.6 or stap.length() / delta < 1.2 or _stof_wacht > 0.0:
+		return
+	var ruiter := _unit_type == Constants.UnitType.CAVALRY
+	_stof_wacht = 0.09 if ruiter else 0.14
+	if get_parent() is Node3D:
+		VFX.stof_spoor(get_parent() as Node3D, nu, stap, 1.0 if ruiter else 0.6)
 
 
 ## Draai het doek in de wind: de wereld-richting (PawnView.wind_richting) naar

@@ -101,10 +101,17 @@ static func _tuner() -> void:
 		_ok(duur > 0.0 and meeste > 2, "%s: speelt (%d dingen op het toneel)" % [e.id, meeste])
 		_ok(not is_instance_valid(oud) or oud != toneel, "%s: het oude toneel is weg" % e.id)
 	_ok(spelbaar >= 10, "%d effecten af te spelen" % spelbaar)
-	# een wens speelt niet en zegt waarom
-	tuner.call("kies", "rookring_kanon")
-	var niets: float = tuner.call("speel")
-	_ok(niets == 0.0 and String((tuner.get("_melding") as Label).text).contains("wens"), "een wens speelt niet en zegt dat")
+	# een wens speelt niet en zegt waarom (de eerste die er nog is)
+	var wens := ""
+	for e in Catalogus.EFFECTEN:
+		if String(e.status) == "wens":
+			wens = String(e.id)
+			break
+	if wens != "":
+		tuner.call("kies", wens)
+		var niets: float = tuner.call("speel")
+		_ok(niets == 0.0 and String((tuner.get("_melding") as Label).text).contains("wens"),
+			"een wens (%s) speelt niet en zegt dat" % wens)
 	# een knop zetten komt aan in het spel (PawnView.fx), en de schuif volgt
 	tuner.call("kies", "schot_musket")
 	var oud_waarde: float = PawnView.fx("smoke_size", 1.0)

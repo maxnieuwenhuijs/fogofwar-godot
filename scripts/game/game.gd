@@ -3965,8 +3965,8 @@ func _spawn_footprints(a: Vector3, b: Vector3, dur: float, mover: Pawn = null) -
 ## assets/textures/smoke/ (billboards die echt uitzetten), zonder textures
 ## grijze bol-wolkjes. Knoppen in de Model-tuner: rook-aantal/-maat/-groei/-duur.
 func _spawn_smoke(pos: Vector3, count: int, size: float, dir: Vector3 = Vector3.ZERO,
-		life_mult: float = 1.0, tex_wens: String = "") -> void:
-	PawnView.spawn_powder_smoke(_board, pos, count, size, dir, life_mult, tex_wens)
+		life_mult: float = 1.0, tex_wens: String = "musket") -> void:
+	VFX.rook(_board, pos, count, size, dir, life_mult, tex_wens)
 
 
 ## Treffer-feedback (de "Hit"-fase). Op het inslagmoment (na `delay`): witte flits,

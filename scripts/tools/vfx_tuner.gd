@@ -21,6 +21,9 @@ const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")
 const PAWN_Y := 0.05
 const SCHUTTER_TEGEL := Vector2i(5, 7)
 const DOEL_TEGEL := Vector2i(5, 3)
+const CHARGE_EIND := Vector2i(5, 4)   # de charge landt op het vak voor het doel
+const GALOP_VAN := Vector2i(3, 6)     # de galop rijdt dwars door het beeld
+const GALOP_NAAR := Vector2i(7, 6)
 const SCHOT_NA := 0.25          # het vuurmoment na het begin van de aanval-clip
 const DICHTBIJ_MAAT := 7.0      # orthografische maat van de close-up (het spel: 25,5)
 const TEMPOS: Array = [1.0, 0.5, 0.25, 0.1]
@@ -209,12 +212,19 @@ func _bouw_toneel() -> void:
 	_toneel = Node3D.new()
 	_toneel.name = "Toneel"
 	_bord.add_child(_toneel)
-	var kanon: bool = _gekozen.ends_with("_kanon")
+	# Wie er schiet of rijdt staat in de catalogus (schutter: musket, kanon, ruiter).
+	var soort: String = String(Catalogus.effect(_gekozen).get("schutter", "musket"))
+	var tp_s: int = Constants.UnitType.INFANTRY
+	if soort == "kanon":
+		tp_s = Constants.UnitType.ARTILLERY
+	elif soort == "ruiter":
+		tp_s = Constants.UnitType.CAVALRY
 	var fac_s: int = _fac_schutter
-	var tp_s: int = Constants.UnitType.ARTILLERY if kanon else Constants.UnitType.INFANTRY
 	if not _kent(fac_s, tp_s):
 		fac_s = Constants.Doctrine.MENS
-	_schutter = _pion(fac_s, tp_s, SCHUTTER_TEGEL, Vector2i(0, -1), Constants.Team.RED)
+	var galop: bool = Catalogus.effect(_gekozen).get("speel", "") == "galop_stof"
+	_schutter = _pion(fac_s, tp_s, GALOP_VAN if galop else SCHUTTER_TEGEL,
+		Vector2i(1, 0) if galop else Vector2i(0, -1), Constants.Team.RED)
 	_doel = _pion(_fac_doel, Constants.UnitType.INFANTRY, DOEL_TEGEL, Vector2i(0, 1), Constants.Team.BLUE)
 
 
@@ -273,6 +283,38 @@ func speel() -> float:
 		"kruitdamp":
 			var loop := _loop(false)
 			VFX.rook(_toneel, loop, 2, 0.09, (_doelpunt() - loop).normalized())
+		"rook_wind":
+			# een paar wolken die lang blijven hangen, zodat je de wind ziet
+			VFX.rook(_toneel, _loop(false), 4, 0.12, Vector3.ZERO, 2.0)
+			duur = 4.0
+		"rookring":
+			var loop_k := _loop(true)
+			var dir_k := (_doelpunt() - loop_k).normalized()
+			_schutter.play_attack()
+			VFX.vuurmond(_toneel, loop_k, true)
+			VFX.rookring(_toneel, loop_k, dir_k)
+			VFX.pluim(_toneel, loop_k, dir_k)
+			duur = 3.5
+		"pankruit":
+			var loop_p := _loop(false)
+			_schutter.play_attack()
+			VFX.pankruit(_toneel, VFX.slot_bij(loop_p, (_doelpunt() - loop_p).normalized()))
+			duur = 1.5
+		"propjes":
+			var loop_v := _loop(false)
+			VFX.propjes(_toneel, loop_v, (_doelpunt() - loop_v).normalized(), false)
+			duur = 1.5
+		"charge_stof":
+			_recept_charge(gen)
+			duur = 3.0
+		"galop_stof":
+			_schutter.play_rush()
+			var rit := _schutter.create_tween()
+			rit.tween_property(_schutter, "position", _tegel(GALOP_NAAR) + Vector3(0.0, PAWN_Y, 0.0), 1.0)
+			rit.tween_callback(func() -> void:
+				if is_instance_valid(_schutter):
+					_schutter.play_idle())
+			duur = 2.4
 		"koppelwolkje":
 			_doel.flash_ring(Color(0.5, 0.85, 1.0))
 			var puff: int = int(round(4.0 * PawnView.fx("link_puff", 1.0)))
@@ -324,6 +366,30 @@ func _recept_schot(gen: int, kanon: bool, dood: bool) -> void:
 		return
 	var kracht: float = (1.4 if kanon else 0.75) if dood else (1.0 if kanon else 0.35)
 	_treffer(_richting_naar_doel(), kracht, dood)
+
+
+## Een charge zoals in het spel (PawnView.charge_tijdlijn, gedeeld met game.gd):
+## de ruiter rijdt aan, springt zodat hij op het vak voor het doel landt (daar
+## maakt PawnView zelf het stof), en de klap valt na de landing.
+func _recept_charge(gen: int) -> void:
+	var afstand: int = absi(SCHUTTER_TEGEL.y - CHARGE_EIND.y)
+	var tl: Dictionary = _schutter.charge_tijdlijn(afstand)
+	_schutter.play_rush()
+	var rit := _schutter.create_tween()
+	rit.tween_property(_schutter, "position", _tegel(CHARGE_EIND) + Vector3(0.0, PAWN_Y, 0.0),
+		maxf(float(tl.rij_dur), 0.05))
+	var sprong: float = float(tl.sprong_start)
+	if sprong > 0.0:
+		await get_tree().create_timer(sprong).timeout
+	if gen != _gen or not is_instance_valid(_schutter):
+		return
+	_schutter.play_charge()
+	await get_tree().create_timer(maxf(float(tl.klap_del) - sprong, 0.0)).timeout
+	if gen != _gen or not is_instance_valid(_doel):
+		return
+	_doel.flash_hit()
+	_doel.stagger(_richting_naar_doel())
+	_doel.play_hit()
 
 
 ## De treffer (game._hit_feedback): vonken, schok, en dan de dood of de wond
@@ -411,6 +477,17 @@ func _bouw_ui() -> void:
 	rij1.add_child(_vinkje("dichtbij", true, func(aan: bool) -> void:
 		_dichtbij = aan
 		_zet_camera()))
+	# De wind van het potje (in het spel geloot): hier met de hand, in graden.
+	rij1.add_child(_tekst("wind"))
+	var wind := HSlider.new()
+	wind.min_value = 0.0
+	wind.max_value = 359.0
+	wind.step = 1.0
+	wind.custom_minimum_size = Vector2(200.0, 36.0)
+	wind.value = rad_to_deg(atan2(PawnView.wind_richting.z, PawnView.wind_richting.x)) + (360.0 if PawnView.wind_richting.z < 0.0 else 0.0)
+	wind.value_changed.connect(func(graden: float) -> void:
+		PawnView.wind_richting = Vector3(cos(deg_to_rad(graden)), 0.0, sin(deg_to_rad(graden))))
+	rij1.add_child(wind)
 	var rij2 := HFlowContainer.new()
 	ov.add_child(rij2)
 	rij2.add_child(_tekst("schutter"))

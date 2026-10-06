@@ -17,14 +17,14 @@ kort en los van de achtergrond. Pas hem gerust aan.
 
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
 |---|---|---|---|---|
-| Musketschot | elk musketschot | spel | fout: kiest soms de kanonvlam en het witte koppelwolkje | A flintlock musket firing on a miniature wooden war-game board, seen from above at an angle: a short bright orange muzzle flash and a thick puff of grey-white black-powder smoke drifting forward. |
-| Kanonschot | elk kanonschot | spel | | A small bronze field cannon firing on a miniature wooden board, top-down angled view: a large orange-yellow muzzle blast, a dense cloud of grey powder smoke rolling forward, dust kicked up around the wheels. |
+| Musketschot | elk musketschot | spel | 6 okt: de juiste vlam en kruitdamp (was willekeurig), plus pankruit en propjes | A flintlock musket firing on a miniature wooden war-game board, seen from above at an angle: a short bright orange muzzle flash and a thick puff of grey-white black-powder smoke drifting forward. |
+| Kanonschot | elk kanonschot | spel | 6 okt: rookring, pluim en propjes erbij | A small bronze field cannon firing on a miniature wooden board, top-down angled view: a large orange-yellow muzzle blast, a dense cloud of grey powder smoke rolling forward, dust kicked up around the wheels. |
 | Kruitdamp aan de loop | na elk schot | spel | | Grey-white black-powder smoke billowing from a gun barrel and slowly rising, soft and thick, miniature scale, top-down angled view. |
 | Wit wolkje bij koppelen | kaart koppelen | spel | | A clean small white puff of magical smoke around a miniature soldier figure, soft and round, top-down angled view. |
-| Rook met de wind mee | alle rook | wens | rook drijft met de wind van het potje, net als de vlaggen | Black-powder smoke drifting sideways in a steady breeze over a miniature battlefield board, top-down angled view. |
-| Rookring en pluim bij het kanon | kanonschot | wens | een ring die uitdijt en een dikke pluim | A cannon shot producing an expanding smoke ring and a tall thick plume of grey smoke, miniature board, top-down angled view. |
-| Kruitflits op de pan | vlak voor een musketschot | wens | flitsje en wolkje bij het slot | The priming pan of a flintlock musket flashing: a tiny bright spark and a small puff of smoke at the lock, close-up, miniature. |
-| Gloeiende propjes uit de loop | schot | wens | gloeiende vonkjes die vallen en doven | Glowing embers and burning paper wadding spraying from a musket barrel and falling to a wooden board, dark background. |
+| Rook met de wind mee | alle rook | spel | 6 okt: knop rook met de wind; in de tuner de windschuif | Black-powder smoke drifting sideways in a steady breeze over a miniature battlefield board, top-down angled view. |
+| Rookring en pluim bij het kanon | kanonschot | spel | 6 okt: knoppen rookring en rookpluim | A cannon shot producing an expanding smoke ring and a tall thick plume of grey smoke, miniature board, top-down angled view. |
+| Kruitflits op de pan | bij een musketschot | spel | 6 okt: knop kruitflits op de pan | The priming pan of a flintlock musket flashing: a tiny bright spark and a small puff of smoke at the lock, close-up, miniature. |
+| Gloeiende propjes uit de loop | schot | spel | 6 okt: knop gloeiende propjes | Glowing embers and burning paper wadding spraying from a musket barrel and falling to a wooden board, dark background. |
 
 ## 2. Stof en aarde
 
@@ -32,10 +32,10 @@ kort en los van de achtergrond. Pas hem gerust aan.
 |---|---|---|---|---|
 | Stofjes in de lucht | boven het bord | spel | staat uit (stofdeeltjes 0); nog niet in de tuner | Fine dust motes floating in a beam of warm light above a miniature wooden board. |
 | Voetsporen en wielsporen | elke stap | spel | nog niet in de tuner | Footprints and thin wheel tracks pressed into a dusty miniature board surface, top-down view. |
-| Stof bij de landing van een charge | ruiter landt na zijn sprong | wens | | A miniature cavalry rider landing after a jump on a dusty board: a ring of brown dust bursting out around the horse's hooves, top-down angled view. |
-| Stof achter galopperende ruiters | ruiter rijdt | wens | | A small trail of dust clouds kicked up behind a galloping miniature cavalry horse on a wooden board, top-down angled view. |
-| Opspattende aarde bij een kanonsinslag | kanonskogel slaat in | wens | | A cannonball hitting the ground on a miniature board: clods of dirt and dust spraying up in a fan, top-down angled view. |
-| Krater of schroeiplek | na een kanonsinslag | wens | blijft liggen en vervaagt | A small scorched crater with darkened earth on a miniature wooden board tile, top-down view. |
+| Stof bij de landing van een charge | ruiter landt na zijn sprong | spel | 6 okt: knoppen stof bij de landing en stof: dekking | A miniature cavalry rider landing after a jump on a dusty board: a ring of brown dust bursting out around the horse's hooves, top-down angled view. |
+| Stof achter galopperende ruiters | ruiter (of kanon) rijdt hard | spel | 6 okt: knop stof achter ruiters en kanonnen | A small trail of dust clouds kicked up behind a galloping miniature cavalry horse on a wooden board, top-down angled view. |
+| Opspattende aarde bij een kanonsinslag | kanonskogel slaat in | spel | 6 okt: kluiten en een stofwolk, knop opspattende aarde | A cannonball hitting the ground on a miniature board: clods of dirt and dust spraying up in a fan, top-down angled view. |
+| Krater of schroeiplek | na een kanonsinslag | spel | 6 okt: knoppen krater en krater blijft liggen (s) | A small scorched crater with darkened earth on a miniature wooden board tile, top-down view. |
 
 ## 3. Bloed en inslag
 
