@@ -3701,7 +3701,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "tik_toon", "label": "tik-combo: toon omhoog per klik", "min": 0.0, "max": 0.15, "step": 0.005, "def": 0.07},
 	{"key": "idle_afwijkers", "label": "idle: hoeveel pionnen tegelijk een andere idle doen (0 = niemand)", "min": 0.0, "max": 6.0, "step": 1.0, "def": 2.0},
 	{"key": "ui_tempo", "label": "UI-beweging: tempo (0 = uit, 0,5 = slowmo, 2 = snel)", "min": 0.0, "max": 2.0, "step": 0.05, "def": 1.0},
-	{"key": "ui_wolk", "label": "UI-beweging: stofwolkjes en hover-schaduw (0 = uit)", "min": 0.0, "max": 2.0, "step": 0.05, "def": 1.0},
+	{"key": "ui_wolk", "label": "UI-beweging: stof als een kaart omdraait, en hover-schaduw (0 = uit)", "min": 0.0, "max": 2.0, "step": 0.05, "def": 1.0},
 ]
 
 

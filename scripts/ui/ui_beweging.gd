@@ -49,22 +49,25 @@ extends RefCounted
 ## Landen (6 oktober, Max: "laat alles wat invliegt en verschijnt een beetje
 ## ploffen, met ook een wolke of schaduw dat je ziet en dan een geluidje, beetje
 ## verschillend, bij alle animaties en hovers en kliks"). Wat binnenkomt LANDT:
-## op het moment dat plof, inschuiven, stempel, omdraaien of een ding in een rij
-## aankomt komt er een stofwolkje onder vandaan en klinkt een plofje (een andere
-## variant dan de vorige keer, met een eigen toon; in een rij oplopend). Het
-## geluid zit IN de tween (een callback op het landingsmoment), dus het valt
-## samen met wat je ziet, ook als een inkom twee frames vastgehouden wordt; wordt
-## de animatie afgebroken, dan landt er niets. Wat inschuift zonder veer deukt bij
-## het landen even in (DEUK). Een knop: indrukken geeft een wolkje en een zacht
-## houten tokje (ui_knop; het klikgeluid van de schermen zelf komt bij het
-## loslaten), hover met een echte muis een schaduw eronder en ui_hover. Het stof
-## en de schaduw zijn een eigen canvas-item ONDER dat van het ding
-## (draw_behind_parent): het komt onder het ding vandaan, beweegt mee, en er komt
-## geen node bij (kindlijsten, containers en render_digest blijven gelijk). Een
-## begrenzer (KLANK_MIN_MS) laat hetzelfde geluid niet twee keer binnen 45 ms
-## klinken, en een rij plaatst hooguit RIJ_KLANK_MAX plofjes. Stof en schaduw
-## alleen bij volle beweging (rustig houdt het geluid); sterkte via de dev-knop
-## `ui_wolk` (0 = uit).
+## op het moment dat plof, inschuiven of een ding in een rij aankomt klinkt een
+## plofje (een andere variant dan de vorige keer, met een eigen toon; in een rij
+## oplopend), een stempel bonst. Het geluid zit IN de tween (een callback op het
+## landingsmoment), dus het valt samen met wat je ziet, ook als een inkom twee
+## frames vastgehouden wordt; wordt de animatie afgebroken, dan landt er niets.
+## Wat inschuift zonder veer deukt bij het landen even in (DEUK). Een kaart die
+## omdraait (`draai_om`) slaat neer met een stofwolkje eronder. Een knop:
+## indrukken geeft een zacht houten tokje (ui_knop; het klikgeluid van de
+## schermen zelf komt bij het loslaten), hover met een echte muis een schaduw
+## eronder en ui_hover. Stof en schaduw zijn een eigen canvas-item ONDER dat van
+## het ding (draw_behind_parent): ze bewegen mee en er komt geen node bij
+## (kindlijsten, containers en render_digest blijven gelijk). Een begrenzer
+## (KLANK_MIN_MS) laat hetzelfde geluid niet twee keer binnen 45 ms klinken, en
+## een rij plaatst hooguit RIJ_KLANK_MAX plofjes. Stof en schaduw alleen bij
+## volle beweging (rustig houdt het geluid); sterkte via de dev-knop `ui_wolk`
+## (0 = uit). Het stof kwam eerst bij alles wat landde en bij elke knop die je
+## indrukte; dezelfde dag bleef het alleen bij de kaart die omdraait (Max: "haal
+## dat stof opwaaiing weg bij de UI, beetje te veel", en "wel die stof pof bij
+## de kaart turns dat vind ik wel leuk").
 ##
 ## Standen (user://settings.cfg [ui] beweging): normaal = alles; rustig =
 ## alleen alpha op 60% van de duur, indrukken is kort donkerder; uit = niets.
@@ -119,13 +122,11 @@ const PLOF_LAND := 0.37          # BACK out passeert zijn doel op 37% van de duu
 const SCHUIF_LAND := 0.72        # CUBIC out is daar op 98%: het ding staat stil
 const DEUK := 0.05               # wat inschuift deukt bij het landen hooguit zo plat ...
 const DEUK_DUUR := 0.2           # ... en is zo snel weer rond
-const WOLK_DUUR := 0.42          # een stofwolkje bij het landen
-const WOLK_KLIK_DUUR := 0.3      # een kleintje onder een knop die je indrukt
+const WOLK_DUUR := 0.42          # een stofwolkje als een kaart omdraait en neerslaat
 const SCHADUW_DUUR := 0.12       # de schaduw onder een knop bij hover
 const SCHADUW_DRUK := 0.35       # ingedrukt staat de knop op het papier: minder schaduw
 const KLANK_MIN_MS := 45         # hetzelfde geluid hooguit zo vaak (de begrenzer)
 const RIJ_KLANK_MAX := 4         # een rij: hooguit zoveel plofjes, oplopend in toon
-const RIJ_WOLK_MAX := 8          # en hooguit zoveel wolkjes
 const STOF := Color(0.97, 0.94, 0.88)         # de lichte kern van een plukje (zichtbaar op hout en bord)
 const STOF_RAND := Color(0.36, 0.27, 0.2)     # zijn schaduwkant, rechtsonder (zichtbaar op perkament)
 const SCHADUW_KLEUR := Color(0.1, 0.06, 0.03, 0.5)
@@ -146,7 +147,7 @@ static var _klank_vorige: Dictionary = {}             # categorie -> de vorige v
 static var _rng_wolk: RandomNumberGenerator = null    # eigen RNG voor het stof
 static var _wolk_sterkte: float = 1.0                 # dev-knop ui_wolk (0 = geen stof en schaduw)
 static var _wolken: int = 0                           # hoeveel wolkjes er kwamen (voor de check)
-static var _actief: Array = []                        # lopende wolkjes: {ci, node, waar, bron, ...}
+static var _actief: Array = []                        # lopende wolkjes: {ci, node, bron, ...}
 static var _cirkel: PackedVector2Array = PackedVector2Array()
 ## Waar de stand staat; de check wijst een eigen bestand aan.
 static var instellingen_pad: String = "user://settings.cfg"
@@ -435,14 +436,14 @@ static func _spil(c: Control, ratio: Vector2 = Vector2(0.5, 0.5)) -> void:
 		c.set_meta("ub_spil", true)
 
 
-## Van `van` maal de rust naar de rust. Met `land` (een wolkje: "onder",
-## "rondom") en/of `cat` (een geluid, op toon `toon`) gebeurt er iets op het
-## moment dat het ding aankomt: BACK passeert zijn doel op PLOF_LAND, de rest is
-## daar op SCHUIF_LAND vrijwel stil. Het zit in de tween, dus het wacht mee met
-## het vasthouden en valt weg als de animatie afgebroken wordt.
+## Van `van` maal de rust naar de rust. Met `cat` (een geluid, op toon `toon`)
+## klinkt het op het moment dat het ding aankomt: BACK passeert zijn doel op
+## PLOF_LAND, de rest is daar op SCHUIF_LAND vrijwel stil. Het zit in de tween,
+## dus het wacht mee met het vasthouden en valt weg als de animatie afgebroken
+## wordt.
 static func _schaal_van(c: Control, van: float, vertraging: float, duur: float,
 		trans: int = Tween.TRANS_BACK, ratio: Vector2 = Vector2(0.5, 0.5),
-		land: String = "", cat: String = "", toon: float = 0.0) -> void:
+		cat: String = "", toon: float = 0.0) -> void:
 	_spil(c, ratio)
 	var rust: Vector2 = _rust(c, "scale", "schaal")
 	var tw := _tween(c, "schaal", true)
@@ -451,18 +452,10 @@ static func _schaal_van(c: Control, van: float, vertraging: float, duur: float,
 		tw.tween_interval(vertraging)
 	tw.tween_property(c, "scale", rust, duur).from(rust * van) \
 		.set_trans(trans).set_ease(Tween.EASE_OUT)
-	if land != "" or cat != "":
-		var t_land: float = (PLOF_LAND if trans == Tween.TRANS_BACK else SCHUIF_LAND) * duur
-		tw.parallel().tween_callback(func() -> void: _geland(c, land, cat, toon)).set_delay(t_land)
-	_klaar(tw, c, "scale")
-
-
-## Het moment van landen: een wolkje (als `waar` niet leeg is) en een geluid.
-static func _geland(c: Control, waar: String, cat: String, toon: float = 0.0) -> void:
-	if waar != "" and is_instance_valid(c):
-		wolkje(c, waar)
 	if cat != "":
-		klank(cat, 0.0, toon)
+		var t_land: float = (PLOF_LAND if trans == Tween.TRANS_BACK else SCHUIF_LAND) * duur
+		tw.parallel().tween_callback(func() -> void: klank(cat, 0.0, toon)).set_delay(t_land)
+	_klaar(tw, c, "scale")
 
 
 # --- ERIN -----------------------------------------------------------------------
@@ -511,12 +504,11 @@ static func wissel(c: Control, ratio: Vector2 = Vector2(0.5, 0.5)) -> void:
 ## Items na elkaar: alpha plus een klein schaaltje (mag in een container: de
 ## schaal eindigt op de rust en heeft een expliciete start). Onzichtbare en
 ## al vrijgegeven items tellen niet mee. De DINGEN in de rij (knoppen, panelen,
-## plaatjes; geen tekstregels of schuifjes) landen met een wolkje (hooguit
-## RIJ_WOLK_MAX) en een paar plofjes die oplopen in toon (hooguit RIJ_KLANK_MAX,
-## zo ver uit elkaar dat de begrenzer ze laat staan). `geluid`/`wolk` false voor
-## een rij die zelf al klinkt of te dicht op elkaar staat (een tabel).
+## plaatjes; geen tekstregels of schuifjes) landen met een paar plofjes die
+## oplopen in toon (hooguit RIJ_KLANK_MAX, zo ver uit elkaar dat de begrenzer ze
+## laat staan). `geluid` false voor een rij die zelf al klinkt.
 static func inkom_rij(items: Array, vertraging: float = 0.0, stap: float = RIJ_STAP,
-		geluid: bool = true, wolk: bool = true) -> void:
+		geluid: bool = true) -> void:
 	if not aan():
 		return
 	var lijst: Array = []
@@ -531,10 +523,6 @@ static func inkom_rij(items: Array, vertraging: float = 0.0, stap: float = RIJ_S
 	for n in lijst:
 		if n is Control and _is_ding(n as Control):
 			dingen.append(n)
-	var met_wolk: Dictionary = {}
-	if wolk:
-		for j in mini(dingen.size(), RIJ_WOLK_MAX):
-			met_wolk[dingen[_verdeel(j, mini(dingen.size(), RIJ_WOLK_MAX), dingen.size())]] = true
 	var met_klank: Dictionary = {}
 	if geluid and not dingen.is_empty():
 		# elk zoveelste ding, zodat de plofjes minstens KLANK_MIN_MS uit elkaar liggen
@@ -552,29 +540,22 @@ static func inkom_rij(items: Array, vertraging: float = 0.0, stap: float = RIJ_S
 		var cat: String = "ui_plof" if met_klank.has(n) else ""
 		if vol() and n is Control:
 			_schaal_van(n as Control, RIJ_VAN, v, RIJ_DUUR, Tween.TRANS_BACK, Vector2(0.5, 0.5),
-				"onder" if met_wolk.has(n) else "", cat, float(met_klank.get(n, 0.0)))
+				cat, float(met_klank.get(n, 0.0)))
 		elif cat != "":
 			klank(cat, v + PLOF_LAND * _duur(RIJ_DUUR), float(met_klank[n]))
 
 
-## Het j-de van m, gelijk verdeeld over n plekken (0 en n-1 doen altijd mee).
-static func _verdeel(j: int, m: int, n: int) -> int:
-	if m <= 1 or n <= 1:
-		return 0
-	return int(round(float(j) * float(n - 1) / float(m - 1)))
-
-
-## Een DING dat landt en dus stof geeft: knoppen, panelen, plaatjes en vlakken,
-## of een wrapper met meta "ub_ding" (de kaarten op het onthulscherm); geen
-## tekstregels, schuifjes of lege containers.
+## Een DING dat landt en dus een plofje mag geven: knoppen, panelen, plaatjes en
+## vlakken, of een wrapper met meta "ub_ding" (de kaarten op het onthulscherm);
+## geen tekstregels, schuifjes of lege containers.
 static func _is_ding(c: Control) -> bool:
 	return c is BaseButton or c is Panel or c is PanelContainer or c is TextureRect \
 		or c is NinePatchRect or c is ColorRect or bool(c.get_meta("ub_ding", false))
 
 
 ## Een vrij geplaatst stuk (niet in een container) schuift van `van` pixels
-## naast zijn rust naar binnen en landt: een wolkje en een plofje (`geluid`),
-## en zonder veer deukt het even in (met veer schiet het zelf al door).
+## naast zijn rust naar binnen en landt met een plofje (`geluid`), en zonder
+## veer deukt het even in (met veer schiet het zelf al door).
 static func schuif_in(n: Control, van: Vector2, vertraging: float = 0.0,
 		duur: float = SCHUIF_DUUR, veer: bool = false, geluid: bool = true) -> void:
 	if not _mag(n):
@@ -595,7 +576,8 @@ static func schuif_in(n: Control, van: Vector2, vertraging: float = 0.0,
 	tw.parallel().tween_callback(func() -> void:
 		if not veer:
 			_deuk(n)
-		_geland(n, "onder", "ui_plof" if geluid else "")).set_delay(t_land)
+		if geluid:
+			klank("ui_plof")).set_delay(t_land)
 	_klaar(tw, n, "position")
 
 
@@ -617,20 +599,18 @@ static func _deuk(c: Control) -> void:
 
 # --- TIK --------------------------------------------------------------------------
 
-## Keuze of nieuw element ploft erin en landt met een wolkje (`wolk`) en een
-## plofje (`geluid` false als het scherm er zelf al een geluid bij speelt).
-## `met_alfa` false voor nodes waarvan de modulate een tint draagt (iconen,
-## portretten): dan alleen schaal.
+## Keuze of nieuw element ploft erin en landt met een plofje (`geluid` false
+## als het scherm er zelf al een geluid bij speelt). `met_alfa` false voor nodes
+## waarvan de modulate een tint draagt (iconen, portretten): dan alleen schaal.
 static func plof(c: Control, vertraging: float = 0.0, van: float = POP_VAN,
-		met_alfa: bool = true, ratio: Vector2 = Vector2(0.5, 0.5), geluid: bool = true,
-		wolk: bool = true) -> void:
+		met_alfa: bool = true, ratio: Vector2 = Vector2(0.5, 0.5), geluid: bool = true) -> void:
 	if not _mag(c):
 		return
 	if met_alfa:
 		fade_in(c, vertraging, POP_DUUR * 0.6)
 	if vol():
 		_schaal_van(c, van, vertraging, POP_DUUR, Tween.TRANS_BACK, ratio,
-			"onder" if wolk else "", "ui_plof" if geluid else "")
+			"ui_plof" if geluid else "")
 	elif geluid:
 		klank("ui_plof", vertraging + PLOF_LAND * _duur(POP_DUUR))
 
@@ -713,9 +693,8 @@ static func schud(c: Control) -> void:
 
 
 ## Stempel: van groot met een draai erop drukken en naveren; op de inslag het
-## geluid en stof rondom. `verberg` houdt het ding tot de stempel valt op een
-## schaal van bijna niets (nooit via modulate: die wordt gemeten). Alleen schaal
-## en draai.
+## geluid. `verberg` houdt het ding tot de stempel valt op een schaal van bijna
+## niets (nooit via modulate: die wordt gemeten). Alleen schaal en draai.
 static func stempel(c: Control, vertraging: float = 0.0, verberg: bool = false, geluid: bool = true) -> void:
 	if not _mag(c):
 		return
@@ -735,7 +714,8 @@ static func stempel(c: Control, vertraging: float = 0.0, verberg: bool = false, 
 		tw_rot.tween_interval(vertraging)
 	tw.tween_callback(func() -> void: c.scale = rs * STEMPEL_VAN)
 	tw.tween_property(c, "scale", rs * 0.94, STEMPEL_IN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw.tween_callback(func() -> void: _geland(c, "rondom", "ui_stempel" if geluid else ""))
+	if geluid:
+		tw.tween_callback(func() -> void: klank("ui_stempel"))
 	tw.tween_property(c, "scale", rs, STEMPEL_UIT).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw_rot.tween_callback(func() -> void: c.rotation = rr + deg_to_rad(STEMPEL_DRAAI))
 	tw_rot.tween_property(c, "rotation", rr, STEMPEL_IN + STEMPEL_UIT).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -765,7 +745,7 @@ static func draai_om(c: Control, halverwege: Callable, vertraging: float = 0.0) 
 		tw.tween_callback(halverwege)
 	tw.tween_property(c, "scale", rust, DRAAI_OPEN).from(Vector2(0.0, rust.y)) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_callback(func() -> void: _geland(c, "onder", "")).set_delay(PLOF_LAND * DRAAI_OPEN)
+	tw.parallel().tween_callback(func() -> void: wolkje(c)).set_delay(PLOF_LAND * DRAAI_OPEN)
 	_klaar(tw, c, "scale")
 
 
@@ -879,21 +859,22 @@ static func wolken() -> int:
 	return _wolken
 
 
-## De wolkjes die nu lopen, elk {node, waar, bron (Rect2 in de ruimte van node)}.
+## De wolkjes die nu lopen, elk {node, bron (Rect2 in de ruimte van node)}.
 ## Voor checks.
 static func actieve_wolken() -> Array:
 	var uit: Array = []
 	for info in _actief:
-		uit.append({"node": info["node"], "waar": info["waar"], "bron": info["bron"]})
+		uit.append({"node": info["node"], "bron": info["bron"]})
 	return uit
 
 
-## Een stofwolkje ACHTER `c`: een eigen canvas-item onder dat van c, met
-## draw_behind_parent. Het stof komt onder het ding vandaan, beweegt en schaalt
-## mee, wordt verborgen met het ding, en er komt geen node bij. `waar`: "onder"
-## (landen), "rondom" (een stempel), "klik" (een knop indrukken). Ruimt zichzelf
-## op na WOLK_DUUR, of meteen als c de boom verlaat.
-static func wolkje(c: Control, waar: String = "onder") -> void:
+## Een stofwolkje ACHTER `c`, alleen nog als een kaart omdraait en neerslaat
+## (`draai_om`; Max: "wel die stof pof bij de kaart turns dat vind ik wel
+## leuk"). Een eigen canvas-item onder dat van c, met draw_behind_parent: het
+## stof komt bij de onderhoeken onder het ding vandaan, beweegt en schaalt mee,
+## wordt verborgen met het ding, en er komt geen node bij. Ruimt zichzelf op na
+## WOLK_DUUR, of meteen als c de boom verlaat.
+static func wolkje(c: Control) -> void:
 	if not wolk_aan() or not _mag(c) or c.clip_contents or c.size.x < 2.0 or c.size.y < 2.0:
 		return
 	if _rng_wolk == null:
@@ -902,13 +883,13 @@ static func wolkje(c: Control, waar: String = "onder") -> void:
 	var ci := RenderingServer.canvas_item_create()
 	RenderingServer.canvas_item_set_parent(ci, c.get_canvas_item())
 	RenderingServer.canvas_item_set_draw_behind_parent(ci, true)
-	# Het canvas-item erft de modulate van c: een getint icoon (de rode sabels)
-	# zou rood stof geven. Die tint delen we eruit (de alpha blijft meedoen).
+	# Het canvas-item erft de modulate van c: een getint ding zou getint stof
+	# geven. Die tint delen we eruit (de alpha blijft meedoen).
 	var tint: Color = c.modulate
 	RenderingServer.canvas_item_set_modulate(ci, Color(1.0 / maxf(tint.r, 0.08), 1.0 / maxf(tint.g, 0.08),
 		1.0 / maxf(tint.b, 0.08), 1.0))
-	var plukjes := _plukjes(c.size, waar)
-	var info := {"ci": ci, "node": c, "waar": waar, "bron": Rect2(Vector2.ZERO, c.size)}
+	var plukjes := _plukjes(c.size)
+	var info := {"ci": ci, "node": c, "bron": Rect2(Vector2.ZERO, c.size)}
 	_actief.append(info)
 	_wolken += 1
 	var weg := func() -> void: _wolk_weg(info, true)
@@ -920,8 +901,7 @@ static func wolkje(c: Control, waar: String = "onder") -> void:
 	tw.set_speed_scale(_tempo)
 	tw.set_meta("ub", true)
 	info["tw"] = tw
-	tw.tween_method(func(f: float) -> void: _teken_wolk(ci, plukjes, f), 0.0, 1.0,
-		WOLK_KLIK_DUUR if waar == "klik" else WOLK_DUUR)
+	tw.tween_method(func(f: float) -> void: _teken_wolk(ci, plukjes, f), 0.0, 1.0, WOLK_DUUR)
 	tw.tween_callback(func() -> void: _wolk_weg(info, false))
 
 
@@ -945,65 +925,29 @@ static func _wolk_weg(info: Dictionary, stop: bool) -> void:
 
 
 ## De plukjes stof van een wolkje (begin, eind, straal, wanneer), uit een eigen
-## rng. Een plukje is nooit groter dan zo; een groot paneel krijgt meer stof
-## langs de rand, niet dikker stof.
-static func _plukjes(maat: Vector2, waar: String) -> Array:
-	var s: float = _wolk_sterkte
+## rng: bij elke onderhoek waait een klontje van twee of drie plukjes die
+## elkaar overlappen onder het ding vandaan, nooit een rij langs de hele rand.
+## Een plukje is nooit groter dan zo; een breed ding krijgt meer plukjes, niet
+## dikker stof.
+static func _plukjes(maat: Vector2) -> Array:
 	var rng := _rng_wolk
 	var uit: Array = []
-	match waar:
-		"rondom":
-			# een stempel drukt de lucht weg: een kring plukjes die naar buiten waaien
-			var r: float = clampf(minf(maat.x, maat.y) * 0.2, 8.0, 18.0) * s
-			var n: int = clampi(int((maat.x + maat.y) * 2.0 / 45.0), 8, 18)
-			var midden := maat * 0.5
-			for i in n:
-				var p := _op_rand(maat, (float(i) + rng.randf_range(0.0, 0.6)) / float(n))
-				var weg := (p - midden).normalized()
-				uit.append(_plukje(p + weg * r * 0.3, p + weg * r * rng.randf_range(1.3, 2.1), r, rng))
-		"klik":
-			# een knop die je indrukt: een paar plukjes bij de onderhoeken
-			var r: float = clampf(maat.y * 0.18, 7.0, 16.0) * s
-			for kant in [-1.0, 1.0]:
-				for j in 2:
-					var x: float = maat.x * 0.5 + kant * (maat.x * 0.5 + r * rng.randf_range(-0.6, 0.2))
-					var p := Vector2(x, maat.y - r * rng.randf_range(0.0, 0.4))
-					var naar := p + Vector2(kant * r * rng.randf_range(0.9, 1.7), -r * rng.randf_range(0.1, 0.6))
-					uit.append(_plukje(p, naar, r * rng.randf_range(0.8, 1.1), rng))
-		_:
-			# landen: bij elke onderhoek waait een wolkje onder het ding vandaan
-			# (een klontje van twee of drie plukjes die elkaar overlappen), nooit een
-			# rij langs de hele rand
-			var r: float = clampf(maat.y * 0.24, 10.0, 26.0) * s
-			var n: int = 3 if maat.x > 160.0 else 2   # per hoek
-			for kant in [-1.0, 1.0]:
-				var hoek_x: float = maat.x * 0.5 + kant * maat.x * 0.5
-				for j in n:
-					var p := Vector2(hoek_x - kant * r * (0.55 * float(j) + rng.randf_range(-0.15, 0.25)),
-						maat.y - r * rng.randf_range(0.05, 0.4))
-					var naar := p + Vector2(kant * r * rng.randf_range(1.1, 2.0) * (1.0 - 0.18 * float(j)),
-						r * (rng.randf_range(-0.65, -0.1) + 0.2 * float(j)))
-					uit.append(_plukje(p, naar, r * (1.0 - 0.14 * float(j)) * rng.randf_range(0.8, 1.15), rng))
+	var r: float = clampf(maat.y * 0.24, 10.0, 26.0) * _wolk_sterkte
+	var n: int = 3 if maat.x > 160.0 else 2   # per hoek
+	for kant in [-1.0, 1.0]:
+		var hoek_x: float = maat.x * 0.5 + kant * maat.x * 0.5
+		for j in n:
+			var p := Vector2(hoek_x - kant * r * (0.55 * float(j) + rng.randf_range(-0.15, 0.25)),
+				maat.y - r * rng.randf_range(0.05, 0.4))
+			var naar := p + Vector2(kant * r * rng.randf_range(1.1, 2.0) * (1.0 - 0.18 * float(j)),
+				r * (rng.randf_range(-0.65, -0.1) + 0.2 * float(j)))
+			uit.append(_plukje(p, naar, r * (1.0 - 0.14 * float(j)) * rng.randf_range(0.8, 1.15), rng))
 	return uit
 
 
 static func _plukje(van: Vector2, naar: Vector2, r: float, rng: RandomNumberGenerator) -> Dictionary:
 	return {"van": van, "naar": naar, "r0": r * 0.5, "r1": r * rng.randf_range(1.0, 1.4),
 		"v": rng.randf_range(0.0, 0.1), "a": rng.randf_range(0.65, 0.85), "tint": rng.randf_range(-0.05, 0.02)}
-
-
-## Een punt op de rand van een rechthoek, `u` van 0 tot 1 rond de omtrek.
-static func _op_rand(maat: Vector2, u: float) -> Vector2:
-	var d: float = fposmod(u, 1.0) * 2.0 * (maat.x + maat.y)
-	if d < maat.x:
-		return Vector2(d, 0.0)
-	d -= maat.x
-	if d < maat.y:
-		return Vector2(maat.x, d)
-	d -= maat.y
-	if d < maat.x:
-		return Vector2(maat.x - d, maat.y)
-	return Vector2(0.0, maat.y - (d - maat.x))
 
 
 ## Een beeld van het wolkje op `f` (0..1): elk plukje waait naar buiten en iets
@@ -1223,8 +1167,8 @@ static func _hover_maat(b: Control) -> float:
 	return 1.0 + clampf(8.0 / maxf(maxf(b.size.x, b.size.y), 1.0), 0.02, 0.05)
 
 
-## Indrukken: de knop deukt in, er komt een wolkje onder vandaan en een zacht
-## houten tokje (het klikgeluid van het scherm zelf komt bij het loslaten).
+## Indrukken: de knop deukt in met een zacht houten tokje (het klikgeluid van
+## het scherm zelf komt bij het loslaten).
 static func _druk(b: BaseButton) -> void:
 	if not _mag(b) or _uit(b):
 		return
@@ -1242,7 +1186,6 @@ static func _druk(b: BaseButton) -> void:
 	b.set_meta("ub_vast_scale", true)
 	var tw := _tween(b, "schaal")
 	tw.tween_property(b, "scale", rust * _druk_maat(b), DRUK_DUUR).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	wolkje(b, "klik")
 	if heeft_schaduw(b):
 		_schaduw(b, SCHADUW_DRUK)
 

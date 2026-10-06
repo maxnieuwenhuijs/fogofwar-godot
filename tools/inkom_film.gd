@@ -4,7 +4,8 @@ extends RefCounted
 ## van de UI-beweging halverwege en aan het eind, om te zien hoe het beweegt.
 ## Speelt op een lager tempo (ui_tempo 0,3), zodat de tussenstanden vallen.
 ## Schrijft <uitmap>/<reeks>_<n>.png; standaard user://inkomfilm. Reeksen: menu,
-## kaarten, hub, loting, intro, stof (zonder: allemaal).
+## kaarten (met het stof als een kaart omdraait), hub, loting, intro, knop
+## (zonder: allemaal).
 
 const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 const TEMPO := 0.3
@@ -36,8 +37,8 @@ static func run(host: Node, uit: String = "", reeksen: Array = []) -> int:
 		await _loting()
 	if alles or reeksen.has("intro"):
 		await _duel_intro()
-	if alles or reeksen.has("stof"):
-		await _stof()
+	if alles or reeksen.has("knop"):
+		await _knop()
 	Beweging.zet_tempo(tempo_oud)
 	Beweging.forceer(-1)
 	print("[FILM] klaar: %s (%d fouten)" % [ProjectSettings.globalize_path(_uit), _fouten])
@@ -194,11 +195,11 @@ static func _duel_intro() -> void:
 	await _wacht(0.3)
 
 
-# --- Stof, schaduw en de klik (6 oktober) -----------------------------------------
+# --- Schaduw en de klik (6 oktober) -----------------------------------------------
 
-## Een knop in de voet van de hub: hover (schaduw eronder), indrukken (wolkje),
-## dan een pop-up waarvan de rijen landen met stof.
-static func _stof() -> void:
+## Een knop in de voet van de hub: hover (schaduw eronder), indrukken (deukt in),
+## dan een pop-up waarvan de rijen landen.
+static func _knop() -> void:
 	var driver := SoloDriver.new(42, 0)
 	driver.duel_ai = "easy"
 	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()

@@ -1178,30 +1178,35 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   verschijnt een beetje ploffen, met ook een wolke of schaduw dat je ziet en
   dan een geluidje, beetje verschillend, bij alle animaties en hovers en
   kliks").** Wat binnenkomt LANDT: plof, inschuiven (deukt dan even in),
-  stempel (stof rondom), omdraaien en de DINGEN in een rij (knoppen, panelen,
-  plaatjes, meta `ub_ding`; geen tekstregels) krijgen op het landingsmoment een
-  stofwolkje bij de onderhoeken en een `ui_plof`. Het geluid zit IN de tween
-  (callback op `PLOF_LAND` 37% bij BACK, `SCHUIF_LAND` 72% bij CUBIC), dus het
-  valt samen met wat je ziet en een afgebroken animatie landt niet. Een knop:
-  indrukken = wolkje + `ui_knop` (zacht houten tokje, -15 dB; het klikgeluid
-  van het scherm komt bij het loslaten), hover met een echte muis = schaduw
-  eronder + `ui_hover` (de overlay speelt zijn eigen hover-geluid niet meer).
-  Stof en schaduw zijn een EIGEN canvas-item onder dat van het ding
-  (`RenderingServer`, `draw_behind_parent`): geen node erbij, dus kindlijsten,
-  containers en render_digest blijven gelijk; de tint van een getint icoon
-  wordt eruit gedeeld (anders rood stof bij de rode sabels); opgeruimd na
-  `WOLK_DUUR` of zodra het ding de boom verlaat (`tree_exiting`). Klank: elke
-  keer een andere variant dan de vorige, begrenzer `KLANK_MIN_MS` 45 ms per
-  categorie (zes ploffen tegelijk = een), een rij hooguit `RIJ_KLANK_MAX` 4
-  plofjes oplopend in toon. Stof en schaduw alleen bij normaal (rustig houdt
-  het geluid), dev-knop `ui_wolk` in het sfeer-paneel (0 = uit, 2 = dubbel).
-  Aanroepers zetten `geluid`/`wolk` uit waar het scherm al klinkt of het te
-  druk wordt: de hub-golf klinkt alleen bij vlag en kader, de tijdlijn hooguit
-  vier per golf, het fasepaneel alleen bij een nieuwe fase of tab (niet bij
-  elke botbeurt). Check: `-- inkomcheck wolk` (36 punten: landingsmoment,
-  eigen rng, opruimen, deuk, stempel, afgebroken, rustig/sterkte/uit, hover,
-  touch, indrukken, begrenzer, rij); kijken: `-- inkomfilm <map> stof` (en
-  `menu`, `intro`). Lambda's die een Dictionary vangen die zelf de tween
+  stempel en de DINGEN in een rij (knoppen, panelen, plaatjes, meta `ub_ding`;
+  geen tekstregels) krijgen op het landingsmoment een `ui_plof` (de stempel
+  bonst). Het geluid zit IN de tween (callback op `PLOF_LAND` 37% bij BACK,
+  `SCHUIF_LAND` 72% bij CUBIC), dus het valt samen met wat je ziet en een
+  afgebroken animatie landt niet. **Stof alleen als een kaart omdraait**
+  (`draai_om`: de kaarten van de tegenstander op het onthulscherm slaan neer
+  met een wolkje bij de onderhoeken). Het stof bij al het andere landen en bij
+  elke knopdruk ging dezelfde dag weer weg (Max: "haal dat stof opwaaiing weg
+  bij de UI, beetje te veel", en "wel die stof pof bij de kaart turns dat vind
+  ik wel leuk"); zet het niet terug. Een knop: indrukken = `ui_knop` (zacht
+  houten tokje, -15 dB; het klikgeluid van het scherm komt bij het loslaten),
+  hover met een echte muis = schaduw eronder + `ui_hover` (de overlay speelt
+  zijn eigen hover-geluid niet meer). Stof en schaduw zijn een EIGEN
+  canvas-item onder dat van het ding (`RenderingServer`, `draw_behind_parent`):
+  geen node erbij, dus kindlijsten, containers en render_digest blijven gelijk;
+  de tint van een getint ding wordt eruit gedeeld; opgeruimd na `WOLK_DUUR` of
+  zodra het ding de boom verlaat (`tree_exiting`). Klank: elke keer een andere
+  variant dan de vorige, begrenzer `KLANK_MIN_MS` 45 ms per categorie (zes
+  ploffen tegelijk = een), een rij hooguit `RIJ_KLANK_MAX` 4 plofjes oplopend
+  in toon. Stof en schaduw alleen bij normaal (rustig houdt het geluid),
+  dev-knop `ui_wolk` in het sfeer-paneel (0 = uit, 2 = dubbel). Aanroepers
+  zetten `geluid` uit waar het scherm al klinkt of het te druk wordt: de
+  hub-golf klinkt alleen bij vlag en kader, de tijdlijn hooguit vier per golf,
+  het fasepaneel alleen bij een nieuwe fase of tab (niet bij elke botbeurt).
+  Check: `-- inkomcheck landen` (43 punten: landingsmoment, stof alleen bij
+  het omdraaien, eigen rng, opruimen, deuk, stempel, afgebroken,
+  rustig/sterkte/uit, hover, touch, indrukken, begrenzer, rij); kijken:
+  `-- inkomfilm <map> kaarten` (het omdraaien), `knop` (hover, klik, pop-up),
+  `menu`, `intro`. Lambda's die een Dictionary vangen die zelf de tween
   vasthoudt lekken: `_wolk_weg` haalt die sleutels eruit.
 - **Staat een model scheef of de verkeerde kant op? `-- richtingcheck
   [factie]`** (capture.tscn, 18 september, Max: "voor infantry attack pig

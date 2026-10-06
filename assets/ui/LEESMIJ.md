@@ -63,17 +63,18 @@ Elke inkom en elke microinteractie komt uit `scripts/ui/ui_beweging.gd`
 | stempel | van 1,45 met -8 graden, 0,10 + 0,14 s | CP-zegel, STEM, winst |
 | tel op | tot 0,5 s, de laatste tekst exact | punten, saldi |
 | duw | een zachte puls na 6 s niets doen, dan elke 8 s | de knop die op jou wacht |
-| landen | op 37% (BACK) of 72% (CUBIC) van de duur: stof bij de onderhoeken + `ui_plof` | plof, inschuiven, omdraaien, dingen in een rij |
+| landen | op 37% (BACK) of 72% (CUBIC) van de duur: `ui_plof` | plof, inschuiven, dingen in een rij |
 | deuk | 1,05 x 0,95 op de onderrand, 0,2 s, grote stukken minder | wat inschuift zonder veer |
-| stof | 0,42 s; rondom bij een stempel, klein (0,3 s) bij indrukken | ook `Beweging.wolkje(node, waar)` |
+| stof | 0,42 s, een wolkje bij de onderhoeken | alleen een kaart die omdraait (`draai_om`); ook `Beweging.wolkje(node)` |
 | schaduw | ovaal onder de knop, 0,12 s, ingedrukt 0,35 | hover met een echte muis |
 | klank | elke keer een andere variant, hetzelfde geluid hooguit elke 45 ms, een rij hooguit 4 | alle UI-geluiden |
 
 Landen (6 oktober): het stof en de schaduw zijn een eigen canvas-item ONDER
 dat van het ding (geen node erbij: kindlijsten en containers blijven gelijk),
 alleen bij normaal (rustig houdt het geluid), sterkte met de dev-knop
-`ui_wolk`. Een scherm dat zelf al klinkt geeft `geluid` false mee; een rij die
-te dicht op elkaar staat (een tabel) `wolk` false.
+`ui_wolk`. Stof alleen nog als een kaart omdraait: bij al het andere landen en
+bij elke knopdruk was het te veel (Max, dezelfde dag). Een scherm dat zelf al
+klinkt geeft `geluid` false mee.
 
 Huisregels (bovenin de module): alleen beeld bovenop een staat die al klopt
 (nooit `visible`, teksten of submits uitstellen); nooit de root van een
@@ -85,7 +86,7 @@ forceert); alles binnen 0,45 s klaar.
 Standen: Instellingen > Animaties (normaal / rustig / uit, in
 `user://settings.cfg [ui] beweging`); dev-knoppen `ui_tempo` en `ui_wolk` in
 het sfeer-paneel. Controle: `-- inkomcheck [fase]`; kijken: `-- inkomfilm
-<map> [menu|kaarten|hub|loting|intro|stof]` (met venster).
+<map> [menu|kaarten|hub|loting|intro|knop]` (met venster).
 
 ## Wat er (nog) niet in zit
 

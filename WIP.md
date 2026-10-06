@@ -1,5 +1,26 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- UI-stof alleen nog als een kaart omdraait
+
+Max: "en haal dat stof opwaaiing weg bij de UI, beetje te veel", en even later
+"wel die stof pof bij de kaart turns dat vind ik wel leuk".
+
+- **`ui_beweging.gd`:** het stofwolkje komt alleen nog als een kaart omdraait en
+  neerslaat (`draai_om`: de kaarten van de tegenstander op het onthulscherm).
+  Weg bij plof, inschuiven, stempel (het stof rondom), de dingen in een rij en
+  het indrukken van een knop. Het plofje, de deuk, de tok en de hover-schaduw
+  blijven. `plof` en `inkom_rij` verloren hun `wolk`-argument (de hub gaf het
+  op drie plekken mee), `_schaal_van` zijn `land`; `wolkje(c)` kent alleen nog
+  het landen bij de onderhoeken (rondom en klik zijn weg, met `_op_rand`,
+  `_verdeel`, `RIJ_WOLK_MAX` en `WOLK_KLIK_DUUR`). De dev-knop `ui_wolk` blijft
+  (stof bij het omdraaien en de hover-schaduw), met een nieuwe uitleg.
+- **`-- inkomcheck`:** de fase `wolk` heet nu `landen` (43 punten): het
+  omdraaien geeft een wolkje (onder de kaart, zonder node, ruimt op, ook als de
+  kaart de boom verlaat; rustig, sterkte 0 en uit niet), en plof, inschuiven,
+  stempel, indrukken en een rij geven er geen. `-- inkomfilm`: de reeks `stof`
+  heet `knop` (hover, klik, pop-up); het omdraaien zit in `kaarten`.
+- Checks: zie de regressie hieronder.
+
 ## 6 oktober -- Randlicht op de laatste pionnen die nog kunnen
 
 Max: "en randlicht ook goed voor de hightlight wanneer de tegenstander klaar is

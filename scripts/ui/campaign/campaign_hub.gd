@@ -80,7 +80,7 @@ var _qc_meer: Button = null
 var _groep_nu: String = ""       # de groep die _plaats meegeeft (golf bij de eerste opening)
 var _cascade_gedaan: bool = false
 var _paneel_sleutel: String = ""   # ronde|fase|tab|wacht|bezig|dank: alleen een inkom bij verandering
-var _paneel_groot: String = ""     # ronde|fase|tab: alleen dan landen met stof en plofjes
+var _paneel_groot: String = ""     # ronde|fase|tab: alleen dan landen met plofjes
 var _fase_sleutel: String = ""     # ronde|fase: het blad klinkt alleen bij een echte fasewissel
 var _ingediend: bool = false     # STEM/KLAAR/NALATEN: de eerste tik telt, tot het paneel ververst
 
@@ -362,8 +362,8 @@ func _cascade() -> void:
 			"qc":
 				van = Vector2(0, 14)
 				v = 0.18
-		# Alles landt met een wolkje; alleen de vlag en het fasekader ploffen
-		# hoorbaar (anders wordt de golf een ratel).
+		# Alleen de vlag en het fasekader ploffen hoorbaar (anders wordt de golf
+		# een ratel).
 		var hoorbaar: bool = c == _vlag or String(c.get_meta("hub_groep")) == "kader"
 		Beweging.schuif_in(c, van * _s, v, Beweging.SCHUIF_DUUR, veer, hoorbaar)
 
@@ -1248,7 +1248,7 @@ func _pop_lid(sid: int) -> void:
 			Beweging.plof(p, 0.0, 0.85, false)
 		var g := b.get_node_or_null("Gloed") as Control
 		if g != null:
-			Beweging.plof(g, 0.0, 0.7, true, Vector2(0.5, 0.5), false, false)   # het portret klinkt en stuift al
+			Beweging.plof(g, 0.0, 0.7, true, Vector2(0.5, 0.5), false)   # het portret klinkt al
 
 
 ## UI-beweging: het schild in het fasepaneel (raad of testament) ploft na een keuze.
@@ -1446,11 +1446,11 @@ func _ververs_tijdlijn() -> void:
 				tw.tween_interval(wacht)
 				tw.tween_property(kaart, "modulate:a", 1.0, 0.25)
 				# UI-beweging: het kaartje komt ook een tikje omhoog uit de onderkant;
-				# een op de zoveel landt hoorbaar met een wolkje (hooguit vier per
-				# golf, anders wordt een rij botbeurten een ratel).
+				# een op de zoveel landt hoorbaar (hooguit vier per golf, anders
+				# wordt een rij botbeurten een ratel).
 				var nr: int = nieuw_totaal - 1 - van_onder
 				var hoorbaar: bool = nr % maxi(1, ceili(float(nieuw_totaal) / 4.0)) == 0
-				Beweging.plof(kaart as Control, wacht, 0.97, false, Vector2(0.5, 1.0), hoorbaar, hoorbaar)
+				Beweging.plof(kaart as Control, wacht, 0.97, false, Vector2(0.5, 1.0), hoorbaar)
 	CampaignBridge.feed_gezien = maxi(CampaignBridge.feed_gezien, driver.feed.size())
 	_scroll_naar_onder(_scroll)
 
@@ -2035,15 +2035,15 @@ func _na_fase_paneel() -> void:
 	var sleutel := "%d|%d|%d|%s|%s|%s" % [c.ronde, c.fase, _tab, driver.wacht_op_mens(), _bezig, c.dank_af]
 	if sleutel != _paneel_sleutel:
 		var eerste := _paneel_sleutel == ""
-		# Landen met stof en plofjes alleen bij een nieuwe fase of tab; wisselt
-		# alleen "bezig" of "wacht op jou" (elke botbeurt), dan stil en zonder stof.
+		# Landen met plofjes alleen bij een nieuwe fase of tab; wisselt alleen
+		# "bezig" of "wacht op jou" (elke botbeurt), dan stil.
 		var groot_sleutel := "%d|%d|%d" % [c.ronde, c.fase, _tab]
 		var groot: bool = groot_sleutel != _paneel_groot
 		_paneel_groot = groot_sleutel
 		_paneel_sleutel = sleutel
 		if not eerste:
-			Beweging.inkom_rij(_paneel.get_children(), 0.0, Beweging.RIJ_STAP, groot, groot)
-			Beweging.inkom_rij(_voet.get_children(), 0.06, Beweging.RIJ_STAP, groot, groot)
+			Beweging.inkom_rij(_paneel.get_children(), 0.0, Beweging.RIJ_STAP, groot)
+			Beweging.inkom_rij(_voet.get_children(), 0.06, Beweging.RIJ_STAP, groot)
 		var fase_sleutel := "%d|%d" % [c.ronde, c.fase]
 		if fase_sleutel != _fase_sleutel:
 			if _fase_sleutel != "":
