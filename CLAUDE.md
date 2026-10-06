@@ -1282,6 +1282,25 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   nooit volume_db alleen. `sounds/sound_tuning.json` wordt opnieuw gelezen
   als hij op schijf veranderde, en bewaren schrijft alleen de eigen
   wijzigingen (studio en tuner schreven elkaars dB weg).
+- **VFX-studio (6 oktober, `docs/VFX-studio.md`, Max: "een studio voor
+  allemaal wensen en vfx effecten zoals bloed, stof, vuurmonden, vuur").**
+  De effecten van het bord staan op EEN plek: `scripts/vfx/vfx.gd` (via
+  preload als `VFX`: de schot-keten `schot`, `vuurmond`, `rook`, `vonken`,
+  `schade_getal`; game.gd geeft door), de rest in PawnView (bloed, dood,
+  gibs). `scripts/vfx/vfx_catalogus.gd` is de lijst van ALLE effecten
+  (bestaand en gewenst: id, groep, wanneer, status spel/wens/diorama, recept,
+  knoppen) met de metadata van elke knop; een nieuw effect = een regel daar,
+  een recept in de tuner en zijn knoppen in `KNOPPEN`. De VFX-tuner
+  (`scenes/tools/VfxTuner.tscn`, paneelknop "VFX-tuner") speelt elk effect
+  op het echte bord in het licht van het spel (schutter, doel, slowmo,
+  herhaal, donker, dichtbij, schuifjes, OPSLAAN naar effects_tuning.json);
+  elk afspelen is een vers toneel. `VFX-WISHLIST.md` is Max zijn lijst met
+  per effect een Engelse concept-prompt. Checks: `-- vfxcheck` (headless en
+  met venster), plaatjes `-- vfxshot <id> [map] [tempo]`. Nieuwe effectcode
+  trekt nooit uit de globale rng; de verhuisde code doet dat nog (dezelfde
+  volgorde, uispel gelijk). Volgende stappen: de vier groepen, dan een
+  stijl-studio (shaders voor alle 3D-objecten), dan de concept-webpagina
+  (Replicate: beelden en Seedance 2.5).
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

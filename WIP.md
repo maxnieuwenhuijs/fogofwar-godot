@@ -1,5 +1,56 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 1: catalogus en VFX-tuner
+
+Max: "hoe kan ik die rook particles of stof opwaai particles en vfx het beste
+met jou gaan bouwen, kan jij voor mij ook een studio maken voor allemaal wensen
+en vfx effecten zoals bloed, stof, vuurmonden, vuur, alle soorten eigenlijk",
+en: concept-plaatjes met een promptvak en een Seedance 2.5-filmpje als
+afspraak. Besluiten: Replicate-sleutel komt in
+`%LOCALAPPDATA%\FogOfWar\replicate.key`; alle vier de groepen; eerst de tuner
+in Godot; daarna (vraag "shaders voor alle 3d objecten") een stijl-studio om
+looks uit te proberen, na de effecten. Plan: `docs/VFX-studio.md`.
+
+- **Inventaris** (verkenner): vuurmond met lichtflits, kruitdamp aan de loop
+  en bij de inslag, vonken, bloed (straal, druppels, plassen, nevel), gibs,
+  doormidden, voetsporen; in het diorama kampvuur, sneeuw, fontein. Gevonden:
+  de vuurmond en de kruitdamp kiezen hun textuur willekeurig uit hun map (een
+  musket toont soms de kanonvlam, de kruitdamp soms het witte koppelwolkje; in
+  de tuner meteen te zien), rook negeert de wind, combat bouwt met tweens en
+  het diorama met GPU-deeltjes, en het diorama heeft geen knoppen.
+- **`scripts/vfx/vfx.gd`**: de schot-keten (kogel of kanonskogel, vuurmond met
+  lichtflits, terugslag via een Callable, kruitdamp, inslagrook), de vonken en
+  het schadegetal, uit game.gd verhuisd. game.gd houdt dunne doorgeefluiken
+  (`_fire_projectile`, `_spawn_sparks`, `_spawn_damage_float`; `_muzzle_flash`
+  is weg). Puur verplaatst, dezelfde trekjes uit de rng in dezelfde volgorde:
+  uispel bleef exact gelijk.
+- **`scripts/vfx/vfx_catalogus.gd`**: 27 effecten in vijf groepen (kruitdamp en
+  vuurmond, stof en aarde, bloed en inslag, sterven en brokstukken, vuur en
+  explosies), elk met wanneer, status (spel, wens, diorama), recept en
+  knoppen; 65 knoppen met label, bereik en standaard (gelijk aan de
+  Model-tuner en het sfeer-paneel).
+- **VFX-tuner** (`scenes/tools/VfxTuner.tscn`, `scripts/tools/vfx_tuner.gd`,
+  paneelknop): het echte bord met het licht van het spel (dezelfde knoppen),
+  een schutter en een doel (factie te kiezen; een kanon pakt het Varken als
+  de factie er geen heeft), boven de groepen en effecten (wensen grijs), onder
+  SPEEL, herhaal, tempo (slowmo), donker, dichtbij, standaard, OPSLAAN
+  (effects_tuning.json, zoals de Model-tuner) en per effect zijn schuifjes.
+  Elk afspelen is een vers toneel: lijken, bloed en rook van de vorige keer
+  gaan weg. Elf effecten spelen nu af; de wensen zeggen dat ze nog moeten
+  komen.
+- **Checks:** `-- vfxcheck` (catalogus klopt, elk recept speelt en zet iets op
+  het toneel, het oude toneel is weg, een knop komt aan bij PawnView.fx, de
+  tijd loopt weer gewoon) headless en met venster; `-- vfxshot <id> [map]
+  [tempo]` (plaatjes, ook voor de concept-webpagina straks).
+- **`VFX-WISHLIST.md`**: de lijst voor Max per groep, met status, wens en een
+  Engelse concept-prompt per effect.
+- Checks: vfxcheck headless en met venster (27 effecten, 11 spelen af), vfxshot
+  musketschot en kanonsdood nagekeken, play met venster tot de actiefase,
+  uicheck, uispel 777 5862e4c9 (gelijk: de verhuisde schot-code verandert
+  niets), herstelcheck 777 en 4242 wolf 0, resumecheck 777 1 en 4242 2 0, naad,
+  koppel, beurtlicht, audiopaneel, inkomcheck, simcheck 0, tests 2912/0,
+  paneel.ps1 0 parsefouten.
+
 ## 6 oktober -- Landen met een stofwolkje, schaduw onder de knop en een plofje
 
 Max: "laat alles wat invliegt en verschijnt een beetje ploffen, met ook een

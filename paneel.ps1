@@ -44,7 +44,7 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
 # Nooit hoger dan het scherm; wat er niet op past, scrolt (25 september: er
 # kwam een kader bij voor de campagnebots).
-$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1258, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
+$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1298, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
 $form.AutoScroll = $true
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
@@ -374,7 +374,7 @@ $btnStartpunten.Add_Click({
 $kadFacties.Controls.Add($btnStartpunten)
 
 # --- 6. Bekijken wat er nu geldt en wat eruit gekomen is.
-$kadKijk = Maak-Kader "Bekijken" 618 200
+$kadKijk = Maak-Kader "Bekijken" 618 240
 Maak-Uitleg $kadKijk "Het rapport met winst-percentages, of de factie-instellingen van nu."
 $null = Maak-Knop $kadKijk "Bekijk het rapport" {
     try { & python "$repo\tools\dashboard\build_dashboard.py" | Out-Null } catch {}
@@ -451,9 +451,23 @@ $btnGeluidStudio.Add_Click({
         -ArgumentList @((Join-Path $repo "tools\geluid_studio.py"))
 })
 $kadKijk.Controls.Add($btnGeluidStudio)
+# Zesde knop: de VFX-tuner (6 oktober, docs/VFX-studio.md; Max: "een studio
+# voor allemaal wensen en vfx effecten zoals bloed, stof, vuurmonden, vuur").
+# Het spel opent in de tuner: elk effect op het echte bord afspelen, met
+# slowmo, herhalen en schuifjes; OPSLAAN schrijft effects_tuning.json.
+$btnVfxTuner = New-Object System.Windows.Forms.Button
+$btnVfxTuner.Text = "VFX-tuner: rook, vuur, bloed en stof afspelen en bijstellen"
+$btnVfxTuner.Location = New-Object System.Drawing.Point(12, 162)
+$btnVfxTuner.Size = New-Object System.Drawing.Size(401, 34)
+$btnVfxTuner.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnVfxTuner.Add_Click({
+    Start-Process $godot -WorkingDirectory $repo `
+        -ArgumentList @("--path", ".", "res://scenes/tools/VfxTuner.tscn")
+})
+$kadKijk.Controls.Add($btnVfxTuner)
 $lblKijkHint = New-Object System.Windows.Forms.Label
 $lblKijkHint.Text = "Facties: voor en na een voorstel. Geluid en props: zien wat er nog mist. De studio maakt de geluiden zelf (ElevenLabs-sleutel nodig)."
-$lblKijkHint.Location = New-Object System.Drawing.Point(12, 162)
+$lblKijkHint.Location = New-Object System.Drawing.Point(12, 202)
 $lblKijkHint.Size = New-Object System.Drawing.Size(400, 28)
 $lblKijkHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblKijkHint.ForeColor = [System.Drawing.Color]::DimGray
@@ -462,7 +476,7 @@ $kadKijk.Controls.Add($lblKijkHint)
 # --- 7. Modellen bouwen uit de blend-inbox.
 # Alleen de voorkant van tools/bouw_modellen.py: die doet per .blend de drie
 # Blender-stappen (los wapen, karakter met het wapen erin, gibs + rechtdraaien).
-$kadModellen = Maak-Kader "Modellen bouwen" 824 122
+$kadModellen = Maak-Kader "Modellen bouwen" 864 122
 Maak-Uitleg $kadModellen "Een map met een .blend en de nieuwe texturen erin gaat in een keer het spel in."
 # Hoofdknop: een complete levering (een map met de .blend EN de nieuwe texturen)
 # in een keer verwerken. Eerst de droogloop tonen en om bevestiging vragen; die
@@ -577,7 +591,7 @@ $kadModellen.Controls.Add($btnRetexture)
 # --- 8. Campagnebots: hoe de bots handelen in het campagnemenu (F7.2,
 # docs/F7-campagnetrainer.md). Eerst duels meten (de data van het orakel),
 # dan trainen op dat orakel. De trainer schrijft data/campagne_verstand.json.
-$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 952 166
+$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 992 166
 Maak-Uitleg $kadCampagne "Eerst duels meten (orakel), dan trainen. Niet naast een training."
 $numCampMeet = Maak-Getal $kadCampagne 205 60 5 600 "minuten"
 $null = Maak-Knop $kadCampagne "Campagne-duels meten" {
@@ -646,7 +660,7 @@ $kadCampagne.Controls.Add($numPunten)
 $kadCampagne.Controls.Add($lblPunten)
 
 # --- 9. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 1124 86
+$kadStop = Maak-Kader "Noodrem" 1164 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots

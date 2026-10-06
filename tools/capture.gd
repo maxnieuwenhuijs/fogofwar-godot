@@ -106,6 +106,24 @@ func _ready() -> void:
 		get_tree().quit(0 if klaar_fouten == 0 else 1)
 		return
 
+	if "vfxcheck" in OS.get_cmdline_user_args():
+		# VFX-studio (6 oktober, docs/VFX-studio.md): de catalogus klopt en de
+		# VFX-tuner speelt elk effect af. Headless en met venster.
+		var vfx_fouten: int = await preload("res://tools/vfx_check.gd").run(self)
+		get_tree().quit(0 if vfx_fouten == 0 else 1)
+		return
+
+	if "vfxshot" in OS.get_cmdline_user_args():
+		# `-- vfxshot <id> [map] [tempo]` (met venster): plaatjes van een effect.
+		var vargs := OS.get_cmdline_user_args()
+		var vi := vargs.find("vfxshot")
+		var vid: String = String(vargs[vi + 1]) if vargs.size() > vi + 1 else "schot_musket"
+		var vmap: String = String(vargs[vi + 2]) if vargs.size() > vi + 2 else ""
+		var vtempo: float = float(vargs[vi + 3]) if vargs.size() > vi + 3 else 1.0
+		var vshot_fouten: int = await preload("res://tools/vfx_check.gd").shot(self, vid, vmap, vtempo)
+		get_tree().quit(0 if vshot_fouten == 0 else 1)
+		return
+
 	if "inkomfilm" in OS.get_cmdline_user_args():
 		# UI-beweging: plaatjes halverwege en aan het eind (met venster, tempo 0,5).
 		# `-- inkomfilm [uitmap] [reeks...]`, standaard user://inkomfilm en alles.

@@ -1,0 +1,214 @@
+extends RefCounted
+
+## De catalogus van alle effecten (6 oktober 2026, docs/VFX-studio.md): wat er in
+## het spel zit en wat Max wil, per groep, met de knoppen die het bijstellen.
+## De VFX-tuner, `-- vfxcheck`, `-- vfxshot` en (straks) de concept-webpagina
+## lezen hem; de knoppen zelf staan in assets/models/effects_tuning.json en de
+## code leest ze met `PawnView.fx(sleutel, standaard)`. Zonder class_name:
+## `const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")`.
+##
+## Een effect: id, groep, naam, wanneer (in het spel), knoppen (sleutels uit
+## KNOPPEN), status ("spel" = zit erin, "wens" = nog te bouwen, "diorama" = in
+## het diorama maar nog met vaste waarden), speel (het recept in de tuner; leeg
+## = nog niet af te spelen) en een notitie.
+
+const GROEPEN: Array = [
+	{"id": "kruit", "naam": "Kruitdamp en vuurmond"},
+	{"id": "stof", "naam": "Stof en aarde"},
+	{"id": "bloed", "naam": "Bloed en inslag"},
+	{"id": "dood", "naam": "Sterven en brokstukken"},
+	{"id": "vuur", "naam": "Vuur en explosies"},
+]
+
+## Elke knop: label, bereik, stap en standaard (dezelfde als in de Model-tuner,
+## FX_DEFS, en het sfeer-paneel, AMBIANCE_DEFS, zodat ze nergens verschillen).
+const KNOPPEN: Dictionary = {
+	"fire_size": {"label": "vuur-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	"fire_life": {"label": "vuur-duur", "min": 0.03, "max": 2.0, "step": 0.01, "def": 0.14},
+	"fire_light": {"label": "vuur-licht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
+	"fire_shake": {"label": "vuur-schok", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"smoke_amount": {"label": "rook-aantal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"smoke_size": {"label": "rook-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	"smoke_grow": {"label": "rook-groei", "min": 0.5, "max": 10.0, "step": 0.01, "def": 3.0},
+	"smoke_life": {"label": "rook-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
+	"smoke_drift": {"label": "rook-drift", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"smoke_alpha": {"label": "rook-alpha", "min": 0.05, "max": 1.0, "step": 0.01, "def": 1.0},
+	"smoke_fade": {"label": "rook-vervaag", "min": 0.0, "max": 0.95, "step": 0.01, "def": 0.35},
+	"smoke_linger_chance": {"label": "rook-blijfkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.25},
+	"smoke_rise": {"label": "rook-stijg", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"impact_smoke_life": {"label": "inslag-rook-duur", "min": 0.05, "max": 5.0, "step": 0.01, "def": 0.6},
+	"link_puff": {"label": "koppel-wolkje", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	"blood_burst": {"label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"blood_spurt": {"label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"blood_mist": {"label": "kanon-mist", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"blood_mist_melee": {"label": "melee-wolk (x kanon)", "min": 0.0, "max": 2.0, "step": 0.01, "def": 0.55},
+	"mist_travel": {"label": "mist-dracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
+	"drop_fall_time": {"label": "druppel-duur", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	"drop_size": {"label": "druppel-maat", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	"wound_blood": {"label": "wond-bloed (overleven)", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"wound_delay": {"label": "wond-vertraging", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.0},
+	"wound_straal": {"label": "wond-straaltje (lengte)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.22},
+	"wound_straal_dikte": {"label": "straaltje dikte (voet)", "min": 0.005, "max": 0.1, "step": 0.001, "def": 0.022},
+	"wound_straal_op": {"label": "straaltje op (s)", "min": 0.01, "max": 0.5, "step": 0.01, "def": 0.07},
+	"wound_straal_duur": {"label": "straaltje terug (s)", "min": 0.05, "max": 2.0, "step": 0.01, "def": 0.3},
+	"drop_stain_chance": {"label": "druppel-vlekkans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
+	"drop_stain_delay": {"label": "vlek-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.05},
+	"drop_stain_grow": {"label": "vlek-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.25},
+	"gib_pool_delay": {"label": "gib-poel-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.1},
+	"gib_pool_grow": {"label": "gib-poel-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 0.45},
+	"blood_extra_delay": {"label": "plas-wacht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.4},
+	"blood_grow": {"label": "plas-groei", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
+	"blood_size": {"label": "plas-maat", "min": 0.05, "max": 10.0, "step": 0.01, "def": 1.0},
+	"death_blood_delay": {"label": "lijkpoel-fallback", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.9},
+	"debris_donker_na": {"label": "donker na (s)", "min": 0.0, "max": 30.0, "step": 0.5, "def": 4.0},
+	"debris_donker_duur": {"label": "donker duur (s)", "min": 0.1, "max": 15.0, "step": 0.1, "def": 2.5},
+	"debris_donker": {"label": "hoe donker", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.7},
+	"debris_doorzicht": {"label": "hoe doorzichtig", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
+	"debris_zak": {"label": "zakt in bord", "min": 0.0, "max": 0.5, "step": 0.01, "def": 0.08},
+	"hat_fling_power": {"label": "hoed-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.5},
+	"hat_fling_time": {"label": "hoed-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.8},
+	"hat_pop_chance": {"label": "hoed-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.55},
+	"limb_shed_chance": {"label": "ledemaat-kans", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.4},
+	"limb_fling_power": {"label": "ledemaat-kracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 0.9},
+	"limb_fling_time": {"label": "ledemaat-hangtijd", "min": 0.1, "max": 10.0, "step": 0.01, "def": 1.0},
+	"gib_fling_power": {"label": "gib-worpkracht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"gib_spin": {"label": "gib-tolling", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	"gib_bloed": {"label": "bloedspatten op gibs", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.45},
+	"slice_kans_sabel": {"label": "doormidden-kans (sabel)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.85},
+	"slice_kans_bajonet": {"label": "doormidden-kans (bajonet)", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.35},
+	"slice_hoogte": {"label": "snijhoogte (deel van de pion)", "min": 0.15, "max": 0.85, "step": 0.01, "def": 0.55},
+	"slice_hoek": {"label": "snijhoek sabel (graden)", "min": 0.0, "max": 70.0, "step": 1.0, "def": 35.0},
+	"slice_hoek_bajonet": {"label": "snijhoek bajonet (graden)", "min": 0.0, "max": 70.0, "step": 1.0, "def": 10.0},
+	"slice_sta": {"label": "benen staan nog (s)", "min": 0.0, "max": 2.0, "step": 0.01, "def": 0.35},
+	"slice_los": {"label": "losse stukjes (wolkje)", "min": 0.0, "max": 4.0, "step": 1.0, "def": 2.0},
+	"slice_kracht": {"label": "helft-worpkracht", "min": 0.0, "max": 5.0, "step": 0.01, "def": 1.0},
+	"slice_tuimel": {"label": "salto's van de romp", "min": 0.0, "max": 3.0, "step": 0.5, "def": 1.0},
+	"dust": {"label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	"footprints": {"label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	"footprint_dark": {"label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},
+	"wheel_width": {"label": "wielspoor-breedte", "min": 0.005, "max": 0.12, "step": 0.001, "def": 0.024},
+	"wheel_base": {"label": "wielbasis", "min": 0.05, "max": 0.6, "step": 0.005, "def": 0.17},
+}
+
+const _ROOK := ["smoke_amount", "smoke_size", "smoke_grow", "smoke_life", "smoke_drift", "smoke_alpha",
+	"smoke_fade", "smoke_linger_chance", "smoke_rise"]
+const _VUUR := ["fire_size", "fire_life", "fire_light", "fire_shake"]
+const _WOND := ["wound_blood", "wound_delay", "wound_straal", "wound_straal_dikte", "wound_straal_op",
+	"wound_straal_duur", "blood_burst", "blood_spurt", "drop_size", "drop_fall_time", "drop_stain_chance",
+	"drop_stain_delay", "drop_stain_grow"]
+const _LIJK := ["debris_donker_na", "debris_donker_duur", "debris_donker", "debris_doorzicht", "debris_zak"]
+
+const EFFECTEN: Array = [
+	# --- Kruitdamp en vuurmond -------------------------------------------------
+	{"id": "schot_musket", "groep": "kruit", "naam": "Musketschot", "status": "spel", "speel": "schot_musket",
+		"wanneer": "elk musketschot: kogel, vuurmond, kruitdamp aan de loop, inslagrook",
+		"knoppen": _VUUR + _ROOK + ["impact_smoke_life"],
+		"notitie": "fout: de vuurmond kiest soms de kanonvlam en de kruitdamp soms het witte koppelwolkje (stap 2)"},
+	{"id": "schot_kanon", "groep": "kruit", "naam": "Kanonschot", "status": "spel", "speel": "schot_kanon",
+		"wanneer": "elk kanonschot: streep, grote vuurmond, vier wolken kruitdamp, inslagrook",
+		"knoppen": _VUUR + _ROOK + ["impact_smoke_life"]},
+	{"id": "kruitdamp", "groep": "kruit", "naam": "Kruitdamp aan de loop", "status": "spel", "speel": "kruitdamp",
+		"wanneer": "na elk schot, drijft met het schot mee en stijgt op", "knoppen": _ROOK},
+	{"id": "koppelwolkje", "groep": "kruit", "naam": "Wit wolkje bij koppelen", "status": "spel", "speel": "koppelwolkje",
+		"wanneer": "een kaart koppelen of ontkoppelen", "knoppen": ["link_puff"] + _ROOK},
+	{"id": "rook_wind", "groep": "kruit", "naam": "Rook met de wind mee", "status": "wens", "speel": "",
+		"wanneer": "alle rook drijft met de wind van het potje, zoals de vlaggen", "knoppen": []},
+	{"id": "rookring_kanon", "groep": "kruit", "naam": "Rookring en pluim bij het kanon", "status": "wens", "speel": "",
+		"wanneer": "een kanonschot: een ring die uitdijt en een dikke pluim", "knoppen": []},
+	{"id": "pankruit", "groep": "kruit", "naam": "Kruitflits op de pan", "status": "wens", "speel": "",
+		"wanneer": "vlak voor een musketschot een flitsje en wolkje bij het slot", "knoppen": []},
+	{"id": "propjes", "groep": "kruit", "naam": "Gloeiende propjes uit de loop", "status": "wens", "speel": "",
+		"wanneer": "een schot: een paar gloeiende vonkjes die vallen en doven", "knoppen": []},
+	# --- Stof en aarde ---------------------------------------------------------
+	{"id": "stofjes", "groep": "stof", "naam": "Stofjes in de lucht", "status": "spel", "speel": "",
+		"wanneer": "zweven boven het bord (staat uit: stofdeeltjes 0)", "knoppen": ["dust"],
+		"notitie": "zit in game.gd; nog niet af te spelen in de tuner"},
+	{"id": "voetsporen", "groep": "stof", "naam": "Voetsporen en wielsporen", "status": "spel", "speel": "",
+		"wanneer": "elke stap over het bord", "knoppen": ["footprints", "footprint_dark", "wheel_width", "wheel_base"],
+		"notitie": "zit in game.gd; nog niet af te spelen in de tuner"},
+	{"id": "charge_stof", "groep": "stof", "naam": "Stof bij de landing van een charge", "status": "wens", "speel": "",
+		"wanneer": "de ruiter landt na zijn sprong", "knoppen": []},
+	{"id": "galop_stof", "groep": "stof", "naam": "Stof achter galopperende ruiters", "status": "wens", "speel": "",
+		"wanneer": "een ruiter rijdt over het bord", "knoppen": []},
+	{"id": "inslag_aarde", "groep": "stof", "naam": "Opspattende aarde bij een kanonsinslag", "status": "wens", "speel": "",
+		"wanneer": "een kanonskogel slaat in", "knoppen": []},
+	{"id": "krater", "groep": "stof", "naam": "Krater of schroeiplek", "status": "wens", "speel": "",
+		"wanneer": "blijft na een kanonsinslag op het bord en vervaagt", "knoppen": []},
+	# --- Bloed en inslag -------------------------------------------------------
+	{"id": "vonken", "groep": "bloed", "naam": "Vonken bij een treffer", "status": "spel", "speel": "vonken",
+		"wanneer": "elke treffer, ook op vlees", "knoppen": [],
+		"notitie": "overal dezelfde gele vonken; per materiaal is een wens"},
+	{"id": "treffer", "groep": "bloed", "naam": "Treffer: flits, wankelen, wond", "status": "spel", "speel": "treffer",
+		"wanneer": "een pion wordt geraakt en overleeft", "knoppen": _WOND},
+	{"id": "schadegetal", "groep": "bloed", "naam": "Schadegetal (-N)", "status": "spel", "speel": "schadegetal",
+		"wanneer": "boven een geraakte pion", "knoppen": []},
+	{"id": "inslag_materiaal", "groep": "bloed", "naam": "Inslag per materiaal", "status": "wens", "speel": "",
+		"wanneer": "vlees: bloed; hout: splinters; metaal: vonken (zoals het geluid)", "knoppen": []},
+	{"id": "bloed_variatie", "groep": "bloed", "naam": "Meer variatie in het bloed", "status": "wens", "speel": "",
+		"wanneer": "spatten in de richting van de klap, verschillende vlekken", "knoppen": []},
+	# --- Sterven en brokstukken ------------------------------------------------
+	{"id": "dood_musket", "groep": "dood", "naam": "Sterven door een musketkogel", "status": "spel", "speel": "dood_musket",
+		"wanneer": "een kill met het musket: hoed of ledemaat kan loskomen, bloedplas",
+		"knoppen": ["hat_pop_chance", "hat_fling_power", "hat_fling_time", "limb_shed_chance", "limb_fling_power",
+			"limb_fling_time", "blood_size", "blood_grow", "blood_extra_delay", "death_blood_delay"] + _LIJK},
+	{"id": "dood_kanon", "groep": "dood", "naam": "Sterven door een kanonskogel (gibs)", "status": "spel", "speel": "dood_kanon",
+		"wanneer": "een kill met het kanon: het lijf vliegt in stukken, bloednevel",
+		"knoppen": ["gib_fling_power", "gib_spin", "gib_bloed", "blood_mist", "mist_travel", "gib_pool_delay",
+			"gib_pool_grow"] + _LIJK},
+	{"id": "dood_bajonet", "groep": "dood", "naam": "Sterven door de bajonet", "status": "spel", "speel": "dood_bajonet",
+		"wanneer": "een kill in een gevecht van dichtbij", "knoppen": ["slice_kans_bajonet", "slice_hoek_bajonet",
+			"limb_shed_chance", "blood_size"] + _LIJK},
+	{"id": "doormidden", "groep": "dood", "naam": "Doormidden (sabelhouw)", "status": "spel", "speel": "doormidden",
+		"wanneer": "een kill met de charge: het lijf in twee helften",
+		"knoppen": ["slice_kans_sabel", "slice_hoogte", "slice_hoek", "slice_sta", "slice_los", "slice_kracht",
+			"slice_tuimel", "blood_mist_melee"] + _LIJK},
+	# --- Vuur en explosies -----------------------------------------------------
+	{"id": "kampvuur", "groep": "vuur", "naam": "Kampvuur in het diorama", "status": "diorama", "speel": "",
+		"wanneer": "brandt in het kamp; klikken geeft rook of een knal", "knoppen": [],
+		"notitie": "in omgeving.gd met vaste waarden"},
+	{"id": "kanon_kapot", "groep": "vuur", "naam": "Kanon gaat kapot", "status": "wens", "speel": "",
+		"wanneer": "een kanon wordt vernietigd: splinters, rookkolom, een klein vuur", "knoppen": []},
+	{"id": "kruitvat", "groep": "vuur", "naam": "Kruitvat ontploft", "status": "wens", "speel": "",
+		"wanneer": "een explosie met vuurbal, rook en rondvliegende stukken", "knoppen": []},
+	{"id": "vuur_bord", "groep": "vuur", "naam": "Vuur op het bord", "status": "wens", "speel": "",
+		"wanneer": "iets blijft even branden (een wrak, een kruitspoor)", "knoppen": []},
+]
+
+
+static func effect(id: String) -> Dictionary:
+	for e in EFFECTEN:
+		if String(e.id) == id:
+			return e
+	return {}
+
+
+static func van_groep(groep: String) -> Array:
+	var uit: Array = []
+	for e in EFFECTEN:
+		if String(e.groep) == groep:
+			uit.append(e)
+	return uit
+
+
+## De metadata van een knop; een onbekende sleutel krijgt een ruim bereik zodat
+## de tuner hem toch kan tonen.
+static func knop(sleutel: String) -> Dictionary:
+	if KNOPPEN.has(sleutel):
+		return KNOPPEN[sleutel]
+	return {"label": sleutel, "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0}
+
+
+## Alles als platte data (voor de concept-webpagina): groepen, effecten met hun
+## knoppen en de huidige waarden uit effects_tuning.json.
+static func als_data() -> Dictionary:
+	var effecten: Array = []
+	for e in EFFECTEN:
+		var knoppen: Array = []
+		for k in e.knoppen:
+			var m: Dictionary = knop(String(k))
+			knoppen.append({"sleutel": k, "label": m.label, "waarde": PawnView.fx(String(k), float(m.def)),
+				"min": m.min, "max": m.max, "def": m.def})
+		var d: Dictionary = e.duplicate()
+		d["knoppen"] = knoppen
+		effecten.append(d)
+	return {"groepen": GROEPEN, "effecten": effecten}

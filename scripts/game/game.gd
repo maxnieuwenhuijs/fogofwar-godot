@@ -15,6 +15,9 @@ const ONTHUL_SCHERM_SCRIPT := preload("res://scripts/ui/match/onthul_scherm.gd")
 ## UI-beweging (30 september): inkom en microinteracties, een module voor de
 ## hele UI (scripts/ui/ui_beweging.gd, via preload).
 const BEWEGING := preload("res://scripts/ui/ui_beweging.gd")
+## De effecten van het bord (6 oktober, docs/VFX-studio.md): schot, vuurmond,
+## vonken en schadegetal op een plek, zodat de VFX-tuner dezelfde code afspeelt.
+const VFX := preload("res://scripts/vfx/vfx.gd")
 const PAWN_Y := 0.05
 
 ## AI difficulty: 0 = Easy, 1 = Medium, 2 = Hard
@@ -3441,52 +3444,10 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	if spv != null and spv._tune_key != "":
 		muzzle = _board.to_local(spv.muzzle_world())
 	var target: Vector3 = end + Vector3(0.0, 0.55, 0.0)
-	# Kanon vliegt razendsnel (keihard), infanterie iets rustiger.
-	var dist_len: float = (end - start).length()
-	var dur: float = clampf(0.016 * dist_len, 0.05, 0.22) if is_cannon \
-		else clampf(0.06 * dist_len, 0.1, 0.4)
-
-	var proj := MeshInstance3D.new()
-	var mesh := SphereMesh.new()
-	var radius: float = 0.13 if is_cannon else 0.055
-	mesh.radius = radius
-	mesh.height = radius * 2.0
-	proj.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	if is_cannon:
-		mat.albedo_color = Color(0.16, 0.16, 0.18)
-		mat.metallic = 0.5
-	else:
-		mat.albedo_color = Color(1.0, 0.9, 0.5)
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.85, 0.4)
-		mat.emission_energy_multiplier = 1.6
-	proj.material_override = mat
-	proj.position = muzzle
-	_board.add_child(proj)
-
-	# Kanonskogel: rek de bol uit langs de vliegrichting → een strakke streep,
-	# keihard rechtdoor (geen boog). Infanterie blijft een rond tracer-bolletje.
-	if is_cannon and muzzle.distance_to(target) > 0.01:
-		proj.look_at_from_position(muzzle, target, Vector3.UP)
-		proj.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
-	var tween := create_tween()
-	tween.tween_method(func(t: float) -> void: proj.position = muzzle.lerp(target, t), 0.0, 1.0, dur)
-	tween.tween_callback(proj.queue_free)
-
-	_muzzle_flash(muzzle, is_cannon)
-	# vuur-schok: korte terugslag-shake bij het afvuren (kanon harder).
-	_shake((0.55 if is_cannon else 0.3) * PawnView.fx("fire_shake", 1.0))
-	# Rook drift met de schot-richting mee, van de loop af.
-	var shot_dir := Vector3.ZERO
-	if muzzle.distance_to(target) > 0.01:
-		shot_dir = (target - muzzle).normalized()
-	_spawn_smoke(muzzle, 4 if is_cannon else 2, 0.16 if is_cannon else 0.09, shot_dir)
-	# Inslag-rook zodra het projectiel aankomt (zelfde richting = momentum).
-	var impact_count: int = 3 if is_cannon else 2
-	var impact_size: float = 0.14 if is_cannon else 0.08
-	get_tree().create_timer(dur).timeout.connect(func() -> void: _spawn_smoke(target, impact_count, impact_size, shot_dir, PawnView.fx("impact_smoke_life", 0.6)))
-	return dur
+	# Kogel, vuurmond, terugslag, kruitdamp en inslagrook: de gedeelde keten
+	# (scripts/vfx/vfx.gd), dezelfde die de VFX-tuner afspeelt.
+	var dur: float = VFX.vlucht_duur((end - start).length(), is_cannon)
+	return VFX.schot(_board, muzzle, target, is_cannon, dur, _shake)
 
 
 ## Het diorama om het bord (8 september): graslandschap, wolkenschaduwen,
@@ -4000,40 +3961,6 @@ func _spawn_footprints(a: Vector3, b: Vector3, dur: float, mover: Pawn = null) -
 
 ## Korte felle flits + lichtpuls aan de loop. Met een texture in
 ## assets/textures/fire/ een echte vlam-billboard; anders de bol-flits.
-func _muzzle_flash(pos: Vector3, big: bool) -> void:
-	var textured := PawnView.spawn_muzzle_fire(_board, pos, big)
-	var holder := Node3D.new()
-	holder.position = pos
-	_board.add_child(holder)
-	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.78, 0.35)
-	# vuur-licht: hoe fel de omgeving even oplicht bij het schot.
-	light.light_energy = (2.6 if big else 1.6) * PawnView.fx("fire_light", 1.6)
-	light.omni_range = 2.8
-	holder.add_child(light)
-	var tween := create_tween().set_parallel()
-	if not textured:
-		var flash := MeshInstance3D.new()
-		var mesh := SphereMesh.new()
-		var radius: float = 0.16 if big else 0.09
-		mesh.radius = radius
-		mesh.height = radius * 2.0
-		flash.mesh = mesh
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.75, 0.25, 0.9)
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.7, 0.2)
-		mat.emission_energy_multiplier = 2.5
-		flash.material_override = mat
-		flash.scale = Vector3.ONE * 0.5
-		holder.add_child(flash)
-		tween.tween_property(flash, "scale", Vector3.ONE * (2.0 if big else 1.4), 0.12).set_ease(Tween.EASE_OUT)
-		tween.tween_property(mat, "albedo_color:a", 0.0, 0.14).set_ease(Tween.EASE_IN)
-	tween.tween_property(light, "light_energy", 0.0, 0.18)
-	tween.chain().tween_callback(holder.queue_free)
-
-
 ## Zwartkruit-rook via de gedeelde spawner in PawnView: textures uit
 ## assets/textures/smoke/ (billboards die echt uitzetten), zonder textures
 ## grijze bol-wolkjes. Knoppen in de Model-tuner: rook-aantal/-maat/-groei/-duur.
@@ -4103,36 +4030,11 @@ func _kill_view(pawn_id: int, world_dir: Vector3, strength: float = 0.7, kind: S
 		pv.queue_free()
 
 
-## Korte vonken-/stofexplosie op het inslagpunt.
+## Korte vonken-/stofexplosie op het inslagpunt (scripts/vfx/vfx.gd).
 func _spawn_sparks(pos: Vector3, strength: float) -> void:
 	if not _combat_feel:
 		return
-	var n: int = int(clampf(6.0 * strength, 3.0, 12.0))
-	for i in n:
-		var spark := MeshInstance3D.new()
-		var mesh := SphereMesh.new()
-		mesh.radial_segments = 6
-		mesh.rings = 3
-		var r := randf_range(0.02, 0.05)
-		mesh.radius = r
-		mesh.height = r * 2.0
-		spark.mesh = mesh
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.85, 0.4)
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.8, 0.3)
-		mat.emission_energy_multiplier = 2.0
-		spark.material_override = mat
-		spark.position = pos
-		_board.add_child(spark)
-		var dir := Vector3(randf_range(-1, 1), randf_range(0.3, 1.2), randf_range(-1, 1)).normalized()
-		var dist := randf_range(0.3, 0.7) * maxf(strength, 0.4)
-		var life := randf_range(0.25, 0.45)
-		var tw := create_tween().set_parallel()
-		tw.tween_property(spark, "position", pos + dir * dist, life).set_ease(Tween.EASE_OUT)
-		tw.tween_property(mat, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
-		tw.chain().tween_callback(spark.queue_free)
+	VFX.vonken(_board, pos, strength)
 
 
 ## Screen shake aanzwengelen (schaalt met impact). Uitzetbaar (motion sickness).
@@ -4167,21 +4069,7 @@ func _hitstop(secs: float) -> void:
 
 
 func _spawn_damage_float(coord: Vector2i, text: String, color: Color = Color(1.0, 0.32, 0.26)) -> void:
-	var label := Label3D.new()
-	label.text = text
-	label.font_size = 88
-	label.outline_size = 16
-	label.outline_modulate = Color(0.05, 0.02, 0.02, 0.9)
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = color
-	label.position = tile_position(coord.x, coord.y) + Vector3(0.0, 1.5, 0.0)
-	_board.add_child(label)
-	var tween := create_tween().set_parallel()
-	tween.tween_property(label, "position:y", label.position.y + 0.9, 0.7) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(label, "modulate:a", 0.0, 0.7).set_ease(Tween.EASE_IN)
-	tween.chain().tween_callback(label.queue_free)
+	VFX.schade_getal(_board, tile_position(coord.x, coord.y) + Vector3(0.0, 1.5, 0.0), text, color)
 
 
 ## Opruk na een gewonnen melee: eerst de vasthoud-vlag weg, dan pas lopen.
