@@ -1566,6 +1566,10 @@ def in_spel(oid, pad, modus="vervang", doel=""):
     stempel_bron = os.path.basename(bron).rsplit("_", 1)[0]
     meta = lees_meta(eid, stempel_bron)
     k, r = [int(x) for x in (meta.get("rooster") or [1, 1])[:2]]
+    if o["soort"] != "flipbook" and (k, r) != (1, 1) and not o.get("vel"):
+        raise RuntimeError("Hier speelt het spel (nog) geen vel af: het zou het hele rooster in een keer tonen. "
+                           "Zet de frames er los in, of vraag Claude dit onderdeel een vel te laten afspelen.")
+    rooster_naam = ("_%dx%d" % (k, r)) if (k, r) != (1, 1) else ""
     im = Image.open(bron)
     alpha = _heeft_alpha(im)
     if o["achtergrond"] == "alpha" and not alpha:
@@ -1579,14 +1583,16 @@ def in_spel(oid, pad, modus="vervang", doel=""):
     if o["soort"] == "varianten" and modus == "variant":
         namen = {h["naam"].lower() for h in huidig}
         n = 1
-        while any(x.startswith("%s%d." % (o["bestand"].lower(), n)) for x in namen):
+        while any(x.startswith("%s%d." % (o["bestand"].lower(), n)) or x.startswith("%s%d_" % (o["bestand"].lower(), n))
+                  for x in namen):
             n += 1
-        naam, weg_lijst = "%s%d.png" % (o["bestand"], n), []
+        naam, weg_lijst = "%s%d%s.png" % (o["bestand"], n, rooster_naam), []
     elif o["soort"] == "varianten":
         h = next((h for h in huidig if doel in (h["pad"], h["naam"])), None)
         if h is None:
             raise RuntimeError("Welke variant vervang je? Kies er een, of zet hem erbij.")
-        naam, weg_lijst = os.path.splitext(h["naam"])[0] + ".png", [h]
+        base = re.sub(r"_\d+x\d+$", "", os.path.splitext(h["naam"])[0])
+        naam, weg_lijst = base + rooster_naam + ".png", [h]
     elif o["soort"] == "flipbook":
         naam = ("%s_%dx%d.png" % (o["bestand"], k, r)) if (k, r) != (1, 1) else "%s.png" % o["bestand"]
         weg_lijst = huidig            # het spel pakt de eerste die past: er mag er maar een zijn

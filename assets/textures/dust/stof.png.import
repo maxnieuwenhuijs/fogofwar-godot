@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b8ayv2jk6u2p8"
-path="res://.godot/imported/musket_3x1.png-33816fe0a16e8dc95b1dbd3d0fe882cf.ctex"
+uid="uid://d4iw6f0yej0p8"
+path="res://.godot/imported/stof.png-5482dafbe224c13a4aacfcc977e15778.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/fire/musket_3x1.png"
-dest_files=["res://.godot/imported/musket_3x1.png-33816fe0a16e8dc95b1dbd3d0fe882cf.ctex"]
+source_file="res://assets/textures/dust/stof.png"
+dest_files=["res://.godot/imported/stof.png-5482dafbe224c13a4aacfcc977e15778.ctex"]
 
 [params]
 

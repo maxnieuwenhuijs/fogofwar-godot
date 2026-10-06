@@ -12,7 +12,12 @@ extends RefCounted
 ## vaste momenten, voor de concept-webpagina en om naar te kijken.
 
 const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")
+const VFX := preload("res://scripts/vfx/vfx.gd")
 const STATUSSEN := ["spel", "wens", "diorama"]
+## De texturen die de studio levert en die de code via VFX._geleverde laadt:
+## map, naam, boost, hooguit-px, bijsnijden.
+const GELEVERD := [["decals", "krater", 0.0, 512, false, false], ["dust", "stof", 2.3, 256, true, true],
+	["flame", "vlam", 0.0, 512, false, false], ["footstep", "wiel", 0.0, 256, true, false]]
 
 static var _fouten := 0
 static var _host: Node = null
@@ -35,6 +40,7 @@ static func run(host: Node) -> int:
 	_fouten = 0
 	_host = host
 	_catalogus()
+	_geleverd()
 	await _tuner()
 	print("[VFX] %s: %d fouten" % ["PASS" if _fouten == 0 else "FAIL", _fouten])
 	return _fouten
@@ -87,6 +93,41 @@ static func _catalogus() -> void:
 		"" if fout_regels.is_empty() else ": " + "; ".join(fout_regels)])
 	var data: Dictionary = Catalogus.als_data()
 	_ok((data.effecten as Array).size() == Catalogus.EFFECTEN.size(), "als_data levert alle effecten met hun waarden")
+
+
+## De geleverde texturen (krater, stof, vlam, wielspoor): elk bestand in de map
+## komt klaar uit de lader, niet groter dan afgesproken en met mipmaps; het
+## wielspoor is tot een strook bijgesneden en de vlam uit zijn plaatje geknipt.
+## Zonder bestanden (een verse checkout) is er niets te controleren.
+static func _geleverd() -> void:
+	print("[VFX] geleverde texturen")
+	for g in GELEVERD:
+		var map := String(g[0])
+		var naam := String(g[1])
+		var bestanden := 0
+		var d := DirAccess.open("res://assets/textures/%s/" % map)
+		if d != null:
+			for f in d.get_files():
+				var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
+				if fname == f and fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"] \
+						and fname.get_basename().to_lower().begins_with(naam):
+					bestanden += 1
+		var lijst: Array = VFX._geleverde(map, naam, float(g[2]), int(g[3]), bool(g[4]), bool(g[5]))
+		var fout := ""
+		for e in lijst:
+			var tex: Texture2D = e.tex
+			if maxi(tex.get_width(), tex.get_height()) > int(g[3]):
+				fout = "te groot (%dx%d)" % [tex.get_width(), tex.get_height()]
+			elif tex.get_image() == null or not tex.get_image().has_mipmaps():
+				fout = "geen mipmaps"
+			elif naam == "wiel" and float(tex.get_width()) > float(tex.get_height()) * 0.6:
+				fout = "niet bijgesneden (%dx%d)" % [tex.get_width(), tex.get_height()]
+			elif naam == "vlam" and int(e.cols) * int(e.rows) == 1 and (e.uitsnede as Rect2).get_area() > 0.9:
+				fout = "vlam niet uit het plaatje geknipt"
+			elif naam == "stof" and int(e.cols) * int(e.rows) == 1 and tex.get_width() != tex.get_height():
+				fout = "stofwolk niet vierkant (%dx%d)" % [tex.get_width(), tex.get_height()]
+		_ok(lijst.size() == bestanden and fout == "", "%s/%s: %d van %d bestanden klaar%s" % [map, naam, lijst.size(),
+			bestanden, "" if fout == "" else ", " + fout])
 
 
 static func _tuner() -> void:

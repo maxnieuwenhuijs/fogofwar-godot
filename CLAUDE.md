@@ -1364,7 +1364,26 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   een contactvel `<naam>_vel.jpg` (12 beelden met de tijd): zo ziet Claude
   wat er gebeurt. Krater, stof en vlammen op het bord staan er al in maar
   het spel kijkt er nog niet naar (`gebruikt: false`): ombouwen zodra Max
-  er een textuur voor levert.
+  er een textuur voor levert. **Stap 9 (6 oktober): die texturen zitten
+  erin.** `VFX._geleverde(map, naam, boost, max_px, bijsnijden, vierkant)`
+  laadt wat de studio in `assets/textures/<map>/` zet, een keer per bestand
+  klaargemaakt: hooguit `max_px`, rooster uit de naam, bijgesneden tot wat
+  er te zien is (`vierkant` voor billboards), zwart doorzichtig als het
+  plaatje geen alpha heeft, en met mipmaps (een 1024-plaatje op 70 px
+  flikkert anders). Kiezen met de eigen rng. Krater: een variant uit
+  `decals/krater*` (512); stof: `dust/stof*` vierkant bijgesneden, in eigen
+  kleur, maat x1,6 en dekking x0,7 (`STOF_BEELD_*`; anders stickertjes),
+  voor landing, galop, inslag en schokgolf; vlammen op het bord:
+  `flame/vlam*` met `VLAM_BEELD_SHADER` (de vlam uit het plaatje geknipt,
+  golft en flakkert, spiegelt, een vel speelt af; additief); wielspoor:
+  `VFX.geleverde_textuur("footstep", "wiel", 256, true)` in game.gd
+  (bijgesneden tot de strook). De bloednevel speelt een vel
+  (`blood_mist1_4x3.png`; `PawnView._blood_entry`, evenveel globale trekjes
+  als voorheen), de studio noemt een vel-variant `<naam><n>_KxR.png` en
+  weigert een vel waar het spel er niets mee kan (`vel` in ONDERDELEN).
+  `-- vfxcheck` toetst elk geleverd bestand (klaar, maat, mipmaps,
+  bijgesneden). Elke check-modus van capture.gd neemt `fx:<knop>=<waarde>`
+  (alleen die run), bv. `-- play fx:stijl_miniatuur=1`.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dsuqtjm1abfh6"
-path="res://.godot/imported/cannon_3x1.png-2685956ea20e11d5d79f3d9f7c06041c.ctex"
+uid="uid://b66r1po25jtse"
+path="res://.godot/imported/wiel.png-cd1a0c4dcc2eb9fa31807584ce02f8b6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/fire/cannon_3x1.png"
-dest_files=["res://.godot/imported/cannon_3x1.png-2685956ea20e11d5d79f3d9f7c06041c.ctex"]
+source_file="res://assets/textures/footstep/wiel.png"
+dest_files=["res://.godot/imported/wiel.png-cd1a0c4dcc2eb9fa31807584ce02f8b6.ctex"]
 
 [params]
 

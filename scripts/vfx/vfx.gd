@@ -24,6 +24,142 @@ static func _r() -> RandomNumberGenerator:
 	return _rng
 
 
+## Texturen die de VFX-studio levert (6 oktober, stap 9; tools/vfx_studio.py, groep
+## "Texturen en decals"): per map onder assets/textures/ de bestanden waarvan de
+## naam met `naam` begint, elk een keer klaargemaakt en bewaard: hooguit `max_px`
+## per kant (een vel blijft deelbaar door zijn rooster uit de naam, bv. _4x4),
+## desgewenst bijgesneden tot wat er te zien is (`vierkant`: een vierkant om het
+## midden, voor een billboard die anders vervormt), zwart doorzichtig als het plaatje
+## zelf geen doorzichtigheid heeft (`boost` > 0, zoals PawnView._black_to_alpha), en
+## met mipmaps, zodat een groot plaatje klein op het bord niet flikkert. Leeg = de
+## code tekent zijn eigen vervanger. Kiezen gaat met de eigen rng, nooit de globale.
+static var _geleverd: Dictionary = {}     # "map/naam" -> Array van {tex, cols, rows, uitsnede}
+
+
+static func _geleverde(map: String, naam: String, boost: float = 0.0, max_px: int = 512,
+		bijsnijden: bool = false, vierkant: bool = false) -> Array:
+	var sleutel := "%s/%s/%s/%d/%s/%s" % [map, naam, boost, max_px, bijsnijden, vierkant]
+	if _geleverd.has(sleutel):
+		return _geleverd[sleutel]
+	var lijst: Array = []
+	var pad := "res://assets/textures/%s/" % map
+	var d := DirAccess.open(pad)
+	if d != null:
+		var namen: Array = []
+		for f in d.get_files():
+			var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
+			if fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"] and not namen.has(fname):
+				namen.append(fname)
+		namen.sort()
+		for fname in namen:
+			var base := String(fname).get_basename().to_lower()
+			if not base.begins_with(naam) or not ResourceLoader.exists(pad + fname):
+				continue
+			var tex = load(pad + fname)
+			if tex is Texture2D:
+				lijst.append(_maak_klaar(tex, base, boost, max_px, bijsnijden, vierkant))
+	_geleverd[sleutel] = lijst
+	return lijst
+
+
+static func _kies_geleverd(map: String, naam: String, boost: float = 0.0, max_px: int = 512,
+		bijsnijden: bool = false, vierkant: bool = false) -> Dictionary:
+	var lijst := _geleverde(map, naam, boost, max_px, bijsnijden, vierkant)
+	return {} if lijst.is_empty() else lijst[_r().randi() % lijst.size()]
+
+
+## Een geleverde textuur zoals die in het spel moet: zie _geleverde. Ook voor
+## game.gd (het wielspoor). Zonder beelddata (een VRAM-textuur) blijft hij zoals hij is.
+static func _maak_klaar(tex: Texture2D, base: String, boost: float, max_px: int, bijsnijden: bool,
+		vierkant: bool = false) -> Dictionary:
+	var cols := 1
+	var rows := 1
+	var us := base.rfind("_")
+	if us >= 0:
+		var grid := base.substr(us + 1).split("x")
+		if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
+			cols = maxi(int(grid[0]), 1)
+			rows = maxi(int(grid[1]), 1)
+	var e := {"tex": tex, "cols": cols, "rows": rows, "uitsnede": Rect2(0.0, 0.0, 1.0, 1.0)}
+	var img := tex.get_image()
+	if img == null:
+		return e
+	img = img.duplicate()
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	var alpha := false
+	for y in range(0, img.get_height(), 4):
+		for x in range(0, img.get_width(), 4):
+			if img.get_pixel(x, y).a < 0.98:
+				alpha = true
+				break
+		if alpha:
+			break
+	if bijsnijden and cols * rows == 1:
+		var r := _inhoud(img, alpha)
+		if vierkant:
+			var z := mini(maxi(r.size.x, r.size.y), mini(img.get_width(), img.get_height()))
+			var m := r.get_center()
+			r = Rect2i(clampi(m.x - z / 2, 0, img.get_width() - z), clampi(m.y - z / 2, 0, img.get_height() - z), z, z)
+		if r.size.x > 4 and r.size.y > 4:
+			img = img.get_region(r)
+	var celw := img.get_width() / cols
+	var celh := img.get_height() / rows
+	var schaal := minf(1.0, float(max_px) / float(maxi(img.get_width(), img.get_height())))
+	if schaal < 1.0:
+		img.resize(maxi(1, int(celw * schaal)) * cols, maxi(1, int(celh * schaal)) * rows, Image.INTERPOLATE_LANCZOS)
+	if boost > 0.0 and not alpha:
+		for y in img.get_height():
+			for x in img.get_width():
+				var c := img.get_pixel(x, y)
+				c.a = minf(maxf(c.r, maxf(c.g, c.b)) * boost, 1.0)
+				img.set_pixel(x, y, c)
+	if cols * rows == 1:
+		var r2 := _inhoud(img, alpha or boost > 0.0)
+		e.uitsnede = Rect2(Vector2(r2.position) / Vector2(img.get_size()), Vector2(r2.size) / Vector2(img.get_size()))
+	img.generate_mipmaps()
+	e.tex = ImageTexture.create_from_image(img)
+	return e
+
+
+## Het deel van een plaatje waar iets te zien is: dekking (met alpha) of
+## helderheid (op zwart), met een randje marge.
+static func _inhoud(img: Image, alpha: bool) -> Rect2i:
+	var w := img.get_width()
+	var h := img.get_height()
+	var stap := maxi(1, int(maxi(w, h) / 256))
+	var x0 := w
+	var y0 := h
+	var x1 := -1
+	var y1 := -1
+	for y in range(0, h, stap):
+		for x in range(0, w, stap):
+			var c := img.get_pixel(x, y)
+			var zicht: float = c.a if alpha else maxf(c.r, maxf(c.g, c.b))
+			if zicht > 0.06:
+				x0 = mini(x0, x)
+				y0 = mini(y0, y)
+				x1 = maxi(x1, x)
+				y1 = maxi(y1, y)
+	if x1 < 0:
+		return Rect2i(0, 0, w, h)
+	var marge := maxi(stap * 2, int(maxi(x1 - x0, y1 - y0) * 0.04))
+	x0 = maxi(0, x0 - marge)
+	y0 = maxi(0, y0 - marge)
+	x1 = mini(w - 1, x1 + marge)
+	y1 = mini(h - 1, y1 + marge)
+	return Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1)
+
+
+## Een textuur uit een vaste map (het wielspoor in game.gd), klaargemaakt als
+## hierboven en bewaard; null als het bestand er niet is.
+static func geleverde_textuur(map: String, naam: String, max_px: int, bijsnijden: bool) -> Texture2D:
+	for e in _geleverde(map, naam, 0.0, max_px, bijsnijden):
+		return e.tex
+	return null
+
+
 ## De wind van het potje (PawnView.wind_richting, wereld) in de ruimte van `ouder`.
 static func _wind(ouder: Node3D) -> Vector3:
 	return ouder.global_transform.basis.inverse() * PawnView.wind_richting
@@ -160,7 +296,15 @@ static func slot_bij(loop: Vector3, richting: Vector3) -> Vector3:
 static func _rookpluk(ouder: Node3D, van: Vector3, naar: Vector3, m0: float, m1: float, duur: float,
 		alfa: float = 0.85, vol: float = 0.3, trans: int = Tween.TRANS_CUBIC, eind_frame: int = -1,
 		wens: String = "musket", tint: Color = Color.WHITE) -> void:
-	var e: Dictionary = PawnView._vfx_entry(PawnView.SMOKE_TEX_DIR, 2.3, wens)
+	_pluk(ouder, PawnView._vfx_entry(PawnView.SMOKE_TEX_DIR, 2.3, wens), van, naar, m0, m1, duur, alfa, vol,
+		trans, eind_frame, tint, 1)
+
+
+## Een plukje met een gegeven textuur (`e` = {tex, cols, rows}, leeg = een grijze
+## bol): zie _rookpluk. Een vel speelt vanaf `eerste` (de kruitdamp vanaf 1: beeldje
+## 0 draagt de vlam van het schot).
+static func _pluk(ouder: Node3D, e: Dictionary, van: Vector3, naar: Vector3, m0: float, m1: float, duur: float,
+		alfa: float, vol: float, trans: int, eind_frame: int, tint: Color, eerste: int, spiegel: bool = false) -> void:
 	var mi := MeshInstance3D.new()
 	var mat := StandardMaterial3D.new()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -178,7 +322,10 @@ static func _rookpluk(ouder: Node3D, van: Vector3, naar: Vector3, m0: float, m1:
 		rows = int(e.rows)
 		if cols * rows > 1:
 			mat.uv1_scale = Vector3(1.0 / cols, 1.0 / rows, 1.0)
-			PawnView._sheet_frame(1, mat, cols, rows)   # beeldje 0 draagt de vlam van het schot
+			PawnView._sheet_frame(mini(eerste, cols * rows - 1), mat, cols, rows)
+		elif spiegel:
+			mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)
+			mat.uv1_offset = Vector3(1.0, 0.0, 0.0)
 	else:
 		var bol := SphereMesh.new()
 		bol.radius = 0.5
@@ -198,7 +345,7 @@ static func _rookpluk(ouder: Node3D, van: Vector3, naar: Vector3, m0: float, m1:
 	if cols * rows > 1:
 		# `eind_frame`: niet tot de rafelige laatste beeldjes (een ring moet dicht blijven)
 		var laatste: int = cols * rows - 1 if eind_frame < 0 else mini(eind_frame, cols * rows - 1)
-		tw.tween_method(PawnView._sheet_frame.bind(mat, cols, rows), 1, laatste, duur)
+		tw.tween_method(PawnView._sheet_frame.bind(mat, cols, rows), mini(eerste, laatste), laatste, duur)
 	tw.tween_property(mat, "albedo_color:a", 0.0, duur * (1.0 - vol)).set_delay(duur * vol).set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(mi.queue_free)
 
@@ -333,12 +480,29 @@ static func _gloeiend(ouder: Node3D, loop: Vector3, v: Vector3, duur: float, gro
 # --- Stof en aarde (6 oktober, stap 3) -----------------------------------------------
 
 const STOF_KLEUR := Color(0.76, 0.68, 0.56)    # droog zand en stof, lichter dan het bord
+const STOF_BEELD_MAAT := 1.6                     # een geleverde stofwolk (assets/textures/dust/) groter
+const STOF_BEELD_ALFA := 0.7                     # en wat doorzichtiger dan de oude pof
 ## Waar vlekken en kraters op het bord liggen: net boven het bordmodel, op de
 ## hoogte van de bloedplassen van PawnView (pion-hoogte 0,05 + 0,015).
 const GROND_Y := 0.065
 const AARDE_KLEUR := Color(0.3, 0.22, 0.15)    # kluiten
 
 static var _krater_tex: Texture2D = null
+
+
+## Een plukje stof: de stofwolk uit assets/textures/dust/ (stof*.png, van de
+## studio) in zijn eigen kleur, anders de witte pof in stofkleur. `donker` maakt
+## hem wat donkerder (aarde bij een inslag).
+static func _stofpluk(ouder: Node3D, van: Vector3, naar: Vector3, m0: float, m1: float, duur: float,
+		alfa: float, vol: float, trans: int, donker: float = 0.0) -> void:
+	var e := _kies_geleverd("dust", "stof", 2.3, 256, true, true)
+	if e.is_empty():
+		_rookpluk(ouder, van, naar, m0, m1, duur, alfa, vol, trans, 6, "white_smoke", STOF_KLEUR.darkened(donker))
+	else:
+		# een geleverde wolk is scherper en dichter dan de oude pof: groter en wat
+		# doorzichtiger, zodat de plukjes samen een wolk vormen
+		_pluk(ouder, e, van, naar, m0 * STOF_BEELD_MAAT, m1 * STOF_BEELD_MAAT, duur, alfa * STOF_BEELD_ALFA, vol,
+			trans, -1, Color.WHITE.darkened(donker), 0, _r().randf() < 0.5)
 
 
 static func _vlak(richting: Vector3) -> Vector3:
@@ -360,8 +524,8 @@ static func stof_landing(ouder: Node3D, pos: Vector3) -> void:
 		var h := TAU * float(i) / float(n) + r.randf_range(-0.2, 0.2)
 		var d := Vector3(cos(h), 0.0, sin(h))
 		var naar := grond + d * r.randf_range(0.5, 0.8) * sterkte + Vector3.UP * r.randf_range(0.05, 0.2) + wind
-		_rookpluk(ouder, grond + d * 0.12, naar, 0.15, r.randf_range(0.45, 0.58) * sterkte,
-			r.randf_range(0.9, 1.3), PawnView.fx("stof_alfa", 0.7), 0.35, Tween.TRANS_EXPO, 6, "white_smoke", STOF_KLEUR)
+		_stofpluk(ouder, grond + d * 0.12, naar, 0.15, r.randf_range(0.45, 0.58) * sterkte,
+			r.randf_range(0.9, 1.3), PawnView.fx("stof_alfa", 0.7), 0.35, Tween.TRANS_EXPO)
 
 
 ## Een stofje achter iets dat hard over het bord gaat (stof-galop): een ruiter
@@ -378,8 +542,8 @@ static func stof_spoor(ouder: Node3D, pos: Vector3, richting: Vector3, factor: f
 		var van: Vector3 = Vector3(pos.x, 0.08, pos.z) + achter * 0.18 + zij * float(kant) * r.randf_range(0.06, 0.16)
 		var naar: Vector3 = van + achter * r.randf_range(0.15, 0.3) + zij * float(kant) * 0.08 \
 			+ Vector3.UP * r.randf_range(0.1, 0.24) + wind
-		_rookpluk(ouder, van, naar, 0.1, r.randf_range(0.3, 0.42) * sterkte, r.randf_range(0.6, 0.9),
-			PawnView.fx("stof_alfa", 0.7) * 0.85, 0.3, Tween.TRANS_CUBIC, 6, "white_smoke", STOF_KLEUR)
+		_stofpluk(ouder, van, naar, 0.1, r.randf_range(0.3, 0.42) * sterkte, r.randf_range(0.6, 0.9),
+			PawnView.fx("stof_alfa", 0.7) * 0.85, 0.3, Tween.TRANS_CUBIC)
 
 
 ## Opspattende aarde bij een kanonsinslag (aarde-inslag): kluiten die in een
@@ -403,9 +567,8 @@ static func inslag_aarde(ouder: Node3D, pos: Vector3, richting: Vector3) -> void
 		var h := r.randf_range(0.0, TAU)
 		var d := Vector3(cos(h), 0.0, sin(h))
 		var naar := grond + d * r.randf_range(0.2, 0.45) + vooruit * 0.15 + Vector3.UP * r.randf_range(0.25, 0.55) + wind
-		_rookpluk(ouder, grond + d * 0.05, naar, 0.18, r.randf_range(0.45, 0.62) * sterkte,
-			r.randf_range(1.1, 1.6), PawnView.fx("stof_alfa", 0.7), 0.35, Tween.TRANS_EXPO, 6, "white_smoke",
-			STOF_KLEUR.darkened(0.12))
+		_stofpluk(ouder, grond + d * 0.05, naar, 0.18, r.randf_range(0.45, 0.62) * sterkte,
+			r.randf_range(1.1, 1.6), PawnView.fx("stof_alfa", 0.7), 0.35, Tween.TRANS_EXPO, 0.12)
 
 
 ## Een kluit aarde: een klein blokje dat tollend een boog vliegt, op het bord
@@ -441,7 +604,8 @@ static func _kluit(ouder: Node3D, start: Vector3, v: Vector3, maat: float) -> vo
 
 ## Een krater of schroeiplek op het bord (krater, krater-duur): een donkere,
 ## onregelmatige plek met een randje opgeworpen aarde, die even blijft liggen en
-## dan vervaagt. De textuur wordt eenmalig in code gemaakt (geen bestand).
+## dan vervaagt. Een van de kraters uit assets/textures/decals/ (krater*.png, van
+## de studio), willekeurig gedraaid; zonder die bestanden een textuur uit code.
 static func krater(ouder: Node3D, pos: Vector3) -> void:
 	var sterkte: float = PawnView.fx("krater", 1.0)
 	if sterkte <= 0.0 or ouder == null:
@@ -452,7 +616,8 @@ static func krater(ouder: Node3D, pos: Vector3) -> void:
 	vlak.size = Vector2.ONE * 0.9 * sterkte
 	mi.mesh = vlak
 	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = _krater_textuur()
+	var geleverd := _kies_geleverd("decals", "krater", 0.0, 512)
+	mat.albedo_texture = geleverd.tex if not geleverd.is_empty() else _krater_textuur()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.roughness = 1.0
 	mi.material_override = mat
@@ -809,9 +974,75 @@ void fragment() {
 
 static var _vuur_shader: Shader = null
 
+## Een vlam uit een plaatje (assets/textures/flame/vlam*.png, van de studio): dezelfde
+## staande billboard als hierboven, met het deel van het plaatje waar de vlam staat
+## (`uitsnede`), dat golft (hoe hoger hoe meer, de voet blijft staan) en flakkert;
+## een vel (`rooster`) speelt zijn beeldjes af. Additief: zwart telt niet mee.
+const VLAM_BEELD_SHADER := """
+shader_type spatial;
+render_mode blend_add, unshaded, cull_disabled, depth_draw_never, shadows_disabled, fog_disabled;
 
-## Een vlam-quad met de vuur-shader, de voet op `voet`, `hoog` hoog.
+uniform sampler2D vlam_tex : source_color, filter_linear_mipmap, repeat_disable;
+uniform vec4 uitsnede = vec4(0.0, 0.0, 1.0, 1.0);
+uniform vec2 rooster = vec2(1.0, 1.0);
+uniform float tijd_offset = 0.0;
+uniform float sterkte = 1.0;
+uniform float snelheid = 1.0;
+uniform float spiegel = 0.0;
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float ruis(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+void vertex() {
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(
+		vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0),
+		vec4(0.0, 1.0, 0.0, 0.0),
+		vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0),
+		MODEL_MATRIX[3]);
+	MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(
+		vec4(length(MODEL_MATRIX[0].xyz), 0.0, 0.0, 0.0),
+		vec4(0.0, length(MODEL_MATRIX[1].xyz), 0.0, 0.0),
+		vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0));
+	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+}
+
+void fragment() {
+	float t = TIME * snelheid + tijd_offset;
+	vec2 uv = UV;
+	if (spiegel > 0.5) {
+		uv.x = 1.0 - uv.x;
+	}
+	float y = 1.0 - uv.y;
+	uv.x += (ruis(vec2(y * 3.0 - t * 2.4, t * 0.6)) - 0.5) * 0.16 * y;
+	uv.y += (ruis(vec2(uv.x * 5.0, y * 2.0 - t * 3.1)) - 0.5) * 0.05 * y;
+	vec2 cel = vec2(0.0);
+	float n = rooster.x * rooster.y;
+	if (n > 1.0) {
+		float beeld = mod(floor(t * 12.0), n);
+		cel = vec2(mod(beeld, rooster.x), floor(beeld / rooster.x));
+	}
+	vec2 bron = (cel + uitsnede.xy + clamp(uv, 0.0, 1.0) * uitsnede.zw) / rooster;
+	vec4 c = texture(vlam_tex, bron);
+	float flakker = 0.82 + 0.18 * ruis(vec2(t * 7.0, 3.1));
+	ALBEDO = c.rgb * flakker * sterkte * 1.1;
+	ALPHA = c.a;
+}
+"""
+static var _vlam_beeld_shader: Shader = null
+
+
+## Een vlam-quad met de vuur-shader, de voet op `voet`, `hoog` hoog; met een
+## geleverd vlam-plaatje (de studio) die in plaats van de shader-vlam.
 static func _vlam(ouder: Node3D, voet: Vector3, hoog: float) -> MeshInstance3D:
+	var geleverd := _kies_geleverd("flame", "vlam", 0.0, 512)
+	if not geleverd.is_empty():
+		return _vlam_beeld(ouder, voet, hoog, geleverd)
 	if _vuur_shader == null:
 		_vuur_shader = Shader.new()
 		_vuur_shader.code = VUUR_SHADER
@@ -828,6 +1059,37 @@ static func _vlam(ouder: Node3D, voet: Vector3, hoog: float) -> MeshInstance3D:
 	ouder.add_child(mi)
 	mi.position = voet + Vector3.UP * hoog * 0.5
 	mi.scale = Vector3.ONE * hoog
+	return mi
+
+
+static func _vlam_beeld(ouder: Node3D, voet: Vector3, hoog: float, e: Dictionary) -> MeshInstance3D:
+	if _vlam_beeld_shader == null:
+		_vlam_beeld_shader = Shader.new()
+		_vlam_beeld_shader.code = VLAM_BEELD_SHADER
+	var tex: Texture2D = e.tex
+	var u: Rect2 = e.uitsnede
+	var cols := int(e.cols)
+	var rows := int(e.rows)
+	var celw: float = float(tex.get_width()) / float(cols) * u.size.x
+	var celh: float = float(tex.get_height()) / float(rows) * u.size.y
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(clampf(celw / maxf(celh, 1.0), 0.3, 2.0), 1.0)
+	mi.mesh = q
+	var mat := ShaderMaterial.new()
+	mat.shader = _vlam_beeld_shader
+	mat.set_shader_parameter("vlam_tex", tex)
+	mat.set_shader_parameter("uitsnede", Vector4(u.position.x, u.position.y, u.size.x, u.size.y))
+	mat.set_shader_parameter("rooster", Vector2(cols, rows))
+	mat.set_shader_parameter("tijd_offset", _r().randf_range(0.0, 50.0))
+	mat.set_shader_parameter("snelheid", _r().randf_range(0.85, 1.15))
+	mat.set_shader_parameter("spiegel", 1.0 if _r().randf() < 0.5 else 0.0)
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	var h := hoog * 1.25    # het plaatje is de hele vlam, de shader-vlam had lucht erboven
+	mi.position = voet + Vector3.UP * h * 0.5
+	mi.scale = Vector3.ONE * h
 	return mi
 
 
@@ -973,8 +1235,8 @@ static func _stofring(ouder: Node3D, grond: Vector3, straal: float) -> void:
 		var d := Vector3(cos(h), 0.0, sin(h))
 		var van := grond + Vector3.UP * 0.05 + d * 0.15
 		var naar := grond + Vector3.UP * r.randf_range(0.05, 0.15) + d * straal * r.randf_range(0.85, 1.1)
-		_rookpluk(ouder, van, naar, 0.15, r.randf_range(0.35, 0.5) * clampf(straal, 0.6, 2.0), r.randf_range(0.6, 0.9),
-			PawnView.fx("stof_alfa", 0.7) * 0.85, 0.3, Tween.TRANS_EXPO, 6, "white_smoke", STOF_KLEUR)
+		_stofpluk(ouder, van, naar, 0.15, r.randf_range(0.35, 0.5) * clampf(straal, 0.6, 2.0), r.randf_range(0.6, 0.9),
+			PawnView.fx("stof_alfa", 0.7) * 0.85, 0.3, Tween.TRANS_EXPO)
 
 
 ## Een kanon gaat kapot (kanon-kapot): het kruit ontploft (kleiner dan een

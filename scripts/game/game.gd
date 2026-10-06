@@ -3803,7 +3803,8 @@ func _save_ambiance() -> void:
 func _spawn_wheel_tracks(flat_a: Vector3, flat_b: Vector3, dirn: Vector3, side: Vector3, dur: float) -> void:
 	var dist := flat_a.distance_to(flat_b)
 	var count := int(dist / 0.16)
-	var tex := _footstep_texture(["wiel"])
+	# het wielspoor van de studio: bijgesneden tot de strook, klein en met mipmaps
+	var tex := VFX.geleverde_textuur("footstep", "wiel", 256, true)
 	for i in range(count):
 		var t := float(i + 1) / float(count + 1)
 		for lane in [-1.0, 1.0]:

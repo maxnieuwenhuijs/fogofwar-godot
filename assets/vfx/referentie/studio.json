@@ -1,0 +1,36 @@
+{
+ "goed": {},
+ "instellingen": {
+  "basiszin": "Keep this image exactly as it is (the board, the figures, the camera and the light) and only add or change this effect: ",
+  "beeldmodel": "google/nano-banana-2",
+  "duur": 5,
+  "filmmodel": "bytedance/seedance-2.5",
+  "filmzin": "Fixed camera: no camera movement, no zoom and no cuts. The effect plays once, in real time.",
+  "geluid": false,
+  "resolutie": "480p"
+ },
+ "keuze": {
+  "schot_musket": {
+   "beeld": "assets/vfx/referentie/schot_musket/beeld.jpeg",
+   "beeld_bron": "results/vfx_studio/concept/schot_musket/20261006_150337_0001_1.jpeg",
+   "beeld_model": "google/nano-banana-2",
+   "beeld_prompt": "Keep this image exactly as it is (the board, the figures, the camera and the light) and only add or change this effect: A flintlock musket firing on a miniature wooden war-game board, seen from above at an angle: a short bright orange muzzle flash and a thick puff of grey-white black-powder smoke drifting forward.",
+   "tijd": "2026-10-06 16:01"
+  }
+ },
+ "notities": {
+  "galop_stof": "gebruik meerdere puffs tegelijkerijgd random en ook iets qua grootte etc verschillen voor een natuurlijke look"
+ },
+ "prompts": {},
+ "reeksen": {
+  "rook_wit": {
+   "basis_prompt": "A natural puff of soft white smoke, centered, isolated on a solid pure black background, game VFX texture, no text."
+  },
+  "vlam_kanon": {
+   "basis_prompt": "A large cannon muzzle flash: a big burst of orange and yellow fire with dark edges flowing from left to right with lots of dark smoke. centered, isolated on a solid pure black background, game VFX texture."
+  },
+  "vlam_musket": {
+   "basis_prompt": "A musket muzzle flash seen from the side flowing from left to right: a short bright orange-yellow burst of fire with a few sparks, lots of dark smoke. centered, isolated on a solid pure black background, game VFX texture."
+  }
+ }
+}

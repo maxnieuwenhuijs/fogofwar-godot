@@ -174,6 +174,21 @@ Godot, daarna de concept-webpagina.
      (welke onderdelen een bestand hebben); `-- vfxcheck` controleert de
      onderdelen in de catalogus.
 
+9. **De geleverde texturen in het spel** (Max, 6 oktober: "voeg toe behalve
+   de musketshot"; hij had in de studio drie kraters, een stofwolk, een vlam
+   en een wielspoor in het spel gezet, en daarna zelf een witte pof als vel
+   en een bloednevel-reeks). **Gebouwd (6 oktober):**
+   - `VFX._geleverde`: een lader voor alles wat de studio levert, met de eigen
+     rng; maakt elk bestand een keer klaar (maat, rooster, bijsnijden, zwart
+     doorzichtig, mipmaps).
+   - Krater uit `decals/`, stof uit `dust/` (groter en zachter dan het plaatje,
+     anders lijken het stickertjes), vlammen op het bord uit `flame/` met een
+     eigen shader die golft en flakkert, het wielspoor bijgesneden tot de
+     strook. Zonder bestanden doet alles wat het daarvoor deed.
+   - De bloednevel speelt een vel af (de reeks van Max: `blood_mist1_4x3.png`,
+     hernoemd; de studio zet het rooster voortaan zelf in de naam).
+   - De kruitdamp van het musketschot bleef bewust ongemoeid.
+
 ## Huisregels
 
 - Effecten zijn puur beeld: nooit spelstaat, nooit `_animaties_bezig`.

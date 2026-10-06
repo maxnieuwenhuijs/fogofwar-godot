@@ -178,6 +178,14 @@ static var _blood_tex_loaded: bool = false
 ## prefix filtert op bestandsnaam ("blood_pool" = volle plassen, "splat" =
 ## fijne spetters); geen match of geen prefix = kies uit alles.
 static func _blood_texture(prefix: String = "") -> Texture2D:
+	var e := _blood_entry(prefix)
+	return e.get("tex") as Texture2D if not e.is_empty() else null
+
+
+## Als _blood_texture, met het rooster uit de naam erbij ({tex, cols, rows}):
+## een vel (blood_mist1_4x3.png, een reeks uit de VFX-studio, 6 oktober) speelt
+## de nevel af. Zelfde keuze en evenveel trekjes als voorheen.
+static func _blood_entry(prefix: String = "") -> Dictionary:
 	if not _blood_tex_loaded:
 		_blood_tex_loaded = true
 		var seen: Dictionary = {}
@@ -193,17 +201,26 @@ static func _blood_texture(prefix: String = "") -> Texture2D:
 				if ResourceLoader.exists(BLOOD_TEX_DIR + fname):
 					var tex = load(BLOOD_TEX_DIR + fname)
 					if tex is Texture2D:
-						_blood_textures.append({"name": fname.get_basename().to_lower(), "tex": tex})
+						var naam := fname.get_basename().to_lower()
+						var cols := 1
+						var rows := 1
+						var us := naam.rfind("_")
+						if us >= 0:
+							var grid := naam.substr(us + 1).split("x")
+							if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
+								cols = maxi(int(grid[0]), 1)
+								rows = maxi(int(grid[1]), 1)
+						_blood_textures.append({"name": naam, "tex": tex, "cols": cols, "rows": rows})
 	if _blood_textures.is_empty():
-		return null
+		return {}
 	var keuze: Array = []
 	if prefix != "":
 		for e in _blood_textures:
 			if String(e.name).begins_with(prefix):
-				keuze.append(e.tex)
+				keuze.append(e)
 	if keuze.is_empty():
 		for e in _blood_textures:
-			keuze.append(e.tex)
+			keuze.append(e)
 	return keuze[randi() % keuze.size()]
 
 
@@ -1966,6 +1983,8 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float, schaal: floa
 	for i in count:
 		var puff := MeshInstance3D.new()
 		var mat := StandardMaterial3D.new()
+		var vel_cols := 1
+		var vel_rows := 1
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		if mist_tex != null:
@@ -1973,11 +1992,18 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float, schaal: floa
 			var qs := randf_range(0.5, 0.85) * (0.7 + 0.3 * power) * schaal
 			q.size = Vector2(qs, qs)
 			puff.mesh = q
-			mat.albedo_texture = _blood_texture("blood_mist")
+			var me := _blood_entry("blood_mist")
+			mat.albedo_texture = me.get("tex")
 			mat.albedo_color = Color(1, 1, 1, randf_range(0.8, 1.0))
 			mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 			mat.billboard_keep_scale = true
-			if randf() < 0.5:
+			vel_cols = int(me.get("cols", 1))
+			vel_rows = int(me.get("rows", 1))
+			var spiegel := randf() < 0.5     # altijd getrokken, ook bij een vel (evenveel trekjes)
+			if vel_cols * vel_rows > 1:
+				mat.uv1_scale = Vector3(1.0 / vel_cols, 1.0 / vel_rows, 1.0)
+				_sheet_frame(0, mat, vel_cols, vel_rows)
+			elif spiegel:
 				mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)  # gespiegeld = extra variatie
 		else:
 			var m := SphereMesh.new()
@@ -2014,6 +2040,8 @@ func _spawn_blood_mist(center: Vector3, dir: Vector3, power: float, schaal: floa
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff.material_override, "albedo_color:a", 0.0, life) \
 			.set_ease(Tween.EASE_IN)
+		if vel_cols * vel_rows > 1:
+			tw.tween_method(_sheet_frame.bind(mat, vel_cols, vel_rows), 0, vel_cols * vel_rows - 1, life)
 		tw.chain().tween_callback(puff.queue_free)
 
 

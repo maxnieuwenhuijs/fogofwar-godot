@@ -37,10 +37,10 @@ nieuwe wens kun je ook daar invullen; hij komt dan als regel in deze tabel.
 |---|---|---|---|---|
 | Stofjes in de lucht | boven het bord | spel | staat uit (stofdeeltjes 0); nog niet in de tuner | Fine dust motes floating in a beam of warm light above a miniature wooden board. |
 | Voetsporen en wielsporen | elke stap | spel | nog niet in de tuner | Footprints and thin wheel tracks pressed into a dusty miniature board surface, top-down view. |
-| Stof bij de landing van een charge | ruiter landt na zijn sprong | spel | 6 okt: knoppen stof bij de landing en stof: dekking | A miniature cavalry rider landing after a jump on a dusty board: a ring of brown dust bursting out around the horse's hooves, top-down angled view. |
-| Stof achter galopperende ruiters | ruiter (of kanon) rijdt hard | spel | 6 okt: knop stof achter ruiters en kanonnen | A small trail of dust clouds kicked up behind a galloping miniature cavalry horse on a wooden board, top-down angled view. |
-| Opspattende aarde bij een kanonsinslag | kanonskogel slaat in | spel | 6 okt: kluiten en een stofwolk, knop opspattende aarde | A cannonball hitting the ground on a miniature board: clods of dirt and dust spraying up in a fan, top-down angled view. |
-| Krater of schroeiplek | na een kanonsinslag | spel | 6 okt: knoppen krater en krater blijft liggen (s) | A small scorched crater with darkened earth on a miniature wooden board tile, top-down view. |
+| Stof bij de landing van een charge | ruiter landt na zijn sprong | spel | 6 okt: knoppen stof bij de landing en stof: dekking; sinds 6 okt met de stofwolk van Max uit de studio | A miniature cavalry rider landing after a jump on a dusty board: a ring of brown dust bursting out around the horse's hooves, top-down angled view. |
+| Stof achter galopperende ruiters | ruiter (of kanon) rijdt hard | spel | 6 okt: knop stof achter ruiters en kanonnen; sinds 6 okt met de stofwolk van Max uit de studio | A small trail of dust clouds kicked up behind a galloping miniature cavalry horse on a wooden board, top-down angled view. |
+| Opspattende aarde bij een kanonsinslag | kanonskogel slaat in | spel | 6 okt: kluiten en een stofwolk, knop opspattende aarde; sinds 6 okt met de stofwolk van Max uit de studio | A cannonball hitting the ground on a miniature board: clods of dirt and dust spraying up in a fan, top-down angled view. |
+| Krater of schroeiplek | na een kanonsinslag | spel | 6 okt: knoppen krater en krater blijft liggen (s); sinds 6 okt een van de drie kraters van Max uit de studio | A small scorched crater with darkened earth on a miniature wooden board tile, top-down view. |
 
 ## 3. Bloed en inslag
 
@@ -68,7 +68,7 @@ nieuwe wens kun je ook daar invullen; hij komt dan als regel in deze tabel.
 | Kampvuur in het diorama | in het kamp | diorama | vaste waarden in omgeving.gd | A small campfire with flickering flames and rising smoke beside a miniature army camp, top-down angled view, night. |
 | Kanon gaat kapot | kanon vernietigd | spel | 6 okt: het kruit ontploft, de affuit spat uiteen, het wrak brandt na; een kanon bloedt niet meer | A miniature wooden field cannon blown apart: splinters and a wheel flying, a column of dark smoke and small flames on the wreck, top-down angled view. |
 | Explosie (kruitvat) | explosie | spel | 6 okt: flits, vuurbal (kanonsvlam), stofkring, rookkolom, splinters, vonken; nu bij een kanon, straks ook kruitvaten | A small gunpowder barrel exploding on a miniature board: an orange fireball, a ring of smoke and flying wooden staves, top-down angled view. |
-| Vuur op het bord | iets blijft branden | spel | 6 okt: vlammen uit een eigen shader (geen textuur), flakkerend licht, rook, vonkjes; knoppen vuur: maat en brandt na | Small flames licking up from burning debris on a wooden game board, gentle smoke, top-down angled view. |
+| Vuur op het bord | iets blijft branden | spel | 6 okt: vlammen uit een eigen shader (geen textuur), flakkerend licht, rook, vonkjes; knoppen vuur: maat en brandt na; sinds 6 okt de vlam van Max uit de studio, die golft en flakkert | Small flames licking up from burning debris on a wooden game board, gentle smoke, top-down angled view. |
 
 ## 6. Stijl (alle 3D)
 

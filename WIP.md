@@ -1,5 +1,95 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- Randlicht op de laatste pionnen die nog kunnen
+
+Max: "en randlicht ook goed voor de hightlight wanneer de tegenstander klaar is
+en je nog een paar laatste stappen moeten doen naast de spotlight".
+
+- **`PawnView`:** precies de pionnen met de lichtstraal (`set_beurt_licht`)
+  krijgen ook een gloeiende rand: `BEURT_RAND_SHADER` (fresnel, additief,
+  unshaded) als `material_overlay` op elk GeometryInstance3D van het stuk,
+  lijf, wapen en prop; de kleur en de puls van de straal (`_beurt_puls`). Na
+  een modelwissel opnieuw (`_swap_piece`, uitgesteld zodat het wapen dat er
+  net in komt meedoet), bij de dood eraf (`play_death`: een lijk gloeit niet
+  na). Knop `beurt_rand` in het sfeer-paneel (0 = uit, 1 standaard).
+- **Eerste versie te sterk:** `pow(rand, 2,2)` maakte de drie poppetjes in de
+  straal bijna helemaal wit (van schuin boven staat veel van het lijf schuin
+  van je af; de straal maakt ze al bleek). Nu `smoothstep(0,62; 0,97)` op
+  `1 - |N.V|`: alleen de omtrek, een dunne goudlijn; vergeleken met de rand
+  uit (`fx:beurt_rand=0`).
+- **capture.gd:** elke modus neemt nu `fx:<knop>=<waarde>` (alleen die run,
+  niets bewaard): `-- beurtlicht fx:beurt_rand=0`, `-- play
+  fx:stijl_miniatuur=1`. Daarmee ook gekeken naar tilt-shift in het spel zelf
+  (Max: "kan dat uberhaupt op het bord tijdens het spelen? wel geinig
+  effect"): het werkt (het kamp boven en onder wazig, het bord scherp, de HUD
+  ligt erboven en blijft scherp); de bovenste rij van het bord zit op de rand
+  van de band 0,22, met 0,25 blijft het hele bord scherp. Staat nog uit, Max
+  zet hem zelf in de VFX-tuner.
+- `-- beurtlicht`: `_bl_meet` telt een rand die niet bij de straal hoort als
+  fout, en een stap zet `beurt_rand` op 0 (de rand weg, de straal blijft) en
+  weer terug.
+- Checks: zie de regressie bij stap 9 hieronder (zelfde run).
+
+## 6 oktober -- VFX-studio stap 9: de geleverde texturen in het spel
+
+Max: "voeg toe behalve de musketshot" (op de vraag of ik krater, stof en vlammen
+op het bord met zijn texturen zou inbouwen, en de kruitdamp naar zijn gekozen
+plaatje). In de studio had hij drie kraters (doorzichtig), een stofwolk en een
+vlam (op zwart) en een wielspoor in het spel gezet; daarna ook zelf een witte
+pof als vel (`white_smoke_4x3.png`, de oude 3x3 naar de backup) en een
+bloednevel-reeks als vel (`blood_mist1.png`).
+
+- **`VFX._geleverde(map, naam, boost, max_px, bijsnijden, vierkant)`:** de
+  lader voor alles wat de studio in `assets/textures/<map>/` zet (bestanden die
+  met `naam` beginnen), elk een keer klaargemaakt en bewaard: rooster uit de
+  naam, desgewenst bijgesneden tot wat er te zien is (`_inhoud`: alpha of
+  helderheid, 4% marge; `vierkant` om het midden voor billboards), hooguit
+  `max_px` (een vel blijft deelbaar door zijn rooster), zwart doorzichtig als
+  het plaatje geen alpha heeft, en mipmaps (een 1024-krater op ~70 px
+  flikkert anders). Kiezen met de eigen rng (`_kies_geleverd`).
+- **Krater:** een variant uit `decals/krater*` (512), willekeurig gedraaid;
+  zonder bestanden de oude textuur uit code.
+- **Stof:** `_stofpluk` neemt `dust/stof*` (vierkant bijgesneden, 256, eigen
+  kleur, gespiegeld) voor de landing van een charge, het galopspoor, de
+  kanonsinslag en de schokgolf; zonder bestand de witte pof in stofkleur.
+  `_rookpluk` is daarvoor gesplitst in opzoeken en `_pluk` (zelfde gedrag voor
+  de kruitdamp). Eerste beeld: kleine losse "stickertjes" (de wolk vulde maar
+  een deel van het plaatje en is scherper dan de oude pof); bijgesneden en
+  `STOF_BEELD_MAAT` 1,6 / `STOF_BEELD_ALFA` 0,7 maken er weer een stofwolk van.
+- **Vlammen op het bord:** `_vlam` neemt `flame/vlam*` met
+  `VLAM_BEELD_SHADER`: dezelfde staande billboard als de shader-vlam, het deel
+  van het plaatje waar de vlam staat (`uitsnede`), golvend (hoe hoger hoe meer,
+  de voet blijft staan), flakkerend, gespiegeld of niet, een vel speelt af;
+  additief, dus zwart telt niet mee. De oude shader-vlam blijft de terugval.
+- **Wielspoor:** game.gd neemt `VFX.geleverde_textuur("footstep", "wiel", 256,
+  true)`: Max zijn plaatje is een smalle strook midden in een vierkant, en op
+  het smalle vlakje van het spoor werd hij flinterdun; bijgesneden tot de
+  strook past hij.
+- **Bloednevel als vel:** `PawnView._blood_entry` (de oude `_blood_texture`
+  met het rooster uit de naam erbij, dezelfde keuze en evenveel globale
+  trekjes) en `_spawn_blood_mist` speelt een vel af over de levensduur van het
+  plukje (een vel wordt niet gespiegeld; de trekking gebeurt wel). Max zijn
+  `blood_mist1.png` heet nu `blood_mist1_4x3.png` (zijn .import weg, de editor
+  importeert opnieuw); de studio zet het rooster voortaan zelf in de naam van
+  een variant en weigert een vel waar het spel er niets mee kan (`vel` in
+  ONDERDELEN, nu alleen de bloednevel).
+- Catalogus: krater, stof en vlammen op het bord `gebruikt: true` met een
+  nieuwe uitleg; `-- vfxcheck` toetst elk geleverd bestand (klaar, maat,
+  mipmaps, wielspoor bijgesneden, vlam geknipt, stof vierkant).
+- Bekeken met `-- vfxshot` (krater onder het doel met stof erbij, het stof bij
+  een charge, de vlam) naast de oude versie.
+- Nog niet geimporteerd toen ik klaar was: `white_smoke_4x3.png` en
+  `blood_mist1_4x3.png` (de editor stond open en doet dat zodra Max naar zijn
+  venster gaat). Tot dan valt het koppelwolkje terug op een willekeurige
+  rookwolk (de oude globale trekking in `_vfx_entry`); uispel bleef ook zo
+  `5862e4c9`.
+- Checks: `-- vfxcheck` PASS (headless; de geleverde texturen alle 6 klaar),
+  `-- beurtlicht` PASS (headless en met venster), uispel 777 `5862e4c9`
+  ongewijzigd, herstelcheck 777 en 4242 wolf 0, resumecheck 777 1 en 4242 2 0,
+  naad, koppel, audiopaneel, inkomcheck, uicheck PASS, simcheck 0, tests
+  2912/0 (twee SoloTests-delen vielen in de regressie stil weg toen de editor
+  net de nieuwe plaatjes importeerde; los gedraaid 62/0 en 50/0).
+
 ## 6 oktober -- VFX-studio stap 8b: een reeks, frame voor frame
 
 Max: "maar een groep moet ook soms bestaan uit meerdere frames toch, 1
