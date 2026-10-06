@@ -146,6 +146,20 @@ Godot, daarna de concept-webpagina.
      zelf als die openstaat, anders de knop "Importeer in Godot" (die weigert
      als de editor openstaat). Bij elk effect kun je ook zelf een plaatje of
      filmpje als concept erin slepen.
+   - Een reeks, frame voor frame (Max: "1 ontploffing kan wel 12 plaatjes
+     tellen; kies een vast getal en dan per frame een prompt en een
+     plaatje"): per onderdeel kies je 4, 6, 8, 9, 12 of 16 frames (rooster
+     2x2 tot 4x4), een onderwerp-prompt voor alle frames en per frame een
+     fase-prompt (voorgevuld van "net ontstaan" via "op zijn grootst" tot
+     "het laatste spoor"). De frames worden na elkaar gemaakt, elk met het
+     vorige frame als basis en een vaste zin dat kader, midden, maat en
+     stijl gelijk blijven; frame 1 komt uit de tekst (of je zet een eigen
+     plaatje of kandidaat op een frame). Per frame opnieuw maken, versies
+     doorbladeren, stoppen; een speler laat de frames na elkaar zien; "leg in
+     een vel" maakt er een kandidaat met het rooster van, en die gaat met "in
+     het spel" onder de goede naam het spel in. Een reeks staat in
+     `studio.json` (`reeksen`); zijn frames zijn opdrachten met `reeks_frame`
+     en staan niet tussen de gewone kandidaten.
    - Meekijken: van elk filmpje (van Replicate, eigen upload, en bij "dit is
      hem" ook in de referentiemap als `film_vel.jpg`) maakt de studio een
      contactvel van 12 beelden met de tijd erbij. Een plaatje kan Claude

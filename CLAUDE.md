@@ -1347,7 +1347,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   noemt zijn `onderdelen`. In de studio de groep "Texturen en decals"
   (`/#texturen`): wat er in het spel staat, en kandidaten uit een upload
   (slepen), Replicate (vierkant), een flipbook uit een filmpje (OpenCV) of
-  "achtergrond weg"; "in het spel" schrijft de PNG onder de juiste naam
+  "achtergrond weg", of een reeks frame voor frame (vast aantal 4-16, per
+  frame een fase-prompt, elk frame op het vorige als basis, "leg in een
+  vel"); "in het spel" schrijft de PNG onder de juiste naam
   (oude naar `results/vfx_studio/backup/`), daarna importeert de editor hem
   (of de knop "Importeer in Godot" als de editor dicht is). Van elk filmpje
   een contactvel `<naam>_vel.jpg` (12 beelden met de tijd): zo ziet Claude

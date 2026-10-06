@@ -239,7 +239,7 @@ def lees_studio():
             d = {}
     except (OSError, ValueError):
         d = {}
-    for k in ("prompts", "notities", "keuze", "goed"):
+    for k in ("prompts", "notities", "keuze", "goed", "reeksen"):
         if not isinstance(d.get(k), dict):
             d[k] = {}
     inst = dict(STANDAARD)
@@ -1214,10 +1214,11 @@ def maak_vel(pad, n=12, kolommen=4):
         return ""
 
 
-def upload(eid, naam, data):
+def upload(eid, naam, data, frame=None):
     """Een eigen bestand erin (een plaatje, gif of filmpje), als kandidaat bij een
     effect of een onderdeel (o_<onderdeel>). Een vel met `_4x4` in de naam krijgt
-    dat rooster mee."""
+    dat rooster mee. Met `frame` (een getal) is het een plaatje voor dat frame van
+    de reeks van het onderdeel."""
     eid = _id_ok(eid)
     if eid.startswith(ONDERDEEL_VOOR):
         _onderdeel(eid[len(ONDERDEEL_VOOR):])
@@ -1243,6 +1244,10 @@ def upload(eid, naam, data):
         vel = maak_vel(pad)
         if vel:
             velden["vellen"] = [_rel(os.path.abspath(vel))]
+    if frame is not None and str(frame) != "":
+        if film or not eid.startswith(ONDERDEEL_VOOR):
+            raise RuntimeError("Een frame is een plaatje van een onderdeel.")
+        velden["reeks_frame"] = int(frame)
     werk_meta(eid, stempel, **velden)
     return stempel
 
@@ -1322,6 +1327,209 @@ def zet_rooster(oid, stempel, kolommen, rijen):
     if not re.fullmatch(r"[0-9_]+", str(stempel or "")):
         raise RuntimeError("rare stempel")
     werk_meta(eid, stempel, rooster=[max(1, min(16, int(kolommen))), max(1, min(16, int(rijen)))])
+
+
+# Een reeks: een vast aantal frames, per frame een prompt en een plaatje, en die
+# samen in een vel (Max: "1 ontploffing kan wel 12 plaatjes tellen; kies een vast
+# getal en dan per frame een prompt en een plaatje"). Elk frame kan voortbouwen op
+# het vorige (het vorige plaatje als basis), zodat het een en dezelfde
+# ontploffing blijft.
+REEKS_ROOSTER = {4: (2, 2), 6: (3, 2), 8: (4, 2), 9: (3, 3), 12: (4, 3), 16: (4, 4)}
+FASEN = [
+    "the very first instant, just appearing as a tiny bright point at the center",
+    "starting to burst outward, still small",
+    "growing fast",
+    "almost at full size",
+    "at its biggest and most intense",
+    "still big, starting to break up at the edges",
+    "breaking up and getting thinner",
+    "thinning out and drifting apart",
+    "mostly gone, a few thin wisps left",
+    "faint and transparent, almost gone",
+    "only a faint trace left",
+    "the last faint trace fading to nothing",
+]
+KETENZIN = ("The given image is the previous frame of the same animation: keep exactly the same framing, center, "
+            "scale, style, colors and background, so the frames line up, and only show the next moment. ")
+_reeks_bezig = {}       # onderdeel -> {"loopt", "nu", "van", "tot", "stop", "fout"}
+
+
+def standaard_fasen(n):
+    if n <= 1:
+        return [FASEN[4]]
+    return [FASEN[round(i * (len(FASEN) - 1) / (n - 1))] for i in range(n)]
+
+
+def reeks_van(oid, st=None, metas=None):
+    """De reeks van een onderdeel: aantal frames en rooster, of elk frame op het
+    vorige voortbouwt, de onderwerp-prompt, en per frame de prompt, het plaatje
+    (het gekozen, anders het nieuwste) en of er een opdracht loopt."""
+    o = _onderdeel(oid)
+    st = st or lees_studio()
+    r = st["reeksen"].get(oid) or {}
+    n = int(r.get("n") or 12)
+    if n not in REEKS_ROOSTER:
+        n = 12
+    k, rij = REEKS_ROOSTER[n]
+    std = standaard_fasen(n)
+    eigen = list(r.get("frames") or [])
+    prompts = [(eigen[i] if i < len(eigen) and str(eigen[i]).strip() else std[i]) for i in range(n)]
+    gekozen = r.get("gekozen") or {}
+    metas = metas if metas is not None else concepten_van(ONDERDEEL_VOOR + oid)
+    frames = []
+    for i in range(n):
+        van_i = [m for m in metas if m.get("reeks_frame") == i]          # nieuwste eerst
+        klaar = [m for m in van_i if m.get("status") == "klaar" and m.get("bestanden")]
+        versies = [m["bestanden"][0] for m in klaar]
+        keuze = gekozen.get(str(i), "")
+        beeld = keuze if keuze and (os.path.exists(keuze) or os.path.exists(os.path.join(WORTEL, keuze))) else \
+            (versies[0] if versies else "")
+        laatste = van_i[0] if van_i else {}
+        frames.append({"prompt": prompts[i], "beeld": beeld, "versies": versies,
+                       "bezig": any(m.get("status") in ("start", "bezig") for m in van_i),
+                       "fout": laatste.get("fout", "") if laatste.get("status") == "mislukt" else ""})
+    return {"n": n, "kolommen": k, "rijen": rij, "keten": bool(r.get("keten", True)),
+            "basis_prompt": r.get("basis_prompt") or o.get("prompt", ""), "frames": frames,
+            "status": dict(_reeks_bezig.get(oid, {}))}
+
+
+def zet_reeks(oid, b):
+    """Bewaar een deel van de reeks: n, keten, basis_prompt, of voor een frame
+    (`frame`) zijn prompt of het gekozen plaatje (`gekozen`)."""
+    _onderdeel(oid)
+    eid = ONDERDEEL_VOOR + oid
+    with _lock:
+        st = lees_studio()
+        r = st["reeksen"].setdefault(oid, {})
+        if "n" in b:
+            n = int(b["n"])
+            if n not in REEKS_ROOSTER:
+                raise RuntimeError("Kies 4, 6, 8, 9, 12 of 16 frames.")
+            r["n"] = n
+        if "keten" in b:
+            r["keten"] = bool(b["keten"])
+        if "basis_prompt" in b:
+            r["basis_prompt"] = str(b["basis_prompt"] or "").strip()
+        if "frame" in b:
+            i = int(b["frame"])
+            if not 0 <= i < 16:
+                raise RuntimeError("rare frame")
+            if "prompt" in b:
+                lijst = list(r.get("frames") or [])
+                while len(lijst) <= i:
+                    lijst.append("")
+                lijst[i] = str(b["prompt"] or "").strip()
+                r["frames"] = lijst
+            if "gekozen" in b:
+                g = r.setdefault("gekozen", {})
+                if b["gekozen"]:
+                    g[str(i)] = _rel(_veilig(b["gekozen"], [os.path.join(concept_dir(), eid)]))
+                else:
+                    g.pop(str(i), None)
+        schrijf_studio(st)
+    return reeks_van(oid)
+
+
+def reeks_prompt(r, i, met_basis):
+    tekst = "%s Frame %d of %d of the animation: %s." % (r["basis_prompt"].strip().rstrip("."), i + 1, r["n"],
+                                                         r["frames"][i]["prompt"].strip().rstrip("."))
+    return (KETENZIN + tekst) if met_basis else tekst
+
+
+def _start_frame(oid, i, prompt, basis):
+    eid = ONDERDEEL_VOOR + oid
+    inst = lees_studio()["instellingen"]
+    model = inst["beeldmodel"]
+    bp = _veilig(basis, [os.path.join(concept_dir(), eid)]) if basis else ""
+
+    def maak():
+        return beeld_invoer(model, prompt, data_uri(bp) if bp else "", "1:1")
+    return start_opdracht(eid, "beeld", model, prompt, prompt, maak,
+                          {"reeks_frame": i, "basis": _rel(bp) if bp else ""})
+
+
+def start_reeks(oid, van=0, tot=-1, alleen_leeg=True):
+    """Maak frames `van` tot en met `tot` (0-geteld), na elkaar: een frame op het
+    vorige wacht tot dat er is. `alleen_leeg` slaat frames met een plaatje over."""
+    if not lees_sleutel():
+        raise RuntimeError("Geen Replicate-sleutel: plak hem bovenaan.")
+    if _reeks_bezig.get(oid, {}).get("loopt"):
+        raise RuntimeError("Deze reeks loopt al.")
+    r = reeks_van(oid)
+    n = r["n"]
+    van = max(0, min(n - 1, int(van)))
+    tot = n - 1 if int(tot) < 0 else max(van, min(n - 1, int(tot)))
+    status = {"loopt": True, "nu": van, "van": van, "tot": tot, "stop": False, "fout": ""}
+    _reeks_bezig[oid] = status
+    eid = ONDERDEEL_VOOR + oid
+
+    def run():
+        try:
+            for i in range(van, tot + 1):
+                if status["stop"]:
+                    break
+                status["nu"] = i
+                r_ = reeks_van(oid)
+                if alleen_leeg and r_["frames"][i]["beeld"]:
+                    continue
+                vorige = r_["frames"][i - 1]["beeld"] if (r_["keten"] and i > 0) else ""
+                if r_["keten"] and i > 0 and not vorige:
+                    raise RuntimeError("frame %d heeft nog geen plaatje om op voort te bouwen" % i)
+                stempel = _start_frame(oid, i, reeks_prompt(r_, i, bool(vorige)), vorige)
+                gestopt = False
+                while True:
+                    m = lees_meta(eid, stempel)
+                    if m.get("status") in ("klaar", "mislukt"):
+                        break
+                    if status["stop"] and not gestopt:
+                        gestopt = True
+                        try:
+                            stop_opdracht(eid, stempel)
+                        except ReplicateFout:
+                            pass
+                    time.sleep(max(0.05, P["poll_beeld"] / 2))
+                if m.get("status") == "mislukt" and not status["stop"]:
+                    raise RuntimeError("frame %d: %s" % (i + 1, m.get("fout", "mislukt")))
+        except Exception as e:  # noqa: BLE001
+            status["fout"] = str(e)
+        status["loopt"] = False
+
+    threading.Thread(target=run, daemon=True).start()
+    return dict(status)
+
+
+def stop_reeks(oid):
+    if _reeks_bezig.get(oid, {}).get("loopt"):
+        _reeks_bezig[oid]["stop"] = True
+
+
+def reeks_vel(oid):
+    """De frames in een vel (het rooster bij het aantal, hooguit 256 per beeldje
+    en 1024 breed), als kandidaat van het onderdeel; dan "in het spel"."""
+    r = reeks_van(oid)
+    leeg = [str(i + 1) for i, f in enumerate(r["frames"]) if not f["beeld"]]
+    if leeg:
+        raise RuntimeError("Nog zonder plaatje: frame %s." % ", ".join(leeg))
+    k, rij = r["kolommen"], r["rijen"]
+    cel = min(256, MAX_TEXTUUR // max(k, rij))
+    beelden = [Image.open(os.path.abspath(f["beeld"])) for f in r["frames"]]
+    alpha = any(_heeft_alpha(b) for b in beelden)
+    vel = Image.new("RGBA" if alpha else "RGB", (k * cel, rij * cel), (0, 0, 0, 0) if alpha else (0, 0, 0))
+    for i, b in enumerate(beelden):
+        b = b.convert("RGBA" if alpha else "RGB")
+        w, h = b.size
+        z = min(w, h)
+        b = b.crop(((w - z) // 2, (h - z) // 2, (w - z) // 2 + z, (h - z) // 2 + z)).resize((cel, cel), Image.LANCZOS)
+        vel.paste(b, ((i % k) * cel, (i // k) * cel))
+    eid = ONDERDEEL_VOOR + oid
+    stempel = nieuwe_stempel()
+    pad = os.path.join(concept_dir(), eid, "%s_1.png" % stempel)
+    os.makedirs(os.path.dirname(pad), exist_ok=True)
+    vel.save(pad, "PNG")
+    werk_meta(eid, stempel, soort="beeld", status="klaar", model="reeks", bron="reeks", rooster=[k, rij], cel=cel,
+              prompt=r["basis_prompt"], tijd=time.strftime("%Y-%m-%d %H:%M"), start=time.time(),
+              bestanden=[_rel(os.path.abspath(pad))], seconden=0)
+    return stempel
 
 
 def editor_open():
@@ -1450,13 +1658,15 @@ def onderdeel_rij(oid, cat=None, st=None):
         k = st["keuze"].get(bron_id, {})
         if k.get("film"):
             films.append({"pad": k["film"], "label": "%s, dit is hem" % label})
+    metas = concepten_van(eid)
     return {"id": oid, "eid": eid, "naam": o.get("naam", oid), "map": o["map"], "bestand": o["bestand"],
             "soort": o["soort"], "achtergrond": o["achtergrond"], "boost": float(o.get("boost", 2.3)),
             "gebruikt": bool(o.get("gebruikt", True)), "uitleg": o.get("uitleg", ""),
             "prompt_bron": o.get("prompt", ""), "film_bron": o.get("film", ""),
             "prompt": st["prompts"].get(eid, ""), "notitie": st["notities"].get(eid, ""),
             "effecten": [{"id": e["id"], "naam": e.get("naam", e["id"])} for e in effecten],
-            "spel": spel_bestanden(oid), "kandidaten": concepten_van(eid), "films": films}
+            "spel": spel_bestanden(oid), "kandidaten": [m for m in metas if "reeks_frame" not in m],
+            "films": films, "reeks": reeks_van(oid, st, metas)}
 
 
 def onderdeel_rijen():
@@ -1644,6 +1854,17 @@ canvas.vel{width:150px;height:150px;border-radius:4px;border:1px solid var(--ran
 .fb.open{display:flex}
 .fb input{width:58px}.fb select{max-width:280px}
 .kaart select{font-size:12px;padding:1px 4px;max-width:100%}
+.reeks{display:none;margin-top:8px;background:#221e19;border:1px solid var(--rand);border-radius:6px;padding:8px}
+.reeks.open{display:block}
+.frames{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.frame{background:#2a2620;border:1px solid var(--rand);border-radius:5px;padding:5px;font-size:12px}
+.frame.drop{margin:0;padding:5px;text-align:left;cursor:default}
+.frame canvas.vel,.frame .leegframe{width:100%;height:auto;aspect-ratio:1}
+.frame .leegframe{display:flex;align-items:center;justify-content:center;border:1px dashed var(--rand);border-radius:4px;color:var(--dof);text-align:center;padding:6px}
+.frame textarea{min-height:52px;font-size:12px;margin-top:4px}
+.frame .knopjes{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.speler{display:flex;gap:12px;align-items:flex-start;margin-top:8px}
+.speler canvas{width:180px;height:180px;border-radius:4px;border:1px solid var(--rand);background:#26221e}
 .actief{color:var(--ok)}
 </style></head><body>
 <div id="laden"><span class="spin"></span> overzicht laden...</div>
@@ -1687,6 +1908,7 @@ canvas.vel{width:150px;height:150px;border-radius:4px;border:1px solid var(--ran
 <div id="groot"><img alt="groot"></div>
 <div id="toasts"></div>
 <script>
+const vanWie={};let lopendeReeksen={};
 let D=null;const dicht={};const basis={};const spelBasis={};const metBasis={};let poll=null;let spelTimer=null;const bekend=new Set();
 const SOORT={beeld:'plaatje',film:'filmpje'};
 async function api(p,b){const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});let j;try{j=await r.json()}catch(e){throw new Error('geen antwoord van de studio (draait hij nog?)')}if(j.fout)throw new Error(j.fout);return j}
@@ -1773,10 +1995,30 @@ function ondHtml(o){const id=esc(o.id),eid=esc(o.eid);
  c+='<div class="inst"><button class="prim" data-act="ondBeeld" data-ond="'+id+'" data-n="1" title="vierkant, met de prompt hierboven">Maak plaatje</button><button data-act="ondBeeld" data-ond="'+id+'" data-n="3" title="drie keer, meer keus">&times;3</button>';
  if(o.film_bron)c+='<button data-act="ondFilm" data-ond="'+id+'" title="Seedance maakt een vierkant filmpje van alleen dit onderdeel, op zwart: daar knip je een flipbook uit. Leeg vak = de filmprompt: '+esc(o.film_bron)+'">Maak filmpje (op zwart)</button>';
  c+='<button data-act="fbOpen" data-ond="'+id+'"'+(o.films.length?'':' disabled')+' title="knip een flipbook uit een filmpje van dit onderdeel of van een effect dat het gebruikt">Flipbook uit filmpje</button></div>';
- c+=fbForm(o);
+ c+='<button class="klein" data-act="reeksOpen" data-ond="'+id+'" title="een vast aantal frames, per frame een prompt en een plaatje, en dan samen in een vel">Reeks: frame voor frame ('+o.reeks.frames.filter(f=>f.beeld).length+'/'+o.reeks.n+')</button>';
+ c+=fbForm(o)+reeksHtml(o);
  c+='<div class="drop" data-ond="'+id+'" data-act="kiesBestand">Sleep hier een PNG, JPG, GIF of MP4 (of klik): eigen werk, een pakket, iets van elders<input type="file" multiple accept=".png,.jpg,.jpeg,.webp,.gif,.mp4,.mov,.webm" hidden></div>';
  c+='<div class="galerij">'+ondGalerij(o)+'</div></div>';
  return a+b+c}
+function reeksHtml(o){const id=esc(o.id),r=o.reeks,st=r.status||{};const loopt=!!st.loopt;
+ let h='<div class="reeks'+((loopt||r.frames.some(f=>f.beeld||f.bezig))?' open':'')+'" id="rk_'+id+'"><div class="inst"><label>frames <select data-reeks-n="'+id+'"'+(loopt?' disabled':'')+'>'+[4,6,8,9,12,16].map(n=>'<option'+(n===r.n?' selected':'')+'>'+n+'</option>').join('')+'</select></label><span class="klein">rooster '+r.kolommen+'x'+r.rijen+'</span>';
+ h+='<label class="klein" title="elk frame krijgt het vorige plaatje mee als basis, zodat het een en dezelfde ontploffing blijft"><input type="checkbox" data-reeks-keten="'+id+'"'+(r.keten?' checked':'')+(loopt?' disabled':'')+'> elk frame bouwt voort op het vorige</label>';
+ if(loopt)h+='<span class="klein"><span class="spin"></span> bezig met frame '+(st.nu+1)+' (tot '+(st.tot+1)+')</span><button class="klein" data-act="reeksStop" data-ond="'+id+'">stop</button>';
+ else h+='<button class="prim klein" data-act="reeksMaak" data-ond="'+id+'" data-leeg="1">Maak de lege frames</button><button class="klein" data-act="reeksMaak" data-ond="'+id+'" data-leeg="0">Alles opnieuw</button>';
+ h+='<button class="klein" data-act="reeksVel" data-ond="'+id+'"'+(r.frames.every(f=>f.beeld)?'':' disabled')+' title="alle frames in een vel, als kandidaat; dan In het spel">Leg in een vel</button>';
+ if(st.fout)h+='<span class="fout">'+esc(st.fout)+'</span>';
+ h+='</div><label class="klein">onderwerp en stijl (voor elk frame)</label><textarea class="prompt" data-reeks-basis="'+id+'">'+esc(r.basis_prompt)+'</textarea>';
+ const met=r.frames.filter(f=>f.beeld).map(f=>f.beeld);
+ if(met.length)h+='<div class="speler"><canvas class="speeldoek" data-reeks-speler="1" data-srcs="'+esc(JSON.stringify(met))+'" data-zwart="'+(o.achtergrond==='zwart'?1:0)+'" data-boost="'+o.boost+'"></canvas><div class="klein">zo speelt het af ('+met.length+' van '+r.n+' frames); de vel-versie komt met Leg in een vel</div></div>';
+ h+='<div class="frames">';
+ r.frames.forEach((f,i)=>{const vi=f.versies.indexOf(f.beeld);
+  h+='<div class="frame drop" data-ond="'+id+'" data-frame="'+i+'"><div class="klein"><b>frame '+(i+1)+'</b>'+(f.versies.length>1?' &middot; versie '+(vi+1)+'/'+f.versies.length:'')+'</div>';
+  h+=f.bezig?'<div class="leegframe"><span class="spin"></span></div>':(f.beeld?velCanvas(f.beeld,0,1,1,o):'<div class="leegframe">leeg: maak hem, of sleep hier een plaatje</div>');
+  if(f.fout)h+='<div class="fout">'+esc(f.fout)+'</div>';
+  h+='<textarea data-reeks-frame="'+id+'" data-i="'+i+'">'+esc(f.prompt)+'</textarea><div class="knopjes"><button class="klein" data-act="reeksMaak" data-ond="'+id+'" data-van="'+i+'" data-tot="'+i+'" data-leeg="0"'+(loopt||f.bezig?' disabled':'')+' title="alleen dit frame (opnieuw)">maak</button>';
+  if(f.versies.length>1)h+='<button class="klein" data-act="reeksVersie" data-ond="'+id+'" data-i="'+i+'" data-stap="-1">&lsaquo;</button><button class="klein" data-act="reeksVersie" data-ond="'+id+'" data-i="'+i+'" data-stap="1">&rsaquo;</button>';
+  h+='</div></div>'});
+ return h+'</div></div>'}
 function fbForm(o){const id=esc(o.id);let opts='';for(const f of o.films)opts+='<option value="'+esc(f.pad)+'">'+esc(f.label)+'</option>';
  return '<div class="fb" id="fb_'+id+'"><label>filmpje <select data-fb="film">'+opts+'</select></label><label>van <input data-fb="start" value="0"> s</label><label>tot <input data-fb="eind" value="0" title="0 = tot het eind"> s</label><label>rooster <select data-fb="rooster">'+ROOSTERS.slice(1).map(x=>'<option'+(x==='4x4'?' selected':'')+'>'+x+'</option>').join('')+'</select></label><label>beeldje <select data-fb="cel"><option>128</option><option>192</option><option selected>256</option><option>384</option><option>512</option></select> px</label><label>inzoomen <input data-fb="zoom" value="1" title="1 = het grootste vierkant uit het midden, 2 = de helft daarvan"></label><button class="prim klein" data-act="fbMaak" data-ond="'+id+'">Maak flipbook</button><span class="klein">tot 0 = tot het eind; het vel wordt hooguit 1024 px</span></div>'}
 function ondGalerij(o){let h='';const id=esc(o.id),eid=esc(o.eid);
@@ -1794,8 +2036,9 @@ function ondGalerij(o){let h='';const id=esc(o.id),eid=esc(o.eid);
     h+='<select data-vrij="'+id+'" data-pad="'+esc(p)+'"><option value="">achtergrond weg...</option><option value="zwart">zwart wordt doorzichtig</option><option value="wit">wit wordt doorzichtig</option><option value="groen">groen wordt doorzichtig</option></select>';
     h+='<select data-rooster="'+id+'" data-stempel="'+esc(m.stempel)+'" title="hoeveel beeldjes staan er op dit vel?">'+ROOSTERS.map(x=>'<option'+(x===k+'x'+r?' selected':'')+'>'+x+'</option>').join('')+'</select>';
     if(o.film_bron)h+='<button class="klein" data-act="ondFilm" data-ond="'+id+'" data-pad="'+esc(p)+'" title="Seedance maakt een filmpje met dit plaatje als eerste beeld">filmpje hiervan</button>';
+    if(k*r===1)h+='<select data-alsframe="'+id+'" data-pad="'+esc(p)+'" title="dit plaatje als frame van de reeks"><option value="">als frame...</option>'+o.reeks.frames.map((f,i)=>'<option value="'+i+'">frame '+(i+1)+'</option>').join('')+'</select>';
     h+='<button class="klein" data-act="weg" data-id="'+eid+'" data-pad="'+esc(p)+'">weg</button></div>'}
-   const bron={upload:'eigen bestand'+(m.naam?': '+m.naam:''),flipbook:'flipbook uit een filmpje',vrijstaand:'achtergrond weg ('+(m.methode||'')+')'}[m.bron]||((m.model||'').split('/').pop());
+   const bron={upload:'eigen bestand'+(m.naam?': '+m.naam:''),flipbook:'flipbook uit een filmpje',reeks:'vel uit de reeks',vrijstaand:'achtergrond weg ('+(m.methode||'')+')'}[m.bron]||((m.model||'').split('/').pop());
    h+='<div class="klein" title="'+esc(m.volle_prompt||m.prompt||'')+'">'+esc(m.tijd)+' &middot; '+esc(bron)+(m.in_spel?' &middot; <span class="actief">in het spel</span>':'')+'</div></div>'}}
  return h||'<div class="klein">nog geen kandidaten</div>'}
 function ondAttrs(el,o){if(!el)return;el.dataset.zoek=(o.naam+' '+o.id+' '+o.map+' '+o.bestand+' '+o.uitleg+' '+o.notitie).toLowerCase()}
@@ -1811,12 +2054,19 @@ function startVellen(root){(root||document).querySelectorAll('canvas.vel:not([da
    ruit(ctx,cv.width,cv.height);ctx.drawImage(tmp,0,0);f=(f+1)%n};
   stap();if(n>1){const t=setInterval(()=>{if(!cv.isConnected){clearInterval(t);return}stap()},Math.max(45,1200/n))}};
  img.src=url(cv.dataset.src,cv.dataset.v)})}
+function startSpelers(root){(root||document).querySelectorAll('canvas[data-reeks-speler]:not([data-aan])').forEach(cv=>{cv.dataset.aan=1;let srcs=[];try{srcs=JSON.parse(cv.dataset.srcs)}catch(e){}const zwart=cv.dataset.zwart==='1',boost=+cv.dataset.boost||2.3;cv.width=180;cv.height=180;const ctx=cv.getContext('2d');const tmp=document.createElement('canvas');tmp.width=180;tmp.height=180;const tc=tmp.getContext('2d',{willReadFrequently:true});
+ const imgs=srcs.map(s=>{const i=new Image();i.src=url(s);return i});let f=0;
+ const stap=()=>{const img=imgs[f];if(img&&img.complete&&img.naturalWidth){tc.clearRect(0,0,180,180);const z=Math.min(img.naturalWidth,img.naturalHeight);tc.drawImage(img,(img.naturalWidth-z)/2,(img.naturalHeight-z)/2,z,z,0,0,180,180);
+  if(zwart){const id=tc.getImageData(0,0,180,180),d=id.data;let alpha=false;for(let i=3;i<d.length;i+=4){if(d[i]<250){alpha=true;break}}if(!alpha){for(let i=0;i<d.length;i+=4){d[i+3]=Math.min(255,Math.max(d[i],d[i+1],d[i+2])*boost)}tc.putImageData(id,0,0)}}
+  ruit(ctx,180,180);ctx.drawImage(tmp,0,0)}f=(f+1)%Math.max(1,imgs.length)};
+ const t=setInterval(()=>{if(!cv.isConnected){clearInterval(t);return}stap()},Math.max(60,1200/Math.max(1,imgs.length)))})}
+async function bewaarReeks(oid,velden,teken_){try{const r=await api('/api/reeks',Object.assign({id:oid},velden));const o=ond(oid);if(o)o.reeks=r;if(teken_)await verversOnd(oid)}catch(e){toast(e.message,'fout')}}
 async function verversOnd(id,flits){try{const o=await api('/api/onderdeel?id='+encodeURIComponent(id));const i=(D.onderdelen||[]).findIndex(x=>x.id===id);if(i>=0)D.onderdelen[i]=o;const el=document.querySelector('.rij.ond[data-ond="'+id+'"]');if(!el)return;
- const fb=document.getElementById('fb_'+id);const fbOpen=fb&&fb.classList.contains('open');const t=document.getElementById('p_'+o.eid);const tik=t&&document.activeElement===t?t.value:null;
- el.innerHTML=ondHtml(o);ondAttrs(el,o);if(fbOpen)document.getElementById('fb_'+id).classList.add('open');if(tik!==null){const t2=document.getElementById('p_'+o.eid);t2.value=tik;t2.focus()}
- startVellen(el);if(flits){el.classList.remove('nieuw');void el.offsetWidth;el.classList.add('nieuw')}}catch(e){toast(e.message,'fout')}}
+ const fb=document.getElementById('fb_'+id);const fbOpen=fb&&fb.classList.contains('open');const rk=document.getElementById('rk_'+id);const rkOpen=rk&&rk.classList.contains('open');const t=document.getElementById('p_'+o.eid);const tik=t&&document.activeElement===t?t.value:null;
+ el.innerHTML=ondHtml(o);ondAttrs(el,o);if(fbOpen)document.getElementById('fb_'+id).classList.add('open');if(rkOpen||(o.reeks.status||{}).loopt)document.getElementById('rk_'+id).classList.add('open');if(tik!==null){const t2=document.getElementById('p_'+o.eid);t2.value=tik;t2.focus()}
+ startVellen(el);startSpelers(el);if(flits){el.classList.remove('nieuw');void el.offsetWidth;el.classList.add('nieuw')}}catch(e){toast(e.message,'fout')}}
 async function zetInSpel(oid,pad,modus,doel){try{const j=await api('/api/in_spel',{id:oid,pad,modus,doel});toast('in het spel: '+j.doel+(j.weg.length?' (weg, met backup: '+j.weg.join(', ')+')':'')+(j.editor?'. De editor importeert hem zodra je naar zijn venster gaat.':'. Druk op Importeer in Godot, of open de editor.'));await verversOnd(oid,true)}catch(e){toast(e.message,'fout')}}
-async function uploadBestanden(eid,files,oid,id){for(const f of files){try{const r=await fetch('/api/upload?id='+encodeURIComponent(eid)+'&naam='+encodeURIComponent(f.name),{method:'POST',body:f});const j=await r.json();if(j.fout)throw new Error(j.fout);toast(f.name+' staat erin')}catch(e){toast(f.name+': '+e.message,'fout')}}if(oid)await verversOnd(oid,true);else if(id)await ververs(id,true)}
+async function uploadBestanden(eid,files,oid,id,frame){for(const f of files){try{const r=await fetch('/api/upload?id='+encodeURIComponent(eid)+'&naam='+encodeURIComponent(f.name)+(frame!==undefined&&frame!==''?'&frame='+frame:''),{method:'POST',body:f});const j=await r.json();if(j.fout)throw new Error(j.fout);toast(f.name+' staat erin')}catch(e){toast(f.name+': '+e.message,'fout')}}if(oid)await verversOnd(oid,true);else if(id)await ververs(id,true)}
 function importStatus(){const s=D.import||{};const el=document.getElementById('importstatus');el.innerHTML=s.bezig?'<span class="spin"></span> Godot importeert...':(s.laatste?'import: '+esc(s.laatste):'');document.getElementById('btnImport').disabled=!!s.bezig}
 let importTimer=null;
 function importPoll(){if(importTimer)return;importTimer=setInterval(async()=>{let s;try{s=await api('/api/import_status')}catch(e){return}D.import=s;importStatus();if(!s.bezig){clearInterval(importTimer);importTimer=null;toast('Godot-import '+s.laatste,(s.laatste||'').startsWith('klaar')?'':'fout')}},3000)}
@@ -1832,7 +2082,7 @@ function teken(){const m=document.getElementById('main');let h='',sec=null;const
  m.innerHTML=h;
  for(const r of D.rijen)attrs(document.querySelector('.rij[data-id="'+r.id+'"]'),r);
  for(const o of O)ondAttrs(document.querySelector('.rij.ond[data-ond="'+o.id+'"]'),o);
- startVellen(m);
+ startVellen(m);startSpelers(m);
  let nav='';for(const c of secs){const s=document.querySelector('.sectie[data-groep="'+c.id+'"] .sub');if(s)s.textContent=c.n+' effecten, '+c.keuze+' met een keuze, '+c.goed+' goed';nav+='<span class="chip" data-act="spring" data-groep="'+esc(c.id)+'">'+esc(c.naam)+' <span class="klein">'+c.keuze+'/'+c.n+'</span></span>'}
  if(O.length)nav+='<span class="chip" data-act="spring" data-groep="onderdelen">Texturen en decals <span class="klein">'+O.length+'</span></span>';
  document.getElementById('nav').innerHTML=nav;tel();filter()}
@@ -1862,11 +2112,16 @@ async function pollTaken(){let j;try{j=await api('/api/taken')}catch(e){return}
  const nu=new Set(j.taken.map(t=>t.stempel));
  for(const s of [...bekend]){if(nu.has(s))continue;bekend.delete(s);const r=D.rijen.find(x=>x.concepten.some(m=>m.stempel===s));
   if(r){await ververs(r.id,true);const m=(rij(r.id)||{concepten:[]}).concepten.find(x=>x.stempel===s);if(m)toast(m.status==='klaar'?(SOORT[m.soort]+' voor '+r.naam+' is er'):(SOORT[m.soort]+' voor '+r.naam+' mislukt: '+(m.fout||'')),m.status==='klaar'?'':'fout');continue}
+  const oid=(vanWie[s]||'').startsWith('o_')?vanWie[s].slice(2):'';
+  if(oid&&!(D.onderdelen||[]).some(x=>x.kandidaten.some(m=>m.stempel===s))){await verversOnd(oid);continue}
   const o=(D.onderdelen||[]).find(x=>x.kandidaten.some(m=>m.stempel===s));
   if(o){await verversOnd(o.id,true);const m=(ond(o.id)||{kandidaten:[]}).kandidaten.find(x=>x.stempel===s);if(m)toast(m.status==='klaar'?(SOORT[m.soort]+' voor '+o.naam+' is er'):(SOORT[m.soort]+' voor '+o.naam+' mislukt: '+(m.fout||'')),m.status==='klaar'?'':'fout')}}
- for(const t of j.taken)bekend.add(t.stempel);
+ for(const t of j.taken){bekend.add(t.stempel);vanWie[t.stempel]=t.id}
+ const rk=j.reeksen||{};for(const oid of Object.keys(rk)){const o=ond(oid);if(o&&JSON.stringify(rk[oid])!==JSON.stringify(lopendeReeksen[oid]))await verversOnd(oid)}
+ for(const oid of Object.keys(lopendeReeksen)){if(!rk[oid]){await verversOnd(oid,true);const o=ond(oid);const st=(o&&o.reeks.status)||{};toast(st.fout?('reeks van '+(o?o.naam:oid)+': '+st.fout):('reeks van '+(o?o.naam:oid)+' klaar'),st.fout?'fout':'')}}
+ lopendeReeksen=rk;
  const sec=Date.now()/1000;document.querySelectorAll('.kaart.bezig .tijd').forEach(t=>{const s=+t.dataset.start;if(s)t.textContent=t.dataset.tekst+', '+Math.max(0,Math.round(sec-s))+' s'});
- if(!j.taken.length){clearInterval(poll);poll=null}}
+ if(!j.taken.length&&!Object.keys(rk).length){clearInterval(poll);poll=null}}
 const ACT={
  groot:b=>{const g=document.getElementById('groot');g.querySelector('img').src=url(b.dataset.src);g.style.display='flex'},
  basis:b=>{const id=b.dataset.id;spelBasis[id]=b.dataset.pad;basis[id]=b.dataset.pad;metBasis[id]=true;b.parentElement.querySelectorAll('img').forEach(i=>i.classList.toggle('basis',i===b));const cb=document.getElementById('b_'+id);if(cb){cb.disabled=false;cb.checked=true}const bt=document.getElementById('bt_'+id);if(bt)bt.textContent=basisTekst(id);document.querySelectorAll('.rij[data-id="'+id+'"] .galerij .kaart.basis').forEach(k=>k.classList.remove('basis'))},
@@ -1899,6 +2154,15 @@ const ACT={
  inSpel:async b=>{if(!confirm('In het spel zetten? Wat er nu staat gaat naar een backup.'))return;await zetInSpel(b.dataset.ond,b.dataset.pad,'vervang','')},
  variant:async b=>{await zetInSpel(b.dataset.ond,b.dataset.pad,'variant','')},
  kiesBestand:b=>{const i=b.querySelector('input[type=file]');if(i)i.click()},
+ reeksOpen:b=>{const r=document.getElementById('rk_'+b.dataset.ond);if(r){r.classList.toggle('open');if(r.classList.contains('open'))r.scrollIntoView({block:'nearest',behavior:'smooth'})}},
+ reeksMaak:async b=>{const o=ond(b.dataset.ond);if(!o)return;const r=o.reeks;const leeg=b.dataset.leeg==='1';const van=b.dataset.van!==undefined?+b.dataset.van:0,tot=b.dataset.tot!==undefined?+b.dataset.tot:r.n-1;
+  let n=0;for(let i=van;i<=tot;i++)if(!leeg||!r.frames[i].beeld)n++;if(!n){toast('Alle frames hebben al een plaatje.','info');return}
+  const prijs=(D.instellingen.beeldmodel||'').includes('pro')?0.13:0.04;
+  if(!confirm(n+' plaatje(s) maken met '+D.instellingen.beeldmodel+(r.keten&&n>1?', na elkaar (elk op het vorige)':'')+'? Dat kost ongeveer $'+(n*prijs).toFixed(2).replace('.',',')+' (indicatie).'))return;
+  try{await api('/api/reeks_maak',{id:o.id,van,tot,alleen_leeg:leeg});toast('de reeks loopt; de frames komen een voor een','info');lopendeReeksen[o.id]={loopt:true};await verversOnd(o.id);startPoll()}catch(e){toast(e.message,'fout')}},
+ reeksStop:async b=>{try{await api('/api/reeks_stop',{id:b.dataset.ond});toast('de reeks stopt na het frame dat nu loopt (dat wordt geannuleerd)','info')}catch(e){toast(e.message,'fout')}},
+ reeksVel:async b=>{try{await api('/api/reeks_vel',{id:b.dataset.ond});toast('vel gemaakt: een nieuwe kandidaat, druk daar op In het spel');await verversOnd(b.dataset.ond,true)}catch(e){toast(e.message,'fout')}},
+ reeksVersie:async b=>{const o=ond(b.dataset.ond);if(!o)return;const f=o.reeks.frames[+b.dataset.i];const n=f.versies.length;if(n<2)return;const i=(f.versies.indexOf(f.beeld)+(+b.dataset.stap)+n)%n;await bewaarReeks(o.id,{frame:+b.dataset.i,gekozen:f.versies[i]},true)},
  importeer:async()=>{try{const s=await api('/api/import',{});D.import=s;importStatus();if(s.bezig)importPoll();else if(s.laatste)toast(s.laatste,'info')}catch(e){toast(e.message,'fout')}},
  wensOpen:b=>b.closest('.wensform').classList.toggle('open'),
  wens:async b=>{const f=b.closest('.wensform');const v={};f.querySelectorAll('[data-w]').forEach(i=>v[i.dataset.w]=i.value.trim());if(!v.naam){toast('Geef de wens een naam.','fout');return}
@@ -1912,12 +2176,17 @@ document.addEventListener('change',async e=>{const t=e.target;
  if(t.dataset.rooster){const [k,r]=t.value.split('x').map(Number);try{await api('/api/rooster',{id:t.dataset.rooster,stempel:t.dataset.stempel,kolommen:k,rijen:r});await verversOnd(t.dataset.rooster)}catch(e){toast(e.message,'fout')}return}
  if(t.dataset.vervang){if(!t.value)return;const doel=t.value;t.value='';if(!confirm('Variant '+doel+' vervangen? De oude gaat naar een backup.'))return;await zetInSpel(t.dataset.vervang,t.dataset.pad,'vervang',doel);return}
  if(t.dataset.fb)return;
+ if(t.dataset.reeksN){await bewaarReeks(t.dataset.reeksN,{n:+t.value},true);return}
+ if(t.dataset.reeksKeten){await bewaarReeks(t.dataset.reeksKeten,{keten:t.checked},false);return}
+ if(t.dataset.reeksBasis){await bewaarReeks(t.dataset.reeksBasis,{basis_prompt:t.value},false);return}
+ if(t.dataset.reeksFrame){await bewaarReeks(t.dataset.reeksFrame,{frame:+t.dataset.i,prompt:t.value},false);return}
+ if(t.dataset.alsframe){if(t.value==='')return;const i=+t.value;t.value='';await bewaarReeks(t.dataset.alsframe,{frame:i,gekozen:t.dataset.pad},true);toast('nu frame '+(i+1)+' van de reeks');return}
  if(t.dataset.veld){const id=t.dataset.id;await bewaar(id,t.dataset.veld,t.type==='checkbox'?t.checked:t.value);const r=rij(id);if(r){if(t.dataset.veld==='goed'){r.goed=t.checked;await ververs(id)}else r[t.dataset.veld]=t.value}}
  else if(t.dataset.inst){try{const j=await api('/api/instellingen',{[t.dataset.inst]:t.type==='checkbox'?t.checked:t.value});D.instellingen=j.instellingen;toast('instelling bewaard','info')}catch(e){toast(e.message,'fout')}}});
 document.getElementById('groot').onclick=()=>{document.getElementById('groot').style.display='none'};
 document.addEventListener('dragover',e=>{e.preventDefault();const d=e.target.closest&&e.target.closest('.drop');if(d)d.classList.add('over')});
 document.addEventListener('dragleave',e=>{const d=e.target.closest&&e.target.closest('.drop');if(d)d.classList.remove('over')});
-document.addEventListener('drop',async e=>{e.preventDefault();const d=e.target.closest&&e.target.closest('.drop');if(!d)return;d.classList.remove('over');const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];if(files.length)await uploadBestanden(d.dataset.ond?('o_'+d.dataset.ond):d.dataset.id,files,d.dataset.ond||'',d.dataset.id||'')});
+document.addEventListener('drop',async e=>{e.preventDefault();const d=e.target.closest&&e.target.closest('.drop');if(!d)return;d.classList.remove('over');const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];if(!files.length)return;if(d.dataset.frame!==undefined){await uploadBestanden('o_'+d.dataset.ond,files.slice(0,1),d.dataset.ond,'',d.dataset.frame);return}await uploadBestanden(d.dataset.ond?('o_'+d.dataset.ond):d.dataset.id,files,d.dataset.ond||'',d.dataset.id||'')});
 document.addEventListener('play',e=>{if(e.target.tagName!=='VIDEO')return;document.querySelectorAll('video').forEach(v=>{if(v!==e.target&&!v.paused)v.pause()})},true);
 laad();
 </script></body></html>
@@ -1992,7 +2261,8 @@ class Handler(BaseHTTPRequestHandler):
                 o = overzicht(_id_ok(q.get("id", [""])[0]))
                 self._json(o["rijen"][0] if o["rijen"] else {"fout": "onbekend effect"})
             elif u.path == "/api/taken":
-                self._json({"taken": lopend(), "nu": time.time()})
+                self._json({"taken": lopend(), "nu": time.time(),
+                            "reeksen": {k: dict(v) for k, v in _reeks_bezig.items() if v.get("loopt")}})
             elif u.path == "/api/spel_status":
                 self._json(dict(_spel))
             elif u.path == "/api/onderdeel":
@@ -2015,7 +2285,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise RuntimeError("te groot (hooguit %d MB)" % (MAX_UPLOAD // (1024 * 1024)))
                 q = urllib.parse.parse_qs(u.query)
                 data = self.rfile.read(n)
-                self._json({"stempel": upload(q.get("id", [""])[0], q.get("naam", [""])[0], data)})
+                self._json({"stempel": upload(q.get("id", [""])[0], q.get("naam", [""])[0], data,
+                                              q.get("frame", [None])[0])})
             except Exception as e:  # noqa: BLE001
                 self._json({"fout": str(e)})
             return
@@ -2140,6 +2411,16 @@ class Handler(BaseHTTPRequestHandler):
         if pad == "/api/import":
             godot_import()
             return dict(_import_status)
+        if pad == "/api/reeks":
+            return zet_reeks(str(b.get("id", "")), b)
+        if pad == "/api/reeks_maak":
+            return start_reeks(str(b.get("id", "")), b.get("van") or 0, -1 if b.get("tot") is None else b.get("tot"),
+                               bool(b.get("alleen_leeg", True)))
+        if pad == "/api/reeks_stop":
+            stop_reeks(str(b.get("id", "")))
+            return {"ok": True}
+        if pad == "/api/reeks_vel":
+            return {"stempel": reeks_vel(str(b.get("id", "")))}
         if pad == "/api/wens":
             return {"id": nieuwe_wens(b.get("groep"), b.get("naam"), b.get("wanneer"), b.get("notitie"),
                                       b.get("prompt"))}
@@ -2543,6 +2824,63 @@ def proef():
         post("/api/kies", {"id": "kruitdamp", "pad": filmpad})
         ok(os.path.exists(os.path.join(P["ref"], "kruitdamp", "film_vel.jpg"))
            and keuze_van("kruitdamp", lees_studio()).get("film_vel"), "dit is hem (filmpje): het contactvel staat in de referentie")
+        # --- de reeks: een vast aantal frames, per frame een prompt en een plaatje
+        rk = reeks_van("vlam_kanon")
+        ok(rk["n"] == 12 and (rk["kolommen"], rk["rijen"]) == (4, 3) and rk["frames"][0]["prompt"] == FASEN[0]
+           and rk["frames"][11]["prompt"] == FASEN[11] and rk["basis_prompt"] == od["vlam_kanon"]["prompt"]
+           and not any(f["beeld"] for f in rk["frames"]), "reeks: standaard 12 frames (4x3), fasen van ontstaan tot weg")
+        rk = post("/api/reeks", {"id": "vlam_kanon", "n": 4})
+        ok(rk["n"] == 4 and (rk["kolommen"], rk["rijen"]) == (2, 2) and len(rk["frames"]) == 4, "reeks: 4 frames = 2x2")
+        post("/api/reeks", {"id": "vlam_kanon", "frame": 1, "prompt": "eigen fase"})
+        post("/api/reeks", {"id": "vlam_kanon", "basis_prompt": "A cartoon explosion on black"})
+        voor = len(nep["invoer"])
+        post("/api/reeks_maak", {"id": "vlam_kanon", "van": 0, "tot": 3, "alleen_leeg": True})
+
+        def wacht_reeks(oid, sec=15.0):
+            e_ = time.time() + sec
+            while time.time() < e_:
+                if not _reeks_bezig.get(oid, {}).get("loopt"):
+                    return True
+                time.sleep(0.05)
+            return False
+        ok(wacht_reeks("vlam_kanon") and all(f["beeld"] for f in reeks_van("vlam_kanon")["frames"]),
+           "reeks: de vier frames na elkaar gemaakt")
+        inv = [x[1] for x in nep["invoer"][voor:]]
+        ok(len(inv) == 4 and "image_input" not in inv[0] and all(isinstance(x.get("image_input"), list) for x in inv[1:])
+           and inv[1]["prompt"].startswith(KETENZIN) and "Frame 2 of 4 of the animation: eigen fase." in inv[1]["prompt"]
+           and inv[0]["prompt"].startswith("A cartoon explosion on black Frame 1 of 4") and inv[0].get("aspect_ratio") == "1:1"
+           and all(x.get("aspect_ratio") == "match_input_image" for x in inv[1:]),
+           "reeks: frame 1 vanaf tekst (vierkant), de rest op het vorige frame (zelfde maat), met de fase per frame"
+           + ("" if len(inv) == 4 else " (%d invoeren)" % len(inv)))
+        ok(not any("reeks_frame" in m for m in onderdeel_rij("vlam_kanon")["kandidaten"]), "reeks: de frames staan niet tussen de kandidaten")
+        b3 = io.BytesIO()
+        Image.new("RGB", (80, 80), (250, 160, 20)).save(b3, "PNG")
+        req = urllib.request.Request(basis_url + "/api/upload?id=o_vlam_kanon&naam=eigen.png&frame=2", data=b3.getvalue(), method="POST")
+        with urllib.request.urlopen(req, timeout=30) as r_:
+            json.loads(r_.read().decode("utf-8"))
+        f2 = reeks_van("vlam_kanon")["frames"][2]
+        ok(len(f2["versies"]) == 2 and f2["beeld"] == f2["versies"][0], "reeks: een eigen plaatje op frame 3 is de nieuwste versie")
+        post("/api/reeks", {"id": "vlam_kanon", "frame": 2, "gekozen": f2["versies"][1]})
+        ok(reeks_van("vlam_kanon")["frames"][2]["beeld"] == f2["versies"][1], "reeks: een andere versie kiezen")
+        stv2 = post("/api/reeks_vel", {"id": "vlam_kanon"})["stempel"]
+        mv2 = next(m for m in concepten_van("o_vlam_kanon") if m["stempel"] == stv2)
+        with Image.open(mv2["bestanden"][0]) as im:
+            ok(im.size == (512, 512) and mv2.get("rooster") == [2, 2] and mv2.get("bron") == "reeks",
+               "reeks: leg in een vel, 2x2 van 256 px, met het rooster")
+        j = post("/api/in_spel", {"id": "vlam_kanon", "pad": mv2["bestanden"][0], "modus": "vervang"})
+        ok(j.get("doel", "").endswith("fire/cannon_2x2.png") and not os.path.exists(os.path.join(P["texturen"], "fire", "cannon_3x1.png"))
+           and os.path.exists(os.path.join(P["texturen"], "fire", "musket_3x1.png")), "reeks: het vel in het spel als cannon_2x2.png, de musketvlam blijft")
+        post("/api/reeks", {"id": "vuur_niets" if False else "stof", "n": 4})
+        ok("fout" in post("/api/reeks_maak", {"id": "stof", "van": 1, "tot": 1, "alleen_leeg": False}) or
+           (wacht_reeks("stof") and "nog geen plaatje" in _reeks_bezig.get("stof", {}).get("fout", "")),
+           "reeks: een frame op een leeg vorig frame meldt dat")
+        post("/api/reeks", {"id": "stof", "basis_prompt": "TRAAG"})
+        post("/api/reeks_maak", {"id": "stof", "van": 0, "tot": 3, "alleen_leeg": True})
+        e_ = time.time() + 5
+        while time.time() < e_ and not any(m.get("status") == "bezig" for m in concepten_van("o_stof") if "reeks_frame" in m):
+            time.sleep(0.05)
+        post("/api/reeks_stop", {"id": "stof"})
+        ok(wacht_reeks("stof") and not reeks_van("stof")["frames"][1]["beeld"], "reeks: stop breekt de keten af na het lopende frame")
         code, data = get("/api/onderdeel?id=rook_musket")
         ok(code == 200 and json.loads(data.decode("utf-8"))["spel"][0]["naam"] == "musket_4x4.png", "onderdeel via http")
         code, _ = get("/bestand?p=" + urllib.parse.quote(os.path.join(rook, "musket_4x4.png")))

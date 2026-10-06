@@ -1,5 +1,50 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 8b: een reeks, frame voor frame
+
+Max: "maar een groep moet ook soms bestaan uit meerdere frames toch, 1
+ontploffing kan wel 12 plaatjes tellen oid", en: "dus kies een vast getal en
+dan per frame een prompt en een plaatje".
+
+- **Per onderdeel een reeks** (knop "Reeks: frame voor frame" in de rij, het
+  paneel staat open zodra er frames zijn): 4, 6, 8, 9, 12 of 16 frames
+  (rooster 2x2, 3x2, 4x2, 3x3, 4x3, 4x4), een onderwerp-prompt voor alle
+  frames (beginwaarde: de prompt van het onderdeel) en per frame een
+  fase-prompt, voorgevuld uit twaalf fasen van "the very first instant, just
+  appearing" via "at its biggest and most intense" tot "the last faint trace
+  fading to nothing" (gelijk verdeeld over het aantal).
+- **Maken:** "Maak de lege frames" of "Alles opnieuw" laat een thread de
+  frames na elkaar bij Replicate maken (Nano Banana, vierkant); met "elk frame
+  bouwt voort op het vorige" krijgt elk frame het vorige plaatje als basis plus
+  een vaste zin dat kader, midden, maat, stijl en achtergrond gelijk blijven,
+  zodat het een ontploffing blijft. Per frame "maak" (opnieuw), versies
+  doorbladeren (de nieuwste telt tenzij je er een kiest), stoppen (het lopende
+  frame wordt bij Replicate geannuleerd). Eerst een bevestiging met het aantal
+  plaatjes en de prijs.
+- **Zelf leveren:** een plaatje op een frame slepen, of bij een kandidaat
+  "als frame..." kiezen (bv. een geslaagd plaatje als frame 1, en de rest daar
+  op laten voortbouwen).
+- **Afspelen en in het spel:** een speler laat de frames na elkaar zien (zwart
+  doorzichtig zoals het spel); "Leg in een vel" maakt er een kandidaat van met
+  het rooster (hooguit 256 per beeldje), en die gaat met "In het spel" onder
+  de goede naam het spel in (een 2x2-reeks voor de kanonvlam wordt
+  `cannon_2x2.png`).
+- Opslag: `reeksen` in `assets/vfx/referentie/studio.json`; de frames zijn
+  gewone opdrachten met `reeks_frame` en staan niet tussen de kandidaten; de
+  pagina hoort via `/api/taken` welke reeksen lopen en blijft zolang
+  verversen.
+- Gevonden bij het kijken (headless Edge, nepframes van een groeiende bol): de
+  speler bleef leeg, want de vel-voorbeelden pakten zijn canvas al op (zelfde
+  klasse); eigen klasse gegeven.
+- Checks: `--proef` PASS (65 stappen; nieuw: standaardreeks 12 = 4x3 met de
+  fasen, 4 = 2x2, vier frames na elkaar, frame 1 uit tekst vierkant en de rest
+  op het vorige frame met de fase in de prompt, frames niet tussen de
+  kandidaten, eigen plaatje op een frame als nieuwste versie, een andere
+  versie kiezen, vel 2x2 van 256 px, in het spel als cannon_2x2.png met de
+  musketvlam ongemoeid, een frame op een leeg vorig frame meldt dat, stop
+  breekt de keten af). Alleen de Python-studio veranderde: geen Godot-regressie
+  nodig (stap 8 was groen).
+
 ## 6 oktober -- VFX-studio stap 8: texturen en decals aanleveren
 
 Max: "en hoe kan ik dan de VFX maken en of aanpassen dat de details kunnen
