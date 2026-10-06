@@ -14,7 +14,8 @@ const STIJL := preload("res://scripts/vfx/stijl.gd")
 ## het diorama maar nog met vaste waarden), speel (het recept in de tuner; leeg
 ## = nog niet af te spelen), schutter (wie de tuner neerzet: "musket", "kanon"
 ## of "ruiter"; standaard musket), doel (wat er geraakt wordt: "musket" of
-## "kanon"; standaard musket) en een notitie.
+## "kanon"; standaard musket), de onderdelen (texturen en decals uit
+## ONDERDELEN die het gebruikt) en een notitie.
 
 const GROEPEN: Array = [
 	{"id": "kruit", "naam": "Kruitdamp en vuurmond"},
@@ -121,26 +122,106 @@ const _WOND := ["wound_blood", "wound_delay", "wound_straal", "wound_straal_dikt
 	"drop_stain_delay", "drop_stain_grow"]
 const _LIJK := ["debris_donker_na", "debris_donker_duur", "debris_donker", "debris_doorzicht", "debris_zak"]
 
+## De texturen en decals die de effecten gebruiken (6 oktober, stap 8; Max: "het
+## doel is om met de studio ook de textures en alle decals die nodig zijn aan te
+## leveren"). Waar ze staan (assets/textures/<map>/) en hoe het spel ze vindt:
+## `soort` "flipbook" = een vel met het rooster in de naam (musket_3x3.png), het
+## spel neemt het eerste bestand waarvan de naam `bestand` bevat; "varianten" =
+## alle bestanden die met `bestand` beginnen, het spel kiest er een; "vast" =
+## precies `bestand`.png. `achtergrond` "zwart": een plaatje zonder
+## doorzichtigheid krijgt die bij het laden uit de helderheid (maal `boost`);
+## "alpha": een PNG met doorzichtigheid. `gebruikt` false = het spel kijkt er
+## nog niet naar (eerst ombouwen). De VFX-studio levert ze aan (tools/
+## vfx_studio.py, groep "Texturen en decals"); `prompt` is de beginprompt voor
+## een plaatje, `film` die voor een filmpje (leeg = geen filmpje nodig).
+const ONDERDELEN: Dictionary = {
+	"rook_musket": {"naam": "Kruitdamp (rookwolk)", "map": "smoke", "bestand": "musket", "soort": "flipbook",
+		"achtergrond": "zwart", "boost": 2.3, "gebruikt": true,
+		"uitleg": "elke rookwolk van een schot: aan de loop, op de inslag, de ring en de pluim; beeldje 0 draagt de vlam, de wolk speelt vanaf beeldje 1",
+		"prompt": "A single puff of grey-white black-powder smoke, soft and billowing, centered, isolated on a solid pure black background, game VFX texture, no ground, no text.",
+		"film": "A single puff of grey-white black-powder smoke bursts out from the center, billows outward and slowly dissolves, isolated on a solid pure black background."},
+	"rook_wit": {"naam": "Witte pof", "map": "smoke", "bestand": "white_smoke", "soort": "flipbook",
+		"achtergrond": "zwart", "boost": 2.3, "gebruikt": true,
+		"uitleg": "het witte wolkje bij koppelen en bij een nieuwe pion; bruin getint is het nu ook het stof",
+		"prompt": "A clean round puff of soft white smoke, centered, isolated on a solid pure black background, game VFX texture, no text.",
+		"film": "A small round puff of soft white smoke pops out from the center and fades away, isolated on a solid pure black background."},
+	"vlam_musket": {"naam": "Vuurmond musket", "map": "fire", "bestand": "musket", "soort": "flipbook",
+		"achtergrond": "zwart", "boost": 1.5, "gebruikt": true,
+		"uitleg": "de steekvlam van een musket; het vel speelt af binnen de flits",
+		"prompt": "A musket muzzle flash seen from the side: a short bright orange-yellow burst of fire with a few sparks, centered, isolated on a solid pure black background, game VFX texture.",
+		"film": "A short bright orange muzzle flash bursts from the center and vanishes, isolated on a solid pure black background."},
+	"vlam_kanon": {"naam": "Vuurmond kanon en vuurbal", "map": "fire", "bestand": "cannon", "soort": "flipbook",
+		"achtergrond": "zwart", "boost": 1.5, "gebruikt": true,
+		"uitleg": "de grote vlam van een kanon, en de vuurbal van een explosie",
+		"prompt": "A large cannon muzzle blast: a big round burst of orange and yellow fire with dark edges, centered, isolated on a solid pure black background, game VFX texture.",
+		"film": "A big ball of orange fire bursts out from the center, rolls outward and burns out into dark smoke, isolated on a solid pure black background."},
+	"bloed_spetter": {"naam": "Bloedspetters", "map": "blood", "bestand": "splat", "soort": "varianten",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": true,
+		"uitleg": "fijne spetters op het bord (de bloedwaaier, druppels); elke spetter kiest een variant",
+		"prompt": "A small splatter of dark red blood seen from straight above, stylized, on a pure white background, game decal texture, no shadow.",
+		"film": ""},
+	"bloed_plas": {"naam": "Bloedplas", "map": "blood", "bestand": "blood_pool", "soort": "varianten",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": true,
+		"uitleg": "de plas onder een dode, die langzaam groeit; elke plas kiest een variant",
+		"prompt": "A small pool of dark red blood seen from straight above, irregular round shape, stylized, on a pure white background, game decal texture, no shadow.",
+		"film": ""},
+	"bloed_nevel": {"naam": "Bloednevel", "map": "blood", "bestand": "blood_mist", "soort": "varianten",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": true,
+		"uitleg": "de rode wolk bij een dood door het kanon en bij de sabelhouw",
+		"prompt": "A soft cloud of fine red mist, centered, on a solid pure black background, game VFX texture.",
+		"film": "A burst of fine red mist puffs out from the center and drifts apart, on a solid pure black background."},
+	"voetstap_links": {"naam": "Voetstap links", "map": "footstep", "bestand": "left", "soort": "vast",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": true,
+		"uitleg": "een afdruk in het stof, de neus naar boven; per factie kan ook <factie>_left (bv. mouse_left)",
+		"prompt": "A single small left boot print pressed into dust, seen from straight above, toe pointing up, dark brown on a pure white background, game decal texture.",
+		"film": ""},
+	"voetstap_rechts": {"naam": "Voetstap rechts", "map": "footstep", "bestand": "right", "soort": "vast",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": true,
+		"uitleg": "de rechtervoet; per factie kan ook <factie>_right",
+		"prompt": "A single small right boot print pressed into dust, seen from straight above, toe pointing up, dark brown on a pure white background, game decal texture.",
+		"film": ""},
+	"wielspoor": {"naam": "Wielspoor", "map": "footstep", "bestand": "wiel", "soort": "vast",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": true,
+		"uitleg": "een stukje spoor van een kanonwiel, een smalle strook in de lengte (nu leeg: dan een effen streep)",
+		"prompt": "A short straight wheel track pressed into dust, seen from straight above, a narrow vertical strip, dark brown on a pure white background, game decal texture.",
+		"film": ""},
+	"krater": {"naam": "Krater of schroeiplek", "map": "decals", "bestand": "krater", "soort": "varianten",
+		"achtergrond": "alpha", "boost": 1.0, "gebruikt": false,
+		"uitleg": "nu tekent de code de krater zelf (ruis); met een plaatje hier bouw ik hem om",
+		"prompt": "A small scorched crater in dry earth seen from straight above, a dark burnt center with a ring of thrown-up dirt, stylized, on a pure white background, game decal texture.",
+		"film": ""},
+	"stof": {"naam": "Stofwolk", "map": "dust", "bestand": "stof", "soort": "flipbook",
+		"achtergrond": "zwart", "boost": 2.3, "gebruikt": false,
+		"uitleg": "nu is stof de witte pof in bruin getint; met een eigen stofwolk hier bouw ik hem om",
+		"prompt": "A puff of light brown dust kicked up from the ground, soft and grainy, centered, isolated on a solid pure black background, game VFX texture.",
+		"film": "A puff of light brown dust is kicked up from the center, spreads out and settles, isolated on a solid pure black background."},
+	"vlam_bord": {"naam": "Vlammen op het bord", "map": "flame", "bestand": "vlam", "soort": "flipbook",
+		"achtergrond": "zwart", "boost": 1.5, "gebruikt": false,
+		"uitleg": "het vuur op het bord is nu een shader; met een vlammen-flipbook hier bouw ik hem om",
+		"prompt": "A small flickering flame, orange and yellow, centered, isolated on a solid pure black background, game VFX texture.",
+		"film": "A small flame flickers and dances in place, centered, isolated on a solid pure black background, seamless loop."},
+}
+
 const EFFECTEN: Array = [
 	# --- Kruitdamp en vuurmond -------------------------------------------------
 	{"id": "schot_musket", "groep": "kruit", "naam": "Musketschot", "status": "spel", "speel": "schot_musket",
 		"wanneer": "elk musketschot: kogel, vuurmond, kruitflits op de pan, propjes, kruitdamp, inslagrook",
-		"knoppen": _VUUR + ["pan_flits", "propjes", "smoke_wind"] + _ROOK + ["impact_smoke_life"]},
+		"knoppen": _VUUR + ["pan_flits", "propjes", "smoke_wind"] + _ROOK + ["impact_smoke_life"], "onderdelen": ["rook_musket", "vlam_musket"]},
 	{"id": "schot_kanon", "groep": "kruit", "naam": "Kanonschot", "status": "spel", "speel": "schot_kanon", "schutter": "kanon",
 		"wanneer": "elk kanonschot: streep, grote vuurmond, rookring, pluim, propjes, kruitdamp, inslagrook",
-		"knoppen": _VUUR + ["kanon_ring", "kanon_pluim", "propjes", "smoke_wind"] + _ROOK + ["impact_smoke_life"]},
+		"knoppen": _VUUR + ["kanon_ring", "kanon_pluim", "propjes", "smoke_wind"] + _ROOK + ["impact_smoke_life"], "onderdelen": ["rook_musket", "vlam_kanon"]},
 	{"id": "kruitdamp", "groep": "kruit", "naam": "Kruitdamp aan de loop", "status": "spel", "speel": "kruitdamp",
-		"wanneer": "na elk schot, drijft met het schot en de wind mee en stijgt op", "knoppen": ["smoke_wind"] + _ROOK},
+		"wanneer": "na elk schot, drijft met het schot en de wind mee en stijgt op", "knoppen": ["smoke_wind"] + _ROOK, "onderdelen": ["rook_musket"]},
 	{"id": "koppelwolkje", "groep": "kruit", "naam": "Wit wolkje bij koppelen", "status": "spel", "speel": "koppelwolkje",
-		"wanneer": "een kaart koppelen of ontkoppelen", "knoppen": ["link_puff", "smoke_wind"] + _ROOK},
+		"wanneer": "een kaart koppelen of ontkoppelen", "knoppen": ["link_puff", "smoke_wind"] + _ROOK, "onderdelen": ["rook_wit"]},
 	{"id": "rook_wind", "groep": "kruit", "naam": "Rook met de wind mee", "status": "spel", "speel": "rook_wind",
 		"wanneer": "alle rook drijft met de wind van het potje, zoals de vlaggen (de tuner: schuif wind)",
-		"knoppen": ["smoke_wind", "smoke_life", "smoke_linger_chance"]},
+		"knoppen": ["smoke_wind", "smoke_life", "smoke_linger_chance"], "onderdelen": ["rook_musket"]},
 	{"id": "rookring_kanon", "groep": "kruit", "naam": "Rookring en pluim bij het kanon", "status": "spel", "speel": "rookring", "schutter": "kanon",
 		"wanneer": "een kanonschot: een ring die uitdijt en stilvalt, een dikke pluim die blijft hangen",
-		"knoppen": ["kanon_ring", "kanon_pluim", "smoke_wind"]},
+		"knoppen": ["kanon_ring", "kanon_pluim", "smoke_wind"], "onderdelen": ["rook_musket", "vlam_kanon"]},
 	{"id": "pankruit", "groep": "kruit", "naam": "Kruitflits op de pan", "status": "spel", "speel": "pankruit",
-		"wanneer": "een musketschot: een flitsje en een wolkje dat bij het slot omhoog krult", "knoppen": ["pan_flits", "smoke_wind"]},
+		"wanneer": "een musketschot: een flitsje en een wolkje dat bij het slot omhoog krult", "knoppen": ["pan_flits", "smoke_wind"], "onderdelen": ["rook_musket"]},
 	{"id": "propjes", "groep": "kruit", "naam": "Gloeiende propjes uit de loop", "status": "spel", "speel": "propjes",
 		"wanneer": "een schot: gloeiende proppen die vallen, op het bord liggen en doven", "knoppen": ["propjes"]},
 	# --- Stof en aarde ---------------------------------------------------------
@@ -149,50 +230,50 @@ const EFFECTEN: Array = [
 		"notitie": "zit in game.gd; nog niet af te spelen in de tuner"},
 	{"id": "voetsporen", "groep": "stof", "naam": "Voetsporen en wielsporen", "status": "spel", "speel": "",
 		"wanneer": "elke stap over het bord", "knoppen": ["footprints", "footprint_dark", "wheel_width", "wheel_base"],
-		"notitie": "zit in game.gd; nog niet af te spelen in de tuner"},
+		"notitie": "zit in game.gd; nog niet af te spelen in de tuner", "onderdelen": ["voetstap_links", "voetstap_rechts", "wielspoor"]},
 	{"id": "charge_stof", "groep": "stof", "naam": "Stof bij de landing van een charge", "status": "spel",
 		"speel": "charge_stof", "schutter": "ruiter",
-		"wanneer": "de ruiter landt na zijn sprong: een kring stof om de hoeven", "knoppen": ["stof_landing", "stof_alfa", "smoke_wind"]},
+		"wanneer": "de ruiter landt na zijn sprong: een kring stof om de hoeven", "knoppen": ["stof_landing", "stof_alfa", "smoke_wind"], "onderdelen": ["stof", "rook_wit"]},
 	{"id": "galop_stof", "groep": "stof", "naam": "Stof achter galopperende ruiters", "status": "spel",
 		"speel": "galop_stof", "schutter": "ruiter",
-		"wanneer": "een ruiter (of een kanon, minder) rijdt hard over het bord", "knoppen": ["stof_galop", "stof_alfa", "smoke_wind"]},
+		"wanneer": "een ruiter (of een kanon, minder) rijdt hard over het bord", "knoppen": ["stof_galop", "stof_alfa", "smoke_wind"], "onderdelen": ["stof", "rook_wit"]},
 	{"id": "inslag_aarde", "groep": "stof", "naam": "Opspattende aarde bij een kanonsinslag", "status": "spel",
 		"speel": "schot_kanon", "schutter": "kanon",
-		"wanneer": "een kanonskogel slaat in: kluiten en een stofwolk", "knoppen": ["aarde_inslag", "stof_alfa", "smoke_wind"]},
+		"wanneer": "een kanonskogel slaat in: kluiten en een stofwolk", "knoppen": ["aarde_inslag", "stof_alfa", "smoke_wind"], "onderdelen": ["stof", "rook_wit"]},
 	{"id": "krater", "groep": "stof", "naam": "Krater of schroeiplek", "status": "spel",
 		"speel": "schot_kanon", "schutter": "kanon",
-		"wanneer": "blijft na een kanonsinslag op het bord liggen en vervaagt", "knoppen": ["krater", "krater_duur"]},
+		"wanneer": "blijft na een kanonsinslag op het bord liggen en vervaagt", "knoppen": ["krater", "krater_duur"], "onderdelen": ["krater"]},
 	# --- Bloed en inslag -------------------------------------------------------
 	{"id": "vonken", "groep": "bloed", "naam": "Vonken op metaal", "status": "spel", "speel": "vonken",
 		"wanneer": "een treffer op het kuras van de hp-pion: vonken en een witte flits",
 		"knoppen": ["inslag_materiaal"]},
 	{"id": "treffer", "groep": "bloed", "naam": "Treffer: flits, wankelen, wond", "status": "spel", "speel": "treffer",
-		"wanneer": "een pion wordt geraakt en overleeft", "knoppen": _WOND},
+		"wanneer": "een pion wordt geraakt en overleeft", "knoppen": _WOND, "onderdelen": ["bloed_spetter"]},
 	{"id": "schadegetal", "groep": "bloed", "naam": "Schadegetal (-N)", "status": "spel", "speel": "schadegetal",
 		"wanneer": "boven een geraakte pion", "knoppen": []},
 	{"id": "inslag_materiaal", "groep": "bloed", "naam": "Inslag per materiaal", "status": "spel",
 		"speel": "inslag_materiaal",
 		"wanneer": "vlees: rode nevel en spatjes; hout (een kanon): splinters; metaal: vonken (zoals het geluid; na elkaar)",
-		"knoppen": ["inslag_materiaal", "inslag_sterkte"]},
+		"knoppen": ["inslag_materiaal", "inslag_sterkte"], "onderdelen": ["bloed_spetter"]},
 	{"id": "bloed_variatie", "groep": "bloed", "naam": "Bloedwaaier op de grond", "status": "spel", "speel": "dood_musket",
 		"wanneer": "een dode: een waaier langgerekte spatten van de klap af, na elkaar neerkomend",
-		"knoppen": ["bloed_waaier", "blood_size", "blood_grow"]},
+		"knoppen": ["bloed_waaier", "blood_size", "blood_grow"], "onderdelen": ["bloed_spetter", "bloed_plas"]},
 	# --- Sterven en brokstukken ------------------------------------------------
 	{"id": "dood_musket", "groep": "dood", "naam": "Sterven door een musketkogel", "status": "spel", "speel": "dood_musket",
 		"wanneer": "een kill met het musket: hoed of ledemaat kan loskomen, bloedplas",
 		"knoppen": ["hat_pop_chance", "hat_fling_power", "hat_fling_time", "limb_shed_chance", "limb_fling_power",
-			"limb_fling_time", "blood_size", "blood_grow", "blood_extra_delay", "death_blood_delay"] + _LIJK},
+			"limb_fling_time", "blood_size", "blood_grow", "blood_extra_delay", "death_blood_delay"] + _LIJK, "onderdelen": ["bloed_plas", "bloed_spetter"]},
 	{"id": "dood_kanon", "groep": "dood", "naam": "Sterven door een kanonskogel (gibs)", "status": "spel", "speel": "dood_kanon", "schutter": "kanon",
 		"wanneer": "een kill met het kanon: het lijf vliegt in stukken, bloednevel",
 		"knoppen": ["gib_fling_power", "gib_spin", "gib_bloed", "blood_mist", "mist_travel", "gib_pool_delay",
-			"gib_pool_grow"] + _LIJK},
+			"gib_pool_grow"] + _LIJK, "onderdelen": ["bloed_nevel", "bloed_plas", "bloed_spetter"]},
 	{"id": "dood_bajonet", "groep": "dood", "naam": "Sterven door de bajonet", "status": "spel", "speel": "dood_bajonet",
 		"wanneer": "een kill in een gevecht van dichtbij", "knoppen": ["slice_kans_bajonet", "slice_hoek_bajonet",
-			"limb_shed_chance", "blood_size"] + _LIJK},
+			"limb_shed_chance", "blood_size"] + _LIJK, "onderdelen": ["bloed_plas"]},
 	{"id": "doormidden", "groep": "dood", "naam": "Doormidden (sabelhouw)", "status": "spel", "speel": "doormidden",
 		"wanneer": "een kill met de charge: het lijf in twee helften",
 		"knoppen": ["slice_kans_sabel", "slice_hoogte", "slice_hoek", "slice_sta", "slice_los", "slice_kracht",
-			"slice_tuimel", "blood_mist_melee"] + _LIJK},
+			"slice_tuimel", "blood_mist_melee"] + _LIJK, "onderdelen": ["bloed_nevel", "bloed_plas"]},
 	# --- Vuur en explosies -----------------------------------------------------
 	{"id": "kampvuur", "groep": "vuur", "naam": "Kampvuur in het diorama", "status": "diorama", "speel": "",
 		"wanneer": "brandt in het kamp; klikken geeft rook of een knal", "knoppen": [],
@@ -200,13 +281,13 @@ const EFFECTEN: Array = [
 	{"id": "kanon_kapot", "groep": "vuur", "naam": "Kanon gaat kapot", "status": "spel", "speel": "dood_kanon",
 		"schutter": "kanon", "doel": "kanon",
 		"wanneer": "een kanon wordt vernietigd: het kruit ontploft, de affuit spat uiteen, het wrak brandt na",
-		"knoppen": ["kanon_kapot", "explosie", "vuur_duur", "vuur_maat", "inslag_sterkte"]},
+		"knoppen": ["kanon_kapot", "explosie", "vuur_duur", "vuur_maat", "inslag_sterkte"], "onderdelen": ["vlam_kanon", "rook_musket"]},
 	{"id": "kruitvat", "groep": "vuur", "naam": "Explosie (kruitvat)", "status": "spel", "speel": "explosie",
 		"wanneer": "flits, vuurbal, schokgolf, rookkolom, brokstukken en vonken (nu bij een kanon; straks ook kruitvaten)",
-		"knoppen": ["explosie", "smoke_wind"]},
+		"knoppen": ["explosie", "smoke_wind"], "onderdelen": ["vlam_kanon", "rook_musket"]},
 	{"id": "vuur_bord", "groep": "vuur", "naam": "Vuur op het bord", "status": "spel", "speel": "vuur",
 		"wanneer": "iets blijft branden (het wrak van een kanon): vlammen, flakkerend licht, rook, vonkjes",
-		"knoppen": ["vuur_maat", "vuur_duur", "smoke_wind"]},
+		"knoppen": ["vuur_maat", "vuur_duur", "smoke_wind"], "onderdelen": ["vlam_bord"]},
 	# --- Stijl: looks voor alle 3D-objecten (stap 6, scripts/vfx/stijl.gd) -------
 	# Een look staat altijd aan zodra zijn knop boven 0 staat; Speel schiet een
 	# musket af zodat je hem in actie ziet. Alles standaard uit.
@@ -258,6 +339,11 @@ static func knop(sleutel: String) -> Dictionary:
 	return {"label": sleutel, "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0}
 
 
+## Het onderdeel (textuur of decal) met deze id, of leeg.
+static func onderdeel(id: String) -> Dictionary:
+	return ONDERDELEN.get(id, {})
+
+
 ## Kent de catalogus deze knop (met label, bereik en standaard)?
 static func bekend(sleutel: String) -> bool:
 	return KNOPPEN.has(sleutel) or STIJL.KNOPPEN.has(sleutel)
@@ -276,4 +362,4 @@ static func als_data() -> Dictionary:
 		var d: Dictionary = e.duplicate()
 		d["knoppen"] = knoppen
 		effecten.append(d)
-	return {"groepen": GROEPEN, "effecten": effecten}
+	return {"groepen": GROEPEN, "effecten": effecten, "onderdelen": ONDERDELEN}

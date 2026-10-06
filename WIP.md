@@ -1,5 +1,81 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 8: texturen en decals aanleveren
+
+Max: "en hoe kan ik dan de VFX maken en of aanpassen dat de details kunnen
+importeren zoals de plaatjes png of iets, het doel is om met de studio ook de
+textures en alle decals die nodig zijn aan te leveren en voor claude opus 5.5
+of voor jou dus te zien wat er gebeurt en dat te animeren in of wel blender of
+in game".
+
+- **`ONDERDELEN` in de catalogus** (dertien): per textuur of decal de map
+  onder `assets/textures/`, de naam die het spel zoekt en hoe (`soort`:
+  flipbook = het eerste bestand dat de naam bevat, met het rooster in de naam,
+  zoals `PawnView._vfx_entry`; varianten = alles wat ermee begint, zoals
+  `_blood_texture`; vast = precies die naam, zoals de voetstappen), de
+  achtergrond (zwart wordt bij het laden doorzichtig met `boost` 2,3 voor rook
+  en 1,5 voor vuur; alpha = een PNG met doorzichtigheid), `gebruikt`, een
+  uitleg en beginprompts. Elk effect noemt zijn `onderdelen` (stof gebruikt nu
+  de witte pof in bruin; de bloednevel komt alleen bij het kanon en de
+  sabelhouw). Krater, stof en vlammen op het bord staan er met `gebruikt:
+  false` in: daar kijkt het spel nog niet, die bouw ik om zodra er een textuur
+  is. `-- vfxcheck` controleert de onderdelen.
+- **De studio, groep "Texturen en decals"** (`/#texturen` filtert er meteen
+  op): per onderdeel wat er nu in het spel staat, op ruitjes, een vel speelt
+  zijn beeldjes af en zwart wordt doorzichtig zoals het spel laadt; daarnaast
+  de kandidaten:
+  - zelf erin slepen of kiezen (png, jpg, webp, gif, mp4, mov, webm; een
+    `_4x4` in de bestandsnaam wordt het rooster), ook bij elk effect (een
+    eigen concept);
+  - laten maken bij Replicate, vierkant (het filmpje van alleen het onderdeel
+    op zwart, met een eigen beginprompt);
+  - een flipbook uit een filmpje (van het onderdeel of van een effect dat het
+    gebruikt; van, tot, rooster, maat per beeldje, inzoomen; OpenCV 5.0 met
+    ffmpeg staat op deze machine; gif via PIL);
+  - achtergrond weg: zwart, wit of groen wordt doorzichtig (met schone randen:
+    de kleur wordt teruggerekend);
+  - "in het spel": de PNG onder de juiste naam (hooguit 1024 px, een vel
+    blijft deelbaar door zijn rooster); wat er stond gaat naar
+    `results/vfx_studio/backup/<map>/` en zijn `.import` weg; een decal zonder
+    doorzichtigheid wordt geweigerd; bij varianten "erbij" (de volgende vrije
+    naam) of "vervang" een bestaande.
+  - Daarna importeert Godot hem: de editor zelf als die openstaat, anders de
+    nieuwe knop "Importeer in Godot" (die kijkt eerst of er een editor draait
+    en weigert dan).
+- **Meekijken voor Claude:** van elk filmpje (van Replicate, een eigen
+  upload, en bij "dit is hem" ook in de referentiemap als `film_vel.jpg`)
+  maakt de studio een contactvel van 12 beelden met de tijd erbij. Gelijk
+  geprobeerd op Max zijn eerste Seedance-filmpje (vanaf het spelbeeld van het
+  musketschot): op 0,2 s een felle oranje flits over het hele vak, tot 1,5 s
+  zwelt een ronde witte wolk op tussen schutter en doel, die drijft langzaam
+  naar voren en is na 4,5 s weg. Zijn twee plaatjes (Nano Banana 2 op het
+  spelbeeld, het tweede "verder hierop") tonen een veel grotere, dichtere
+  wolk dan het spel nu heeft.
+- **De echte sleutel** staat sinds 15:03 in `%LOCALAPPDATA%\FogOfWar\
+  replicate.key` (Max heeft hem in de pagina gezet). Gratis gecontroleerd: het
+  account en de schema's van Nano Banana 2 en Pro, Seedream 5 Lite en Seedance
+  2.5 bij Replicate kloppen met wat de studio stuurt.
+- **Mijn fout:** ik had de studio voor mijn eigen controle gestart en in het
+  browserpaneel open laten staan; Max gebruikte hem, en ik heb die server
+  gestopt terwijl zijn filmpje nog liep. Het filmpje was al betaald en stond
+  nog een uur bij Replicate: met `hervat_opdrachten()` (zonder nieuwe
+  opdracht) opgehaald, met contactvel. Les: een studio die ik voor een check
+  start, stop ik niet zonder te kijken of er opdrachten lopen
+  (`/api/taken`).
+- Checks: `--proef` PASS, nu ook met de onderdelen (op een kopie van
+  `assets/textures`: kruitdamp ziet musket_3x3 als actief 3x3, zes
+  bloedspetters, upload van een plaatje en een echt testfilmpje met
+  contactvel, verkeerd bestand geweigerd, flipbook 4x4 uit het filmpje,
+  achtergrond weg (zwart en wit), in het spel met backup en weg met de oude
+  `.import`, de witte pof blijft staan, variant erbij (splat7) en vervangen
+  (splat1, met backup), weigeren zonder doorzichtigheid, vierkant voor een
+  onderdeel, filmpje zonder eerste beeld, dit is hem met het contactvel);
+  `--overzicht`: 13 onderdelen, 9 met een bestand; `-- vfxcheck` PASS; de
+  pagina bekeken in headless Edge; uispel 777 `5862e4c9` ongewijzigd,
+  herstelcheck 777 en 4242 wolf 0, resumecheck 777 1 en 4242 2 0, naad,
+  koppel, beurtlicht, audiopaneel, inkomcheck, uicheck PASS, simcheck 0,
+  tests 2912/0.
+
 ## 6 oktober -- VFX-studio stap 7: de concept-webpagina
 
 Max: "moet dan met plaatjes werken als concept een prompt box of iets en dan

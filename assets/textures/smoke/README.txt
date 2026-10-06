@@ -16,3 +16,8 @@ Map leeg = grijze bol-wolkjes (fallback). Tip: max ~1024px per bestand.
 
 Tunen in de Model-tuner: rook-aantal, rook-maat, rook-groei, rook-duur,
 rook-drift. Testknoppen: rook (musket) / rook (kanon).
+
+Makkelijker: de VFX-studio (python tools/vfx_studio.py, paneelknop
+"VFX-studio", groep "Texturen en decals") zet een bestand onder de goede
+naam in deze map, met een backup van de oude, en knipt ook een flipbook uit
+een filmpje of haalt een achtergrond weg.

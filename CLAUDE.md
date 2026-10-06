@@ -1340,7 +1340,20 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   Checks: `--proef` (de hele keten tegen een nep-Replicate, kost niets) en
   `--overzicht`. De studio leest de catalogus rechtstreeks uit de
   GDScript-bron (`const`-regels uitgerekend, ook `_VUUR + [...]`); houd die
-  dus bij letterlijke lijsten, dicts en andere constanten.
+  dus bij letterlijke lijsten, dicts en andere constanten. Stap 8,
+  texturen en decals aanleveren: `ONDERDELEN` in de catalogus (map onder
+  `assets/textures/`, naam die het spel zoekt, soort flipbook/varianten/
+  vast, achtergrond zwart/alpha, `gebruikt`, beginprompts); elk effect
+  noemt zijn `onderdelen`. In de studio de groep "Texturen en decals"
+  (`/#texturen`): wat er in het spel staat, en kandidaten uit een upload
+  (slepen), Replicate (vierkant), een flipbook uit een filmpje (OpenCV) of
+  "achtergrond weg"; "in het spel" schrijft de PNG onder de juiste naam
+  (oude naar `results/vfx_studio/backup/`), daarna importeert de editor hem
+  (of de knop "Importeer in Godot" als de editor dicht is). Van elk filmpje
+  een contactvel `<naam>_vel.jpg` (12 beelden met de tijd): zo ziet Claude
+  wat er gebeurt. Krater, stof en vlammen op het bord staan er al in maar
+  het spel kijkt er nog niet naar (`gebruikt: false`): ombouwen zodra Max
+  er een textuur voor levert.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

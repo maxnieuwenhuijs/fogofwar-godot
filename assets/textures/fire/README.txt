@@ -16,3 +16,8 @@ fire burst with sparks, isolated on solid black background, high
 contrast --ar 1:1'
 
 Tunen: vuur-maat en vuur-duur (Rook-tab). Testknop: vuur / test vuur.
+
+Makkelijker: de VFX-studio (python tools/vfx_studio.py, paneelknop
+"VFX-studio", groep "Texturen en decals") zet een bestand onder de goede
+naam in deze map, met een backup van de oude, en knipt ook een flipbook uit
+een filmpje of haalt een achtergrond weg.

@@ -114,6 +114,51 @@ Godot, daarna de concept-webpagina.
      nep-Replicate op deze machine, kost niets: sleutel, plaatje met en
      zonder basis, filmpje, dit is hem, weg, geen tegoed, stoppen, hervatten,
      nieuwe wens, de webserver) en `--overzicht` (de telling).
+8. **Texturen en decals aanleveren** (Max, 6 oktober: "hoe kan ik dan de VFX
+   maken of aanpassen dat de details kunnen importeren zoals de plaatjes png;
+   het doel is om met de studio ook de textures en alle decals die nodig zijn
+   aan te leveren, en voor Claude te zien wat er gebeurt en dat te animeren in
+   Blender of in game"). **Gebouwd (6 oktober):**
+   - `ONDERDELEN` in de catalogus: per textuur of decal de map onder
+     `assets/textures/`, de naam die het spel zoekt, de soort ("flipbook" =
+     een vel met het rooster in de naam, het spel pakt het eerste bestand dat
+     de naam bevat; "varianten" = alle bestanden die ermee beginnen, het spel
+     kiest er een; "vast" = precies die naam), de achtergrond ("zwart" wordt
+     bij het laden doorzichtig, "alpha" = een PNG met doorzichtigheid), of het
+     spel er al naar kijkt, en een beginprompt voor een plaatje en een
+     filmpje. Elk effect noemt zijn onderdelen. Dertien: kruitdamp, witte
+     pof, vuurmond musket, vuurmond kanon, bloedspetters, bloedplas,
+     bloednevel, voetstap links en rechts, wielspoor, en nog zonder code
+     krater, stof en vlammen op het bord (die bouw ik om zodra er een
+     textuur is).
+   - In de studio een groep "Texturen en decals": per onderdeel wat er nu in
+     het spel staat (op ruitjes, een vel speelt zijn beeldjes af, zwart
+     doorzichtig zoals het spel het laadt), en de kandidaten: zelf erin
+     slepen (png, jpg, webp, gif, mp4; een `_4x4` in de bestandsnaam wordt
+     het rooster), een plaatje of filmpje laten maken (vierkant; het filmpje
+     van alleen het onderdeel op zwart), een flipbook knippen uit een
+     filmpje (van het onderdeel of van een effect dat het gebruikt: van, tot,
+     rooster, maat per beeldje, inzoomen; OpenCV), de achtergrond weghalen
+     (zwart, wit of groen wordt doorzichtig), het rooster opgeven, en "in het
+     spel": de juiste naam in de juiste map, hooguit 1024 px, wat er stond
+     naar `results/vfx_studio/backup/<map>/`. Een decal zonder
+     doorzichtigheid wordt geweigerd. Daarna importeert Godot hem: de editor
+     zelf als die openstaat, anders de knop "Importeer in Godot" (die weigert
+     als de editor openstaat). Bij elk effect kun je ook zelf een plaatje of
+     filmpje als concept erin slepen.
+   - Meekijken: van elk filmpje (van Replicate, eigen upload, en bij "dit is
+     hem" ook in de referentiemap als `film_vel.jpg`) maakt de studio een
+     contactvel van 12 beelden met de tijd erbij. Een plaatje kan Claude
+     lezen, een filmpje niet: zo ziet hij wat er gebeurt, en bouwt hij het in
+     Godot (deeltjes, shaders, de texturen) of in Blender (een simulatie van
+     bovenaf, gerenderd naar een flipbook dat via dezelfde groep het spel
+     ingaat).
+   - Checks: `--proef` met de onderdelen erbij (op een kopie van
+     `assets/textures`: upload, flipbook uit een echt testfilmpje, achtergrond
+     weg, in het spel met backup, variant erbij en vervangen, weigeren zonder
+     doorzichtigheid, vierkant voor een onderdeel, contactvel) en `--overzicht`
+     (welke onderdelen een bestand hebben); `-- vfxcheck` controleert de
+     onderdelen in de catalogus.
 
 ## Huisregels
 

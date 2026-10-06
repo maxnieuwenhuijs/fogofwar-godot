@@ -64,14 +64,26 @@ static func _catalogus() -> void:
 		for k in e.get("demo", {}):
 			if not (e.knoppen as Array).has(k):
 				fout_regels.append("%s: demo-knop %s hoort niet bij dit effect" % [id, k])
+		for o in e.get("onderdelen", []):
+			if Catalogus.onderdeel(String(o)).is_empty():
+				fout_regels.append("%s: onbekend onderdeel %s" % [id, o])
+	for oid in Catalogus.ONDERDELEN:
+		var od: Dictionary = Catalogus.ONDERDELEN[oid]
+		for veld in ["naam", "map", "bestand", "uitleg", "prompt"]:
+			if String(od.get(veld, "")) == "":
+				fout_regels.append("onderdeel %s: %s ontbreekt" % [oid, veld])
+		if not ["flipbook", "varianten", "vast"].has(String(od.get("soort", ""))):
+			fout_regels.append("onderdeel %s: onbekende soort %s" % [oid, od.get("soort", "")])
+		if not ["zwart", "alpha"].has(String(od.get("achtergrond", ""))):
+			fout_regels.append("onderdeel %s: onbekende achtergrond %s" % [oid, od.get("achtergrond", "")])
 	var alle: Dictionary = Catalogus.KNOPPEN.duplicate()
 	alle.merge(Catalogus.STIJL.KNOPPEN)
 	for k in alle:
 		var m: Dictionary = alle[k]
 		if not (float(m.min) <= float(m.def) and float(m.def) <= float(m.max)) or float(m.step) <= 0.0:
 			fout_regels.append("knop %s: standaard buiten het bereik of stap 0" % k)
-	_ok(fout_regels.is_empty(), "%d effecten in %d groepen, %d knoppen%s" % [Catalogus.EFFECTEN.size(),
-		Catalogus.GROEPEN.size(), Catalogus.KNOPPEN.size(),
+	_ok(fout_regels.is_empty(), "%d effecten in %d groepen, %d knoppen, %d onderdelen%s" % [Catalogus.EFFECTEN.size(),
+		Catalogus.GROEPEN.size(), Catalogus.KNOPPEN.size(), Catalogus.ONDERDELEN.size(),
 		"" if fout_regels.is_empty() else ": " + "; ".join(fout_regels)])
 	var data: Dictionary = Catalogus.als_data()
 	_ok((data.effecten as Array).size() == Catalogus.EFFECTEN.size(), "als_data levert alle effecten met hun waarden")
