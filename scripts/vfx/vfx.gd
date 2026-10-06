@@ -288,46 +288,54 @@ static func propjes(ouder: Node3D, loop: Vector3, richting: Vector3, kanon: bool
 	var r := _r()
 	var as_ := richting.normalized() if richting.length() > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var n := int(round((9.0 if kanon else 4.0) * sterkte))
-	var vloer := 0.07   # net boven het bord (de tegels liggen op 0,05)
 	for i in n:
 		var v := as_ * r.randf_range(1.2, 2.6) * (1.4 if kanon else 1.0) \
 			+ Vector3(r.randf_range(-0.5, 0.5), r.randf_range(0.2, 0.9), r.randf_range(-0.5, 0.5))
-		var duur := r.randf_range(0.55, 0.95) * (1.3 if kanon else 1.0)
-		var grootte := r.randf_range(0.012, 0.022) * (1.4 if kanon else 1.0)
-		var mi := MeshInstance3D.new()
-		var bol := SphereMesh.new()
-		bol.radius = 1.0
-		bol.height = 2.0
-		bol.radial_segments = 6
-		bol.rings = 3
-		mi.mesh = bol
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(1.0, 0.78, 0.35, 1.0)
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.7, 0.25)
-		mat.emission_energy_multiplier = 2.5
-		mi.material_override = mat
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		ouder.add_child(mi)
-		mi.position = loop
-		mi.scale = Vector3.ONE * grootte
-		var tw := mi.create_tween()
-		tw.tween_method(func(t: float) -> void:
-			var p := loop + v * t + Vector3(0.0, -1.3, 0.0) * t * t
-			p.y = maxf(p.y, vloer)
-			mi.position = p
-			var k: float = clampf(t / duur, 0.0, 1.0)
-			mat.albedo_color = Color(1.0, lerpf(0.78, 0.18, k), lerpf(0.35, 0.05, k), 1.0 - smoothstep(0.6, 1.0, k))
-			mat.emission = Color(1.0, lerpf(0.7, 0.15, k), lerpf(0.25, 0.02, k)),
-			0.0, duur, duur)
-		tw.tween_callback(mi.queue_free)
+		_gloeiend(ouder, loop, v, r.randf_range(0.55, 0.95) * (1.3 if kanon else 1.0),
+			r.randf_range(0.012, 0.022) * (1.4 if kanon else 1.0))
+
+
+## Een gloeiend vonkje of propje: vliegt een boog, valt op het bord en dooft van
+## geel naar donkerrood (propjes, explosies, een vuur dat knettert).
+static func _gloeiend(ouder: Node3D, loop: Vector3, v: Vector3, duur: float, grootte: float) -> void:
+	var vloer := 0.07   # net boven het bord (de tegels liggen op 0,05)
+	var mi := MeshInstance3D.new()
+	var bol := SphereMesh.new()
+	bol.radius = 1.0
+	bol.height = 2.0
+	bol.radial_segments = 6
+	bol.rings = 3
+	mi.mesh = bol
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1.0, 0.78, 0.35, 1.0)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.7, 0.25)
+	mat.emission_energy_multiplier = 2.5
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	mi.position = loop
+	mi.scale = Vector3.ONE * grootte
+	var tw := mi.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var p := loop + v * t + Vector3(0.0, -1.3, 0.0) * t * t
+		p.y = maxf(p.y, vloer)
+		mi.position = p
+		var k: float = clampf(t / duur, 0.0, 1.0)
+		mat.albedo_color = Color(1.0, lerpf(0.78, 0.18, k), lerpf(0.35, 0.05, k), 1.0 - smoothstep(0.6, 1.0, k))
+		mat.emission = Color(1.0, lerpf(0.7, 0.15, k), lerpf(0.25, 0.02, k)),
+		0.0, duur, duur)
+	tw.tween_callback(mi.queue_free)
 
 
 # --- Stof en aarde (6 oktober, stap 3) -----------------------------------------------
 
 const STOF_KLEUR := Color(0.76, 0.68, 0.56)    # droog zand en stof, lichter dan het bord
+## Waar vlekken en kraters op het bord liggen: net boven het bordmodel, op de
+## hoogte van de bloedplassen van PawnView (pion-hoogte 0,05 + 0,015).
+const GROND_Y := 0.065
 const AARDE_KLEUR := Color(0.3, 0.22, 0.15)    # kluiten
 
 static var _krater_tex: Texture2D = null
@@ -450,7 +458,7 @@ static func krater(ouder: Node3D, pos: Vector3) -> void:
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ouder.add_child(mi)
-	mi.position = Vector3(pos.x, 0.056, pos.z)
+	mi.position = Vector3(pos.x, GROND_Y, pos.z)
 	mi.rotation = Vector3(-PI * 0.5, r.randf_range(0.0, TAU), 0.0)
 	mi.scale = Vector3.ONE * 0.3
 	var tw := mi.create_tween()
@@ -489,8 +497,23 @@ static func _krater_textuur() -> Texture2D:
 	return _krater_tex
 
 
-## Korte vonken- en stofexplosie op het inslagpunt (sterker = meer en verder).
-static func vonken(ouder: Node3D, pos: Vector3, kracht: float) -> void:
+## De inslag op het geraakte stuk (sterker = meer en verder). Per materiaal
+## (`materiaal` = PawnView.impact_categorie, dezelfde indeling als het geluid;
+## 6 oktober, inslag-materiaal): vlees een rode nevel en spatjes, hout (een
+## kanon) splinters en houtstof, metaal (het kuras van de hp-pion) vonken met
+## een witte flits. Leeg of knop 0: overal de gele vonken van vroeger.
+static func vonken(ouder: Node3D, pos: Vector3, kracht: float, materiaal: String = "",
+		richting: Vector3 = Vector3.ZERO) -> void:
+	if materiaal != "" and PawnView.fx("inslag_materiaal", 1.0) > 0.0:
+		match materiaal:
+			"impact_flesh":
+				inslag_vlees(ouder, pos, kracht, richting)
+				return
+			"impact_wood":
+				inslag_hout(ouder, pos, kracht, richting)
+				return
+			"impact_armor":
+				_flits(ouder, pos, 0.07 * clampf(kracht, 0.6, 1.6))
 	var n: int = int(clampf(6.0 * kracht, 3.0, 12.0))
 	for i in n:
 		var spark := MeshInstance3D.new()
@@ -517,6 +540,454 @@ static func vonken(ouder: Node3D, pos: Vector3, kracht: float) -> void:
 		tw.tween_property(spark, "position", pos + dir * dist, life).set_ease(Tween.EASE_OUT)
 		tw.tween_property(mat, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
 		tw.chain().tween_callback(spark.queue_free)
+
+
+# --- Bloed en inslag (6 oktober, stap 4) -------------------------------------------
+
+const BLOED_KLEUR := Color(0.42, 0.02, 0.03)
+const HOUT_KLEUR := Color(0.6, 0.45, 0.28)
+
+
+## Vlees: een rode nevel die met de klap mee uitwaait en een paar spatjes die
+## op het bord vallen (het wondbloed zelf komt uit PawnView.play_wound).
+static func inslag_vlees(ouder: Node3D, pos: Vector3, kracht: float, richting: Vector3) -> void:
+	var r := _r()
+	var dir := _vlak(richting)
+	var k := clampf(kracht, 0.5, 1.8) * PawnView.fx("inslag_sterkte", 1.0)
+	if k <= 0.0:
+		return
+	for i in 3:
+		var naar := pos + dir * r.randf_range(0.18, 0.4) \
+			+ Vector3(r.randf_range(-0.1, 0.1), r.randf_range(0.0, 0.15), r.randf_range(-0.1, 0.1))
+		_rookpluk(ouder, pos, naar, 0.08, r.randf_range(0.3, 0.42) * k, r.randf_range(0.35, 0.55),
+			0.8, 0.25, Tween.TRANS_EXPO, 5, "white_smoke", BLOED_KLEUR)
+	for i in int(round(4.0 * k)):
+		var v := dir * r.randf_range(0.6, 1.5) + Vector3(r.randf_range(-0.5, 0.5), r.randf_range(0.4, 1.2),
+			r.randf_range(-0.5, 0.5))
+		_druppel(ouder, pos, v, r.randf_range(0.012, 0.02))
+
+
+## Hout (een kanon): splinters die tollend wegvliegen en blijven liggen, en een
+## wolkje houtstof.
+static func inslag_hout(ouder: Node3D, pos: Vector3, kracht: float, richting: Vector3) -> void:
+	var r := _r()
+	var dir := _vlak(richting)
+	var k := clampf(kracht, 0.5, 2.0) * PawnView.fx("inslag_sterkte", 1.0)
+	if k <= 0.0:
+		return
+	for i in int(round(9.0 * k)):
+		var h := r.randf_range(0.0, TAU)
+		var v := (Vector3(cos(h), 0.0, sin(h)) * r.randf_range(0.4, 1.0) + dir * r.randf_range(0.3, 0.9)) * k \
+			+ Vector3.UP * r.randf_range(0.8, 2.0)
+		_splinter(ouder, pos, v, r.randf_range(0.05, 0.1) * clampf(k, 0.7, 1.4))
+	for i in 3:
+		var naar := pos + Vector3(r.randf_range(-0.2, 0.2), r.randf_range(0.1, 0.3), r.randf_range(-0.2, 0.2)) + dir * 0.1
+		_rookpluk(ouder, pos, naar, 0.08, r.randf_range(0.22, 0.32) * k, r.randf_range(0.6, 0.9),
+			0.6, 0.25, Tween.TRANS_EXPO, 6, "white_smoke", HOUT_KLEUR.lightened(0.15))
+
+
+## Een korte witte flits op het inslagpunt (metaal: de kogel ketst op het kuras).
+static func _flits(ouder: Node3D, pos: Vector3, straal: float) -> void:
+	var mi := MeshInstance3D.new()
+	var bol := SphereMesh.new()
+	bol.radius = 1.0
+	bol.height = 2.0
+	bol.radial_segments = 16   # rond, ook groot (8 gaf een zeshoek bij een explosie)
+	bol.rings = 8
+	mi.mesh = bol
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1.0, 0.95, 0.82, 0.8)
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	mi.position = pos
+	mi.scale = Vector3.ONE * straal * 0.4
+	var tw := mi.create_tween().set_parallel(true)
+	tw.tween_property(mi, "scale", Vector3.ONE * straal, 0.05).set_ease(Tween.EASE_OUT)
+	tw.tween_property(mat, "albedo_color:a", 0.0, 0.1).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(mi.queue_free)
+
+
+## Een splinter: een dun latje hout dat tollend een boog vliegt, op het bord
+## landt, even blijft liggen en wegkrimpt.
+static func _splinter(ouder: Node3D, start: Vector3, v: Vector3, lengte: float) -> void:
+	var r := _r()
+	var mi := MeshInstance3D.new()
+	var blok := BoxMesh.new()
+	blok.size = Vector3.ONE
+	mi.mesh = blok
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = HOUT_KLEUR.darkened(r.randf_range(0.0, 0.35))
+	mat.roughness = 0.9
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	mi.position = start
+	mi.scale = Vector3(lengte * 0.16, lengte * 0.12, lengte)
+	var g := 6.0
+	var vloer := 0.06
+	var vlucht: float = maxf((v.y + sqrt(v.y * v.y + 2.0 * g * maxf(start.y - vloer, 0.0))) / g, 0.15)
+	var tol := Vector3(r.randf_range(-14.0, 14.0), r.randf_range(-14.0, 14.0), r.randf_range(-14.0, 14.0))
+	var tw := mi.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var p := start + v * t + Vector3(0.0, -0.5 * g, 0.0) * t * t
+		p.y = maxf(p.y, vloer)
+		mi.position = p
+		mi.rotation = tol * t, 0.0, vlucht, vlucht)
+	tw.tween_interval(r.randf_range(2.0, 4.0))
+	tw.tween_property(mi, "scale", Vector3.ZERO, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(mi.queue_free)
+
+
+## Een druppel bloed die een boog vliegt en waar hij neerkomt een klein vlekje
+## achterlaat (een splat-texture uit assets/textures/blood/, in de groep
+## battlefield_debris, dus het spel ruimt hem met de lijken op).
+static func _druppel(ouder: Node3D, start: Vector3, v: Vector3, maat: float) -> void:
+	var mi := MeshInstance3D.new()
+	var bol := SphereMesh.new()
+	bol.radius = 1.0
+	bol.height = 2.0
+	bol.radial_segments = 6
+	bol.rings = 3
+	mi.mesh = bol
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = BLOED_KLEUR
+	mat.roughness = 0.3
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	mi.position = start
+	mi.scale = Vector3.ONE * maat
+	var g := 6.0
+	var vloer := 0.06
+	var vlucht: float = maxf((v.y + sqrt(v.y * v.y + 2.0 * g * maxf(start.y - vloer, 0.0))) / g, 0.1)
+	var tw := mi.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var p := start + v * t + Vector3(0.0, -0.5 * g, 0.0) * t * t
+		p.y = maxf(p.y, vloer)
+		mi.position = p, 0.0, vlucht, vlucht)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(ouder):
+			_vlek(ouder, mi.position, v, maat * 6.0)
+		mi.queue_free())
+
+
+## Een bloedvlek op het bord, langgerekt in de richting `v` (een spat landt
+## schuin), even uitvloeiend.
+static func _vlek(ouder: Node3D, pos: Vector3, v: Vector3, maat: float, vertraging: float = 0.0) -> void:
+	var r := _r()
+	var tex := _splat()
+	var mi := MeshInstance3D.new()
+	var vlak := PlaneMesh.new()
+	var rek: float = 1.0 + clampf(Vector2(v.x, v.z).length() * 0.5, 0.0, 1.2)
+	vlak.size = Vector2(maat, maat * rek)
+	mi.mesh = vlak
+	var mat := StandardMaterial3D.new()
+	mat.roughness = 0.4
+	if tex != null:
+		mat.albedo_texture = tex
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	else:
+		mat.albedo_color = BLOED_KLEUR
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	mi.add_to_group("battlefield_debris")
+	mi.position = Vector3(pos.x, GROND_Y + 0.001 + r.randf_range(0.0, 0.005), pos.z)
+	mi.rotation.y = atan2(v.x, v.z) if Vector2(v.x, v.z).length() > 0.01 else r.randf_range(0.0, TAU)
+	mi.scale = Vector3(0.1, 1.0, 0.1)
+	mi.visible = vertraging <= 0.0
+	var tw := mi.create_tween()
+	if vertraging > 0.0:
+		tw.tween_interval(vertraging)
+		tw.tween_callback(mi.show)
+	tw.tween_property(mi, "scale", Vector3.ONE, r.randf_range(0.15, 0.3)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Een splat-texture, gekozen met de eigen rng (PawnView laadt de map; zijn
+## eigen keuze trekt uit de globale rng, dus die vragen we alleen de eerste keer).
+static func _splat() -> Texture2D:
+	if not PawnView._blood_tex_loaded and PawnView._blood_texture("splat") == null:
+		return null
+	var keuze: Array = []
+	for e in PawnView._blood_textures:
+		if String(e.name).begins_with("splat"):
+			keuze.append(e.tex)
+	if keuze.is_empty():
+		return null
+	return keuze[_r().randi_range(0, keuze.size() - 1)]
+
+
+## De bloedwaaier (bloed-waaier): bij een dode een waaier van langgerekte
+## spatten op het bord, van de klap af, die na elkaar verschijnen alsof ze
+## net neerkomen. Meer kracht = verder en meer.
+static func bloed_waaier(ouder: Node3D, pos: Vector3, richting: Vector3, kracht: float) -> void:
+	var sterkte: float = PawnView.fx("bloed_waaier", 1.0)
+	if sterkte <= 0.0 or ouder == null:
+		return
+	var r := _r()
+	var dir := _vlak(richting)
+	var k := clampf(kracht, 0.5, 2.0) * sterkte
+	for i in int(round(9.0 * k)):
+		var hoek := r.randf_range(-0.55, 0.55)
+		var d := dir.rotated(Vector3.UP, hoek)
+		var afstand := r.randf_range(0.15, 0.75) * k
+		var punt := Vector3(pos.x, 0.0, pos.z) + d * afstand
+		_vlek(ouder, punt, d * (1.0 + afstand * 2.0), r.randf_range(0.2, 0.36) * clampf(k, 0.8, 1.5),
+			0.05 + afstand * 0.25)
+
+
+# --- Vuur en explosies (6 oktober, stap 5) -----------------------------------------
+
+## Een vlam: een billboard die rechtop blijft (om de verticale as), met een vorm
+## die naar boven smal wordt en ruis die omhoog stroomt en golft. Geen textuur:
+## de ruis rekent de shader zelf. Additief, dus hij gloeit op elk bord.
+const VUUR_SHADER := """
+shader_type spatial;
+render_mode blend_add, unshaded, cull_disabled, depth_draw_never, shadows_disabled, fog_disabled;
+
+uniform float tijd_offset = 0.0;
+uniform float sterkte = 1.0;
+uniform float snelheid = 1.0;
+uniform vec4 kern_kleur : source_color = vec4(1.0, 0.78, 0.32, 1.0);
+uniform vec4 vlam_kleur : source_color = vec4(0.95, 0.4, 0.08, 1.0);
+uniform vec4 rand_kleur : source_color = vec4(0.5, 0.07, 0.02, 1.0);
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float ruis(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+	float s = 0.0;
+	float a = 0.5;
+	for (int k = 0; k < 4; k++) {
+		s += a * ruis(p);
+		p = p * 2.03 + vec2(1.7, 9.2);
+		a *= 0.5;
+	}
+	return s;
+}
+
+void vertex() {
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(
+		vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0),
+		vec4(0.0, 1.0, 0.0, 0.0),
+		vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0),
+		MODEL_MATRIX[3]);
+	MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(
+		vec4(length(MODEL_MATRIX[0].xyz), 0.0, 0.0, 0.0),
+		vec4(0.0, length(MODEL_MATRIX[1].xyz), 0.0, 0.0),
+		vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0));
+	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+}
+
+void fragment() {
+	float t = TIME * snelheid + tijd_offset;
+	float x = (UV.x - 0.5) * 2.0;
+	float y = 1.0 - UV.y;
+	float golf = (fbm(vec2(y * 2.0 - t * 1.3, t * 0.4)) - 0.5) * 0.7 * y;
+	float n = fbm(vec2((x + golf) * 2.6, y * 3.0 - t * 2.8));
+	// een druppelvorm: rond onderaan, het breedst op een kwart, spits naar boven
+	float breedte = 0.72 * pow(sin(3.14159 * clamp(y * 0.85 + 0.12, 0.0, 1.0)), 0.6) * (1.0 - 0.55 * y);
+	float d = abs(x + golf) / max(breedte, 0.01);
+	float vorm = 1.0 - smoothstep(0.35, 1.0, d + (n - 0.5) * 0.5);
+	float hoog = 1.0 - smoothstep(0.3, 0.95, y + (n - 0.5) * 0.7);
+	float voet = smoothstep(0.0, 0.1, y);
+	float vlam = clamp(vorm * hoog * voet * (0.15 + n * 1.0), 0.0, 1.0);
+	vec3 kleur = mix(rand_kleur.rgb, vlam_kleur.rgb, smoothstep(0.08, 0.45, vlam));
+	kleur = mix(kleur, kern_kleur.rgb, smoothstep(0.6, 0.95, vlam));
+	ALBEDO = kleur * 0.85 * sterkte;
+	ALPHA = smoothstep(0.03, 0.5, vlam) * clamp(sterkte, 0.0, 1.0);
+}
+"""
+
+static var _vuur_shader: Shader = null
+
+
+## Een vlam-quad met de vuur-shader, de voet op `voet`, `hoog` hoog.
+static func _vlam(ouder: Node3D, voet: Vector3, hoog: float) -> MeshInstance3D:
+	if _vuur_shader == null:
+		_vuur_shader = Shader.new()
+		_vuur_shader.code = VUUR_SHADER
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(0.7, 1.0)
+	mi.mesh = q
+	var mat := ShaderMaterial.new()
+	mat.shader = _vuur_shader
+	mat.set_shader_parameter("tijd_offset", _r().randf_range(0.0, 50.0))
+	mat.set_shader_parameter("snelheid", _r().randf_range(0.85, 1.15))
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	mi.position = voet + Vector3.UP * hoog * 0.5
+	mi.scale = Vector3.ONE * hoog
+	return mi
+
+
+## Een vuurtje dat `duur` seconden brandt (vuur-maat): twee of drie vlammen,
+## een flakkerend licht, rook die opkringelt en af en toe een vonkje; daarna
+## dooft het. Hangt onder een eigen node die zichzelf opruimt.
+static func vuur(ouder: Node3D, pos: Vector3, maat: float = 1.0, duur: float = 12.0) -> void:
+	var m: float = maat * PawnView.fx("vuur_maat", 1.0)
+	if m <= 0.0 or duur <= 0.0 or ouder == null:
+		return
+	var r := _r()
+	var haard := Node3D.new()
+	haard.name = "Vuur"
+	ouder.add_child(haard)
+	haard.position = Vector3(pos.x, GROND_Y, pos.z)
+	var vlammen: Array = []
+	for i in 3:
+		var vl := _vlam(haard, Vector3(r.randf_range(-0.07, 0.07), 0.0, r.randf_range(-0.07, 0.07)) * m,
+			r.randf_range(0.3, 0.45) * m * (1.0 if i == 0 else 0.7))
+		vlammen.append(vl)
+	var licht := OmniLight3D.new()
+	licht.light_color = Color(1.0, 0.62, 0.28)
+	licht.omni_range = 2.2 * m
+	licht.position = Vector3.UP * 0.35 * m
+	haard.add_child(licht)
+	var staat := {"rook": 0.0, "vonk": 0.0}
+	var tw := haard.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var uit: float = clampf((duur - t) / 1.5, 0.0, 1.0)   # de laatste 1,5 s dooft het
+		var aan: float = clampf(t / 0.4, 0.0, 1.0)            # en de eerste 0,4 s laait het op
+		var s: float = aan * uit
+		licht.light_energy = 1.4 * m * s * (0.82 + 0.1 * sin(t * 13.0) + 0.08 * sin(t * 31.0 + 1.3))
+		for vl in vlammen:
+			(vl.material_override as ShaderMaterial).set_shader_parameter("sterkte", s)
+		if t >= float(staat.rook) and s > 0.2:
+			staat.rook = t + r.randf_range(0.3, 0.5)
+			var van := haard.position + Vector3.UP * 0.4 * m
+			_rookpluk(ouder, van, van + Vector3.UP * r.randf_range(0.7, 1.1) * m + _wind(ouder) * 0.4,
+				0.15 * m, r.randf_range(0.45, 0.7) * m, r.randf_range(1.8, 2.6), 0.55 * s, 0.25)
+		if t >= float(staat.vonk) and s > 0.5:
+			staat.vonk = t + r.randf_range(0.6, 1.6)
+			_gloeiend(ouder, haard.position + Vector3.UP * 0.2 * m,
+				Vector3(r.randf_range(-0.3, 0.3), r.randf_range(0.8, 1.4), r.randf_range(-0.3, 0.3)),
+				r.randf_range(0.5, 0.9), 0.012),
+		0.0, duur, duur)
+	tw.tween_callback(haard.queue_free)
+
+
+## Een explosie (explosie): een felle flits en licht, een vuurbal die opzwelt en
+## dooft, een schokgolf over de grond, een kolom donkere rook, brokstukken en
+## vonken. `schok` = de schudder van wie de camera heeft (mag leeg).
+static func explosie(ouder: Node3D, pos: Vector3, kracht: float = 1.0, schok: Callable = Callable()) -> void:
+	var k: float = clampf(kracht, 0.3, 2.5) * PawnView.fx("explosie", 1.0)
+	if k <= 0.0 or ouder == null:
+		return
+	var r := _r()
+	var grond := Vector3(pos.x, GROND_Y, pos.z)
+	_flits(ouder, grond + Vector3.UP * 0.3 * k, 0.45 * k)
+	var licht := OmniLight3D.new()
+	licht.light_color = Color(1.0, 0.7, 0.35)
+	licht.light_energy = 6.0 * k
+	licht.omni_range = 4.5 * k
+	ouder.add_child(licht)
+	licht.position = grond + Vector3.UP * 0.5
+	var ltw := licht.create_tween()
+	ltw.tween_property(licht, "light_energy", 0.0, 0.6).set_ease(Tween.EASE_OUT)
+	ltw.tween_callback(licht.queue_free)
+	# de vuurbal: de kanonsvlam (assets/textures/fire/) groot, drie keer kort na
+	# elkaar en iets uit elkaar, zodat hij opbolt
+	_vuurbal(ouder, grond + Vector3.UP * 0.35 * k, 1.7 * k, 0.0)
+	_vuurbal(ouder, grond + Vector3(r.randf_range(-0.2, 0.2), 0.25, r.randf_range(-0.2, 0.2)) * k, 1.2 * k, 0.05)
+	_vuurbal(ouder, grond + Vector3(r.randf_range(-0.2, 0.2), 0.5, r.randf_range(-0.2, 0.2)) * k, 1.0 * k, 0.1)
+	_stofring(ouder, grond, 1.2 * k)
+	# een kolom donkere rook die opstijgt en met de wind wegdrijft
+	var wind := _wind(ouder) * PawnView.fx("smoke_wind", 0.6)
+	for i in int(round(8.0 * clampf(k, 0.5, 1.6))):
+		var van := grond + Vector3(r.randf_range(-0.2, 0.2), 0.2, r.randf_range(-0.2, 0.2)) * k
+		var naar := van + Vector3.UP * r.randf_range(0.8, 1.8) * k + wind * r.randf_range(0.6, 1.2) \
+			+ Vector3(r.randf_range(-0.3, 0.3), 0.0, r.randf_range(-0.3, 0.3))
+		_rookpluk(ouder, van, naar, 0.3 * k, r.randf_range(0.8, 1.2) * k, r.randf_range(2.5, 3.8), 0.8, 0.35,
+			Tween.TRANS_CUBIC, -1, "musket", Color(0.55, 0.52, 0.5))
+	# brokstukken en vonken
+	for i in int(round(10.0 * clampf(k, 0.5, 1.6))):
+		var h := r.randf_range(0.0, TAU)
+		_splinter(ouder, grond + Vector3.UP * 0.15,
+			Vector3(cos(h), 0.0, sin(h)) * r.randf_range(0.8, 2.0) * k + Vector3.UP * r.randf_range(1.5, 3.2), r.randf_range(0.05, 0.11))
+	for i in int(round(8.0 * clampf(k, 0.5, 1.6))):
+		var h := r.randf_range(0.0, TAU)
+		_gloeiend(ouder, grond + Vector3.UP * 0.2,
+			Vector3(cos(h), 0.0, sin(h)) * r.randf_range(0.8, 2.2) * k + Vector3.UP * r.randf_range(1.0, 2.6),
+			r.randf_range(0.6, 1.1), r.randf_range(0.014, 0.026))
+	if schok.is_valid():
+		schok.call(1.3 * k)
+
+
+## Een vuurbal: de kanonsvlam-flipbook als billboard, `maat` groot, die in
+## 0,45 s opzwelt, zijn beeldjes afspeelt en uitdooft (na `vertraging`).
+static func _vuurbal(ouder: Node3D, pos: Vector3, maat: float, vertraging: float) -> void:
+	var e: Dictionary = PawnView._vfx_entry(PawnView.FIRE_TEX_DIR, 1.5, "cannon")
+	if e.is_empty():
+		return
+	var quad := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE
+	quad.mesh = q
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_texture = e.tex
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.billboard_keep_scale = true
+	var cols := int(e.cols)
+	var rows := int(e.rows)
+	if cols * rows > 1:
+		mat.uv1_scale = Vector3(1.0 / cols, 1.0 / rows, 1.0)
+		PawnView._sheet_frame(0, mat, cols, rows)
+	quad.material_override = mat
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(quad)
+	quad.position = pos
+	quad.scale = Vector3.ONE * maat * 0.35
+	quad.visible = vertraging <= 0.0
+	var duur := 0.45
+	var tw := quad.create_tween()
+	if vertraging > 0.0:
+		tw.tween_interval(vertraging)
+		tw.tween_callback(quad.show)
+	tw.set_parallel(true)
+	tw.tween_property(quad, "scale", Vector3.ONE * maat, duur).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	if cols * rows > 1:
+		tw.tween_method(PawnView._sheet_frame.bind(mat, cols, rows), 0, cols * rows - 1, duur)
+	tw.tween_property(mat, "albedo_color:a", 0.0, duur * 0.6).set_delay(duur * 0.4).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(quad.queue_free)
+
+
+## De schokgolf: een kring stof die over de grond wegschiet (EXPO: eerst hard,
+## dan stil) en oplost.
+static func _stofring(ouder: Node3D, grond: Vector3, straal: float) -> void:
+	var r := _r()
+	var n := 16
+	for i in n:
+		var h := TAU * float(i) / float(n) + r.randf_range(-0.1, 0.1)
+		var d := Vector3(cos(h), 0.0, sin(h))
+		var van := grond + Vector3.UP * 0.05 + d * 0.15
+		var naar := grond + Vector3.UP * r.randf_range(0.05, 0.15) + d * straal * r.randf_range(0.85, 1.1)
+		_rookpluk(ouder, van, naar, 0.15, r.randf_range(0.35, 0.5) * clampf(straal, 0.6, 2.0), r.randf_range(0.6, 0.9),
+			PawnView.fx("stof_alfa", 0.7) * 0.85, 0.3, Tween.TRANS_EXPO, 6, "white_smoke", STOF_KLEUR)
+
+
+## Een kanon gaat kapot (kanon-kapot): het kruit ontploft (kleiner dan een
+## kruitvat), de affuit spat in splinters uiteen en het wrak brandt na
+## (vuur-duur; 0 = geen brand).
+static func kanon_kapot(ouder: Node3D, pos: Vector3, richting: Vector3, kracht: float) -> void:
+	if ouder == null or PawnView.fx("kanon_kapot", 1.0) <= 0.0:
+		return
+	explosie(ouder, pos, clampf(kracht, 0.6, 1.4) * 0.75)
+	inslag_hout(ouder, pos + Vector3.UP * 0.3, clampf(kracht, 0.6, 1.4) * 1.5, richting)
+	var brand: float = PawnView.fx("vuur_duur", 12.0)
+	if brand > 0.0:
+		vuur(ouder, pos + _vlak(richting) * 0.1, 0.8, brand)
 
 
 ## Het "-N" dat boven een geraakte pion opstijgt en vervaagt.

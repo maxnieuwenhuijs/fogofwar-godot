@@ -20,12 +20,12 @@ const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")
 
 const PAWN_Y := 0.05
 const SCHUTTER_TEGEL := Vector2i(5, 7)
-const DOEL_TEGEL := Vector2i(5, 3)
-const CHARGE_EIND := Vector2i(5, 4)   # de charge landt op het vak voor het doel
+const DOEL_TEGEL := Vector2i(5, 4)    # drie vakken: alles past tussen de panelen, ook wat erachter valt
+const CHARGE_EIND := Vector2i(5, 5)   # de charge landt op het vak voor het doel
 const GALOP_VAN := Vector2i(3, 6)     # de galop rijdt dwars door het beeld
 const GALOP_NAAR := Vector2i(7, 6)
 const SCHOT_NA := 0.25          # het vuurmoment na het begin van de aanval-clip
-const DICHTBIJ_MAAT := 7.0      # orthografische maat van de close-up (het spel: 25,5)
+const DICHTBIJ_MAAT := 7.5      # orthografische maat van de close-up (het spel: 25,5)
 const TEMPOS: Array = [1.0, 0.5, 0.25, 0.1]
 const LETTER := 20
 const BOVEN_HOOGTE := 300.0     # het paneel met de effecten
@@ -225,7 +225,12 @@ func _bouw_toneel() -> void:
 	var galop: bool = Catalogus.effect(_gekozen).get("speel", "") == "galop_stof"
 	_schutter = _pion(fac_s, tp_s, GALOP_VAN if galop else SCHUTTER_TEGEL,
 		Vector2i(1, 0) if galop else Vector2i(0, -1), Constants.Team.RED)
-	_doel = _pion(_fac_doel, Constants.UnitType.INFANTRY, DOEL_TEGEL, Vector2i(0, 1), Constants.Team.BLUE)
+	# Wat er geraakt wordt (doel: musket of kanon; een kanon pakt het Varken als
+	# de factie er geen heeft).
+	var tp_d: int = Constants.UnitType.ARTILLERY if String(Catalogus.effect(_gekozen).get("doel", "musket")) == "kanon" \
+		else Constants.UnitType.INFANTRY
+	var fac_d: int = _fac_doel if _kent(_fac_doel, tp_d) else Constants.Doctrine.MENS
+	_doel = _pion(fac_d, tp_d, DOEL_TEGEL, Vector2i(0, 1), Constants.Team.BLUE)
 
 
 func _pion(fac: int, tp: int, tegel: Vector2i, richting: Vector2i, team: int) -> PawnView:
@@ -322,7 +327,17 @@ func speel() -> float:
 				VFX.rook(_toneel, _doel.position + Vector3(0.0, 0.45, 0.0), puff, 0.2, Vector3.UP * 0.25, 1.3,
 					"white_smoke")
 		"vonken":
-			VFX.vonken(_toneel, _doelpunt() + Vector3(0.0, 0.05, 0.0), 0.7)
+			VFX.vonken(_toneel, _doelpunt() + Vector3(0.0, 0.05, 0.0), 0.7, "impact_armor", _richting_naar_doel())
+		"inslag_materiaal":
+			_recept_materialen(gen)
+			duur = 3.0
+		"explosie":
+			VFX.explosie(_toneel, _tegel(DOEL_TEGEL) + Vector3(0.9, 0.0, 0.0), 1.0, _schud)
+			duur = 4.0
+		"vuur":
+			var brand: float = maxf(PawnView.fx("vuur_duur", 12.0), 2.0)
+			VFX.vuur(_toneel, _tegel(DOEL_TEGEL) + Vector3(0.8, 0.0, 0.0), 1.0, brand)
+			duur = brand + 1.0
 		"treffer":
 			_treffer(_richting_naar_doel(), 0.7, false)
 		"schadegetal":
@@ -392,10 +407,24 @@ func _recept_charge(gen: int) -> void:
 	_doel.play_hit()
 
 
+## Drie inslagen na elkaar op het doel, met hun naam erboven: vlees, hout,
+## metaal (dezelfde indeling als het inslaggeluid).
+func _recept_materialen(gen: int) -> void:
+	var punt := _tegel(DOEL_TEGEL) + Vector3(0.0, 0.6, 0.0)
+	for paar in [["impact_flesh", "vlees"], ["impact_wood", "hout"], ["impact_armor", "metaal"]]:
+		if gen != _gen or not is_instance_valid(_toneel):
+			return
+		VFX.vonken(_toneel, punt, 0.8, String(paar[0]), _richting_naar_doel())
+		VFX.schade_getal(_toneel, punt + Vector3(0.0, 0.9, 0.0), String(paar[1]), Color(1.0, 0.95, 0.85))
+		_schud(0.5)
+		await get_tree().create_timer(0.8).timeout
+
+
 ## De treffer (game._hit_feedback): vonken, schok, en dan de dood of de wond
 ## met het schadegetal.
 func _treffer(richting: Vector3, kracht: float, dood: bool) -> void:
-	VFX.vonken(_toneel, _tegel(DOEL_TEGEL) + Vector3(0.0, 0.6, 0.0), kracht)
+	VFX.vonken(_toneel, _tegel(DOEL_TEGEL) + Vector3(0.0, 0.6, 0.0), kracht,
+		PawnView.impact_categorie(_doel._unit_type, _doel.archetype()), richting)
 	_schud(kracht)
 	if dood:
 		_doel.play_death(richting, kracht, "shot")

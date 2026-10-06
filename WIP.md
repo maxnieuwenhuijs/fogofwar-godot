@@ -1,5 +1,47 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 4 en 5: bloed en inslag, vuur en explosies
+
+Vervolg op stap 2 en 3 (docs/VFX-studio.md). Hiermee zijn alle wensen uit de
+catalogus gebouwd: 24 effecten spelen af in de VFX-tuner.
+
+- **Inslag per materiaal** (`VFX.vonken` met `materiaal` en `richting`):
+  dezelfde indeling als het inslaggeluid (`PawnView.impact_categorie`): vlees
+  geeft een rode nevel met de klap mee en spatjes die vlekjes achterlaten, hout
+  (een kanon) splinters die tollend wegvliegen en blijven liggen plus houtstof,
+  metaal (het kuras van de hp-pion) de oude gele vonken met een witte flits.
+  game.gd: `_hit_feedback` geeft het materiaal van de view door
+  (`_materiaal`, werkt ook bij een kill) en de knockback-richting. Knoppen
+  `inslag_materiaal` (0 = overal gele vonken zoals vroeger), `inslag_sterkte`.
+- **Bloedwaaier** (`VFX.bloed_waaier`, uit `PawnView.play_death`): bij een
+  dode een waaier langgerekte spatten op het bord van de klap af, die na
+  elkaar neerkomen, in de groep `battlefield_debris` (het spel ruimt ze met
+  de lijken op); knop `bloed_waaier`. Eerst onzichtbaar: ik legde vlekken en
+  krater op hoogte 0,056, onder de bovenkant van het bordmodel; nu op
+  `GROND_Y` 0,065, de hoogte van de bloedplassen van PawnView.
+- **Vuur** (`VFX.vuur`): vlammen uit een eigen shader (`VUUR_SHADER`:
+  billboard om de verticale as, druppelvorm, ruis die omhoog stroomt en golft,
+  additief; geen textuur), een flakkerend licht, rook die opkringelt en af en
+  toe een vonkje; dooft na `vuur_duur`. De eerste vlam was een wit, hard
+  trapezium; nu een zachte druppel met een gele kern.
+- **Explosie** (`VFX.explosie`): een flits en licht, een vuurbal uit de
+  kanonsvlam-flipbook (drie keer, opbollend), een kring stof als schokgolf
+  (eerst een strakke ring, die leek op een selectiecirkel), een kolom donkere
+  rook met de wind mee, splinters en vonken; knop `explosie`.
+- **Kanon gaat kapot** (`VFX.kanon_kapot`, uit `PawnView.play_death` voor
+  artillerie): het kruit ontploft, de affuit spat in splinters uiteen en het
+  wrak brandt na. Een kanon bloedt niet meer bij een zware treffer (de
+  bloednevel en -fontein sloegen het type over). Knop `kanon_kapot`.
+- **Tuner:** veld `doel` in de catalogus (een kanon als doel), recepten voor
+  de drie materialen na elkaar (met hun naam erboven), de explosie en het
+  vuur; het doel staat een vak dichterbij zodat ook wat erachter valt tussen
+  de panelen past.
+- Checks: vfxcheck headless (24 effecten spelen af), met venster plaatjes van de
+  drie materialen, de bloedwaaier, krater, explosie, vuur en het kapotte kanon
+  nagekeken (geen shaderfouten), uispel 777 5862e4c9 (gelijk), herstelcheck 777
+  en 4242 wolf 0, resumecheck 777 1 en 4242 2 0, naad, koppel, beurtlicht,
+  audiopaneel, inkomcheck, uicheck, simcheck 0, tests 2912/0.
+
 ## 6 oktober -- VFX-studio stap 2 en 3: kruitdamp en vuurmond, stof en aarde
 
 Vervolg op stap 1 (docs/VFX-studio.md). Max koos alle vier de groepen, eerst de

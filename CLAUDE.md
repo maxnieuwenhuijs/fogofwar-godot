@@ -1305,10 +1305,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   kruitflits op de pan, gloeiende propjes, stof bij de landing van een
   charge en achter ruiters en kanonnen (PawnView zelf: `play_charge` op
   t_land, `_stof_process` op de eigen verplaatsing), opspattende aarde en
-  een krater bij een kanonsinslag (textuur in code). Volgende stappen: bloed
-  en inslag per materiaal, vuur en explosies, dan een stijl-studio (shaders
-  voor alle 3D-objecten), dan de concept-webpagina (Replicate: beelden en
-  Seedance 2.5).
+  een krater bij een kanonsinslag (textuur in code). Stap 4 en 5: inslag per
+  materiaal (`VFX.vonken` met het materiaal van `PawnView.impact_categorie`,
+  game `_materiaal`), bloedwaaier bij een dode, vuur uit een eigen shader
+  (`VUUR_SHADER`, geen textuur), explosie (vuurbal uit de kanonsvlam,
+  stofkring, rookkolom) en een kanon dat kapotgaat en nabrandt (uit
+  `play_death`; een kanon bloedt niet). Vlekken en kraters op `GROND_Y`
+  0,065 (de hoogte van de bloedplassen; lager zakt onder het bordmodel).
+  Volgende stappen: een stijl-studio (shaders voor alle 3D-objecten), dan
+  de concept-webpagina (Replicate: beelden en Seedance 2.5).
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

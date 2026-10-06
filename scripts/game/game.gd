@@ -3985,7 +3985,7 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 	if delay > 0.0:
 		await get_tree().create_timer(delay).timeout
 	var s: float = strength + (0.4 if killed else 0.0)
-	_spawn_sparks(tile_position(coord.x, coord.y) + Vector3(0.0, 0.6, 0.0), s)
+	_spawn_sparks(tile_position(coord.x, coord.y) + Vector3(0.0, 0.6, 0.0), s, _materiaal(pawn_id), world_dir)
 	_shake(s)
 	_hitstop(0.03 + 0.03 * clampf(s, 0.0, 1.6))
 	if killed:
@@ -4031,10 +4031,19 @@ func _kill_view(pawn_id: int, world_dir: Vector3, strength: float = 0.7, kind: S
 
 
 ## Korte vonken-/stofexplosie op het inslagpunt (scripts/vfx/vfx.gd).
-func _spawn_sparks(pos: Vector3, strength: float) -> void:
+func _spawn_sparks(pos: Vector3, strength: float, materiaal: String = "", richting: Vector3 = Vector3.ZERO) -> void:
 	if not _combat_feel:
 		return
-	VFX.vonken(_board, pos, strength)
+	VFX.vonken(_board, pos, strength, materiaal, richting)
+
+
+## Waar een treffer op inslaat, zoals het inslaggeluid (PawnView.impact_categorie):
+## de view kent zijn type en archetype, ook als de pion al van het bord is (een kill).
+func _materiaal(pawn_id: int) -> String:
+	var pv: PawnView = _pawn_views.get(pawn_id)
+	if pv == null:
+		return ""
+	return PawnView.impact_categorie(pv._unit_type, pv.archetype())
 
 
 ## Screen shake aanzwengelen (schaalt met impact). Uitzetbaar (motion sickness).

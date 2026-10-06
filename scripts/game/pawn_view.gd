@@ -1298,6 +1298,14 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 		dir = Vector3(0, 0, 1)
 	dir = dir.normalized()
 	_fling_weapon(dir)  # musket vliegt uit de handen
+	# Een waaier spatten op het bord, van de klap af (6 oktober, bloed-waaier);
+	# een kanon bloedt niet.
+	if _unit_type != Constants.UnitType.ARTILLERY and get_parent() is Node3D:
+		VFX.bloed_waaier(get_parent() as Node3D, position, dir, strength)
+	# Een kanon gaat kapot (6 oktober, kanon-kapot): het kruit ontploft, de
+	# affuit spat in splinters uiteen en het wrak brandt na.
+	if _unit_type == Constants.UnitType.ARTILLERY and get_parent() is Node3D:
+		VFX.kanon_kapot(get_parent() as Node3D, position, dir, strength)
 	# Doormidden (16 september, Max: "een gibs wolkje en doormidden gesliced
 	# het poppetje, bloederig net als bij kanon inslag"): de sabelhouw van de
 	# charge, en met een kleinere kans de bajonet. VOOR de kanon-route, want
@@ -1316,10 +1324,12 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 	# bovendien volledig uiteen; zonder valt het via de die-clip hieronder.
 	if strength >= 1.2:
 		var mist := fx("blood_mist", 1.0)
-		if mist > 0.0:
+		# een kanon bloedt niet (6 oktober: die ontploft hierboven)
+		if mist > 0.0 and _unit_type != Constants.UnitType.ARTILLERY:
 			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
 			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
-		_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
+		if _unit_type != Constants.UnitType.ARTILLERY:
+			_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
 		if _spawn_gibs(dir, strength):
 			if _piece != null:
 				_piece.visible = false  # de brokstukken zíjn het lijk

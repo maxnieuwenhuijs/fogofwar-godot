@@ -41,11 +41,11 @@ kort en los van de achtergrond. Pas hem gerust aan.
 
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
 |---|---|---|---|---|
-| Vonken bij een treffer | elke treffer | spel | overal dezelfde gele vonken | Bright yellow sparks bursting from a bullet impact, miniature scale, dark background. |
+| Vonken op metaal | treffer op het kuras (hp-pion) | spel | 6 okt: alleen nog op metaal, met een witte flits | Bright yellow sparks bursting from a bullet impact, miniature scale, dark background. |
 | Treffer: flits, wankelen, wond | geraakt en overleeft | spel | | A miniature soldier figure flinching from a hit, a small spurt of blood from the chest, top-down angled view. |
 | Schadegetal (-N) | boven een geraakte pion | spel | | |
-| Inslag per materiaal | elke treffer | wens | vlees: bloed; hout: splinters; metaal: vonken | Three impacts side by side on a miniature board: a red blood splash on cloth, wooden splinters flying from a cannon carriage, bright sparks off a steel cuirass. |
-| Meer variatie in het bloed | treffers en doden | wens | spatten in de richting van de klap | Directional blood splatter on a wooden board after a hit, stylized, top-down view. |
+| Inslag per materiaal | elke treffer | spel | 6 okt: vlees rode nevel en spatjes, hout splinters, metaal vonken (zoals het geluid); knoppen inslag per materiaal en inslag: hoeveel | Three impacts side by side on a miniature board: a red blood splash on cloth, wooden splinters flying from a cannon carriage, bright sparks off a steel cuirass. |
+| Bloedwaaier op de grond | een dode | spel | 6 okt: langgerekte spatten van de klap af, na elkaar; knop bloedwaaier | Directional blood splatter on a wooden board after a hit, stylized, top-down view. |
 
 ## 4. Sterven en brokstukken
 
@@ -61,6 +61,6 @@ kort en los van de achtergrond. Pas hem gerust aan.
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
 |---|---|---|---|---|
 | Kampvuur in het diorama | in het kamp | diorama | vaste waarden in omgeving.gd | A small campfire with flickering flames and rising smoke beside a miniature army camp, top-down angled view, night. |
-| Kanon gaat kapot | kanon vernietigd | wens | splinters, rookkolom, een klein vuur dat blijft branden | A miniature wooden field cannon blown apart: splinters and a wheel flying, a column of dark smoke and small flames on the wreck, top-down angled view. |
-| Kruitvat ontploft | explosie | wens | vuurbal, rook, rondvliegende stukken | A small gunpowder barrel exploding on a miniature board: an orange fireball, a ring of smoke and flying wooden staves, top-down angled view. |
-| Vuur op het bord | iets blijft branden | wens | een wrak, een kruitspoor | Small flames licking up from burning debris on a wooden game board, gentle smoke, top-down angled view. |
+| Kanon gaat kapot | kanon vernietigd | spel | 6 okt: het kruit ontploft, de affuit spat uiteen, het wrak brandt na; een kanon bloedt niet meer | A miniature wooden field cannon blown apart: splinters and a wheel flying, a column of dark smoke and small flames on the wreck, top-down angled view. |
+| Explosie (kruitvat) | explosie | spel | 6 okt: flits, vuurbal (kanonsvlam), stofkring, rookkolom, splinters, vonken; nu bij een kanon, straks ook kruitvaten | A small gunpowder barrel exploding on a miniature board: an orange fireball, a ring of smoke and flying wooden staves, top-down angled view. |
+| Vuur op het bord | iets blijft branden | spel | 6 okt: vlammen uit een eigen shader (geen textuur), flakkerend licht, rook, vonkjes; knoppen vuur: maat en brandt na | Small flames licking up from burning debris on a wooden game board, gentle smoke, top-down angled view. |

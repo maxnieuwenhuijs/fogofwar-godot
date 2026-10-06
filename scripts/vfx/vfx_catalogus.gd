@@ -11,7 +11,8 @@ extends RefCounted
 ## KNOPPEN), status ("spel" = zit erin, "wens" = nog te bouwen, "diorama" = in
 ## het diorama maar nog met vaste waarden), speel (het recept in de tuner; leeg
 ## = nog niet af te spelen), schutter (wie de tuner neerzet: "musket", "kanon"
-## of "ruiter"; standaard musket) en een notitie.
+## of "ruiter"; standaard musket), doel (wat er geraakt wordt: "musket" of
+## "kanon"; standaard musket) en een notitie.
 
 const GROEPEN: Array = [
 	{"id": "kruit", "naam": "Kruitdamp en vuurmond"},
@@ -49,6 +50,13 @@ const KNOPPEN: Dictionary = {
 	"aarde_inslag": {"label": "opspattende aarde (kanon)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	"krater": {"label": "krater (maat, 0 = geen)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	"krater_duur": {"label": "krater blijft liggen (s)", "min": 0.5, "max": 120.0, "step": 0.5, "def": 25.0},
+	"inslag_materiaal": {"label": "inslag per materiaal (0 = gele vonken)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	"bloed_waaier": {"label": "bloedwaaier bij een dode", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	"inslag_sterkte": {"label": "inslag: hoeveel (vlees en hout)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	"vuur_maat": {"label": "vuur: maat", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	"vuur_duur": {"label": "vuur: brandt na (s, 0 = niet)", "min": 0.0, "max": 60.0, "step": 0.5, "def": 12.0},
+	"explosie": {"label": "explosie: kracht", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	"kanon_kapot": {"label": "kanon ontploft (0 = uit)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	"link_puff": {"label": "koppel-wolkje", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	"blood_burst": {"label": "wond-druppels", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
 	"blood_spurt": {"label": "spuit-straal", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
@@ -152,17 +160,20 @@ const EFFECTEN: Array = [
 		"speel": "schot_kanon", "schutter": "kanon",
 		"wanneer": "blijft na een kanonsinslag op het bord liggen en vervaagt", "knoppen": ["krater", "krater_duur"]},
 	# --- Bloed en inslag -------------------------------------------------------
-	{"id": "vonken", "groep": "bloed", "naam": "Vonken bij een treffer", "status": "spel", "speel": "vonken",
-		"wanneer": "elke treffer, ook op vlees", "knoppen": [],
-		"notitie": "overal dezelfde gele vonken; per materiaal is een wens"},
+	{"id": "vonken", "groep": "bloed", "naam": "Vonken op metaal", "status": "spel", "speel": "vonken",
+		"wanneer": "een treffer op het kuras van de hp-pion: vonken en een witte flits",
+		"knoppen": ["inslag_materiaal"]},
 	{"id": "treffer", "groep": "bloed", "naam": "Treffer: flits, wankelen, wond", "status": "spel", "speel": "treffer",
 		"wanneer": "een pion wordt geraakt en overleeft", "knoppen": _WOND},
 	{"id": "schadegetal", "groep": "bloed", "naam": "Schadegetal (-N)", "status": "spel", "speel": "schadegetal",
 		"wanneer": "boven een geraakte pion", "knoppen": []},
-	{"id": "inslag_materiaal", "groep": "bloed", "naam": "Inslag per materiaal", "status": "wens", "speel": "",
-		"wanneer": "vlees: bloed; hout: splinters; metaal: vonken (zoals het geluid)", "knoppen": []},
-	{"id": "bloed_variatie", "groep": "bloed", "naam": "Meer variatie in het bloed", "status": "wens", "speel": "",
-		"wanneer": "spatten in de richting van de klap, verschillende vlekken", "knoppen": []},
+	{"id": "inslag_materiaal", "groep": "bloed", "naam": "Inslag per materiaal", "status": "spel",
+		"speel": "inslag_materiaal",
+		"wanneer": "vlees: rode nevel en spatjes; hout (een kanon): splinters; metaal: vonken (zoals het geluid; na elkaar)",
+		"knoppen": ["inslag_materiaal", "inslag_sterkte"]},
+	{"id": "bloed_variatie", "groep": "bloed", "naam": "Bloedwaaier op de grond", "status": "spel", "speel": "dood_musket",
+		"wanneer": "een dode: een waaier langgerekte spatten van de klap af, na elkaar neerkomend",
+		"knoppen": ["bloed_waaier", "blood_size", "blood_grow"]},
 	# --- Sterven en brokstukken ------------------------------------------------
 	{"id": "dood_musket", "groep": "dood", "naam": "Sterven door een musketkogel", "status": "spel", "speel": "dood_musket",
 		"wanneer": "een kill met het musket: hoed of ledemaat kan loskomen, bloedplas",
@@ -183,12 +194,16 @@ const EFFECTEN: Array = [
 	{"id": "kampvuur", "groep": "vuur", "naam": "Kampvuur in het diorama", "status": "diorama", "speel": "",
 		"wanneer": "brandt in het kamp; klikken geeft rook of een knal", "knoppen": [],
 		"notitie": "in omgeving.gd met vaste waarden"},
-	{"id": "kanon_kapot", "groep": "vuur", "naam": "Kanon gaat kapot", "status": "wens", "speel": "",
-		"wanneer": "een kanon wordt vernietigd: splinters, rookkolom, een klein vuur", "knoppen": []},
-	{"id": "kruitvat", "groep": "vuur", "naam": "Kruitvat ontploft", "status": "wens", "speel": "",
-		"wanneer": "een explosie met vuurbal, rook en rondvliegende stukken", "knoppen": []},
-	{"id": "vuur_bord", "groep": "vuur", "naam": "Vuur op het bord", "status": "wens", "speel": "",
-		"wanneer": "iets blijft even branden (een wrak, een kruitspoor)", "knoppen": []},
+	{"id": "kanon_kapot", "groep": "vuur", "naam": "Kanon gaat kapot", "status": "spel", "speel": "dood_kanon",
+		"schutter": "kanon", "doel": "kanon",
+		"wanneer": "een kanon wordt vernietigd: het kruit ontploft, de affuit spat uiteen, het wrak brandt na",
+		"knoppen": ["kanon_kapot", "explosie", "vuur_duur", "vuur_maat", "inslag_sterkte"]},
+	{"id": "kruitvat", "groep": "vuur", "naam": "Explosie (kruitvat)", "status": "spel", "speel": "explosie",
+		"wanneer": "flits, vuurbal, schokgolf, rookkolom, brokstukken en vonken (nu bij een kanon; straks ook kruitvaten)",
+		"knoppen": ["explosie", "smoke_wind"]},
+	{"id": "vuur_bord", "groep": "vuur", "naam": "Vuur op het bord", "status": "spel", "speel": "vuur",
+		"wanneer": "iets blijft branden (het wrak van een kanon): vlammen, flakkerend licht, rook, vonkjes",
+		"knoppen": ["vuur_maat", "vuur_duur", "smoke_wind"]},
 ]
 
 
