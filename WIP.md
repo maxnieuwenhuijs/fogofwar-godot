@@ -1,5 +1,45 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- de lichtstraal en de rand blijven nergens meer hangen
+
+Max: "soms blijft de light van de laatste units nog rondom de player model
+hangen de omlinging nieuwe, en de spotlight mag ook wel wat minder".
+
+- **Eerst nagebootst, dan gerepareerd** (`-- beurtlicht`, drie nieuwe
+  metingen, alle drie FAIL op de oude code):
+  - *Wissel-race (de rand die bleef hangen):* je laatste zet beeindigt de
+    actiefase, de reset ontkoppelt en wisselt het model terug naar basis, en
+    in dezelfde `_refresh_all` gaat de straal uit. `_swap_piece` had een
+    uitgestelde `_zet_beurt_rand(true)` klaargezet die daarna binnenkwam: de
+    rand op het nieuwe model, `_beurt_licht_aan` al false, dus elke volgende
+    "uit" deed niets meer tot de volgende modelwissel. Nu zet de uitgestelde
+    aanroep de rand zoals de straal DAN staat (`_beurt_rand_volgens_straal`).
+    Het echte verloop (alles uitspelen tot CYCLE_SPAWN) gaf 1 hangende rand,
+    nu 0.
+  - *Lijk:* een pion met straal die sterft blijft als debris liggen en
+    `_refresh_all` ziet hem niet meer; `play_death` haalde alleen de rand weg,
+    kegel en puls bleven. Nu `set_beurt_licht(false)` in `play_death`.
+- **Workflow (vier lenzen, elke vondst door een scepticus):** nog een lek dat
+  standhield: een einde zonder actie-event (opgeven in je eigen beurt; online
+  de opgave van de ander of een 409 "match afgelopen" via
+  `_einde_via_status`) draait geen `_refresh_all`, dus straal en rand bleven
+  achter het eindscherm en de menu's pulseren tot de volgende opstelling.
+  Nagebootst met `-- beurtlicht opgeven` (9 stralen, na het opgeven nog alle
+  9). Nu `game._beurt_licht_uit`, los van de staat (online kan die bij de 409
+  nog op jouw actiebeurt staan, een `_refresh_all` zou ze weer aanzetten): bij
+  elke fase buiten ACTION, in `_on_game_over`, `_start_match` en
+  `_verlaat_online`. Weerlegd: de Wolf-stap als laatste zet in een honger-einde
+  (de refresh na de melee zette ze al uit) en het licht tijdens de Wolf-stap
+  (alleen cosmetisch, gaat daarna gewoon uit).
+- **De spotlight minder:** Max zette `beurt_licht` intussen zelf op 0,14 in
+  het sfeer-paneel (effects_tuning.json, 18:58). Dat is nu ook de standaard in
+  de code (`PawnView.BEURT_LICHT_STANDAARD`, paneel-def; was 1,0). De basis van
+  kegel en vlek is NIET verlaagd: dat zou bovenop zijn eigen 0,14 komen.
+- Checks: `-- beurtlicht` en `-- beurtlicht opgeven` PASS, `-- uispel 777`
+  gelijk (`5862e4c9`, 165, 4), herstelcheck 777 en 4242 wolf 0 verschillen,
+  resumecheck 777 1 en 4242 2 0 verschillen, naadcheck, play, stompcheck
+  (ook wond en wissel), snijcheck.
+
 ## 6 oktober -- Tilt-shift zichtbaar: in het spel te zetten, in de tuner te zien
 
 Max: "en de tilt shift zie ik niet echt?".

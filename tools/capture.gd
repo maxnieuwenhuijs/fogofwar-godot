@@ -3183,6 +3183,33 @@ func _ready() -> void:
 		if bl_uit[2] > 0:
 			print("[LICHT] FOUT: %d pion(nen) met een straal die niet klopt" % bl_uit[2])
 			bl_fouten += 1
+		if "opgeven" in args:
+			# 6 oktober: opgeven in je eigen actiebeurt geeft alleen een fase- en
+			# een einde-event (geen actie), dus geen _refresh_all meer. Stralen en
+			# randen mogen niet achter het eindscherm blijven hangen.
+			PawnView.set_fx("beurt_licht_vanaf", 30.0)
+			game._refresh_all()
+			var bl_voor: int = _bl_meet(game)[1]
+			game.session.submit_resign(1)   # wat de bevestigknop van Opgeven doet
+			await get_tree().process_frame
+			await get_tree().create_timer(0.5).timeout
+			var bl_na: Array = _bl_meet(game)
+			var bl_hangend := 0
+			for bl_pv in game._pawn_views.values():
+				var bl_v := bl_pv as PawnView
+				if bl_v._beurt_licht_aan or (bl_v._beurt_licht != null and bl_v._beurt_licht.visible) or bl_v.beurt_rand_aan():
+					bl_hangend += 1
+			print("[LICHT] opgeven (%s): %d stralen ervoor, daarna %d pion(nen) met licht of rand (%s)" % [
+				Phase.to_string_phase(GameSession.state.phase), bl_voor, bl_hangend, "PASS" if bl_voor > 0 and bl_hangend == 0 else "FAIL"])
+			if bl_voor == 0:
+				print("[LICHT] FOUT: geen stralen aan voor het opgeven, er viel niets te meten")
+				bl_fouten += 1
+			if bl_hangend > 0 or bl_na[2] > 0:
+				print("[LICHT] FOUT: na opgeven hangt er nog licht of rand")
+				bl_fouten += 1
+			print("[LICHT] %s: %d fout(en)" % ["PASS" if bl_fouten == 0 else "FAIL", bl_fouten])
+			get_tree().quit(0 if bl_fouten == 0 else 1)
+			return
 		# Zetten doen (beurtelings: de bot speelt tussendoor zelf) tot er hooguit
 		# `drempel` eigen pionnen over zijn die nog kunnen, in de eigen beurt.
 		var bl_drempel: int = int(round(PawnView.fx("beurt_licht_vanaf", 3.0)))
@@ -3241,6 +3268,94 @@ func _ready() -> void:
 		PawnView.set_fx("beurt_rand", 1.0)
 		for bl_pv in game._pawn_views.values():
 			(bl_pv as PawnView).zet_beurt_licht_sterkte()
+		# 6 oktober (Max: "soms blijft de light van de laatste units nog rondom
+		# de player model hangen"). Wissel-race: je laatste zet beeindigt de
+		# actiefase, de reset ontkoppelt en wisselt het model terug naar basis,
+		# en in dezelfde _refresh_all gaat de straal uit. De rand mag daarna niet
+		# alsnog terugkomen op het nieuwe model.
+		var bl_wissel: PawnView = null
+		var bl_wissel_id := -1
+		for bl_pid in game._pawn_views:
+			var bl_p: Pawn = GameSession.state.pawns.get(bl_pid)
+			if bl_p == null or bl_p.owner_id != 1 or bl_p.is_eliminated or bl_p.linked_card_id < 0:
+				continue
+			var bl_kand: PawnView = game._pawn_views[bl_pid]
+			bl_kand.set_beurt_licht(true)
+			var bl_swaps: int = bl_kand.swaps
+			bl_kand.set_character(GameSession.state.doctrine_of(1), bl_p.unit_type, null)
+			if bl_kand.swaps > bl_swaps:
+				bl_wissel = bl_kand
+				bl_wissel_id = int(bl_pid)
+				break
+			bl_kand.set_beurt_licht(false)
+		if bl_wissel == null:
+			print("[LICHT] FOUT: geen gekoppelde eigen pion die bij ontkoppelen van model wisselt")
+			bl_fouten += 1
+		else:
+			bl_wissel.set_beurt_licht(false)   # zelfde frame als de wissel, zoals in _refresh_all
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var bl_hangt: bool = bl_wissel.beurt_rand_aan()
+			print("[LICHT] wissel en uit in een frame (pion %d): rand %s (%s)" % [bl_wissel_id, "hangt" if bl_hangt else "weg", "FAIL" if bl_hangt else "PASS"])
+			if bl_hangt:
+				print("[LICHT] FOUT: de rand blijft op het nieuwe model hangen terwijl de straal uit is")
+				bl_fouten += 1
+			# Andersom: wissel terwijl hij aan blijft, dan hoort het nieuwe model
+			# de rand weer te dragen (ook het wapen dat er net in komt).
+			bl_wissel.set_beurt_licht(true)
+			var bl_p2: Pawn = GameSession.state.pawns.get(bl_wissel_id)
+			bl_wissel.set_character(GameSession.state.doctrine_of(1), bl_p2.unit_type, GameSession.state.all_cards.get(bl_p2.linked_card_id))
+			await get_tree().process_frame
+			await get_tree().process_frame
+			print("[LICHT] wissel met de straal aan: rand %s (%s)" % ["aan" if bl_wissel.beurt_rand_aan() else "weg", "PASS" if bl_wissel.beurt_rand_aan() else "FAIL"])
+			if not bl_wissel.beurt_rand_aan():
+				print("[LICHT] FOUT: na een wissel met de straal aan hoort het nieuwe model de rand te dragen")
+				bl_fouten += 1
+			game._refresh_all()
+		# Het echte verloop: alle pionnen die nog kunnen de straal (drempel 30)
+		# en uitspelen tot de actiefase voorbij is; daarna mag nergens nog licht
+		# of rand staan, ook niet op een lijk.
+		var bl_t0 := Time.get_ticks_msec()
+		var bl_laatste_mens := false
+		while GameSession.state.phase == Phase.Type.ACTION and Time.get_ticks_msec() - bl_t0 < 60000:
+			if GameSession.state.current_player == 1:
+				game._refresh_all()
+				game._auto_action_human()
+				bl_laatste_mens = true
+			else:
+				bl_laatste_mens = false
+			await get_tree().create_timer(0.1).timeout
+		await get_tree().create_timer(2.0).timeout
+		var bl_eind: Array = _bl_meet(game)
+		var bl_lijk_fout: int = _bl_lijken(game)
+		print("[LICHT] na de actiefase (%s, laatste zet %s): %d stralen, %d fout, %d lijk(en) met licht (%s)" % [
+			Phase.to_string_phase(GameSession.state.phase), "van jou" if bl_laatste_mens else "van de bot",
+			bl_eind[1], bl_eind[2], bl_lijk_fout, "PASS" if bl_eind[2] == 0 and bl_lijk_fout == 0 else "FAIL"])
+		if bl_eind[2] > 0 or bl_lijk_fout > 0:
+			print("[LICHT] FOUT: na de actiefase hangt er nog licht of rand")
+			bl_fouten += 1
+		# Sterven met de straal aan: het lijk blijft als debris liggen, zonder
+		# straal en zonder rand (zelfde weg als in het spel: _kill_view).
+		var bl_dode: PawnView = null
+		for bl_pid in game._pawn_views.keys():
+			var bl_p3: Pawn = GameSession.state.pawns.get(bl_pid)
+			if bl_p3 != null and bl_p3.owner_id == 1 and not bl_p3.is_eliminated:
+				bl_dode = game._pawn_views[bl_pid]
+				bl_dode.set_beurt_licht(true)
+				game._kill_view(int(bl_pid), Vector3(0.0, 0.0, 1.0), 0.7, "melee")
+				break
+		if bl_dode == null:
+			print("[LICHT] FOUT: geen eigen pion om te laten sterven")
+			bl_fouten += 1
+		else:
+			await get_tree().create_timer(1.0).timeout
+			var bl_straal_lijk: bool = is_instance_valid(bl_dode) and bl_dode._beurt_licht != null and bl_dode._beurt_licht.visible
+			var bl_rand_lijk: bool = is_instance_valid(bl_dode) and bl_dode.beurt_rand_aan()
+			print("[LICHT] lijk met de straal gestorven: straal %s, rand %s (%s)" % [
+				"aan" if bl_straal_lijk else "uit", "aan" if bl_rand_lijk else "uit", "FAIL" if bl_straal_lijk or bl_rand_lijk else "PASS"])
+			if bl_straal_lijk or bl_rand_lijk:
+				print("[LICHT] FOUT: een lijk houdt de straal of de rand")
+				bl_fouten += 1
 		# Sterkte 0: nooit een straal.
 		PawnView.set_fx("beurt_licht", 0.0)
 		PawnView.set_fx("beurt_licht_vanaf", 30.0)
@@ -5043,7 +5158,7 @@ func _bl_meet(g) -> Array:
 		if p.owner_id == 1 and not p.is_eliminated and p.is_active and Rules.can_pawn_act(st, int(pid)):
 			eigen_kunnen.append(int(pid))
 	kunnen = eigen_kunnen.size()
-	var hoort: bool = PawnView.fx("beurt_licht", 1.0) > 0.0 and drempel > 0 and kunnen <= drempel \
+	var hoort: bool = PawnView.fx("beurt_licht", PawnView.BEURT_LICHT_STANDAARD) > 0.0 and drempel > 0 and kunnen <= drempel \
 			and st.phase == Phase.Type.ACTION and st.current_player == 1
 	var rand_hoort: bool = PawnView.fx("beurt_rand", 1.0) > 0.0
 	for pid in g._pawn_views:
@@ -5057,6 +5172,20 @@ func _bl_meet(g) -> Array:
 		if pv.beurt_rand_aan() != (verwacht and rand_hoort):
 			fout += 1
 	return [kunnen, aan, fout]
+
+
+## Beurtlicht: lijken (PawnViews die niet meer in _pawn_views staan) met een
+## zichtbare straal of een rand.
+func _bl_lijken(g) -> int:
+	var fout := 0
+	var levend: Array = g._pawn_views.values()
+	for n in g._pawns_root.get_children():
+		var pv := n as PawnView
+		if pv == null or levend.has(pv) or pv.is_queued_for_deletion():
+			continue
+		if (pv._beurt_licht != null and pv._beurt_licht.visible) or pv.beurt_rand_aan():
+			fout += 1
+	return fout
 
 
 ## Sleepcheck: een muisknop indrukken of loslaten op een schermpunt, als echt event.

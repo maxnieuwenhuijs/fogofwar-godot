@@ -688,7 +688,22 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   in de kleur en puls van de straal; opnieuw na een modelwissel
   (`_swap_piece`), weg bij de dood. Knop `beurt_rand` (0 = uit) in het
   sfeer-paneel; `-- beurtlicht` meet dat de rand bij precies de straal
-  hoort en op 0 verdwijnt.
+  hoort en op 0 verdwijnt. **Niets blijft meer hangen (6 oktober, Max:
+  "soms blijft de light van de laatste units nog rondom de player model
+  hangen"; "de spotlight mag ook wel wat minder"):** de standaard van
+  `beurt_licht` is 0,14 (Max' eigen stand, `PawnView.BEURT_LICHT_STANDAARD`;
+  was 1,0). Drie lekken dicht: (1) `_swap_piece` zette de rand uitgesteld op
+  "aan", en de reset na je laatste zet wisselt het model in dezelfde
+  `_refresh_all` die de straal uitzet, dus nu zet de uitgestelde aanroep de
+  rand zoals de straal DAN staat (`_beurt_rand_volgens_straal`); (2) een lijk
+  verliest straal en rand in `play_death` (debris wordt niet meer ververst);
+  (3) opgeven, online een opgave van de ander of een 409 "match afgelopen"
+  geven geen actie-event en dus geen `_refresh_all`, dus
+  `game._beurt_licht_uit` zet alles uit, los van de staat (online kan die
+  nog op jouw beurt staan), bij elke fase buiten ACTION, in
+  `_on_game_over`, `_start_match` en `_verlaat_online`. `-- beurtlicht`
+  meet nu ook de wissel-race, het eind van de actiefase (ook op lijken) en
+  het sterven; `-- beurtlicht opgeven` het opgeven.
 - **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
   mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
   gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de

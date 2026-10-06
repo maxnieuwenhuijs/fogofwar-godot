@@ -579,6 +579,9 @@ func _refresh_ring() -> void:
 ## pulserend. game._refresh_all zet hem aan zodra er hooguit
 ## `beurt_licht_vanaf` eigen pionnen zijn die nog kunnen handelen. Sterkte:
 ## knop `beurt_licht` (0 = uit). Puur beeld, geen RNG.
+## 6 oktober (Max: "de spotlight mag ook wel wat minder", en hij zette de knop
+## zelf op 0,14 in het sfeer-paneel): dat is nu ook de standaard (was 1,0).
+const BEURT_LICHT_STANDAARD := 0.14
 const BEURT_LICHT_HOOGTE := 1.9
 const BEURT_LICHT_KLEUR := Color(1.0, 0.86, 0.5)
 const BEURT_LICHT_ALPHA := 0.5
@@ -627,7 +630,7 @@ var _beurt_tween: Tween = null
 
 
 func set_beurt_licht(aan: bool) -> void:
-	if aan and fx("beurt_licht", 1.0) <= 0.0:
+	if aan and fx("beurt_licht", BEURT_LICHT_STANDAARD) <= 0.0:
 		aan = false
 	if aan == _beurt_licht_aan:
 		return
@@ -730,6 +733,11 @@ func _zet_beurt_rand(aan: bool) -> void:
 			gi.material_overlay = null
 
 
+## De rand zoals de straal nu staat (uitgesteld na een modelwissel).
+func _beurt_rand_volgens_straal() -> void:
+	_zet_beurt_rand(_beurt_licht_aan)
+
+
 ## Draagt het stuk nu de rand? (voor `-- beurtlicht`)
 func beurt_rand_aan() -> bool:
 	if _piece == null or not is_instance_valid(_piece) or _beurt_rand_mat == null:
@@ -743,7 +751,7 @@ func beurt_rand_aan() -> bool:
 func _beurt_puls(f: float) -> void:
 	if _beurt_licht_mat == null or _beurt_vlek_mat == null:
 		return
-	var sterkte: float = fx("beurt_licht", 1.0) * f
+	var sterkte: float = fx("beurt_licht", BEURT_LICHT_STANDAARD) * f
 	if _beurt_rand_mat != null:
 		_beurt_rand_mat.set_shader_parameter("sterkte", fx("beurt_rand", 1.0) * f)
 	var k := BEURT_LICHT_KLEUR
@@ -1351,7 +1359,10 @@ func stagger(world_dir: Vector3) -> void:
 ## force_die_clip: laat een SPECIFIEKE dood-clip spelen (Model-tuner) —
 ## leeg = willekeurige variant.
 func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee", force_die_clip: String = "") -> void:
-	_zet_beurt_rand(false)   # een lijk gloeit niet na
+	# Een lijk krijgt geen straal en gloeit niet na. Het blijft als debris
+	# liggen en game.gd ververst het niet meer (uit _pawn_views), dus hier uit.
+	set_beurt_licht(false)
+	_zet_beurt_rand(false)
 	_kreet_af = kreet_al_gespeeld   # game.gd deed de kanonkreet al vóór de inslag
 	kreet_al_gespeeld = false
 	_dodelijke_kracht = strength
@@ -3147,8 +3158,11 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
-	if _beurt_licht_aan:
-		_zet_beurt_rand.call_deferred(true)   # na de wissel (en het wapen dat er net in komt)
+	# Na de wissel (en het wapen dat er net in komt) de rand zetten zoals de
+	# straal DAN staat, niet zoals nu: de reset na je laatste zet wisselt het
+	# model en zet de straal in dezelfde _refresh_all uit, en een uitgestelde
+	# "aan" liet de rand daarna op het nieuwe model hangen (6 oktober).
+	_beurt_rand_volgens_straal.call_deferred()
 	_apply_team_texture()
 	# Geen team-sokkel meer onder .glb-modellen (besluit 6 juli): het
 	# team-onderscheid komt straks van de _team1/_team2-textures.

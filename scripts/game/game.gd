@@ -915,6 +915,7 @@ func _start_match(difficulty: int) -> void:
 	_shake_amt = 0.0
 	_dying_views.clear()
 	_advance_holds.clear()
+	_beurt_licht_uit()   # de oude pionnen staan er tot de opstelling nog
 	_clear_debris(true)  # slagveld van de vorige partij ruimen
 	_clear_footprints()
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
@@ -2200,6 +2201,17 @@ func _refresh_all() -> void:
 		pv.set_selected(pid == _selected_pawn_id)
 
 
+## Alle stralen en randen uit, los van de staat (6 oktober, Max: "soms blijft
+## de light van de laatste units nog rondom de player model hangen"). Een einde
+## zonder actie-event (opgeven, online de opgave van de ander of een 409 "match
+## afgelopen") draait geen _refresh_all meer, en online kan de staat dan nog op
+## jouw actiebeurt staan; daarom niet via _refresh_all.
+func _beurt_licht_uit() -> void:
+	for pv in _pawn_views.values():
+		if is_instance_valid(pv):
+			(pv as PawnView).set_beurt_licht(false)
+
+
 # --- v4.2 (F2.6): CP-bod, versterkingen en de kanon-taal ----------------------
 
 ## Blinde CP-inzet (D1): elke CP maakt 1 kaart deze ronde budget+1.
@@ -2879,6 +2891,8 @@ func _on_phase_changed(new_phase: int, old_phase: int) -> void:
 	_selected_link_card_id = -1  # een kaartkeuze leeft alleen binnen een koppel-fase
 	if new_phase == Phase.Type.ACTION:
 		_clear_highlights()
+	else:
+		_beurt_licht_uit()   # de straal hoort alleen bij je eigen actiebeurt
 	if Phase.is_define(new_phase):
 		if Phase.is_linking(old_phase):
 			# Laat de zojuist gekoppelde pion(nen) even zien vóór de nieuwe ronde.
@@ -3683,7 +3697,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "haven_alpha", "label": "haven-zichtbaarheid", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.45},
 	{"key": "ring_glow", "label": "ring-gloed", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "aura_gloed", "label": "aura-gloed (trom en vaandel)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
-	{"key": "beurt_licht", "label": "lichtstraal laatste pionnen (sterkte)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
+	{"key": "beurt_licht", "label": "lichtstraal laatste pionnen (sterkte)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.14},
 	{"key": "beurt_licht_vanaf", "label": "lichtstraal vanaf (pionnen die nog kunnen)", "min": 0.0, "max": 30.0, "step": 1.0, "def": 3.0},
 	{"key": "beurt_rand", "label": "randlicht laatste pionnen (sterkte, 0 = uit)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
@@ -4149,6 +4163,7 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush:
 
 func _on_game_over(winner_id: int) -> void:
 	_clear_highlights()
+	_beurt_licht_uit()   # niet achter het eindscherm blijven pulseren
 	_card_hand.visible = false
 	Audio.stop_music()  # sting krijgt de ruimte; ambience loopt door
 	Audio.play("win_fanfare" if winner_id == _human_id else "lose_sting", 0.3)
@@ -4209,6 +4224,7 @@ func _verlaat_online() -> void:
 	_human_id = Constants.PLAYER_1
 	_ai_id = Constants.PLAYER_2
 	_orient_camera_for(_human_id)
+	_beurt_licht_uit()
 	_show_difficulty_menu()
 
 
