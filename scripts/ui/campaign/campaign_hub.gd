@@ -99,6 +99,20 @@ var _km_laag: Control = null
 var _km_open: bool = false       # KLAAR staat open (de paren zijn getoond)
 var _km_gezien: int = 0          # hoeveel gebeurtenissen al op het scherm staan
 var _km_klok_ms: int = 0         # bovenop de echte klok (de fixture spoelt zo door)
+
+## De weg naar het bord (6 oktober, Max: "het begin is goed en dan zie je je
+## duel en dan ineens rambam bam ben je op het spel"): de hub telt zichtbaar af
+## (was 2,5 s zonder tekst) en daarna komt het duel-intro, jij tegen hem,
+## voordat de scene wisselt (was twee frames laadscherm). Een tik slaat het
+## intro over, NAAR HET BORD de aftel, "Blijf even in de hub" stopt hem.
+const DUEL_AFTEL_SEC := 8.0
+const DUEL_INTRO_SEC := 3.2
+var _intro_tot_ms: int = 0       # het duel-intro loopt tot hier (0 na een tik: meteen door)
+## Waar het duel speelt. Leeg (de klaarcheck) = niet wisselen, alleen
+## `naar_bord_ms` zetten: zo meet de check het hele pad zonder zijn eigen
+## scene kwijt te raken.
+var bord_pad: String = "res://scenes/game/game.tscn"
+var naar_bord_ms: int = 0
 ## De laatst getoonde saldi in de statusbalk. Static: overleeft het bord, zodat
 ## een winst na een duel optelt.
 static var _status_gezien: Dictionary = {}
@@ -2551,7 +2565,15 @@ func _paneel_duel(c: CState) -> void:
 			_auto_start_idx = int(d.idx)
 			_auto_start_ms = Time.get_ticks_msec()
 			_auto_start_duel(int(d.idx), vijand)
-		knop_kolom.add_child(Aftel.new(_auto_start_ms, 2500, _u(8)))
+		var aftel := Aftel.new(_auto_start_ms, int(DUEL_AFTEL_SEC * 1000.0), _u(8))
+		knop_kolom.add_child(aftel)
+		# Hoe lang nog, in woorden: de balk alleen was een verrassing.
+		var nog := HubAssets.tekst("", _px(7.5), HubAssets.INKT_ZACHT)
+		nog.name = "DuelAftelTekst"
+		nog.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		aftel.tekst = nog
+		aftel.tekst_fmt = tr("HUB_DUEL_STARTS_IN")
+		knop_kolom.add_child(nog)
 		links.add_child(_link_knop(tr("HUB_DUEL_STAY_BTN"), "BlijfKnop", func() -> void:
 			_auto_stop_idx = int(d.idx)
 			_bouw_fase_paneel()))
@@ -2677,7 +2699,7 @@ func _paar_regel(c: CState, duel: Dictionary) -> Control:
 
 
 func _auto_start_duel(idx: int, vijand: int) -> void:
-	await get_tree().create_timer(2.5).timeout
+	await get_tree().create_timer(DUEL_AFTEL_SEC).timeout
 	if not is_inside_tree() or _auto_stop_idx == idx:
 		return
 	var d: Dictionary = driver.mens_duel()
@@ -2686,37 +2708,125 @@ func _auto_start_duel(idx: int, vijand: int) -> void:
 	_start_mens_duel(vijand)
 
 
-## Laadscherm tonen en dan pas de (zware) scene-wissel doen: geen bevroren
-## hub meer tussen klik en bord.
+## Eerst het duel-intro (jij tegen hem), dan pas de (zware) scene-wissel: geen
+## bevroren hub tussen klik en bord, en geen klap van hub naar bord. De
+## bot-duels van de ronde lopen intussen al op hun thread (de brug start ze).
 func _start_mens_duel(vijand: int) -> void:
 	if _duel_start_bezig or not CampaignBridge.start_mens_duel():
 		return
 	_duel_start_bezig = true
 	_toon_lader(vijand)
+	_intro_tot_ms = Time.get_ticks_msec() + int(_intro_duur() * 1000.0)
+	var laag := _keuze_laag
+	if laag != null and is_instance_valid(laag):
+		# Een tik waar dan ook: meteen naar het bord.
+		laag.gui_input.connect(func(ev: InputEvent) -> void:
+			if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
+				_intro_tot_ms = 0)
+	while is_inside_tree() and Time.get_ticks_msec() < _intro_tot_ms:
+		await get_tree().process_frame
+	# Nog een frame: dan staat het intro zeker in beeld tijdens het laden.
 	await get_tree().process_frame
-	await get_tree().process_frame
-	if is_inside_tree():
-		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+	if not is_inside_tree():
+		return
+	naar_bord_ms = Time.get_ticks_msec()
+	if bord_pad != "":
+		get_tree().change_scene_to_file(bord_pad)
 
 
-## Het laadscherm voor je duel, in de stijl van de hub (27 september): jij
-## tegen hem met schild, naam, factie en saldo, en de regel dat het laadt.
+## Met Animaties uit is er niets om naar te kijken behalve het paar zelf.
+func _intro_duur() -> float:
+	return DUEL_INTRO_SEC if Beweging.aan() else DUEL_INTRO_SEC * 0.6
+
+
+## Het duel-intro (6 oktober; was het laadscherm dat twee frames stond): de
+## ronde bovenaan, jouw kant schuift van links in en de zijne van rechts, de
+## sabels stempelen ertussen, en onder de regel dat het laadt met een balk naar
+## het bord en "tik om meteen te beginnen". De scene-wissel wacht in
+## _start_mens_duel; de screenshot-fixture (laden) bouwt alleen dit scherm.
 func _toon_lader(vijand: int) -> void:
-	var kolom := _keuze_scherm(tr("HUB_DUEL_KOP"), "Lader")
-	_ruimte(kolom)
-	var kaart := PanelContainer.new()
-	kaart.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
-		Vector2(26, 26), Vector4(_u(18), _u(18), _u(18), _u(18))))
-	kolom.add_child(kaart)
-	var binnen := VBoxContainer.new()
-	binnen.add_theme_constant_override("separation", _px(14))
-	kaart.add_child(binnen)
-	binnen.add_child(_vs_rij(driver.c, vijand, 72.0))
-	var tekst := HubAssets.tekst(tr("HUB_DUEL_LOADING") % String(driver.c.spelers[vijand].naam),
-		_px(12), HubAssets.INKT, true)
-	tekst.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	binnen.add_child(tekst)
-	_ruimte(kolom)
+	var c: CState = driver.c
+	var titel: String = tr("HUB_DUEL_INTRO_TITLE") % c.ronde
+	if c.fase == CState.Fase.BURGEROORLOG:
+		titel = tr("HUB_PHASE_SHORT_CIVIL_WAR")
+	var kolom := _keuze_scherm(titel, "Lader", tr("HUB_DUEL_KOP"))
+	var frame := kolom.get_parent() as Control
+	var hoogte: float = frame.size.y / _s
+	var midden: float = clampf(hoogte * 0.42, 300.0, 480.0)
+	# Een perkamenten band achter de twee kanten, vrij geplaatst (niet in een
+	# container), zodat de kanten van opzij kunnen inschuiven.
+	var band := PanelContainer.new()
+	band.name = "IntroBand"
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	band.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Timeline_action_box_2",
+		Vector2(26, 26), Vector4(_u(18), _u(14), _u(18), _u(14))))
+	band.position = Vector2(_u(16), _u(midden - 128))
+	band.size = Vector2(_u(532), _u(256))
+	frame.add_child(band)
+	var jij := _intro_kant(c, mens_id, true)
+	jij.name = "IntroJij"
+	jij.position = Vector2(_u(34), _u(midden - 112))
+	jij.size = Vector2(_u(214), _u(224))
+	frame.add_child(jij)
+	var hij := _intro_kant(c, vijand, false)
+	hij.name = "IntroHij"
+	hij.position = Vector2(_u(316), _u(midden - 112))
+	hij.size = Vector2(_u(214), _u(224))
+	frame.add_child(hij)
+	var sabels := HubAssets.icoon("Inbattle_icon", _u(48), HubAssets.ROOD)
+	sabels.name = "IntroVS"
+	sabels.position = Vector2(_u(258), _u(midden - 70))
+	sabels.size = Vector2(_u(48), _u(48))
+	frame.add_child(sabels)
+	var laad := HubAssets.tekst(tr("HUB_DUEL_LOADING") % String(c.spelers[vijand].naam), _px(12),
+		HubAssets.IVOOR, true)
+	laad.name = "IntroLaad"
+	laad.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	laad.position = Vector2(_u(22), _u(midden + 148))
+	laad.size = Vector2(_u(520), _u(26))
+	frame.add_child(laad)
+	var balk := Aftel.new(Time.get_ticks_msec(), int(_intro_duur() * 1000.0), _u(8))
+	balk.name = "IntroBalk"
+	balk.position = Vector2(_u(132), _u(midden + 182))
+	balk.size = Vector2(_u(300), _u(8))
+	frame.add_child(balk)
+	var tik := HubAssets.tekst(tr("HUB_DUEL_INTRO_SKIP"), _px(8.5), HubAssets.IVOOR)
+	tik.name = "IntroTik"
+	tik.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tik.position = Vector2(_u(22), _u(midden + 200))
+	tik.size = Vector2(_u(520), _u(20))
+	frame.add_child(tik)
+	# Erin: de band, de kanten van opzij, dan de sabels als stempel.
+	Beweging.klank("ui_blad")
+	Beweging.fade_in(band, 0.0, 0.2)
+	Beweging.schuif_in(jij, Vector2(-240, 0) * _s, 0.08, 0.4, true)
+	Beweging.schuif_in(hij, Vector2(240, 0) * _s, 0.08, 0.4, true)
+	Beweging.stempel(sabels, 0.46, true)
+	Beweging.fade_in(laad, 0.6)
+	Beweging.fade_in(balk, 0.6)
+	Beweging.fade_in(tik, 0.9)
+
+
+## Een kant in het duel-intro: groot schild, naamplaat, factie en saldo (van de
+## vijand "?", zoals overal in de hub).
+func _intro_kant(c: CState, sid: int, eigen: bool) -> VBoxContainer:
+	var sp: Dictionary = c.spelers[sid]
+	var kolom := VBoxContainer.new()
+	kolom.alignment = BoxContainer.ALIGNMENT_CENTER
+	kolom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kolom.add_theme_constant_override("separation", _px(4))
+	var p := HubAssets.portret(int(sp.get("doctrine", 0)), eigen, false, _u(112))
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kolom.add_child(p)
+	var plaat := _naamplaat(String(sp.naam), 13)
+	plaat.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kolom.add_child(plaat)
+	var factie := HubAssets.tekst(Constants.doctrine_display_name(int(sp.get("doctrine", 0))).to_upper(),
+		_px(9), HubAssets.INKT_ZACHT, true)
+	factie.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(factie)
+	kolom.add_child(_saldo_regel(c, sid, false, HubAssets.INKT, 10.0))
+	return kolom
 
 
 ## C11-UX (Max): doneren = een plusje achter de naam. [+1] geeft 1
@@ -3476,6 +3586,9 @@ class Aftel:
 	var start_ms: int
 	var duur_ms: int
 	var _vul: TextureRect
+	## Optioneel: een label dat de resterende hele seconden toont (tekst_fmt met %d).
+	var tekst: Label = null
+	var tekst_fmt: String = ""
 
 	func _init(p_start: int, p_duur: int, hoogte: float) -> void:
 		start_ms = p_start
@@ -3494,3 +3607,5 @@ class Aftel:
 		var rest: float = clampf(1.0 - float(Time.get_ticks_msec() - start_ms) / float(duur_ms), 0.0, 1.0)
 		_vul.anchor_right = rest
 		_vul.offset_right = 0.0
+		if tekst != null and is_instance_valid(tekst) and tekst_fmt != "":
+			tekst.text = tekst_fmt % int(ceil(rest * float(duur_ms) / 1000.0))

@@ -14,12 +14,17 @@ extends RefCounted
 ##  oefenen   de start van een online campagne met nagespeelde spelers: jij te
 ##            laat is TE LAAT; jij op tijd, een ander te laat: eruit, zoeken,
 ##            invallen (of een bot), en dan het einde van het oefenen.
+##  duel      de weg naar het bord (6 oktober, Max: "ineens rambam bam ben je
+##            op het spel"): de hub zegt hoe lang nog en telt af, na 3 s staat
+##            hij er nog; NAAR HET BORD toont eerst het duel-intro (de kanten
+##            schuiven in), het bord komt pas na het intro, en een tik op het
+##            intro gaat meteen door. Zonder scene-wissel (bord_pad leeg).
 ##
 ## Exit 1 bij een fout; de grep op "SCRIPT ERROR" hoort erbij.
 
 const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 const HUB := "res://scripts/ui/campaign/campaign_hub.gd"
-const FASEN := ["solo", "onthul", "oefenen"]
+const FASEN := ["solo", "onthul", "oefenen", "duel"]
 
 static var _fouten := 0
 static var _host: Node = null
@@ -37,6 +42,8 @@ static func run(host: Node, fasen: Array = []) -> int:
 				await _onthul()
 			"oefenen":
 				await _oefenen()
+			"duel":
+				await _duel()
 			_:
 				_fouten += 1
 				print("[KLAAR] onbekende fase: %s (bekend: %s)" % [fase, ", ".join(FASEN)])
@@ -260,4 +267,101 @@ static func _oefenen() -> void:
 	_ok(CampaignBridge.driver == null or CampaignBridge.driver != hub2.get("driver"),
 		"oefenen raakt de brug niet")
 	await _ruim_op(hub2)
+	Beweging.forceer(-1)
+
+
+# --- duel: de weg naar het bord (6 oktober) -----------------------------------------
+
+## Een hub die meteen bij jouw duel staat (de klaarmelding overgeslagen), met
+## het orakel (dan zijn de bot-duels die de brug start meteen klaar) en zonder
+## scene-wissel naar het bord.
+static func _hub_duel() -> Control:
+	var hs = load("res://tools/hub_shot.gd")
+	var orakel := "res://data/duel_orakel.json" if FileAccess.file_exists("res://data/duel_orakel.json") else ""
+	var driver = hs._nieuwe_driver(42, orakel)
+	var hub: Control = load(HUB).new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	hub.set("klaar_overslaan", true)
+	hub.set("bord_pad", "")
+	_host.add_child(hub)
+	return hub
+
+
+## Na NAAR HET BORD loopt de brug: zijn bot-duels afwachten en hem leeg achterlaten.
+static func _ruim_op_duel(hub: Control) -> void:
+	CampaignBridge._wacht_op_sim()
+	CampaignBridge.duel_actief = false
+	await _ruim_op(hub)
+
+
+static func _getal(l: Label) -> int:
+	if l == null:
+		return -1
+	var re := RegEx.new()
+	re.compile("[0-9]+")
+	var m := re.search(l.text)
+	return int(m.get_string()) if m != null else -1
+
+
+static func _duel() -> void:
+	print("[KLAAR] fase duel")
+	var constanten: Dictionary = (load(HUB) as GDScript).get_script_constant_map()
+	var aftel_sec: float = float(constanten.DUEL_AFTEL_SEC)
+	var intro_sec: float = float(constanten.DUEL_INTRO_SEC)
+	_ok(aftel_sec >= 6.0 and intro_sec >= 2.0, "de aftel duurt %.1f s en het intro %.1f s" % [aftel_sec, intro_sec])
+	Beweging.forceer(1)
+	var hub := _hub_duel()
+	await _wacht(0.3)
+	var tekst: Label = hub.find_child("DuelAftelTekst", true, false)
+	var getal_1 := _getal(tekst)
+	_ok(getal_1 >= int(aftel_sec) - 1 and getal_1 <= int(aftel_sec),
+		"de hub zegt hoe lang nog (%s)" % (tekst.text if tekst != null else "-"))
+	await _wacht(1.2)
+	var getal_2 := _getal(tekst)
+	_ok(getal_2 >= 0 and getal_2 < getal_1, "en telt af (%d -> %d)" % [getal_1, getal_2])
+	await _wacht(1.5)
+	_ok(int(hub.get("naar_bord_ms")) == 0 and hub.find_child("Lader", true, false) == null,
+		"na 3 s staat de hub er nog: geen klap naar het bord")
+	# NAAR HET BORD: eerst het intro, en het bord pas na het intro.
+	var t0 := Time.get_ticks_msec()
+	var speel: Button = hub.find_child("SpeelDuelKnop", true, false)
+	if speel != null:
+		speel.pressed.emit()
+	await _wacht(0.1)
+	var lader: Node = hub.find_child("Lader", true, false)
+	var jij: Control = lader.find_child("IntroJij", true, false) if lader != null else null
+	_ok(jij != null and lader.find_child("IntroHij", true, false) != null and lader.find_child("IntroVS", true, false) != null
+		and lader.find_child("IntroBalk", true, false) != null, "NAAR HET BORD: eerst het duel-intro, jij tegen hem")
+	var rust_x: float = (jij.get_meta("ub_rust_position") as Vector2).x if jij != null and jij.has_meta("ub_rust_position") else 0.0
+	var nu_x: float = jij.position.x if jij != null else 0.0
+	_ok(jij != null and jij.has_meta("ub_rust_position") and nu_x < rust_x - 20.0,
+		"jouw kant schuift van links in (x %.0f, eindplek %.0f)" % [nu_x, rust_x])
+	await _wacht(1.0)
+	_ok(jij != null and not jij.has_meta("ub_rust_position"), "en staat na een seconde op zijn plek")
+	_ok(int(hub.get("naar_bord_ms")) == 0, "na 1 s nog geen bord")
+	while int(hub.get("naar_bord_ms")) == 0 and Time.get_ticks_msec() - t0 < 6000:
+		await _host.get_tree().process_frame
+	var na: float = (int(hub.get("naar_bord_ms")) - t0) / 1000.0
+	_ok(na >= intro_sec - 0.1 and na < intro_sec + 1.0, "het bord komt na het intro (%.2f s)" % na)
+	await _ruim_op_duel(hub)
+	# Een tik op het intro: meteen door.
+	var hub2 := _hub_duel()
+	await _wacht(0.3)
+	var t1 := Time.get_ticks_msec()
+	var speel2: Button = hub2.find_child("SpeelDuelKnop", true, false)
+	if speel2 != null:
+		speel2.pressed.emit()
+	await _wacht(0.3)
+	var laag: Control = hub2.find_child("Lader", true, false)
+	if laag != null:
+		var klik := InputEventMouseButton.new()
+		klik.button_index = MOUSE_BUTTON_LEFT
+		klik.pressed = true
+		laag.gui_input.emit(klik)
+	while int(hub2.get("naar_bord_ms")) == 0 and Time.get_ticks_msec() - t1 < 4000:
+		await _host.get_tree().process_frame
+	var na2: float = (int(hub2.get("naar_bord_ms")) - t1) / 1000.0
+	_ok(na2 > 0.0 and na2 < 0.9, "een tik op het intro: meteen naar het bord (%.2f s)" % na2)
+	await _ruim_op_duel(hub2)
 	Beweging.forceer(-1)

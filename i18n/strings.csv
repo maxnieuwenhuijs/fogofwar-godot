@@ -654,3 +654,6 @@ HUB_READY_AGAIN,AGAIN,NOG EEN KEER
 MENU_MULTI_CAMPAIGN_PRACTICE,Practice: start of an online campaign,Oefenen: start van een online campagne
 HUB_READY_SEARCH_ONE,One place is looking for a new player,Een plek zoekt een nieuwe speler
 HUB_READY_SEARCH_N,%d places are looking for a new player,%d plekken zoeken een nieuwe speler
+HUB_DUEL_STARTS_IN,Your duel starts in %d s,Je duel begint over %d s
+HUB_DUEL_INTRO_TITLE,ROUND %d,RONDE %d
+HUB_DUEL_INTRO_SKIP,Tap to start right away,Tik om meteen te beginnen

@@ -28,6 +28,7 @@ static func run(host: Node, uit: String = "") -> int:
 	await _kaarten()
 	await _hub()
 	await _loting()
+	await _duel_intro()
 	Beweging.zet_tempo(tempo_oud)
 	Beweging.forceer(-1)
 	print("[FILM] klaar: %s (%d fouten)" % [ProjectSettings.globalize_path(_uit), _fouten])
@@ -152,6 +153,32 @@ static func _loting() -> void:
 	var d: Dictionary = driver.mens_duel()
 	if not d.is_empty():
 		hub.set("_auto_stop_idx", int(d.idx))
+	if CampaignBridge.driver == driver:
+		CampaignBridge.driver = null
+	hub.queue_free()
+	await _wacht(0.3)
+
+
+# --- Het duel-intro: van de hub naar het bord (6 oktober) -----------------------
+
+static func _duel_intro() -> void:
+	var driver := SoloDriver.new(42, 0)
+	driver.duel_ai = "easy"
+	var hub: Control = load("res://scripts/ui/campaign/campaign_hub.gd").new()
+	hub.set("driver", driver)
+	hub.set("mens_id", 0)
+	hub.set("klaar_overslaan", true)
+	_host.add_child(hub)
+	await _wacht(1.0)
+	var d: Dictionary = driver.mens_duel()
+	if d.is_empty():
+		_fouten += 1
+		print("[FILM] geen duel om te tonen")
+	else:
+		hub.set("_auto_stop_idx", int(d.idx))   # de aftel uit: het intro tonen we zelf
+		var vijand: int = int(d.p2) if int(d.p1) == 0 else int(d.p1)
+		hub.call("_toon_lader", vijand)
+		await _reeks("intro", [0.05, 0.3, 0.6, 1.0, 1.6, 2.4, 3.4])
 	if CampaignBridge.driver == driver:
 		CampaignBridge.driver = null
 	hub.queue_free()

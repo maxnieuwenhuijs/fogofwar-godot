@@ -312,10 +312,20 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `CampaignBridge.klaar_oefenen`, geen save, buiten de brug) zeven mensen na
   (`scripts/game/klaar_sim.gd`, eigen rng, 20/12/8 s, bots zichtbaar met BOT):
   te laat is TE LAAT, op tijd eindigt het oefenen bij "iedereen klaar".
-  Checks: `-- klaarcheck [solo|onthul|oefenen]` (headless en met venster),
+  Checks: `-- klaarcheck [solo|onthul|oefenen|duel]` (headless en met venster),
   `KlaarmeldingTests`, `-- shot campaign_hub 42 loting|klaar|klaar_online|
   klaar_eruit` (alle andere modi zetten `klaar_overslaan`), en een reeks in
-  `-- inkomfilm`.
+  `-- inkomfilm`. **De weg naar het bord (6 oktober, Max: "het begin is goed
+  en dan zie je je duel en dan ineens rambam bam ben je op het spel"):** de
+  aftel in het duelpaneel duurt `DUEL_AFTEL_SEC` (8 s, was 2,5) en zegt het
+  ("Je duel begint over 6 s", `Aftel.tekst`); NAAR HET BORD of het eind van
+  de aftel toont eerst het duel-intro (`_toon_lader`: RONDE n en JOUW DUEL,
+  jij en hij schuiven van opzij in, de sabels stempelen, een balk naar het
+  bord, `DUEL_INTRO_SEC` 3,2 s, met Animaties uit 60%; een tik gaat meteen
+  door) en pas dan de scene-wissel (was twee frames laadscherm). Geldt voor
+  elk duel. `bord_pad` leeg = niet wisselen, alleen `naar_bord_ms` zetten
+  (de check); `-- shot campaign_hub 42 laden` toont het intro, de inkomfilm
+  heeft een reeks "intro".
 - Godot: `$env:GODOT_PATH`, anders
   `C:\Users\maxni\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe`
   (console-variant `..._console.exe` voor terminal-output).

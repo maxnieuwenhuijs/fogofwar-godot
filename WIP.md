@@ -1,5 +1,36 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- De weg naar het bord: zichtbare aftel en een duel-intro
+
+Max: "het gaat nog steeds snel, het begin is goed en dan zie je je duel en dan
+ineens rambam bam ben je op het spel".
+
+- **Oorzaak:** na de klaarmelding (en bij elk duel) startte de hub het duel
+  na 2,5 s vanzelf, met alleen een balk zonder tekst, en het laadscherm "jij
+  tegen hem" stond er twee frames voordat de scene wisselde.
+- **De aftel** duurt nu `DUEL_AFTEL_SEC` 8 s en zegt het: "Je duel begint
+  over 6 s" onder de balk (`Aftel.tekst`/`tekst_fmt`, telt per seconde af).
+  "Blijf even in de hub" stopt hem, NAAR HET BORD gaat meteen.
+- **Het duel-intro** (`_toon_lader`, voorheen het laadscherm): RONDE n en
+  JOUW DUEL op de titelplaat, op een perkamenten band jouw kant en de zijne
+  (groot schild, naam, factie, saldo; dat van de vijand "?"), die van links en
+  van rechts inschuiven, de sabels die ertussen stempelen, en daaronder "Je
+  duel tegen X wordt geladen..." met een balk en "Tik om meteen te beginnen".
+  `DUEL_INTRO_SEC` 3,2 s (met Animaties uit 60%), dan pas de scene-wissel;
+  een tik gaat meteen door. De bot-duels lopen intussen al op hun thread.
+- **Testnaad:** `bord_pad` leeg = niet wisselen, alleen `naar_bord_ms`
+  zetten, zodat de check het hele pad kan meten zonder zijn scene kwijt te
+  raken.
+- Teksten: HUB_DUEL_STARTS_IN, HUB_DUEL_INTRO_TITLE, HUB_DUEL_INTRO_SKIP
+  (vertalingen weer zonder `--import` gebouwd, editor open; sleutel voor
+  sleutel tegen HEAD: alleen deze drie).
+- Checks: `-- klaarcheck` met de nieuwe fase duel (de hub zegt 8 s en telt af,
+  na 3 s nog in de hub, NAAR HET BORD = eerst het intro met inschuivende kanten,
+  het bord na 3,21 s, een tik = na 0,32 s), uicheck, herstelcheck 777 en 4242
+  wolf 0, resumecheck 777 1 en 4242 2 0, naad, koppel, beurtlicht, audiopaneel,
+  simcheck 0, uispel 777 5862e4c9 (de referentie), tests 2912/0, alle 25
+  hub-modi en het grootboek 0 fouten, klaarcheck ook met venster.
+
 ## 30 september -- De loting en de klaarmelding voor de start van een campagne
 
 Max: "toon voordat een campagne begint ook met bots en online. Eerst 1 voor 1
