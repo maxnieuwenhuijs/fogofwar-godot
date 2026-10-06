@@ -582,6 +582,26 @@ void fragment() {
 	ALPHA = kleur.a * val * mix(0.2, 1.0, zij);
 }
 """
+## De rand (6 oktober, Max: "randlicht ook goed voor de highlight wanneer de
+## tegenstander klaar is en je nog een paar laatste stappen moet doen, naast de
+## spotlight"): een gloeiende rand om het model van precies de pionnen met de
+## straal, als overlay-materiaal over elk deel van het stuk (fresnel: wat van je
+## af buigt licht op), in de kleur en de puls van de straal. Knop `beurt_rand`
+## (0 = uit). Opnieuw na een modelwissel, weg bij de dood. Puur beeld.
+const BEURT_RAND_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_back, shadows_disabled, fog_disabled;
+uniform vec4 kleur : source_color = vec4(1.0, 0.86, 0.5, 1.0);
+uniform float sterkte = 1.0;
+void fragment() {
+	// alleen de omtrek: wat bijna loodrecht van je af buigt (de zijkanten van het
+	// lijf), niet wat schuin naar je toe staat (van boven gezien het meeste)
+	float rand = 1.0 - clamp(abs(dot(normalize(NORMAL), normalize(VIEW))), 0.0, 1.0);
+	ALBEDO = kleur.rgb * smoothstep(0.62, 0.97, rand) * sterkte * 1.4;
+}
+"""
+static var _beurt_rand_shader: Shader = null
+var _beurt_rand_mat: ShaderMaterial = null
 var _beurt_licht: Node3D = null
 var _beurt_licht_aan: bool = false
 var _beurt_licht_mat: ShaderMaterial = null
@@ -595,6 +615,7 @@ func set_beurt_licht(aan: bool) -> void:
 	if aan == _beurt_licht_aan:
 		return
 	_beurt_licht_aan = aan
+	_zet_beurt_rand(aan)
 	if aan and _beurt_licht == null:
 		_bouw_beurt_licht()
 	if _beurt_licht != null:
@@ -664,15 +685,50 @@ func _bouw_beurt_licht() -> void:
 	add_child(_beurt_licht)
 
 
-## Sterkte uit de knop `beurt_licht` (sfeer-paneel), live.
+## Sterkte uit de knoppen `beurt_licht` en `beurt_rand` (sfeer-paneel), live.
 func zet_beurt_licht_sterkte() -> void:
+	_zet_beurt_rand(_beurt_licht_aan)
 	_beurt_puls(1.0)
+
+
+## De rand aan of uit op elk deel van het stuk (lichaam, wapen, prop).
+func _zet_beurt_rand(aan: bool) -> void:
+	if aan and fx("beurt_rand", 1.0) <= 0.0:
+		aan = false
+	if aan and _beurt_rand_mat == null:
+		if _beurt_rand_shader == null:
+			_beurt_rand_shader = Shader.new()
+			_beurt_rand_shader.code = BEURT_RAND_SHADER
+		_beurt_rand_mat = ShaderMaterial.new()
+		_beurt_rand_mat.shader = _beurt_rand_shader
+		_beurt_rand_mat.set_shader_parameter("kleur", BEURT_LICHT_KLEUR)
+		_beurt_rand_mat.set_shader_parameter("sterkte", fx("beurt_rand", 1.0))
+	if _piece == null or not is_instance_valid(_piece) or _beurt_rand_mat == null:
+		return
+	for g in _piece.find_children("*", "GeometryInstance3D", true, false):
+		var gi := g as GeometryInstance3D
+		if aan:
+			gi.material_overlay = _beurt_rand_mat
+		elif gi.material_overlay == _beurt_rand_mat:
+			gi.material_overlay = null
+
+
+## Draagt het stuk nu de rand? (voor `-- beurtlicht`)
+func beurt_rand_aan() -> bool:
+	if _piece == null or not is_instance_valid(_piece) or _beurt_rand_mat == null:
+		return false
+	for g in _piece.find_children("*", "GeometryInstance3D", true, false):
+		if (g as GeometryInstance3D).material_overlay == _beurt_rand_mat:
+			return true
+	return false
 
 
 func _beurt_puls(f: float) -> void:
 	if _beurt_licht_mat == null or _beurt_vlek_mat == null:
 		return
 	var sterkte: float = fx("beurt_licht", 1.0) * f
+	if _beurt_rand_mat != null:
+		_beurt_rand_mat.set_shader_parameter("sterkte", fx("beurt_rand", 1.0) * f)
 	var k := BEURT_LICHT_KLEUR
 	_beurt_licht_mat.set_shader_parameter("kleur", Color(k.r, k.g, k.b, BEURT_LICHT_ALPHA * sterkte))
 	_beurt_vlek_mat.albedo_color = Color(k.r, k.g, k.b, 0.55 * sterkte)
@@ -1278,6 +1334,7 @@ func stagger(world_dir: Vector3) -> void:
 ## force_die_clip: laat een SPECIFIEKE dood-clip spelen (Model-tuner) —
 ## leeg = willekeurige variant.
 func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee", force_die_clip: String = "") -> void:
+	_zet_beurt_rand(false)   # een lijk gloeit niet na
 	_kreet_af = kreet_al_gespeeld   # game.gd deed de kanonkreet al vóór de inslag
 	kreet_al_gespeeld = false
 	_dodelijke_kracht = strength
@@ -3062,6 +3119,8 @@ func _swap_piece(scene: PackedScene, auto_fit: bool = false) -> void:
 	for node in _piece.find_children("*", "GeometryInstance3D", true, false):
 		if node.is_in_group("team_tint"):
 			_tint_nodes.append(node)
+	if _beurt_licht_aan:
+		_zet_beurt_rand.call_deferred(true)   # na de wissel (en het wapen dat er net in komt)
 	_apply_team_texture()
 	# Geen team-sokkel meer onder .glb-modellen (besluit 6 juli): het
 	# team-onderscheid komt straks van de _team1/_team2-textures.

@@ -6,6 +6,14 @@ const Bestandsindex := preload("res://scripts/core/bestandsindex.gd")
 ## Modi (na `--`): (geen)=waaier, `open`=open-stand, `click`=klik-test op de + knop.
 
 func _ready() -> void:
+	# `fx:<knop>=<waarde>` (6 oktober): een effect-knop (effects_tuning.json) alleen
+	# voor deze run, voor elke modus; bv. `-- play fx:stijl_miniatuur=1` of
+	# `-- beurtlicht fx:beurt_rand=0`. Niets wordt bewaard.
+	for fx_arg in OS.get_cmdline_user_args():
+		if String(fx_arg).begins_with("fx:") and String(fx_arg).contains("="):
+			var fx_kv := String(fx_arg).substr(3).split("=")
+			PawnView.set_fx(fx_kv[0], float(fx_kv[1]))
+			print("[FX] %s = %s (alleen deze run)" % [fx_kv[0], fx_kv[1]])
 	if "weightio" in OS.get_cmdline_user_args():
 		# Per-factie-profiel: alleen de Muis-set wijkt af; de rest blijft default.
 		var profile := AIController.default_profile()
@@ -3215,6 +3223,24 @@ func _ready() -> void:
 				bl_fouten += 1
 		else:
 			print("[LICHT] (geen eigen beurt met precies een pion over; laatste-pion-meting overgeslagen)")
+		# De rand op 0: de straal blijft, de rand gaat eraf (en komt terug).
+		PawnView.set_fx("beurt_licht_vanaf", 30.0)
+		game._refresh_all()
+		var bl_randen := 0
+		for bl_pv in game._pawn_views.values():
+			if (bl_pv as PawnView).beurt_rand_aan():
+				bl_randen += 1
+		PawnView.set_fx("beurt_rand", 0.0)
+		for bl_pv in game._pawn_views.values():
+			(bl_pv as PawnView).zet_beurt_licht_sterkte()
+		bl_uit = _bl_meet(game)
+		print("[LICHT] rand: %d randen met de straal; rand op 0: %d stralen, %d fout" % [bl_randen, bl_uit[1], bl_uit[2]])
+		if bl_randen != bl_uit[1] or bl_randen == 0 or bl_uit[2] > 0:
+			print("[LICHT] FOUT: de rand hoort bij precies de pionnen met de straal, en weg te gaan op 0")
+			bl_fouten += 1
+		PawnView.set_fx("beurt_rand", 1.0)
+		for bl_pv in game._pawn_views.values():
+			(bl_pv as PawnView).zet_beurt_licht_sterkte()
 		# Sterkte 0: nooit een straal.
 		PawnView.set_fx("beurt_licht", 0.0)
 		PawnView.set_fx("beurt_licht_vanaf", 30.0)
@@ -5019,12 +5045,16 @@ func _bl_meet(g) -> Array:
 	kunnen = eigen_kunnen.size()
 	var hoort: bool = PawnView.fx("beurt_licht", 1.0) > 0.0 and drempel > 0 and kunnen <= drempel \
 			and st.phase == Phase.Type.ACTION and st.current_player == 1
+	var rand_hoort: bool = PawnView.fx("beurt_rand", 1.0) > 0.0
 	for pid in g._pawn_views:
 		var pv: PawnView = g._pawn_views[pid]
 		if pv._beurt_licht_aan:
 			aan += 1
 		var verwacht: bool = hoort and eigen_kunnen.has(int(pid))
 		if pv._beurt_licht_aan != verwacht:
+			fout += 1
+		# de rand (6 oktober) hoort precies bij de straal, tenzij beurt_rand 0 is
+		if pv.beurt_rand_aan() != (verwacht and rand_hoort):
 			fout += 1
 	return [kunnen, aan, fout]
 

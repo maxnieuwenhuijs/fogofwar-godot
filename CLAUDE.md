@@ -679,7 +679,16 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   venster: speelt tot je eigen actiebeurt, zet door tot er hooguit drie
   pionnen over zijn die nog kunnen en meet dat precies die de straal
   hebben, dan met drempel 1 alleen de laatste, en met sterkte 0 geen; met
-  venster `_shot_beurtlicht.png`).
+  venster `_shot_beurtlicht.png`). **Randlicht erbij (6 oktober, Max:
+  "randlicht ook goed voor de highlight wanneer de tegenstander klaar is en
+  je nog een paar laatste stappen moet doen, naast de spotlight"):** precies
+  die pionnen krijgen ook een gloeiende rand, `BEURT_RAND_SHADER` als
+  `material_overlay` op elk deel van het stuk (fresnel, alleen de omtrek:
+  `smoothstep(0,62; 0,97)`, de eerste versie maakte het hele poppetje wit),
+  in de kleur en puls van de straal; opnieuw na een modelwissel
+  (`_swap_piece`), weg bij de dood. Knop `beurt_rand` (0 = uit) in het
+  sfeer-paneel; `-- beurtlicht` meet dat de rand bij precies de straal
+  hoort en op 0 verdwijnt.
 - **Koppel-fase: je kaartkeuze blijft staan** (12 september, Max: "houd
   mijn kaart geselecteerd ook al is de AI eerst aan de beurt, totdat ik
   gelinkt heb"). Een kaart kiezen mag de hele koppel-fase, ook in de

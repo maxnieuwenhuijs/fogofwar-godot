@@ -3685,6 +3685,7 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "aura_gloed", "label": "aura-gloed (trom en vaandel)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "beurt_licht", "label": "lichtstraal laatste pionnen (sterkte)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "beurt_licht_vanaf", "label": "lichtstraal vanaf (pionnen die nog kunnen)", "min": 0.0, "max": 30.0, "step": 1.0, "def": 3.0},
+	{"key": "beurt_rand", "label": "randlicht laatste pionnen (sterkte, 0 = uit)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "dust", "label": "stofdeeltjes", "min": 0.0, "max": 3.0, "step": 0.01, "def": 1.0},
 	{"key": "footprints", "label": "voetsporen", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "footprint_dark", "label": "voetspoor-donkerte", "min": 0.0, "max": 1.0, "step": 0.01, "def": 0.32},
