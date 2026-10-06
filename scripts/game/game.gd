@@ -3741,7 +3741,7 @@ func _build_ambiance_panel() -> void:
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.add_theme_constant_override("separation", 2)
 	scroll.add_child(rows)
-	for d in AMBIANCE_DEFS:
+	for d in AMBIANCE_DEFS + _stijl_defs():
 		var row := HBoxContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var lbl := Label.new()
@@ -3776,6 +3776,17 @@ func _build_ambiance_panel() -> void:
 		add_child(_ambiance_panel)
 
 
+## De looks over het hele spelbeeld (scripts/vfx/stijl.gd) staan ook in het
+## sfeer-paneel: die beoordeel je het best in het spel zelf (6 oktober, Max: "de
+## tilt shift zie ik niet echt"). Bereik en standaard uit STIJL.KNOPPEN.
+func _stijl_defs() -> Array:
+	var uit: Array = []
+	for k in STIJL.KNOPPEN:
+		var m: Dictionary = STIJL.KNOPPEN[k]
+		uit.append({"key": k, "label": "stijl: %s" % m.label, "min": m.min, "max": m.max, "step": m.step, "def": m.def})
+	return uit
+
+
 func _on_ambiance_slider(value: float, key: String, val_label: Label) -> void:
 	PawnView.set_fx(key, value)
 	val_label.text = String.num(value, 3)
@@ -3786,6 +3797,8 @@ func _on_ambiance_slider(value: float, key: String, val_label: Label) -> void:
 		BEWEGING.zet_tempo(value)
 	elif key == "ui_wolk":
 		BEWEGING.zet_wolk(value)
+	elif key.begins_with("stijl_"):
+		STIJL.zet_op(_camera)
 
 
 ## Schrijft alle knoppen (sfeer + effecten) terug naar effects_tuning.json:

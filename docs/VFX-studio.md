@@ -75,7 +75,11 @@ Godot, daarna de concept-webpagina.
    kosten; aan = een schermvullende pass met tot een stuk of twintig
    textuur-lezingen per pixel, nog niet op een telefoon gemeten. Open: de
    lichtstand "neutraal zoals de Model-tuner" (wacht op wat Max met "moddif"
-   bedoelt).
+   bedoelt). **Later die dag** (Max: "de tilt shift zie ik niet echt"): de
+   looks staan ook in het sfeer-paneel van het spel (rijen "stijl: ...", live
+   op het echte spelbeeld), en de miniatuur rekent zijn scherpe band in het
+   spelbeeld: in de tuner het stuk tussen de panelen (daarvoor viel de vage
+   rand erachter en zag je bijna niets), in het spel het hele scherm.
 7. **Concept-webpagina** (`tools/vfx_studio.py`, zoals de geluid-studio; Max:
    "Webpagina, zoals de geluid-studio: elk effect is een rij. Er staat in waar
    en wanneer het gebeurt, met een promptvak voor concept-plaatjes, een knop

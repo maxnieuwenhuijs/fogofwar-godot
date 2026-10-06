@@ -1335,7 +1335,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `stijl_warmte`, `stijl_korrel`, `stijl_trappen`, standaard alle 0 = uit
   (vlak onzichtbaar). game.gd: `STIJL.zet_op(_camera)`. In de tuner groep
   "Stijl"; `-- vfxshot <id> [map] [tempo] knop=waarde` om een look te
-  bekijken. Stap 7, de concept-webpagina: `python tools/vfx_studio.py`
+  bekijken. **Ook in het sfeer-paneel van het spel** (rijen `stijl: ...`,
+  uit `STIJL.KNOPPEN`, live op het spelbeeld; Max: "de tilt shift zie ik niet
+  echt": hij stond uit, en in de tuner viel de vage rand achter de panelen).
+  De band van de miniatuur rekent in het spelbeeld (uniform `beeld`, in het
+  spel 0..1; de tuner zet het stuk tussen de panelen met `STIJL.zet_beeld`).
+  Stap 7, de concept-webpagina: `python tools/vfx_studio.py`
   (paneelknop "VFX-studio", poort 8775): per effect een rij met de versie
   uit het spel (`-- vfxstudio <map> [id]`, met venster: rustbeeld plus 20
   beelden van alleen het bord, de studio maakt er een bewegend webp van; een

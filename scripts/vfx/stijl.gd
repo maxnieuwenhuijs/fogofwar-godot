@@ -39,6 +39,7 @@ uniform vec4 rand_kleur : source_color = vec4(1.0, 0.9, 0.7, 1.0);
 uniform float miniatuur = 0.0;
 uniform float focus_y = 0.5;
 uniform float focus_band = 0.22;
+uniform vec2 beeld = vec2(0.0, 1.0);   // boven en onder van het spelbeeld (zet_beeld)
 uniform float warmte = 0.0;
 uniform float korrel = 0.0;
 uniform float trappen = 0.0;
@@ -67,9 +68,12 @@ void fragment() {
 	vec3 kleur = texture(scherm, uv).rgb;
 	if (miniatuur > 0.0) {
 		// buiten de scherpe band: een kring van acht monsters op een lagere
-		// resolutie, des te wijder naarmate je verder van de band zit
-		float buiten = max(abs(uv.y - focus_y) - focus_band, 0.0);
-		float straal = buiten * miniatuur * 0.06;
+		// resolutie, des te wijder naarmate je verder van de band zit. De band
+		// rekent in het spelbeeld (`beeld`): in het spel het hele scherm, in de
+		// VFX-tuner het stuk tussen de panelen.
+		float hoog = max(beeld.y - beeld.x, 0.001);
+		float buiten = max(abs((uv.y - beeld.x) / hoog - focus_y) - focus_band, 0.0);
+		float straal = buiten * miniatuur * 0.06 * hoog;
 		if (straal > 0.0005) {
 			float lod = clamp(log2(straal * VIEWPORT_SIZE.y * 0.25 + 1.0), 0.0, 5.0);
 			vec3 som = textureLod(scherm, uv, lod).rgb;
@@ -171,6 +175,17 @@ static func zet_op(camera: Camera3D) -> MeshInstance3D:
 		mi.position = Vector3(0.0, 0.0, -1.0)
 	pas_toe(mi)
 	return mi
+
+
+## Welk deel van het scherm het spelbeeld is (`boven` en `onder` als deel van de
+## hoogte, 0..1). In het spel het hele scherm (nooit gezet: de shader rekent dan
+## met 0..1); de VFX-tuner legt panelen over boven- en onderkant, en zonder dit
+## viel de vage rand van de miniatuur daarachter (Max, 6 oktober: "de tilt shift
+## zie ik niet echt").
+static func zet_beeld(mi: MeshInstance3D, boven: float, onder: float) -> void:
+	if mi == null or not is_instance_valid(mi):
+		return
+	(mi.material_override as ShaderMaterial).set_shader_parameter("beeld", Vector2(boven, onder))
 
 
 ## De knoppen uit effects_tuning.json naar de shader; alles 0 = onzichtbaar.

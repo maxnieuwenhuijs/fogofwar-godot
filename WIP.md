@@ -1,5 +1,32 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- Tilt-shift zichtbaar: in het spel te zetten, in de tuner te zien
+
+Max: "en de tilt shift zie ik niet echt?".
+
+- **Waarom niet:** in het spel stond hij uit (geen `stijl_miniatuur` in
+  effects_tuning.json; de standaard is 0). En in de VFX-tuner lag de vage rand
+  achter de panelen: de tuner toont alleen het midden van het scherm, precies
+  de scherpe band (0,5 +- 0,22), dus met de schuif op 1 werd alleen een strookje
+  bovenin wat vaag.
+- **`stijl.gd`:** uniform `beeld` (boven en onder van het spelbeeld, 0..1); de
+  band en de straal rekenen daarin. In het spel nooit gezet, dus het hele
+  scherm en precies het beeld van daarvoor. `STIJL.zet_beeld(mi, boven, onder)`;
+  de tuner zet het in `_zet_camera` (ook als een paneel van maat verandert).
+- **Sfeer-paneel (toets L, knop "ambiance"):** alle looks erbij, rijen
+  `stijl: ...` uit `STIJL.KNOPPEN`, live op het spelbeeld (`STIJL.zet_op`),
+  OPSLAAN bewaart ze. Zo zet je de tilt-shift aan terwijl je speelt.
+- **`-- vfxcheck`:** de band rekent in de tuner in het beeld tussen de panelen;
+  het sfeer-paneel heeft een schuif per look, de miniatuur gaat live aan en
+  weer terug, en in het spel blijft `beeld` ongezet.
+- Bekeken: `-- vfxshot miniatuur <map> 1.0 stijl_miniatuur=1` (boven en onder
+  in het tunerbeeld vaag, het midden scherp; daarvoor bijna niets) en
+  `-- play fx:stijl_miniatuur=1 fx:stijl_focus_band=0.25` (het kamp boven en
+  onder het bord vaag, het bord scherp).
+- Checks: vfxcheck PASS, `-- uispel 777` gelijk (`5862e4c9`), herstelcheck 777
+  0 verschillen (game.gd kreeg alleen de paneelrijen, die alleen met het
+  paneel open gebouwd worden).
+
 ## 6 oktober -- UI-stof alleen nog als een kaart omdraait
 
 Max: "en haal dat stof opwaaiing weg bij de UI, beetje te veel", en even later

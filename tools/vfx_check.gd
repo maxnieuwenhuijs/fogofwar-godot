@@ -42,8 +42,46 @@ static func run(host: Node) -> int:
 	_catalogus()
 	_geleverd()
 	await _tuner()
+	await _sfeer()
 	print("[VFX] %s: %d fouten" % ["PASS" if _fouten == 0 else "FAIL", _fouten])
 	return _fouten
+
+
+## De looks staan ook in het sfeer-paneel van het spel (toets L): een schuif zet
+## de knop live en het vlak over het spelbeeld volgt meteen (6 oktober, Max: "de
+## tilt shift zie ik niet echt"; een look over het hele beeld beoordeel je het
+## best in het spel zelf).
+static func _sfeer() -> void:
+	print("[VFX] sfeer-paneel")
+	var game: Node = load("res://scenes/game/game.tscn").instantiate()
+	_host.add_child(game)
+	await _wacht(0.5)
+	game.call("_toggle_ambiance_panel")
+	var paneel: Control = game.get("_ambiance_panel")
+	var schuif: HSlider = null
+	var rijen := 0
+	if paneel != null:
+		for rij in paneel.find_children("*", "HBoxContainer", true, false):
+			var l := rij.get_child(0) as Label
+			if l != null and l.text.begins_with("stijl: "):
+				rijen += 1
+				if l.text.contains("tilt-shift"):
+					schuif = rij.get_child(1) as HSlider
+	_ok(rijen == Catalogus.STIJL.KNOPPEN.size(), "elke look een schuif in het sfeer-paneel (%d)" % rijen)
+	var cam: Camera3D = game.get("_camera")
+	var vlak: MeshInstance3D = cam.get_node_or_null(Catalogus.STIJL.NAAM) if cam != null else null
+	_ok(schuif != null and vlak != null, "de miniatuur-schuif en het vlak over het spelbeeld zijn er")
+	if schuif != null and vlak != null:
+		var oud: float = PawnView.fx("stijl_miniatuur", 0.0)
+		var mat := vlak.material_override as ShaderMaterial
+		schuif.value = 1.0
+		_ok(vlak.visible and is_equal_approx(float(mat.get_shader_parameter("miniatuur")), 1.0),
+			"de schuif zet de miniatuur live aan op het spelbeeld")
+		_ok(mat.get_shader_parameter("beeld") == null, "in het spel rekent de band in het hele scherm")
+		schuif.value = oud
+		_ok(is_equal_approx(float(mat.get_shader_parameter("miniatuur")), oud), "en terug (%.2f)" % oud)
+	game.queue_free()
+	await _wacht(0.3)
 
 
 static func _catalogus() -> void:
@@ -178,6 +216,18 @@ static func _tuner() -> void:
 	_ok(is_equal_approx(PawnView.fx("smoke_size", 1.0), 2.25) and schuif != null and is_equal_approx(schuif.value, 2.25),
 		"een knop zetten: live in PawnView.fx en op de schuif")
 	tuner.call("zet_knop", "smoke_size", oud_waarde)
+	# de miniatuur rekent in het beeld tussen de panelen, net als in het spel in
+	# het hele scherm (anders viel de vage rand achter de panelen; Max: "de tilt
+	# shift zie ik niet echt")
+	tuner.call("kies", "miniatuur")
+	await _wacht(0.3)   # het onderpaneel krijgt zijn maat, de camera en de band volgen
+	var stijl: MeshInstance3D = tuner.get("_stijl")
+	var r: Rect2i = tuner.call("beeld_rect")
+	var h: float = maxf((tuner as Node).get_viewport().get_visible_rect().size.y, 1.0)
+	var beeld: Variant = (stijl.material_override as ShaderMaterial).get_shader_parameter("beeld") \
+		if stijl != null else null
+	_ok(beeld is Vector2 and (beeld as Vector2).distance_to(Vector2(float(r.position.y) / h, float(r.end.y) / h)) < 0.01,
+		"miniatuur: de scherpe band rekent in het beeld tussen de panelen (%s)" % str(beeld))
 	tuner.queue_free()
 	await _wacht(0.8)   # lopende recepten (een schot wacht tot de kogel aankomt) laten aflopen
 	_ok(Engine.time_scale == 1.0, "de tijd loopt weer gewoon na het sluiten")

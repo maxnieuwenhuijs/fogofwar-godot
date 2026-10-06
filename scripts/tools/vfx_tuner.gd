@@ -176,6 +176,9 @@ func _zet_camera() -> void:
 	var boven: float = (_boven.size.y if _boven != null else 0.0) / hoog
 	var onder: float = (_onder.size.y if _onder != null else 0.0) / hoog
 	_cam.v_offset = -(0.5 - (boven + 1.0 - onder) * 0.5) * _cam.size
+	# de looks rekenen in het stuk tussen de panelen, net als in het spel in het
+	# hele scherm (de vage rand van de miniatuur viel anders achter de panelen)
+	STIJL.zet_beeld(_stijl, boven, 1.0 - onder)
 
 
 func _process(delta: float) -> void:
