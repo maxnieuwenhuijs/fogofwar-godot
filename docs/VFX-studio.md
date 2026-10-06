@@ -76,13 +76,44 @@ Godot, daarna de concept-webpagina.
    textuur-lezingen per pixel, nog niet op een telefoon gemeten. Open: de
    lichtstand "neutraal zoals de Model-tuner" (wacht op wat Max met "moddif"
    bedoelt).
-7. **Concept-webpagina** (`tools/vfx_studio.py`, zoals de geluid-studio): per
-   effect uit de catalogus een rij met waar en wanneer, status, promptvak,
-   concept-plaatjes (een beeldmodel op Replicate), "maak filmpje" (Seedance
-   2.5), "dit is hem", notities, en ernaast de huidige versie uit het spel
-   (`-- vfxshot`). Plaatjes en filmpjes in `assets/vfx/referentie/<id>/` met
-   een `.gdignore`. Elk filmpje kost geld op Max zijn Replicate-account: de
-   pagina doet niets vanzelf.
+7. **Concept-webpagina** (`tools/vfx_studio.py`, zoals de geluid-studio; Max:
+   "Webpagina, zoals de geluid-studio: elk effect is een rij. Er staat in waar
+   en wanneer het gebeurt, met een promptvak voor concept-plaatjes, een knop
+   'maak filmpje' (Seedance), een knop 'dit is hem' en notities. Daarnaast
+   staat de huidige versie uit het spel."). **Gebouwd (6 oktober):**
+   - Rijen: de catalogus (rechtstreeks uit `vfx_catalogus.gd` gelezen, de
+     constanten uitgerekend) plus de wishlist (concept-prompt, wens); een
+     wens die alleen in de wishlist staat komt er ook bij, en "nieuwe wens"
+     zet er een regel in.
+   - In het spel nu: `-- vfxstudio <map> [id]` (met venster) speelt elk
+     effect in de VFX-tuner af en bewaart alleen het bord tussen de panelen:
+     een rustbeeld en 20 beelden op gelijke afstanden (tempo 0,5), de studio
+     maakt er een bewegend webp van. Een look die nog uit staat neemt hij op
+     in de `demo`-stand uit de catalogus. Knop "Spelbeelden maken" of per rij.
+   - Concepten via Replicate: plaatjes met Nano Banana 2 (standaard; ook Pro
+     en Seedream), met of zonder basis (een spelbeeld of een eerder plaatje,
+     "verder hierop"); filmpjes met Seedance 2.5, het plaatje of het
+     spelbeeld als eerste beeld (`image`, beeldverhouding `adaptive`), 5 s op
+     480p zonder geluid als standaard. De studio leest de invoer van een model
+     uit zijn schema bij Replicate (anders de lijst in het script), zet een
+     vaste zin achter elk filmpje (camera stil, effect een keer) en voor een
+     plaatje op een basis, allebei aan te passen onder "zinnen".
+   - Opdrachten lopen in een eigen thread; de pagina vraagt de stand op. Een
+     opdracht die nog liep als de studio dichtging, haalt hij bij de volgende
+     start op (al betaald). Wat Replicate maakt staat in
+     `results/vfx_studio/concept/<id>/` tot je het weggooit.
+   - "Dit is hem" kopieert naar `assets/vfx/referentie/<id>/beeld.*` en
+     `film.mp4`; prompts, notities, keuzes, "zo is hij goed" en de
+     instellingen staan in `assets/vfx/referentie/studio.json` (in git; de
+     map heeft een `.gdignore`).
+   - Kosten (indicatie, 6 oktober): een plaatje een paar cent (Nano Banana
+     Pro rond $0,13), Seedance 2.5
+     ongeveer $0,10-0,14 per seconde op 480p en $0,23-0,30 op 720p. Een
+     filmpje vraagt eerst om bevestiging met de geschatte prijs.
+   - Checks: `python tools/vfx_studio.py --proef` (de hele keten tegen een
+     nep-Replicate op deze machine, kost niets: sleutel, plaatje met en
+     zonder basis, filmpje, dit is hem, weg, geen tegoed, stoppen, hervatten,
+     nieuwe wens, de webserver) en `--overzicht` (de telling).
 
 ## Huisregels
 

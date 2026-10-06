@@ -1321,8 +1321,26 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `stijl_warmte`, `stijl_korrel`, `stijl_trappen`, standaard alle 0 = uit
   (vlak onzichtbaar). game.gd: `STIJL.zet_op(_camera)`. In de tuner groep
   "Stijl"; `-- vfxshot <id> [map] [tempo] knop=waarde` om een look te
-  bekijken. Volgende stap: de concept-webpagina (Replicate: beelden en
-  Seedance 2.5; sleutel in `%LOCALAPPDATA%\FogOfWar\replicate.key`).
+  bekijken. Stap 7, de concept-webpagina: `python tools/vfx_studio.py`
+  (paneelknop "VFX-studio", poort 8775): per effect een rij met de versie
+  uit het spel (`-- vfxstudio <map> [id]`, met venster: rustbeeld plus 20
+  beelden van alleen het bord, de studio maakt er een bewegend webp van; een
+  look die nog uit staat in de `demo`-stand van de catalogus), een
+  promptvak (leeg = de concept-prompt uit VFX-WISHLIST.md), plaatjes via
+  Replicate (Nano Banana 2, op een spelbeeld of eerder plaatje als basis),
+  filmpjes via Seedance 2.5 (`image` als eerste beeld, `adaptive`, 5 s,
+  480p, zonder geluid), "dit is hem" naar `assets/vfx/referentie/<id>/`
+  (`.gdignore`; prompts, notities, keuzes en instellingen in `studio.json`
+  daar), notities en "nieuwe wens" (schrijft een regel in de wishlist).
+  Concepten in `results/vfx_studio/concept/<id>/`, nooit vanzelf weg (ze
+  kostten geld); een lopende opdracht wordt na een herstart verder
+  opgehaald. Sleutel uit `REPLICATE_API_TOKEN` of
+  `%LOCALAPPDATA%\FogOfWar\replicate.key`, nooit in de repo. De pagina doet
+  niets vanzelf; een filmpje vraagt bevestiging met de geschatte prijs.
+  Checks: `--proef` (de hele keten tegen een nep-Replicate, kost niets) en
+  `--overzicht`. De studio leest de catalogus rechtstreeks uit de
+  GDScript-bron (`const`-regels uitgerekend, ook `_VUUR + [...]`); houd die
+  dus bij letterlijke lijsten, dicts en andere constanten.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

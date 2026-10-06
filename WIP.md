@@ -1,5 +1,82 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 7: de concept-webpagina
+
+Max: "moet dan met plaatjes werken als concept een prompt box of iets en dan
+ook nog met seedance 2.5 een filmpje maken op basis van de het concept vfx en
+dat dan maken?", en zijn voorstel: "Webpagina, zoals de geluid-studio: elk
+effect is een rij. Er staat in waar en wanneer het gebeurt, met een promptvak
+voor concept-plaatjes, een knop 'maak filmpje' (Seedance), een knop 'dit is
+hem' en notities. Daarnaast staat de huidige versie uit het spel."
+
+- **`tools/vfx_studio.py`** (paneelknop "VFX-studio", poort 8775): per effect
+  een rij in drie kolommen. Links naam, status, wanneer, de wens uit de
+  wishlist, de knoppen met hun waarde, notities en "zo is hij goed". In het
+  midden "in het spel nu": een bewegend plaatje van het effect in de
+  VFX-tuner plus een strip beeldjes; een klik maakt een beeldje de basis.
+  Rechts "dit is hem" (de keuze, groot), het promptvak en de concepten.
+- **Rijen:** de catalogus rechtstreeks uit `vfx_catalogus.gd` (de
+  `const`-regels uitgerekend, want de knoppenlijsten zijn `_VUUR + [...]`;
+  eerste versie las ze als JSON en viel om) plus VFX-WISHLIST.md
+  (concept-prompt en wens, op naam gekoppeld). Een wens die alleen in de
+  wishlist staat komt er ook bij; "nieuwe wens" onder elke groep schrijft er
+  een regel bij. De zes rijen zonder concept-prompt (de vier sterfgevallen,
+  het schadegetal, de lichtwens) hebben er een gekregen.
+- **In het spel nu:** `-- vfxstudio <map> [id]` (capture.tscn, met venster;
+  `VfxCheck.studio`) speelt elk effect dat in de tuner speelt af op tempo 0,5
+  en bewaart een rustbeeld en 20 beelden op gelijke afstanden, alleen het bord
+  tussen de panelen (`VfxTuner.beeld_rect`, geschaald naar de echte
+  beeldmaat), plus `catalogus.json`. Een look die in het spel nog uit staat
+  neemt hij op in zijn `demo`-stand (nieuw veld in de catalogus, alleen voor
+  de opname; vfxcheck controleert dat de demo-knoppen bij het effect horen).
+  De studio maakt er een bewegend webp van (480 breed, ware snelheid, een tel
+  stil op het eind). Knop "Spelbeelden maken (alle)", of per rij.
+- **Replicate:** plaatjes met Nano Banana 2 (standaard; ook Nano Banana Pro,
+  Seedream 5 Lite en 4.5), met of zonder basis: een spelbeeld of een eerder
+  plaatje ("verder hierop"); filmpjes met Seedance 2.5 met het plaatje of het
+  spelbeeld als eerste beeld. De invoer komt uit het schema van het model bij
+  Replicate (zonder sleutel uit de lijst in het script, overgenomen van de
+  API-pagina's): Seedance 2.5 kent `image` als eerste beeld (dan moet de
+  beeldverhouding `adaptive`), `duration` 4-30, `resolution` 480p of 720p,
+  `generate_audio` (uit) en `watermark` (uit). Beelden gaan als data-URI
+  (jpeg, hooguit 1280 px). Voor een plaatje op een basis zet de studio een
+  vaste zin ("Keep this image exactly as it is ... only add or change this
+  effect:"), achter elk filmpje "Fixed camera ... plays once"; allebei aan
+  te passen onder "zinnen".
+- **Opdrachten** lopen in een eigen thread met een meta-bestand per opdracht
+  in `results/vfx_studio/concept/<id>/`; de pagina vraagt de stand op en ververst
+  de rij als hij klaar is. Een opdracht die nog liep toen de studio dichtging,
+  haalt hij bij de volgende start alsnog op (al betaald); een die nooit
+  verstuurd is, staat als mislukt met "niets betaald". Stop annuleert bij
+  Replicate. Niets gaat vanzelf weg: weggooien vraagt bevestiging.
+- **Dit is hem:** kopie naar `assets/vfx/referentie/<id>/beeld.*` en
+  `film.mp4`; prompts, notities, keuzes, "zo is hij goed" en de instellingen
+  in `assets/vfx/referentie/studio.json` (in git; `.gdignore` in die map en in
+  `results/vfx_studio/`, anders importeert de open editor elk plaatje).
+- **Gevonden bij het kijken:** "op de basis" aanvinken zonder eerst een
+  beeldje te kiezen stuurde geen basis mee; nu is het eerste spelbeeld de
+  basis tot je een ander kiest. Zonder sleutel geeft Maak plaatje meteen een
+  melding in plaats van een mislukte opdracht.
+- **Geld:** de pagina doet niets vanzelf. Een filmpje vraagt bevestiging met
+  de geschatte prijs (indicatie van 6 oktober: Seedance 2.5 ongeveer
+  $0,10-0,14 per seconde op 480p, $0,23-0,30 op 720p); de sleutel staat nog
+  niet klaar (`%LOCALAPPDATA%\FogOfWar\replicate.key` ontbreekt), de pagina
+  heeft er een veld voor dat hem eerst bij Replicate controleert.
+- Checks: `python tools/vfx_studio.py --proef` PASS (33 stappen tegen een
+  nep-Replicate op deze machine, kost niets: sleutel weigeren en bewaren,
+  plaatje met en zonder basis met de juiste invoer, filmpje met de juiste
+  invoer, dit is hem en kies af, weg, buiten de map geweigerd, geen tegoed,
+  stoppen, hervatten na een herstart, notitie/prompt/goed, instellingen,
+  nieuwe wens en dubbele wens, pagina, overzicht, video met Range, bestanden
+  buiten de studio geweigerd); `--overzicht`: 33 effecten in 6 groepen, alle
+  met een wishlist-rij en een prompt; `-- vfxstudio` (met venster, via de
+  knop van de studio) 29 van 29 opgenomen, 0 fouten (131 MB jpg in results,
+  webp's 180 KB tot 1 MB); `-- vfxcheck` PASS; de pagina met en zonder
+  nep-concepten bekeken in headless Edge (alle kaartsoorten, de keuze, de
+  notitie); uispel 777 `5862e4c9` ongewijzigd, herstelcheck 777 en 4242 wolf 0,
+  resumecheck 777 1 en 4242 2 0, naad, koppel, beurtlicht, audiopaneel,
+  inkomcheck, uicheck PASS, simcheck 0, tests 2912/0.
+
 ## 6 oktober -- VFX-studio stap 6: stijl voor alle 3D-objecten
 
 Max: "kan je ook iets met shaders doen voor alle 3d objecten? of hoe moet ik

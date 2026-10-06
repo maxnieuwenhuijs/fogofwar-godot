@@ -61,6 +61,9 @@ static func _catalogus() -> void:
 		for k in e.knoppen:
 			if not Catalogus.bekend(String(k)):
 				fout_regels.append("%s: knop %s zonder metadata" % [id, k])
+		for k in e.get("demo", {}):
+			if not (e.knoppen as Array).has(k):
+				fout_regels.append("%s: demo-knop %s hoort niet bij dit effect" % [id, k])
 	var alle: Dictionary = Catalogus.KNOPPEN.duplicate()
 	alle.merge(Catalogus.STIJL.KNOPPEN)
 	for k in alle:
@@ -166,3 +169,112 @@ static func shot(host: Node, id: String, map: String = "", tempo: float = 1.0, k
 	print("[VFXSHOT] %s klaar (duur %.1f s, %d fouten)" % [id, duur, _fouten])
 	tuner.queue_free()
 	return _fouten
+
+
+## `-- vfxstudio <map> [id]` (met venster; tools/vfx_studio.py start dit): elk
+## effect dat in de tuner speelt, opgenomen voor de kolom "in het spel nu" van de
+## VFX-studio. Per effect <map>/<id>/: rust.jpg (het toneel vlak voor het
+## effect), spel_00..19.jpg op gelijke afstanden in de tijd, en info.json; alleen
+## het bord tussen de panelen. Plus <map>/catalogus.json (de catalogus met de
+## huidige knoppen, de terugval van de studio). Een look die in het spel nog uit
+## staat (de stijl) neemt hij op in de `demo`-stand van de catalogus; die geldt
+## alleen voor de opname.
+const STUDIO_BEELDEN := 20
+const STUDIO_TEMPO := 0.5
+
+static func studio(host: Node, map: String, alleen: String = "") -> int:
+	_host = host
+	_fouten = 0
+	if DisplayServer.get_name() == "headless":
+		print("[VFXSTUDIO] alleen met venster (headless tekent niets)")
+		return 1
+	DirAccess.make_dir_recursive_absolute(map)
+	var gi := FileAccess.open(map.path_join(".gdignore"), FileAccess.WRITE)
+	if gi != null:
+		gi.close()
+	var cf := FileAccess.open(map.path_join("catalogus.json"), FileAccess.WRITE)
+	if cf != null:
+		cf.store_string(JSON.stringify(Catalogus.als_data(), "\t"))
+		cf.close()
+	var tuner: Node = (load("res://scenes/tools/VfxTuner.tscn") as PackedScene).instantiate()
+	host.add_child(tuner)
+	await _wacht(0.8)
+	var n := 0
+	for e in Catalogus.EFFECTEN:
+		if String(e.get("speel", "")) == "" or (alleen != "" and String(e.id) != alleen):
+			continue
+		n += 1
+		print("[VFXSTUDIO] bezig %s" % e.id)
+		var fout: String = await _studio_effect(host, tuner, e, map.path_join(String(e.id)))
+		if fout == "":
+			print("[VFXSTUDIO] %s ok" % e.id)
+		else:
+			_fouten += 1
+			print("[VFXSTUDIO] %s FOUT %s" % [e.id, fout])
+	Engine.time_scale = 1.0
+	tuner.queue_free()
+	await _wacht(0.8)
+	print("[VFXSTUDIO] klaar: %d effecten, %d fouten" % [n, _fouten])
+	return _fouten
+
+
+static func _studio_effect(host: Node, tuner: Node, e: Dictionary, map: String) -> String:
+	DirAccess.make_dir_recursive_absolute(map)
+	for oud in DirAccess.get_files_at(map):
+		DirAccess.remove_absolute(map.path_join(oud))
+	tuner.call("kies", String(e.id))
+	var terug: Dictionary = {}
+	var demo: Dictionary = e.get("demo", {})
+	for k in demo:
+		var nu: float = PawnView.fx(String(k), float(Catalogus.knop(String(k)).def))
+		if absf(nu) < 0.001:
+			terug[k] = nu
+			tuner.call("zet_knop", String(k), float(demo[k]))
+	await _wacht(0.5)
+	var fout := ""
+	if not await _bewaar_beeld(host, tuner, map.path_join("rust.jpg")):
+		fout = "rust-beeld niet bewaard"
+	Engine.time_scale = STUDIO_TEMPO
+	var duur: float = tuner.call("speel")
+	var lengte := clampf(duur + 0.5, 1.5, 3.5)   # in spel-seconden
+	var stap := lengte / float(STUDIO_BEELDEN)
+	if duur <= 0.0:
+		fout = "speelt niet"
+	else:
+		var start := Time.get_ticks_msec()
+		var mislukt := 0
+		for i in STUDIO_BEELDEN:
+			var doel: int = start + int((float(i) + 0.5) * stap / STUDIO_TEMPO * 1000.0)
+			while Time.get_ticks_msec() < doel:
+				await host.get_tree().process_frame
+			if not await _bewaar_beeld(host, tuner, map.path_join("spel_%02d.jpg" % i)):
+				mislukt += 1
+		if mislukt > 0 and fout == "":
+			fout = "%d beelden niet bewaard" % mislukt
+	Engine.time_scale = 1.0
+	for k in terug:
+		tuner.call("zet_knop", String(k), float(terug[k]))
+	var f := FileAccess.open(map.path_join("info.json"), FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify({"id": e.id, "duur": duur, "lengte": lengte, "stap": stap,
+			"beelden": STUDIO_BEELDEN, "tempo": STUDIO_TEMPO, "demo": demo}, "\t"))
+		f.close()
+	return fout
+
+
+## Het bord tussen de panelen als jpg (de beeldmaat kan van de zichtbare rect
+## verschillen als het venster geschaald is).
+static func _bewaar_beeld(host: Node, tuner: Node, pad: String) -> bool:
+	await RenderingServer.frame_post_draw
+	var img := host.get_viewport().get_texture().get_image()
+	if img == null:
+		return false
+	var vp: Vector2 = host.get_viewport().get_visible_rect().size
+	var r: Rect2i = tuner.call("beeld_rect")
+	var sx: float = float(img.get_width()) / maxf(vp.x, 1.0)
+	var sy: float = float(img.get_height()) / maxf(vp.y, 1.0)
+	var uit := Rect2i(int(r.position.x * sx), int(r.position.y * sy), int(r.size.x * sx), int(r.size.y * sy))
+	uit = uit.intersection(Rect2i(0, 0, img.get_width(), img.get_height()))
+	if uit.size.x < 8 or uit.size.y < 8:
+		return false
+	return img.get_region(uit).save_jpg(pad, 0.88) == OK

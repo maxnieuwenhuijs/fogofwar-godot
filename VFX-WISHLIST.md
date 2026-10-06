@@ -13,6 +13,11 @@ De concept-prompt (Engels, voor het beeldmodel en Seedance) beschrijft het
 effect zoals het in het spel moet ogen: van schuin boven, op het houten bord,
 kort en los van de achtergrond. Pas hem gerust aan.
 
+De VFX-studio (`python tools/vfx_studio.py`, paneelknop "VFX-studio") zet elke
+rij hiernaast: de versie uit het spel, een promptvak (leeg = de prompt uit deze
+tabel), plaatjes en filmpjes via Replicate, "dit is hem" en notities. Een
+nieuwe wens kun je ook daar invullen; hij komt dan als regel in deze tabel.
+
 ## 1. Kruitdamp en vuurmond
 
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
@@ -43,7 +48,7 @@ kort en los van de achtergrond. Pas hem gerust aan.
 |---|---|---|---|---|
 | Vonken op metaal | treffer op het kuras (hp-pion) | spel | 6 okt: alleen nog op metaal, met een witte flits | Bright yellow sparks bursting from a bullet impact, miniature scale, dark background. |
 | Treffer: flits, wankelen, wond | geraakt en overleeft | spel | | A miniature soldier figure flinching from a hit, a small spurt of blood from the chest, top-down angled view. |
-| Schadegetal (-N) | boven een geraakte pion | spel | | |
+| Schadegetal (-N) | boven een geraakte pion | spel | | A small red damage number "-2" popping up above a miniature soldier figure on a wooden war-game board, bold game-style digits that float up and fade, top-down angled view. |
 | Inslag per materiaal | elke treffer | spel | 6 okt: vlees rode nevel en spatjes, hout splinters, metaal vonken (zoals het geluid); knoppen inslag per materiaal en inslag: hoeveel | Three impacts side by side on a miniature board: a red blood splash on cloth, wooden splinters flying from a cannon carriage, bright sparks off a steel cuirass. |
 | Bloedwaaier op de grond | een dode | spel | 6 okt: langgerekte spatten van de klap af, na elkaar; knop bloedwaaier | Directional blood splatter on a wooden board after a hit, stylized, top-down view. |
 
@@ -51,10 +56,10 @@ kort en los van de achtergrond. Pas hem gerust aan.
 
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
 |---|---|---|---|---|
-| Sterven door een musketkogel | kill met het musket | spel | | |
-| Sterven door een kanonskogel (gibs) | kill met het kanon | spel | | |
-| Sterven door de bajonet | kill van dichtbij | spel | | |
-| Doormidden (sabelhouw) | kill met de charge | spel | | |
+| Sterven door een musketkogel | kill met het musket | spel | | A miniature animal soldier figure on a wooden war-game board is hit by a musket ball and topples backwards, a small puff of red mist and a little dust, stylized, top-down angled view. |
+| Sterven door een kanonskogel (gibs) | kill met het kanon | spel | | A cannonball strikes a miniature animal soldier figure on a wooden war-game board and the figure bursts apart like a broken toy, pieces flying with a red splash and a cloud of dust, stylized, top-down angled view. |
+| Sterven door de bajonet | kill van dichtbij | spel | | A miniature animal soldier figure is struck by a bayonet thrust and collapses on a wooden war-game board, a small red splash, stylized, top-down angled view. |
+| Doormidden (sabelhouw) | kill met de charge | spel | | A cavalry sabre slash cuts a miniature animal soldier figure in two on a wooden war-game board, the halves tumbling apart with a red spray, stylized and toy-like, top-down angled view. |
 
 ## 5. Vuur en explosies
 
@@ -79,4 +84,4 @@ actie ziet). Effecten (rook, vuur, bloed) tekenen er scherp overheen.
 | Miniatuur (tilt-shift) | altijd | spel | 6 okt: boven en onder vaag, scherp op een band; knoppen hoogte en breedte van de band | A tilt-shift photograph of a miniature war-game board with animal soldiers, sharp in the middle band and softly blurred at the top and bottom. |
 | Kleurstemming en korrel | altijd | spel | 6 okt: koel tot warm, filmkorrel | A miniature battlefield board with animal soldiers in warm golden afternoon light with subtle film grain, top-down angled view. |
 | Kleurtrappen (cel) | altijd | spel | 6 okt: de lichtheid in een paar treden, een getekende stripstijl | A miniature war-game board with animal soldiers in a cel-shaded comic style with flat bands of light and shadow, top-down angled view. |
-| Licht zoals in de Model-tuner | altijd | wens | Max: "in moddif zien de modellen er mooier uit"; wat is moddif? | |
+| Licht zoals in de Model-tuner | altijd | wens | Max: "in moddif zien de modellen er mooier uit"; wat is moddif? | The same miniature war-game board with animal soldiers, lit by soft neutral studio light: bright and even, clean colors, gentle soft shadows, top-down angled view. |

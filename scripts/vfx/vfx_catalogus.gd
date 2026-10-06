@@ -210,19 +210,23 @@ const EFFECTEN: Array = [
 	# --- Stijl: looks voor alle 3D-objecten (stap 6, scripts/vfx/stijl.gd) -------
 	# Een look staat altijd aan zodra zijn knop boven 0 staat; Speel schiet een
 	# musket af zodat je hem in actie ziet. Alles standaard uit.
+	# `demo`: de stand waarin de VFX-studio een look opneemt zolang hij in het
+	# spel nog uit staat (alleen voor die opname, niet bewaard).
 	{"id": "inktranden", "groep": "stijl", "naam": "Inktranden (gravure)", "status": "spel", "speel": "stijl",
 		"wanneer": "een donkere lijn om elk model, elke prop en waar het bord van kleur verspringt, zoals de gravures",
-		"knoppen": ["stijl_inkt", "stijl_inkt_dikte"]},
+		"knoppen": ["stijl_inkt", "stijl_inkt_dikte"], "demo": {"stijl_inkt": 1.0}},
 	{"id": "randlicht", "groep": "stijl", "naam": "Randlicht", "status": "spel", "speel": "stijl",
 		"wanneer": "de binnenkant van elk silhouet licht warm op, de modellen komen los van het bord",
-		"knoppen": ["stijl_rand"]},
+		"knoppen": ["stijl_rand"], "demo": {"stijl_rand": 1.0}},
 	{"id": "miniatuur", "groep": "stijl", "naam": "Miniatuur (tilt-shift)", "status": "spel", "speel": "stijl",
 		"wanneer": "boven en onder in beeld vaag, alsof je een echt tafelspel fotografeert",
-		"knoppen": ["stijl_miniatuur", "stijl_focus_y", "stijl_focus_band"]},
+		"knoppen": ["stijl_miniatuur", "stijl_focus_y", "stijl_focus_band"], "demo": {"stijl_miniatuur": 1.0}},
 	{"id": "kleurstemming", "groep": "stijl", "naam": "Kleurstemming en korrel", "status": "spel", "speel": "stijl",
-		"wanneer": "het hele beeld warmer of koeler, met filmkorrel", "knoppen": ["stijl_warmte", "stijl_korrel"]},
+		"wanneer": "het hele beeld warmer of koeler, met filmkorrel", "knoppen": ["stijl_warmte", "stijl_korrel"],
+		"demo": {"stijl_warmte": 0.6, "stijl_korrel": 0.5}},
 	{"id": "kleurtrappen", "groep": "stijl", "naam": "Kleurtrappen (cel)", "status": "spel", "speel": "stijl",
-		"wanneer": "de lichtheid in een paar treden, een getekende stripstijl", "knoppen": ["stijl_trappen"]},
+		"wanneer": "de lichtheid in een paar treden, een getekende stripstijl", "knoppen": ["stijl_trappen"],
+		"demo": {"stijl_trappen": 0.8}},
 	{"id": "licht_neutraal", "groep": "stijl", "naam": "Licht zoals in de Model-tuner", "status": "wens", "speel": "",
 		"wanneer": "Max: in moddif zien de modellen er mooier uit (wat is moddif? gelezen als de Model-tuner: neutraler, helderder licht)",
 		"knoppen": []},

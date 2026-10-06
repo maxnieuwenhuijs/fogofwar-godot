@@ -723,6 +723,15 @@ func toneel() -> Node3D:
 	return _toneel
 
 
+## Het stuk beeld tussen de panelen (in de eenheden van de zichtbare rect): de
+## opnames van de VFX-studio (`-- vfxstudio`) knippen alleen het bord eruit.
+func beeld_rect() -> Rect2i:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var boven: float = _boven.size.y if _boven != null else 0.0
+	var onder: float = _onder.size.y if _onder != null else 0.0
+	return Rect2i(0, int(boven), int(vp.x), maxi(int(vp.y - boven - onder), 1))
+
+
 ## Een donker, compact thema voor de panelen (een werkbank, geen spelscherm).
 func _thema() -> Theme:
 	var th := Theme.new()

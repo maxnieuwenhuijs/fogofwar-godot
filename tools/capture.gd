@@ -132,6 +132,17 @@ func _ready() -> void:
 		get_tree().quit(0 if vshot_fouten == 0 else 1)
 		return
 
+	if "vfxstudio" in OS.get_cmdline_user_args():
+		# `-- vfxstudio <map> [id]` (met venster; tools/vfx_studio.py start dit):
+		# elk effect opgenomen voor de kolom "in het spel nu" van de VFX-studio.
+		var sargs := OS.get_cmdline_user_args()
+		var si := sargs.find("vfxstudio")
+		var smap: String = String(sargs[si + 1]) if sargs.size() > si + 1 else "user://vfxstudio"
+		var sid: String = String(sargs[si + 2]) if sargs.size() > si + 2 else ""
+		var sfouten: int = await preload("res://tools/vfx_check.gd").studio(self, smap, sid)
+		get_tree().quit(0 if sfouten == 0 else 1)
+		return
+
 	if "inkomfilm" in OS.get_cmdline_user_args():
 		# UI-beweging: plaatjes halverwege en aan het eind (met venster, tempo 0,5).
 		# `-- inkomfilm [uitmap] [reeks...]`, standaard user://inkomfilm en alles.
