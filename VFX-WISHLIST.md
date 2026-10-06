@@ -64,3 +64,19 @@ kort en los van de achtergrond. Pas hem gerust aan.
 | Kanon gaat kapot | kanon vernietigd | spel | 6 okt: het kruit ontploft, de affuit spat uiteen, het wrak brandt na; een kanon bloedt niet meer | A miniature wooden field cannon blown apart: splinters and a wheel flying, a column of dark smoke and small flames on the wreck, top-down angled view. |
 | Explosie (kruitvat) | explosie | spel | 6 okt: flits, vuurbal (kanonsvlam), stofkring, rookkolom, splinters, vonken; nu bij een kanon, straks ook kruitvaten | A small gunpowder barrel exploding on a miniature board: an orange fireball, a ring of smoke and flying wooden staves, top-down angled view. |
 | Vuur op het bord | iets blijft branden | spel | 6 okt: vlammen uit een eigen shader (geen textuur), flakkerend licht, rook, vonkjes; knoppen vuur: maat en brandt na | Small flames licking up from burning debris on a wooden game board, gentle smoke, top-down angled view. |
+
+## 6. Stijl (alle 3D)
+
+Een look geldt voor het hele beeld: elk model, elke prop en het bord, ook
+modellen die er later bij komen. Alles staat standaard uit; in de tuner zet
+je een look aan met zijn schuif (Speel schiet een musket af, zodat je hem in
+actie ziet). Effecten (rook, vuur, bloed) tekenen er scherp overheen.
+
+| Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
+|---|---|---|---|---|
+| Inktranden (gravure) | altijd | spel | 6 okt: een donkere lijn om elk model en waar het bord van kleur verspringt, zoals de gravures van de emblemen; knoppen inktranden en dikte | A miniature war-game board with animal soldier figures rendered with dark ink outlines, like an engraving or a hand-inked illustration, top-down angled view. |
+| Randlicht | altijd | spel | 6 okt: de binnenkant van elk silhouet licht warm op | Miniature animal soldier figures on a wooden board with a warm glowing rim light along their silhouettes, top-down angled view. |
+| Miniatuur (tilt-shift) | altijd | spel | 6 okt: boven en onder vaag, scherp op een band; knoppen hoogte en breedte van de band | A tilt-shift photograph of a miniature war-game board with animal soldiers, sharp in the middle band and softly blurred at the top and bottom. |
+| Kleurstemming en korrel | altijd | spel | 6 okt: koel tot warm, filmkorrel | A miniature battlefield board with animal soldiers in warm golden afternoon light with subtle film grain, top-down angled view. |
+| Kleurtrappen (cel) | altijd | spel | 6 okt: de lichtheid in een paar treden, een getekende stripstijl | A miniature war-game board with animal soldiers in a cel-shaded comic style with flat bands of light and shadow, top-down angled view. |
+| Licht zoals in de Model-tuner | altijd | wens | Max: "in moddif zien de modellen er mooier uit"; wat is moddif? | |

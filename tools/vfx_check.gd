@@ -59,10 +59,12 @@ static func _catalogus() -> void:
 		if String(e.status) == "spel" and String(e.get("speel", "")) == "" and String(e.get("notitie", "")) == "":
 			fout_regels.append("%s: zit in het spel maar speelt niet in de tuner, zonder notitie waarom" % id)
 		for k in e.knoppen:
-			if not Catalogus.KNOPPEN.has(String(k)):
+			if not Catalogus.bekend(String(k)):
 				fout_regels.append("%s: knop %s zonder metadata" % [id, k])
-	for k in Catalogus.KNOPPEN:
-		var m: Dictionary = Catalogus.KNOPPEN[k]
+	var alle: Dictionary = Catalogus.KNOPPEN.duplicate()
+	alle.merge(Catalogus.STIJL.KNOPPEN)
+	for k in alle:
+		var m: Dictionary = alle[k]
 		if not (float(m.min) <= float(m.def) and float(m.def) <= float(m.max)) or float(m.step) <= 0.0:
 			fout_regels.append("knop %s: standaard buiten het bereik of stap 0" % k)
 	_ok(fout_regels.is_empty(), "%d effecten in %d groepen, %d knoppen%s" % [Catalogus.EFFECTEN.size(),
@@ -127,7 +129,7 @@ static func _tuner() -> void:
 
 ## Plaatjes van een effect (met venster): kiest het, speelt het op `tempo` en
 ## schiet op vaste momenten (echte tijd) een plaatje.
-static func shot(host: Node, id: String, map: String = "", tempo: float = 1.0) -> int:
+static func shot(host: Node, id: String, map: String = "", tempo: float = 1.0, knoppen: Dictionary = {}) -> int:
 	_host = host
 	_fouten = 0
 	if DisplayServer.get_name() == "headless":
@@ -142,6 +144,8 @@ static func shot(host: Node, id: String, map: String = "", tempo: float = 1.0) -
 	host.add_child(tuner)
 	await _wacht(0.8)
 	tuner.call("kies", id)
+	for k in knoppen:
+		tuner.call("zet_knop", String(k), float(knoppen[k]))
 	await _wacht(0.6)
 	Engine.time_scale = tempo
 	var duur: float = tuner.call("speel")

@@ -114,13 +114,21 @@ func _ready() -> void:
 		return
 
 	if "vfxshot" in OS.get_cmdline_user_args():
-		# `-- vfxshot <id> [map] [tempo]` (met venster): plaatjes van een effect.
+		# `-- vfxshot <id> [map] [tempo] [knop=waarde ...]` (met venster): plaatjes
+		# van een effect; knoppen gelden alleen voor deze opname (niet bewaard).
 		var vargs := OS.get_cmdline_user_args()
 		var vi := vargs.find("vfxshot")
-		var vid: String = String(vargs[vi + 1]) if vargs.size() > vi + 1 else "schot_musket"
-		var vmap: String = String(vargs[vi + 2]) if vargs.size() > vi + 2 else ""
-		var vtempo: float = float(vargs[vi + 3]) if vargs.size() > vi + 3 else 1.0
-		var vshot_fouten: int = await preload("res://tools/vfx_check.gd").shot(self, vid, vmap, vtempo)
+		var vrest: Array = []
+		var vknoppen: Dictionary = {}
+		for a in vargs.slice(vi + 1):
+			if String(a).contains("="):
+				vknoppen[String(a).get_slice("=", 0)] = float(String(a).get_slice("=", 1))
+			else:
+				vrest.append(String(a))
+		var vid: String = String(vrest[0]) if vrest.size() > 0 else "schot_musket"
+		var vmap: String = String(vrest[1]) if vrest.size() > 1 else ""
+		var vtempo: float = float(vrest[2]) if vrest.size() > 2 else 1.0
+		var vshot_fouten: int = await preload("res://tools/vfx_check.gd").shot(self, vid, vmap, vtempo, vknoppen)
 		get_tree().quit(0 if vshot_fouten == 0 else 1)
 		return
 

@@ -18,6 +18,7 @@ const BEWEGING := preload("res://scripts/ui/ui_beweging.gd")
 ## De effecten van het bord (6 oktober, docs/VFX-studio.md): schot, vuurmond,
 ## vonken en schadegetal op een plek, zodat de VFX-tuner dezelfde code afspeelt.
 const VFX := preload("res://scripts/vfx/vfx.gd")
+const STIJL := preload("res://scripts/vfx/stijl.gd")
 const PAWN_Y := 0.05
 
 ## AI difficulty: 0 = Easy, 1 = Medium, 2 = Hard
@@ -137,6 +138,7 @@ func _ready() -> void:
 	_setup_board_model()
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
+	STIJL.zet_op(_camera)  # de looks over het hele beeld (VFX-tuner, groep Stijl); standaard uit
 	# F4.3g: camera EN lichten onder één kijk-pivot, zodat voor speler 2 het
 	# hele gezichtspunt (inclusief zon, spot en rim) 180 graden om het
 	# bordcentrum draait. De pivot staat op identiteit, dus de kinderen

@@ -65,11 +65,17 @@ Godot, daarna de concept-webpagina.
    met shaders doen voor alle 3d objecten", en bij de keuze welke looks: "een
    studio om het allemaal uit te proberen, in moddif zien de modellen er mooier
    uit"; eerst de effecten, dan dit). Een groep "Stijl" in de VFX-tuner waarin
-   elke look een aan/uit en schuifjes heeft: over het hele beeld inktranden
-   (gravure, zoals de emblemen), miniatuur-scherpte (tilt-shift), kleurgrading
-   en korrel; per materiaal randlicht en cel-shading (op de plek waar pionnen,
-   props en het bord geladen worden, niets per model); en lichtstanden (het
-   spel, neutraal zoals de Model-tuner). Telefoonkosten meten.
+   elke look een schuif heeft. **Gebouwd (6 oktober):** alles als EEN shader
+   over het camerabeeld (`scripts/vfx/stijl.gd`), dus niets per model of per
+   materiaal: inktranden (gravure, zoals de emblemen; uit diepte- en
+   kleursprongen), randlicht (de binnenkant van elk silhouet, uit de diepte),
+   miniatuur-scherpte (tilt-shift), kleurstemming, korrel en kleurtrappen
+   (cel). Het vlak tekent als eerste van de doorzichtige laag, zodat de
+   effecten er scherp overheen komen. Alles uit = het vlak onzichtbaar, geen
+   kosten; aan = een schermvullende pass met tot een stuk of twintig
+   textuur-lezingen per pixel, nog niet op een telefoon gemeten. Open: de
+   lichtstand "neutraal zoals de Model-tuner" (wacht op wat Max met "moddif"
+   bedoelt).
 7. **Concept-webpagina** (`tools/vfx_studio.py`, zoals de geluid-studio): per
    effect uit de catalogus een rij met waar en wanneer, status, promptvak,
    concept-plaatjes (een beeldmodel op Replicate), "maak filmpje" (Seedance

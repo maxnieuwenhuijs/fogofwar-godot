@@ -6,6 +6,8 @@ extends RefCounted
 ## lezen hem; de knoppen zelf staan in assets/models/effects_tuning.json en de
 ## code leest ze met `PawnView.fx(sleutel, standaard)`. Zonder class_name:
 ## `const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")`.
+
+const STIJL := preload("res://scripts/vfx/stijl.gd")
 ##
 ## Een effect: id, groep, naam, wanneer (in het spel), knoppen (sleutels uit
 ## KNOPPEN), status ("spel" = zit erin, "wens" = nog te bouwen, "diorama" = in
@@ -20,6 +22,7 @@ const GROEPEN: Array = [
 	{"id": "bloed", "naam": "Bloed en inslag"},
 	{"id": "dood", "naam": "Sterven en brokstukken"},
 	{"id": "vuur", "naam": "Vuur en explosies"},
+	{"id": "stijl", "naam": "Stijl (alle 3D)"},
 ]
 
 ## Elke knop: label, bereik, stap en standaard (dezelfde als in de Model-tuner,
@@ -204,6 +207,25 @@ const EFFECTEN: Array = [
 	{"id": "vuur_bord", "groep": "vuur", "naam": "Vuur op het bord", "status": "spel", "speel": "vuur",
 		"wanneer": "iets blijft branden (het wrak van een kanon): vlammen, flakkerend licht, rook, vonkjes",
 		"knoppen": ["vuur_maat", "vuur_duur", "smoke_wind"]},
+	# --- Stijl: looks voor alle 3D-objecten (stap 6, scripts/vfx/stijl.gd) -------
+	# Een look staat altijd aan zodra zijn knop boven 0 staat; Speel schiet een
+	# musket af zodat je hem in actie ziet. Alles standaard uit.
+	{"id": "inktranden", "groep": "stijl", "naam": "Inktranden (gravure)", "status": "spel", "speel": "stijl",
+		"wanneer": "een donkere lijn om elk model, elke prop en waar het bord van kleur verspringt, zoals de gravures",
+		"knoppen": ["stijl_inkt", "stijl_inkt_dikte"]},
+	{"id": "randlicht", "groep": "stijl", "naam": "Randlicht", "status": "spel", "speel": "stijl",
+		"wanneer": "de binnenkant van elk silhouet licht warm op, de modellen komen los van het bord",
+		"knoppen": ["stijl_rand"]},
+	{"id": "miniatuur", "groep": "stijl", "naam": "Miniatuur (tilt-shift)", "status": "spel", "speel": "stijl",
+		"wanneer": "boven en onder in beeld vaag, alsof je een echt tafelspel fotografeert",
+		"knoppen": ["stijl_miniatuur", "stijl_focus_y", "stijl_focus_band"]},
+	{"id": "kleurstemming", "groep": "stijl", "naam": "Kleurstemming en korrel", "status": "spel", "speel": "stijl",
+		"wanneer": "het hele beeld warmer of koeler, met filmkorrel", "knoppen": ["stijl_warmte", "stijl_korrel"]},
+	{"id": "kleurtrappen", "groep": "stijl", "naam": "Kleurtrappen (cel)", "status": "spel", "speel": "stijl",
+		"wanneer": "de lichtheid in een paar treden, een getekende stripstijl", "knoppen": ["stijl_trappen"]},
+	{"id": "licht_neutraal", "groep": "stijl", "naam": "Licht zoals in de Model-tuner", "status": "wens", "speel": "",
+		"wanneer": "Max: in moddif zien de modellen er mooier uit (wat is moddif? gelezen als de Model-tuner: neutraler, helderder licht)",
+		"knoppen": []},
 ]
 
 
@@ -222,12 +244,19 @@ static func van_groep(groep: String) -> Array:
 	return uit
 
 
-## De metadata van een knop; een onbekende sleutel krijgt een ruim bereik zodat
-## de tuner hem toch kan tonen.
+## De metadata van een knop (ook die van de stijl, uit scripts/vfx/stijl.gd);
+## een onbekende sleutel krijgt een ruim bereik zodat de tuner hem toch kan tonen.
 static func knop(sleutel: String) -> Dictionary:
 	if KNOPPEN.has(sleutel):
 		return KNOPPEN[sleutel]
+	if STIJL.KNOPPEN.has(sleutel):
+		return STIJL.KNOPPEN[sleutel]
 	return {"label": sleutel, "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0}
+
+
+## Kent de catalogus deze knop (met label, bereik en standaard)?
+static func bekend(sleutel: String) -> bool:
+	return KNOPPEN.has(sleutel) or STIJL.KNOPPEN.has(sleutel)
 
 
 ## Alles als platte data (voor de concept-webpagina): groepen, effecten met hun

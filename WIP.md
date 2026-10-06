@@ -1,5 +1,41 @@
 # Fog of War — Work In Progress & Context
 
+## 6 oktober -- VFX-studio stap 6: stijl voor alle 3D-objecten
+
+Max: "kan je ook iets met shaders doen voor alle 3d objecten? of hoe moet ik
+dat inregelen?", en bij de keuze welke looks: "een studio om het allemaal uit
+te proberen, in moddif zien de modellen er mooier uit" (eerst de effecten,
+dan dit; wat "moddif" is heb ik gevraagd).
+
+- **`scripts/vfx/stijl.gd`** (via preload als `STIJL`): EEN shader over het
+  camerabeeld, dus elk model, elke prop en het bord krijgt de look, ook nieuwe
+  modellen, zonder iets per model. Een vlak van 2 x 2 als kind van de camera
+  (`POSITION` op het hele scherm, `extra_cull_margin`), dat het beeld en de
+  diepte leest en als EERSTE van de doorzichtige laag tekent
+  (`render_priority` -128): het scherm wordt na de ondoorzichtige laag
+  gekopieerd, dus de look werkt op bord en modellen, en rook, vuur en bloed
+  tekenen er daarna scherp overheen (anders zou het vlak ze wegvegen).
+- **Looks** (knoppen `stijl_*`, standaard allemaal 0 = uit; alles uit = het
+  vlak onzichtbaar): inktranden uit diepte- en kleursprongen (acht buren,
+  dikte in pixels), randlicht op de binnenkant van elk silhouet,
+  miniatuur-scherpte (tilt-shift: een kring van acht monsters op een lagere
+  resolutie, wijder naarmate je verder van de scherpe band zit), kleurstemming
+  (koel tot warm), filmkorrel, kleurtrappen (cel: de lichtheid in treden, in
+  gamma gerekend en altijd het midden van een trede).
+- Eerste versie: de inktranden waren een pixel dun (wel aanwezig, niet te
+  zien), de miniatuur-vervaging alleen een lagere mip (te zwak) en de
+  kleurtrappen maakten het donkere bord zwart (lineair gekwantiseerd).
+- **Spel:** game.gd zet het vlak op de camera van het bord (`STIJL.zet_op`).
+  **Tuner:** groep "Stijl (alle 3D)" met vijf looks (Speel schiet een musket
+  af zodat je de look in actie ziet); elke schuif past de look live toe.
+  "Licht zoals in de Model-tuner" staat als wens tot Max zegt wat "moddif" is.
+- `-- vfxshot <id> [map] [tempo] knop=waarde ...` zet knoppen alleen voor die
+  opname (zo zijn de looks hierboven bekeken).
+- Checks: `-- vfxcheck` PASS (headless en met venster), `-- play` met venster;
+  uispel 777 `5862e4c9` (ongewijzigd, alles staat standaard uit), herstelcheck
+  777 en 4242 wolf 0, resumecheck 777 1 en 4242 2 0, naad, koppel, beurtlicht,
+  audiopaneel, inkomcheck, uicheck PASS, simcheck 0, tests 2912/0.
+
 ## 6 oktober -- VFX-studio stap 4 en 5: bloed en inslag, vuur en explosies
 
 Vervolg op stap 2 en 3 (docs/VFX-studio.md). Hiermee zijn alle wensen uit de

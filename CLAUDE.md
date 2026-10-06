@@ -1312,8 +1312,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   stofkring, rookkolom) en een kanon dat kapotgaat en nabrandt (uit
   `play_death`; een kanon bloedt niet). Vlekken en kraters op `GROND_Y`
   0,065 (de hoogte van de bloedplassen; lager zakt onder het bordmodel).
-  Volgende stappen: een stijl-studio (shaders voor alle 3D-objecten), dan
-  de concept-webpagina (Replicate: beelden en Seedance 2.5).
+  Stap 6, stijl voor alle 3D-objecten: `scripts/vfx/stijl.gd` (via preload
+  als `STIJL`), EEN shader over het camerabeeld op een vlak als kind van de
+  camera, dat als EERSTE van de doorzichtige laag tekent
+  (`render_priority` -128: de schermkopie bevat dan bord en modellen, en
+  rook, vuur en bloed tekenen er scherp overheen). Looks `stijl_inkt`
+  (+`_dikte`), `stijl_rand`, `stijl_miniatuur` (+`_focus_y`, `_focus_band`),
+  `stijl_warmte`, `stijl_korrel`, `stijl_trappen`, standaard alle 0 = uit
+  (vlak onzichtbaar). game.gd: `STIJL.zet_op(_camera)`. In de tuner groep
+  "Stijl"; `-- vfxshot <id> [map] [tempo] knop=waarde` om een look te
+  bekijken. Volgende stap: de concept-webpagina (Replicate: beelden en
+  Seedance 2.5; sleutel in `%LOCALAPPDATA%\FogOfWar\replicate.key`).
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

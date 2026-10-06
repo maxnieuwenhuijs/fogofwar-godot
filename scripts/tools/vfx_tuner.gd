@@ -17,6 +17,7 @@ const PAWN_SCENE := preload("res://scenes/game/pawn_view.tscn")
 const BOARD_SCENE := preload("res://Board.tscn")
 const VFX := preload("res://scripts/vfx/vfx.gd")
 const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")
+const STIJL := preload("res://scripts/vfx/stijl.gd")
 
 const PAWN_Y := 0.05
 const SCHUTTER_TEGEL := Vector2i(5, 7)
@@ -41,6 +42,7 @@ var _spot: SpotLight3D = null
 var _rand: DirectionalLight3D = null
 var _env: Environment = null
 var _toneel: Node3D = null
+var _stijl: MeshInstance3D = null   # de looks over het hele beeld (scripts/vfx/stijl.gd)
 var _schutter: PawnView = null
 var _doel: PawnView = null
 var _rng := RandomNumberGenerator.new()
@@ -125,6 +127,7 @@ func _bouw_wereld() -> void:
 	we.environment = _env
 	add_child(we)
 	_licht()
+	_stijl = STIJL.zet_op(_cam)
 	_toneel = Node3D.new()
 	_toneel.name = "Toneel"
 	_bord.add_child(_toneel)
@@ -340,6 +343,9 @@ func speel() -> float:
 			duur = brand + 1.0
 		"treffer":
 			_treffer(_richting_naar_doel(), 0.7, false)
+		"stijl":
+			# een look staat altijd aan; een schot laat hem in actie zien
+			_recept_schot(gen, false, false)
 		"schadegetal":
 			VFX.schade_getal(_toneel, _tegel(DOEL_TEGEL) + Vector3(0.0, 1.5, 0.0), "-2")
 		"dood_bajonet":
@@ -680,6 +686,7 @@ func _getal(v: float) -> String:
 
 func _op_schuif(waarde: float, sleutel: String) -> void:
 	PawnView.set_fx(sleutel, snappedf(waarde, 0.001))
+	STIJL.pas_toe(_stijl)
 	if _waarden.has(sleutel):
 		(_waarden[sleutel] as Label).text = _getal(waarde)
 
@@ -687,6 +694,7 @@ func _op_schuif(waarde: float, sleutel: String) -> void:
 ## Zet een knop (ook voor de checks): live, en de schuif volgt.
 func zet_knop(sleutel: String, waarde: float) -> void:
 	PawnView.set_fx(sleutel, waarde)
+	STIJL.pas_toe(_stijl)
 	if _sliders.has(sleutel):
 		(_sliders[sleutel] as HSlider).set_value_no_signal(waarde)
 		(_waarden[sleutel] as Label).text = _getal(waarde)
