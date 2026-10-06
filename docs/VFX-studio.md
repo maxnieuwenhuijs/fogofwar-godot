@@ -189,6 +189,51 @@ Godot, daarna de concept-webpagina.
      hernoemd; de studio zet het rooster voortaan zelf in de naam).
    - De kruitdamp van het musketschot bleef bewust ongemoeid.
 
+10. **Prompts met AI en texturen weer uit het spel** (Max, 7 oktober: "geef me
+    in de vfx studio wel de mogelijkheid om prompts te enhancen met ai of te
+    maken dat ik beschrijf wat ik wil en dat de ai een prompt genereert en ook
+    dat ik decals of plaatjes kan verwijderen weer die in gebruik zijn").
+    **Gebouwd (7 oktober):**
+    - Onder elk promptvak (effect, textuur en het onderwerp van een reeks) een
+      regel: een vak "beschrijf in gewone taal wat je wilt zien", bij een
+      effect en een textuur met een filmprompt de keuze voor een plaatje of
+      voor een filmpje, en twee knoppen. **AI: maak prompt** (of Enter in het
+      vak) schrijft een Engelse prompt uit je beschrijving; **AI: verbeter**
+      verbetert wat er in het vak staat (leeg vak = de prompt uit de wishlist
+      of de catalogus) en neemt je beschrijving mee. De nieuwe prompt komt in
+      het vak en wordt bewaard; **vorige** zet de oude terug.
+    - Claude krijgt mee wat de studio weet: het spel en de stijl (vaste
+      systeemtekst `PROMPT_SYSTEEM`), het doel (effect-concept of textuur,
+      plaatje, filmpje of reeks), naam, wanneer, de notities, de
+      standaardprompt, bij een textuur de achtergrondregel (puur zwart wordt
+      doorzichtig, of een vlakke kleur om weg te halen) en of het een vel of
+      een variant is, en een plaatje: het gekozen spelbeeld of concept, anders
+      de opname uit het spel, bij een textuur de textuur die nu in het spel
+      staat. Staat "op de basis" aan, dan schrijft hij alleen de verandering
+      (de studio zet de basiszin er zelf voor). Bij een filmpje geen
+      camerawoorden: de filmzin komt er al achter.
+    - Model `claude-opus-5-5` (effort medium) via de Anthropic-SDK
+      (`python -m pip install anthropic`), met de fallback van de API bij een
+      weigering. Sleutel uit `ANTHROPIC_API_KEY` of het veld "Claude-sleutel"
+      bovenaan, gecontroleerd en bewaard in
+      `%LOCALAPPDATA%\FogOfWar\anthropic.key`, nooit in de repo. Een
+      aanroep kost een fractie van een cent.
+    - **Uit het spel**: elke textuur onder "in het spel nu" heeft die knop.
+      Het bestand en zijn `.import` gaan naar
+      `results/vfx_studio/backup/<map>/` (en git heeft hem ook nog);
+      zonder bestand tekent het spel weer zijn vervanger, bij varianten
+      kiest het uit de rest. De kandidaat die hem had geleverd verliest zijn
+      "in het spel".
+    - Checks: `--proef` met een nep-Claude op de nepserver (sleutel weigeren
+      en bewaren, maak en verbeter, de vraag draagt doel, effect, beschrijving
+      en plaatje, de textuurregels, alleen de verandering op een basis, een
+      weigering, rare id) en uit het spel (vel met .import en backup, een
+      variant, een bestand dat er niet staat, iets buiten het onderdeel). De
+      proef zet sinds die dag zijn eigen beginstand voor rook, bloed en vuur
+      in zijn kopie van `assets/textures`: hij verwachtte de texturen van de
+      ochtend (`musket_3x3`, zes spetters) en faalde zodra er nieuwe in het
+      spel stonden.
+
 ## Huisregels
 
 - Effecten zijn puur beeld: nooit spelstaat, nooit `_animaties_bezig`.

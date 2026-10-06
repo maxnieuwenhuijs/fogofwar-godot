@@ -98,6 +98,8 @@ P = {
     "werk": os.path.join("results", "vfx_studio"),
     "sleutel": os.path.join(os.environ.get("LOCALAPPDATA", WORTEL), "FogOfWar", "replicate.key"),
     "api": os.environ.get("REPLICATE_API_BASE", "https://api.replicate.com/v1"),
+    "claude_sleutel": os.path.join(os.environ.get("LOCALAPPDATA", WORTEL), "FogOfWar", "anthropic.key"),
+    "claude_api": os.environ.get("ANTHROPIC_BASE_URL", ""),
     "poll_beeld": 2.0,
     "poll_film": 5.0,
 }
@@ -1681,6 +1683,247 @@ def onderdeel_rijen():
     return [onderdeel_rij(oid, cat, st) for oid in onderdelen()]
 
 
+def uit_spel(oid, naam):
+    """Haal een textuur die het spel nu gebruikt weer weg (7 oktober, Max: "dat
+    ik decals of plaatjes kan verwijderen weer die in gebruik zijn"). Het
+    bestand en zijn .import gaan eerst naar results/vfx_studio/backup/<map>/;
+    zonder bestand tekent het spel weer zijn vervanger (VFX._geleverde)."""
+    o = _onderdeel(oid)
+    h = next((h for h in spel_bestanden(oid) if h["naam"].lower() == str(naam or "").lower()), None)
+    if h is None:
+        raise RuntimeError("%s staat niet (meer) in het spel." % naam)
+    a = os.path.abspath(h["pad"])
+    backup = os.path.join(P["werk"], "backup", o["map"])
+    stempel = nieuwe_stempel()
+    with _lock:
+        os.makedirs(backup, exist_ok=True)
+        doel = os.path.join(backup, "%s_%s" % (stempel, h["naam"]))
+        shutil.copyfile(a, doel)
+        os.remove(a)
+        if os.path.exists(a + ".import"):
+            os.remove(a + ".import")
+    # een kandidaat die hier "in het spel" stond, staat dat nu niet meer
+    eid = ONDERDEEL_VOOR + oid
+    for m in concepten_van(eid):
+        if _n(m.get("in_spel", "")).lower() == _n(h["pad"]).lower():
+            werk_meta(eid, m["stempel"], in_spel="", in_spel_tijd="")
+    return {"weg": h["naam"], "backup": _rel(os.path.abspath(doel)), "over": len(spel_bestanden(oid)),
+            "editor": editor_open()}
+
+
+# ------------------------------------------------------------------ prompts met Claude
+#
+# 7 oktober, Max: "geef me in de vfx studio wel de mogelijkheid om prompts te
+# enhancen met ai, of te maken dat ik beschrijf wat ik wil en dat de ai een
+# prompt genereert". Een enkele aanroep naar de Claude API (Messages) per
+# knopdruk; de sleutel uit ANTHROPIC_API_KEY of het veld bovenaan, bewaard in
+# %LOCALAPPDATA%\FogOfWar\anthropic.key, nooit in de repo.
+
+CLAUDE_MODEL = "claude-opus-5-5"
+# Bij een weigering laat de API een ander model het overnemen ("default" kiest
+# zelf op de categorie); alleen deze modellen kennen die vorm.
+CLAUDE_FALLBACK_BETA = "server-side-fallback-2026-07-01"
+_CLAUDE_MET_FALLBACK = ("claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "claude-sonnet-5-5")
+
+PROMPT_SYSTEEM = """You write prompts for image and video generation models (Nano Banana, Seedream, Seedance) for the visual effects of "Fog of War", a strategy board game.
+
+The game: two armies of low-poly animal soldiers (mice, pigs, lions, bears, wolves, crocodiles) in Napoleonic-era uniforms, with flintlock muskets, cavalry and small bronze field cannons, fight on a miniature wooden 11x11 board. The camera looks down at the board from above at an angle. Effects must read clearly at small size on a phone screen: short, punchy, stylised but grounded, warm and painterly, never cluttered.
+
+What a prompt can be for (the request says which):
+- Effect concept, image: one still of the effect as it looks in the game: on the wooden board, among the figures, seen from above at an angle. It is a reference for how the effect should look, not the final asset.
+- Effect concept, video: one short take of the effect happening once, in the same game scene. The studio adds its own sentence about a fixed camera, so do not write camera instructions; describe what appears, how it moves and how it ends.
+- Texture or decal, image: a game texture of the element alone: centered, square, no board, no figures, no ground, no text. Follow the background rule given in the request exactly. On a pure black background, black becomes transparent in the game, so the element must not rely on black or very dark parts to be seen. For a transparent PNG, ask for a plain flat solid background in a colour that does not occur in the element, so it can be keyed out.
+- Texture or decal, video: the element alone on its background, appearing, playing out once and fading away, centered, fixed framing. Frames will be cut from it into a flipbook.
+- Sequence subject: the subject and style shared by every frame of a frame-by-frame animation. The studio adds the phase per frame (just born, at its biggest, fading), so keep this phase-neutral.
+
+If an image is attached, it shows the current state (a capture from the game, an earlier concept, or the texture now in the game). Use it to see what exists and what has to change. When the request says the image will be used as the base for the next picture, write only what should be added or changed, because the studio keeps the rest of the image.
+
+Rules for the prompt you write:
+- English, one paragraph of one to four sentences, concrete visual words: shape, colour, material, size relative to a soldier figure, motion and timing.
+- Keep the intent of the user. When improving, keep what works in the current prompt and fix what is weak or missing; respect the notes.
+- No text, logos, watermarks, borders or user-interface elements in the picture. Do not use em dashes.
+- Reply with the prompt only: no preamble, no quotes, no explanation."""
+
+_DOEL_TEKST = {
+    ("effect", "beeld"): "Effect concept, image",
+    ("effect", "film"): "Effect concept, video",
+    ("onderdeel", "beeld"): "Texture or decal, image",
+    ("onderdeel", "film"): "Texture or decal, video",
+    ("onderdeel", "reeks"): "Sequence subject",
+}
+
+
+def lees_claude_sleutel():
+    k = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if k:
+        return k
+    try:
+        return io.open(P["claude_sleutel"], encoding="utf-8").read().strip()
+    except OSError:
+        return ""
+
+
+def _claude():
+    try:
+        import anthropic
+    except ImportError:
+        raise RuntimeError("De Anthropic-SDK ontbreekt: python -m pip install anthropic")
+    k = lees_claude_sleutel()
+    if not k:
+        raise RuntimeError("Geen Claude-sleutel: plak hem bovenaan (platform.claude.com, API keys).")
+    return anthropic, anthropic.Anthropic(api_key=k, base_url=P["claude_api"] or None, timeout=180.0)
+
+
+def _claude_fout(anthropic, e):
+    if isinstance(e, anthropic.AuthenticationError):
+        return "Claude weigert de sleutel (401): klopt hij nog?"
+    if isinstance(e, anthropic.PermissionDeniedError):
+        return "Deze Claude-sleutel mag dit model niet gebruiken (403)."
+    if isinstance(e, anthropic.NotFoundError):
+        return "Model %s niet gevonden (404)." % CLAUDE_MODEL
+    if isinstance(e, anthropic.RateLimitError):
+        return "Even te veel verzoeken bij Claude (429): probeer het zo opnieuw."
+    if isinstance(e, anthropic.BadRequestError):
+        return "Claude snapt het verzoek niet (400): %s" % getattr(e, "message", e)
+    if isinstance(e, anthropic.APIStatusError):
+        return "Claude gaf een fout (%s): %s" % (e.status_code, getattr(e, "message", e))
+    if isinstance(e, anthropic.APIConnectionError):
+        return "Geen verbinding met Claude: staat het internet aan?"
+    return "Claude: %s" % e
+
+
+def check_claude(k):
+    """Een gratis controle van een nieuwe sleutel: het model opvragen."""
+    try:
+        import anthropic
+    except ImportError:
+        raise RuntimeError("De Anthropic-SDK ontbreekt: python -m pip install anthropic")
+    c = anthropic.Anthropic(api_key=k, base_url=P["claude_api"] or None, timeout=30.0)
+    try:
+        return c.models.retrieve(CLAUDE_MODEL).display_name
+    except anthropic.AnthropicError as e:
+        raise RuntimeError(_claude_fout(anthropic, e))
+
+
+def _beeld_blok(pad, max_px=1024):
+    """Een plaatje als image-blok voor Claude (jpeg, verkleind)."""
+    if Image is None:
+        return None
+    try:
+        im = Image.open(pad)
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGBA")
+            onder = Image.new("RGB", im.size, (0, 0, 0))
+            onder.paste(im, mask=im.getchannel("A"))
+            im = onder
+        else:
+            im = im.convert("RGB")
+        im.thumbnail((max_px, max_px), Image.LANCZOS)
+        b = io.BytesIO()
+        im.save(b, "JPEG", quality=88)
+    except OSError:
+        return None
+    return {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
+                                        "data": base64.standard_b64encode(b.getvalue()).decode("ascii")}}
+
+
+def prompt_context(eid, doel, modus, tekst, wens, beeld="", met_basis=False):
+    """De vraag aan Claude: het doel, alles wat de studio van het effect of de
+    textuur weet, de huidige prompt en de beschrijving. Geeft (tekst, beeldpad,
+    wat het plaatje is)."""
+    eid = _id_ok(eid)
+    regels = ["Mode: %s" % ("improve the current prompt" if modus == "verbeter" else "write a new prompt from the description")]
+    beeld_pad, beeld_wat = "", ""
+    if eid.startswith(ONDERDEEL_VOOR):
+        o = onderdeel_rij(eid[len(ONDERDEEL_VOOR):])
+        regels.append("For: %s" % _DOEL_TEKST.get(("onderdeel", doel), _DOEL_TEKST[("onderdeel", "beeld")]))
+        regels.append("Texture: %s (file assets/textures/%s/%s, kind: %s)" % (o["naam"], o["map"], o["bestand"], o["soort"]))
+        if o["uitleg"]:
+            regels.append("Where the game uses it (Dutch): %s" % o["uitleg"])
+        regels.append("Background rule: " + ("isolated on a solid pure black background (black becomes transparent in the game)"
+                                             if o["achtergrond"] == "zwart" else
+                                             "must end up as a PNG with transparency: a plain flat solid background that can be keyed out"))
+        if o["soort"] == "flipbook":
+            regels.append("In the game this plays as a flipbook (a sheet of frames).")
+        elif o["soort"] == "varianten":
+            regels.append("The game picks one of several variants at random, so this is one variant.")
+        if o["notitie"]:
+            regels.append("Notes from the developer (Dutch): %s" % o["notitie"])
+        bron = o["film_bron"] if doel == "film" else o["prompt_bron"]
+        if doel == "reeks":
+            bron = o["reeks"].get("basis_prompt", "") or o["prompt_bron"]
+        if bron:
+            regels.append("Default prompt from the catalogue: %s" % bron)
+        actief = next((f for f in o["spel"] if f.get("actief")), None)
+        if actief and not beeld:
+            beeld_pad, beeld_wat = os.path.abspath(actief["pad"]), "the texture that is in the game now"
+    else:
+        rijen = overzicht(eid)["rijen"]
+        if not rijen:
+            raise RuntimeError("onbekend effect: %s" % eid)
+        r = rijen[0]
+        regels.append("For: %s" % _DOEL_TEKST.get(("effect", doel), _DOEL_TEKST[("effect", "beeld")]))
+        regels.append("Effect: %s (group: %s)" % (r["naam"], r["groepnaam"]))
+        if r["wanneer"]:
+            regels.append("When it happens in the game (Dutch): %s" % r["wanneer"])
+        for k, label in (("notitie_cat", "Catalogue note"), ("wl_notitie", "Wishlist note"), ("notitie", "Notes from the developer")):
+            if r.get(k):
+                regels.append("%s (Dutch): %s" % (label, r[k]))
+        if r["prompt_bron"]:
+            regels.append("Default prompt from the wishlist: %s" % r["prompt_bron"])
+        if not beeld and (r["spel"] or {}).get("rust"):
+            beeld_pad, beeld_wat = os.path.abspath(r["spel"]["rust"]), "a capture of this effect as it plays in the game now"
+    if beeld:
+        beeld_pad = _veilig(beeld)
+        beeld_wat = ("the image the next picture will be built on" if met_basis else "the image the developer selected")
+        if met_basis:
+            regels.append("The attached image will be used as the base for the next picture: write only what to add or change.")
+    if beeld_pad:
+        regels.append("Attached image: %s." % beeld_wat)
+    if tekst:
+        regels.append("Current prompt: %s" % tekst)
+    if wens:
+        regels.append("What the developer wants (in their own words, often Dutch): %s" % wens)
+    return "\n".join(regels), beeld_pad
+
+
+def prompt_ai(eid, doel="beeld", modus="maak", tekst="", wens="", beeld="", met_basis=False):
+    """Een prompt maken of verbeteren met Claude; geeft {"prompt": ...}."""
+    doel = doel if doel in ("beeld", "film", "reeks") else "beeld"
+    modus = "verbeter" if modus == "verbeter" else "maak"
+    tekst, wens = str(tekst or "").strip(), str(wens or "").strip()
+    if modus == "maak" and not wens:
+        raise RuntimeError("Beschrijf eerst in gewone taal wat je wilt zien.")
+    if modus == "verbeter" and not (tekst or wens):
+        raise RuntimeError("Er staat nog geen prompt om te verbeteren.")
+    vraag, beeld_pad = prompt_context(eid, doel, modus, tekst, wens, beeld, bool(met_basis))
+    anthropic, client = _claude()
+    inhoud = []
+    blok = _beeld_blok(beeld_pad) if beeld_pad else None
+    if blok:
+        inhoud.append(blok)
+    inhoud.append({"type": "text", "text": vraag})
+    model = lees_studio()["instellingen"].get("promptmodel") or CLAUDE_MODEL
+    extra = {}
+    if model in _CLAUDE_MET_FALLBACK:
+        extra = {"betas": [CLAUDE_FALLBACK_BETA], "fallbacks": "default"}
+    try:
+        antw = client.beta.messages.create(
+            model=model, max_tokens=16000, system=PROMPT_SYSTEEM,
+            output_config={"effort": "medium"},
+            messages=[{"role": "user", "content": inhoud}], **extra)
+    except anthropic.AnthropicError as e:
+        raise RuntimeError(_claude_fout(anthropic, e))
+    if antw.stop_reason == "refusal":
+        cat = getattr(getattr(antw, "stop_details", None), "category", None)
+        raise RuntimeError("Claude weigert deze vraag%s; schrijf hem anders." % (" (%s)" % cat if cat else ""))
+    uit = "".join(b.text for b in antw.content if b.type == "text").strip()
+    uit = uit.strip().strip('"').strip("'").strip()
+    if not uit:
+        raise RuntimeError("Claude gaf geen prompt terug (%s)." % antw.stop_reason)
+    return {"prompt": uit, "model": antw.model}
+
+
 # ------------------------------------------------------------------ overzicht
 
 def _rij(e, w, g, st, od=None):
@@ -1763,6 +2006,7 @@ def _volle_overzicht():
     o = overzicht()
     o.update({"fout": _cat_fout, "modellen": {"beeld": BEELDMODELLEN, "film": FILMMODELLEN},
               "sleutel": bool(lees_sleutel()), "account": dict(_account), "taken": lopend(),
+              "claude": {"sleutel": bool(lees_claude_sleutel()), "model": CLAUDE_MODEL},
               "spel": dict(_spel), "onderdelen": onderdeel_rijen(), "import": dict(_import_status)})
     return o
 
@@ -1872,6 +2116,9 @@ canvas.vel{width:150px;height:150px;border-radius:4px;border:1px solid var(--ran
 .speler{display:flex;gap:12px;align-items:flex-start;margin-top:8px}
 .speler canvas{width:180px;height:180px;border-radius:4px;border:1px solid var(--rand);background:#26221e}
 .actief{color:var(--ok)}
+.ai{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.ai input{flex:1;min-width:200px;font-size:12px}.ai select{font-size:12px;padding:3px 4px}
+.ai button[data-act="ai"]{border-color:var(--blauw)}
 </style></head><body>
 <div id="laden"><span class="spin"></span> overzicht laden...</div>
 <header>
@@ -1895,6 +2142,7 @@ canvas.vel{width:150px;height:150px;border-radius:4px;border:1px solid var(--ran
 </div>
 <div class="balk">
 <label class="klein">Replicate-sleutel <input id="sleutel" type="password" style="width:180px"></label><button class="klein" data-act="sleutel">bewaar</button><span id="account" class="klein"></span>
+<label class="klein" title="voor de knoppen AI: maak prompt en AI: verbeter">Claude-sleutel <input id="csleutel" type="password" style="width:160px"></label><button class="klein" data-act="csleutel">bewaar</button><span id="caccount" class="klein"></span>
 <label class="klein">beeld <select id="i_beeldmodel" data-inst="beeldmodel"></select></label>
 <label class="klein">film <select id="i_filmmodel" data-inst="filmmodel"></select></label>
 <label class="klein">duur <select id="i_duur" data-inst="duur"><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option></select> s</label>
@@ -1935,6 +2183,7 @@ function kop(){const i=D.instellingen;
  document.getElementById('i_duur').value=String(i.duur);document.getElementById('i_resolutie').value=i.resolutie;
  document.getElementById('i_geluid').checked=!!i.geluid;document.getElementById('i_filmzin').value=i.filmzin;document.getElementById('i_basiszin').value=i.basiszin;
  document.getElementById('sleutel').placeholder=D.sleutel?'sleutel staat (verborgen)':'r8_...';
+ const cl=D.claude||{};document.getElementById('csleutel').placeholder=cl.sleutel?'sleutel staat (verborgen)':'sk-ant-...';document.getElementById('caccount').textContent=cl.sleutel?'AI-prompts met '+cl.model:'nog geen Claude-sleutel';
  const a=D.account;document.getElementById('account').innerHTML=a.naam?'ingelogd als <b>'+esc(a.naam)+'</b>':(a.fout?'<span class="fout">'+esc(a.fout)+'</span>':(D.sleutel?'':'nog geen sleutel'));
  document.getElementById('melding').textContent=D.fout||'';spelStatus();importStatus()}
 function stripBeelden(s){const uit=[];if(s.rust)uit.push(s.rust);const n=(s.beelden||[]).length;for(const f of [0.2,0.4,0.6,0.85]){if(n){const p=s.beelden[Math.min(n-1,Math.floor(f*n))];if(!uit.includes(p))uit.push(p)}}return uit}
@@ -1965,6 +2214,7 @@ function rijHtml(r){const id=esc(r.id),s=r.spel||{};
   if(r.keuze.film)c+='<div class="kaart gekozen"><video src="'+url(r.keuze.film,r.keuze.v)+'" controls loop muted playsinline preload="metadata" title="'+esc(r.keuze.film_prompt||'')+'"></video><div class="knopjes">'+(r.keuze.film_vel?'<button class="klein" data-act="groot" data-src="'+esc(r.keuze.film_vel)+'" title="12 beelden uit het filmpje">vel</button>':'')+'<button class="klein" data-act="kiesAf" data-id="'+id+'" data-soort="film">kies af</button></div></div>';
   c+='</div>'}
  c+='<div class="kop">concept</div><textarea class="prompt" id="p_'+id+'" data-veld="prompt" data-id="'+id+'" placeholder="'+esc(r.prompt_bron||'nog geen prompt in de wishlist: schrijf er een, in het Engels')+'">'+esc(r.prompt)+'</textarea>';
+ c+=aiRij(r.id,['beeld','film'],'data-sleutel="'+id+'" data-id="'+id+'" data-soort="effect"');
  c+='<div class="inst"><button class="prim" data-act="beeld" data-id="'+id+'" data-n="1">Maak plaatje</button><button data-act="beeld" data-id="'+id+'" data-n="3" title="drie keer, meer keus">&times;3</button>';
  c+='<label class="klein" title="het volgende plaatje bouwt voort op een spelbeeld (klik er een in de strip) of op een eerder plaatje (verder hierop)"><input type="checkbox" id="b_'+id+'" data-basis="'+id+'"'+(metBasis[r.id]?' checked':'')+((s.rust||basis[r.id])?'':' disabled')+'> op de basis <span id="bt_'+id+'">'+basisTekst(r.id)+'</span></label>';
  c+='<button data-act="filmSpel" data-id="'+id+'"'+(s.rust?'':' disabled')+' title="Seedance begint bij het gekozen spelbeeld">Filmpje van het spelbeeld</button>';
@@ -1983,6 +2233,22 @@ function galerij(r){let h='';const id=esc(r.id);
  return h||'<div class="klein">nog geen concepten</div>'}
 function velVan(m,p){const b=p.replace(/\.[^.]+$/,'');return (m.vellen||[]).find(v=>v.startsWith(b))||''}
 function ond(id){return (D.onderdelen||[]).find(o=>o.id===id)}
+// AI-prompts (7 oktober): beschrijf in gewone taal wat je wilt, of laat de prompt in het vak verbeteren.
+// Wat je typt en de keuze plaatje/filmpje overleven het opnieuw tekenen van een rij; "vorige" zet de
+// prompt van voor de AI terug.
+const vorige={},wensen={},aidoel={};
+const DOELNAAM={beeld:'voor een plaatje',film:'voor een filmpje'};
+function aiRij(s,doelen,attrs){let h='<div class="ai"><input id="w_'+esc(s)+'" value="'+esc(wensen[s]||'')+'" placeholder="beschrijf in gewone taal wat je wilt zien, bv. dikkere grijze rook die met de wind meedrijft">';
+ if(doelen.length>1)h+='<select id="ad_'+esc(s)+'" title="schrijf de prompt voor een plaatje of voor een filmpje">'+doelen.map(d=>'<option value="'+d+'"'+(aidoel[s]===d?' selected':'')+'>'+DOELNAAM[d]+'</option>').join('')+'</select>';
+ h+='<button class="klein" data-act="ai" data-modus="maak" '+attrs+' title="Claude schrijft een prompt (Engels) uit je beschrijving en wat de studio van dit effect weet">AI: maak prompt</button>';
+ h+='<button class="klein" data-act="ai" data-modus="verbeter" '+attrs+' title="Claude verbetert de prompt in het vak (en neemt je beschrijving en notities mee)">AI: verbeter</button>';
+ if(vorige[s]!==undefined)h+='<button class="klein" data-act="aiTerug" '+attrs+' title="terug naar de prompt van voor de AI">vorige</button>';
+ return h+'</div>'}
+function aiVak(b){return b.dataset.soort==='reeks'?document.querySelector('[data-reeks-basis="'+b.dataset.ond+'"]'):document.getElementById('p_'+b.dataset.id)}
+async function aiZet(b,tekst){const t=aiVak(b);if(t)t.value=tekst;
+ if(b.dataset.soort==='reeks'){await bewaarReeks(b.dataset.ond,{basis_prompt:tekst},false);return}
+ await bewaar(b.dataset.id,'prompt',tekst);
+ if(b.dataset.soort==='ond'){const o=ond(b.dataset.ond);if(o)o.prompt=tekst}else{const r=rij(b.dataset.id);if(r)r.prompt=tekst}}
 function ondPrompt(o,film){const t=document.getElementById('p_'+o.eid);return (t&&t.value.trim())||(film?o.film_bron:o.prompt_bron)||''}
 const ROOSTERS=['1x1','2x2','3x3','4x4','5x5','6x6','8x8','3x1','4x1','8x1'];
 function velCanvas(pad,v,k,r,o){return '<canvas class="vel" data-src="'+esc(pad)+'" data-v="'+(v||0)+'" data-k="'+k+'" data-r="'+r+'" data-zwart="'+(o.achtergrond==='zwart'?1:0)+'" data-boost="'+o.boost+'" data-act="groot"></canvas>'}
@@ -1994,10 +2260,11 @@ function ondHtml(o){const id=esc(o.id),eid=esc(o.eid);
  if(o.effecten.length){a+='<div class="ond-chips"><span class="klein">gebruikt door:</span>';for(const e of o.effecten)a+='<span class="chip" data-act="naarEffect" data-id="'+esc(e.id)+'">'+esc(e.naam)+'</span>';a+='</div>'}
  a+='<textarea class="notitie" data-veld="notitie" data-id="'+eid+'" placeholder="notities: wat moet er anders?">'+esc(o.notitie)+'</textarea></div>';
  let b='<div><div class="kop">in het spel nu</div>';
- if(o.spel.length){b+='<div class="spelvel'+(o.spel.length>2?' veel':'')+'">';for(const f of o.spel)b+='<div class="kaart">'+velCanvas(f.pad,f.v,f.rooster[0],f.rooster[1],o)+'<div class="klein">'+esc(f.naam)+(f.maat?' &middot; '+f.maat[0]+'x'+f.maat[1]:'')+(f.rooster[0]*f.rooster[1]>1?' &middot; '+f.rooster[0]+'x'+f.rooster[1]+' beeldjes':'')+(o.soort==='flipbook'?(f.actief?' &middot; <span class="actief">in gebruik</span>':' &middot; niet in gebruik (het spel pakt de eerste)'):'')+'</div></div>';b+='</div>'}
+ if(o.spel.length){b+='<div class="spelvel'+(o.spel.length>2?' veel':'')+'">';for(const f of o.spel)b+='<div class="kaart">'+velCanvas(f.pad,f.v,f.rooster[0],f.rooster[1],o)+'<div class="klein">'+esc(f.naam)+(f.maat?' &middot; '+f.maat[0]+'x'+f.maat[1]:'')+(f.rooster[0]*f.rooster[1]>1?' &middot; '+f.rooster[0]+'x'+f.rooster[1]+' beeldjes':'')+(o.soort==='flipbook'?(f.actief?' &middot; <span class="actief">in gebruik</span>':' &middot; niet in gebruik (het spel pakt de eerste)'):'')+'</div><div class="knopjes"><button class="klein" data-act="uitSpel" data-ond="'+id+'" data-naam="'+esc(f.naam)+'" title="haal hem uit het spel; hij gaat eerst naar een backup, en zonder bestand tekent het spel weer zijn vervanger">uit het spel</button></div></div>';b+='</div>'}
  else b+='<div class="leeg">'+(o.gebruikt?'nog niets: het spel tekent nu een vervanger':'nog niets, en het spel kijkt hier nog niet')+'</div>';
  b+='</div>';
  let c='<div><div class="kop">nieuw</div><textarea class="prompt" id="p_'+eid+'" data-veld="prompt" data-id="'+eid+'" placeholder="'+esc(o.prompt_bron)+'">'+esc(o.prompt)+'</textarea>';
+ c+=aiRij(o.eid,o.film_bron?['beeld','film']:['beeld'],'data-sleutel="'+eid+'" data-id="'+eid+'" data-ond="'+id+'" data-soort="ond"');
  c+='<div class="inst"><button class="prim" data-act="ondBeeld" data-ond="'+id+'" data-n="1" title="vierkant, met de prompt hierboven">Maak plaatje</button><button data-act="ondBeeld" data-ond="'+id+'" data-n="3" title="drie keer, meer keus">&times;3</button>';
  if(o.film_bron)c+='<button data-act="ondFilm" data-ond="'+id+'" title="Seedance maakt een vierkant filmpje van alleen dit onderdeel, op zwart: daar knip je een flipbook uit. Leeg vak = de filmprompt: '+esc(o.film_bron)+'">Maak filmpje (op zwart)</button>';
  c+='<button data-act="fbOpen" data-ond="'+id+'"'+(o.films.length?'':' disabled')+' title="knip een flipbook uit een filmpje van dit onderdeel of van een effect dat het gebruikt">Flipbook uit filmpje</button></div>';
@@ -2014,6 +2281,7 @@ function reeksHtml(o){const id=esc(o.id),r=o.reeks,st=r.status||{};const loopt=!
  h+='<button class="klein" data-act="reeksVel" data-ond="'+id+'"'+(r.frames.every(f=>f.beeld)?'':' disabled')+' title="alle frames in een vel, als kandidaat; dan In het spel">Leg in een vel</button>';
  if(st.fout)h+='<span class="fout">'+esc(st.fout)+'</span>';
  h+='</div><label class="klein">onderwerp en stijl (voor elk frame)</label><textarea class="prompt" data-reeks-basis="'+id+'">'+esc(r.basis_prompt)+'</textarea>';
+ h+=aiRij('r_'+o.id,['reeks'],'data-sleutel="r_'+id+'" data-id="'+esc(o.eid)+'" data-ond="'+id+'" data-soort="reeks"');
  const met=r.frames.filter(f=>f.beeld).map(f=>f.beeld);
  if(met.length)h+='<div class="speler"><canvas class="speeldoek" data-reeks-speler="1" data-srcs="'+esc(JSON.stringify(met))+'" data-zwart="'+(o.achtergrond==='zwart'?1:0)+'" data-boost="'+o.boost+'"></canvas><div class="klein">zo speelt het af ('+met.length+' van '+r.n+' frames); de vel-versie komt met Leg in een vel</div></div>';
  h+='<div class="frames">';
@@ -2145,6 +2413,26 @@ const ACT={
  kies:async b=>{try{const j=await api('/api/kies',{id:b.dataset.id,pad:b.dataset.pad});toast('dit is hem: '+j.doel);await ververs(b.dataset.id,true)}catch(e){toast(e.message,'fout')}},
  kiesAf:async b=>{try{await api('/api/kies_af',{id:b.dataset.id,soort:b.dataset.soort});await ververs(b.dataset.id)}catch(e){toast(e.message,'fout')}},
  weg:async b=>{if(b.dataset.pad&&!confirm('Weggooien? Terughalen kan niet (het kostte geld).'))return;try{await api('/api/weg',{id:b.dataset.id,pad:b.dataset.pad||'',stempel:b.dataset.stempel||''});if(basis[b.dataset.id]===b.dataset.pad)delete basis[b.dataset.id];await ververs(b.dataset.id)}catch(e){toast(e.message,'fout')}},
+ csleutel:async()=>{const k=document.getElementById('csleutel').value.trim();if(!k)return;try{const j=await api('/api/claude_sleutel',{sleutel:k});document.getElementById('csleutel').value='';toast('Claude-sleutel bewaard ('+j.model+')');await laad(true)}catch(e){toast(e.message,'fout')}},
+ ai:async b=>{const s=b.dataset.sleutel,soort=b.dataset.soort,id=b.dataset.id,modus=b.dataset.modus;const t=aiVak(b);
+  const sel=document.getElementById('ad_'+s);const doel=soort==='reeks'?'reeks':(sel?sel.value:'beeld');
+  const wens=((document.getElementById('w_'+s)||{}).value||'').trim();
+  let tekst=t?t.value.trim():'';
+  if(!tekst&&soort==='effect')tekst=(rij(id)||{}).prompt_bron||'';
+  if(!tekst&&soort==='ond'){const o=ond(b.dataset.ond);if(o)tekst=doel==='film'?(o.film_bron||''):(o.prompt_bron||'')}
+  if(modus==='maak'&&!wens){toast('Beschrijf eerst in het vak ernaast wat je wilt zien.','fout');return}
+  if(modus==='verbeter'&&!tekst&&!wens){toast('Er staat nog geen prompt om te verbeteren: beschrijf wat je wilt en druk op AI: maak prompt.','fout');return}
+  let beeld='',met_basis=false;if(soort==='effect'){const cb=document.getElementById('b_'+id);met_basis=!!(cb&&cb.checked);beeld=met_basis?(basis[id]||spelBasis[id]||''):(basis[id]||'')}
+  const oud=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span> Claude schrijft...';
+  try{const j=await api('/api/prompt_ai',{id,doel,modus,tekst,wens,beeld,met_basis});vorige[s]=t?t.value:'';await aiZet(b,j.prompt);
+   if(!b.parentElement.querySelector('[data-act="aiTerug"]')){const v=document.createElement('button');v.className='klein';v.dataset.act='aiTerug';for(const k of ['sleutel','id','ond','soort'])if(b.dataset[k]!==undefined)v.dataset[k]=b.dataset[k];v.title='terug naar de prompt van voor de AI';v.textContent='vorige';b.parentElement.appendChild(v)}
+   if(t){t.classList.remove('nieuw');void t.offsetWidth;t.style.outline='2px solid var(--blauw)';setTimeout(()=>t.style.outline='',1500)}
+   toast('nieuwe prompt '+(DOELNAAM[doel]||'voor de reeks')+' van Claude; kijk hem na voor je op Maak drukt')}
+  catch(e){toast(e.message,'fout')}b.disabled=false;b.innerHTML=oud},
+ aiTerug:async b=>{const s=b.dataset.sleutel;if(vorige[s]===undefined)return;await aiZet(b,vorige[s]);delete vorige[s];b.remove();toast('de vorige prompt staat er weer','info')},
+ uitSpel:async b=>{const o=ond(b.dataset.ond);const naam=b.dataset.naam;
+  if(!confirm(naam+' uit het spel halen?\n\nHij gaat eerst naar results/vfx_studio/backup/; zonder dit bestand tekent het spel weer '+(o&&o.soort==='varianten'?'de andere varianten':'zijn vervanger')+'.'))return;
+  try{const j=await api('/api/uit_spel',{id:b.dataset.ond,naam});toast(j.weg+' is uit het spel (backup: '+j.backup+')'+(j.editor?'; de editor ziet het zodra je naar zijn venster gaat':''));await verversOnd(b.dataset.ond,true)}catch(e){toast(e.message,'fout')}},
  herstel:async b=>{const id=b.dataset.id;document.getElementById('p_'+id).value='';await bewaar(id,'prompt','');await ververs(id)},
  spel:async b=>{await spelbeelden(b.dataset.id)},
  spelAlle:async()=>{if(!confirm('Godot opent een venster en speelt alle effecten af (een paar minuten). Doorgaan?'))return;await spelbeelden('')},
@@ -2175,7 +2463,10 @@ const ACT={
   try{const j=await api('/api/wens',Object.assign({groep:b.dataset.naam},v));toast('in de wishlist gezet: '+v.naam);await laad(true);const el=document.querySelector('.rij[data-id="'+j.id+'"]');if(el){el.scrollIntoView({block:'center'});el.classList.add('nieuw')}}catch(e){toast(e.message,'fout')}},
 };
 document.addEventListener('click',e=>{if(e.target.tagName==='INPUT'&&e.target.type==='file')return;const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=ACT[b.dataset.act];if(f){e.preventDefault();f(b)}});
+document.addEventListener('input',e=>{const t=e.target;if(t.id&&t.id.startsWith('w_'))wensen[t.id.slice(2)]=t.value});
+document.addEventListener('keydown',e=>{const t=e.target;if(e.key==='Enter'&&t.id&&t.id.startsWith('w_')){e.preventDefault();const b=t.parentElement.querySelector('[data-act="ai"][data-modus="maak"]');if(b&&!b.disabled)ACT.ai(b)}});
 document.addEventListener('change',async e=>{const t=e.target;
+ if(t.id&&t.id.startsWith('ad_')){aidoel[t.id.slice(3)]=t.value;return}
  if(t.dataset.basis!==undefined){metBasis[t.dataset.basis]=t.checked;return}
  if(t.type==='file'&&t.closest('.drop')){const d=t.closest('.drop');const files=[...t.files];t.value='';if(files.length)await uploadBestanden(d.dataset.ond?('o_'+d.dataset.ond):d.dataset.id,files,d.dataset.ond||'',d.dataset.id||'');return}
  if(t.dataset.vrij){if(!t.value)return;const m=t.value;t.value='';try{await api('/api/vrijstaand',{id:t.dataset.vrij,pad:t.dataset.pad,methode:m});toast('achtergrond weg ('+m+'): een nieuwe kandidaat');await verversOnd(t.dataset.vrij,true)}catch(e){toast(e.message,'fout')}return}
@@ -2317,6 +2608,20 @@ class Handler(BaseHTTPRequestHandler):
             schrijf_sleutel(k)
             _schemas.clear()
             return {"naam": a["naam"], "melding": a["fout"]}
+        if pad == "/api/claude_sleutel":
+            k = str(b.get("sleutel", "")).strip()
+            if not k.startswith("sk-ant-"):
+                raise RuntimeError("Dit lijkt geen Claude-sleutel: die begint met sk-ant- "
+                                   "(platform.claude.com, API keys).")
+            naam = check_claude(k)
+            os.makedirs(os.path.dirname(P["claude_sleutel"]), exist_ok=True)
+            io.open(P["claude_sleutel"], "w", encoding="utf-8").write(k)
+            return {"model": naam}
+        if pad == "/api/prompt_ai":
+            return prompt_ai(str(b.get("id", "")), str(b.get("doel") or "beeld"), str(b.get("modus") or "maak"),
+                             b.get("tekst"), b.get("wens"), str(b.get("beeld") or ""), bool(b.get("met_basis")))
+        if pad == "/api/uit_spel":
+            return uit_spel(str(b.get("id", "")), str(b.get("naam", "")))
         if pad == "/api/instellingen":
             with _lock:
                 st = lees_studio()
@@ -2504,6 +2809,20 @@ def proef():
     os.environ.pop("REPLICATE_API_TOKEN", None)
     shutil.copyfile("VFX-WISHLIST.md", P["wishlist"])
     shutil.copytree(os.path.join("assets", "textures"), P["texturen"])
+    # Een vaste beginstand voor de texturen die de proef verandert: wat er echt in
+    # het spel staat wisselt zodra Max iets in het spel zet (7 oktober: de proef
+    # verwachtte nog musket_3x3 en zes spetters en faalde daarop).
+    for mapnaam, weg_, nieuw in (("smoke", ("musket_", "white_smoke_"), ["musket_3x3.png", "white_smoke_3x3.png"]),
+                                 ("blood", ("splat",), ["splat%d.png" % i for i in range(1, 7)]),
+                                 ("fire", ("cannon_", "musket_"), ["cannon_3x1.png", "musket_3x1.png"])):
+        d_ = os.path.join(P["texturen"], mapnaam)
+        os.makedirs(d_, exist_ok=True)
+        for f_ in os.listdir(d_):
+            if f_.lower().startswith(weg_):
+                os.remove(os.path.join(d_, f_))
+        for f_ in nieuw:
+            Image.new("RGBA" if mapnaam == "blood" else "RGB", (96, 96), (180, 30, 30, 0) if mapnaam == "blood"
+                      else (200, 200, 200)).save(os.path.join(d_, f_), "PNG")
     testfilm = os.path.join(tmp, "testfilm.mp4")
     _testfilm(testfilm)
     filmdata = open(testfilm, "rb").read()
@@ -2521,7 +2840,7 @@ def proef():
         Image.new("RGB", (96, 72), kleur).save(b, "JPEG")
         return b.getvalue()
 
-    nep = {"pred": {}, "invoer": [], "bestanden": {}}
+    nep = {"pred": {}, "invoer": [], "bestanden": {}, "claude": []}
 
     class Nep(BaseHTTPRequestHandler):
         def log_message(self, *a):
@@ -2541,7 +2860,18 @@ def proef():
                 return False
             return True
 
+        def _claude_auth(self):
+            if self.headers.get("x-api-key") != "sk-ant-proef":
+                self._j({"type": "error", "error": {"type": "authentication_error", "message": "invalid x-api-key"}}, 401)
+                return False
+            return True
+
         def do_GET(self):
+            if self.path.startswith("/v1/models/claude"):
+                if self._claude_auth():
+                    self._j({"type": "model", "id": CLAUDE_MODEL, "display_name": "Claude Opus 5.5",
+                             "created_at": "2026-01-01T00:00:00Z"})
+                return
             m = re.match(r"^/out/(.+)$", self.path)
             if m:
                 data = nep["bestanden"][m.group(1)]
@@ -2572,6 +2902,18 @@ def proef():
             self._j({"detail": "Not found"}, 404)
 
         def do_POST(self):
+            if self.path.split("?")[0] == "/v1/messages":
+                n = int(self.headers.get("Content-Length", "0") or 0)
+                body = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
+                if not self._claude_auth():
+                    return
+                nep["claude"].append({"body": body, "beta": self.headers.get("anthropic-beta", "")})
+                weiger = "WEIGER" in json.dumps(body)
+                return self._j({"id": "msg_proef", "type": "message", "role": "assistant", "model": body.get("model"),
+                                "content": [] if weiger else [{"type": "text", "text": "\"Thick grey smoke drifting with the wind.\""}],
+                                "stop_reason": "refusal" if weiger else "end_turn", "stop_sequence": None,
+                                "stop_details": {"type": "refusal", "category": "cyber", "explanation": "proef"} if weiger else None,
+                                "usage": {"input_tokens": 10, "output_tokens": 5}})
             if not self._auth():
                 return
             n = int(self.headers.get("Content-Length", "0") or 0)
@@ -2602,6 +2944,9 @@ def proef():
     nep_srv = ThreadingHTTPServer(("127.0.0.1", nep_poort), Nep)
     threading.Thread(target=nep_srv.serve_forever, daemon=True).start()
     P["api"] = "http://127.0.0.1:%d/v1" % nep_poort
+    P["claude_api"] = "http://127.0.0.1:%d" % nep_poort
+    P["claude_sleutel"] = os.path.join(tmp, "anthropic.key")
+    os.environ.pop("ANTHROPIC_API_KEY", None)
     srv, poort = start_server(18950)
     basis_url = "http://127.0.0.1:%d" % poort
 
@@ -2891,6 +3236,56 @@ def proef():
         ok(code == 200 and json.loads(data.decode("utf-8"))["spel"][0]["naam"] == "musket_4x4.png", "onderdeel via http")
         code, _ = get("/bestand?p=" + urllib.parse.quote(os.path.join(rook, "musket_4x4.png")))
         ok(code == 200, "texturen uit het spel worden geserveerd (voor de voorbeelden)")
+        # --- prompts met Claude (nep-API op dezelfde nepserver)
+        ok("sleutel" in post("/api/prompt_ai", {"id": "schot_musket", "modus": "maak", "wens": "dikkere rook"}).get("fout", "")
+           and not nep["claude"], "AI-prompt zonder Claude-sleutel: meteen een melding, geen verzoek")
+        ok("fout" in post("/api/claude_sleutel", {"sleutel": "r8_proef"}), "een Replicate-sleutel is geen Claude-sleutel")
+        ok("401" in post("/api/claude_sleutel", {"sleutel": "sk-ant-fout"}).get("fout", "") and not lees_claude_sleutel(),
+           "een verkeerde Claude-sleutel wordt niet bewaard")
+        ok(post("/api/claude_sleutel", {"sleutel": "sk-ant-proef"}).get("model") == "Claude Opus 5.5"
+           and lees_claude_sleutel() == "sk-ant-proef", "de goede Claude-sleutel wordt gecontroleerd en bewaard")
+        ok("Beschrijf" in post("/api/prompt_ai", {"id": "schot_musket", "modus": "maak", "wens": ""}).get("fout", ""),
+           "AI: maak prompt zonder beschrijving vraagt erom")
+        j = post("/api/prompt_ai", {"id": "schot_musket", "doel": "film", "modus": "maak",
+                                    "wens": "dikkere grijze rook die met de wind meedrijft"})
+        cb = nep["claude"][-1]
+        vraag = cb["body"]["messages"][0]["content"]
+        tekst_ = next(x["text"] for x in vraag if x["type"] == "text")
+        ok(j.get("prompt") == "Thick grey smoke drifting with the wind." and cb["body"]["model"] == CLAUDE_MODEL
+           and cb["body"].get("fallbacks") == "default" and CLAUDE_FALLBACK_BETA in cb["beta"]
+           and "Fog of War" in cb["body"]["system"] and cb["body"]["output_config"]["effort"] == "medium",
+           "AI: maak prompt geeft de prompt terug (zonder aanhalingstekens), %s met fallback" % CLAUDE_MODEL)
+        ok("Effect concept, video" in tekst_ and "dikkere grijze rook" in tekst_ and "Musketschot" in tekst_
+           and "Mode: write a new prompt" in tekst_ and vraag[0]["type"] == "image",
+           "AI: de vraag draagt het doel (filmpje), het effect, de beschrijving en het spelbeeld")
+        post("/api/prompt_ai", {"id": "o_rook_musket", "doel": "beeld", "modus": "verbeter", "tekst": "A puff of smoke"})
+        tekst_ = next(x["text"] for x in nep["claude"][-1]["body"]["messages"][0]["content"] if x["type"] == "text")
+        ok("Texture or decal, image" in tekst_ and "pure black" in tekst_ and "Current prompt: A puff of smoke" in tekst_
+           and "flipbook" in tekst_ and nep["claude"][-1]["body"]["messages"][0]["content"][0]["type"] == "image",
+           "AI: verbeter voor een textuur kent de achtergrondregel, het flipbook en de textuur uit het spel")
+        post("/api/prompt_ai", {"id": "schot_musket", "modus": "verbeter", "tekst": "Smoke", "beeld": r_spel_rust, "met_basis": True})
+        tekst_ = next(x["text"] for x in nep["claude"][-1]["body"]["messages"][0]["content"] if x["type"] == "text")
+        ok("only what to add or change" in tekst_, "AI: op een basis schrijft hij alleen de verandering")
+        ok("weigert" in post("/api/prompt_ai", {"id": "schot_musket", "modus": "maak", "wens": "WEIGER"}).get("fout", ""),
+           "AI: een weigering van Claude wordt een nette melding")
+        ok("fout" in post("/api/prompt_ai", {"id": "../x", "modus": "maak", "wens": "x"}), "AI: een rare id wordt geweigerd")
+        # --- uit het spel: een textuur die het spel gebruikt weer weghalen
+        Image.new("RGB", (4, 4)).save(os.path.join(rook, "musket_4x4.png.import.tmp"), "PNG")
+        os.replace(os.path.join(rook, "musket_4x4.png.import.tmp"), os.path.join(rook, "musket_4x4.png.import"))
+        j = post("/api/uit_spel", {"id": "rook_musket", "naam": "musket_4x4.png"})
+        ok(j.get("weg") == "musket_4x4.png" and not os.path.exists(os.path.join(rook, "musket_4x4.png"))
+           and not os.path.exists(os.path.join(rook, "musket_4x4.png.import")) and os.path.exists(os.path.abspath(j.get("backup", "")))
+           and onderdeel_rij("rook_musket")["spel"] == [] and os.path.exists(os.path.join(rook, "white_smoke_3x3.png")),
+           "uit het spel (flipbook): het vel en zijn .import weg, met backup; de witte pof blijft")
+        ok(not any(m.get("in_spel") for m in concepten_van("o_rook_musket")),
+           "uit het spel: de kandidaat staat niet meer als 'in het spel'")
+        j = post("/api/uit_spel", {"id": "bloed_spetter", "naam": "splat7.png"})
+        ok(j.get("over") == 6 and not os.path.exists(os.path.join(P["texturen"], "blood", "splat7.png")),
+           "uit het spel (variant): splat7.png weg, zes spetters over")
+        ok("niet" in post("/api/uit_spel", {"id": "bloed_spetter", "naam": "splat7.png"}).get("fout", ""),
+           "uit het spel: een bestand dat er niet (meer) staat geeft een melding")
+        ok("fout" in post("/api/uit_spel", {"id": "bloed_spetter", "naam": "../../project.godot"}),
+           "uit het spel: alleen bestanden van het onderdeel")
         # webserver
         code, data = get("/")
         ok(code == 200 and b"VFX-studio" in data, "de pagina laadt")
