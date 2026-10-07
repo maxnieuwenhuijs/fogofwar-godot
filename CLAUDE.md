@@ -1126,7 +1126,17 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   reken daarmee. De min geeft het punt aan de kleinste andere stat
   (`_adjust_stat`, delta -1; het besluit van 3 september "alleen plus" is
   hiermee teruggedraaid). `-- define klik` klikt echt op de min en de plus
-  van kaart 0 (hp 3 -> 2 -> 3) en meet de volgorde plus/cijfer/min. **De emblemen zijn
+  van kaart 0 (hp 3 -> 2 -> 3) en meet de volgorde plus/cijfer/min. **Nog te
+  verdelen punten (7 oktober, Max: "op de kaarten moet ook linksboven iets
+  van 0/8 staan voor nog te verdelen punten, bijv bij lion"; "alleen de
+  tekst donker en geen achtergrond"):** linksboven (`CardView.PUNTEN_POS`
+  70,124, 150 x 68, onder de naamplaat en links van de krans) in inkt op
+  het perkament "nog over/budget van deze kaart"
+  (`data.remaining_points()`/`data.budget`; Leeuw "0/8", een CP-kaart
+  "0/9"; rood als er iets open staat), alleen bij het definieren,
+  net als plus en min. Een kaart start al verdeeld, dus normaal staat er 0.
+  `-- define [muis|leeuw|beer|wolf|krokodil] [cp]` meet per kaart tekst,
+  budget en plek. **De emblemen zijn
   de duo-gravures** (big bro met kleine broertje) uit
   `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
   `python tools/verwerk_emblemen.py` knipt en schaalt ze naar

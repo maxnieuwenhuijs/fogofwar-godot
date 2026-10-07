@@ -2477,10 +2477,16 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 	elif "define" in args:
-		# `-- define muis` toont de 4-kaarten-waaier van de Muis.
+		# `-- define muis` toont de 4-kaarten-waaier van de Muis; `leeuw`, `beer`,
+		# `wolf`, `krokodil` (of de mapnamen) de waaier van die factie.
 		if "muis" in args:
 			game._human_doctrine = Constants.Doctrine.MUIS
 			game._ai_doctrine = Constants.Doctrine.MENS
+		var dfn := _met_mapnamen({"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER, "wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
+		for fn in dfn:
+			if fn in args:
+				game._human_doctrine = dfn[fn]
+				game._ai_doctrine = Constants.Doctrine.MENS
 		game._start_match(1)
 		await get_tree().create_timer(0.2).timeout
 		game._confirm_placement()
@@ -2524,6 +2530,33 @@ func _ready() -> void:
 					k_rechts = maxf(k_rechts, kn.position.x + kn.size.x * kn.scale.x)
 			print("[DEFINE] kolommen van %.0f tot %.0f op de kaart, kader 47..599 (%s)" % [
 				k_links, k_rechts, "PASS" if k_links >= 47.0 and k_rechts <= 599.0 else "FAIL"])
+		# Nog te verdelen punten (7 oktober): per kaart "over/budget" linksboven,
+		# zichtbaar bij het definieren, tussen kader (47) en krans (vanaf 240),
+		# onder de naamplaat (tot 116); de CP-kaart heeft budget + 1.
+		var d_budget: int = int(GameSession.state.doctrine_data_of(game._human_id).budget)
+		for i in dviews.size():
+			var pcv: CardView = dviews[i]
+			var pt: Label = pcv.find_child("PuntenTekst", true, false)
+			var pp: Control = pcv.find_child("Punten", true, false)
+			if pt == null or pp == null:
+				print("[DEFINE] FOUT: kaart %d heeft geen punten-teller" % i)
+				continue
+			# Los van de kaartdata: een vers uitgedeelde kaart is helemaal verdeeld,
+			# dus "0/<factie-budget>", met de CP-inzet een meer.
+			var verwacht: String = "0/%d" % (d_budget + (1 if pcv._cp_inzet else 0))
+			var plek_ok: bool = pp.position.x >= 47.0 and pp.position.x + pp.size.x <= 240.0 and pp.position.y >= 116.0
+			print("[DEFINE] kaart %d punten: \"%s\" (verwacht %s, factie-budget %d%s), zichtbaar %s, plek %.0f..%.0f x %.0f..%.0f (%s)" % [
+				i, pt.text, verwacht, d_budget, ", CP" if pcv._cp_inzet else "", str(pp.is_visible_in_tree()),
+				pp.position.x, pp.position.x + pp.size.x, pp.position.y, pp.position.y + pp.size.y,
+				"PASS" if pt.text == verwacht and pp.is_visible_in_tree() and plek_ok else "FAIL"])
+		# Een weergavekaart (onthulscherm, spookkaart) toont geen teller.
+		var wkaart: CardView = CardView.maak(3, 3, 2, game._human_id, game._human_doctrine, d_budget)
+		add_child(wkaart)
+		await get_tree().process_frame
+		var wpunten: Control = wkaart.find_child("Punten", true, false)
+		var wverborgen: bool = wpunten != null and not wpunten.is_visible_in_tree()
+		print("[DEFINE] weergavekaart: punten-teller %s (%s)" % ["verborgen" if wverborgen else "zichtbaar", "PASS" if wverborgen else "FAIL"])
+		wkaart.queue_free()
 		if "klik" in args and dviews.size() >= 1:
 			var kdoel: CardView = dviews[0]
 			var ky_voor: float = kdoel.position.y

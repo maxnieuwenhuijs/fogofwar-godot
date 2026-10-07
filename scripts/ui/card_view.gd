@@ -66,6 +66,15 @@ const KOLOM_MIN_Y := 340.0       # de min, onder het cijfer
 const GESELECTEERD_SCHAAL := 1.04
 const GEKOPPELD_DIM := 0.72
 const GLOED_RAND := 8.0
+## Nog te verdelen punten (7 oktober, Max: "op de kaarten moet ook linksboven
+## iets van 0/8 staan voor nog te verdelen punten, bijv bij lion"; daarna
+## "alleen de tekst donker en geen achtergrond"): "nog over / budget van deze
+## kaart" in inkt op het perkament linksboven, onder de naamplaat (tot y 116)
+## en links van de krans (vanaf x 240). Een CP-kaart toont budget + 1.
+## Alleen bij het definieren, net als de plus en de min.
+const PUNTEN_POS := Vector2(70.0, 124.0)
+const PUNTEN_MAAT := Vector2(150.0, 68.0)
+const PUNTEN_GROOTTE := 48
 
 var data: CardData = CardData.new()
 var _editable: bool = true
@@ -100,6 +109,8 @@ var _bonus_labels: Array[Label] = []
 var _cp_zegel: TextureRect
 var _cp_zegel_2: TextureRect   # tweede laag bij inzet: de plaat is half doorzichtig, twee lagen dekken
 var _cp_tekst: Label
+var _punten: Control
+var _punten_tekst: Label
 var _onthuld_rect: TextureRect
 var _lint: TextureRect
 var _gekoppeld: TextureRect
@@ -298,6 +309,13 @@ func _bouw() -> void:
 		Vector2((maat.x - SIERLIJN_MAAT.x) * 0.5, UiAssets.KAART_SIERLIJN_Y), SIERLIJN_MAAT))
 	_factie_label = _label("Titel", "LabelKopInkt", 48, Vector2(0, UiAssets.KAART_TITEL_Y), Vector2(maat.x, 60))
 	_kaartlaag.add_child(_factie_label)
+	# Nog te verdelen punten, linksboven: alleen "0/8" in inkt, geen plaatje.
+	_punten = _control("Punten", PUNTEN_POS, PUNTEN_MAAT)
+	_kaartlaag.add_child(_punten)
+	_punten_tekst = _label("PuntenTekst", "LabelCijfer", PUNTEN_GROOTTE, Vector2.ZERO, PUNTEN_MAAT)
+	_punten_tekst.add_theme_constant_override("outline_size", 0)
+	_punten.add_child(_punten_tekst)
+	_uniek(_punten_tekst)
 	# Drie stat-kolommen: HP links, SPEED midden, ATTACK rechts.
 	# drie kolommen op eigen maat, gecentreerd op de kaart
 	var kolom_b: float = KOLOM_MAAT.x
@@ -508,6 +526,12 @@ func _update_staat() -> void:
 	var open := not _verborgen
 	for button in _buttons:
 		button.visible = _editable and open
+	# Nog te verdelen / budget. Sinds 3 september start een kaart al verdeeld en
+	# schuift plus/min alleen, dus normaal "0/8"; staat er toch iets open, dan rood.
+	_punten.visible = _editable and open
+	var over: int = data.remaining_points()
+	_punten_tekst.text = "%d/%d" % [over, data.budget]
+	_punten_tekst.add_theme_color_override("font_color", UiAssets.DIEP_ROOD if over != 0 else UiAssets.INKT)
 	_lint.visible = _selectable and not gekoppeld and open
 	_gekoppeld.visible = gekoppeld and open
 	var gloed_was: bool = _gloed.visible

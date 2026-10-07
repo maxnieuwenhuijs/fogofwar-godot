@@ -1,5 +1,32 @@
 # Fog of War — Work In Progress & Context
 
+## 7 oktober -- nog te verdelen punten linksboven op de kaart
+
+Max: "op de kaarten moet ook linksboven iets van 0/8 staan voor nog te
+verdelen punten bijv bij lion etc".
+
+- **`card_view.gd`:** linksboven (70,124, 150 x 68) `%PuntenTekst`: nog over
+  / budget van deze kaart, in inkt op het perkament. Eerst op een donker
+  plaatje als de kolomnamen; Max: "alleen de tekst donker en geen
+  achtergrond". Leeuw "0/8", de kaart met de CP-inzet "0/9", Muis "0/5". Rood
+  als er een punt open staat (goud las slecht op perkament). Alleen bij het
+  definieren (`_editable`), dus niet in de koppel-fase,
+  op het onthulscherm of op een kaartrug. Gezet in `_update_staat`, zodat een
+  budgetwissel (CP) altijd meekomt.
+- **Let op:** een kaart start al verdeeld (`CardData.reset_stats`) en plus/min
+  schuiven alleen, dus er staat normaal altijd 0. Wil Max zelf vanaf 1/1/1
+  verdelen, dan is dat een andere invoer (plus uit de pot, min terug).
+- **`-- define`** kent nu ook `leeuw`, `beer`, `wolf`, `krokodil` (en de
+  mapnamen) en meet per kaart de tekst tegen "0/<factie-budget>" (+1 met
+  CP, los van de kaartdata) en de plek (tussen kader 47 en krans 240, onder
+  de naamplaat 116), en dat een weergavekaart (`CardView.maak`) geen teller
+  toont. Review-workflow (drie lenzen, toets per vondst): geen fout; de
+  strengere check is zijn suggestie.
+- Checks: `-- define leeuw cp` (0/9 en 0/8), `-- define muis klik` (vijf keer
+  0/5, klik en min-knop PASS), inkomcheck kaart, uicheck, spscheck,
+  sleepcheck, `-- uispel 777` gelijk (`5862e4c9`), herstelcheck 777,
+  testsuite.
+
 ## 6-7 oktober -- Een eigen textuur voor elk nieuw effect, en een zwaaispoor
 
 Max: "opspattende aarde bij een kanonsinslag moet ook decal zijn net als vonken,
