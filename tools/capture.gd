@@ -5436,6 +5436,7 @@ func _make_goldens() -> void:
 	_golden_cp_inzet(dir)
 	_golden_kanon_act(dir)
 	_golden_sps(dir)
+	_golden_bod_per_hand(dir)
 	print("[GOLDENS] klaar")
 
 
@@ -5617,6 +5618,39 @@ func _golden_sps(dir: String) -> void:
 		[Actions.make_ack_reveal(), 1],
 		[Actions.make_ack_reveal(), 2],
 	])
+
+
+func _golden_bod_per_hand(dir: String) -> void:
+	# 4.3.9 (7 oktober, Max: "als ik er 5 nog heb"): de Muis met zijn volle
+	# hand (een kaart helemaal op aanval, de rest half) tegen een Leeuw met nog
+	# een vrije pion, die zijn ene kaart helemaal op aanval zet. Het bod deelt
+	# door de volle hand, dus de Muis krijgt het initiatief (onder 4.3.8 won die
+	# ene kaart met 100%). Daarna bevestigen beide: het koppelen begint bij P1.
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}})
+	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MUIS
+	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.LEEUW
+	s.phase = Phase.Type.SETUP_1_DEFINE
+	s.current_player = 1
+	var muis: Dictionary = s.doctrine_data_of(1)
+	var leeuw: Dictionary = s.doctrine_data_of(2)
+	for i in int(muis.cards):
+		s._spawn_pawn(1, Vector2i(3 + i, 9))
+	s._spawn_pawn(2, Vector2i(5, 1))
+	s.init_pools()
+	var bm: int = int(muis.budget)
+	var bl: int = int(leeuw.budget)
+	var hand: Array = []
+	for i in int(muis.cards):
+		var aanval: int = 1 + ((bm - 3) if i == 0 else (bm - 3) / 2)
+		hand.append({"hp": bm - 1 - aanval, "stamina": 1, "attack": aanval})
+	_golden_opnemen(dir + "bod_per_hand.json", s, [
+		[Actions.make_define_cards(hand), 1],
+		[Actions.make_define_cards([{"hp": 1, "stamina": 1, "attack": bl - 2}]), 2],
+		[Actions.make_ack_reveal(), 1],
+		[Actions.make_ack_reveal(), 2],
+	])
+	print("[GOLDENS] bod_per_hand: initiatief bij speler %d (koppelen begint bij %d)" % [s.initiative_player, s.current_player])
 
 
 func _golden_kanon_act(dir: String) -> void:

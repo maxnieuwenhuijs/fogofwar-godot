@@ -13,6 +13,7 @@
  },
  "campaign": {
   "initiatief_sps": true,
+  "initiatief_per_hand": true,
   "budget_bonus": {
    "1": {
     "cp": 0,

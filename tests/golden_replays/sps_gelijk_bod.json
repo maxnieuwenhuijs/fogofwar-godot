@@ -18,10 +18,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "33cf0b9a5423a6a6d73725cc4e5de03152ff550d644b257eb1800fba33774de8",
+			"hash": "8134a4fd266da6f97ad4fb301f72d84acfd89c5621f39265cc76f59d09dd5a1e",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1791227341.153
+			"ts": 1791367180.537
 		},
 		{
 			"action": {
@@ -82,10 +82,10 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "dba4fb6efdc12b94144870e0847771f7561c2849c412721277c13565f06e8866",
+			"hash": "2b445fda415f8d1664bf967298b528dba181a668c100eb341c7095af8ff8cbb7",
 			"player_id": 2,
 			"seq": 1,
-			"ts": 1791227341.153
+			"ts": 1791367180.537
 		},
 		{
 			"action": {
@@ -107,10 +107,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "001e88e8492187d3044665dbaf7de2eec6edbb167d3e46f0a799392facac0397",
+			"hash": "2bbb8be92f9debb153405824c1e4fcf7381b2e7ce7a0f9c39ca5b570cd513d53",
 			"player_id": 1,
 			"seq": 2,
-			"ts": 1791227341.153
+			"ts": 1791367180.537
 		},
 		{
 			"action": {
@@ -144,10 +144,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5ffb1dc0490b53f5049570706a723ae17b2283ad9d111bcdd592b1838722cbd1",
+			"hash": "eecc9119365179247eb5198dac025241b84a6db2f1cbf975ebbb4a55d9393b15",
 			"player_id": 2,
 			"seq": 3,
-			"ts": 1791227341.153
+			"ts": 1791367180.538
 		},
 		{
 			"action": {
@@ -169,10 +169,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "049d051eb711d5efc367078c30f7c88384c2a3b3b57ae3cec0b0b262d74f19fa",
+			"hash": "1128b11f9c5d0a4dd92b0479e6ae2411ee89ee49b97a57daa1c72639fc9c3ed2",
 			"player_id": 1,
 			"seq": 4,
-			"ts": 1791227341.153
+			"ts": 1791367180.538
 		},
 		{
 			"action": {
@@ -206,20 +206,20 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "5e1b686dc4ed450523f67375f28bc892573a1bf8eeca4933216c0654f06321b9",
+			"hash": "74c9a472a6cc5fb1866bd543460ae15bb2caff20d2aee50d4d2a42bd0ece6dde",
 			"player_id": 2,
 			"seq": 5,
-			"ts": 1791227341.155
+			"ts": 1791367180.538
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "29d3cacd33517ac906cf1fbcc7b57bf664a951e8306e1fb5919213d8f4a76252",
+			"hash": "25adb1554ab1901e6e0b476fe3d4c75f15cb3a215e8f20a920f41a7652031d69",
 			"player_id": 1,
 			"seq": 6,
-			"ts": 1791227341.155
+			"ts": 1791367180.539
 		},
 		{
 			"action": {
@@ -242,13 +242,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "89889c24b87d195cf5ec16d2309bcc62dfcd51fc72c82ee8f8b184f4815a3cab",
+			"hash": "b1dc8f58222f666ce2c4c12a0caed572cbf23e92a12e02d3f3074b0bd957b7b0",
 			"player_id": 2,
 			"seq": 7,
-			"ts": 1791227341.155
+			"ts": 1791367180.539
 		}
 	],
-	"final_hash": "89889c24b87d195cf5ec16d2309bcc62dfcd51fc72c82ee8f8b184f4815a3cab",
+	"final_hash": "b1dc8f58222f666ce2c4c12a0caed572cbf23e92a12e02d3f3074b0bd957b7b0",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -403,6 +403,7 @@
 				"cp_refund": "none",
 				"cp_start": 10,
 				"cp_start_mode": "vast",
+				"initiatief_per_hand": true,
 				"initiatief_sps": true,
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -453,7 +454,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.8",
+			"rules_version": "4.3.9",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"stat_bonus": {},
@@ -476,7 +477,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-10-05T21:09:01",
+		"created": "2026-10-07T11:59:40",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -605,6 +606,7 @@
 					"cp_refund": "none",
 					"cp_start": 10,
 					"cp_start_mode": "vast",
+					"initiatief_per_hand": true,
 					"initiatief_sps": true,
 					"kanon_actie_kost": {
 						"roll": 1,
@@ -655,7 +657,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.8",
+				"rules_version": "4.3.9",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"stat_bonus": {},
@@ -677,6 +679,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.8"
+		"rules_version": "4.3.9"
 	}
 }

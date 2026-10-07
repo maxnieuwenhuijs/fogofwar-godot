@@ -66,11 +66,16 @@ func test_winnaar_tabel() -> void:
 
 
 func test_versie_en_knop() -> void:
-	assert_eq(RulesConfig.from_dict({"campaign": {}}).rules_version, "4.3.8", "campaign = 4.3.8")
-	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_sps": false}}).rules_version, "4.3.7",
-		"knop uit = 4.3.7")
-	assert_eq(RulesConfig.from_dict({"rules_version": "4.3.7", "campaign": {}}).rules_version, "4.3.8",
-		"een oud bestand met het blok gaat mee naar 4.3.8")
+	# Het label volgt de nieuwste knop die aan staat: 4.3.9 (bod per volle hand)
+	# boven 4.3.8 (deze regel); de knop zelf staat in het blok.
+	assert_eq(RulesConfig.from_dict({"campaign": {}}).rules_version, "4.3.9", "campaign = 4.3.9")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false}}).rules_version, "4.3.8",
+		"zonder het bod per hand = 4.3.8")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false, "initiatief_sps": false}}).rules_version, "4.3.7",
+		"ook deze knop uit = 4.3.7")
+	assert_false(bool(RulesConfig.from_dict({"campaign": {"initiatief_sps": false}}).campaign.initiatief_sps), "de knop staat in het blok")
+	assert_eq(RulesConfig.from_dict({"rules_version": "4.3.7", "campaign": {}}).rules_version, "4.3.9",
+		"een oud bestand met het blok gaat mee naar de nieuwste versie")
 
 
 func test_gelijk_bod_opent_steen_papier_schaar() -> void:
@@ -176,7 +181,7 @@ func test_kale_ack_kiest_geseed_en_volgorde_onafhankelijk() -> void:
 
 func test_knop_uit_houdt_de_oude_terugval() -> void:
 	var s := _define_staat(false)
-	assert_eq(s.rules.rules_version, "4.3.7")
+	assert_false(Rules.sps_aan(s), "knop uit")
 	var events := _naar_reveal(s)
 	assert_false(s.sps_nodig, "knop uit: geen steen-papier-schaar")
 	assert_eq(int(_event(events, Reducer.EV_CARDS_REVEALED).payload.winner), 1, "cyclus 1, ronde 1: speler 1")

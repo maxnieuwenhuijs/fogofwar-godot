@@ -1,5 +1,44 @@
 # Fog of War — Work In Progress & Context
 
+## 7 oktober -- 4.3.9: het initiatief-bod deelt door de volle hand
+
+Max: "is het een percentage dat je met 1 kaart ook kan winnen? dat is dan toch
+niet eerlijk, als ik er 5 nog heb". Uitgelegd (het bod was het gemiddelde per
+gespeelde kaart, dus een kant met een vrije pion kocht het initiatief met een
+kaart all-in), twee richtingen voorgelegd (per volle hand delen, of een kaal
+totaal waarin de factie met de meeste kaarten altijd wint), Max: "doe maar"
+op per volle hand, als knop met de oude regel als terugval.
+
+- **Engine:** `Rules.compute_bid(cards, budget, stat, hand)` deelt door
+  `maxi(n, hand) × (budget − 3)`; `Rules.bod_hand(state, p)` is de
+  kaarten-per-ronde van de factie als `campaign.initiatief_per_hand` aan staat
+  (`Rules.bod_per_hand`), anders 0 (= per gespeelde kaart). Aanval-bod en
+  stamina-tiebreak. Knop default aan in `CAMPAIGN_DEFAULTS` en expliciet in
+  `rules_v42_campaign.json` en `v42_default.json`. Versielabel: 4.3.9, met
+  de knop uit 4.3.8, met ook sps uit 4.3.7 (alleen een label).
+- **Tests:** `RulesTests.test_bod_per_hand_een_kaart_tegen_vijf` (Muis volle
+  hand tegen Leeuw met een kaart all-in: knop aan wint de Muis, uit de
+  Leeuw), `_volle_hand_zoals_vroeger`, `_ook_voor_de_stamina_tiebreak`;
+  versie-asserts in SpawnTests en SpsTests naar 4.3.9.
+- **Goldens:** de vier campagne-goldens opnieuw (de twaalf zonder campagne
+  alleen tijdstempels, teruggezet); nieuw `bod_per_hand` (initiatief naar
+  P1, de Muis). `golden_sims.json` ongewijzigd (simcheck 0).
+- **uispel 777:** dezelfde partij (165, 4), nieuwe referentie `d2080e7a…`.
+  Core-hash `8501a3e2…` (pakket-proef OK): server en client samen uitrollen.
+- Balans niet gemeten (B18). **Review-workflow** (vier lenzen, toets per
+  vondst): de docs zeiden dat spiegelpartijen ongewijzigd spelen (alleen bij
+  even grote handen; rechtgezet), en een korte hand is vooral een kwestie van
+  factie, niet van achterstand: koppelingen blijven de hele cyclus staan, dus
+  in ronde 3 is de hand kort onder 3 x kaarten levende pionnen (Muis na 6
+  netto verlies, Varken 9, Krokodil en Leeuw 13, Beer en Wolf 14). Dan haalt
+  de Muis met 4 kaarten hooguit 80% tegen een Leeuw met 2 (100%). Aan Max
+  voorgelegd: eventueel alleen korten tot wat de tegenstander speelt
+  (deler = max(n, min(hand, n tegenstander))). Weerlegd: campagneduels die de
+  knop uit het bestand niet lezen (zo werkt ook de sps-knop: CAMPAIGN_DEFAULTS),
+  en een lopende partij die halverwege van regel wisselt (geen duel wordt
+  halverwege bewaard). Tests sterker: `bod_hand` is de hand uit het
+  regelbestand (Muis 5).
+
 ## 7 oktober -- Charge: zware stappen die versnellen tot de aanval
 
 Max: "speel ook bij de charge die zware voetstappen af achter elkaar steeds

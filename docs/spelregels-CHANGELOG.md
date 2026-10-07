@@ -1,5 +1,42 @@
 # Spelregels — CHANGELOG
 
+## 4.3.9: 7 oktober 2026 (het initiatief-bod deelt door de volle hand)
+
+*Besluit Max, 7 oktober: "is het een percentage dat je met 1 kaart ook kan
+winnen? dat is dan toch niet eerlijk, als ik er 5 nog heb", en na de uitleg
+van de keuze "doe maar".*
+
+**Wat verandert.** Het Aanval-bod (en de stamina-tiebreak) was het gemiddelde
+per gespeelde kaart: (Σ stat − n) / (n × (budget − 3)). Wie nog maar een
+vrije pion had, zette die ene kaart op aanval en had 100%, tegen een volle
+hand die dan met elke kaart all-in moest om gelijk te komen. Nu deelt het bod
+door de VOLLE hand van de factie (kaarten per ronde): (Σ stat − n) / (hand ×
+(budget − 3)). Bij volle handen is dat precies hetzelfde getal (ook in een
+spiegelpartij, zolang beide kanten een volle hand spelen); met minder kaarten
+haal je hooguit dat deel van een volle hand (1 van 5 kaarten: 20%, de Leeuw
+met 1 van zijn 2: 50%). Knop
+`campaign.initiatief_per_hand` (default aan, expliciet in
+`rules_v42_campaign.json` en `v42_default.json`); uit = 4.3.8. Spec:
+`docs/spelregels-v4.2.md`, Deel B "4.3.9".
+
+**Gevolgen.** Regelversie 4.3.9 en een nieuwe sleutel in het campaign-blok:
+de vier campagne-goldens (`cp_inzet`, `kanon_act`, `spawn_geblokkeerd`,
+`sps_gelijk_bod`) zijn opnieuw gemaakt (in `cp_inzet` speelt P1 een kaart van
+een hand van drie: bod 25% wordt 8,3%, hij wint nog steeds van 0%), plus een
+nieuwe golden `bod_per_hand` (Muis met volle hand tegen een Leeuw met een
+kaart all-in: het initiatief gaat naar de Muis, onder 4.3.8 naar de Leeuw).
+De twaalf goldens zonder campagne en `golden_sims.json` zijn ongewijzigd. De
+uispel-referentie verschuift (dezelfde partij, de regels zitten in de
+staat-hash). De core-hash verandert: server en client samen uitrollen. Net als
+bij 4.3.8 speelt een partij die onder de oude versie begon en nu verder gaat
+met de nieuwe regel (het blok mist de sleutel, de default is aan). De balans
+is niet gemeten (B18: gepaard, knop aan tegen uit). Wie het raakt is vooral
+een kwestie van factie, niet van achterstand: koppelingen blijven de hele
+cyclus staan, dus in ronde 3 (die bepaalt wie de actiefase begint) is je hand
+kort zodra je minder dan 3 × je kaarten aan levende pionnen hebt. De Muis
+zit daar na 6 pionnen netto verlies al onder, Varken na 9, Krokodil en Leeuw
+na 13, Beer en Wolf na 14 (review van 7 oktober).
+
 ## 4.3.8: 5 oktober 2026 (steen-papier-schaar bij een volledig gelijk bod)
 
 *Besluit Max (cloud-sessie 5 oktober, lokaal gebouwd): "rock paper scissor bij
