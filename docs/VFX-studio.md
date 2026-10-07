@@ -163,7 +163,12 @@ Godot, daarna de concept-webpagina.
      een vel" maakt er een kandidaat met het rooster van, en die gaat met "in
      het spel" onder de goede naam het spel in. Een reeks staat in
      `studio.json` (`reeksen`); zijn frames zijn opdrachten met `reeks_frame`
-     en staan niet tussen de gewone kandidaten.
+     en staan niet tussen de gewone kandidaten. **Weggooien** (7 oktober,
+     Max: "laat me ook de 12 frames kunnen verwijderen"): per frame "weg"
+     (de versie die je ziet; een eerdere versie komt terug) en bovenaan
+     "alle frames weg" (alle versies van alle frames; `reeks_weg`). Een vel
+     dat je er al van maakte en wat in het spel staat blijven; terwijl de
+     reeks loopt kan het niet.
    - Meekijken: van elk filmpje (van Replicate, eigen upload, en bij "dit is
      hem" ook in de referentiemap als `film_vel.jpg`) maakt de studio een
      contactvel van 12 beelden met de tijd erbij. Een plaatje kan Claude
