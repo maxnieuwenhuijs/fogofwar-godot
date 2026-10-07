@@ -25,6 +25,16 @@ hand ook de Muis met 4 kaarten tegen de Leeuw met 2 kortte (80 tegen 100). Max:
   P1). `golden_sims.json` ongewijzigd (simcheck 0).
 - **uispel 777:** dezelfde partij, referentie `73b47201…`. Core-hash
   `47092ea8…` (pakket-proef OK).
+- **Nacht van 7 op 8 oktober** (Max: "kaarten niet leeg en doe maar een nacht
+  trainen toch"; kaarten blijven dus voorverdeeld): `tools/balans/
+  nacht_bod_deler.ps1`, om 21:30 gestart via WMI. Eerst de gewone
+  trainingsnacht op 4.3.10 (420 min, zes trainers, nachtmatrix, dashboard),
+  daarna de gepaarde meting van alleen de bod-regel: `bod_tegen` (4.3.10,
+  ijkpunt, een exacte kopie van `rules_v42_campaign.json`) tegen
+  `bod_kaarten` (4.3.8), dezelfde verse bots, seed 93000, 2 potjes per paar,
+  1728 partijen per kant; de vergelijking in
+  `results/nacht_bod_deler_<stempel>.log`. Rookproef vooraf: beide varianten
+  door de echte arena, regels 4.3.10 en 4.3.8 in de metadata.
 
 ## 7 oktober -- 4.3.9: het initiatief-bod deelt door de volle hand
 
