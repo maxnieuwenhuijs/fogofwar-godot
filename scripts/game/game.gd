@@ -3309,6 +3309,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# aanvaller, met zijn factie erbij als die een eigen opname heeft.
 			_melee_geluid(action.attacker_id, attacker, result.get("eliminated", false),
 				maxf(hit_del - 0.12, 0.0))
+			if attacker != null:
+				attacker.zwaaispoor(maxf(hit_del - 0.12, 0.0))   # het lint achter de bajonet (6 oktober)
 			_impact_laag(action.defender_id, int(result.get("damage", 0)),
 				result.get("eliminated", false), maxf(hit_del - 0.12, 0.0), true)
 			_hit_feedback(action.defender_id, result.defender_pos, result.damage, hit_del,
@@ -3422,6 +3424,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				var klap_del: float = tijdlijn.klap_del
 				# sabel, lans of bijl van deze ruiter (17 september)
 				_melee_geluid(action.pawn_id, cav, result.get("eliminated", false), klap_del)
+				if cav != null:
+					cav.zwaaispoor(klap_del)   # het lint achter sabel, lans of bijl (6 oktober)
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
 					result.get("eliminated", false), klap_del, true)
 				_hit_feedback(action.defender_id, result.defender_pos, result.damage, klap_del,

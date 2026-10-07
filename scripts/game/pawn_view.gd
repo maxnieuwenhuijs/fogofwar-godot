@@ -46,6 +46,8 @@ const Bestandsindex := preload("res://scripts/core/bestandsindex.gd")
 ## De effecten van het bord (6 oktober, docs/VFX-studio.md): stof bij de landing
 ## van een charge en achter een ruiter of kanon dat hard rijdt.
 const VFX := preload("res://scripts/vfx/vfx.gd")
+## Het zwaaispoor achter de punt van een melee-wapen (6 oktober).
+const ZWAAISPOOR := preload("res://scripts/vfx/zwaaispoor.gd")
 const MODELS_DIR := "res://assets/models/"
 ## Placeholder-silhouet zolang het .glb ontbreekt, in de visuele taal van
 ## MODEL-WISHLIST.md: dun/gestrekt = snel, laag/rond = taai, breed/gespierd =
@@ -1695,6 +1697,203 @@ func _hand_positie() -> Vector3:
 				skel.force_update_all_bone_transforms()
 				return (skel.global_transform * skel.get_bone_global_pose(bone)).origin
 	return global_position + Vector3.UP * 0.35
+
+
+## Het zwaaispoor (6 oktober, Max: "voeg ook een slashing trail toe aan de melee
+## wapens, een lijntje om het effect wat kracht bij te geven, moet ook allemaal
+## tunebaar zijn"): een lijntje langs de baan van de punt van het wapen
+## (scripts/vfx/zwaaispoor.gd), van `slash_start` voor de klap tot `slash_na`
+## erna. game.gd roept dit bij een bajonetstoot en een charge met de tijd tot de
+## klap, de VFX-tuner ook. Het lijntje hangt onder de ouder (het bord) en blijft
+## dus liggen waar de zwaai was. Knop `slash_spoor` 0 = uit.
+func zwaaispoor(tot_klap: float) -> void:
+	if fx("slash_spoor", 1.0) <= 0.0 or not (get_parent() is Node3D):
+		return
+	var begin: float = maxf(tot_klap - fx("slash_start", 0.2), 0.0)
+	var opnemen: float = maxf(tot_klap - begin, 0.0) + fx("slash_na", 0.35)
+	if begin <= 0.0:
+		_start_zwaaispoor(opnemen)
+	else:
+		get_tree().create_timer(begin).timeout.connect(_start_zwaaispoor.bind(opnemen))
+
+
+func _start_zwaaispoor(opnemen: float) -> void:
+	if not is_inside_tree() or not visible or not (get_parent() is Node3D):
+		return
+	var spoor := ZWAAISPOOR.new()
+	spoor.name = "Zwaaispoor"
+	_zwaai_wapen = _kies_zwaai_wapen()
+	spoor.bron = _wapen_punt
+	spoor.opnemen = opnemen
+	var teamkleur := Color(1.0, 0.5, 0.4) if team == Constants.Team.RED else Color(0.5, 0.7, 1.0)
+	spoor.kleur = Color(0.92, 0.96, 1.0).lerp(teamkleur, clampf(fx("slash_team", 0.35), 0.0, 1.0))
+	get_parent().add_child(spoor)
+
+
+## [de punt van het wapen] in de ruimte van de ouder, voor het lijntje. Leeg als
+## er even geen wapen of hand is (dan slaat het lijntje dat frame over).
+func _wapen_punt() -> Array:
+	if not is_inside_tree() or not (get_parent() is Node3D):
+		return []
+	var einden := _wapen_einden()
+	if einden.is_empty():
+		return []
+	return [(get_parent() as Node3D).to_local(einden[1])]
+
+
+## Het wapen waar het lijntje de punt van volgt, gekozen bij de start van het
+## spoor: de prop in de hand, anders het ingebakken wapen (van de wapenroute, of
+## gezocht op naam als het model zijn wapen zonder losse glb draagt).
+var _zwaai_wapen: Node3D = null
+
+
+func _kies_zwaai_wapen() -> Node3D:
+	if _weapon != null and is_instance_valid(_weapon) and _weapon.is_visible_in_tree():
+		return _weapon
+	var kandidaten: Array = _baked_wapens if not _baked_wapens.is_empty() else _vind_ingebakken_wapens()
+	for mi in kandidaten:
+		if is_instance_valid(mi) and (mi as Node3D).is_visible_in_tree():
+			return mi
+	return null
+
+
+## De twee uiteinden van het wapen in wereldruimte, [kant van de hand, punt]: zijn
+## langste as, de punt is het eind het verst van de hand. Een prop of een wapen
+## aan een bot beweegt met zijn eigen transform; een geskind wapen niet, dat zet
+## `_geskinde_einden` in de houding van nu. Zonder wapen (een big bro met blote
+## handen) de onderarm door de hand verlengd, `slash_lengte` lang. Leeg zonder hand.
+func _wapen_einden() -> Array:
+	var hand := _bot_wereld("RightHand")
+	if hand == Vector3.INF:
+		return []
+	var w := _zwaai_wapen
+	if w != null and is_instance_valid(w) and w.is_inside_tree():
+		var einden: Array = []
+		if w is MeshInstance3D and (w as MeshInstance3D).skin != null and not _aan_een_bot(w):
+			einden = _geskinde_einden(w as MeshInstance3D)
+		else:
+			einden = _starre_einden(w)
+		if einden.size() == 2:
+			var p0: Vector3 = einden[0]
+			var p1: Vector3 = einden[1]
+			return [p0, p1] if p1.distance_to(hand) >= p0.distance_to(hand) else [p1, p0]
+	var arm := _bot_wereld("RightForeArm")
+	if arm == Vector3.INF or arm.distance_to(hand) < 0.0001:
+		return []
+	return [hand, hand + (hand - arm).normalized() * fx("slash_lengte", 0.5)]
+
+
+## De uiteinden van de langste as van een doos.
+static func _as_einden(ab: AABB) -> Array:
+	var as_: int = 0 if ab.size.x >= ab.size.y and ab.size.x >= ab.size.z else (1 if ab.size.y >= ab.size.z else 2)
+	var half := Vector3.ZERO
+	half[as_] = ab.size[as_] * 0.5
+	return [ab.get_center() - half, ab.get_center() + half]
+
+
+## Een prop of een wapen aan een bot: zijn doos in zijn eigen ruimte, met zijn
+## transform van nu.
+func _starre_einden(w: Node3D) -> Array:
+	var ab := _lokale_aabb(w)
+	if ab.size.length() < 0.0001:
+		return []
+	var e := _as_einden(ab)
+	return [w.global_transform * (e[0] as Vector3), w.global_transform * (e[1] as Vector3)]
+
+
+## Een geskind wapen (het ingebakken musket of melee-wapen uit de .blend): zijn
+## doos in rust, gezet zoals de skinning het doet, langs het bot waar het wapen
+## het zwaarst aan hangt: skelet x houding van dat bot x bind-pose.
+func _geskinde_einden(mi: MeshInstance3D) -> Array:
+	var skin := mi.skin
+	var skel := mi.get_node_or_null(mi.skeleton) as Skeleton3D
+	if skin == null or skel == null or mi.mesh == null:
+		return []
+	var bind: int = int(mi.get_meta("zs_bind", -2))
+	if bind == -2:
+		bind = _zwaarste_bind(mi.mesh)
+		mi.set_meta("zs_bind", bind)
+	if bind < 0 or bind >= skin.get_bind_count():
+		return []
+	var bot := skin.get_bind_bone(bind)
+	if String(skin.get_bind_name(bind)) != "":
+		bot = skel.find_bone(skin.get_bind_name(bind))
+	if bot < 0:
+		return []
+	var ab := mi.get_aabb()
+	if ab.size.length() < 0.0001:
+		return []
+	var xf := skel.global_transform * skel.get_bone_global_pose(bot) * skin.get_bind_pose(bind)
+	var e := _as_einden(ab)
+	return [xf * (e[0] as Vector3), xf * (e[1] as Vector3)]
+
+
+## Aan welke bind (bot) hangt een geskinde mesh het zwaarst? De gewichten van de
+## eerste surface opgeteld; -1 zonder gewichten.
+static func _zwaarste_bind(mesh: Mesh) -> int:
+	if mesh.get_surface_count() == 0:
+		return -1
+	var arr := mesh.surface_get_arrays(0)
+	if arr[Mesh.ARRAY_BONES] == null or arr[Mesh.ARRAY_WEIGHTS] == null:
+		return -1
+	var botten: PackedInt32Array = arr[Mesh.ARRAY_BONES]
+	var gewichten: PackedFloat32Array = arr[Mesh.ARRAY_WEIGHTS]
+	if botten.is_empty() or botten.size() != gewichten.size():
+		return -1
+	var som: Dictionary = {}
+	for i in botten.size():
+		som[botten[i]] = float(som.get(botten[i], 0.0)) + gewichten[i]
+	var beste := -1
+	var meest := 0.0
+	for b in som:
+		if float(som[b]) > meest:
+			meest = float(som[b])
+			beste = int(b)
+	return beste
+
+
+## Hangt deze node (een ingebakken wapen) aan een bot (BoneAttachment3D), dus
+## beweegt hij als een stuk mee?
+func _aan_een_bot(n: Node) -> bool:
+	var p := n.get_parent()
+	while p != null and p != _piece:
+		if p is BoneAttachment3D:
+			return true
+		p = p.get_parent()
+	return false
+
+
+## De omhullende doos van een wapen in zijn eigen ruimte (een keer gemeten en
+## bewaard: een wapen verandert niet van vorm).
+func _lokale_aabb(n: Node3D) -> AABB:
+	if n.has_meta("zs_aabb"):
+		return n.get_meta("zs_aabb")
+	var ab := AABB()
+	var eerste := true
+	var inv := n.global_transform.affine_inverse()
+	var delen: Array = [n] if n is VisualInstance3D else []
+	delen.append_array(n.find_children("*", "VisualInstance3D", true, false))
+	for vi in delen:
+		var b: AABB = (inv * (vi as VisualInstance3D).global_transform) * (vi as VisualInstance3D).get_aabb()
+		ab = b if eerste else ab.merge(b)
+		eerste = false
+	n.set_meta("zs_aabb", ab)
+	return ab
+
+
+## Een bot in wereldruimte op het eind van zijn naam ("RightHand" vindt ook
+## mixamorig:RightHand en mixamorig_RightHand); Vector3.INF als het er niet is.
+func _bot_wereld(naam: String) -> Vector3:
+	if _piece == null or not is_instance_valid(_piece):
+		return Vector3.INF
+	var skels: Array = _piece.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		return Vector3.INF
+	var skel: Skeleton3D = skels[0]
+	for i in skel.get_bone_count():
+		if String(skel.get_bone_name(i)).ends_with(naam):
+			return (skel.global_transform * skel.get_bone_global_pose(i)).origin
+	return Vector3.INF
 
 
 ## Het lijk/brokstuk blijft op het bord tot de volgende definieerfase;

@@ -1,5 +1,59 @@
 # Fog of War — Work In Progress & Context
 
+## 6-7 oktober -- Een eigen textuur voor elk nieuw effect, en een zwaaispoor
+
+Max: "opspattende aarde bij een kanonsinslag moet ook decal zijn net als vonken,
+voeg die toe in de studio al deze, ook misschien de kogel, gloeiende propjes uit
+de loop etc, al deze nieuwe vfx moeten hun eigen decal krijgen", en "voeg ook
+een slashing trail toe aan de melee wapens, een lijntje om het effect wat kracht
+bij te geven, moet ook allemaal tunebaar zijn".
+
+- **Negen onderdelen** in `vfx_catalogus.gd` (uitleg, beginprompt, filmprompt
+  waar een vel kan): `kogel_musket` (bullet/musket), `kogel_kanon`
+  (bullet/cannon), `propje` en `vonk` (sparks), `flits` (flash), `kluit` en
+  `splinter` (debris), `schokgolf` (decals) en `slash` (trails). De effecten
+  noemen ze (musketschot, kanonschot, kruitflits, propjes, opspattende aarde,
+  vonken, inslag per materiaal, kanon kapot, explosie, vuur, zwaaispoor), dus
+  de studio toont ze bij hun rij.
+- **`vfx.gd`:** elk van die plekken pakt de geleverde textuur als die er is
+  (`_kies_geleverd`, eigen rng), anders de oude bol, het blokje of het latje:
+  `_beeld` (billboard), `_vel_bij` (een vel over de levensduur), `_vliegend`
+  (kluit en splinter: boog, landen, liggen, een vel tolt twee keer rond tijdens
+  de vlucht), `_streep` (de kanonskogel plat langs de vliegrichting, naar de
+  camera gekeerd), `_flits_beeld` (ook de kruitflits op de pan, warm getint) en
+  de schokgolf als decal onder de stofkring. `vonken` trekt nog uit de globale
+  rng: de trekkingen staan in dezelfde volgorde, de keuze van een vonk komt uit
+  de eigen rng. `VFX.proef_geleverd(map, naam, tex)` doet voor de checks alsof
+  er een bestand ligt.
+- **Zwaaispoor:** `scripts/vfx/zwaaispoor.gd` (MeshInstance3D, ImmediateMesh,
+  additief, onder het bord). Eerste versie: een lint van de hand-kant tot de
+  punt; bij een stoot (de punt beweegt langs het wapen) had dat geen oppervlak.
+  Nu een lijntje langs de baan van de punt, naar de camera gekeerd,
+  Catmull-Rom rond, spits naar achteren, zacht dwarsprofiel zonder textuur.
+  `PawnView.zwaaispoor(tot_klap)` (game.gd bij de bajonetstoot en de charge,
+  de tuner in `_recept_stoot` en `_recept_charge`) start het van `slash_start`
+  voor tot `slash_na` na de klap; het wapen wordt bij de start gekozen.
+  **De punt**, gezocht met een debugscript: het varkensmusket hangt aan een
+  BoneAttachment (de langste as van zijn doos, met zijn transform); een
+  geskind wapen gaat via zijn zwaarste bot en de bind-pose (zoals de skinning);
+  de eerste versie verlengde de onderarm, en die wees bij dit model naar het
+  noorden, achter het varken, terwijl het musket naar het westen wees.
+  **Het venster:** bij de varkens valt de zwaai grotendeels na het raakmoment,
+  dus `slash_na` staat op 0,35 (was 0,06). Standaard
+  ook duur 0,22 en dikte 0,08: met 0,05 was het in de tuner een flintertje.
+  Bij een korte stoot blijft het een kort lijntje; bij de neerwaartse zwaai en
+  de bijl van de charge een duidelijke witte boog.
+- **Knoppen** (`slash_*`): sterkte (0 = uit), duur, dikte, lengte (alleen
+  zonder wapen), start, na, gloed, teamkleur; groep "Zwaai en klap" met de
+  effecten `zwaaispoor` en `zwaaispoor_charge`.
+- **Checks:** `-- vfxcheck` (proef per onderdeel: het plaatje komt in beeld bij
+  zijn effect; het zwaaispoor groeit, de punt reist 0,25 bij de stoot en 2,31
+  bij de charge, ligt bij de schutter boven het bord en is daarna weg; knop 0
+  geen spoor), `-- meleecheck` PASS, `vfx_studio.py --proef` PASS, uispel 777
+  gelijk (`5862e4c9`), herstelcheck 777 en 4242 wolf en resumecheck 777/1 en
+  4242/2 0 verschillen, inkomcheck, uicheck, naad, koppel, beurtlicht,
+  audiopaneel en simcheck PASS, tests 2912/0.
+
 ## 6 oktober -- de lichtstraal en de rand blijven nergens meer hangen
 
 Max: "soms blijft de light van de laatste units nog rondom de player model

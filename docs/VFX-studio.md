@@ -238,6 +238,45 @@ Godot, daarna de concept-webpagina.
       ochtend (`musket_3x3`, zes spetters) en faalde zodra er nieuwe in het
       spel stonden.
 
+11. **Een eigen textuur voor elk nieuw effect, en een zwaaispoor** (Max, 6
+    oktober: "opspattende aarde bij een kanonsinslag moet ook decal zijn net als
+    vonken, voeg die toe in de studio, ook de kogel, gloeiende propjes uit de
+    loop etc, al deze nieuwe vfx moeten hun eigen decal krijgen", en "voeg ook
+    een slashing trail toe aan de melee wapens, een lijntje om het effect wat
+    kracht bij te geven, moet ook allemaal tunebaar zijn"). **Gebouwd:**
+    - Negen nieuwe onderdelen in de catalogus, elk met uitleg en beginprompts,
+      en het spel gebruikt ze zodra er een bestand ligt (zonder bestand blijft
+      alles zoals het was): `bullet/musket` (de kogel als billboard),
+      `bullet/cannon` (de kogelstreep plat langs de vliegrichting, naar de
+      camera gekeerd), `sparks/propje` (gloeiende propjes, ook van een explosie
+      en een vuur; het spel kleurt ze van geel naar donkerrood),
+      `sparks/vonk`, `flash/flits` (op het kuras, de pan en bij een explosie),
+      `debris/kluit` en `debris/splinter` (vliegen een boog, landen en blijven
+      even liggen; een vel tolt tijdens de vlucht), `decals/schokgolf` (een
+      kring die bij een explosie over de grond uitdijt) en `trails/slash`.
+      Elk effect noemt zijn onderdelen, dus de studio toont ze bij de rij.
+    - Het zwaaispoor (`scripts/vfx/zwaaispoor.gd`, groep "Zwaai en klap"): een
+      lijntje langs de baan van de punt van het wapen, naar de camera gekeerd
+      (zodat ook een stoot langs het wapen te zien is), rond gemaakt
+      (Catmull-Rom), spits naar achteren, additief. De punt: een prop of een
+      wapen aan een bot langs zijn langste as, een geskind wapen via zijn bot en
+      bind-pose zoals de skinning, een big bro zonder wapen de onderarm
+      verlengd. Het begint met de zwaai (game.gd, naast `_melee_geluid`; in de
+      tuner de recepten `slash` en `charge_slash`). Knoppen `slash_spoor`,
+      `slash_duur`, `slash_dikte`, `slash_lengte`, `slash_start`, `slash_na`,
+      `slash_gloed`, `slash_team`. Les: bij de varkens zit de zwaai grotendeels
+      NA het raakmoment, dus het venster loopt standaard 0,35 s door.
+    - Checks: `-- vfxcheck` doet voor elk nieuw onderdeel alsof er een bestand
+      ligt (`VFX.proef_geleverd`) en zoekt het plaatje in beeld bij het effect;
+      het zwaaispoor groeit, ligt bij de schutter boven het bord en ruimt
+      zichzelf op, en met de knop op 0 komt er geen.
+    - De kogel mag een vel zijn (7 oktober; Max zette een reeks van 4x3 voor
+      de kanonskogel in de studio en kreeg "Hier speelt het spel (nog) geen
+      vel af"): `kogel_musket` en `kogel_kanon` dragen `vel`, en `schot` loopt
+      de beeldjes een keer af tijdens de vlucht (de streep en het billboard
+      beginnen op beeldje 0). Een kanonskogel is maar 0,05-0,22 s onderweg,
+      dus een vel flitst er snel doorheen.
+
 ## Huisregels
 
 - Effecten zijn puur beeld: nooit spelstaat, nooit `_animaties_bezig`.

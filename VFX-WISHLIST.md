@@ -22,14 +22,14 @@ nieuwe wens kun je ook daar invullen; hij komt dan als regel in deze tabel.
 
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
 |---|---|---|---|---|
-| Musketschot | elk musketschot | spel | 6 okt: de juiste vlam en kruitdamp (was willekeurig), plus pankruit en propjes | A flintlock musket firing on a miniature wooden war-game board, seen from above at an angle: a short bright orange muzzle flash and a thick puff of grey-white black-powder smoke drifting forward. |
-| Kanonschot | elk kanonschot | spel | 6 okt: rookring, pluim en propjes erbij | A small bronze field cannon firing on a miniature wooden board, top-down angled view: a large orange-yellow muzzle blast, a dense cloud of grey powder smoke rolling forward, dust kicked up around the wheels. |
+| Musketschot | elk musketschot | spel | 6 okt: de juiste vlam en kruitdamp (was willekeurig), plus pankruit en propjes; de kogel heeft een eigen textuur (bullet/musket) | A flintlock musket firing on a miniature wooden war-game board, seen from above at an angle: a short bright orange muzzle flash and a thick puff of grey-white black-powder smoke drifting forward. |
+| Kanonschot | elk kanonschot | spel | 6 okt: rookring, pluim en propjes erbij; de kogelstreep heeft een eigen textuur (bullet/cannon) | A small bronze field cannon firing on a miniature wooden board, top-down angled view: a large orange-yellow muzzle blast, a dense cloud of grey powder smoke rolling forward, dust kicked up around the wheels. |
 | Kruitdamp aan de loop | na elk schot | spel | | Grey-white black-powder smoke billowing from a gun barrel and slowly rising, soft and thick, miniature scale, top-down angled view. |
 | Wit wolkje bij koppelen | kaart koppelen | spel | | A clean small white puff of magical smoke around a miniature soldier figure, soft and round, top-down angled view. |
 | Rook met de wind mee | alle rook | spel | 6 okt: knop rook met de wind; in de tuner de windschuif | Black-powder smoke drifting sideways in a steady breeze over a miniature battlefield board, top-down angled view. |
 | Rookring en pluim bij het kanon | kanonschot | spel | 6 okt: knoppen rookring en rookpluim | A cannon shot producing an expanding smoke ring and a tall thick plume of grey smoke, miniature board, top-down angled view. |
-| Kruitflits op de pan | bij een musketschot | spel | 6 okt: knop kruitflits op de pan | The priming pan of a flintlock musket flashing: a tiny bright spark and a small puff of smoke at the lock, close-up, miniature. |
-| Gloeiende propjes uit de loop | schot | spel | 6 okt: knop gloeiende propjes | Glowing embers and burning paper wadding spraying from a musket barrel and falling to a wooden board, dark background. |
+| Kruitflits op de pan | bij een musketschot | spel | 6 okt: knop kruitflits op de pan; de flits heeft een eigen textuur (flash/flits) | The priming pan of a flintlock musket flashing: a tiny bright spark and a small puff of smoke at the lock, close-up, miniature. |
+| Gloeiende propjes uit de loop | schot | spel | 6 okt: knop gloeiende propjes; eigen textuur (sparks/propje), ook voor de vonkjes van een explosie en een vuur | Glowing embers and burning paper wadding spraying from a musket barrel and falling to a wooden board, dark background. |
 
 ## 2. Stof en aarde
 
@@ -39,17 +39,17 @@ nieuwe wens kun je ook daar invullen; hij komt dan als regel in deze tabel.
 | Voetsporen en wielsporen | elke stap | spel | nog niet in de tuner | Footprints and thin wheel tracks pressed into a dusty miniature board surface, top-down view. |
 | Stof bij de landing van een charge | ruiter landt na zijn sprong | spel | 6 okt: knoppen stof bij de landing en stof: dekking; sinds 6 okt met de stofwolk van Max uit de studio | A miniature cavalry rider landing after a jump on a dusty board: a ring of brown dust bursting out around the horse's hooves, top-down angled view. |
 | Stof achter galopperende ruiters | ruiter (of kanon) rijdt hard | spel | 6 okt: knop stof achter ruiters en kanonnen; sinds 6 okt met de stofwolk van Max uit de studio | A small trail of dust clouds kicked up behind a galloping miniature cavalry horse on a wooden board, top-down angled view. |
-| Opspattende aarde bij een kanonsinslag | kanonskogel slaat in | spel | 6 okt: kluiten en een stofwolk, knop opspattende aarde; sinds 6 okt met de stofwolk van Max uit de studio | A cannonball hitting the ground on a miniature board: clods of dirt and dust spraying up in a fan, top-down angled view. |
+| Opspattende aarde bij een kanonsinslag | kanonskogel slaat in | spel | 6 okt: kluiten en een stofwolk, knop opspattende aarde; sinds 6 okt met de stofwolk van Max uit de studio; de kluiten hebben een eigen textuur (debris/kluit, een vel tolt) | A cannonball hitting the ground on a miniature board: clods of dirt and dust spraying up in a fan, top-down angled view. |
 | Krater of schroeiplek | na een kanonsinslag | spel | 6 okt: knoppen krater en krater blijft liggen (s); sinds 6 okt een van de drie kraters van Max uit de studio | A small scorched crater with darkened earth on a miniature wooden board tile, top-down view. |
 
 ## 3. Bloed en inslag
 
 | Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
 |---|---|---|---|---|
-| Vonken op metaal | treffer op het kuras (hp-pion) | spel | 6 okt: alleen nog op metaal, met een witte flits | Bright yellow sparks bursting from a bullet impact, miniature scale, dark background. |
+| Vonken op metaal | treffer op het kuras (hp-pion) | spel | 6 okt: alleen nog op metaal, met een witte flits; vonk en flits hebben een eigen textuur (sparks/vonk, flash/flits) | Bright yellow sparks bursting from a bullet impact, miniature scale, dark background. |
 | Treffer: flits, wankelen, wond | geraakt en overleeft | spel | | A miniature soldier figure flinching from a hit, a small spurt of blood from the chest, top-down angled view. |
 | Schadegetal (-N) | boven een geraakte pion | spel | | A small red damage number "-2" popping up above a miniature soldier figure on a wooden war-game board, bold game-style digits that float up and fade, top-down angled view. |
-| Inslag per materiaal | elke treffer | spel | 6 okt: vlees rode nevel en spatjes, hout splinters, metaal vonken (zoals het geluid); knoppen inslag per materiaal en inslag: hoeveel | Three impacts side by side on a miniature board: a red blood splash on cloth, wooden splinters flying from a cannon carriage, bright sparks off a steel cuirass. |
+| Inslag per materiaal | elke treffer | spel | 6 okt: vlees rode nevel en spatjes, hout splinters, metaal vonken (zoals het geluid); knoppen inslag per materiaal en inslag: hoeveel; splinters met een eigen textuur (debris/splinter) | Three impacts side by side on a miniature board: a red blood splash on cloth, wooden splinters flying from a cannon carriage, bright sparks off a steel cuirass. |
 | Bloedwaaier op de grond | een dode | spel | 6 okt: langgerekte spatten van de klap af, na elkaar; knop bloedwaaier | Directional blood splatter on a wooden board after a hit, stylized, top-down view. |
 
 ## 4. Sterven en brokstukken
@@ -67,7 +67,7 @@ nieuwe wens kun je ook daar invullen; hij komt dan als regel in deze tabel.
 |---|---|---|---|---|
 | Kampvuur in het diorama | in het kamp | diorama | vaste waarden in omgeving.gd | A small campfire with flickering flames and rising smoke beside a miniature army camp, top-down angled view, night. |
 | Kanon gaat kapot | kanon vernietigd | spel | 6 okt: het kruit ontploft, de affuit spat uiteen, het wrak brandt na; een kanon bloedt niet meer | A miniature wooden field cannon blown apart: splinters and a wheel flying, a column of dark smoke and small flames on the wreck, top-down angled view. |
-| Explosie (kruitvat) | explosie | spel | 6 okt: flits, vuurbal (kanonsvlam), stofkring, rookkolom, splinters, vonken; nu bij een kanon, straks ook kruitvaten | A small gunpowder barrel exploding on a miniature board: an orange fireball, a ring of smoke and flying wooden staves, top-down angled view. |
+| Explosie (kruitvat) | explosie | spel | 6 okt: flits, vuurbal (kanonsvlam), stofkring, rookkolom, splinters, vonken; nu bij een kanon, straks ook kruitvaten; de schokgolf ligt als decal op de grond (decals/schokgolf) | A small gunpowder barrel exploding on a miniature board: an orange fireball, a ring of smoke and flying wooden staves, top-down angled view. |
 | Vuur op het bord | iets blijft branden | spel | 6 okt: vlammen uit een eigen shader (geen textuur), flakkerend licht, rook, vonkjes; knoppen vuur: maat en brandt na; sinds 6 okt de vlam van Max uit de studio, die golft en flakkert | Small flames licking up from burning debris on a wooden game board, gentle smoke, top-down angled view. |
 
 ## 6. Stijl (alle 3D)
@@ -85,3 +85,15 @@ actie ziet). Effecten (rook, vuur, bloed) tekenen er scherp overheen.
 | Kleurstemming en korrel | altijd | spel | 6 okt: koel tot warm, filmkorrel | A miniature battlefield board with animal soldiers in warm golden afternoon light with subtle film grain, top-down angled view. |
 | Kleurtrappen (cel) | altijd | spel | 6 okt: de lichtheid in een paar treden, een getekende stripstijl | A miniature war-game board with animal soldiers in a cel-shaded comic style with flat bands of light and shadow, top-down angled view. |
 | Licht zoals in de Model-tuner | altijd | wens | Max: "in moddif zien de modellen er mooier uit"; wat is moddif? | The same miniature war-game board with animal soldiers, lit by soft neutral studio light: bright and even, clean colors, gentle soft shadows, top-down angled view. |
+
+## 7. Zwaai en klap
+
+Max (6 oktober): "voeg ook een slashing trail toe aan de melee wapens, een
+lijntje om het effect wat kracht bij te geven, moet ook allemaal tunebaar
+zijn". Een lijntje langs de baan van de punt van het wapen, dat naar de camera
+kijkt en snel vervaagt; eigen textuur in de studio (trails/slash).
+
+| Effect | Wanneer | Status | Wens / notitie | Concept-prompt |
+|---|---|---|---|---|
+| Zwaaispoor (bajonet) | een bajonetstoot | spel | 6 okt: knoppen zwaaispoor (sterkte, duur, dikte, start, na, gloed, teamkleur); bij een korte stoot een kort lijntje | A miniature animal soldier on a wooden war-game board thrusting a bayonet, a thin bright white motion streak trailing the blade tip, top-down angled view. |
+| Zwaaispoor bij een charge | de ruiter springt en slaat | spel | 6 okt: dezelfde knoppen; het lijntje volgt de bijl, sabel of lans | A miniature cavalry beast leaping and swinging an axe on a wooden war-game board, a curved bright white slash trail following the axe head, top-down angled view. |

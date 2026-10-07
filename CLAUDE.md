@@ -1408,7 +1408,27 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   weigert een vel waar het spel er niets mee kan (`vel` in ONDERDELEN).
   `-- vfxcheck` toetst elk geleverd bestand (klaar, maat, mipmaps,
   bijgesneden). Elke check-modus van capture.gd neemt `fx:<knop>=<waarde>`
-  (alleen die run), bv. `-- play fx:stijl_miniatuur=1`.
+  (alleen die run), bv. `-- play fx:stijl_miniatuur=1`. **Een eigen textuur
+  voor elk nieuw effect (6 oktober, Max: "al deze nieuwe vfx moeten hun eigen
+  decal krijgen"):** negen onderdelen erbij, het spel gebruikt ze zodra er een
+  bestand ligt (anders de oude vervanger): `bullet/musket` en `bullet/cannon`
+  (de kogel; de kanonskogel als streep langs de vliegrichting, `VFX._streep`),
+  `sparks/propje`, `sparks/vonk`, `flash/flits`, `debris/kluit` en
+  `debris/splinter` (`VFX._vliegend`: boog, landen, liggen, een vel tolt),
+  `decals/schokgolf` en `trails/slash`; billboards via `VFX._beeld`. De
+  globale trekkingen van `vonken` blijven in dezelfde volgorde (uispel).
+  `-- vfxcheck` toetst elk pad zonder bestanden met `VFX.proef_geleverd`.
+  **Zwaaispoor (6 oktober, Max: "een slashing trail aan de melee wapens, een
+  lijntje om het effect wat kracht bij te geven, allemaal tunebaar"):**
+  `scripts/vfx/zwaaispoor.gd` (via preload), een lijntje langs de baan van de
+  wapenpunt, naar de camera gekeerd, onder het bord; `PawnView.zwaaispoor(
+  tot_klap)` vanuit game.gd naast `_melee_geluid` (bajonet en charge). De punt
+  uit `_wapen_einden`: prop of wapen aan een bot langs de langste as, een
+  geskind wapen via zijn zwaarste bot en de bind-pose, zonder wapen de onderarm
+  verlengd. Knoppen `slash_*` (sterkte, duur 0,22, dikte 0,08, lengte, start
+  0,2 s voor en na 0,35 s na de klap, gloed, teamkleur); bij de varkens valt de
+  zwaai grotendeels NA het raakmoment. Tuner-recepten `slash` en
+  `charge_slash`, groep "Zwaai en klap".
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

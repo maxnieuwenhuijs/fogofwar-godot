@@ -34,10 +34,23 @@ static func _r() -> RandomNumberGenerator:
 ## met mipmaps, zodat een groot plaatje klein op het bord niet flikkert. Leeg = de
 ## code tekent zijn eigen vervanger. Kiezen gaat met de eigen rng, nooit de globale.
 static var _geleverd: Dictionary = {}     # "map/naam" -> Array van {tex, cols, rows, uitsnede}
+static var _proef: Dictionary = {}        # "map/naam" -> Array: de checks doen alsof er een bestand is
+
+
+## Voor `-- vfxcheck`: doe alsof de studio voor map/naam deze textuur leverde
+## (null = weer gewoon de bestanden). Zo is elk geleverd pad te toetsen zonder
+## bestanden in de map.
+static func proef_geleverd(map: String, naam: String, tex: Texture2D) -> void:
+	if tex == null:
+		_proef.erase(map + "/" + naam)
+	else:
+		_proef[map + "/" + naam] = [{"tex": tex, "cols": 1, "rows": 1, "uitsnede": Rect2(0.0, 0.0, 1.0, 1.0)}]
 
 
 static func _geleverde(map: String, naam: String, boost: float = 0.0, max_px: int = 512,
 		bijsnijden: bool = false, vierkant: bool = false) -> Array:
+	if _proef.has(map + "/" + naam):
+		return _proef[map + "/" + naam]
 	var sleutel := "%s/%s/%s/%d/%s/%s" % [map, naam, boost, max_px, bijsnijden, vierkant]
 	if _geleverd.has(sleutel):
 		return _geleverd[sleutel]
@@ -160,6 +173,64 @@ static func geleverde_textuur(map: String, naam: String, max_px: int, bijsnijden
 	return null
 
 
+## Een billboard met een geleverde textuur (`e` = {tex, cols, rows}): een vierkant
+## vlak dat naar de camera kijkt, op het eerste beeldje van een vel. Voor de
+## stukjes die de studio levert (kogel, vonk, propje, flits, kluit, splinter).
+static func _beeld(ouder: Node3D, e: Dictionary, tint: Color = Color.WHITE) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE
+	mi.mesh = q
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_texture = e.tex
+	mat.albedo_color = tint
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.billboard_keep_scale = true
+	if int(e.cols) * int(e.rows) > 1:
+		mat.uv1_scale = Vector3(1.0 / int(e.cols), 1.0 / int(e.rows), 1.0)
+		PawnView._sheet_frame(0, mat, int(e.cols), int(e.rows))
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ouder.add_child(mi)
+	return mi
+
+
+## Het beeldje van een vel bij `f` (0..1 over de levensduur, `rondes` keer rond).
+static func _vel_bij(mi: MeshInstance3D, e: Dictionary, f: float, rondes: float = 1.0) -> void:
+	var n := int(e.cols) * int(e.rows)
+	if n > 1:
+		PawnView._sheet_frame(clampi(int(f * float(n) * rondes) % n, 0, n - 1),
+			mi.material_override as StandardMaterial3D, int(e.cols), int(e.rows))
+
+
+## Een geleverd stukje (een kluit, een splinter) dat een boog vliegt, op het bord
+## landt, `liggen` s blijft liggen en wegkrimpt. Een vel tolt tijdens de vlucht
+## (twee keer rond); een los plaatje wordt de helft van de keren gespiegeld.
+static func _vliegend(ouder: Node3D, e: Dictionary, start: Vector3, v: Vector3, maat: float, liggen: float) -> void:
+	var r := _r()
+	var mi := _beeld(ouder, e)
+	if int(e.cols) * int(e.rows) == 1 and r.randf() < 0.5:
+		var mat := mi.material_override as StandardMaterial3D
+		mat.uv1_scale = Vector3(-1.0, 1.0, 1.0)
+		mat.uv1_offset = Vector3(1.0, 0.0, 0.0)
+	mi.position = start
+	mi.scale = Vector3.ONE * maat
+	var g := 6.0
+	var vloer := 0.06 + maat * 0.42   # de onderkant van het plaatje op het bord
+	var vlucht: float = maxf((v.y + sqrt(v.y * v.y + 2.0 * g * maxf(start.y - vloer, 0.0))) / g, 0.15)
+	var tw := mi.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var p := start + v * t + Vector3(0.0, -0.5 * g, 0.0) * t * t
+		p.y = maxf(p.y, vloer)
+		mi.position = p
+		_vel_bij(mi, e, t / vlucht, 2.0), 0.0, vlucht, vlucht)
+	tw.tween_interval(liggen)
+	tw.tween_property(mi, "scale", Vector3.ZERO, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(mi.queue_free)
+
+
 ## De wind van het potje (PawnView.wind_richting, wereld) in de ruimte van `ouder`.
 static func _wind(ouder: Node3D) -> Vector3:
 	return ouder.global_transform.basis.inverse() * PawnView.wind_richting
@@ -177,31 +248,52 @@ static func vlucht_duur(afstand: float, kanon: bool) -> float:
 ## loop die met het schot mee drijft en inslagrook bij aankomst. Geeft `duur`.
 static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur: float,
 		schok: Callable = Callable()) -> float:
-	var proj := MeshInstance3D.new()
-	var mesh := SphereMesh.new()
-	var radius: float = 0.13 if kanon else 0.055
-	mesh.radius = radius
-	mesh.height = radius * 2.0
-	proj.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	if kanon:
-		mat.albedo_color = Color(0.16, 0.16, 0.18)
-		mat.metallic = 0.5
+	# De kogel uit assets/textures/bullet/ (musket*, cannon*, van de studio) als
+	# hij er is: de musketkogel een billboard, de kanonskogel een streep langs de
+	# vliegrichting. Anders het bolletje en de uitgerekte bol van daarvoor.
+	var kogel := _kies_geleverd("bullet", "cannon" if kanon else "musket", 1.6, 256 if kanon else 128, true, not kanon)
+	var proj: Node3D
+	if not kogel.is_empty():
+		if kanon:
+			proj = _streep(ouder, kogel, loop, doel, 0.9, 0.22)
+		else:
+			proj = _beeld(ouder, kogel)
+			proj.scale = Vector3.ONE * 0.2
+		proj.position = loop
 	else:
-		mat.albedo_color = Color(1.0, 0.9, 0.5)
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.85, 0.4)
-		mat.emission_energy_multiplier = 1.6
-	proj.material_override = mat
-	proj.position = loop
-	ouder.add_child(proj)
-	# Kanonskogel: rek de bol uit langs de vliegrichting tot een strakke streep,
-	# keihard rechtdoor (geen boog). Infanterie blijft een rond tracer-bolletje.
-	if kanon and loop.distance_to(doel) > 0.01:
-		proj.look_at_from_position(loop, doel, Vector3.UP)
-		proj.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
+		var bol := MeshInstance3D.new()
+		var mesh := SphereMesh.new()
+		var radius: float = 0.13 if kanon else 0.055
+		mesh.radius = radius
+		mesh.height = radius * 2.0
+		bol.mesh = mesh
+		var mat := StandardMaterial3D.new()
+		if kanon:
+			mat.albedo_color = Color(0.16, 0.16, 0.18)
+			mat.metallic = 0.5
+		else:
+			mat.albedo_color = Color(1.0, 0.9, 0.5)
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.85, 0.4)
+			mat.emission_energy_multiplier = 1.6
+		bol.material_override = mat
+		bol.position = loop
+		ouder.add_child(bol)
+		# Kanonskogel: rek de bol uit langs de vliegrichting tot een strakke streep,
+		# keihard rechtdoor (geen boog). Infanterie blijft een rond tracer-bolletje.
+		if kanon and loop.distance_to(doel) > 0.01:
+			bol.look_at_from_position(loop, doel, Vector3.UP)
+			bol.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
+		proj = bol
+	# Een kogel als vel speelt zijn beeldjes een keer af tijdens de vlucht.
+	var vel_mi: MeshInstance3D = null
+	if not kogel.is_empty() and int(kogel.cols) * int(kogel.rows) > 1:
+		vel_mi = proj.get_meta("vel") if proj.has_meta("vel") else proj as MeshInstance3D
 	var tween := ouder.create_tween()
-	tween.tween_method(func(t: float) -> void: proj.position = loop.lerp(doel, t), 0.0, 1.0, duur)
+	tween.tween_method(func(t: float) -> void:
+		proj.position = loop.lerp(doel, t)
+		if vel_mi != null:
+			_vel_bij(vel_mi, kogel, minf(t, 0.999)), 0.0, 1.0, duur)
 	tween.tween_callback(proj.queue_free)
 
 	vuurmond(ouder, loop, kanon)
@@ -233,6 +325,41 @@ static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur
 				inslag_aarde(ouder, doel, richting)
 				krater(ouder, doel))
 	return duur
+
+
+## Een streep langs de vliegrichting (de kanonskogel uit de studio: links de
+## kogel, naar rechts de streep): een plat vlak met de lange kant van `naar`
+## terug naar `van`, zo goed als het kan naar de camera gekeerd. Geeft een
+## houder op de plek van de kogel (de streep hangt erachter).
+static func _streep(ouder: Node3D, e: Dictionary, van: Vector3, naar: Vector3, lengte: float, hoogte: float) -> Node3D:
+	var houder := Node3D.new()
+	ouder.add_child(houder)
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE
+	mi.mesh = q
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.albedo_texture = e.tex
+	if int(e.cols) * int(e.rows) > 1:
+		# een vel (7 oktober, Max zette een reeks van 4x3 in de studio): beeldje 0
+		# nu, `schot` loopt de rest af tijdens de vlucht
+		mat.uv1_scale = Vector3(1.0 / int(e.cols), 1.0 / int(e.rows), 1.0)
+		PawnView._sheet_frame(0, mat, int(e.cols), int(e.rows))
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	houder.add_child(mi)
+	houder.set_meta("vel", mi)
+	var terug := (van - naar).normalized() if van.distance_to(naar) > 0.001 else Vector3.RIGHT
+	var cam := ouder.get_viewport().get_camera_3d() if ouder.is_inside_tree() else null
+	var kijk: Vector3 = ouder.global_transform.basis.inverse() * cam.global_transform.basis.z if cam != null else Vector3.UP
+	var voor := (kijk - terug * kijk.dot(terug))
+	voor = voor.normalized() if voor.length() > 0.001 else Vector3.UP.cross(terug).normalized()
+	mi.basis = Basis(terug * lengte, voor.cross(terug) * hoogte, voor)
+	mi.position = terug * lengte * 0.4   # de kogel (links op het plaatje) op de plek van de houder
+	return houder
 
 
 ## De vuurmond: de steekvlam (een flipbook uit assets/textures/fire/, zonder
@@ -399,29 +526,34 @@ static func pankruit(ouder: Node3D, slot: Vector3) -> void:
 	var sterkte: float = PawnView.fx("pan_flits", 1.0)
 	if sterkte <= 0.0 or ouder == null:
 		return
-	var mi := MeshInstance3D.new()
-	var bol := SphereMesh.new()
-	bol.radius = 0.035
-	bol.height = 0.07
-	bol.radial_segments = 8
-	bol.rings = 4
-	mi.mesh = bol
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(1.0, 0.86, 0.48, 0.95)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.75, 0.3)
-	mat.emission_energy_multiplier = 3.0
-	mi.material_override = mat
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ouder.add_child(mi)
-	mi.position = slot
-	mi.scale = Vector3.ONE * 0.4 * sterkte
-	var tw := mi.create_tween().set_parallel(true)
-	tw.tween_property(mi, "scale", Vector3.ONE * 1.7 * sterkte, 0.05).set_ease(Tween.EASE_OUT)
-	tw.tween_property(mat, "albedo_color:a", 0.0, 0.11).set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(mi.queue_free)
+	var e := _kies_geleverd("flash", "flits", 1.5, 256, true, true)
+	if not e.is_empty():
+		# de geleverde flits, klein en warm
+		_flits_beeld(ouder, e, slot, 0.13 * sterkte, Color(1.0, 0.86, 0.55))
+	else:
+		var mi := MeshInstance3D.new()
+		var bol := SphereMesh.new()
+		bol.radius = 0.035
+		bol.height = 0.07
+		bol.radial_segments = 8
+		bol.rings = 4
+		mi.mesh = bol
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(1.0, 0.86, 0.48, 0.95)
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.75, 0.3)
+		mat.emission_energy_multiplier = 3.0
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ouder.add_child(mi)
+		mi.position = slot
+		mi.scale = Vector3.ONE * 0.4 * sterkte
+		var tw := mi.create_tween().set_parallel(true)
+		tw.tween_property(mi, "scale", Vector3.ONE * 1.7 * sterkte, 0.05).set_ease(Tween.EASE_OUT)
+		tw.tween_property(mat, "albedo_color:a", 0.0, 0.11).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(mi.queue_free)
 	_rookpluk(ouder, slot, slot + Vector3.UP * 0.35 * sterkte + _wind(ouder) * PawnView.fx("smoke_wind", 0.6) * 0.15,
 		0.05, 0.18 * sterkte, 0.9, 0.7, 0.25)
 
@@ -446,6 +578,24 @@ static func propjes(ouder: Node3D, loop: Vector3, richting: Vector3, kanon: bool
 ## geel naar donkerrood (propjes, explosies, een vuur dat knettert).
 static func _gloeiend(ouder: Node3D, loop: Vector3, v: Vector3, duur: float, grootte: float) -> void:
 	var vloer := 0.07   # net boven het bord (de tegels liggen op 0,05)
+	# een geleverd propje (assets/textures/sparks/propje*): dezelfde boog, het
+	# plaatje doven van zijn eigen kleur naar donkerrood, een vel speelt af
+	var e := _kies_geleverd("sparks", "propje", 2.0, 128, true, true)
+	if not e.is_empty():
+		var bm := _beeld(ouder, e)
+		var bmat := bm.material_override as StandardMaterial3D
+		bm.position = loop
+		bm.scale = Vector3.ONE * grootte * 5.0
+		var btw := bm.create_tween()
+		btw.tween_method(func(t: float) -> void:
+			var p := loop + v * t + Vector3(0.0, -1.3, 0.0) * t * t
+			p.y = maxf(p.y, vloer + grootte * 2.0)
+			bm.position = p
+			var k: float = clampf(t / duur, 0.0, 1.0)
+			bmat.albedo_color = Color(1.0, lerpf(1.0, 0.3, k), lerpf(1.0, 0.18, k), 1.0 - smoothstep(0.6, 1.0, k))
+			_vel_bij(bm, e, k), 0.0, duur, duur)
+		btw.tween_callback(bm.queue_free)
+		return
 	var mi := MeshInstance3D.new()
 	var bol := SphereMesh.new()
 	bol.radius = 1.0
@@ -572,9 +722,15 @@ static func inslag_aarde(ouder: Node3D, pos: Vector3, richting: Vector3) -> void
 
 
 ## Een kluit aarde: een klein blokje dat tollend een boog vliegt, op het bord
-## landt, daar 1,5-3 s blijft liggen en dan wegkrimpt.
+## landt, daar 1,5-3 s blijft liggen en dan wegkrimpt. Met een geleverde kluit
+## (assets/textures/debris/kluit*, van de studio; Max: "opspattende aarde moet
+## ook decal zijn") vliegt dat plaatje, een vel tolt.
 static func _kluit(ouder: Node3D, start: Vector3, v: Vector3, maat: float) -> void:
 	var r := _r()
+	var e := _kies_geleverd("debris", "kluit", 0.0, 128, true, true)
+	if not e.is_empty():
+		_vliegend(ouder, e, start, v, maat * 2.6, r.randf_range(1.5, 3.0))
+		return
 	var mi := MeshInstance3D.new()
 	var blok := BoxMesh.new()
 	blok.size = Vector3.ONE
@@ -681,29 +837,41 @@ static func vonken(ouder: Node3D, pos: Vector3, kracht: float, materiaal: String
 				_flits(ouder, pos, 0.07 * clampf(kracht, 0.6, 1.6))
 	var n: int = int(clampf(6.0 * kracht, 3.0, 12.0))
 	for i in n:
-		var spark := MeshInstance3D.new()
-		var mesh := SphereMesh.new()
-		mesh.radial_segments = 6
-		mesh.rings = 3
+		# De globale trekkingen in dezelfde volgorde als altijd (uispel); de keuze
+		# van een geleverde vonk (assets/textures/sparks/vonk*) uit de eigen rng.
 		var r := randf_range(0.02, 0.05)
-		mesh.radius = r
-		mesh.height = r * 2.0
-		spark.mesh = mesh
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.85, 0.4)
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.8, 0.3)
-		mat.emission_energy_multiplier = 2.0
-		spark.material_override = mat
+		var ev := _kies_geleverd("sparks", "vonk", 2.0, 128, true, true)
+		var spark: MeshInstance3D
+		var mat: StandardMaterial3D
+		if not ev.is_empty():
+			spark = _beeld(ouder, ev)
+			spark.scale = Vector3.ONE * r * 5.0
+			mat = spark.material_override as StandardMaterial3D
+		else:
+			spark = MeshInstance3D.new()
+			var mesh := SphereMesh.new()
+			mesh.radial_segments = 6
+			mesh.rings = 3
+			mesh.radius = r
+			mesh.height = r * 2.0
+			spark.mesh = mesh
+			mat = StandardMaterial3D.new()
+			mat.albedo_color = Color(1.0, 0.85, 0.4)
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.8, 0.3)
+			mat.emission_energy_multiplier = 2.0
+			spark.material_override = mat
+			ouder.add_child(spark)
 		spark.position = pos
-		ouder.add_child(spark)
 		var dir := Vector3(randf_range(-1, 1), randf_range(0.3, 1.2), randf_range(-1, 1)).normalized()
 		var dist := randf_range(0.3, 0.7) * maxf(kracht, 0.4)
 		var life := randf_range(0.25, 0.45)
 		var tw := spark.create_tween().set_parallel()
 		tw.tween_property(spark, "position", pos + dir * dist, life).set_ease(Tween.EASE_OUT)
 		tw.tween_property(mat, "albedo_color:a", 0.0, life).set_ease(Tween.EASE_IN)
+		if not ev.is_empty() and int(ev.cols) * int(ev.rows) > 1:
+			tw.tween_method(func(f: float) -> void: _vel_bij(spark, ev, f), 0.0, 1.0, life)
 		tw.chain().tween_callback(spark.queue_free)
 
 
@@ -752,7 +920,12 @@ static func inslag_hout(ouder: Node3D, pos: Vector3, kracht: float, richting: Ve
 
 
 ## Een korte witte flits op het inslagpunt (metaal: de kogel ketst op het kuras).
+## Met een geleverde flits (assets/textures/flash/flits*) dat plaatje.
 static func _flits(ouder: Node3D, pos: Vector3, straal: float) -> void:
+	var e := _kies_geleverd("flash", "flits", 1.5, 256, true, true)
+	if not e.is_empty():
+		_flits_beeld(ouder, e, pos, straal * 2.4, Color.WHITE)
+		return
 	var mi := MeshInstance3D.new()
 	var bol := SphereMesh.new()
 	bol.radius = 1.0
@@ -775,10 +948,30 @@ static func _flits(ouder: Node3D, pos: Vector3, straal: float) -> void:
 	tw.chain().tween_callback(mi.queue_free)
 
 
+## Een geleverde flits: zwelt in 0,05 s op tot `maat`, speelt zijn vel af en is in
+## 0,12 s weg (de kruitflits op de pan krijgt een warme tint).
+static func _flits_beeld(ouder: Node3D, e: Dictionary, pos: Vector3, maat: float, tint: Color) -> void:
+	var mi := _beeld(ouder, e, tint)
+	var mat := mi.material_override as StandardMaterial3D
+	mi.position = pos
+	mi.scale = Vector3.ONE * maat * 0.4
+	var tw := mi.create_tween().set_parallel(true)
+	tw.tween_property(mi, "scale", Vector3.ONE * maat, 0.05).set_ease(Tween.EASE_OUT)
+	tw.tween_property(mat, "albedo_color:a", 0.0, 0.12).set_delay(0.02).set_ease(Tween.EASE_IN)
+	if int(e.cols) * int(e.rows) > 1:
+		tw.tween_method(func(f: float) -> void: _vel_bij(mi, e, f), 0.0, 1.0, 0.14)
+	tw.chain().tween_callback(mi.queue_free)
+
+
 ## Een splinter: een dun latje hout dat tollend een boog vliegt, op het bord
-## landt, even blijft liggen en wegkrimpt.
+## landt, even blijft liggen en wegkrimpt. Met een geleverde splinter
+## (assets/textures/debris/splinter*) vliegt dat plaatje, een vel tolt.
 static func _splinter(ouder: Node3D, start: Vector3, v: Vector3, lengte: float) -> void:
 	var r := _r()
+	var e := _kies_geleverd("debris", "splinter", 0.0, 128, true, true)
+	if not e.is_empty():
+		_vliegend(ouder, e, start, v, lengte * 1.5, r.randf_range(2.0, 4.0))
+		return
 	var mi := MeshInstance3D.new()
 	var blok := BoxMesh.new()
 	blok.size = Vector3.ONE
@@ -1226,9 +1419,30 @@ static func _vuurbal(ouder: Node3D, pos: Vector3, maat: float, vertraging: float
 
 
 ## De schokgolf: een kring stof die over de grond wegschiet (EXPO: eerst hard,
-## dan stil) en oplost.
+## dan stil) en oplost. Met een geleverde schokgolf (assets/textures/decals/
+## schokgolf*) ligt die eronder als decal die meegroeit en vervaagt.
 static func _stofring(ouder: Node3D, grond: Vector3, straal: float) -> void:
 	var r := _r()
+	var golf := _kies_geleverd("decals", "schokgolf", 0.0, 512)
+	if not golf.is_empty():
+		var mi := MeshInstance3D.new()
+		var vlak := QuadMesh.new()
+		vlak.size = Vector2.ONE
+		mi.mesh = vlak
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = golf.tex
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ouder.add_child(mi)
+		mi.position = Vector3(grond.x, GROND_Y + 0.003, grond.z)
+		mi.rotation = Vector3(-PI * 0.5, r.randf_range(0.0, TAU), 0.0)
+		mi.scale = Vector3.ONE * 0.2
+		var tw := mi.create_tween().set_parallel(true)
+		tw.tween_property(mi, "scale", Vector3.ONE * straal * 2.4, 0.5).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+		tw.tween_property(mat, "albedo_color:a", 0.0, 0.6).set_delay(0.15).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(mi.queue_free)
 	var n := 16
 	for i in n:
 		var h := TAU * float(i) / float(n) + r.randf_range(-0.1, 0.1)

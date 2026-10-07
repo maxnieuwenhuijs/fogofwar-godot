@@ -315,9 +315,12 @@ func speel() -> float:
 			var loop_v := _loop(false)
 			VFX.propjes(_toneel, loop_v, (_doelpunt() - loop_v).normalized(), false)
 			duur = 1.5
-		"charge_stof":
+		"charge_stof", "charge_slash":
 			_recept_charge(gen)
 			duur = 3.0
+		"slash":
+			_recept_stoot(gen)
+			duur = 2.0
 		"galop_stof":
 			_schutter.play_rush()
 			var rit := _schutter.create_tween()
@@ -408,7 +411,23 @@ func _recept_charge(gen: int) -> void:
 	if gen != _gen or not is_instance_valid(_schutter):
 		return
 	_schutter.play_charge()
+	_schutter.zwaaispoor(maxf(float(tl.klap_del) - sprong, 0.0))   # zoals game.gd (6 oktober)
 	await get_tree().create_timer(maxf(float(tl.klap_del) - sprong, 0.0)).timeout
+	if gen != _gen or not is_instance_valid(_doel):
+		return
+	_doel.flash_hit()
+	_doel.stagger(_richting_naar_doel())
+	_doel.play_hit()
+
+
+## Een bajonetstoot zoals in het spel (game.gd): de melee-clip, het zwaaispoor
+## vanaf `slash_start` voor de klap, en op de klap (melee-raakmoment min 0,12 s,
+## zoals het geluid) het doel dat het voelt. Op afstand: het gaat om de zwaai.
+func _recept_stoot(gen: int) -> void:
+	_schutter.play_melee()
+	var klap: float = maxf(_schutter.melee_fx("hit_delay", "melee_hit_delay", 0.55) - 0.12, 0.0)
+	_schutter.zwaaispoor(klap)
+	await get_tree().create_timer(klap).timeout
 	if gen != _gen or not is_instance_valid(_doel):
 		return
 	_doel.flash_hit()

@@ -17,7 +17,13 @@ const STATUSSEN := ["spel", "wens", "diorama"]
 ## De texturen die de studio levert en die de code via VFX._geleverde laadt:
 ## map, naam, boost, hooguit-px, bijsnijden.
 const GELEVERD := [["decals", "krater", 0.0, 512, false, false], ["dust", "stof", 2.3, 256, true, true],
-	["flame", "vlam", 0.0, 512, false, false], ["footstep", "wiel", 0.0, 256, true, false]]
+	["flame", "vlam", 0.0, 512, false, false], ["footstep", "wiel", 0.0, 256, true, false],
+	# de nieuwe stukjes (6 oktober, Max: "al deze nieuwe vfx moeten hun eigen decal krijgen")
+	["bullet", "musket", 1.6, 128, true, true], ["bullet", "cannon", 1.6, 256, true, false],
+	["sparks", "propje", 2.0, 128, true, true], ["sparks", "vonk", 2.0, 128, true, true],
+	["flash", "flits", 1.5, 256, true, true], ["debris", "kluit", 0.0, 128, true, true],
+	["debris", "splinter", 0.0, 128, true, true], ["decals", "schokgolf", 0.0, 512, false, false],
+	["trails", "slash", 0.0, 256, false, false]]
 
 static var _fouten := 0
 static var _host: Node = null
@@ -162,8 +168,8 @@ static func _geleverd() -> void:
 				fout = "niet bijgesneden (%dx%d)" % [tex.get_width(), tex.get_height()]
 			elif naam == "vlam" and int(e.cols) * int(e.rows) == 1 and (e.uitsnede as Rect2).get_area() > 0.9:
 				fout = "vlam niet uit het plaatje geknipt"
-			elif naam == "stof" and int(e.cols) * int(e.rows) == 1 and tex.get_width() != tex.get_height():
-				fout = "stofwolk niet vierkant (%dx%d)" % [tex.get_width(), tex.get_height()]
+			elif bool(g[5]) and int(e.cols) * int(e.rows) == 1 and tex.get_width() != tex.get_height():
+				fout = "niet vierkant voor een billboard (%dx%d)" % [tex.get_width(), tex.get_height()]
 		_ok(lijst.size() == bestanden and fout == "", "%s/%s: %d van %d bestanden klaar%s" % [map, naam, lijst.size(),
 			bestanden, "" if fout == "" else ", " + fout])
 
@@ -228,9 +234,92 @@ static func _tuner() -> void:
 		if stijl != null else null
 	_ok(beeld is Vector2 and (beeld as Vector2).distance_to(Vector2(float(r.position.y) / h, float(r.end.y) / h)) < 0.01,
 		"miniatuur: de scherpe band rekent in het beeld tussen de panelen (%s)" % str(beeld))
+	await _zwaai(tuner)
+	await _stukjes(tuner)
 	tuner.queue_free()
 	await _wacht(0.8)   # lopende recepten (een schot wacht tot de kogel aankomt) laten aflopen
 	_ok(Engine.time_scale == 1.0, "de tijd loopt weer gewoon na het sluiten")
+
+
+## Het zwaaispoor (6 oktober): bij een bajonetstoot en een charge hangt er een
+## lijntje langs de punt van het wapen, dat daarna vanzelf weer weg is. Met de knop
+## op 0 komt er geen.
+static func _zwaai(tuner: Node) -> void:
+	for id in ["zwaaispoor", "zwaaispoor_charge"]:
+		tuner.call("kies", id)
+		await _host.get_tree().process_frame
+		var duur: float = tuner.call("speel")
+		var toneel: Node = tuner.call("toneel")
+		var schutter: Node3D = tuner.get("_schutter")
+		var meeste := 0
+		var gezien := false
+		var lengte := 0.0      # hoe ver de punt reisde (de langste kant van de doos)
+		var afstand := 0.0     # hoe ver het lijntje van de schutter af lag (midden van de doos)
+		var hoogte := 0.0      # en op welke hoogte (het bord ligt op 0,05)
+		var t0 := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < int((duur + 0.5) * 1000.0):
+			await _host.get_tree().process_frame
+			if not is_instance_valid(toneel):
+				break
+			for s in toneel.find_children("Zwaaispoor*", "", false, false):
+				gezien = true
+				meeste = maxi(meeste, int(s.call("stukjes")))
+				var ab: AABB = s.call("omvang")
+				if ab.get_longest_axis_size() > lengte:
+					lengte = ab.get_longest_axis_size()
+					if is_instance_valid(schutter):
+						var m := ab.get_center()
+						afstand = Vector2(m.x - schutter.position.x, m.z - schutter.position.z).length()
+						hoogte = m.y
+		var over: int = toneel.find_children("Zwaaispoor*", "", false, false).size() if is_instance_valid(toneel) else 0
+		_ok(gezien and meeste >= 4 and over == 0,
+			"%s: een lijntje achter de punt van het wapen (tot %d punten), daarna weer weg (%d over)" % [id, meeste, over])
+		_ok(lengte > 0.1 and afstand < 1.2 and hoogte > 0.1,
+			"%s: de punt reist %.2f, het lijntje ligt %.2f van de schutter op hoogte %.2f" % [id, lengte, afstand, hoogte])
+	var oud: float = PawnView.fx("slash_spoor", 1.0)
+	PawnView.set_fx("slash_spoor", 0.0)
+	tuner.call("kies", "zwaaispoor")
+	await _host.get_tree().process_frame
+	tuner.call("speel")
+	await _wacht(0.8)
+	var toneel_uit: Node = tuner.call("toneel")
+	_ok(toneel_uit.find_children("Zwaaispoor*", "", false, false).is_empty(), "knop slash_spoor 0: geen lijntje")
+	PawnView.set_fx("slash_spoor", oud)
+	await _wacht(1.5)
+
+
+## De nieuwe stukjes (6 oktober, Max: "al deze nieuwe vfx moeten hun eigen decal
+## krijgen"): met een textuur van de studio tekent elk effect die in plaats van
+## zijn vervanger. Zonder bestanden doet de check alsof (VFX.proef_geleverd) en
+## zoekt het plaatje in de tuner.
+const STUKJES := [["bullet", "musket", "schot_musket"], ["bullet", "cannon", "schot_kanon"],
+	["sparks", "propje", "propjes"], ["sparks", "vonk", "vonken"], ["flash", "flits", "vonken"],
+	["debris", "kluit", "inslag_aarde"], ["debris", "splinter", "inslag_materiaal"],
+	["decals", "schokgolf", "kruitvat"], ["trails", "slash", "zwaaispoor"]]
+
+
+static func _stukjes(tuner: Node) -> void:
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	img.fill(Color(1.0, 1.0, 1.0, 1.0))
+	var tex := ImageTexture.create_from_image(img)
+	for s in STUKJES:
+		VFX.proef_geleverd(String(s[0]), String(s[1]), tex)
+		tuner.call("kies", String(s[2]))
+		await _host.get_tree().process_frame
+		tuner.call("speel")
+		var gezien := false
+		var t0 := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < 2500 and not gezien:
+			await _host.get_tree().process_frame
+			for mi in (tuner as Node).find_children("*", "MeshInstance3D", true, false):
+				var mat := (mi as MeshInstance3D).material_override as StandardMaterial3D
+				if mat != null and mat.albedo_texture == tex:
+					gezien = true
+					break
+		_ok(gezien, "%s/%s: het geleverde plaatje komt in beeld bij %s" % [s[0], s[1], s[2]])
+		VFX.proef_geleverd(String(s[0]), String(s[1]), null)
+		await _wacht(0.2)
+	await _wacht(1.5)   # lopende recepten laten aflopen
 
 
 ## Plaatjes van een effect (met venster): kiest het, speelt het op `tempo` en
