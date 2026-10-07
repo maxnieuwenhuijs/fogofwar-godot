@@ -1432,6 +1432,46 @@ def zet_reeks(oid, b):
     return reeks_van(oid)
 
 
+def reeks_weg(oid, frame=-1, alles=False):
+    """Frames van een reeks weggooien (7 oktober, Max: "laat me in de vfx studio
+    ook de 12 frames kunnen verwijderen"). Met `alles`: alle versies van alle
+    frames (of van `frame`); anders alleen de versie die `frame` nu toont, en
+    een eerdere versie komt terug. Een mislukte poging van het frame gaat mee.
+    Het vel dat er al van gemaakt is (een gewone kandidaat) blijft staan."""
+    _onderdeel(oid)
+    if _reeks_bezig.get(oid, {}).get("loopt"):
+        raise RuntimeError("De reeks loopt nog; stop hem eerst.")
+    eid = ONDERDEEL_VOOR + oid
+    r = reeks_van(oid)
+    frame = int(frame)
+    if frame >= r["n"] or (frame < 0 and not alles):
+        raise RuntimeError("Welk frame?")
+    getoond = r["frames"][frame]["beeld"] if frame >= 0 else ""
+    weg_n = 0
+    with _lock:
+        st = lees_studio()
+        gekozen = (st["reeksen"].get(oid) or {}).get("gekozen") or {}
+        for m in concepten_van(eid):
+            i = m.get("reeks_frame")
+            if i is None or (frame >= 0 and i != frame):
+                continue
+            if m.get("status") in ("start", "bezig"):
+                raise RuntimeError("Frame %d wordt nog gemaakt; wacht of stop de reeks." % (int(i) + 1))
+            bestanden = m.get("bestanden") or []
+            if not alles and m.get("status") != "mislukt" and getoond not in bestanden:
+                continue
+            for b in bestanden:
+                os.remove(_veilig(b, [os.path.join(concept_dir(), eid)]))
+                weg_n += 1
+            try:
+                os.remove(_meta_pad(eid, m["stempel"]))
+            except OSError:
+                pass
+            gekozen.pop(str(i), None)
+        schrijf_studio(st)
+    return {"weg": weg_n, "reeks": reeks_van(oid)}
+
+
 def reeks_prompt(r, i, met_basis):
     tekst = "%s Frame %d of %d of the animation: %s." % (r["basis_prompt"].strip().rstrip("."), i + 1, r["n"],
                                                          r["frames"][i]["prompt"].strip().rstrip("."))
@@ -2279,6 +2319,7 @@ function reeksHtml(o){const id=esc(o.id),r=o.reeks,st=r.status||{};const loopt=!
  if(loopt)h+='<span class="klein"><span class="spin"></span> bezig met frame '+(st.nu+1)+' (tot '+(st.tot+1)+')</span><button class="klein" data-act="reeksStop" data-ond="'+id+'">stop</button>';
  else h+='<button class="prim klein" data-act="reeksMaak" data-ond="'+id+'" data-leeg="1">Maak de lege frames</button><button class="klein" data-act="reeksMaak" data-ond="'+id+'" data-leeg="0">Alles opnieuw</button>';
  h+='<button class="klein" data-act="reeksVel" data-ond="'+id+'"'+(r.frames.every(f=>f.beeld)?'':' disabled')+' title="alle frames in een vel, als kandidaat; dan In het spel">Leg in een vel</button>';
+ if(!loopt&&r.frames.some(f=>f.beeld||f.fout))h+='<button class="klein" data-act="reeksWegAlle" data-ond="'+id+'" title="alle frames van deze reeks weggooien, met al hun versies; een vel dat je er al van maakte blijft">alle frames weg</button>';
  if(st.fout)h+='<span class="fout">'+esc(st.fout)+'</span>';
  h+='</div><label class="klein">onderwerp en stijl (voor elk frame)</label><textarea class="prompt" data-reeks-basis="'+id+'">'+esc(r.basis_prompt)+'</textarea>';
  h+=aiRij('r_'+o.id,['reeks'],'data-sleutel="r_'+id+'" data-id="'+esc(o.eid)+'" data-ond="'+id+'" data-soort="reeks"');
@@ -2291,6 +2332,7 @@ function reeksHtml(o){const id=esc(o.id),r=o.reeks,st=r.status||{};const loopt=!
   if(f.fout)h+='<div class="fout">'+esc(f.fout)+'</div>';
   h+='<textarea data-reeks-frame="'+id+'" data-i="'+i+'">'+esc(f.prompt)+'</textarea><div class="knopjes"><button class="klein" data-act="reeksMaak" data-ond="'+id+'" data-van="'+i+'" data-tot="'+i+'" data-leeg="0"'+(loopt||f.bezig?' disabled':'')+' title="alleen dit frame (opnieuw)">maak</button>';
   if(f.versies.length>1)h+='<button class="klein" data-act="reeksVersie" data-ond="'+id+'" data-i="'+i+'" data-stap="-1">&lsaquo;</button><button class="klein" data-act="reeksVersie" data-ond="'+id+'" data-i="'+i+'" data-stap="1">&rsaquo;</button>';
+  if((f.beeld||f.fout)&&!loopt&&!f.bezig)h+='<button class="klein" data-act="reeksWeg" data-ond="'+id+'" data-i="'+i+'" title="'+(f.versies.length>1?'deze versie weggooien; de vorige komt terug':'dit frame weggooien')+'">weg</button>';
   h+='</div></div>'});
  return h+'</div></div>'}
 function fbForm(o){const id=esc(o.id);let opts='';for(const f of o.films)opts+='<option value="'+esc(f.pad)+'">'+esc(f.label)+'</option>';
@@ -2456,6 +2498,12 @@ const ACT={
   try{await api('/api/reeks_maak',{id:o.id,van,tot,alleen_leeg:leeg});toast('de reeks loopt; de frames komen een voor een','info');lopendeReeksen[o.id]={loopt:true};await verversOnd(o.id);startPoll()}catch(e){toast(e.message,'fout')}},
  reeksStop:async b=>{try{await api('/api/reeks_stop',{id:b.dataset.ond});toast('de reeks stopt na het frame dat nu loopt (dat wordt geannuleerd)','info')}catch(e){toast(e.message,'fout')}},
  reeksVel:async b=>{try{await api('/api/reeks_vel',{id:b.dataset.ond});toast('vel gemaakt: een nieuwe kandidaat, druk daar op In het spel');await verversOnd(b.dataset.ond,true)}catch(e){toast(e.message,'fout')}},
+ reeksWeg:async b=>{const o=ond(b.dataset.ond);if(!o)return;const i=+b.dataset.i;const f=o.reeks.frames[i];
+  if(!confirm('Frame '+(i+1)+(f.versies.length>1?' (deze versie)':'')+' weggooien? Terughalen kan niet (het kostte geld).'))return;
+  try{const j=await api('/api/reeks_weg',{id:o.id,frame:i});o.reeks=j.reeks;toast('frame '+(i+1)+' weg'+(j.reeks.frames[i].beeld?'; de vorige versie staat er weer':''));await verversOnd(o.id)}catch(e){toast(e.message,'fout')}},
+ reeksWegAlle:async b=>{const o=ond(b.dataset.ond);if(!o)return;const n=o.reeks.frames.filter(f=>f.beeld).length;
+  if(!confirm('Alle '+n+' frames van deze reeks weggooien, met al hun versies?\n\nTerughalen kan niet (ze kostten geld). Een vel dat je er al van maakte en wat in het spel staat blijven.'))return;
+  try{const j=await api('/api/reeks_weg',{id:o.id,alles:true});o.reeks=j.reeks;toast(j.weg+' plaatje(s) weg; de reeks is weer leeg');await verversOnd(o.id,true)}catch(e){toast(e.message,'fout')}},
  reeksVersie:async b=>{const o=ond(b.dataset.ond);if(!o)return;const f=o.reeks.frames[+b.dataset.i];const n=f.versies.length;if(n<2)return;const i=(f.versies.indexOf(f.beeld)+(+b.dataset.stap)+n)%n;await bewaarReeks(o.id,{frame:+b.dataset.i,gekozen:f.versies[i]},true)},
  importeer:async()=>{try{const s=await api('/api/import',{});D.import=s;importStatus();if(s.bezig)importPoll();else if(s.laatste)toast(s.laatste,'info')}catch(e){toast(e.message,'fout')}},
  wensOpen:b=>b.closest('.wensform').classList.toggle('open'),
@@ -2730,6 +2778,9 @@ class Handler(BaseHTTPRequestHandler):
         if pad == "/api/reeks_stop":
             stop_reeks(str(b.get("id", "")))
             return {"ok": True}
+        if pad == "/api/reeks_weg":
+            return reeks_weg(str(b.get("id", "")), -1 if b.get("frame") is None else b.get("frame"),
+                             bool(b.get("alles")))
         if pad == "/api/reeks_vel":
             return {"stempel": reeks_vel(str(b.get("id", "")))}
         if pad == "/api/wens":
@@ -3221,6 +3272,20 @@ def proef():
         j = post("/api/in_spel", {"id": "vlam_kanon", "pad": mv2["bestanden"][0], "modus": "vervang"})
         ok(j.get("doel", "").endswith("fire/cannon_2x2.png") and not os.path.exists(os.path.join(P["texturen"], "fire", "cannon_3x1.png"))
            and os.path.exists(os.path.join(P["texturen"], "fire", "musket_3x1.png")), "reeks: het vel in het spel als cannon_2x2.png, de musketvlam blijft")
+        # frames weggooien: de getoonde versie van een frame, dan de hele reeks
+        getoond = reeks_van("vlam_kanon")["frames"][2]["beeld"]
+        j = post("/api/reeks_weg", {"id": "vlam_kanon", "frame": 2})
+        f2n = j["reeks"]["frames"][2]
+        ok(j.get("weg") == 1 and not os.path.exists(os.path.abspath(getoond)) and f2n["beeld"]
+           and f2n["beeld"] != getoond and len(f2n["versies"]) == 1,
+           "reeks: weg gooit de getoonde versie van een frame weg, de andere komt terug")
+        ok("fout" in post("/api/reeks_weg", {"id": "vlam_kanon"}), "reeks: weg zonder frame wordt geweigerd")
+        j = post("/api/reeks_weg", {"id": "vlam_kanon", "alles": True})
+        ok(j.get("weg") == 4 and not any(f["beeld"] for f in j["reeks"]["frames"])
+           and not any("reeks_frame" in m for m in concepten_van("o_vlam_kanon"))
+           and os.path.exists(os.path.abspath(mv2["bestanden"][0]))
+           and os.path.exists(os.path.join(P["texturen"], "fire", "cannon_2x2.png")),
+           "reeks: alle frames weg; het vel en wat in het spel staat blijven")
         post("/api/reeks", {"id": "vuur_niets" if False else "stof", "n": 4})
         ok("fout" in post("/api/reeks_maak", {"id": "stof", "van": 1, "tot": 1, "alleen_leeg": False}) or
            (wacht_reeks("stof") and "nog geen plaatje" in _reeks_bezig.get("stof", {}).get("fout", "")),
