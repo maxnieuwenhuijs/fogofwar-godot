@@ -163,8 +163,13 @@ static func _geleverd() -> void:
 		var fout := ""
 		for e in lijst:
 			var tex: Texture2D = e.tex
-			if maxi(tex.get_width(), tex.get_height()) > int(g[3]):
-				fout = "te groot (%dx%d)" % [tex.get_width(), tex.get_height()]
+			# de maat geldt per beeldje van een vel, het hele vel hooguit 2048 (7 oktober)
+			var cel := maxi(tex.get_width() / int(e.cols), tex.get_height() / int(e.rows))
+			if cel > int(g[3]) or maxi(tex.get_width(), tex.get_height()) > 2048:
+				fout = "te groot (%dx%d, beeldje %d)" % [tex.get_width(), tex.get_height(), cel]
+			elif naam == "cannon" and int(e.cols) * int(e.rows) > 1 \
+					and tex.get_height() / int(e.rows) * 4 > tex.get_width() / int(e.cols) * 3:
+				fout = "vel niet bijgesneden (beeldje %dx%d)" % [tex.get_width() / int(e.cols), tex.get_height() / int(e.rows)]
 			elif tex.get_image() == null or not tex.get_image().has_mipmaps():
 				fout = "geen mipmaps"
 			elif naam == "wiel" and float(tex.get_width()) > float(tex.get_height()) * 0.6:

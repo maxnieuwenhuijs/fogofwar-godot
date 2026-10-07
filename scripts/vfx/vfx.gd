@@ -117,9 +117,18 @@ static func _maak_klaar(tex: Texture2D, base: String, boost: float, max_px: int,
 			r = Rect2i(clampi(m.x - z / 2, 0, img.get_width() - z), clampi(m.y - z / 2, 0, img.get_height() - z), z, z)
 		if r.size.x > 4 and r.size.y > 4:
 			img = img.get_region(r)
+	elif bijsnijden:
+		# Een vel (7 oktober: de kanonskogel van Max, 4x3, besloeg maar een kwart
+		# van de hoogte van elk beeldje en werd een draadje): elk beeldje gaat
+		# terug tot wat er in ALLE beeldjes samen te zien is, voor allemaal
+		# dezelfde rechthoek, zodat de animatie op haar plek blijft.
+		img = _vel_bijgesneden(img, cols, rows, alpha, vierkant)
 	var celw := img.get_width() / cols
 	var celh := img.get_height() / rows
-	var schaal := minf(1.0, float(max_px) / float(maxi(img.get_width(), img.get_height())))
+	# `max_px` geldt per beeldje (7 oktober: een vel van 4x3 op 256 px breed gaf
+	# beeldjes van 64 px), met een bovengrens van 2048 voor het hele vel.
+	var schaal := minf(1.0, minf(float(max_px) / float(maxi(celw, celh)),
+		2048.0 / float(maxi(img.get_width(), img.get_height()))))
 	if schaal < 1.0:
 		img.resize(maxi(1, int(celw * schaal)) * cols, maxi(1, int(celh * schaal)) * rows, Image.INTERPOLATE_LANCZOS)
 	if boost > 0.0 and not alpha:
@@ -136,9 +145,33 @@ static func _maak_klaar(tex: Texture2D, base: String, boost: float, max_px: int,
 	return e
 
 
+## Een vel bijgesneden tot de rechthoek die alles van alle beeldjes bevat (bij
+## `vierkant` een vierkant om het midden daarvan); lege beeldjes tellen niet mee.
+static func _vel_bijgesneden(img: Image, cols: int, rows: int, alpha: bool, vierkant: bool) -> Image:
+	var cw := img.get_width() / cols
+	var ch := img.get_height() / rows
+	var u := Rect2i()
+	for i in cols * rows:
+		var r := _inhoud(img.get_region(Rect2i((i % cols) * cw, (i / cols) * ch, cw, ch)), alpha, true)
+		if r.size != Vector2i.ZERO:
+			u = r if u.size == Vector2i.ZERO else u.merge(r)
+	if vierkant and u.size != Vector2i.ZERO:
+		var z := mini(maxi(u.size.x, u.size.y), mini(cw, ch))
+		var m := u.get_center()
+		u = Rect2i(clampi(m.x - z / 2, 0, cw - z), clampi(m.y - z / 2, 0, ch - z), z, z)
+	if u.size.x <= 4 or u.size.y <= 4 or u.size == Vector2i(cw, ch):
+		return img
+	var uit := Image.create(u.size.x * cols, u.size.y * rows, false, img.get_format())
+	for i in cols * rows:
+		uit.blit_rect(img, Rect2i((i % cols) * cw + u.position.x, (i / cols) * ch + u.position.y, u.size.x, u.size.y),
+			Vector2i((i % cols) * u.size.x, (i / cols) * u.size.y))
+	return uit
+
+
 ## Het deel van een plaatje waar iets te zien is: dekking (met alpha) of
-## helderheid (op zwart), met een randje marge.
-static func _inhoud(img: Image, alpha: bool) -> Rect2i:
+## helderheid (op zwart), met een randje marge. Niets te zien: het hele plaatje,
+## of bij `leeg_niets` een lege rechthoek.
+static func _inhoud(img: Image, alpha: bool, leeg_niets: bool = false) -> Rect2i:
 	var w := img.get_width()
 	var h := img.get_height()
 	var stap := maxi(1, int(maxi(w, h) / 256))
@@ -156,7 +189,7 @@ static func _inhoud(img: Image, alpha: bool) -> Rect2i:
 				x1 = maxi(x1, x)
 				y1 = maxi(y1, y)
 	if x1 < 0:
-		return Rect2i(0, 0, w, h)
+		return Rect2i() if leeg_niets else Rect2i(0, 0, w, h)
 	var marge := maxi(stap * 2, int(maxi(x1 - x0, y1 - y0) * 0.04))
 	x0 = maxi(0, x0 - marge)
 	y0 = maxi(0, y0 - marge)
@@ -352,6 +385,12 @@ static func _streep(ouder: Node3D, e: Dictionary, van: Vector3, naar: Vector3, l
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	houder.add_child(mi)
 	houder.set_meta("vel", mi)
+	# de hoogte volgt het (bijgesneden) beeldje, zodat het niet platgedrukt wordt;
+	# `hoogte` is de terugval zonder maat
+	var tw: float = float((e.tex as Texture2D).get_width()) / maxf(float(e.cols), 1.0)
+	var th: float = float((e.tex as Texture2D).get_height()) / maxf(float(e.rows), 1.0)
+	if tw > 0.0 and th > 0.0:
+		hoogte = clampf(lengte * th / tw, 0.12, 0.5)
 	var terug := (van - naar).normalized() if van.distance_to(naar) > 0.001 else Vector3.RIGHT
 	var cam := ouder.get_viewport().get_camera_3d() if ouder.is_inside_tree() else null
 	var kijk: Vector3 = ouder.global_transform.basis.inverse() * cam.global_transform.basis.z if cam != null else Vector3.UP

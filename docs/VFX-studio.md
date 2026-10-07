@@ -275,7 +275,15 @@ Godot, daarna de concept-webpagina.
       vel af"): `kogel_musket` en `kogel_kanon` dragen `vel`, en `schot` loopt
       de beeldjes een keer af tijdens de vlucht (de streep en het billboard
       beginnen op beeldje 0). Een kanonskogel is maar 0,05-0,22 s onderweg,
-      dus een vel flitst er snel doorheen.
+      dus een vel flitst er snel doorheen. Later die dag (het vel stond erin
+      maar je zag alleen een draadje bij de loop): `max_px` geldt nu per
+      beeldje (het hele vel hooguit 2048; daarvoor werd de 4x3 op 256 breed
+      beeldjes van 64 px), een vel met bijsnijden gaat terug tot wat er in alle
+      beeldjes samen te zien is (zelfde rechthoek voor elk, bij een billboard
+      vierkant; `VFX._vel_bijgesneden`), en de streep neemt zijn hoogte uit
+      de verhouding van het beeldje (0,12-0,5) in plaats van vast 0,22.
+      `-- vfxcheck` toetst de maat per beeldje en of het kogelvel bijgesneden
+      is.
 
 ## Huisregels
 
