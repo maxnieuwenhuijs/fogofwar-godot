@@ -290,7 +290,11 @@ Godot, daarna de concept-webpagina.
       vierkant; `VFX._vel_bijgesneden`), en de streep neemt zijn hoogte uit
       de verhouding van het beeldje (0,12-0,5) in plaats van vast 0,22.
       `-- vfxcheck` toetst de maat per beeldje en of het kogelvel bijgesneden
-      is.
+      is. En de kanonskogel zelf vliegt weer mee (Max: "voeg die decal en de
+      kanonskogel zelf wel nog toe, die distorted bal"): de uitgerekte donkere
+      bol (`VFX._kogel_bol`) voorop, de streep uit de studio erachter; zonder
+      textuur alleen de bol, zoals altijd. Een musketkogel met een eigen
+      textuur blijft zonder bolletje.
 
 ## Huisregels
 

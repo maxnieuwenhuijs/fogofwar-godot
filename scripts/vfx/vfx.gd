@@ -285,7 +285,7 @@ static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur
 	# hij er is: de musketkogel een billboard, de kanonskogel een streep langs de
 	# vliegrichting. Anders het bolletje en de uitgerekte bol van daarvoor.
 	var kogel := _kies_geleverd("bullet", "cannon" if kanon else "musket", 1.6, 256 if kanon else 128, true, not kanon)
-	var proj: Node3D
+	var proj: Node3D = null
 	if not kogel.is_empty():
 		if kanon:
 			proj = _streep(ouder, kogel, loop, doel, 0.9, 0.22)
@@ -293,31 +293,15 @@ static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur
 			proj = _beeld(ouder, kogel)
 			proj.scale = Vector3.ONE * 0.2
 		proj.position = loop
-	else:
-		var bol := MeshInstance3D.new()
-		var mesh := SphereMesh.new()
-		var radius: float = 0.13 if kanon else 0.055
-		mesh.radius = radius
-		mesh.height = radius * 2.0
-		bol.mesh = mesh
-		var mat := StandardMaterial3D.new()
-		if kanon:
-			mat.albedo_color = Color(0.16, 0.16, 0.18)
-			mat.metallic = 0.5
-		else:
-			mat.albedo_color = Color(1.0, 0.9, 0.5)
-			mat.emission_enabled = true
-			mat.emission = Color(1.0, 0.85, 0.4)
-			mat.emission_energy_multiplier = 1.6
-		bol.material_override = mat
-		bol.position = loop
-		ouder.add_child(bol)
-		# Kanonskogel: rek de bol uit langs de vliegrichting tot een strakke streep,
-		# keihard rechtdoor (geen boog). Infanterie blijft een rond tracer-bolletje.
-		if kanon and loop.distance_to(doel) > 0.01:
-			bol.look_at_from_position(loop, doel, Vector3.UP)
-			bol.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
-		proj = bol
+	# De kanonskogel zelf (de uitgerekte bol) vliegt altijd mee, ook met de streep
+	# uit de studio erachter (7 oktober, Max: "voeg die decal en de kanonskogel
+	# zelf wel nog toe, die distorted bal"). Een musketkogel met een eigen
+	# textuur heeft geen bolletje meer nodig.
+	var bol: MeshInstance3D = null
+	if kanon or proj == null:
+		bol = _kogel_bol(ouder, loop, doel, kanon)
+		if proj == null:
+			proj = bol
 	# Een kogel als vel speelt zijn beeldjes een keer af tijdens de vlucht.
 	var vel_mi: MeshInstance3D = null
 	if not kogel.is_empty() and int(kogel.cols) * int(kogel.rows) > 1:
@@ -325,9 +309,13 @@ static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur
 	var tween := ouder.create_tween()
 	tween.tween_method(func(t: float) -> void:
 		proj.position = loop.lerp(doel, t)
+		if bol != null and bol != proj:
+			bol.position = proj.position
 		if vel_mi != null:
 			_vel_bij(vel_mi, kogel, minf(t, 0.999)), 0.0, 1.0, duur)
 	tween.tween_callback(proj.queue_free)
+	if bol != null and bol != proj:
+		tween.tween_callback(bol.queue_free)
 
 	vuurmond(ouder, loop, kanon)
 	# vuur-schok: korte terugslag bij het afvuren (kanon harder).
@@ -358,6 +346,34 @@ static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur
 				inslag_aarde(ouder, doel, richting)
 				krater(ouder, doel))
 	return duur
+
+
+## De kogel als bol: een kanonskogel donker ijzer, uitgerekt langs de
+## vliegrichting tot een strakke streep (keihard rechtdoor, geen boog); een
+## musketkogel een rond gloeiend tracer-bolletje.
+static func _kogel_bol(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool) -> MeshInstance3D:
+	var bol := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	var radius: float = 0.13 if kanon else 0.055
+	mesh.radius = radius
+	mesh.height = radius * 2.0
+	bol.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	if kanon:
+		mat.albedo_color = Color(0.16, 0.16, 0.18)
+		mat.metallic = 0.5
+	else:
+		mat.albedo_color = Color(1.0, 0.9, 0.5)
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.85, 0.4)
+		mat.emission_energy_multiplier = 1.6
+	bol.material_override = mat
+	bol.position = loop
+	ouder.add_child(bol)
+	if kanon and loop.distance_to(doel) > 0.01:
+		bol.look_at_from_position(loop, doel, Vector3.UP)
+		bol.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
+	return bol
 
 
 ## Een streep langs de vliegrichting (de kanonskogel uit de studio: links de
