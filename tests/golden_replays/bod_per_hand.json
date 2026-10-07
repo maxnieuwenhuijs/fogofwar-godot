@@ -33,10 +33,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "80106b2351c29a121f0971375a9bcbe90ff6d27f3e0913c00f2fef2cc6a89f15",
+			"hash": "08cbfb50723df6592a457380dd9bb1acdaa1cd0ea6fe8dde75a452cec1cfc9d3",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1791367180.542
+			"ts": 1791369378.319
 		},
 		{
 			"action": {
@@ -97,20 +97,20 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "d47b1e050120ef84e555edd53bffe227905bba4eff77c81939d7f9d28df4a3d3",
+			"hash": "ba6a6d04c0ccf4d2db717b3c0f85f54ae81be5957f2cf7108be5cba6739be781",
 			"player_id": 2,
 			"seq": 1,
-			"ts": 1791367180.542
+			"ts": 1791369378.319
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "cf28786b23e4094e74540e5e3e771eb3a582c03d060b36be0544108b5e571ff4",
+			"hash": "5c6676791bc038687d39a2ea36a9e637ad991a2604b035630b122776d53bad90",
 			"player_id": 1,
 			"seq": 2,
-			"ts": 1791367180.542
+			"ts": 1791369378.32
 		},
 		{
 			"action": {
@@ -133,13 +133,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "8a9153e7da43c1c722d53e7eebbba52e181f023d2c7dff67cc570e04373a9962",
+			"hash": "e01c3c3e488ac13dec48bd4c1e6294b32e7b0e665672a543a6bb7db4820ac36a",
 			"player_id": 2,
 			"seq": 3,
-			"ts": 1791367180.543
+			"ts": 1791369378.32
 		}
 	],
-	"final_hash": "8a9153e7da43c1c722d53e7eebbba52e181f023d2c7dff67cc570e04373a9962",
+	"final_hash": "e01c3c3e488ac13dec48bd4c1e6294b32e7b0e665672a543a6bb7db4820ac36a",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -387,7 +387,7 @@
 				"cp_refund": "none",
 				"cp_start": 10,
 				"cp_start_mode": "vast",
-				"initiatief_per_hand": true,
+				"initiatief_deler": "tegenstander",
 				"initiatief_sps": true,
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -438,7 +438,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.9",
+			"rules_version": "4.3.10",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"stat_bonus": {},
@@ -461,7 +461,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-10-07T11:59:40",
+		"created": "2026-10-07T12:36:18",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -650,7 +650,7 @@
 					"cp_refund": "none",
 					"cp_start": 10,
 					"cp_start_mode": "vast",
-					"initiatief_per_hand": true,
+					"initiatief_deler": "tegenstander",
 					"initiatief_sps": true,
 					"kanon_actie_kost": {
 						"roll": 1,
@@ -701,7 +701,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.9",
+				"rules_version": "4.3.10",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"stat_bonus": {},
@@ -723,6 +723,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.9"
+		"rules_version": "4.3.10"
 	}
 }

@@ -77,10 +77,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "70ee48e8dd025d16660f20bd02f63593772e804d7cb2806d1bef89bcd6188a31",
+			"hash": "66848674b0bcc3e80d5e66da65fd224591c03907059a7710898a55bd71fa6adc",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1791367180.527
+			"ts": 1791369378.307
 		},
 		{
 			"action": {
@@ -116,10 +116,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "ff5af87db7143e986ebf9c4a7f38b3b86308c5c7e1081e6d834a7405864d20ec",
+			"hash": "11e757be9d9d2a7396ddc1728f262502e34fa1c192ba2e668d885db0aa873d35",
 			"player_id": 1,
 			"seq": 1,
-			"ts": 1791367180.527
+			"ts": 1791369378.307
 		},
 		{
 			"action": {
@@ -196,13 +196,13 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "0ff7e5a1c16565672293c94cfceed62825ecf154394990bfc8d0bbe786527dc5",
+			"hash": "0b86d76f438e89c56c307c3660304d0a0c647484914873d0721478fc03936586",
 			"player_id": 2,
 			"seq": 2,
-			"ts": 1791367180.528
+			"ts": 1791369378.307
 		}
 	],
-	"final_hash": "0ff7e5a1c16565672293c94cfceed62825ecf154394990bfc8d0bbe786527dc5",
+	"final_hash": "0b86d76f438e89c56c307c3660304d0a0c647484914873d0721478fc03936586",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -380,7 +380,7 @@
 				"cp_refund": "none",
 				"cp_start": 10,
 				"cp_start_mode": "vast",
-				"initiatief_per_hand": true,
+				"initiatief_deler": "tegenstander",
 				"initiatief_sps": true,
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -431,7 +431,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.9",
+			"rules_version": "4.3.10",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"stat_bonus": {},
@@ -469,7 +469,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-10-07T11:59:40",
+		"created": "2026-10-07T12:36:18",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {
@@ -628,7 +628,7 @@
 					"cp_refund": "none",
 					"cp_start": 10,
 					"cp_start_mode": "vast",
-					"initiatief_per_hand": true,
+					"initiatief_deler": "tegenstander",
 					"initiatief_sps": true,
 					"kanon_actie_kost": {
 						"roll": 1,
@@ -679,7 +679,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.9",
+				"rules_version": "4.3.10",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"stat_bonus": {},
@@ -701,6 +701,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.9"
+		"rules_version": "4.3.10"
 	}
 }

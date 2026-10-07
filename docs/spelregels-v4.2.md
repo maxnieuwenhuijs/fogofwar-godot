@@ -111,8 +111,9 @@ de honger op 10 is de mediaan onveranderd (10 cycli), het maximum 16, en eindigt
 - **Bod-formule:** bod = (Σ stat − n) / (n × (budget − 3)) over de onthulde
   kaarten (n = aantal). 0 kaarten of budget ≤ 3 → bod 0. Genormaliseerd over
   doctrines: alles-op-max geeft 1.0. `Rules.gd:442-449` *(Onder het
-  campaign-blok deelt het bod sinds 4.3.9 door de volle hand van de factie in
-  plaats van door n; zie Deel B, "4.3.9".)*
+  campaign-blok kort het bod sinds 4.3.10 wie minder kaarten speelt dan zijn
+  tegenstander: de ontbrekende kaarten tellen als kaarten zonder punten, tot
+  je volle hand; zie Deel B, "4.3.10".)*
 - **Initiatief:** hoogste Aanval-bod wint (ε = 0.000001). Gelijk → hoogste
   stamina-bod. Ook gelijk → in cyclus 1/ronde 1 Speler 1, anders de vorige
   initiatiefhouder. Volledig deterministisch; er is geen loting en geen
@@ -538,7 +539,9 @@ niets (default van 5 oktober, voor Max om te bevestigen).
 ## 4.3.9: het initiatief-bod deelt door de volle hand
 
 *Besluit Max, 7 oktober 2026: "is het een percentage dat je met 1 kaart ook
-kan winnen? dat is dan toch niet eerlijk, als ik er 5 nog heb".*
+kan winnen? dat is dan toch niet eerlijk, als ik er 5 nog heb". Dezelfde dag
+vervangen door 4.3.10 (hieronder); nog te kiezen met
+`campaign.initiatief_deler` = `"hand"`.*
 
 Het bod per stat is nu
 
@@ -570,8 +573,37 @@ de ander (de Muis met 4 tegen de Leeuw met 2: hooguit 80% tegen 100%).
 - Het CP-punt telt mee zoals altijd (een kaart met budget + 1 kan boven de
   100% van zijn deel uitkomen), maar op een korte hand weegt het naar
   verhouding.
-- Knop `campaign.initiatief_per_hand` (default aan); met de knop uit 4.3.8.
-  Zonder campaign-blok (4.1) bestaat de regel niet.
-- Implementatie: `Rules.compute_bid(..., hand)`, `Rules.bod_hand`,
-  `Rules.compute_initiative`.
+- In 4.3.9 de knop `campaign.initiatief_per_hand`; sinds 4.3.10 de stand
+  `"hand"` van `campaign.initiatief_deler` (de oude schakelaar wordt nog
+  gelezen). Zonder campaign-blok (4.1) bestaat de regel niet.
+
+## 4.3.10: het bod kort alleen wie minder kaarten speelt dan de tegenstander
+
+*Besluit Max, 7 oktober 2026, na de review van 4.3.9 ("ja doe maar").
+4.3.9 kortte ook wie nog MEER kaarten speelde dan de ander, zolang zijn eigen
+hand niet vol was: de Muis met 4 tegen de Leeuw met 2 haalde hooguit 80%
+tegen 100%.*
+
+```
+bod = (Σ stat − n) / (deler × (budget − 3))
+deler = max(n, min(hand, n_tegenstander))
+```
+
+Speel je minder kaarten dan je tegenstander, dan tellen de kaarten die je mist
+mee als kaarten zonder punten, tot je volle hand. Speel je er evenveel of
+meer, dan is het het gemiddelde per kaart (4.1/4.3.8).
+
+- Muis met volle hand (een all-in, de rest half) tegen de Leeuw met een kaart
+  all-in: 60% tegen 50% (de Leeuw telt 1 van de 2 die hij kan spelen); onder
+  4.3.8 won die ene kaart met 100%.
+- Muis met 4 all-in tegen de Leeuw met zijn volle 2 all-in: 100% tegen 100%,
+  gelijk (dan stamina, dan steen-papier-schaar), net als onder 4.3.8.
+- Muis met 1 kaart all-in tegen de Leeuw met 2: hooguit 50%.
+- Tegen een lege hand: het gemiddelde per kaart (het bod van de ander is 0).
+- Geldt voor het Aanval-bod en de stamina-tiebreak.
+- Knop `campaign.initiatief_deler`: `"tegenstander"` (default, 4.3.10),
+  `"hand"` (4.3.9), `"kaarten"` (4.3.8). Zonder campaign-blok altijd
+  `"kaarten"`.
+- Implementatie: `Rules.compute_bid(..., deler)`, `Rules.bod_modus`,
+  `Rules.bod_deler`, `Rules.compute_initiative`.
 

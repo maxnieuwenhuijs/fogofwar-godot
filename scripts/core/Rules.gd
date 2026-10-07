@@ -650,36 +650,50 @@ static func compute_totals(cards: Array) -> Dictionary:
 		total_hp += c.hp
 	return {"attack": total_attack, "stamina": total_stamina, "hp": total_hp}
 
-## AttackBod = (Σ stat − aantal kaarten) / (aantal kaarten × (budget − 3)).
-## 4.3.9 (Max, 7 oktober): `hand` > 0 is de volle hand van de factie; dan
-## deelt het bod door hand × (budget − 3) in plaats van door de gespeelde
-## kaarten. Bij een volle hand is dat hetzelfde getal; met 1 van je 5 kaarten
-## haal je hooguit 20% (daarvoor 100% met die ene kaart, tegen alle vijf).
-static func compute_bid(cards: Array, budget: int, stat: String, hand: int = 0) -> float:
+## AttackBod = (Σ stat − aantal kaarten) / (deler × (budget − 3)), de deler
+## minstens het aantal gespeelde kaarten (dan is het het gemiddelde per kaart,
+## de regel tot en met 4.3.8). Onder het campaign-blok kan hij groter zijn:
+## Rules.bod_deler (7 oktober, 4.3.9 en 4.3.10).
+static func compute_bid(cards: Array, budget: int, stat: String, deler: int = 0) -> float:
 	var n: int = cards.size()
 	if n == 0 or budget <= 3:
 		return 0.0
 	var total: int = 0
 	for c in cards:
 		total += c.attack if stat == "attack" else c.stamina
-	return float(total - n) / float(maxi(n, hand) * (budget - 3))
+	return float(total - n) / float(maxi(n, deler) * (budget - 3))
 
 
-## 4.3.9: deelt het initiatief-bod door de volle hand van de factie? Alleen
-## onder het campaign-blok, en met de knop.
-static func bod_per_hand(state: GameState) -> bool:
+## Waardoor deelt het initiatief-bod? "kaarten", "hand" of "tegenstander"
+## (campaign.initiatief_deler, zie RulesConfig.CAMPAIGN_DEFAULTS). Zonder
+## campaign-blok altijd "kaarten".
+static func bod_modus(state: GameState) -> String:
 	if state.rules == null or not state.rules.campaign_actief():
-		return false
-	return bool((state.rules.campaign as Dictionary).get("initiatief_per_hand",
-		RulesConfig.CAMPAIGN_DEFAULTS["initiatief_per_hand"]))
+		return "kaarten"
+	return String((state.rules.campaign as Dictionary).get("initiatief_deler",
+		RulesConfig.CAMPAIGN_DEFAULTS["initiatief_deler"]))
 
 
-## De volle hand van een speler voor het bod (0 = per gespeelde kaart, de
-## regel tot en met 4.3.8).
-static func bod_hand(state: GameState, player_id: int) -> int:
-	if not bod_per_hand(state):
-		return 0
-	return int(state.doctrine_data_of(player_id).cards)
+## De deler van het bod van een speler (Max, 7 oktober: "is het een
+## percentage dat je met 1 kaart ook kan winnen? dat is dan toch niet eerlijk,
+## als ik er 5 nog heb"), altijd minstens zijn eigen aantal onthulde kaarten:
+## - "kaarten" (tot en met 4.3.8): dat aantal, het gemiddelde per kaart;
+## - "hand" (4.3.9): de volle hand van zijn factie (1 van 5 kaarten: hooguit
+##   20%, maar ook de Muis met 4 tegen de Leeuw met 2: hooguit 80%);
+## - "tegenstander" (4.3.10, de default): speelt hij minder kaarten dan zijn
+##   tegenstander, dan tellen de kaarten die hij mist mee als kaarten zonder
+##   punten, tot zijn volle hand. Evenveel of meer: het gemiddelde per kaart.
+static func bod_deler(state: GameState, player_id: int) -> int:
+	var eigen: int = (state.cards_revealed.get(player_id, []) as Array).size()
+	var modus: String = bod_modus(state)
+	if modus == "kaarten":
+		return eigen
+	var hand: int = int(state.doctrine_data_of(player_id).cards)
+	if modus == "hand":
+		return maxi(eigen, hand)
+	var ander: int = Constants.PLAYER_2 if player_id == Constants.PLAYER_1 else Constants.PLAYER_1
+	var tegen: int = (state.cards_revealed.get(ander, []) as Array).size()
+	return maxi(eigen, mini(hand, tegen))
 
 ## Deterministisch: bod op Attack → bod op Speed → Ronde 1/Cyclus 1: Speler 1,
 ## anders de vorige initiatiefhouder. Onder het campaign-blok (4.3.8) beslist
@@ -690,12 +704,12 @@ static func compute_initiative(state: GameState) -> Dictionary:
 	var cards_p2: Array = state.cards_revealed[Constants.PLAYER_2]
 	var budget_p1: int = state.doctrine_data_of(Constants.PLAYER_1).budget
 	var budget_p2: int = state.doctrine_data_of(Constants.PLAYER_2).budget
-	var hand_p1: int = bod_hand(state, Constants.PLAYER_1)
-	var hand_p2: int = bod_hand(state, Constants.PLAYER_2)
+	var deler_p1: int = bod_deler(state, Constants.PLAYER_1)
+	var deler_p2: int = bod_deler(state, Constants.PLAYER_2)
 	var totals_p1: Dictionary = compute_totals(cards_p1)
 	var totals_p2: Dictionary = compute_totals(cards_p2)
-	var bid_p1: float = compute_bid(cards_p1, budget_p1, "attack", hand_p1)
-	var bid_p2: float = compute_bid(cards_p2, budget_p2, "attack", hand_p2)
+	var bid_p1: float = compute_bid(cards_p1, budget_p1, "attack", deler_p1)
+	var bid_p2: float = compute_bid(cards_p2, budget_p2, "attack", deler_p2)
 	totals_p1["bid"] = bid_p1
 	totals_p2["bid"] = bid_p2
 	var result := {
@@ -710,8 +724,8 @@ static func compute_initiative(state: GameState) -> Dictionary:
 	elif bid_p2 > bid_p1 + EPS:
 		result.winner = Constants.PLAYER_2
 	else:
-		var speed_p1: float = compute_bid(cards_p1, budget_p1, "stamina", hand_p1)
-		var speed_p2: float = compute_bid(cards_p2, budget_p2, "stamina", hand_p2)
+		var speed_p1: float = compute_bid(cards_p1, budget_p1, "stamina", deler_p1)
+		var speed_p2: float = compute_bid(cards_p2, budget_p2, "stamina", deler_p2)
 		if speed_p1 > speed_p2 + EPS:
 			result.winner = Constants.PLAYER_1
 		elif speed_p2 > speed_p1 + EPS:

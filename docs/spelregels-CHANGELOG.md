@@ -1,6 +1,44 @@
 # Spelregels — CHANGELOG
 
+## 4.3.10: 7 oktober 2026 (het bod kort alleen wie minder kaarten speelt dan de tegenstander)
+
+*Besluit Max, 7 oktober, na de review van 4.3.9: "ja doe maar".*
+
+**Wat verandert.** 4.3.9 deelde het bod door de volle hand van je factie.
+Omdat koppelingen de hele cyclus blijven staan, is de hand in ronde 3 vaak kort
+(de Muis na 6 pionnen netto verlies), en dan haalde een Muis met 4 kaarten
+hooguit 80% tegen een Leeuw met zijn volle 2 (100%): meer kaarten en toch
+verliezen, het omgekeerde van wat Max oneerlijk vond. Nu: speel je minder
+kaarten dan je tegenstander, dan tellen de kaarten die je mist mee als kaarten
+zonder punten, tot je volle hand. Speel je er evenveel of meer, dan blijft het
+het gemiddelde per kaart. Deler = max(n, min(hand, n tegenstander)).
+
+| geval | 4.3.8 (kaarten) | 4.3.9 (hand) | 4.3.10 (tegenstander) |
+|---|---|---|---|
+| Muis 5 (een all-in, rest half) tegen Leeuw 1 all-in | Leeuw 100% wint | Muis 60% tegen 50% | Muis 60% tegen 50% |
+| Muis 4 all-in tegen Leeuw 2 all-in | 100/100, gelijk | Leeuw (80 tegen 100) | 100/100, gelijk |
+| Muis 1 all-in tegen Leeuw 2 | Muis 100% | Muis hooguit 20% | Muis hooguit 50% |
+| beide volle handen, of evenveel kaarten | ongewijzigd | ongewijzigd | ongewijzigd |
+
+**Knop.** `campaign.initiatief_deler` met drie standen: `"kaarten"` (4.3.8),
+`"hand"` (4.3.9), `"tegenstander"` (4.3.10, de default, expliciet in
+`rules_v42_campaign.json` en `v42_default.json`). De schakelaar
+`initiatief_per_hand` van 4.3.9 (een uur in de repo) wordt nog gelezen:
+aan = `"hand"`, uit = `"kaarten"`. Een onbekende stand valt terug op de
+default met een push_error.
+
+**Gevolgen.** De vijf campagne-goldens opnieuw (in `cp_inzet` spelen beide
+kanten een kaart: het bod is weer 25%, zoals onder 4.3.8), plus een nieuwe
+golden `bod_meer_kaarten` (Muis met een kaart minder dan haar hand tegen de
+Leeuw met zijn volle hand, beide all-in: gelijk, steen-papier-schaar beslist;
+onder 4.3.9 won de Leeuw meteen). `golden_sims.json` ongewijzigd. Nieuwe
+uispel-referentie (dezelfde partij), nieuwe core-hash: server en client samen
+uitrollen. Balans niet gemeten (B18).
+
 ## 4.3.9: 7 oktober 2026 (het initiatief-bod deelt door de volle hand)
+
+*Dezelfde dag vervangen door 4.3.10; nog te kiezen met `initiatief_deler`
+`"hand"`.*
 
 *Besluit Max, 7 oktober: "is het een percentage dat je met 1 kaart ook kan
 winnen? dat is dan toch niet eerlijk, als ik er 5 nog heb", en na de uitleg

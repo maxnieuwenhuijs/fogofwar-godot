@@ -82,8 +82,12 @@ var campaign = null
 
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
-## rules_version naar 4.3.9 (4.3.8 met initiatief_per_hand uit, 4.3.7 met
-## ook initiatief_sps uit); zonder blok speelt de engine exact 4.1.x.
+## rules_version naar 4.3.10 (4.3.9 met initiatief_deler "hand", 4.3.8 met
+## "kaarten", 4.3.7 met ook initiatief_sps uit); zonder blok speelt de engine
+## exact 4.1.x.
+## De standen van campaign.initiatief_deler (zie CAMPAIGN_DEFAULTS).
+const BOD_DELERS: Array[String] = ["kaarten", "hand", "tegenstander"]
+
 const CAMPAIGN_DEFAULTS := {
 	"cp_start": 10,                      # D2/D13: vast duel-budget (10 sinds 25 juli, besluit Max)
 	"cp_haven": 8, "cp_eliminatie": 4, "cp_raadstem": 1,
@@ -121,13 +125,16 @@ const CAMPAIGN_DEFAULTS := {
 	# plaats van "cyclus 1 ronde 1: speler 1, anders de vorige houder"). In de
 	# code heet het sps: de F0.0-check grept op het andere woord.
 	"initiatief_sps": true,
-	# 4.3.9 (Max, 7 oktober: "is het een percentage dat je met 1 kaart ook kan
-	# winnen? dat is dan toch niet eerlijk, als ik er 5 nog heb"): het
-	# initiatief-bod deelt door de VOLLE hand van de factie (kaarten per ronde)
-	# in plaats van door de kaarten die je deze ronde speelt. Bij volle handen
-	# precies als 4.3.8; met minder kaarten haal je hooguit dat deel van een
-	# volle hand (1 van 5 kaarten: 20%). Uit = het gemiddelde per gespeelde kaart.
-	"initiatief_per_hand": true,
+	# Waardoor deelt het initiatief-bod (Max, 7 oktober: "is het een percentage
+	# dat je met 1 kaart ook kan winnen? dat is dan toch niet eerlijk, als ik er
+	# 5 nog heb")? "kaarten" = de kaarten die je deze ronde speelt (het
+	# gemiddelde per kaart, tot en met 4.3.8); "hand" = de volle hand van je
+	# factie (4.3.9: met 1 van 5 kaarten hooguit 20%, maar ook de Muis met 4
+	# tegen de Leeuw met 2 hooguit 80%); "tegenstander" = 4.3.10, de default:
+	# speel je minder kaarten dan je tegenstander, dan tellen de kaarten die je
+	# mist mee als kaarten zonder punten, tot je volle hand. Speel je er evenveel
+	# of meer, dan blijft het het gemiddelde per kaart. Rules.bod_deler.
+	"initiatief_deler": "tegenstander",
 	# C17 (besluit Max, 31 juli): EEN REGELSET, en dat is de campagne. "De 1v1 is
 	# gewoon een afgeleide van de campagne: in plaats van meerdere duels speel je
 	# er een, en dus heb je iets gedowngrade CP en reinforcements, meer niet."
@@ -357,6 +364,14 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 				blok[k] = String(v)
 			else:
 				blok[k] = _diep_int(v)
+		# 4.3.9 kende alleen de schakelaar initiatief_per_hand (een uur in de
+		# repo, 7 oktober): een blok dat hem nog draagt houdt die regel.
+		if not camp.has("initiatief_deler") and camp.has("initiatief_per_hand"):
+			blok["initiatief_deler"] = "hand" if bool(camp["initiatief_per_hand"]) else "kaarten"
+		if not BOD_DELERS.has(String(blok["initiatief_deler"])):
+			push_error("RulesConfig: initiatief_deler '%s' bestaat niet (%s), teruggezet naar '%s'" % [
+				String(blok["initiatief_deler"]), str(BOD_DELERS), CAMPAIGN_DEFAULTS["initiatief_deler"]])
+			blok["initiatief_deler"] = CAMPAIGN_DEFAULTS["initiatief_deler"]
 		c.campaign = blok
 		# D9-validatie: CANNON_ACT put uit de per-pion stamina-cyclusvoorraad;
 		# het one_action-model heeft geen pot en wordt onder campaign geweigerd.
@@ -369,15 +384,19 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 		# campagne-blok, dus de basisversie is nu 4.3.0 en het blok houdt zijn
 		# eigen trede daarboven.
 		# 4.3.8 (5 oktober): steen-papier-schaar bij een volledig gelijk bod;
-		# met de knop uit blijft het 4.3.7. 4.3.9 (7 oktober): het bod deelt
-		# door de volle hand; met die knop uit 4.3.8. Het label volgt altijd de
-		# nieuwste knop die aan staat (alleen een label: het gedrag zit in de knoppen).
-		var oud: Array = ["4.3.0", "4.3.1", "4.3.2", "4.3.3", "4.3.4", "4.3.5", "4.3.6", "4.3.7", "4.3.8", "4.3.9"]
+		# met de knop uit blijft het 4.3.7. 7 oktober: de deler van het bod,
+		# "hand" = 4.3.9, "tegenstander" = 4.3.10 (de default), "kaarten" = 4.3.8.
+		# Het label volgt altijd de knoppen (alleen een label: het gedrag zit in
+		# de knoppen).
+		var oud: Array = ["4.3.0", "4.3.1", "4.3.2", "4.3.3", "4.3.4", "4.3.5", "4.3.6", "4.3.7", "4.3.8", "4.3.9", "4.3.10"]
 		if c.rules_version.begins_with("4.1") or c.rules_version.begins_with("4.2") or oud.has(c.rules_version):
-			if bool(blok.get("initiatief_per_hand", true)):
-				c.rules_version = "4.3.9"
-			else:
-				c.rules_version = "4.3.8" if bool(blok.get("initiatief_sps", true)) else "4.3.7"
+			match String(blok["initiatief_deler"]):
+				"tegenstander":
+					c.rules_version = "4.3.10"
+				"hand":
+					c.rules_version = "4.3.9"
+				_:
+					c.rules_version = "4.3.8" if bool(blok.get("initiatief_sps", true)) else "4.3.7"
 	else:
 		c.campaign = null
 	return c

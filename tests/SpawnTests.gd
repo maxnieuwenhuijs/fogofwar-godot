@@ -41,11 +41,13 @@ func _spawn_fase_staat() -> GameState:
 
 func test_campaign_blok_bumpt_rules_version() -> void:
 	var met := RulesConfig.from_dict({"campaign": {}})
-	assert_eq(met.rules_version, "4.3.9", "campaign-activering = 4.3.9 (het initiatief-bod deelt door de volle hand)")
-	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false}}).rules_version, "4.3.8",
-		"met die knop uit 4.3.8 (steen-papier-schaar bij een gelijk bod)")
-	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false, "initiatief_sps": false}}).rules_version, "4.3.7",
-		"met beide knoppen uit 4.3.7 (ruiter +2 attack bovenop de kaart)")
+	assert_eq(met.rules_version, "4.3.10", "campaign-activering = 4.3.10 (het bod kort wie minder kaarten speelt dan de tegenstander)")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_deler": "hand"}}).rules_version, "4.3.9",
+		"deler 'hand' = 4.3.9 (het bod deelt door de volle hand)")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_deler": "kaarten"}}).rules_version, "4.3.8",
+		"deler 'kaarten' = 4.3.8 (steen-papier-schaar bij een gelijk bod)")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_deler": "kaarten", "initiatief_sps": false}}).rules_version, "4.3.7",
+		"en ook zonder steen-papier-schaar 4.3.7 (ruiter +2 attack bovenop de kaart)")
 	assert_true(met.campaign_actief())
 	var zonder := RulesConfig.from_dict({})
 	assert_eq(zonder.rules_version, "4.3.0", "zonder blok is het de basisversie")
@@ -590,7 +592,7 @@ func _c21_actief(s: GameState, owner: int, pos: Vector2i, hp: int, spd: int, atk
 
 func test_c21_vaandel_aura_geeft_attack() -> void:
 	var s := _c21_staat()
-	assert_eq(s.rules.rules_version, "4.3.9", "de aura is een regelwijziging (4.3.3); 4.3.4 tot 4.3.9 kwamen erachteraan")
+	assert_eq(s.rules.rules_version, "4.3.10", "de aura is een regelwijziging (4.3.3); 4.3.4 tot 4.3.10 kwamen erachteraan")
 	var aanvaller: Pawn = _c21_actief(s, 1, Vector2i(5, 5), 3, 3, 1)
 	var vaandel: Pawn = s._spawn_pawn(1, Vector2i(4, 4), Constants.UnitType.INFANTRY)
 	vaandel.rol = "flag"   # diagonaal: hoort bij het blok van acht

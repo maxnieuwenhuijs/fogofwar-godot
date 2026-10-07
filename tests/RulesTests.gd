@@ -783,12 +783,15 @@ func test_initiative_bid_normalizes_budgets() -> void:
 	]
 	assert_eq(Rules.compute_bid(mens_cards, 7, "attack"), 1.0)
 
-## 4.3.9 (Max, 7 oktober): het bod deelt door de volle hand van de factie.
-## Campagne-staat met Muis (rood) tegen Leeuw (blauw); kaarten op het budget
-## uit de echte doctrine-data van de staat.
-func _bod_staat(per_hand: bool) -> GameState:
+## 7 oktober (Max: "is het een percentage dat je met 1 kaart ook kan winnen?
+## dat is dan toch niet eerlijk, als ik er 5 nog heb"): de deler van het bod,
+## campaign.initiatief_deler "kaarten" (4.3.8, het gemiddelde per kaart),
+## "hand" (4.3.9) of "tegenstander" (4.3.10, de default). Campagne-staat met
+## Muis (rood) tegen Leeuw (blauw); kaarten op het budget uit de
+## doctrine-data van de staat.
+func _bod_staat(modus: String) -> GameState:
 	var s := GameState.new()
-	s.rules = RulesConfig.from_dict({"campaign": {"initiatief_per_hand": per_hand}})
+	s.rules = RulesConfig.from_dict({"campaign": {"initiatief_deler": modus}})
 	s.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MUIS
 	s.doctrines[Constants.PLAYER_2] = Constants.Doctrine.LEEUW
 	return s
@@ -797,80 +800,160 @@ func _bod_staat(per_hand: bool) -> GameState:
 func _bod_kaart(id: int, eigenaar: int, budget: int, aanval: int) -> Card:
 	return Card.new(id, eigenaar, 1, budget - 1 - aanval, 1, aanval)
 
-func test_bod_per_hand_een_kaart_tegen_vijf() -> void:
-	# Max: "als ik er 5 nog heb": de Muis met zijn volle hand, de Leeuw met nog
-	# een vrije pion en dus een kaart, die helemaal op aanval.
-	for per_hand in [false, true]:
-		var s := _bod_staat(per_hand)
-		var muis: Dictionary = s.doctrine_data_of(Constants.PLAYER_1)
-		var leeuw: Dictionary = s.doctrine_data_of(Constants.PLAYER_2)
-		var bm: int = int(muis.budget)
-		var bl: int = int(leeuw.budget)
-		var kaarten_muis: Array = []
-		for i in int(muis.cards):
-			# een kaart helemaal op aanval, de rest half
-			var vrij: int = bm - 3
-			kaarten_muis.append(_bod_kaart(i, Constants.PLAYER_1, bm, 1 + (vrij if i == 0 else vrij / 2)))
-		s.cards_revealed[Constants.PLAYER_1] = kaarten_muis
-		s.cards_revealed[Constants.PLAYER_2] = [_bod_kaart(9, Constants.PLAYER_2, bl, bl - 2)]
+## `n` kaarten van een speler: de eerste `allin` helemaal op aanval, de rest half.
+func _bod_hand(s: GameState, speler: int, n: int, allin: int) -> Array:
+	var b: int = int(s.doctrine_data_of(speler).budget)
+	var vrij: int = b - 3
+	var kaarten: Array = []
+	for i in n:
+		kaarten.append(_bod_kaart(speler * 10 + i, speler, b, 1 + (vrij if i < allin else vrij / 2)))
+	return kaarten
+
+func _ongeveer(a: float, b: float) -> bool:
+	return absf(a - b) < 0.000001
+
+func test_bod_een_kaart_tegen_vijf() -> void:
+	# Max' geval: de Muis met haar volle hand (een kaart all-in, de rest half),
+	# de Leeuw met nog een vrije pion en dus een kaart, all-in.
+	for modus in ["kaarten", "hand", "tegenstander"]:
+		var s := _bod_staat(modus)
+		var hand_muis: int = int(s.doctrine_data_of(Constants.PLAYER_1).cards)
+		var hand_leeuw: int = int(s.doctrine_data_of(Constants.PLAYER_2).cards)
+		s.cards_revealed[Constants.PLAYER_1] = _bod_hand(s, Constants.PLAYER_1, hand_muis, 1)
+		s.cards_revealed[Constants.PLAYER_2] = _bod_hand(s, Constants.PLAYER_2, 1, 1)
 		var init: Dictionary = Rules.compute_initiative(s)
 		var bod_leeuw: float = float(init.totals_p2.bid)
-		if per_hand:
-			assert_eq(s.rules.rules_version, "4.3.9")
-			assert_true(absf(bod_leeuw - 1.0 / float(int(leeuw.cards))) < 0.000001,
-				"een van de %d kaarten helemaal op aanval = 1/%d van een volle hand" % [int(leeuw.cards), int(leeuw.cards)])
-			assert_eq(int(init.winner), Constants.PLAYER_1, "de Muis met zijn volle hand wint het van die ene kaart")
-		else:
+		if modus == "kaarten":
 			assert_eq(s.rules.rules_version, "4.3.8")
-			assert_true(absf(bod_leeuw - 1.0) < 0.000001, "4.3.8: een kaart helemaal op aanval = 100%")
-			assert_eq(int(init.winner), Constants.PLAYER_2, "4.3.8: die ene kaart wint")
+			assert_true(_ongeveer(bod_leeuw, 1.0), "kaarten: een kaart helemaal op aanval = 100%")
+			assert_eq(int(init.winner), Constants.PLAYER_2, "kaarten: die ene kaart wint")
+		else:
+			assert_eq(s.rules.rules_version, "4.3.9" if modus == "hand" else "4.3.10")
+			assert_true(_ongeveer(bod_leeuw, 1.0 / float(hand_leeuw)),
+				"%s: een kaart all-in telt als 1 van zijn %d" % [modus, hand_leeuw])
+			assert_eq(int(init.winner), Constants.PLAYER_1, "%s: de Muis met haar volle hand wint" % modus)
 
-func test_bod_per_hand_volle_hand_zoals_vroeger() -> void:
-	# Met volle handen aan beide kanten is elk bod precies het getal van 4.3.8.
-	var s := _bod_staat(true)
-	for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
-		var d: Dictionary = s.doctrine_data_of(speler)
-		var kaarten: Array = []
-		for i in int(d.cards):
-			kaarten.append(_bod_kaart(speler * 10 + i, speler, int(d.budget), 1 + (i % (int(d.budget) - 3))))
-		s.cards_revealed[speler] = kaarten
-		assert_eq(Rules.bod_hand(s, speler), int(d.cards), "de deler is de hand van de factie")
-		var oud: float = Rules.compute_bid(kaarten, int(d.budget), "attack")
-		var nieuw: float = Rules.compute_bid(kaarten, int(d.budget), "attack", Rules.bod_hand(s, speler))
-		assert_true(absf(oud - nieuw) < 0.000001, "volle hand speler %d: %.3f = %.3f" % [speler, oud, nieuw])
-	# Met het echte regelbestand komt de hand uit het doctrines-blok (de Muis 5).
+func test_bod_meer_kaarten_maar_korte_hand() -> void:
+	# De Muis met een korte hand (ronde 3 na verlies), toch meer kaarten dan de
+	# Leeuw met zijn volle hand; allebei alles all-in. "hand" kort de Muis
+	# (een kaart minder dan haar hand: in het spel 4 van 5 = 80%, in deze kale
+	# tabel 3 van 4) en de Leeuw wint; "tegenstander" en "kaarten" niet:
+	# allebei 100%, gelijk bod.
+	for modus in ["kaarten", "hand", "tegenstander"]:
+		var s := _bod_staat(modus)
+		var hand_muis: int = int(s.doctrine_data_of(Constants.PLAYER_1).cards)
+		var hand_leeuw: int = int(s.doctrine_data_of(Constants.PLAYER_2).cards)
+		var n_muis: int = hand_muis - 1
+		assert_true(n_muis > hand_leeuw, "de Muis speelt nog meer kaarten dan de Leeuw")
+		s.cards_revealed[Constants.PLAYER_1] = _bod_hand(s, Constants.PLAYER_1, n_muis, n_muis)
+		s.cards_revealed[Constants.PLAYER_2] = _bod_hand(s, Constants.PLAYER_2, hand_leeuw, hand_leeuw)
+		var init: Dictionary = Rules.compute_initiative(s)
+		if modus == "hand":
+			assert_true(_ongeveer(float(init.totals_p1.bid), float(n_muis) / float(hand_muis)), "hand: de Muis gekort")
+			assert_eq(int(init.winner), Constants.PLAYER_2, "hand: de Leeuw wint met minder kaarten")
+		else:
+			assert_true(_ongeveer(float(init.totals_p1.bid), 1.0), "%s: de Muis 100%%" % modus)
+			assert_true(_ongeveer(float(init.totals_p2.bid), 1.0), "%s: de Leeuw 100%%" % modus)
+			assert_true(bool(init.gelijk), "%s: gelijk bod (stamina gelijk, dan steen-papier-schaar)" % modus)
+
+func test_bod_minder_kaarten_dan_de_tegenstander() -> void:
+	# Andersom: de Muis met een kaart all-in tegen de Leeuw met zijn volle 2
+	# (een all-in, een half). "tegenstander": de Muis telt alsof ze de tweede
+	# kaart zonder punten speelt (hooguit 50%); "hand": hooguit 1 van haar hand.
+	for modus in ["kaarten", "hand", "tegenstander"]:
+		var s := _bod_staat(modus)
+		var hand_muis: int = int(s.doctrine_data_of(Constants.PLAYER_1).cards)
+		var hand_leeuw: int = int(s.doctrine_data_of(Constants.PLAYER_2).cards)
+		s.cards_revealed[Constants.PLAYER_1] = _bod_hand(s, Constants.PLAYER_1, 1, 1)
+		s.cards_revealed[Constants.PLAYER_2] = _bod_hand(s, Constants.PLAYER_2, hand_leeuw, 1)
+		var init: Dictionary = Rules.compute_initiative(s)
+		var bod_muis: float = float(init.totals_p1.bid)
+		var bod_leeuw: float = float(init.totals_p2.bid)
+		match modus:
+			"kaarten":
+				assert_true(_ongeveer(bod_muis, 1.0), "kaarten: 100%")
+				assert_eq(int(init.winner), Constants.PLAYER_1, "kaarten: de ene kaart wint")
+			"hand":
+				assert_true(_ongeveer(bod_muis, 1.0 / float(hand_muis)), "hand: 1 van haar hand")
+				assert_eq(int(init.winner), Constants.PLAYER_2)
+			"tegenstander":
+				assert_true(_ongeveer(bod_muis, 1.0 / float(hand_leeuw)), "tegenstander: 1 van de %d die hij speelt" % hand_leeuw)
+				assert_true(bod_leeuw > bod_muis, "de Leeuw biedt meer (%.2f tegen %.2f)" % [bod_leeuw, bod_muis])
+				assert_eq(int(init.winner), Constants.PLAYER_2)
+
+func test_bod_volle_handen_zoals_vroeger() -> void:
+	# Met volle handen aan beide kanten is de deler in elke stand het aantal
+	# kaarten, dus elk bod precies het getal van 4.3.8.
+	for modus in ["kaarten", "hand", "tegenstander"]:
+		var s := _bod_staat(modus)
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			var d: Dictionary = s.doctrine_data_of(speler)
+			s.cards_revealed[speler] = _bod_hand(s, speler, int(d.cards), 1)
+		for speler in [Constants.PLAYER_1, Constants.PLAYER_2]:
+			var d2: Dictionary = s.doctrine_data_of(speler)
+			var kaarten: Array = s.cards_revealed[speler]
+			assert_eq(Rules.bod_deler(s, speler), kaarten.size(), "%s: volle hand, deler = aantal kaarten" % modus)
+			var oud: float = Rules.compute_bid(kaarten, int(d2.budget), "attack")
+			var nieuw: float = Rules.compute_bid(kaarten, int(d2.budget), "attack", Rules.bod_deler(s, speler))
+			assert_true(_ongeveer(oud, nieuw), "%s, speler %d: %.3f = %.3f" % [modus, speler, oud, nieuw])
+
+func test_bod_deler_uit_het_regelbestand() -> void:
+	# Het echte regelbestand: stand "tegenstander", de hand uit het
+	# doctrines-blok (de Muis 5 per ronde).
 	var echt := GameState.new()
 	echt.rules = RulesConfig.load_from_file(CRules.REGELS_BESTAND)
 	echt.doctrines[Constants.PLAYER_1] = Constants.Doctrine.MUIS
-	assert_true(Rules.bod_per_hand(echt), "rules_v42_campaign.json: de knop staat aan")
-	assert_eq(Rules.bod_hand(echt, Constants.PLAYER_1), int(echt.doctrine_data_of(Constants.PLAYER_1).cards))
-	assert_eq(Rules.bod_hand(echt, Constants.PLAYER_1), 5, "de Muis speelt 5 kaarten per ronde (C19)")
-	# en zonder campaign-blok (4.1) geldt de regel niet
+	echt.doctrines[Constants.PLAYER_2] = Constants.Doctrine.MUIS
+	assert_eq(Rules.bod_modus(echt), "tegenstander", "rules_v42_campaign.json")
+	assert_eq(echt.rules.rules_version, "4.3.10")
+	assert_eq(int(echt.doctrine_data_of(Constants.PLAYER_1).cards), 5, "de Muis speelt 5 kaarten per ronde (C19)")
+	echt.cards_revealed[Constants.PLAYER_1] = _bod_hand(echt, Constants.PLAYER_1, 2, 1)
+	echt.cards_revealed[Constants.PLAYER_2] = _bod_hand(echt, Constants.PLAYER_2, 5, 1)
+	assert_eq(Rules.bod_deler(echt, Constants.PLAYER_1), 5, "2 kaarten tegen 5: deler 5")
+	assert_eq(Rules.bod_deler(echt, Constants.PLAYER_2), 5, "5 tegen 2: gewoon 5")
+	echt.cards_revealed[Constants.PLAYER_2] = _bod_hand(echt, Constants.PLAYER_2, 3, 1)
+	assert_eq(Rules.bod_deler(echt, Constants.PLAYER_1), 3, "2 tegen 3: deler 3")
+	echt.cards_revealed[Constants.PLAYER_2] = []
+	assert_eq(Rules.bod_deler(echt, Constants.PLAYER_1), 2, "tegen een lege hand: het eigen aantal")
+	# Zonder campaign-blok (4.1) geldt de regel niet.
 	var kaal := GameState.new()
-	assert_false(Rules.bod_per_hand(kaal), "zonder campaign-blok: per gespeelde kaart")
-	assert_eq(Rules.bod_hand(kaal, Constants.PLAYER_1), 0)
+	assert_eq(Rules.bod_modus(kaal), "kaarten")
+	kaal.cards_revealed[Constants.PLAYER_1] = [Card.new(0, 1, 1, 3, 2, 2)]
+	kaal.cards_revealed[Constants.PLAYER_2] = [Card.new(1, 2, 1, 3, 2, 2), Card.new(2, 2, 1, 3, 2, 2)]
+	assert_eq(Rules.bod_deler(kaal, Constants.PLAYER_1), 1, "4.1: per gespeelde kaart")
 
-func test_bod_per_hand_ook_voor_de_stamina_tiebreak() -> void:
-	# Gelijk aanval-bod (0), dan het stamina-bod: ook dat deelt door de volle hand.
-	var s := _bod_staat(true)
+func test_bod_deler_knop_en_oude_schakelaar() -> void:
+	assert_eq(RulesConfig.from_dict({"campaign": {}}).campaign.initiatief_deler, "tegenstander", "default")
+	# De schakelaar van 4.3.9 (een uur in de repo) houdt zijn betekenis.
+	var oud_aan := RulesConfig.from_dict({"campaign": {"initiatief_per_hand": true}})
+	assert_eq(oud_aan.campaign.initiatief_deler, "hand")
+	assert_eq(oud_aan.rules_version, "4.3.9")
+	var oud_uit := RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false}})
+	assert_eq(oud_uit.campaign.initiatief_deler, "kaarten")
+	assert_eq(oud_uit.rules_version, "4.3.8")
+	# Een onbekende stand valt terug op de default (met een push_error).
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_deler": "onzin"}}).campaign.initiatief_deler, "tegenstander")
+
+func test_bod_ook_voor_de_stamina_tiebreak() -> void:
+	# Gelijk aanval-bod (0), dan het stamina-bod: ook dat deelt met de deler.
+	# De Muis met haar volle hand, de Leeuw met een kaart, stamina helemaal.
+	var s := _bod_staat("tegenstander")
 	var muis: Dictionary = s.doctrine_data_of(Constants.PLAYER_1)
 	var leeuw: Dictionary = s.doctrine_data_of(Constants.PLAYER_2)
 	var bm: int = int(muis.budget)
 	var bl: int = int(leeuw.budget)
 	var kaarten_muis: Array = []
 	for i in int(muis.cards):
-		# aanval 1 (bod 0); stamina: een kaart helemaal, de rest half
 		var vrij: int = bm - 3
 		var sta: int = 1 + (vrij if i == 0 else vrij / 2)
 		kaarten_muis.append(Card.new(i, Constants.PLAYER_1, 1, bm - 1 - sta, sta, 1))
 	s.cards_revealed[Constants.PLAYER_1] = kaarten_muis
-	# de Leeuw: een kaart, aanval 1 en stamina helemaal
 	s.cards_revealed[Constants.PLAYER_2] = [Card.new(9, Constants.PLAYER_2, 1, 1, bl - 2, 1)]
 	var init: Dictionary = Rules.compute_initiative(s)
 	assert_false(bool(init.gelijk))
-	var sta_muis: float = Rules.compute_bid(kaarten_muis, bm, "stamina", Rules.bod_hand(s, Constants.PLAYER_1))
-	var sta_leeuw: float = Rules.compute_bid(s.cards_revealed[Constants.PLAYER_2], bl, "stamina", Rules.bod_hand(s, Constants.PLAYER_2))
-	assert_true(absf(sta_leeuw - 1.0 / float(int(leeuw.cards))) < 0.000001, "stamina-bod van die ene kaart: 1/hand")
+	var sta_leeuw: float = Rules.compute_bid(s.cards_revealed[Constants.PLAYER_2], bl, "stamina", Rules.bod_deler(s, Constants.PLAYER_2))
+	var sta_muis: float = Rules.compute_bid(kaarten_muis, bm, "stamina", Rules.bod_deler(s, Constants.PLAYER_1))
+	assert_true(_ongeveer(sta_leeuw, 1.0 / float(int(leeuw.cards))), "stamina-bod van die ene kaart: 1 van zijn hand")
 	assert_eq(int(init.winner), Constants.PLAYER_1 if sta_muis > sta_leeuw else Constants.PLAYER_2,
 		"de stamina-tiebreak rekent met dezelfde deler (muis %.2f, leeuw %.2f)" % [sta_muis, sta_leeuw])
 

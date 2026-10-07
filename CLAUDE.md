@@ -149,21 +149,23 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   F0.0-check grept op het oude woord (B9/B19). Tests: `SpsTests`, golden
   `sps_gelijk_bod`, `-- spscheck` (gelijk bod door de echte UI, elk moment
   live tegen hersteld). Spec: spelregels-v4.2.md Deel B "4.3.8".
-- **Het initiatief-bod deelt door de volle hand (4.3.9, 7 oktober, Max: "is
-  het een percentage dat je met 1 kaart ook kan winnen? dat is dan toch niet
-  eerlijk, als ik er 5 nog heb").** Onder het campaign-blok: bod = (Σ stat −
-  n) / (hand × (budget − 3)) met hand = kaarten per ronde van de factie
-  (`Rules.bod_hand`, `compute_bid(..., hand)`), voor het Aanval-bod en de
-  stamina-tiebreak. Bij volle handen hetzelfde getal als daarvoor; met 1 van 5
-  kaarten hooguit 20% (de Muis met volle hand 60% tegen een Leeuw met een kaart
-  all-in 50%; onder 4.3.8 won die ene kaart met 100%). Koppelingen blijven
-  de hele cyclus staan, dus in ronde 3 is een hand kort onder 3 x kaarten
-  levende pionnen: de regel raakt vooral de Muis (vanaf 6 netto verlies), de
-  Leeuw pas na 13. Knop
-  `campaign.initiatief_per_hand` (default aan; uit = 4.3.8; het
-  versielabel volgt de nieuwste knop die aan staat). Tests
-  `RulesTests.test_bod_per_hand_*`, golden `bod_per_hand`. Spec:
-  spelregels-v4.2.md Deel B "4.3.9", besluit B20.
+- **Het initiatief-bod kort wie minder kaarten speelt dan de tegenstander
+  (4.3.10, 7 oktober, Max: "is het een percentage dat je met 1 kaart ook kan
+  winnen? dat is dan toch niet eerlijk, als ik er 5 nog heb").** Onder het
+  campaign-blok: bod = (Σ stat − n) / (deler × (budget − 3)) met deler =
+  max(n, min(hand, n tegenstander)): de kaarten die je mist tellen als kaarten
+  zonder punten, tot je volle hand; evenveel of meer kaarten = het gemiddelde
+  per kaart (4.3.8). Aanval-bod en stamina-tiebreak (`Rules.bod_modus`,
+  `Rules.bod_deler`, `compute_bid(..., deler)`). De Muis met volle hand 60%
+  tegen een Leeuw met een kaart all-in 50% (onder 4.3.8 won die ene kaart met
+  100%); de Muis met 4 tegen de Leeuw met 2, allebei all-in: gelijk. Knop
+  `campaign.initiatief_deler`: `"tegenstander"` (default, 4.3.10), `"hand"`
+  (4.3.9, dezelfde dag: delen door de volle hand; kortte ook de Muis met 4
+  tegen 2, want koppelingen blijven de hele cyclus staan en in ronde 3 is een
+  hand kort onder 3 x kaarten levende pionnen) en `"kaarten"` (4.3.8); de
+  schakelaar `initiatief_per_hand` van 4.3.9 wordt nog gelezen. Tests
+  `RulesTests.test_bod_*`, goldens `bod_per_hand` en `bod_meer_kaarten`. Spec:
+  spelregels-v4.2.md Deel B "4.3.10", besluit B20.
 - **De stat heet STAMINA, niet speed (Max, 17 september: "het is belangrijk,
   de term is stamina niet speed, dat moet overal goed worden meegenomen").**
   Elke tekst die de speler ziet (kaart, HUD, onthulscherm, uitleg,
@@ -900,9 +902,10 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   met cycle_limit 20 zo'n 10-15 min per factie).
 - **Client-regressie (F4.3):** `-- uispel [seed]` speelt een volledige partij
   vs-AI waarin de mens via het timeout-pad van game.gd speelt en print de
-  eind-zobrist; seed 777 moet `d2080e7a…` geven (165 acties, cyclus 4, sinds
-  7 oktober: 4.3.9, het bod per volle hand; dezelfde partij, alleen de nieuwe
-  regelknop in de staat-hash); daarvoor `5862e4c9…` (165, 4, sinds
+  eind-zobrist; seed 777 moet `73b47201…` geven (165 acties, cyclus 4, sinds
+  7 oktober: 4.3.10, de deler van het bod; dezelfde partij, alleen de nieuwe
+  regelknop in de staat-hash; die dag eerst `d2080e7a…` onder 4.3.9);
+  daarvoor `5862e4c9…` (165, 4, sinds
   5 oktober: 4.3.8, steen-papier-schaar; dezelfde partij, alleen de nieuwe
   regelknop in de staat-hash); daarvoor `09344a90…` (165, 4, sinds
   4 oktober: de Wolf-gewichten van marathoncyclus 4 en 5, cedb219);

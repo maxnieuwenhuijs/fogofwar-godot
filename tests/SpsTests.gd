@@ -66,15 +66,15 @@ func test_winnaar_tabel() -> void:
 
 
 func test_versie_en_knop() -> void:
-	# Het label volgt de nieuwste knop die aan staat: 4.3.9 (bod per volle hand)
-	# boven 4.3.8 (deze regel); de knop zelf staat in het blok.
-	assert_eq(RulesConfig.from_dict({"campaign": {}}).rules_version, "4.3.9", "campaign = 4.3.9")
-	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false}}).rules_version, "4.3.8",
-		"zonder het bod per hand = 4.3.8")
-	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_per_hand": false, "initiatief_sps": false}}).rules_version, "4.3.7",
+	# Het label volgt de knoppen: de deler van het bod (4.3.9/4.3.10) boven
+	# deze regel (4.3.8); de knop zelf staat in het blok.
+	assert_eq(RulesConfig.from_dict({"campaign": {}}).rules_version, "4.3.10", "campaign = 4.3.10")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_deler": "kaarten"}}).rules_version, "4.3.8",
+		"het bod per gespeelde kaart = 4.3.8")
+	assert_eq(RulesConfig.from_dict({"campaign": {"initiatief_deler": "kaarten", "initiatief_sps": false}}).rules_version, "4.3.7",
 		"ook deze knop uit = 4.3.7")
 	assert_false(bool(RulesConfig.from_dict({"campaign": {"initiatief_sps": false}}).campaign.initiatief_sps), "de knop staat in het blok")
-	assert_eq(RulesConfig.from_dict({"rules_version": "4.3.7", "campaign": {}}).rules_version, "4.3.9",
+	assert_eq(RulesConfig.from_dict({"rules_version": "4.3.7", "campaign": {}}).rules_version, "4.3.10",
 		"een oud bestand met het blok gaat mee naar de nieuwste versie")
 
 

@@ -1,5 +1,31 @@
 # Fog of War — Work In Progress & Context
 
+## 7 oktober -- 4.3.10: het bod kort alleen wie minder kaarten speelt dan de tegenstander
+
+Na de review van 4.3.9 (hieronder) aan Max voorgelegd dat delen door de volle
+hand ook de Muis met 4 kaarten tegen de Leeuw met 2 kortte (80 tegen 100). Max:
+"ja doe maar ben nu de draad kwijt".
+
+- **Regel:** deler = max(n, min(hand, n tegenstander)). Speel je minder
+  kaarten dan je tegenstander, dan tellen de kaarten die je mist mee als
+  kaarten zonder punten, tot je volle hand; evenveel of meer = het gemiddelde
+  per kaart. Tabel met de drie gevallen in de CHANGELOG.
+- **Knop:** `campaign.initiatief_deler` met drie standen (`kaarten` 4.3.8,
+  `hand` 4.3.9, `tegenstander` 4.3.10 = default, ook in de twee
+  regelbestanden); `RulesConfig.BOD_DELERS`, onbekend = default met een
+  push_error; de schakelaar `initiatief_per_hand` van 4.3.9 wordt vertaald.
+  `Rules.bod_modus`, `Rules.bod_deler` (vervangen `bod_per_hand`/`bod_hand`).
+- **Tests:** `RulesTests.test_bod_*`: een kaart tegen vijf, meer kaarten maar
+  een korte hand (alleen `hand` kort), minder kaarten dan de tegenstander,
+  volle handen zoals vroeger (alle drie de standen), de deler uit het
+  regelbestand (Muis 5), de oude schakelaar en een onbekende stand, de
+  stamina-tiebreak. Versie-asserts in SpawnTests en SpsTests naar 4.3.10.
+- **Goldens:** de vijf campagne-goldens opnieuw (`cp_inzet` weer 25%, beide
+  spelen een kaart), nieuw `bod_meer_kaarten` (gelijk bod, steen-papier-schaar,
+  P1). `golden_sims.json` ongewijzigd (simcheck 0).
+- **uispel 777:** dezelfde partij, referentie `73b47201…`. Core-hash
+  `47092ea8…` (pakket-proef OK).
+
 ## 7 oktober -- 4.3.9: het initiatief-bod deelt door de volle hand
 
 Max: "is het een percentage dat je met 1 kaart ook kan winnen? dat is dan toch

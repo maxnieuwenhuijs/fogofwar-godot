@@ -18,10 +18,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "8134a4fd266da6f97ad4fb301f72d84acfd89c5621f39265cc76f59d09dd5a1e",
+			"hash": "ff989a533368e5a607ac38ba3187e07cc2c866cc49e7bf2e5c4cc2b6dddc58ca",
 			"player_id": 1,
 			"seq": 0,
-			"ts": 1791367180.537
+			"ts": 1791369378.314
 		},
 		{
 			"action": {
@@ -82,10 +82,10 @@
 					"type": "cards_revealed"
 				}
 			],
-			"hash": "2b445fda415f8d1664bf967298b528dba181a668c100eb341c7095af8ff8cbb7",
+			"hash": "0c02962400d0d59d67c7e3bb863e8bba4c2526fd5fe27c914d639485b0aab0da",
 			"player_id": 2,
 			"seq": 1,
-			"ts": 1791367180.537
+			"ts": 1791369378.314
 		},
 		{
 			"action": {
@@ -107,10 +107,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "2bbb8be92f9debb153405824c1e4fcf7381b2e7ce7a0f9c39ca5b570cd513d53",
+			"hash": "6d1434a3d72b16c0843dabd08624d924b8d99299465935f6106d2e782bb384e8",
 			"player_id": 1,
 			"seq": 2,
-			"ts": 1791367180.537
+			"ts": 1791369378.316
 		},
 		{
 			"action": {
@@ -144,10 +144,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "eecc9119365179247eb5198dac025241b84a6db2f1cbf975ebbb4a55d9393b15",
+			"hash": "3558ae5128f44ab7de279b0334a10ee57f1a6f019249ebf785879f59d87b1d3d",
 			"player_id": 2,
 			"seq": 3,
-			"ts": 1791367180.538
+			"ts": 1791369378.316
 		},
 		{
 			"action": {
@@ -169,10 +169,10 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "1128b11f9c5d0a4dd92b0479e6ae2411ee89ee49b97a57daa1c72639fc9c3ed2",
+			"hash": "ef4e6229ac9a5f0c597aa98bf85632f861785a74e97c586e7a8526034fd52f83",
 			"player_id": 1,
 			"seq": 4,
-			"ts": 1791367180.538
+			"ts": 1791369378.316
 		},
 		{
 			"action": {
@@ -206,20 +206,20 @@
 					"type": "state_updated"
 				}
 			],
-			"hash": "74c9a472a6cc5fb1866bd543460ae15bb2caff20d2aee50d4d2a42bd0ece6dde",
+			"hash": "04f9c7a92d6dbf4afc5ca489d8992ca0c0786025f952f79c1a0ca220f9c024d1",
 			"player_id": 2,
 			"seq": 5,
-			"ts": 1791367180.538
+			"ts": 1791369378.316
 		},
 		{
 			"action": {
 				"type": "ack_reveal"
 			},
 			"events": [],
-			"hash": "25adb1554ab1901e6e0b476fe3d4c75f15cb3a215e8f20a920f41a7652031d69",
+			"hash": "7047414cc400ed7840d9608d9ad99be957473e362cfa467c30a141bcc0d0172d",
 			"player_id": 1,
 			"seq": 6,
-			"ts": 1791367180.539
+			"ts": 1791369378.317
 		},
 		{
 			"action": {
@@ -242,13 +242,13 @@
 					"type": "turn_changed"
 				}
 			],
-			"hash": "b1dc8f58222f666ce2c4c12a0caed572cbf23e92a12e02d3f3074b0bd957b7b0",
+			"hash": "167e69cf604453491217ceb2ef3d7dda7f43cd9fc0511a3c70c8b84c4e766884",
 			"player_id": 2,
 			"seq": 7,
-			"ts": 1791367180.539
+			"ts": 1791369378.317
 		}
 	],
-	"final_hash": "b1dc8f58222f666ce2c4c12a0caed572cbf23e92a12e02d3f3074b0bd957b7b0",
+	"final_hash": "167e69cf604453491217ceb2ef3d7dda7f43cd9fc0511a3c70c8b84c4e766884",
 	"final_state": {
 		"all_cards": {
 			"0": {
@@ -403,7 +403,7 @@
 				"cp_refund": "none",
 				"cp_start": 10,
 				"cp_start_mode": "vast",
-				"initiatief_per_hand": true,
+				"initiatief_deler": "tegenstander",
 				"initiatief_sps": true,
 				"kanon_actie_kost": {
 					"roll": 1,
@@ -454,7 +454,7 @@
 				"inf": 1
 			},
 			"rounds_per_cycle": 3,
-			"rules_version": "4.3.9",
+			"rules_version": "4.3.10",
 			"schutkleur_onthul_nabij": true,
 			"stamina_model": "pool",
 			"stat_bonus": {},
@@ -477,7 +477,7 @@
 		"winner": -1
 	},
 	"meta": {
-		"created": "2026-10-07T11:59:40",
+		"created": "2026-10-07T12:36:18",
 		"formaat": 1,
 		"initial_state": {
 			"all_cards": {},
@@ -606,7 +606,7 @@
 					"cp_refund": "none",
 					"cp_start": 10,
 					"cp_start_mode": "vast",
-					"initiatief_per_hand": true,
+					"initiatief_deler": "tegenstander",
 					"initiatief_sps": true,
 					"kanon_actie_kost": {
 						"roll": 1,
@@ -657,7 +657,7 @@
 					"inf": 1
 				},
 				"rounds_per_cycle": 3,
-				"rules_version": "4.3.9",
+				"rules_version": "4.3.10",
 				"schutkleur_onthul_nabij": true,
 				"stamina_model": "pool",
 				"stat_bonus": {},
@@ -679,6 +679,6 @@
 			"turn_deadline": 0,
 			"winner": -1
 		},
-		"rules_version": "4.3.9"
+		"rules_version": "4.3.10"
 	}
 }

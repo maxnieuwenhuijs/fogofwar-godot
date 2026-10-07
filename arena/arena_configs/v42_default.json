@@ -13,7 +13,7 @@
  },
  "campaign": {
   "initiatief_sps": true,
-  "initiatief_per_hand": true,
+  "initiatief_deler": "tegenstander",
   "budget_bonus": {
    "1": {
     "cp": 0,
