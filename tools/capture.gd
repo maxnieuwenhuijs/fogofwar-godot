@@ -5855,6 +5855,20 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 	var ok := stootte and afstand_landing < 0.25 and doel_voor_klap and not doel_na_klap
 	if sprong_duur > 0.0:
 		ok = ok and t_sprong >= 0.0 and absf(t_sprong - float(tl.get("sprong_start", 0.0))) < 0.15
+	# De zware stappen van de aanloop (7 oktober, Max: "steeds sneller tot hij
+	# attackt"): minstens drie, elke tussenpoos korter dan de vorige, de laatste
+	# op de afzet van de sprong; en de stap per vakje mag weer (stappen_stil uit).
+	var stappen: Array = Audio.laatste_charge_stappen
+	var versnelt := stappen.size() >= 3
+	for i in range(2, stappen.size()):
+		if float(stappen[i]) - float(stappen[i - 1]) > float(stappen[i - 1]) - float(stappen[i - 2]) + 0.001:
+			versnelt = false
+	var op_afzet: bool = not stappen.is_empty() \
+		and absf(float(stappen[stappen.size() - 1]) - float(tl.get("afzet", -1.0))) < 0.01
+	print("[MELEE][charge] zware stappen op %s s (afzet %.2f, klap %.2f): versnelt=%s, laatste op de afzet=%s" % [
+		str(stappen.map(func(x): return snappedf(float(x), 0.01))), float(tl.get("afzet", -1.0)), klap_del,
+		versnelt, op_afzet])
+	ok = ok and versnelt and op_afzet and not Audio.stappen_stil
 	if not ok:
 		print("[MELEE][charge] FAIL: stoot=%s sprong-op-tijd=%s landing-op-eindvak=%s doel-voor-klap=%s doel-weg-na-klap=%s" % [
 			stootte, t_sprong >= 0.0 and absf(t_sprong - float(tl.get("sprong_start", 0.0))) < 0.15, afstand_landing < 0.25, doel_voor_klap, not doel_na_klap])

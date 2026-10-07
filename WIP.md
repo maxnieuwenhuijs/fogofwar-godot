@@ -1,5 +1,36 @@
 # Fog of War — Work In Progress & Context
 
+## 7 oktober -- Charge: zware stappen die versnellen tot de aanval
+
+Max: "speel ook bij de charge die zware voetstappen af achter elkaar steeds
+sneller tot hij attackt".
+
+- **Tot wanneer:** de sprong-clip ("Standing Melee Run Jump Attack") rent eerst
+  en springt dan. `PawnView.charge_profiel` meet nu ook de afzet
+  (`t_afzet_clip`: het laatste moment voor de top waarop de heupen nog laag
+  zijn), `charge_tijdlijn` geeft `afzet` mee. Bij de muis-ruiter: afzet 0,41 s,
+  landing 0,72 s, klap 0,84 s (de sprong begint meteen: de rit is korter dan
+  de sprong).
+- **`Audio.play_charge_stappen(categorie, eind, snelst, traagst, groei)`:** van
+  achteren gerekend valt de laatste stap op `eind`, de tussenpoos ervoor is
+  `snelst` en groeit per stap met `groei` tot hooguit `traagst`; de toon loopt
+  mee op. Variant en toon uit een eigen rng (`play` met een variant en een toon
+  trekt niets uit de globale). `laatste_charge_stappen` voor de checks.
+- **game.gd (charge met een doel):** de stappen in `cav_move` van de factie en
+  het archetype (terugval `step`), tot de afzet. De stap per vakje van de rit
+  zwijgt dan: `Audio.stappen_stil` staat aan rond `_animate_move` (die
+  functie zelf bleef onaangeroerd; daar ligt ongecommit werk van de
+  geluidssessie). Zonder doel blijft de gewone stap per vakje.
+- **Knoppen in het sfeer-paneel:** `charge_stappen` (0 = uit),
+  `charge_stap_snelst` (0,07 s), `charge_stap_traagst` (0,3 s),
+  `charge_stap_groei` (1,25).
+- **Check:** `-- meleecheck` meet de reeks: bij de muis 0,00 / 0,14 / 0,25 /
+  0,34 / 0,41 s, elke tussenpoos korter, de laatste op de afzet, en
+  `stappen_stil` weer uit. Regressie: uispel 777 gelijk (`5862e4c9`),
+  herstelcheck 777 en 4242 wolf en resumecheck 777/1 en 4242/2 0 verschillen,
+  inkomcheck, uicheck, naad, koppel, beurtlicht, audiopaneel en simcheck PASS,
+  tests 2912/0.
+
 ## 7 oktober -- nog te verdelen punten linksboven op de kaart
 
 Max: "op de kaarten moet ook linksboven iets van 0/8 staan voor nog te

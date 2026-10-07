@@ -1027,7 +1027,15 @@ func charge_profiel() -> Dictionary:
 			if float(paar[0]) > t_top and (paar[1] as Vector3).y <= hoogste * 0.15:
 				t_land = float(paar[0])
 				break
-		uit = {"t_land_clip": t_land, "vooruit": vooruit, "clip": clip}
+		# de afzet: het laatste moment voor de top waarop de heupen nog laag zijn
+		# (tot daar rent hij; de zware stappen van de charge lopen tot hier)
+		var t_afzet := 0.0
+		for paar in lokalen:
+			if float(paar[0]) >= t_top:
+				break
+			if (paar[1] as Vector3).y <= hoogste * 0.15:
+				t_afzet = float(paar[0])
+		uit = {"t_land_clip": t_land, "t_afzet_clip": t_afzet, "vooruit": vooruit, "clip": clip}
 		break
 	_charge_profiel_cache[sleutel] = uit
 	return uit
@@ -1062,6 +1070,7 @@ func charge_tijdlijn(rij_dist: int) -> Dictionary:
 	var rij_dur := 0.0
 	var sprong_start := 0.0
 	var klap_del: float
+	var afzet: float   # wanneer hij de aanval in springt (7 oktober: tot daar de zware stappen)
 	if sprong_duur > 0.0:
 		# 16 september (Max: "de sprong moet echt eerder starten, het poppetje
 		# vliegt er twee velden overheen; of geen walk, alleen de aanloop met
@@ -1078,12 +1087,15 @@ func charge_tijdlijn(rij_dist: int) -> Dictionary:
 			rij_dur = maxf(clampf(0.13 * float(rij_dist), 0.13, 0.45), t_land)
 			sprong_start = maxf(rij_dur - t_land, 0.0)
 		klap_del = sprong_start + t_land + melee_fx("charge_klap_na_landing", "charge_klap_na_landing", 0.12)
+		afzet = sprong_start + clampf(float(prof.get("t_afzet_clip", 0.0)) / speed, 0.0, t_land)
 	else:
 		if rij_dist > 0:
 			rij_dur = clampf(0.13 * float(rij_dist), 0.13, 0.45)
 			sprong_start = rij_dur + 0.02
 		klap_del = sprong_start + melee_fx("charge_hit_delay", "charge_hit_delay", 0.35)
-	return {"rij_dur": rij_dur, "sprong_start": sprong_start, "sprong_duur": sprong_duur, "klap_del": klap_del}
+		afzet = sprong_start
+	return {"rij_dur": rij_dur, "sprong_start": sprong_start, "sprong_duur": sprong_duur, "klap_del": klap_del,
+		"afzet": afzet}
 
 
 func play_die() -> void:

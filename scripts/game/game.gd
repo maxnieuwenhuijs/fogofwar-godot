@@ -3403,10 +3403,24 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# weggecompenseerd), dus de pion springt op het doelvak.
 			var tijdlijn: Dictionary = cav.charge_tijdlijn(rij_dist) if cav != null \
 				else {"rij_dur": -1.0, "sprong_start": 0.0, "klap_del": 0.35}
+			# De zware stappen van de aanloop (7 oktober, Max: "speel ook bij de
+			# charge die zware voetstappen af achter elkaar steeds sneller tot hij
+			# attackt"): van het begin tot de afzet van de sprong, elke stap korter
+			# op de vorige (Audio.play_charge_stappen); de stap per vakje van de
+			# rit zwijgt dan. Knoppen charge_stap_* in het sfeer-paneel.
+			var charge_stappen: bool = heeft_doel and charge_pawn != null and PawnView.fx("charge_stappen", 1.0) > 0.0
+			if charge_stappen:
+				Audio.play_charge_stappen(
+					Audio.effectieve_categorie("cav_move", session.state.doctrine_of(charge_pawn.owner_id), "step",
+						cav.archetype() if cav != null else ""),
+					float(tijdlijn.get("afzet", tijdlijn.klap_del)), PawnView.fx("charge_stap_snelst", 0.07),
+					PawnView.fx("charge_stap_traagst", 0.3), PawnView.fx("charge_stap_groei", 1.25))
 			if rijdt:
 				# Met een doel zet de rit-tween aan het eind geen idle: de
 				# sprong loopt dan nog en keert zelf naar idle terug.
+				Audio.stappen_stil = charge_stappen
 				_animate_move(action.pawn_id, result.charge_from, end_pos, true, not heeft_doel, float(tijdlijn.get("rij_dur", -1.0)))
+				Audio.stappen_stil = false
 			var sprong_start: float = tijdlijn.sprong_start
 			_check_haven_score(action.pawn_id, end_pos)
 			if cav != null and heeft_doel:
@@ -3720,6 +3734,10 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "idle_afwijkers", "label": "idle: hoeveel pionnen tegelijk een andere idle doen (0 = niemand)", "min": 0.0, "max": 6.0, "step": 1.0, "def": 2.0},
 	{"key": "ui_tempo", "label": "UI-beweging: tempo (0 = uit, 0,5 = slowmo, 2 = snel)", "min": 0.0, "max": 2.0, "step": 0.05, "def": 1.0},
 	{"key": "ui_wolk", "label": "UI-beweging: stof als een kaart omdraait, en hover-schaduw (0 = uit)", "min": 0.0, "max": 2.0, "step": 0.05, "def": 1.0},
+	{"key": "charge_stappen", "label": "charge: zware stappen tot de aanval (0 = uit)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "charge_stap_snelst", "label": "charge-stappen: kortste tussenpoos, bij de afzet (s)", "min": 0.03, "max": 0.3, "step": 0.005, "def": 0.07},
+	{"key": "charge_stap_traagst", "label": "charge-stappen: langste tussenpoos, aan het begin (s)", "min": 0.05, "max": 0.8, "step": 0.01, "def": 0.3},
+	{"key": "charge_stap_groei", "label": "charge-stappen: versnelling (tussenpoos x per stap naar achteren)", "min": 1.0, "max": 1.8, "step": 0.01, "def": 1.25},
 ]
 
 

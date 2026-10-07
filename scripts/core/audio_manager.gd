@@ -225,6 +225,13 @@ var _music_streams: Dictionary = {} # lazy-cache: categorie -> Array[AudioStream
 var _pool: Array[AudioStreamPlayer] = []
 var _next: int = 0
 var enabled: bool = true
+## Zolang dit staat speelt play_footsteps niets (7 oktober: de rit van een
+## charge klinkt als de versnellende stappen van play_charge_stappen, niet als
+## een stap per vakje erbovenop).
+var stappen_stil: bool = false
+## De momenten (s na de aanroep) van de laatste reeks charge-stappen, voor de checks.
+var laatste_charge_stappen: Array = []
+var _charge_rng: RandomNumberGenerator = null
 
 var _music_player: AudioStreamPlayer    # muzieklaag (in-game bed)
 var _ambient_player: AudioStreamPlayer  # ambience-laag (wind/veld)
@@ -797,7 +804,7 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 ## ronde omhoog, dus de eerste herhaling van een sample klinkt nét anders.
 ## category: "step" (infanterie), "horse_move" (cavalerie), "cannon_move" (artillerie).
 func play_footsteps(step_count: int, duration: float, category: String = "step") -> void:
-	if not enabled or step_count <= 0:
+	if not enabled or step_count <= 0 or stappen_stil:
 		return
 	var count: int = _streams.get(category, []).size()
 	if count == 0:
@@ -810,6 +817,38 @@ func play_footsteps(step_count: int, duration: float, category: String = "step")
 		var pitch := base_pitch + float(round) * 0.06
 		var t := duration * float(i + 1) / float(step_count)  # geluid bij het neerkomen
 		play(category, t, sample_idx, pitch)
+
+
+## Zware stappen die steeds sneller op elkaar volgen tot `eind` (s vanaf nu): de
+## aanloop van een charge (7 oktober, Max: "speel ook bij de charge die zware
+## voetstappen af achter elkaar steeds sneller tot hij attackt"). Van achteren
+## gerekend: de laatste stap valt op `eind` (de afzet van de sprong), de afstand
+## ervoor is `snelst` en groeit per stap met `groei` tot hooguit `traagst`; zo
+## begint het traag en jaagt het op tot de aanval. De toon loopt mee op. Variant
+## en toon uit een eigen rng (play() met een variant en een toon trekt niets uit
+## de globale). Geeft het aantal stappen.
+func play_charge_stappen(category: String, eind: float, snelst: float = 0.07, traagst: float = 0.3,
+		groei: float = 1.25) -> int:
+	laatste_charge_stappen = []
+	var count: int = _streams.get(category, []).size()
+	if not enabled or eind <= 0.0 or count == 0:
+		return 0
+	if _charge_rng == null:
+		_charge_rng = RandomNumberGenerator.new()
+		_charge_rng.seed = 7102027
+	var tijden: Array = []
+	var t := eind
+	var stap := maxf(snelst, 0.02)
+	while t >= 0.0 and tijden.size() < 32:
+		tijden.push_front(t)
+		t -= stap
+		stap = minf(stap * maxf(groei, 1.0), maxf(traagst, snelst))
+	var start := _charge_rng.randi() % count
+	for i in tijden.size():
+		var f := float(i) / float(maxi(tijden.size() - 1, 1))   # 0 de eerste, 1 de laatste
+		play(category, float(tijden[i]), (start + i) % count, _charge_rng.randf_range(0.95, 1.01) + 0.1 * f)
+	laatste_charge_stappen = tijden
+	return tijden.size()
 
 
 func set_enabled(on: bool) -> void:

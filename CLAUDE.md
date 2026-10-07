@@ -962,6 +962,19 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   sprong op tl.sprong_start, pion op tl.rij_dur op zijn eindvak, doel
   staat vlak voor de klap en is weg erna; de check-ruiter krijgt attack 3
   en 4 HP, een ongekoppelde ruiter sloeg met 0 en stierf aan de terugslag).
+  **Zware stappen tot de aanval (7 oktober, Max: "speel ook bij de charge die
+  zware voetstappen af achter elkaar steeds sneller tot hij attackt"):**
+  `charge_profiel` meet ook de afzet (`t_afzet_clip`: het laatste lage
+  heup-moment voor de top), `charge_tijdlijn` geeft `afzet` (bij de muis 0,41
+  s; landing 0,72, klap 0,84). Bij een charge met een doel speelt game.gd
+  `Audio.play_charge_stappen` (`cav_move` van de factie, terugval `step`):
+  van achteren gerekend valt de laatste stap op de afzet, de tussenpoos
+  daarvoor groeit per stap met `charge_stap_groei` (1,25) van
+  `charge_stap_snelst` (0,07 s) tot hooguit `charge_stap_traagst` (0,3 s), de
+  toon loopt op, variant en toon uit een eigen rng; `charge_stappen` 0 = uit
+  (alle vier in het sfeer-paneel). De stap per vakje van de rit zwijgt dan
+  (`Audio.stappen_stil` rond `_animate_move`). `-- meleecheck` meet de reeks
+  (bij de muis 0,00 / 0,14 / 0,25 / 0,34 / 0,41 s).
 - **Zwaai en klap per wapen (17 september, Max: "update de sounds ook voor
   slashing sounds en zwaard-impactgeluiden per factie of type wapen").**
   Elke melee-aanval (bajonetstoot en charge) speelt drie lagen:
