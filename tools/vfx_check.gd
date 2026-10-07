@@ -149,6 +149,7 @@ static func _geleverd() -> void:
 		var map := String(g[0])
 		var naam := String(g[1])
 		var bestanden := 0
+		var nog_niet := 0   # net geleverd, de open editor heeft hem nog niet geimporteerd
 		var d := DirAccess.open("res://assets/textures/%s/" % map)
 		if d != null:
 			for f in d.get_files():
@@ -156,6 +157,8 @@ static func _geleverd() -> void:
 				if fname == f and fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"] \
 						and fname.get_basename().to_lower().begins_with(naam):
 					bestanden += 1
+					if not FileAccess.file_exists("res://assets/textures/%s/%s.import" % [map, fname]):
+						nog_niet += 1
 		var lijst: Array = VFX._geleverde(map, naam, float(g[2]), int(g[3]), bool(g[4]), bool(g[5]))
 		var fout := ""
 		for e in lijst:
@@ -170,8 +173,9 @@ static func _geleverd() -> void:
 				fout = "vlam niet uit het plaatje geknipt"
 			elif bool(g[5]) and int(e.cols) * int(e.rows) == 1 and tex.get_width() != tex.get_height():
 				fout = "niet vierkant voor een billboard (%dx%d)" % [tex.get_width(), tex.get_height()]
-		_ok(lijst.size() == bestanden and fout == "", "%s/%s: %d van %d bestanden klaar%s" % [map, naam, lijst.size(),
-			bestanden, "" if fout == "" else ", " + fout])
+		_ok(lijst.size() == bestanden - nog_niet and fout == "", "%s/%s: %d van %d bestanden klaar%s%s" % [map, naam,
+			lijst.size(), bestanden, "" if fout == "" else ", " + fout,
+			"" if nog_niet == 0 else ", %d nog niet geimporteerd (de editor doet dat zodra hij focus krijgt)" % nog_niet])
 
 
 static func _tuner() -> void:
