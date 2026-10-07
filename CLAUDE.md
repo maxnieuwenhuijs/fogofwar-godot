@@ -1418,6 +1418,11 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `decals/schokgolf` en `trails/slash`; billboards via `VFX._beeld`. De
   globale trekkingen van `vonken` blijven in dezelfde volgorde (uispel).
   `-- vfxcheck` toetst elk pad zonder bestanden met `VFX.proef_geleverd`.
+  Stof (`dust/stof*`) en vlammen op het bord (`flame/vlam*`) zijn sinds 7
+  oktober varianten (Max: "3-6 unieke stofwolkjes die random worden
+  afgespeeld", "net als vuur"): elk plukje en elke vlam kiest er een, ook een
+  vel; in de studio "erbij in het spel" naast "vervang...". De vuurmonden
+  bleven een enkel vel (de studio-proef zet `vlam_kanon` als vel in het spel).
   **Zwaaispoor (6 oktober, Max: "een slashing trail aan de melee wapens, een
   lijntje om het effect wat kracht bij te geven, allemaal tunebaar"):**
   `scripts/vfx/zwaaispoor.gd` (via preload), een lijntje langs de baan van de

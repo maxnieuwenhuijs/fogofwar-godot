@@ -270,6 +270,13 @@ Godot, daarna de concept-webpagina.
       ligt (`VFX.proef_geleverd`) en zoekt het plaatje in beeld bij het effect;
       het zwaaispoor groeit, ligt bij de schutter boven het bord en ruimt
       zichzelf op, en met de knop op 0 komt er geen.
+    - Stof en vuur als varianten (7 oktober, Max: "ik zie nog niet de
+      verschillende stofwolkjes, dit moeten iets van 3-6 unieke zijn die random
+      worden afgespeeld, doe in de studio ook de mogelijkheid om die toe te
+      voegen", "net als vuur"): `stof` en `vlam_bord` zijn `varianten` met
+      `vel`, dus per kandidaat "erbij in het spel" (`stof1.png`,
+      `stof2_4x4.png`, ...) naast "vervang..."; elk plukje en elke vlam kiest er
+      een. De vuurmonden bleven een enkel vel.
     - De kogel mag een vel zijn (7 oktober; Max zette een reeks van 4x3 voor
       de kanonskogel in de studio en kreeg "Hier speelt het spel (nog) geen
       vel af"): `kogel_musket` en `kogel_kanon` dragen `vel`, en `schot` loopt

@@ -53,6 +53,18 @@ bij te geven, moet ook allemaal tunebaar zijn".
   gelijk (`5862e4c9`), herstelcheck 777 en 4242 wolf en resumecheck 777/1 en
   4242/2 0 verschillen, inkomcheck, uicheck, naad, koppel, beurtlicht,
   audiopaneel en simcheck PASS, tests 2912/0.
+- **7 oktober: stof en vuur als varianten** (Max: "ik zie nog niet de
+  verschillende stofwolkjes, dit moeten iets van 3-6 unieke zijn die random
+  worden afgespeeld, doe in de studio ook de mogelijkheid om die toe te
+  voegen", "net als vuur"). Het spel koos al per plukje en per vlam willekeurig
+  uit alles wat met `stof`/`vlam` begint, maar er lag van elk maar een bestand
+  en de studio zag ze als een enkel vel (vervangen, niet erbij). Nu zijn `stof`
+  en `vlam_bord` in de catalogus `varianten` met `vel`: in de studio per
+  kandidaat "erbij in het spel" (`stof1.png`, `stof2_4x4.png`, ...) naast
+  "vervang...". De vuurmonden bleven een enkel vel (de studio-proef zet
+  `vlam_kanon` als vel in het spel; het spel neemt daar het eerste bestand).
+  `-- vfxcheck`: met vier varianten komen ze alle vier aan de beurt; studio
+  `--proef` PASS.
 
 ## 6 oktober -- de lichtstraal en de rand blijven nergens meer hangen
 

@@ -201,14 +201,17 @@ const ONDERDELEN: Dictionary = {
 		"uitleg": "na een kanonsinslag; elke krater kiest een variant en wordt willekeurig gedraaid (zonder bestanden tekent de code er zelf een)",
 		"prompt": "A small scorched crater in dry earth seen from straight above, a dark burnt center with a ring of thrown-up dirt, stylized, on a pure white background, game decal texture.",
 		"film": ""},
-	"stof": {"naam": "Stofwolk", "map": "dust", "bestand": "stof", "soort": "flipbook",
-		"achtergrond": "zwart", "boost": 2.3, "gebruikt": true,
-		"uitleg": "het stof bij de landing van een charge, achter ruiters en kanonnen, bij een kanonsinslag en in de schokgolf van een explosie, in zijn eigen kleur (zonder bestand de witte pof in bruin)",
+	# Stof en vuur als varianten (7 oktober, Max: "ik zie nog niet de verschillende
+	# stofwolkjes, dit moeten iets van 3-6 unieke zijn die random worden afgespeeld",
+	# "net als vuur"): elk plukje en elke vlam kiest er een (VFX._kies_geleverd).
+	"stof": {"naam": "Stofwolk", "map": "dust", "bestand": "stof", "soort": "varianten",
+		"achtergrond": "zwart", "boost": 2.3, "gebruikt": true, "vel": true,
+		"uitleg": "het stof bij de landing van een charge, achter ruiters en kanonnen, bij een kanonsinslag en in de schokgolf van een explosie, in zijn eigen kleur; zet er 3-6 verschillende bij, elk wolkje kiest er willekeurig een, een vel speelt af (zonder bestand de witte pof in bruin)",
 		"prompt": "A puff of light brown dust kicked up from the ground, soft and grainy, centered, isolated on a solid pure black background, game VFX texture.",
 		"film": "A puff of light brown dust is kicked up from the center, spreads out and settles, isolated on a solid pure black background."},
-	"vlam_bord": {"naam": "Vlammen op het bord", "map": "flame", "bestand": "vlam", "soort": "flipbook",
-		"achtergrond": "zwart", "boost": 1.5, "gebruikt": true,
-		"uitleg": "de vlammen van iets dat blijft branden (het wrak van een kanon): het spel knipt de vlam uit het plaatje en laat hem golven en flakkeren; een vel speelt zijn beeldjes af (zonder bestand een vlam uit de shader)",
+	"vlam_bord": {"naam": "Vlammen op het bord", "map": "flame", "bestand": "vlam", "soort": "varianten",
+		"achtergrond": "zwart", "boost": 1.5, "gebruikt": true, "vel": true,
+		"uitleg": "de vlammen van iets dat blijft branden (het wrak van een kanon): het spel knipt de vlam uit het plaatje en laat hem golven en flakkeren; zet er 3-6 verschillende bij, elke vlam kiest er willekeurig een, een vel speelt zijn beeldjes af (zonder bestand een vlam uit de shader)",
 		"prompt": "A small flickering flame, orange and yellow, centered, isolated on a solid pure black background, game VFX texture.",
 		"film": "A small flame flickers and dances in place, centered, isolated on a solid pure black background, seamless loop."},
 	# De nieuwe effecten van stap 2 t/m 5 elk een eigen textuur (6 oktober, Max:

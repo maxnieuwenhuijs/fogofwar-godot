@@ -329,6 +329,23 @@ static func _stukjes(tuner: Node) -> void:
 		VFX.proef_geleverd(String(s[0]), String(s[1]), null)
 		await _wacht(0.2)
 	await _wacht(1.5)   # lopende recepten laten aflopen
+	# Varianten (7 oktober, Max: "3-6 unieke stofwolkjes die random worden
+	# afgespeeld", "net als vuur"): liggen er meer, dan kiest het spel er elke keer
+	# een uit, en ze komen allemaal aan de beurt.
+	for mn in [["dust", "stof"], ["flame", "vlam"]]:
+		var vier: Array = []
+		for i in 4:
+			var im := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+			im.fill(Color(1.0, 1.0, 1.0, 0.25 * float(i + 1)))
+			vier.append({"tex": ImageTexture.create_from_image(im), "cols": 1, "rows": 1,
+				"uitsnede": Rect2(0.0, 0.0, 1.0, 1.0)})
+		VFX._proef[String(mn[0]) + "/" + String(mn[1])] = vier
+		var gezien: Dictionary = {}
+		for i in 40:
+			var e: Dictionary = VFX._kies_geleverd(String(mn[0]), String(mn[1]))
+			gezien[e.tex] = true
+		VFX._proef.erase(String(mn[0]) + "/" + String(mn[1]))
+		_ok(gezien.size() == 4, "%s/%s: met vier varianten komen ze alle vier aan de beurt (%d)" % [mn[0], mn[1], gezien.size()])
 
 
 ## Plaatjes van een effect (met venster): kiest het, speelt het op `tempo` en
