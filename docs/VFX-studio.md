@@ -292,7 +292,8 @@ Godot, daarna de concept-webpagina.
       `-- vfxcheck` toetst de maat per beeldje en of het kogelvel bijgesneden
       is. En de kanonskogel zelf vliegt weer mee (Max: "voeg die decal en de
       kanonskogel zelf wel nog toe, die distorted bal"): de uitgerekte donkere
-      bol (`VFX._kogel_bol`) voorop, de streep uit de studio erachter; zonder
+      bol (`VFX._kogel_bol`, sinds die middag iets kleiner en korter: 0,48 x 2,6
+      in plaats van 0,6 x 4,0) voorop, de streep uit de studio erachter; zonder
       textuur alleen de bol, zoals altijd. Een musketkogel met een eigen
       textuur blijft zonder bolletje.
 

@@ -372,7 +372,9 @@ static func _kogel_bol(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool)
 	ouder.add_child(bol)
 	if kanon and loop.distance_to(doel) > 0.01:
 		bol.look_at_from_position(loop, doel, Vector3.UP)
-		bol.scale = Vector3(0.6, 0.6, 4.0)  # uitgerekt langs de kijkas (-Z)
+		# uitgerekt langs de kijkas (-Z); 7 oktober iets kleiner en korter (Max),
+		# was 0,6 x 4,0 (een vak lang)
+		bol.scale = Vector3(0.48, 0.48, 2.6)
 	return bol
 
 
