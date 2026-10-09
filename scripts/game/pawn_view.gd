@@ -866,7 +866,256 @@ func play_walk() -> void:
 
 
 func play_attack() -> void:
+	if is_kanon_model():
+		_kanon_vuur()
+		return
 	_play_variant(anim_attack, false, 1.0, true)
+
+
+# --- Artillerie: kanon + bediener (9 oktober, de Leeuw-kanonnen) -------------
+#
+# Een kanonmodel (tools/blender_export_kanon.py) draagt TWEE skeletten: het
+# kanon en de bediener (een Mixamo-karakter). De clips bewegen ze samen: attack
+# (de bediener ontsteekt, het kanon slaat terug), walk1/walk2 (duwen, de wielen
+# draaien mee), idle1/idle2. Max (9 oktober): "dat ik ook alles kan tunen qua
+# vuurmond enzo en terugslag noem maar op". Elke knop hieronder staat in de
+# Model-tuner, tab Kanon: per model (model_tuning "<factie>/<model>" ->
+# "kanon": {...}) of voor alle kanonnen (effects_tuning.json, kanon_<knop>).
+
+## Een kanon met een bediener-model (niet het CSG-stuk van vroeger)?
+func is_kanon_model() -> bool:
+	return _unit_type == Constants.UnitType.ARTILLERY and _piece != null and _model_path != "" \
+		and _anim != null
+
+
+## Een kanon-knop: eerst dit model, dan alle kanonnen (kanon_<kort> in
+## effects_tuning.json), dan de code-default.
+func kanon_fx(kort: String, def: float) -> float:
+	var k: Dictionary = model_tuning().get(_tune_key, {}).get("kanon", {})
+	if k.has(kort):
+		return float(k[kort])
+	return fx("kanon_" + kort, def)
+
+
+## Na hoeveel seconden gaat het kanon af, gerekend vanaf de start van de
+## vuur-clip en MET het vuur-tempo erin? game.gd laat de kogel, de vlam en de
+## knal zo lang wachten (de bediener ontsteekt eerst). Afgesteld ("schot"), of
+## gemeten uit de clip. 0 voor het CSG-stuk: dat schiet meteen, zoals altijd.
+func kanon_schot_moment() -> float:
+	if not is_kanon_model():
+		return 0.0
+	var t := kanon_fx("schot", -1.0)
+	if t < 0.0:
+		t = kanon_schot_gemeten()
+	return t / maxf(kanon_fx("tempo", 1.0), 0.05)
+
+
+static var _schot_cache: Dictionary = {}
+
+
+## Gemeten uit de attack-clip, op tempo 1, per model gecached: het laatste
+## frame waarin het kanon-skelet nog stilstaat (daarna begint de terugslag).
+## 0 als er niets te meten valt.
+func kanon_schot_gemeten() -> float:
+	if _anim == null:
+		return 0.0
+	if _schot_cache.has(_model_path):
+		return float(_schot_cache[_model_path])
+	var t := 0.0
+	var varianten := _variants_of(anim_attack)
+	var wortel: Node = _anim.get_node_or_null(_anim.root_node)
+	if not varianten.is_empty() and wortel != null:
+		var a: Animation = _anim.get_animation(String(varianten[0]))
+		var vroegst := INF
+		for i in a.get_track_count():
+			var soort := a.track_get_type(i)
+			if soort != Animation.TYPE_POSITION_3D and soort != Animation.TYPE_ROTATION_3D:
+				continue
+			var sk := wortel.get_node_or_null(NodePath(String(a.track_get_path(i)).get_slice(":", 0))) as Skeleton3D
+			if sk == null or is_bediener_skelet(sk) or a.track_get_key_count(i) < 2:
+				continue
+			var v0 = a.track_get_key_value(i, 0)
+			for k in range(1, a.track_get_key_count(i)):
+				var v = a.track_get_key_value(i, k)
+				var weg: bool = (v as Vector3).distance_to(v0 as Vector3) > 0.002 \
+					if soort == Animation.TYPE_POSITION_3D \
+					else (v as Quaternion).angle_to(v0 as Quaternion) > deg_to_rad(0.5)
+				if weg:
+					vroegst = minf(vroegst, a.track_get_key_time(i, k - 1))
+					break
+		if vroegst < INF:
+			t = vroegst
+	_schot_cache[_model_path] = t
+	return t
+
+
+## Vuren: de vuur-clip op het kanon-tempo en op het schot-moment de terugslag
+## van het hele stuk. De kogel, de vlam en de knal regelt game.gd op hetzelfde
+## moment (kanon_schot_moment).
+func _kanon_vuur() -> void:
+	_play_variant(anim_attack, false, kanon_fx("tempo", 1.0), true)
+	var stuk := _piece
+	var tw := create_tween()
+	tw.tween_interval(kanon_schot_moment())
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(stuk) and stuk == _piece:
+			kanon_terugslag())
+
+
+var _terugslag_tw: Tween = null
+var _terugslag_rust: Transform3D = Transform3D.IDENTITY
+
+
+## De terugslag van het hele stuk, bovenop die in de clip (een kanon dat afgaat
+## springt een stukje naar achteren en de neus komt omhoog), dan rustig terug.
+## Op het model (_piece), niet op de pion: die blijft op zijn vak. Knoppen:
+## terugslag (vak), kanteling (graden), terugslag_in en terugslag_uit (s).
+func kanon_terugslag() -> void:
+	if _piece == null:
+		return
+	var stuk := _piece as Node3D
+	if _terugslag_tw != null and _terugslag_tw.is_valid():
+		_terugslag_tw.kill()
+		stuk.transform = _terugslag_rust
+	var d := kanon_fx("terugslag", 0.06)
+	var kant := deg_to_rad(kanon_fx("kanteling", 3.0))
+	if d == 0.0 and kant == 0.0:
+		return
+	_terugslag_rust = stuk.transform
+	# De voorkant van een pion is -Z: naar achteren is +Z, en een draai om +X
+	# brengt de neus (de -Z-kant) omhoog.
+	var weg := Transform3D(Basis(Vector3.RIGHT, kant), Vector3(0.0, 0.0, d)) * _terugslag_rust
+	_terugslag_tw = stuk.create_tween()
+	_terugslag_tw.tween_property(stuk, "transform", weg, maxf(kanon_fx("terugslag_in", 0.05), 0.01)) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_terugslag_tw.tween_property(stuk, "transform", _terugslag_rust, maxf(kanon_fx("terugslag_uit", 0.4), 0.01)) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Het skelet van de bediener herken je aan zijn heup (mixamorig_Hips); het
+## kanon heeft er geen.
+static func is_bediener_skelet(sk: Skeleton3D) -> bool:
+	for i in sk.get_bone_count():
+		if sk.get_bone_name(i).to_lower().contains("hips"):
+			return true
+	return false
+
+
+## Hangt deze mesh aan de bediener (geskind of aan een bot van zijn skelet)?
+static func hangt_aan_bediener(mi: MeshInstance3D) -> bool:
+	var sk: Skeleton3D = null
+	if mi.skin != null and not mi.skeleton.is_empty():
+		sk = mi.get_node_or_null(mi.skeleton) as Skeleton3D
+	var n: Node = mi.get_parent()
+	while sk == null and n != null:
+		if n is Skeleton3D:
+			sk = n as Skeleton3D
+		n = n.get_parent()
+	return sk != null and is_bediener_skelet(sk)
+
+
+## De meshes van het KANON in dit model (alles wat niet aan de bediener hangt).
+func kanon_meshes() -> Array:
+	var uit: Array = []
+	if not is_kanon_model():
+		return uit
+	for mi in _piece.find_children("*", "MeshInstance3D", true, false):
+		if not hangt_aan_bediener(mi as MeshInstance3D):
+			uit.append(mi)
+	return uit
+
+
+## Een brokstuk van het kanon in de gibs (Kanon_Loop, Kanon_Wiel.L, ...): geen
+## vlees, geen bloed, de kanonjas in plaats van de jas van de bediener.
+static func is_kanon_deel(n: Node) -> bool:
+	return _kale_deelnaam(String(n.name)).begins_with("kanon")
+
+
+## De kanonjas: <model>_cannon_red.png / _blue.png naast <model>_cannon.glb
+## (de statische kanon-export). Leeg = de textuur uit de glb.
+func kanon_jas() -> Texture2D:
+	var wp := weapon_for(_model_path, Constants.doctrine_folder(_doctrine), "cannon")
+	return weapon_team_texture(String(wp["file"]), team)
+
+
+func _zet_kanonjas() -> void:
+	var jas := kanon_jas()
+	for mi in kanon_meshes():
+		if jas != null:
+			apply_albedo_to_mesh(mi as MeshInstance3D, jas)
+		else:
+			(mi as MeshInstance3D).material_override = null
+
+
+## Maat en midden van een kanonmodel voor de auto-fit: de hoogte van de
+## bediener (voet tot kop, in modelruimte) en het midden van alles (kanon plus
+## bediener) op de grond. Leeg zonder bediener-skelet.
+func _kanon_fit_maat(root: Node3D) -> Dictionary:
+	var inv: Transform3D = root.global_transform.affine_inverse()
+	var lo := Vector3.INF
+	var hi := -Vector3.INF
+	var b_lo := INF
+	var b_hi := -INF
+	for sk in root.find_children("*", "Skeleton3D", true, false):
+		var s := sk as Skeleton3D
+		s.force_update_all_bone_transforms()
+		var xf: Transform3D = inv * s.global_transform
+		var bediener := is_bediener_skelet(s)
+		for i in s.get_bone_count():
+			var p: Vector3 = (xf * s.get_bone_global_pose(i)).origin
+			lo = lo.min(p)
+			hi = hi.max(p)
+			if bediener:
+				b_lo = minf(b_lo, p.y)
+				b_hi = maxf(b_hi, p.y)
+	if b_hi <= b_lo:
+		return {}
+	return {"h": b_hi - b_lo, "midden": (lo + hi) * 0.5}
+
+
+## Het punt van de loop in de wereld: het voorste bot van de loop-ketting (het
+## diepste bot van het kanon-skelet) plus een segment naar voren, want Godot
+## kent alleen de kop van een bot. Volgt de clip, dus ook de terugslag. null
+## zonder kanon-skelet.
+func _kanon_loop_punt() -> Variant:
+	if not is_kanon_model():
+		return null
+	for sk in _piece.find_children("*", "Skeleton3D", true, false):
+		var s := sk as Skeleton3D
+		if is_bediener_skelet(s):
+			continue
+		var diepst := -1
+		var diepte := -1
+		for i in s.get_bone_count():
+			var d := 0
+			var p := s.get_bone_parent(i)
+			while p >= 0:
+				d += 1
+				p = s.get_bone_parent(p)
+			if d > diepte:
+				diepte = d
+				diepst = i
+		if diepst < 0 or s.get_bone_parent(diepst) < 0:
+			return null
+		var kop: Vector3 = s.global_transform * s.get_bone_global_pose(diepst).origin
+		var vorige: Vector3 = s.global_transform * s.get_bone_global_pose(s.get_bone_parent(diepst)).origin
+		return kop + (kop - vorige)
+	return null
+
+
+## Waar staat de bediener (zijn heup, in de wereld)? Voor de bloedwolk als het
+## kanon ontploft. null zonder bediener-skelet.
+func _bediener_punt() -> Variant:
+	if not is_kanon_model():
+		return null
+	for sk in _piece.find_children("*", "Skeleton3D", true, false):
+		var s := sk as Skeleton3D
+		if not is_bediener_skelet(s):
+			continue
+		for i in s.get_bone_count():
+			if s.get_bone_name(i).to_lower().contains("hips"):
+				return s.global_transform * s.get_bone_global_pose(i).origin
+	return null
 
 
 ## Melee-klap: eigen clip als het model die heeft, anders de (schiet)attack.
@@ -1410,7 +1659,8 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 	# charge, en met een kleinere kans de bajonet. VOOR de kanon-route, want
 	# de charge-kill (0,85 + 0,4) zit boven de 1,2 en kreeg anders altijd de
 	# volledige explosie. Zonder gibs-bestand gaat het gewoon verder.
-	if kind == "charge" or kind == "melee":
+	# Een kanon wordt niet doormidden gehouwen: dat spat hieronder uit elkaar.
+	if (kind == "charge" or kind == "melee") and not is_kanon_model():
 		var snij_kans: float = fx("slice_kans_sabel", 0.85) if kind == "charge" else fx("slice_kans_bajonet", 0.35)
 		if snij_kans > 0.0 and randf() < snij_kans and _spawn_slice(dir, strength, kind):
 			if _piece != null:
@@ -1421,12 +1671,22 @@ func play_death(world_dir: Vector3, strength: float = 0.7, kind: String = "melee
 	# de knal - ook zonder gibs-bestand, zodat een nieuw model dat nog geen
 	# _gibs.glb heeft tóch de kanon-gore toont. Mét gibs-bestand klapt het lijf
 	# bovendien volledig uiteen; zonder valt het via de die-clip hieronder.
+	# Een kanon met bediener spat ALTIJD uit elkaar, ook van een musketkogel of
+	# een sabel (9 oktober, Max: "dat het uit elkaar spat als de kanon geraakt
+	# wordt, net als de man zelf, met die gibs, net als de standaard infantry of
+	# cav modellen"): het kanon in onderdelen, de bediener in ledematen.
+	if is_kanon_model():
+		strength = maxf(strength, fx("kanon_gibs_kracht", 1.4))
 	if strength >= 1.2:
 		var mist := fx("blood_mist", 1.0)
-		# een kanon bloedt niet (6 oktober: die ontploft hierboven)
+		# een kanon bloedt niet (6 oktober: die ontploft hierboven); zijn bediener wel
 		if mist > 0.0 and _unit_type != Constants.UnitType.ARTILLERY:
 			_spawn_blood_mist(global_position + Vector3.UP * 0.45, dir, mist)
 			_spawn_blood_burst(global_position + Vector3.UP * 0.5, int(18.0 * mist), dir)
+		elif mist > 0.0 and is_kanon_model():
+			var bp = _bediener_punt()
+			if bp != null:
+				_spawn_blood_mist(bp, dir, mist * fx("kanon_bediener_bloed", 0.6))
 		if _unit_type != Constants.UnitType.ARTILLERY:
 			_spawn_blood_burst(global_position + Vector3.UP * 0.4, int(16 * fx("blood_burst", 1.0)))
 		if _spawn_gibs(dir, strength):
@@ -1513,6 +1773,11 @@ func _speel_doodskreet() -> void:
 			Audio.play_factie("inf_kanon_die", _doctrine, 0.0, 0.0, "inf_die", _archetype)
 		else:
 			Audio.play_factie("cav_die", _doctrine, 0.0, 0.0, "inf_die", _archetype)
+		return
+	if is_kanon_model():
+		# de bediener van een kanon (9 oktober): de kreet van de infanterie
+		Audio.play_factie("inf_kanon_die" if _dodelijke_kracht >= 1.2 else "inf_die", _doctrine, 0.0, 0.0,
+			"inf_die" if _dodelijke_kracht >= 1.2 else "")
 		return
 	if _unit_type != Constants.UnitType.INFANTRY:
 		return
@@ -2332,6 +2597,12 @@ func _spawn_blood_burst(center: Vector3, amount: int, dir: Vector3 = Vector3.ZER
 ## instelbaar via model_tuning "muzzle": [rechts, hoogte, voor] — in te
 ## meten op de Model-tab van de tuner. Zonder tuning: generieke plek per type.
 func muzzle_world() -> Vector3:
+	# Een kanonmodel zonder afgestelde vuurmond: het punt van de loop zelf,
+	# uit het skelet (9 oktober). Afstellen in de tuner wint altijd.
+	if is_kanon_model() and not model_tuning().get(_tune_key, {}).has("muzzle"):
+		var loop = _kanon_loop_punt()
+		if loop != null:
+			return loop
 	var right := 0.08
 	var up := 0.85
 	var fwd := 0.45
@@ -2377,7 +2648,20 @@ func _spawn_gibs(dir: Vector3, strength: float) -> bool:
 	if parts.is_empty():
 		parts_root.queue_free()
 		return false
-	_zet_vlees_alle(parts_root)  # rood door elk open uiteinde, spatten erop (17 september)
+	if is_kanon_model():
+		# Het kanon in onderdelen (9 oktober): de kanonjas en geen vlees, alleen
+		# de bediener is van vlees en bloed.
+		var jas := kanon_jas()
+		for part in parts:
+			if is_kanon_deel(part):
+				if jas != null:
+					apply_albedo_to_mesh(part as MeshInstance3D, jas)
+				else:
+					(part as MeshInstance3D).material_override = null
+			elif (part as MeshInstance3D).visible:
+				_zet_vlees(part as MeshInstance3D)
+	else:
+		_zet_vlees_alle(parts_root)  # rood door elk open uiteinde, spatten erop (17 september)
 	for part in parts:
 		if randf() < 0.15:
 			_drop_part(part as Node3D)
@@ -2977,9 +3261,10 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	var from := part.global_position
 	var land := Vector3(from.x, global_position.y + 0.06, from.z) + fling
 	var peak := from.lerp(land, 0.5) + Vector3.UP * randf_range(0.35, 0.7) * power * time_scale
-	# Bloeden: een vlees-deel (geen hoed/musket) spat druppels op het punt waar
-	# het van het lijf wordt gerukt.
-	if not _is_hat(part):
+	# Bloeden: een vlees-deel (geen hoed/musket, geen kanon-onderdeel) spat
+	# druppels op het punt waar het van het lijf wordt gerukt.
+	var kanon_deel := is_kanon_deel(part)
+	if not _is_hat(part) and not kanon_deel:
 		_spawn_blood_burst(from, int(4 * fx("blood_burst", 1.0)))
 	var t_up := randf_range(0.16, 0.24) * time_scale
 	var t_down := randf_range(0.16, 0.24) * time_scale
@@ -3002,8 +3287,10 @@ func _fling_part(part: Node3D, dir: Vector3, violence: float = 1.0, time_scale: 
 	arc.tween_property(part, "rotation", _flat_rotation(part), 0.12)
 	# Eén poel per stuk, recht onder de landingsplek. Timing strak en
 	# tunebaar: gib-poel-wacht na het landen, volgroeid in gib-poel-groei.
-	_spawn_blood(land, 1, 0.02, t_up + t_down + fx("gib_pool_delay", 0.1),
-		fx("gib_pool_grow", 0.45), _blood_size_for(part), "blood_pool")
+	# Een kanon-onderdeel bloedt niet.
+	if not kanon_deel:
+		_spawn_blood(land, 1, 0.02, t_up + t_down + fx("gib_pool_delay", 0.1),
+			fx("gib_pool_grow", 0.45), _blood_size_for(part), "blood_pool")
 
 
 ## Zacht in elkaar zakken: het deel ploft vrijwel ter plekke op de tegel met
@@ -3019,9 +3306,11 @@ func _drop_part(part: Node3D) -> void:
 	# Meteen plat neerleggen.
 	drop.parallel().tween_property(part, "rotation", _flat_rotation(part), 0.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	# Eén poel per stuk, recht onder de landingsplek (zelfde timing-knoppen).
-	_spawn_blood(land, 1, 0.02, 0.25 + fx("gib_pool_delay", 0.1),
-		fx("gib_pool_grow", 0.45), _blood_size_for(part), "blood_pool")
+	# Eén poel per stuk, recht onder de landingsplek (zelfde timing-knoppen);
+	# niet onder een kanon-onderdeel.
+	if not is_kanon_deel(part):
+		_spawn_blood(land, 1, 0.02, 0.25 + fx("gib_pool_delay", 0.1),
+			fx("gib_pool_grow", 0.45), _blood_size_for(part), "blood_pool")
 
 
 func _on_anim_finished(anim_name: String) -> void:
@@ -3863,6 +4152,19 @@ func _auto_fit_model(root: Node3D) -> void:
 	var s: float = target_h / maxf(top_y - ground_y, 0.0001)
 	if footprint > 0.0001:
 		s = minf(s, 0.95 / footprint)  # armen/loop mogen de buur-tegel niet in
+	# Een kanon met bediener (9 oktober): de BEDIENER is bij elk kanon even groot
+	# (kanon_bediener_hoogte), het kanon houdt zijn eigen maat en mag tot
+	# kanon_max_lengte vakken lang zijn. Passend in een vak maakte de leeuw naast
+	# het lange hp-kanon 0,43 hoog en naast het mix-kanon 0,60. Midden = het
+	# midden van kanon plus bediener, niet het gemiddelde van de botten (dan trok
+	# de bediener met zijn 41 botten alles naar zich toe).
+	var kfit: Dictionary = _kanon_fit_maat(root) if _unit_type == Constants.UnitType.ARTILLERY else {}
+	if not kfit.is_empty():
+		s = fx("kanon_bediener_hoogte", 0.6) / maxf(float(kfit.h), 0.0001)
+		if footprint > 0.0001:
+			s = minf(s, fx("kanon_max_lengte", 1.4) / footprint)
+		var km: Vector3 = kfit.midden
+		center = Vector3(km.x, center.y, km.z)
 	root.scale = Vector3(s, s, s)
 	root.rotation.y = PI
 	# Na rotatie om Y (x,z → -x,-z): voeten-midden op de tegel, zolen op de grond.
@@ -3962,6 +4264,12 @@ func _apply_team_texture() -> void:
 	if _piece == null or _model_path == "":
 		return
 	apply_albedo_to(_piece, team_texture(_model_path, team, false))
+	# Een kanon (9 oktober): de jas hierboven is die van de BEDIENER; het kanon
+	# draagt zijn eigen atlas en dus zijn eigen jas (Max: "kanon ook blauw of
+	# rood jas hoor, minimaal verschil maar toch").
+	if is_kanon_model():
+		_zet_kanonjas()
+		return
 	# Het team-uniform hoort alleen op het LIJF. Het ingebakken musket heeft
 	# zijn eigen texture-atlas: met de team-png van het lijf erover wordt het
 	# een bonte vlek.

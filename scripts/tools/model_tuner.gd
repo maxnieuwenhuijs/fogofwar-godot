@@ -7,6 +7,7 @@ extends Node3D
 
 const PAWN_SCENE := preload("res://scenes/game/pawn_view.tscn")
 const SAVE_PATH := "res://assets/models/model_tuning.json"
+const VFX := preload("res://scripts/vfx/vfx.gd")
 
 const ARCHS: Array = ["base", "spd", "hp", "atk", "mix"]
 ## Kaart-stats die het gewenste archetype forceren (dominante stat).
@@ -88,7 +89,34 @@ const FX_DEFS: Array = [
 	{"cat": "rook", "key": "fire_life", "label": "vuur-duur", "min": 0.03, "max": 2.0, "step": 0.01, "def": 0.14},
 	{"cat": "rook", "key": "fire_light", "label": "vuur-licht", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.6},
 	{"cat": "rook", "key": "fire_shake", "label": "vuur-schok", "min": 0.0, "max": 10.0, "step": 0.01, "def": 1.0},
+	# Kanonnen met bediener (9 oktober, de Leeuw-kanonnen): voor ALLE kanonnen.
+	# Per model overschrijven kan op dezelfde tab (PawnView.kanon_fx).
+	{"cat": "kanon", "key": "kanon_schot", "label": "schot-moment (s, -1 = uit de clip)", "min": -1.0, "max": 5.0, "step": 0.01, "def": -1.0},
+	{"cat": "kanon", "key": "kanon_tempo", "label": "vuur-tempo", "min": 0.2, "max": 5.0, "step": 0.01, "def": 1.0},
+	{"cat": "kanon", "key": "kanon_terugslag", "label": "terugslag (vak)", "min": 0.0, "max": 0.5, "step": 0.005, "def": 0.06},
+	{"cat": "kanon", "key": "kanon_kanteling", "label": "kanteling (graden)", "min": -20.0, "max": 20.0, "step": 0.5, "def": 3.0},
+	{"cat": "kanon", "key": "kanon_terugslag_in", "label": "terugslag heen (s)", "min": 0.01, "max": 1.0, "step": 0.01, "def": 0.05},
+	{"cat": "kanon", "key": "kanon_terugslag_uit", "label": "terugslag terug (s)", "min": 0.01, "max": 3.0, "step": 0.01, "def": 0.4},
+	{"cat": "kanon", "key": "kanon_lont_voor", "label": "lont-sis voor het schot (s)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.6},
+	{"cat": "kanon", "key": "kanon_bediener_hoogte", "label": "bediener-hoogte (vak)", "min": 0.2, "max": 1.5, "step": 0.01, "def": 0.6},
+	{"cat": "kanon", "key": "kanon_max_lengte", "label": "kanon max lengte (vak)", "min": 0.5, "max": 3.0, "step": 0.01, "def": 1.4},
+	{"cat": "kanon", "key": "kanon_gibs_kracht", "label": "uit elkaar: kracht", "min": 0.5, "max": 3.0, "step": 0.01, "def": 1.4},
+	{"cat": "kanon", "key": "kanon_bediener_bloed", "label": "bloedwolk bediener", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.6},
 ]
+
+## Dezelfde kanon-knoppen voor ALLEEN het model in de tuner (model_tuning
+## "<factie>/<model>" -> "kanon"): korte sleutel, label, bereik, stap.
+const KANON_MODEL_KNOPPEN: Array = [
+	["schot", "schot-moment (s, -1 = uit de clip)", -1.0, 5.0, 0.01],
+	["tempo", "vuur-tempo", 0.2, 5.0, 0.01],
+	["terugslag", "terugslag (vak)", 0.0, 0.5, 0.005],
+	["kanteling", "kanteling (graden)", -20.0, 20.0, 0.5],
+	["terugslag_in", "heen (s)", 0.01, 1.0, 0.01],
+	["terugslag_uit", "terug (s)", 0.01, 3.0, 0.01],
+]
+var _kanon_spins: Dictionary = {}      # korte sleutel -> SpinBox (alleen dit model)
+var _kanon_vm_spins: Dictionary = {}   # vuurmond "x"/"y"/"z", gespiegeld met de rij op In de hand
+var _kanon_info: Label = null
 
 var _pawn: PawnView = null
 var _ref: PawnView = null
@@ -1006,7 +1034,8 @@ func _build_ui() -> void:
 	tab_snd.add_child(snd_uitleg)
 
 	# Tabs GORE / BLOED / ROOK: effect-knoppen per categorie in een net raster.
-	var cats: Array = [["Melee", "bajonet"], ["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"]]
+	var cats: Array = [["Melee", "bajonet"], ["Gore", "gore"], ["Bloed", "bloed"], ["Rook", "rook"],
+		["Kanon", "kanon"]]
 	for cat in cats:
 		var tab := VBoxContainer.new()
 		tab.name = String(cat[0])
@@ -1026,6 +1055,8 @@ func _build_ui() -> void:
 			_fx_spins[String(d.key)] = spin
 		if String(cat[1]) == "bajonet":
 			tab.add_child(_make_label("Melee-timing geldt voor ALLE modellen (zelfde clips). Preview: duel-knoppen in de Test-rij bovenin."))
+		if String(cat[1]) == "kanon":
+			_bouw_kanon_tab(tab)
 		if String(cat[1]) == "bloed":
 			# Dood-poel: per dood-clip de lijkpoel timen.
 			var rowd := HBoxContainer.new()
@@ -1631,12 +1662,17 @@ func _sync_sliders_from_tuning() -> void:
 	_x_spin.value = float(t.get("x", 0.0))
 	_z_spin.value = float(t.get("z", 0.0))
 	var mz_def: Array = [0.0, 0.55, 0.7] if _type_btn.get_selected_id() == 2 else [0.08, 0.85, 0.45]
+	# Een kanonmodel zonder afgestelde vuurmond: het punt van de loop zelf (9 oktober).
+	if not t.has("muzzle") and _pawn != null and is_instance_valid(_pawn) and _pawn.is_kanon_model():
+		var l: Vector3 = _pawn.global_transform.affine_inverse() * _pawn.muzzle_world()
+		mz_def = [snappedf(l.x, 0.01), snappedf(l.y, 0.01), snappedf(-l.z, 0.01)]
 	var mz: Array = t.get("muzzle", mz_def)
 	if mz.size() != 3:
 		mz = mz_def
 	_muzzle_spins["x"].value = float(mz[0])
 	_muzzle_spins["y"].value = float(mz[1])
 	_muzzle_spins["z"].value = float(mz[2])
+	_sync_kanon_spins(t)
 	var w: Dictionary = PawnView.model_tuning().get(_weapon_target_key(), {})
 	_weapon_spins["scale"].value = float(w.get("scale", 1.0))
 	var wpos: Array = w.get("pos", [0.0, 0.0, 0.0])
@@ -1975,6 +2011,9 @@ func _on_fx_changed(_v: float) -> void:
 ## Vuur-test: attack-clip + loop-rook op het vuur-moment (maat past bij het
 ## geselecteerde type: artillerie = kanon-rook).
 func _on_fire_test() -> void:
+	if _pawn != null and is_instance_valid(_pawn) and _pawn.is_kanon_model():
+		_on_kanon_test()  # een kanon met bediener schiet op zijn schot-moment
+		return
 	_interrupt_previews(false, true)
 	if _pawn == null or not is_instance_valid(_pawn):
 		return
@@ -2086,6 +2125,192 @@ func _on_muzzle_changed(_v: float) -> void:
 		snappedf(_muzzle_spins["y"].value, 0.01),
 		snappedf(_muzzle_spins["z"].value, 0.01)]
 	PawnView.set_model_tuning(key, entry)
+	for as_naam in _kanon_vm_spins:
+		(_kanon_vm_spins[as_naam] as SpinBox).set_value_no_signal((_muzzle_spins[as_naam] as SpinBox).value)
+	_kanon_info_bij()
+
+
+# --- Tab Kanon (9 oktober, Max: "dat ik ook alles kan tunen qua vuurmond enzo
+# en terugslag noem maar op") ---------------------------------------------------
+#
+# Bovenin het raster met de knoppen voor ALLE kanonnen (effects_tuning.json,
+# kanon_*), daaronder dezelfde knoppen voor ALLEEN het model in de tuner
+# (model_tuning "<factie>/<model>" -> "kanon"), de vuurmond (dezelfde waarden
+# als de rij op In de hand) en de tests. OPSLAAN schrijft alles weg.
+
+func _bouw_kanon_tab(tab: VBoxContainer) -> void:
+	var uitleg := _make_label("Het raster hierboven geldt voor ALLE kanonnen. Hieronder alleen voor het kanon in de tuner; \"terug naar alle kanonnen\" haalt die eigen waarden weer weg.")
+	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	uitleg.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	tab.add_child(uitleg)
+	var rij := HFlowContainer.new()
+	tab.add_child(rij)
+	rij.add_child(_make_label("Dit kanon:"))
+	for k in KANON_MODEL_KNOPPEN:
+		rij.add_child(_make_label("  " + String(k[1])))
+		_kanon_spins[String(k[0])] = _make_spin(rij, float(k[2]), float(k[3]), float(k[4]),
+			_kanon_standaard(String(k[0])), _on_kanon_knop.bind(String(k[0])))
+	var wis := Button.new()
+	wis.text = "terug naar alle kanonnen"
+	wis.pressed.connect(_on_kanon_wis)
+	rij.add_child(wis)
+	var rijv := HBoxContainer.new()
+	tab.add_child(rijv)
+	rijv.add_child(_make_label("Vuurmond: rechts"))
+	_kanon_vm_spins["x"] = _make_spin(rijv, -1.0, 1.0, 0.01, 0.0, _on_kanon_vuurmond)
+	rijv.add_child(_make_label(" hoogte"))
+	_kanon_vm_spins["y"] = _make_spin(rijv, 0.0, 2.0, 0.01, 0.55, _on_kanon_vuurmond)
+	rijv.add_child(_make_label(" voor"))
+	_kanon_vm_spins["z"] = _make_spin(rijv, -1.0, 2.0, 0.01, 0.7, _on_kanon_vuurmond)
+	var vm_loop := Button.new()
+	vm_loop.text = "vuurmond = punt van de loop"
+	vm_loop.tooltip_text = "Haalt de afgestelde vuurmond weg: de vlam komt dan uit het punt van de loop zelf en volgt de terugslag."
+	vm_loop.pressed.connect(_on_kanon_vuurmond_loop)
+	rijv.add_child(vm_loop)
+	var rijt := HBoxContainer.new()
+	tab.add_child(rijt)
+	var test := Button.new()
+	test.text = "test schot"
+	test.tooltip_text = "Zoals in het spel: de bediener ontsteekt, op het schot-moment knal, vlam, kogel en terugslag."
+	test.pressed.connect(_on_kanon_test)
+	rijt.add_child(test)
+	var gib1 := Button.new()
+	gib1.text = "uit elkaar (kanontreffer)"
+	gib1.pressed.connect(_on_gib_test.bind(1.4, "shot"))
+	rijt.add_child(gib1)
+	var gib2 := Button.new()
+	gib2.text = "uit elkaar (musket)"
+	gib2.pressed.connect(_on_gib_test.bind(0.75, "shot"))
+	rijt.add_child(gib2)
+	var gib3 := Button.new()
+	gib3.text = "uit elkaar (charge)"
+	gib3.pressed.connect(_on_gib_test.bind(1.25, "charge"))
+	rijt.add_child(gib3)
+	_kanon_info = _make_label("")
+	_kanon_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_kanon_info.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
+	tab.add_child(_kanon_info)
+
+
+## De code-default van een kanon-knop (uit FX_DEFS).
+func _kanon_standaard(kort: String) -> float:
+	for d in FX_DEFS:
+		if String(d.key) == "kanon_" + kort:
+			return float(d.def)
+	return 0.0
+
+
+## Kanon-spins vullen: de eigen waarde van dit model, anders die van alle kanonnen.
+func _sync_kanon_spins(t: Dictionary) -> void:
+	var k: Dictionary = t.get("kanon", {})
+	for kort in _kanon_spins:
+		(_kanon_spins[kort] as SpinBox).value = float(k.get(kort,
+			PawnView.fx("kanon_" + String(kort), _kanon_standaard(String(kort)))))
+	for as_naam in _kanon_vm_spins:
+		(_kanon_vm_spins[as_naam] as SpinBox).value = (_muzzle_spins[as_naam] as SpinBox).value
+	_kanon_info_bij()
+
+
+func _on_kanon_knop(_v: float, kort: String) -> void:
+	if _updating:
+		return
+	var key := _tune_target_key()
+	if key == "":
+		return
+	var entry: Dictionary = PawnView.model_tuning().get(key, {})
+	var k: Dictionary = entry.get("kanon", {})
+	k[kort] = snappedf((_kanon_spins[kort] as SpinBox).value, 0.001)
+	entry["kanon"] = k
+	PawnView.set_model_tuning(key, entry)
+	_kanon_info_bij()
+
+
+func _on_kanon_wis() -> void:
+	var key := _tune_target_key()
+	if key == "":
+		return
+	var entry: Dictionary = PawnView.model_tuning().get(key, {})
+	entry.erase("kanon")
+	PawnView.set_model_tuning(key, entry)
+	_sync_sliders_from_tuning()
+
+
+## De vuurmond-rij op deze tab schrijft dezelfde waarden als die op In de hand.
+func _on_kanon_vuurmond(_v: float) -> void:
+	if _updating:
+		return
+	for as_naam in _kanon_vm_spins:
+		(_muzzle_spins[as_naam] as SpinBox).set_value_no_signal((_kanon_vm_spins[as_naam] as SpinBox).value)
+	_on_muzzle_changed(0.0)
+
+
+func _on_kanon_vuurmond_loop() -> void:
+	var key := _tune_target_key()
+	if key == "":
+		return
+	var entry: Dictionary = PawnView.model_tuning().get(key, {})
+	entry.erase("muzzle")
+	PawnView.set_model_tuning(key, entry)
+	_sync_sliders_from_tuning()
+
+
+## Wat er nu geldt voor het kanon in de tuner, in een regel.
+func _kanon_info_bij() -> void:
+	if _kanon_info == null:
+		return
+	if _pawn == null or not is_instance_valid(_pawn) or not _pawn.is_kanon_model():
+		_kanon_info.text = "Kies Type = artillerie met een kanonmodel (bv. Leeuw); het CSG-blokje heeft geen bediener en geen clips."
+		return
+	var eigen: Dictionary = PawnView.model_tuning().get(_pawn._tune_key, {}).get("kanon", {})
+	var fit: Dictionary = _pawn.last_fit
+	var jas_b: bool = PawnView.team_texture(_pawn._model_path, _pawn.team) != null
+	var jas_k: bool = _pawn.kanon_jas() != null
+	_kanon_info.text = "%s: schot na %.2f s (uit de clip %.2f s op tempo 1), %s. Schaal %.2f. Jas bediener: %s, kanonjas: %s (%s_cannon_red/blue.png). %d onderdelen in de gibs." % [
+		_pawn._tune_key, _pawn.kanon_schot_moment(), _pawn.kanon_schot_gemeten(),
+		("eigen waarden: " + ", ".join(PackedStringArray(eigen.keys()))) if not eigen.is_empty() else "waarden van alle kanonnen",
+		float(fit.get("s", 0.0)), "ja" if jas_b else "nog niet", "ja" if jas_k else "nog niet",
+		_pawn._model_path.get_file().get_basename(), _kanon_gib_aantal()]
+
+
+func _kanon_gib_aantal() -> int:
+	var pad := _pawn._gibs_pad()
+	if pad == "" or not ResourceLoader.exists(pad):
+		return 0
+	var s: Node = (load(pad) as PackedScene).instantiate()
+	var n := s.find_children("*", "MeshInstance3D", true, false).size()
+	s.free()
+	return n
+
+
+## Test schot, zoals in het spel: de vuur-clip (bediener ontsteekt), op het
+## schot-moment de lont al eerder, dan knal, vlam, kogel, schok en terugslag.
+func _on_kanon_test() -> void:
+	_interrupt_previews(false, true)
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	if not _pawn.is_kanon_model():
+		_on_fire_test()
+		return
+	if _pawn._anim != null:
+		_pawn._anim.stop()
+	_pawn.play_attack()
+	var wacht := _pawn.kanon_schot_moment()
+	Audio.play("cannon_fuse", maxf(0.0, wacht - PawnView.fx("kanon_lont_voor", 0.6)))
+	var gen := _preview_gen
+	var tw := create_tween()
+	tw.tween_interval(wacht)
+	tw.tween_callback(func() -> void:
+		if gen != _preview_gen or _pawn == null or not is_instance_valid(_pawn):
+			return
+		var mond := _pawn.muzzle_world()
+		var voor := -_pawn.global_transform.basis.z
+		voor.y = 0.0
+		var doel := mond + voor.normalized() * 4.0
+		doel.y = 0.55
+		VFX.schot(self, mond, doel, true, VFX.vlucht_duur(4.0, true), _shake_camera)
+		Audio.play("cannon_fire")
+		Audio.play("cannon_air", 0.04))
+	_kanon_info_bij()
 
 
 ## Rooktest aan de loop van het tuning-model (musket- of kanon-maat).

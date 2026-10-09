@@ -1,5 +1,51 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- De vijf Leeuw-kanonnen in het spel
+
+Max: "bekijk de nieuwe kanonnen van Lion ... kijk of alle animaties dezelfde
+naam hebben binnen de kanon categorie en kijk dan hoe we deze in het spel
+kunnen integreren", daarna "zorg dat het erin komt en dat ik ook alles kan
+tunen qua vuurmond enzo en terugslag noem maar op en ook dat het uit elkaar
+spat als de kanon geraakt wordt net als de man zelf, met die gibs".
+
+- **De blends** (`assets/new upload folder/lion/canon_{atk,base,hp,mix,spd}`,
+  16 september): zeven acties met overal dezelfde namen (Character fire +
+  cannon Fire, push / pushing 2 + Cannon moving, Idle 1 / idle 2). Twee rigs:
+  het kanon (9 botten, hp 11 met vier wielen) en de bediener met een
+  IK-besturingsrig (126 botten, 41 deform; de acties keyen alleen
+  `Ctrl_`-botten). atk op 30 fps, de rest op 24 met dezelfde keyframes (export
+  zet alles op 30). De bediener is in alle vijf dezelfde mesh (geometrie- en
+  UV-hash gelijk): een jas voor hem dekt alle vijf. "Cannon moving" in mix en
+  spd draagt sporen voor vier wielen (van hp), onschuldig.
+- **Export** `tools/blender_export_kanon.py` (via `verwerk_levering.py`, mapnaam
+  met canon/cannon/kanon/artillery): `artillery_<arch>.glb` met attack/walk1/
+  walk2/idle1/idle2 waarin BEIDE skeletten bewegen (NLA-sporen met dezelfde
+  naam, `export_def_bones`), `_cannon.glb` (kanon los, voor de kanonjas) en
+  `_gibs.glb` (Kanon_Loop/Affuit/Wiel en de bediener in de infanterie-delen,
+  de berenmuts los, in de idle-houding). Bot-delen nagemeten: afwijking 0.
+  De vijf staan in `assets/models/lion/artillery/` (niet gecommit, zoals alle
+  leveringen). Retexture-uploads `lion_artillery_<arch>.glb` + `_wapen.glb`
+  naast de blends (maak_retexture draaide over heel lion/, dus ook de
+  infanterie- en cavalerie-uploads zijn opnieuw geschreven).
+- **Spel** (PawnView, blok "Artillerie: kanon + bediener"; game.gd): kogel,
+  vlam, knal en treffer wachten op het schot-moment uit de clip (atk 0,93 s,
+  hp 0,87 s), lont-sis 0,6 s ervoor, terugslag van het hele stuk (0,06 vak,
+  3 graden), vuurmond = punt van de loop, bediener overal 0,60 hoog, jas op
+  de bediener en kanonjas op het kanon, elke dood spat uit elkaar (kanon
+  zonder bloed, bediener met vlees, bloedwolk en kreet; niet doormidden).
+  Getest op de echte glb's via runtime-glTF (de editor stond open en had nog
+  niet geimporteerd).
+- **Tuner:** tab Kanon (alle kanonnen + dit kanon, vuurmond, test schot, uit
+  elkaar). **Check:** `-- kanoncheck [factie]`, ook in verwerk_levering.
+- **uispel 777:** in een worktree op HEAD en op HEAD met alleen deze hunks
+  allebei `73b47201…` (165). In de werkmap geeft hij nu `e14d7f70…` (159):
+  dat komen de nog niet gecommitte gewichten van de trainingsnacht van
+  8 oktober (`data/ai_weights_f0/2/3/4.json`), niet de kanonnen.
+- **Open:** `-- kanoncheck lion` en een kijkje met venster zodra de editor de
+  vijf glb's geimporteerd heeft (geen `--import` naast de open editor); de
+  jassen komen na de retexture; van het duwen zie je weinig (een rol duurt
+  0,13-0,45 s); geen raak-clip voor de bediener.
+
 ## 7 oktober -- 4.3.10: het bod kort alleen wie minder kaarten speelt dan de tegenstander
 
 Na de review van 4.3.9 (hieronder) aan Max voorgelegd dat delen door de volle

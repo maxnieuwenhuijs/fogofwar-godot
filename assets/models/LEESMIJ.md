@@ -28,6 +28,9 @@ assets/models/
   props/                  gedeelde voorwerpen (prop_drum, prop_pole, ...)
   <factie>/               per factie, bv mouse/
     infantry/           de modellen zelf + gibs + musket-variant + teamkleuren
+    artillery/          kanon + bediener (artillery_<arch>.glb), het kanon los
+                        (_cannon.glb: daar hoort de kanonjas _cannon_red.png
+                        bij) en de gibs; uit tools/blender_export_kanon.py
     weapons/               musket.glb en zijn texturen
     source-textures/        losse Tripo-jpg's; het spel gebruikt ze NIET
   model_tuning.json       jouw afstelwerk (tuner)

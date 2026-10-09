@@ -371,6 +371,29 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   bovenaan, en elke levering meldde daardoor "1 probleem"); `--geen-controles`
   slaat dat over, `--godot <pad>` of `GODOT_PATH` wijst de binary aan. Alleen de
   Model-tuner blijft handwerk.
+- **Kanonnen (9 oktober, de vijf Leeuw-kanonnen; `KANON-ANIMATIE-EN-GIBS.md`,
+  Max: "zorg dat het erin komt en dat ik ook alles kan tunen qua vuurmond enzo
+  en terugslag, en dat het uit elkaar spat als de kanon geraakt wordt net als
+  de man zelf").** Een kanon-blend heeft TWEE rigs: het kanon en de bediener
+  (Mixamo met een IK-besturingsrig, acties alleen op `Ctrl_`-botten; alles heet
+  `tripo_node`, ook de leeuw). `verwerk_levering.py` herkent `canon`/`cannon`/
+  `kanon`/`artillery` in de mapnaam en draait EEN stap,
+  `tools/blender_export_kanon.py` (deelt in op rig, niet op naam):
+  `artillery_<arch>.glb` (clips attack/walk1/walk2/idle1/idle2, elk met BEIDE
+  skeletten via NLA-sporen met dezelfde naam, `export_def_bones`, 30 fps),
+  `_cannon.glb` (het kanon los: de kanonjas `_cannon_red.png` hoort erbij en
+  uv_check meet ertegen; leveringsmap `weapon/red|blue`) en `_gibs.glb` (het
+  kanon in `Kanon_*`-delen, de bediener in Hat/Head/Body/Arm.L/... in zijn
+  idle-houding). `--retexture` / `maak_retexture.py`: bediener = lijf, kanon =
+  `_wapen.glb`. PawnView (blok "Artillerie: kanon + bediener"): kogel, vlam,
+  knal en treffer wachten op `kanon_schot_moment()` (gemeten uit de clip, ~0,9
+  s; game.gd `_fire_projectile(..., wacht)`), terugslag van het hele stuk op
+  dat moment, vuurmond zonder afstelling = het punt van de loop, de bediener
+  overal even hoog (`kanon_bediener_hoogte` 0,6), jas op de bediener en
+  kanonjas op het kanon, en bij ELKE dood uiteenspatten (kanondelen zonder
+  bloed, de bediener met vlees en een kreet; niet doormidden). Tunen: tab
+  Kanon in de Model-tuner (alle kanonnen in effects_tuning `kanon_*`, per model
+  in model_tuning `"kanon"`). Check: `-- kanoncheck [factie]`.
 - **Een hele blend-inbox bouwen** (7 september, alleen CLI -- de paneelknoppen
   zijn er op 7 september weer uit gehaald omdat Max met losse leveringen werkt):
   `python tools/bouw_modellen.py [--droogloop] [--factie <naam>]

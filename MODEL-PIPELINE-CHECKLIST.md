@@ -57,8 +57,11 @@ zeker kan plaatsen bouwt hij NIET, hij noemt het bestand.
   (standaard 4; ~27 s per model, dus dertig stuks in ~3,5 min).
 - Elke Blender-aanroep krijgt een eigen log in `results/modelbouw_<tijd>/`.
   Exitcode 1 als er iets misging of niet te plaatsen was.
-- Cavalerie krijgt vanzelf `_melee.glb` in plaats van `_musket.glb`;
-  artillerie slaat de wapenstap over.
+- Cavalerie krijgt vanzelf `_melee.glb` in plaats van `_musket.glb`.
+- Artillerie (9 oktober: een kanon-blend met twee rigs, kanon + bediener)
+  gaat door EEN eigen stap, `tools/blender_export_kanon.py`: model, losse
+  `_cannon.glb` (voor de kanonjas) en gibs in een keer. Mapnamen met `canon`,
+  `cannon`, `kanon` of `artillery`. Zie `KANON-ANIMATIE-EN-GIBS.md`.
 
 LET OP: de `tripo_node_<uuid>`-mesh in zo'n blend is het INGEBAKKEN MUSKET
 (niet een duplicaat -- die vergissing is op 15 augustus gemaakt en gefikst).

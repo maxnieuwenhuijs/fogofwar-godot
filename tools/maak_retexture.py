@@ -14,6 +14,11 @@
 #                     geen wapen, lichaamsdelen aan elkaar
 #   <naam>_wapen.glb  alleen het wapen, statisch en losgeknipt van het skelet
 #
+# Bij een KANON (9 oktober, map canon_atk enz.) is het lijf de bediener en het
+# "wapen" het kanon zelf; dat doet tools/blender_export_kanon.py --retexture.
+# De Leeuw-bediener is in alle vijf de kanon-blends dezelfde mesh: een rode en
+# een blauwe jas voor hem passen dus op alle vijf.
+#
 # Ze komen NAAST de .blend te staan, in dezelfde map, zodat alles van een model
 # bij elkaar blijft: de blend, de exports die je uploadt, en straks de png's die
 # je terugkrijgt. Met --uit <map> schrijf je ze ergens anders heen.
@@ -44,6 +49,12 @@ def naam_voor(blend, map_pad):
         return os.path.splitext(os.path.basename(blend))[0].replace(" ", "_")
     factie, soort, arch = pl
     return f"{factie}_{soort}_{arch}"
+
+
+def is_kanon(blend, map_pad):
+    """Hoort deze blend bij een kanon (canon_atk, artillery, kanon ... in het pad)?"""
+    pl = plaats(blend, os.path.dirname(os.path.abspath(map_pad)))
+    return pl is not None and pl[1] == "artillery"
 
 
 def main():
@@ -80,6 +91,26 @@ def main():
         # Standaard naast de .blend: alles van een model in een map.
         map_uit = a.uit or os.path.dirname(blend)
         doel = os.path.join(map_uit, naam_voor(blend, a.map) + ".glb")
+        if is_kanon(blend, a.map):
+            # Een kanon-blend (9 oktober) heeft twee rigs en alles heet
+            # tripo_node: de kanon-export deelt op RIG in en schrijft de bediener
+            # als <naam>.glb en het kanon als <naam>_wapen.glb.
+            begin = time.time()
+            r = subprocess.run([a.blender, "--background", blend, "--python",
+                                os.path.join(PROJ, "tools", "blender_export_kanon.py"),
+                                "--", "--retexture", doel],
+                               capture_output=True, text=True, errors="replace", cwd=PROJ)
+            wdoel = os.path.splitext(doel)[0] + "_wapen.glb"
+            if r.returncode == 0 and os.path.exists(doel) and os.path.exists(wdoel):
+                for pad, wat in ((doel, "de bediener"), (wdoel, "het kanon")):
+                    print(f"  [{i}/{len(blends)}] OK   {os.path.basename(pad):34} {os.path.getsize(pad) // 1024:5} KB  {wat}")
+                    gelukt.append(pad)
+            else:
+                print(f"  [{i}/{len(blends)}] FOUT {os.path.basename(blend)}  ({time.time() - begin:.0f}s)")
+                for l in (r.stdout + r.stderr).splitlines()[-6:]:
+                    print(f"        {l}")
+                mislukt.append(blend)
+            continue
         args = [a.blender, "--background", blend, "--python",
                 os.path.join(PROJ, "tools", "blender_export_retexture.py"),
                 "--", "--uit", doel]

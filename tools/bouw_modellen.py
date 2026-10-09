@@ -19,6 +19,10 @@
 #      plus <type>_<arch>_gibs.glb ernaast. Bewaart en herstelt de
 #      bot-kind-transforms (de zweefbug van Blender 5.1).
 #
+# Artillerie (9 oktober) gaat anders: een kanon-blend heeft twee rigs, dus
+# EEN stap, blender_export_kanon.py, die artillery_<arch>.glb,
+# artillery_<arch>_cannon.glb en artillery_<arch>_gibs.glb schrijft.
+#
 # De namen in de inbox zijn rommelig ("lion Base.blend", "pig atk.blend",
 # "mouse_cavalry_atk.blend", "bear_infantry_atk/bear_infantry_atk.blend").
 # Daarom wordt het pad + de bestandsnaam in woorden geknipt en daaruit worden
@@ -45,7 +49,10 @@ TYPES = {"infantry": "infantry", "infanterie": "infantry", "inf": "infantry",
          # spelfouten die in mapnamen voorkomen (16 september: "cavarly_spd")
          "cavarly": "cavalry", "calvary": "cavalry", "cavalery": "cavalry", "cavallery": "cavalry",
          "artillery": "artillery", "artillerie": "artillery", "art": "artillery",
-         "cannon": "artillery", "kanon": "artillery"}
+         "cannon": "artillery", "kanon": "artillery",
+         # 9 oktober: de Leeuw-kanonnen kwamen als "canon_atk" (een n)
+         "canon": "artillery", "cannons": "artillery", "canons": "artillery",
+         "kanonnen": "artillery", "kannon": "artillery"}
 ARCHETYPEN = {"base": "base", "basis": "base", "spd": "spd", "speed": "spd",
               "snel": "spd", "hp": "hp", "health": "hp", "atk": "atk",
               "attack": "atk", "mix": "mix", "mixed": "mix"}
@@ -82,6 +89,13 @@ def stappen(blend, factie, soort, arch, uit_map):
     """De drie Blender-aanroepen voor één model, in volgorde."""
     doel = os.path.join(uit_map, factie, soort)
     basis = os.path.join(doel, f"{soort}_{arch}.glb")
+    if soort == "artillery":
+        # Een kanon-blend heeft twee rigs (kanon + bediener met besturingsrig):
+        # een eigen export die het model, het losse kanon (<..>_cannon.glb, voor
+        # de kanonjas) en de gibs in een keer schrijft (9 oktober).
+        return doel, basis, [("kanon", ["--background", blend, "--python",
+                                         os.path.join(PROJ, "tools", "blender_export_kanon.py"),
+                                         "--", "--uit", basis])]
     # Infanterie draagt een musket, cavalerie een sabel/bijl/lans: zelfde stap,
     # andere bestandsnaam. Artillerie heeft geen handwapen.
     wapen = os.path.join(doel, f"{soort}_{arch}_" + ("melee" if soort == "cavalry" else "musket") + ".glb")

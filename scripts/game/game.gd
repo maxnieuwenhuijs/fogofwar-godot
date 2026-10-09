@@ -3249,6 +3249,12 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 				pv_c2.kreet_al_gespeeld = true
 		Constants.UnitType.ARTILLERY:
 			Audio.play_factie("cannon_die", doc, delay)
+			# De bediener sterft mee (9 oktober): de kreet van de infanterie van
+			# zijn factie, bij een kanontreffer de zware.
+			var pv_a: PawnView = _pawn_views.get(pawn_id)
+			if pv_a != null and pv_a.is_kanon_model():
+				Audio.play_factie("inf_kanon_die" if kanon else "inf_die", doc, delay, 0.0, "inf_die" if kanon else "")
+				pv_a.kreet_al_gespeeld = true
 			# Een affuit die het opgeeft verliest een wiel (Max, 30 juli): de
 			# crash eerst, daarna rolt het wiel weg. Niet altijd, anders wordt
 			# het een deuntje; de vertraging stel je af in de tuner.
@@ -3347,26 +3353,32 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# Projectiel + muzzle flash + rook; de treffer-feedback wacht op de inslag.
 			var shooter_pawn: Pawn = session.state.pawns.get(action.shooter_id)
 			var shooter_type: int = shooter_pawn.unit_type if shooter_pawn != null else Constants.UnitType.INFANTRY
-			var travel: float = _fire_projectile(result.attacker_from_pos, result.defender_pos, shooter_type, action.shooter_id)
+			# Een kanon met bediener (9 oktober): de bediener ontsteekt eerst, het
+			# schot valt pas op het schot-moment van de clip. Kogel, vlam, knal en
+			# treffer schuiven allemaal zo veel op; 0 voor het CSG-stuk en musketten.
+			var wacht: float = shooter.kanon_schot_moment() if shooter != null else 0.0
+			var travel: float = _fire_projectile(result.attacker_from_pos, result.defender_pos, shooter_type,
+				action.shooter_id, wacht)
 			# Geluid: afvuren nu, inslag bij aankomst van het projectiel.
 			if shooter_type == Constants.UnitType.ARTILLERY:
-				Audio.play("cannon_fuse")  # lont-sis, samen met de knal
-				Audio.play("cannon_fire")
-				Audio.play("cannon_air", 0.04)
-				Audio.play("cannon_hit", travel)
+				# lont-sis: met de knal, of bij een bediener even ervoor (knop kanon_lont_voor)
+				Audio.play("cannon_fuse", maxf(0.0, wacht - (PawnView.fx("kanon_lont_voor", 0.6) if wacht > 0.0 else 0.0)))
+				Audio.play("cannon_fire", wacht)
+				Audio.play("cannon_air", wacht + 0.04)
+				Audio.play("cannon_hit", wacht + travel)
 			else:
 				Audio.play("musket_fire")
 				Audio.play("musket_echo", 0.18)
 				Audio.play("musket_hit", travel)
 			_impact_laag(action.target_id, int(result.get("damage", 0)),
-				result.get("eliminated", false), travel)
+				result.get("eliminated", false), wacht + travel)
 			var shot_strength := 1.4 if shooter_type == Constants.UnitType.ARTILLERY else 0.75
-			_hit_feedback(action.target_id, result.defender_pos, result.damage, travel + 0.03,
+			_hit_feedback(action.target_id, result.defender_pos, result.damage, wacht + travel + 0.03,
 				result.attacker_from_pos, result.get("eliminated", false), shot_strength, "shot")
 			if result.get("eliminated", false):
 				# Kanon: de kreet begint vóór de inslag (kogel is nog onderweg).
 				if shooter_type == Constants.UnitType.ARTILLERY:
-					_death_sound(action.target_id, maxf(0.0, travel - 0.10), true)
+					_death_sound(action.target_id, maxf(0.0, wacht + travel - 0.10), true)
 				else:
 					_death_sound(action.target_id, travel + 0.05)
 		"charge":
@@ -3466,7 +3478,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 ## Vuur een projectiel af van vak naar vak. Kanon: snelle rechte kogel-streep,
 ## keihard rechtdoor; infanterie: klein fel tracer-bolletje, strak en snel.
 ## Retour: de reistijd, zodat de treffer-feedback op de inslag kan wachten.
-func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, shooter_id: int = -1) -> float:
+func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, shooter_id: int = -1,
+		wacht: float = 0.0) -> float:
 	var start: Vector3 = tile_position(from_coord.x, from_coord.y)
 	var end: Vector3 = tile_position(to_coord.x, to_coord.y)
 	var flat_dir: Vector3 = (end - start).normalized()
@@ -3481,6 +3494,17 @@ func _fire_projectile(from_coord: Vector2i, to_coord: Vector2i, unit_type: int, 
 	# Kogel, vuurmond, terugslag, kruitdamp en inslagrook: de gedeelde keten
 	# (scripts/vfx/vfx.gd), dezelfde die de VFX-tuner afspeelt.
 	var dur: float = VFX.vlucht_duur((end - start).length(), is_cannon)
+	if wacht > 0.0:
+		# Een kanon met bediener gaat pas af als die ontstoken heeft (9 oktober,
+		# PawnView.kanon_schot_moment): de vuurmond lezen we op dat moment zelf.
+		get_tree().create_timer(wacht).timeout.connect(func() -> void:
+			if not is_instance_valid(_board):
+				return
+			var mond := muzzle
+			if is_instance_valid(spv) and spv._tune_key != "":
+				mond = _board.to_local(spv.muzzle_world())
+			VFX.schot(_board, mond, target, is_cannon, dur, _shake))
+		return dur
 	return VFX.schot(_board, muzzle, target, is_cannon, dur, _shake)
 
 

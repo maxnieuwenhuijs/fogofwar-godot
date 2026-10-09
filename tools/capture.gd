@@ -1114,6 +1114,158 @@ func _ready() -> void:
 				print("[RICHTING] screenshot -> _shot_richting.png (base, spd, hp, atk, mix; infanterie op rij 7, cavalerie op rij 5)")
 		get_tree().quit(0 if rc_fouten == 0 else 1)
 		return
+	elif "kanoncheck" in args:
+		# 9 oktober (de Leeuw-kanonnen, tools/blender_export_kanon.py): klopt elk
+		# kanonmodel van een factie? Per archetype: model gevonden, attack/walk/
+		# idle aanwezig en elke clip beweegt BEIDE skeletten (kanon en bediener),
+		# het schot-moment valt binnen de vuur-clip, kanon- en bediener-meshes zijn
+		# gescheiden, de gibs hebben kanon- en lijfdelen, de vuurmond staat voor
+		# het stuk. Dan een musketdood: ook die moet uit elkaar spatten, met vlees
+		# op de bediener en niet op het kanon. Gebruik: -- kanoncheck [factie]
+		# (default leeuw; mapnamen als lion mogen ook). Met venster ook
+		# _shot_kanon.png (de vijf op rij 5) en _shot_kanon_gibs.png.
+		var kc_fac: int = Constants.Doctrine.LEEUW
+		var kc_namen := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
+		for kc_n in kc_namen:
+			if kc_n in args:
+				kc_fac = kc_namen[kc_n]
+		var kc_kaarten := {"base": null, "spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1]}
+		var kc_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		game._overlay.hide()
+		var kc_fouten := 0
+		var kc_views: Array = []
+		var kc_i := 0
+		for kc_arch in ["base", "spd", "hp", "atk", "mix"]:
+			var kc_pv: PawnView = kc_scene.instantiate()
+			kc_pv.team = Constants.Team.RED
+			game._board.add_child(kc_pv)
+			kc_pv.set_unit_type(Constants.UnitType.ARTILLERY)
+			var kc_st = kc_kaarten[kc_arch]
+			kc_pv.set_character(kc_fac, Constants.UnitType.ARTILLERY,
+				null if kc_st == null else Card.new(0, 0, 0, int(kc_st[0]), int(kc_st[1]), int(kc_st[2])))
+			kc_pv.position = game.tile_position(1 + kc_i * 2, 5) + Vector3(0.0, 0.05, 0.0)
+			kc_pv.face_dir(Vector2i(0, -1))
+			kc_i += 1
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var kc_bestand := String(kc_pv._model_path).get_file()
+			if not kc_pv.is_kanon_model():
+				print("[KANON] %-4s geen kanonmodel (%s)" % [kc_arch, kc_bestand if kc_bestand != "" else "CSG-stuk"])
+				kc_fouten += 1
+				continue
+			kc_views.append(kc_pv)
+			var kc_f: Array = []
+			for kc_basis in ["attack", "walk", "idle"]:
+				if kc_pv._variants_of(kc_basis).is_empty():
+					kc_f.append("geen %s-clip" % kc_basis)
+			var kc_skels: Array = kc_pv._piece.find_children("*", "Skeleton3D", true, false)
+			var kc_n_bed := 0
+			for kc_s in kc_skels:
+				if PawnView.is_bediener_skelet(kc_s as Skeleton3D):
+					kc_n_bed += 1
+			if kc_skels.size() != 2 or kc_n_bed != 1:
+				kc_f.append("%d skeletten waarvan %d bediener (verwacht 2 en 1)" % [kc_skels.size(), kc_n_bed])
+			var kc_wortel: Node = kc_pv._anim.get_node(kc_pv._anim.root_node)
+			var kc_clips: Array = []
+			for kc_clip in kc_pv._anim.get_animation_list():
+				if String(kc_clip) == "RESET":
+					continue
+				var kc_a: Animation = kc_pv._anim.get_animation(kc_clip)
+				var kc_k := false
+				var kc_b := false
+				for kc_t in kc_a.get_track_count():
+					var kc_sk := kc_wortel.get_node_or_null(NodePath(String(kc_a.track_get_path(kc_t)).get_slice(":", 0))) as Skeleton3D
+					if kc_sk == null:
+						continue
+					if PawnView.is_bediener_skelet(kc_sk):
+						kc_b = true
+					else:
+						kc_k = true
+				kc_clips.append(String(kc_clip))
+				if not (kc_k and kc_b):
+					kc_f.append("clip %s beweegt %s" % [kc_clip, "alleen de bediener" if kc_b else ("alleen het kanon" if kc_k else "niets")])
+			var kc_schot: float = kc_pv.kanon_schot_gemeten()
+			var kc_vuur: float = kc_pv.clip_duration("attack")
+			if kc_schot <= 0.0 or kc_schot >= kc_vuur:
+				kc_f.append("schot-moment %.2f s valt buiten de vuur-clip (%.2f s)" % [kc_schot, kc_vuur])
+			var kc_km := kc_pv.kanon_meshes().size()
+			var kc_alle := kc_pv._piece.find_children("*", "MeshInstance3D", true, false).size()
+			if kc_km == 0 or kc_km == kc_alle:
+				kc_f.append("kanon en bediener niet gescheiden (%d van %d meshes kanon)" % [kc_km, kc_alle])
+			var kc_gk := 0
+			var kc_gl := 0
+			var kc_gp := kc_pv._gibs_pad()
+			if ResourceLoader.exists(kc_gp):
+				var kc_gs: Node = (load(kc_gp) as PackedScene).instantiate()
+				for kc_d in kc_gs.find_children("*", "MeshInstance3D", true, false):
+					if PawnView.is_kanon_deel(kc_d):
+						kc_gk += 1
+					else:
+						kc_gl += 1
+				kc_gs.free()
+			if kc_gk == 0 or kc_gl == 0:
+				kc_f.append("gibs met %d kanondelen en %d lijfdelen" % [kc_gk, kc_gl])
+			var kc_fit: Dictionary = kc_pv._kanon_fit_maat(kc_pv._piece)
+			var kc_bed_h: float = float(kc_fit.get("h", 0.0)) * (kc_pv._piece as Node3D).scale.y
+			var kc_mond: Vector3 = kc_pv.global_transform.affine_inverse() * kc_pv.muzzle_world()
+			if kc_mond.z > -0.05:
+				kc_f.append("vuurmond niet voor het stuk (voor = %.2f)" % -kc_mond.z)
+			if not kc_f.is_empty():
+				kc_fouten += 1
+			print("[KANON] %-4s %-20s clips %s | schot na %.2f van %.2f s | %d/%d meshes kanon | gibs %d kanon + %d lijf | bediener %.2f hoog | vuurmond (%.2f, %.2f, %.2f) | jas %s, kanonjas %s | %s" % [
+				kc_arch, kc_bestand, ",".join(PackedStringArray(kc_clips)), kc_schot, kc_vuur, kc_km, kc_alle,
+				kc_gk, kc_gl, kc_bed_h, kc_mond.x, kc_mond.y, -kc_mond.z,
+				"ja" if PawnView.team_texture(kc_pv._model_path, Constants.Team.RED) != null else "nog niet",
+				"ja" if kc_pv.kanon_jas() != null else "nog niet", "PASS" if kc_f.is_empty() else "FAIL"])
+			for kc_fout in kc_f:
+				print("[KANON]      FOUT: %s" % kc_fout)
+		var kc_tex := get_viewport().get_texture()
+		var kc_venster: bool = kc_tex != null and kc_tex.get_image() != null
+		if kc_venster and not kc_views.is_empty():
+			await get_tree().create_timer(1.0).timeout
+			kc_tex.get_image().save_png("res://_shot_kanon.png")
+			print("[KANON] screenshot -> _shot_kanon.png (base, spd, hp, atk, mix op rij 5)")
+		# Uit elkaar: een musketdood (0,75) moet een kanon toch helemaal opblazen.
+		if not kc_views.is_empty():
+			var kc_dode: PawnView = kc_views[0]
+			var kc_voor: Array = get_tree().get_nodes_in_group("battlefield_debris")
+			kc_dode.play_death(Vector3(0.3, 0.0, 1.0).normalized(), 0.75, "shot")
+			await get_tree().create_timer(0.25).timeout
+			var kc_brok_k := 0
+			var kc_brok_l := 0
+			var kc_vlees_k := 0
+			var kc_vlees_l := 0
+			for kc_node in get_tree().get_nodes_in_group("battlefield_debris"):
+				if kc_voor.has(kc_node) or kc_node == kc_dode:
+					continue
+				# alleen de gibs-wortel (die draagt de Kanon_-delen), niet de splinters
+				# en het vuur van VFX.kanon_kapot
+				var kc_delen: Array = (kc_node as Node).find_children("*", "MeshInstance3D", true, false)
+				if kc_delen.filter(func(m: Node) -> bool: return PawnView.is_kanon_deel(m)).is_empty():
+					continue
+				for kc_mi in kc_delen:
+					var kc_vlees: bool = (kc_mi as MeshInstance3D).material_override is ShaderMaterial
+					if PawnView.is_kanon_deel(kc_mi):
+						kc_brok_k += 1
+						kc_vlees_k += 1 if kc_vlees else 0
+					else:
+						kc_brok_l += 1
+						kc_vlees_l += 1 if kc_vlees else 0
+			var kc_ok_gibs: bool = kc_brok_k > 0 and kc_brok_l > 0 and kc_vlees_k == 0 and kc_vlees_l > 0 \
+				and not (kc_dode._piece as Node3D).visible
+			if not kc_ok_gibs:
+				kc_fouten += 1
+			print("[KANON] musketdood %s: %d kanondelen (%d met vlees, moet 0), %d lijfdelen (%d met vlees), model weg: %s (%s)" % [
+				String(kc_dode._model_path).get_file(), kc_brok_k, kc_vlees_k, kc_brok_l, kc_vlees_l,
+				"ja" if not (kc_dode._piece as Node3D).visible else "NEE", "PASS" if kc_ok_gibs else "FAIL"])
+			if kc_venster:
+				kc_tex.get_image().save_png("res://_shot_kanon_gibs.png")
+				print("[KANON] screenshot -> _shot_kanon_gibs.png (0,25 s na de dood)")
+		print("[KANON] %s: %d kanonmodellen, %d met een fout" % ["PASS" if kc_fouten == 0 else "FAIL", kc_views.size(), kc_fouten])
+		get_tree().quit(0 if kc_fouten == 0 else 1)
+		return
 	elif "wapenroute" in args:
 		# Diagnose (7 september): welke wapen-route neemt het spel per model?
 		#   INGEBAKKEN = het geskinde wapen uit de .blend blijft staan en beweegt

@@ -258,9 +258,14 @@ def oude_afstelling(factie, soort, arch):
             tuning = json.load(f)
     except (OSError, ValueError):
         return []
-    wapen = "melee" if soort == "cavalry" else "musket"
-    kandidaten = [f"{factie}/{soort}_{arch}", f"{factie}/{soort}_{arch}_{wapen}"]
+    kandidaten = [f"{factie}/{soort}_{arch}", f"{factie}/{soort}_{arch}_{wapensoort(soort)}"]
     return [k for k in kandidaten if tuning.get(k)]
+
+
+def wapensoort(soort):
+    """Achtervoegsel van de wapen-glb: het musket, het melee-wapen van de big bro,
+    of het kanon zelf (artillerie, 9 oktober: de kanonjas hoort bij _cannon.glb)."""
+    return {"cavalry": "melee", "artillery": "cannon"}.get(soort, "musket")
 
 
 def _godot(godot, args):
@@ -296,6 +301,8 @@ def controleer(godot, modellen, facties, bewoners=()):
         factie, model = naam.split("/")
         arch = model.split("_")[-1]
         soort = model.split("_")[0]
+        if soort == "artillery":
+            continue  # geen handwapen; de kanoncheck hieronder meet het kanon
         zoek = f"{soort} {factie}/{arch}:"
         regel = next((l for l in regels if l.startswith(zoek)), None)
         if regel is None:
@@ -339,6 +346,17 @@ def controleer(godot, modellen, facties, bewoners=()):
         ok = uitslag.startswith("[RICHTING] PASS")
         problemen += 0 if ok else 1
         print(f"  richting {factie}: {uitslag.replace('[RICHTING] ', '') or 'geen uitslag'}")
+
+    # Kanonnen (9 oktober): clips op beide skeletten, schot-moment, gibs met
+    # kanon- en lijfdelen, en een musketdood die echt uit elkaar spat.
+    for factie in sorted({n.split("/")[0] for n in modellen if n.split("/")[1].startswith("artillery_")}):
+        code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "kanoncheck", factie])
+        for l in regels:
+            if l.startswith("[KANON] ") and ("FOUT" in l or "(FAIL)" in l or "| FAIL" in l):
+                print(f"  kanon  {l.replace('[KANON] ', '').strip()}")
+        uitslag = next((l for l in regels if l.startswith("[KANON] PASS") or l.startswith("[KANON] FAIL")), "")
+        problemen += 0 if uitslag.startswith("[KANON] PASS") else 1
+        print(f"  kanon  {factie}: {uitslag.replace('[KANON] ', '') or 'geen uitslag'}")
 
     code, regels = _godot(godot, ["res://tools/capture.tscn", "--", "tunercheck"])
     slot = next((l for l in regels if "klaar:" in l), "")
@@ -436,10 +454,10 @@ def main():
         # die draagt maar een atlas, dus een verkeerde jas valt meteen door de
         # mand. Meten tegen het lijf-model zou de wapen-atlas als "beste
         # materiaal" opleveren en dus alsnog slagen.
-        wapen_glb = os.path.splitext(basis)[0] + ("_melee" if soort == "cavalry" else "_musket") + ".glb"
+        wapen_glb = os.path.splitext(basis)[0] + "_" + wapensoort(soort) + ".glb"
         tegen = wapen_glb if wapen else basis
         stam = os.path.splitext(os.path.basename(tegen))[0]
-        wat = "wapenjas" if wapen else "jas"
+        wat = ("kanonjas" if soort == "artillery" else "wapenjas") if wapen else "jas"
         for png in kleuren:
             if team is None:
                 geweigerd.append((naam, os.path.basename(png), "team onbekend (geen red/blue in het pad)"))
