@@ -76,6 +76,7 @@ var _waarden: Dictionary = {}
 
 func _ready() -> void:
 	_rng.seed = 6102026
+	VFX.voorbereiden(get_tree())   # texturen vooraf klaar: het eerste afspelen hapert dan niet
 	_tabel = CRules.actieve_tabel()
 	_bouw_wereld()
 	_bouw_ui()

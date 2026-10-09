@@ -139,6 +139,9 @@ func _ready() -> void:
 	_camera = _board.get_node("Camera3D") as Camera3D
 	_cam_base = _camera.position  # rustpositie voor de screen shake
 	STIJL.zet_op(_camera)  # de looks over het hele beeld (VFX-tuner, groep Stijl); standaard uit
+	# rook, vuur, bloed en de geleverde VFX-texturen vooraf klaarmaken, op de
+	# achtergrond: anders stond het eerste schot en de eerste inslag stil
+	VFX.voorbereiden(get_tree())
 	# F4.3g: camera EN lichten onder één kijk-pivot, zodat voor speler 2 het
 	# hele gezichtspunt (inclusief zon, spot en rim) 180 graden om het
 	# bordcentrum draait. De pivot staat op identiteit, dus de kinderen

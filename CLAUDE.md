@@ -1524,6 +1524,36 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   0,2 s voor en na 0,35 s na de klap, gloed, teamkleur); bij de varkens valt de
   zwaai grotendeels NA het raakmoment. Tuner-recepten `slash` en
   `charge_slash`, groep "Zwaai en klap".
+- **Geen haper bij het eerste schot (9 oktober, Max: "even freezed bij schieten,
+  kanon impact").** Rook, vuur, bloed en elke geleverde VFX-textuur werden pas
+  klaargemaakt als een effect ze voor het eerst vroeg (pixelwerk in GDScript,
+  20-180 ms per bestand, 1,3 s samen): het eerste kanonschot stond ~450 ms stil,
+  de inslag ~320 ms, het eerste musketschot ~500 ms, de eerste rook ~350 ms, bij
+  elke nieuwe start. Nu doet `VFX.voorbereiden(get_tree())` dat vooraf (game.gd
+  `_ready`, ook in beide tuners): laden op de achtergrond
+  (`load_threaded_request`), het pixelwerk (`_maak_klaar_beeld`,
+  `PawnView._zwart_naar_alpha_beeld`, alleen Image) op een werkthread, per frame
+  hooguit `VOORAF_PER_FRAME` (3) renderer-stappen op de hoofdthread (gemeten tot
+  20 ms), klaar ~1,7 s na de start van het bord; vraagt een effect eerder iets,
+  dan maakt hij dat stuk meteen af. Zelfde bestanden, volgorde en pixelwerk.
+  Een geleverde textuur vraag je met `_kies(K_...)`: de `K_`-sleutels en
+  `VOORAF` in vfx.gd zijn de enige lijst (`vfx_check.gd` leest hem ook); een
+  onderdeel zonder sleutel hapert weer bij zijn eerste keer. Headless doet het
+  niets (geen beelddata, uispel gelijk); `geen_vooraf` op de opdrachtregel zet
+  het uit (de nulmeting). Meten, met venster: `-- hapercheck [ms]` (Leeuw tegen
+  Wolf: eerste schot, herhaling, dodelijk schot, bajonet, charge, plus de start
+  en het vooraf klaarmaken; grens 100 ms) en `-- uispel 777 haper` (een hele
+  partij, elke frame boven 50 ms met de laatste actie; het rekenwerk van de
+  nagebootste mens telt niet mee). Stand 9 oktober: in de check de schoten
+  onder 30 ms, bajonet en charge 55-75 ms (nagebootst: de staat verandert niet
+  mee, en `_refresh_all` kost dan ~40 ms; in een echte partij niet); in een
+  hele partij 9 frames boven 50 ms (was 16) en geen daarvan bij een actie: de
+  start (~0,9 s, de legers opbouwen) en een paar faseovergangen van 100-220 ms.
+  Lessen: een lambda die naar zichzelf verwijst
+  om los te koppelen houdt het script tot het afsluiten vast ("resources still
+  in use"), dus een eenmalige koppeling (`CONNECT_ONE_SHOT`) die zich elk frame
+  opnieuw inplant; en `print` kost in de console-wrapper ~15 ms per regel, dus
+  nooit meten met prints in tijdkritische code.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

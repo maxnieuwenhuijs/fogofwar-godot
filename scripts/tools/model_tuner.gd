@@ -223,6 +223,7 @@ var _melee_cycle := 0   # melee-knop bladert door de varianten (bayonet1, 2, ...
 
 
 func _ready() -> void:
+	VFX.voorbereiden(get_tree())   # texturen vooraf klaar: het eerste test-schot hapert dan niet
 	_build_world()
 	_build_ui()
 	_reload_pawns()

@@ -1,5 +1,48 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- Geen haper meer bij het eerste schot
+
+Max: "er zit wel een kleine haper in bij acties of schieten, dan even freezed
+de game", en "bij schieten kanon impact of iets".
+
+- **Oorzaak (gemeten, niet geraden):** de geleverde VFX-texturen (stof, kluit,
+  krater, kogel, flits, vonk, ...) en PawnView's rook-, vuur- en bloedtexturen
+  werden pas klaargemaakt als een effect ze voor het eerst vroeg: laden plus
+  pixelwerk in GDScript, 20-180 ms per bestand, 1,3 s samen (een `-s`-meting met
+  echte renderer). Het eerste kanonschot stond 457 ms stil op het schot-moment
+  (kogel, flits) en 324 ms bij de inslag (6 stofwolken, 4 kluiten, 3 kraters);
+  herhalingen waren vloeiend (21 ms). Bij elke nieuwe start van het spel.
+- **Fix:** `VFX.voorbereiden(get_tree())` vanuit game.gd `_ready` (en de twee
+  tuners) maakt alles vooraf klaar: `load_threaded_request`, het pixelwerk
+  (`_maak_klaar_beeld`, `PawnView._zwart_naar_alpha_beeld`) op een werkthread,
+  per frame hooguit 3 renderer-stappen op de hoofdthread (gemeten 13-20 ms),
+  klaar ~1,7 s na de start van het bord. Vraagt een effect iets eerder, dan
+  maakt hij dat stuk meteen af. Resultaten en keuzes ongewijzigd (zelfde
+  bestanden, volgorde, pixelwerk; de checks via `vfx_check` slagen). De
+  geleverde texturen hebben nu `K_`-sleutels in vfx.gd (`_kies(K_STOF)`) en een
+  lijst `VOORAF`, die vfx_check.gd ook leest. PawnView kreeg `vfx_bestanden`,
+  `zet_vfx_map`, `zet_bloed`; `_vfx_entry`/`_blood_entry` gebruiken die zelf ook.
+- **Meten:** `-- hapercheck` (met venster; `geen_vooraf` = nulmeting). A/B, twee
+  keer: eerste schot 437/424 ms -> 21/18 ms; de start van de partij gelijk
+  (~0,7 s, de legers opbouwen) maar zonder de rook-haper van ~280 ms op 1,7 s.
+  `-- uispel 777 haper` (een hele partij, het rekenwerk van de nagebootste mens
+  eraf): 16 frames boven 50 ms -> 9; weg zijn 525 ms bij het eerste musketschot,
+  370 ms bij de eerste rook, 2x 344 ms na een zet, 183 ms na het eerste
+  kanonschot. Over: de start (~0,9 s) en faseovergangen van 100-220 ms,
+  seconden na een zet, in beide runs gelijk.
+- **Gevonden onderweg:** een lambda die zichzelf loskoppelt (zelfverwijzing via
+  een array) hield vfx.gd tot het afsluiten vast ("resources still in use", 2
+  objecten extra gelekt); nu een eenmalige koppeling per frame. `print` kost in
+  de console-wrapper ~15 ms per regel (de eerste uitsplitsing met prints was
+  daardoor onbruikbaar). In de check kosten bajonet en charge 55-75 ms omdat de
+  nagebootste actie de staat niet bijwerkt (`_refresh_all` ~40 ms); in een
+  echte partij zit daar niets.
+- **Checks:** hapercheck PASS; vfxcheck PASS (headless en met venster);
+  kanoncheck lion PASS; tunercheck 0 fouten; `uispel 777` = `e14d7f70`
+  (ongewijzigd ten opzichte van de werkmap, headless doet het vooraf klaarmaken
+  niets); `-- play` met venster: 13 gelekte objecten bij het afsluiten, met en
+  zonder vooraf klaarmaken gelijk.
+
 ## 9 oktober -- De lontstok: eigen geluid voor de ontsteking van het kanon
 
 Max: "ook studio game sounds voor ontsteken kanon hebben we die al?" (de

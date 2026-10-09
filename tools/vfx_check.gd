@@ -15,15 +15,10 @@ const Catalogus := preload("res://scripts/vfx/vfx_catalogus.gd")
 const VFX := preload("res://scripts/vfx/vfx.gd")
 const STATUSSEN := ["spel", "wens", "diorama"]
 ## De texturen die de studio levert en die de code via VFX._geleverde laadt:
-## map, naam, boost, hooguit-px, bijsnijden.
-const GELEVERD := [["decals", "krater", 0.0, 512, false, false], ["dust", "stof", 2.3, 256, true, true],
-	["flame", "vlam", 0.0, 512, false, false], ["footstep", "wiel", 0.0, 256, true, false],
-	# de nieuwe stukjes (6 oktober, Max: "al deze nieuwe vfx moeten hun eigen decal krijgen")
-	["bullet", "musket", 1.6, 128, true, true], ["bullet", "cannon", 1.6, 256, true, false],
-	["sparks", "propje", 2.0, 128, true, true], ["sparks", "vonk", 2.0, 128, true, true],
-	["flash", "flits", 1.5, 256, true, true], ["debris", "kluit", 0.0, 128, true, true],
-	["debris", "splinter", 0.0, 128, true, true], ["decals", "schokgolf", 0.0, 512, false, false],
-	["trails", "slash", 0.0, 256, false, false]]
+## map, naam, boost, hooguit-px, bijsnijden, vierkant. Sinds 9 oktober de lijst
+## van VFX zelf (VFX.VOORAF, dezelfde sleutels als de effecten en het vooraf
+## klaarmaken), dus hij kan niet meer uit de pas lopen.
+const GELEVERD := VFX.VOORAF
 
 static var _fouten := 0
 static var _host: Node = null

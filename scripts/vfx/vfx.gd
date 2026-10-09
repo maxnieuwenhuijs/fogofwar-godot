@@ -35,6 +35,27 @@ static func _r() -> RandomNumberGenerator:
 ## code tekent zijn eigen vervanger. Kiezen gaat met de eigen rng, nooit de globale.
 static var _geleverd: Dictionary = {}     # "map/naam" -> Array van {tex, cols, rows, uitsnede}
 static var _proef: Dictionary = {}        # "map/naam" -> Array: de checks doen alsof er een bestand is
+static var _klaar: Dictionary = {}        # bestand + knoppen -> {tex, cols, rows, uitsnede}
+
+## Elke geleverde textuur die een effect vraagt, met de knoppen van die vraag:
+## map, naam, boost, hooguit-px, bijsnijden, vierkant. De effecten vragen ze met
+## `_kies(K_...)`, en voorbereiden maakt precies deze vooraf klaar; een nieuw
+## geleverd onderdeel hoort dus hier (en in VOORAF), anders hapert zijn eerste keer.
+const K_KOGEL_KANON := ["bullet", "cannon", 1.6, 256, true, false]
+const K_KOGEL_MUSKET := ["bullet", "musket", 1.6, 128, true, true]
+const K_FLITS := ["flash", "flits", 1.5, 256, true, true]
+const K_PROPJE := ["sparks", "propje", 2.0, 128, true, true]
+const K_VONK := ["sparks", "vonk", 2.0, 128, true, true]
+const K_STOF := ["dust", "stof", 2.3, 256, true, true]
+const K_KLUIT := ["debris", "kluit", 0.0, 128, true, true]
+const K_SPLINTER := ["debris", "splinter", 0.0, 128, true, true]
+const K_KRATER := ["decals", "krater", 0.0, 512, false, false]
+const K_SCHOKGOLF := ["decals", "schokgolf", 0.0, 512, false, false]
+const K_VLAM := ["flame", "vlam", 0.0, 512, false, false]
+const K_SLASH := ["trails", "slash", 0.0, 256, false, false]     # zwaaispoor.gd
+const K_WIEL := ["footstep", "wiel", 0.0, 256, true, false]      # het wielspoor in game.gd
+const VOORAF := [K_STOF, K_KLUIT, K_KRATER, K_SCHOKGOLF, K_KOGEL_KANON, K_KOGEL_MUSKET, K_FLITS,
+	K_PROPJE, K_VONK, K_SPLINTER, K_VLAM, K_SLASH, K_WIEL]
 
 
 ## Voor `-- vfxcheck`: doe alsof de studio voor map/naam deze textuur leverde
@@ -55,24 +76,51 @@ static func _geleverde(map: String, naam: String, boost: float = 0.0, max_px: in
 	if _geleverd.has(sleutel):
 		return _geleverd[sleutel]
 	var lijst: Array = []
-	var pad := "res://assets/textures/%s/" % map
-	var d := DirAccess.open(pad)
-	if d != null:
-		var namen: Array = []
-		for f in d.get_files():
-			var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
-			if fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"] and not namen.has(fname):
-				namen.append(fname)
-		namen.sort()
-		for fname in namen:
-			var base := String(fname).get_basename().to_lower()
-			if not base.begins_with(naam) or not ResourceLoader.exists(pad + fname):
-				continue
-			var tex = load(pad + fname)
-			if tex is Texture2D:
-				lijst.append(_maak_klaar(tex, base, boost, max_px, bijsnijden, vierkant))
+	for pad in _bestanden(map, naam):
+		var e := _klaar_bestand(pad, boost, max_px, bijsnijden, vierkant)
+		if not e.is_empty():
+			lijst.append(e)
 	_geleverd[sleutel] = lijst
 	return lijst
+
+
+## De bestanden van een geleverde textuur: in assets/textures/<map>/ alles waarvan
+## de naam met `naam` begint, op naam gesorteerd (elke keer dezelfde volgorde, dus
+## dezelfde keuze uit de eigen rng).
+static func _bestanden(map: String, naam: String) -> Array:
+	var uit: Array = []
+	var pad := "res://assets/textures/%s/" % map
+	var d := DirAccess.open(pad)
+	if d == null:
+		return uit
+	var namen: Array = []
+	for f in d.get_files():
+		var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
+		if fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"] and not namen.has(fname):
+			namen.append(fname)
+	namen.sort()
+	for fname in namen:
+		if String(fname).get_basename().to_lower().begins_with(naam) and ResourceLoader.exists(pad + fname):
+			uit.append(pad + fname)
+	return uit
+
+
+static func _bestand_sleutel(pad: String, boost: float, max_px: int, bijsnijden: bool, vierkant: bool) -> String:
+	return "%s/%s/%d/%s/%s" % [pad, boost, max_px, bijsnijden, vierkant]
+
+
+## Een bestand klaar: uit wat voorbereiden al deed, anders nu meteen (wat nog op
+## de werkthread lag, maakt hij nu af). {} als het bestand niet laadt.
+static func _klaar_bestand(pad: String, boost: float, max_px: int, bijsnijden: bool, vierkant: bool) -> Dictionary:
+	var bs := _bestand_sleutel(pad, boost, max_px, bijsnijden, vierkant)
+	if not _klaar.has(bs) and _vooraf_per_sleutel.has(bs):
+		_vooraf_maak_af(_vooraf_per_sleutel[bs])
+	if not _klaar.has(bs):
+		var tex = load(pad)
+		if not tex is Texture2D:
+			return {}
+		_klaar[bs] = _maak_klaar(tex, pad.get_file().get_basename().to_lower(), boost, max_px, bijsnijden, vierkant)
+	return _klaar[bs]
 
 
 static func _kies_geleverd(map: String, naam: String, boost: float = 0.0, max_px: int = 512,
@@ -81,9 +129,30 @@ static func _kies_geleverd(map: String, naam: String, boost: float = 0.0, max_px
 	return {} if lijst.is_empty() else lijst[_r().randi() % lijst.size()]
 
 
+## Een geleverde textuur volgens een van de K_-sleutels hierboven.
+static func _kies(k: Array) -> Dictionary:
+	return _kies_geleverd(k[0], k[1], k[2], k[3], k[4], k[5])
+
+
 ## Een geleverde textuur zoals die in het spel moet: zie _geleverde. Ook voor
 ## game.gd (het wielspoor). Zonder beelddata (een VRAM-textuur) blijft hij zoals hij is.
 static func _maak_klaar(tex: Texture2D, base: String, boost: float, max_px: int, bijsnijden: bool,
+		vierkant: bool = false) -> Dictionary:
+	return _als_textuur(tex, _maak_klaar_beeld(tex.get_image(), base, boost, max_px, bijsnijden, vierkant))
+
+
+## Het beeld klaar voor het spel ({tex, cols, rows, uitsnede}); de textuur maken
+## gaat via de renderer, dus op de hoofdthread.
+static func _als_textuur(tex: Texture2D, b: Dictionary) -> Dictionary:
+	var img: Image = b.img
+	return {"tex": ImageTexture.create_from_image(img) if img != null else tex, "cols": b.cols,
+		"rows": b.rows, "uitsnede": b.uitsnede}
+
+
+## Het pixelwerk van _maak_klaar: alleen Image, geen renderer, dus het mag op een
+## werkthread (voorbereiden). `img` null (headless, of een VRAM-textuur) = niets te
+## doen, dan blijft de textuur zoals hij is. Geeft {img, cols, rows, uitsnede}.
+static func _maak_klaar_beeld(img: Image, base: String, boost: float, max_px: int, bijsnijden: bool,
 		vierkant: bool = false) -> Dictionary:
 	var cols := 1
 	var rows := 1
@@ -93,8 +162,7 @@ static func _maak_klaar(tex: Texture2D, base: String, boost: float, max_px: int,
 		if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
 			cols = maxi(int(grid[0]), 1)
 			rows = maxi(int(grid[1]), 1)
-	var e := {"tex": tex, "cols": cols, "rows": rows, "uitsnede": Rect2(0.0, 0.0, 1.0, 1.0)}
-	var img := tex.get_image()
+	var e := {"img": null, "cols": cols, "rows": rows, "uitsnede": Rect2(0.0, 0.0, 1.0, 1.0)}
 	if img == null:
 		return e
 	img = img.duplicate()
@@ -141,7 +209,7 @@ static func _maak_klaar(tex: Texture2D, base: String, boost: float, max_px: int,
 		var r2 := _inhoud(img, alpha or boost > 0.0)
 		e.uitsnede = Rect2(Vector2(r2.position) / Vector2(img.get_size()), Vector2(r2.size) / Vector2(img.get_size()))
 	img.generate_mipmaps()
-	e.tex = ImageTexture.create_from_image(img)
+	e.img = img
 	return e
 
 
@@ -204,6 +272,207 @@ static func geleverde_textuur(map: String, naam: String, max_px: int, bijsnijden
 	for e in _geleverde(map, naam, 0.0, max_px, bijsnijden):
 		return e.tex
 	return null
+
+
+# --- Vooraf klaarmaken (9 oktober) ------------------------------------------------
+# Max: "er zit een kleine haper in bij schieten, kanon impact, dan even freezed".
+# Gemeten met `-- hapercheck`: het eerste kanonschot stond 457 ms stil op het
+# schot-moment en 324 ms bij de inslag, bij elke nieuwe start van het spel. Pas
+# dan werden de geleverde texturen klaargemaakt (stof, kluit, krater, kogel,
+# flits: laden plus pixelwerk in GDScript, 20-180 ms per bestand, samen 1,3 s), en
+# PawnView deed hetzelfde met de rook- en vuurvellen en het bloed. Nu begint dat
+# zodra het bord er staat: laden op de achtergrond (load_threaded_request), het
+# pixelwerk op een werkthread (_maak_klaar_beeld, PawnView._zwart_naar_alpha_beeld:
+# alleen Image), en per frame hooguit VOORAF_PER_FRAME stappen met de renderer op
+# de hoofdthread (get_image, een textuur maken). Vraagt een effect iets voordat het
+# klaar is, dan maakt hij dat stuk meteen af, zoals altijd. Dezelfde bestanden,
+# dezelfde volgorde en hetzelfde pixelwerk: alleen het moment verschuift. Headless
+# doet niets (geen beelddata, de checks blijven gelijk), en niets trekt uit een rng.
+const VOORAF_PER_FRAME := 3
+static var _vooraf_aan := false
+static var _vooraf_taken: Array = []           # {soort: geleverd|zwart|laad, pad, fase: 0 laden, 1 werkthread, 2 klaar}
+static var _vooraf_laden: Dictionary = {}      # pad -> Texture2D, null zolang hij laadt, false als dat mislukte
+static var _vooraf_groepen: Dictionary = {}    # PawnView-map (rook, vuur, bloed) -> zijn taken
+static var _vooraf_per_sleutel: Dictionary = {}   # bestand-sleutel -> taak (geleverd)
+static var _vooraf_meting := [0, 0, 0]          # start, klaar (usec), langste stap op de hoofdthread (usec)
+static var _vooraf_aantal := 0                  # hoeveel taken het waren (de lijst gaat weg als alles klaar is)
+
+
+## Begin met vooraf klaarmaken, een keer per run: game.gd zodra het bord er staat,
+## en de tuners. Zie het blok hierboven.
+static func voorbereiden(boom: SceneTree) -> void:
+	# `geen_vooraf` op de opdrachtregel: zoals voor 9 oktober (de nulmeting van -- hapercheck)
+	if _vooraf_aan or boom == null or DisplayServer.get_name() == "headless" \
+			or OS.get_cmdline_user_args().has("geen_vooraf"):
+		return
+	_vooraf_aan = true
+	# eerst wat het spel het eerst nodig heeft: de rook (de pof bij het spawnen),
+	# dan het vuur aan de loop en het bloed; boost -1 = alleen laden
+	for m in [[PawnView.SMOKE_TEX_DIR, 2.3], [PawnView.FIRE_TEX_DIR, 1.5], [PawnView.BLOOD_TEX_DIR, -1.0]]:
+		var taken: Array = []
+		for pad in PawnView.vfx_bestanden(m[0]):
+			taken.append({"soort": "laad" if float(m[1]) < 0.0 else "zwart", "pad": pad, "boost": m[1], "fase": 0})
+		_vooraf_groepen[m[0]] = taken
+		_vooraf_taken.append_array(taken)
+	for k in VOORAF:
+		for pad in _bestanden(k[0], k[1]):
+			var bs := _bestand_sleutel(pad, k[2], k[3], k[4], k[5])
+			if _klaar.has(bs) or _vooraf_per_sleutel.has(bs):
+				continue
+			var t := {"soort": "geleverd", "pad": pad, "k": k, "sleutel": bs, "fase": 0}
+			_vooraf_per_sleutel[bs] = t
+			_vooraf_taken.append(t)
+	for t in _vooraf_taken:
+		if not _vooraf_laden.has(t.pad):
+			_vooraf_laden[t.pad] = null if ResourceLoader.load_threaded_request(t.pad) == OK else false
+	_vooraf_meting[0] = Time.get_ticks_usec()
+	_vooraf_volgende(boom)
+
+
+## Het volgende frame een stap. Elke keer een losse eenmalige koppeling: een lambda
+## die naar zichzelf verwijst om los te koppelen, houdt dit script tot het afsluiten
+## vast ("resources still in use").
+static func _vooraf_volgende(boom: SceneTree) -> void:
+	boom.process_frame.connect(func() -> void: _vooraf_tik(boom), CONNECT_ONE_SHOT)
+
+
+static func _vooraf_tik(boom: SceneTree) -> void:
+	var t0 := Time.get_ticks_usec()
+	var klaar := _vooraf_stap()
+	_vooraf_meting[2] = maxi(int(_vooraf_meting[2]), Time.get_ticks_usec() - t0)
+	if klaar:
+		_vooraf_meting[1] = Time.get_ticks_usec()
+		# alles staat in _klaar en bij PawnView: de takenlijst mag weg
+		_vooraf_aantal = _vooraf_taken.size()
+		_vooraf_taken.clear()
+		_vooraf_per_sleutel.clear()
+		_vooraf_laden.clear()
+	else:
+		_vooraf_volgende(boom)
+
+
+## Een frame verder; true als alles klaar is.
+static func _vooraf_stap() -> bool:
+	for pad in _vooraf_laden:
+		if _vooraf_laden[pad] == null:
+			var status := ResourceLoader.load_threaded_get_status(pad)
+			if status == ResourceLoader.THREAD_LOAD_LOADED:
+				_vooraf_laden[pad] = ResourceLoader.load_threaded_get(pad)
+			elif status != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				_vooraf_laden[pad] = false
+	var budget := VOORAF_PER_FRAME
+	for t in _vooraf_taken:
+		if budget <= 0:
+			break
+		if t.fase == 1:
+			if WorkerThreadPool.is_task_completed(t.taak):
+				_vooraf_af(t)
+				budget -= 1
+		elif t.fase == 0 and _vooraf_laden.get(t.pad) != null:
+			_vooraf_begin(t)
+			budget -= 1
+	for map in _vooraf_groepen.keys():
+		var taken: Array = _vooraf_groepen[map]
+		if taken.all(func(t: Dictionary) -> bool: return t.fase == 2):
+			_vooraf_publiceer(map, taken)
+	return _vooraf_groepen.is_empty() and _vooraf_taken.all(func(t: Dictionary) -> bool: return t.fase == 2)
+
+
+## Het bestand is geladen: het beeld ophalen (renderer, hoofdthread) en het
+## pixelwerk op een werkthread zetten. Bloed hoeft alleen geladen te zijn. Laadt hij
+## nog, dan wacht dit op het laden (alleen als een effect er al om vraagt).
+static func _vooraf_begin(t: Dictionary) -> void:
+	var tex = _vooraf_laden.get(t.pad)
+	if tex == null:
+		tex = ResourceLoader.load_threaded_get(t.pad)
+	if not tex is Texture2D:
+		tex = load(t.pad)   # laden op de achtergrond mislukte: dan gewoon, zoals altijd
+	_vooraf_laden[t.pad] = tex if tex is Texture2D else false
+	t.tex = tex if tex is Texture2D else null
+	if t.tex == null or t.soort == "laad" or (t.soort == "geleverd" and _klaar.has(t.sleutel)):
+		t.fase = 2
+		return
+	var img: Image = (t.tex as Texture2D).get_image()
+	var base := String(t.pad).get_file().get_basename().to_lower()
+	if img == null:
+		_vooraf_klaar(t, null if t.soort == "zwart" else _maak_klaar_beeld(null, base, 0.0, 0, false))
+		return
+	var uit: Array = [null]
+	t.uit = uit
+	if t.soort == "zwart":
+		var boost: float = t.boost
+		t.taak = WorkerThreadPool.add_task(func() -> void: uit[0] = PawnView._zwart_naar_alpha_beeld(img, boost))
+	else:
+		var k: Array = t.k
+		t.taak = WorkerThreadPool.add_task(func() -> void: uit[0] = _maak_klaar_beeld(img, base, k[2], k[3], k[4], k[5]))
+	t.fase = 1
+
+
+## De werkthread is klaar (of we wachten er nu op: puur rekenwerk, dus kort).
+static func _vooraf_af(t: Dictionary) -> void:
+	WorkerThreadPool.wait_for_task_completion(t.taak)
+	_vooraf_klaar(t, t.uit[0])
+
+
+## Het pixelwerk is af: de textuur maken (hoofdthread) en bewaren.
+static func _vooraf_klaar(t: Dictionary, beeld: Variant) -> void:
+	t.fase = 2
+	t.erase("uit")   # het tussenbeeld is niet meer nodig
+	if t.soort == "zwart":
+		t.resultaat = ImageTexture.create_from_image(beeld) if beeld is Image else t.tex
+	elif not _klaar.has(t.sleutel):
+		if beeld is Dictionary:
+			_klaar[t.sleutel] = _als_textuur(t.tex, beeld)
+		else:
+			# de werkthread gaf niets terug (een fout daar): dan hier, zoals altijd
+			var k: Array = t.k
+			_klaar[t.sleutel] = _maak_klaar(t.tex, String(t.pad).get_file().get_basename().to_lower(),
+				k[2], k[3], k[4], k[5])
+
+
+## Een effect wacht op deze taak: maak hem nu af.
+static func _vooraf_maak_af(t: Dictionary) -> void:
+	if t.fase == 0:
+		_vooraf_begin(t)
+	if t.fase == 1:
+		_vooraf_af(t)
+
+
+## PawnView vraagt rook, vuur of bloed voordat voorbereiden klaar is: maak die
+## groep nu af en zet hem erin. false = geen groep (headless, nog niet begonnen of
+## al gezet): dan laadt PawnView hem zelf, zoals altijd.
+static func vooraf_nu(map: String) -> bool:
+	if not _vooraf_groepen.has(map):
+		return false
+	var taken: Array = _vooraf_groepen[map]
+	for t in taken:
+		_vooraf_maak_af(t)
+	_vooraf_publiceer(map, taken)
+	return true
+
+
+static func _vooraf_publiceer(map: String, taken: Array) -> void:
+	_vooraf_groepen.erase(map)
+	var paren: Array = []
+	for t in taken:
+		if t.get("tex") != null:
+			paren.append([t.pad, t.get("resultaat", t.tex)])
+	if map == PawnView.BLOOD_TEX_DIR:
+		PawnView.zet_bloed(paren)
+	else:
+		PawnView.zet_vfx_map(map, paren)
+
+
+## Voor de checks: is alles vooraf klaar (en hoeveel taken waren het)?
+static func vooraf_stand() -> Dictionary:
+	var open := 0
+	for t in _vooraf_taken:
+		if t.fase != 2:
+			open += 1
+	return {"aan": _vooraf_aan, "taken": maxi(_vooraf_taken.size(), _vooraf_aantal), "open": open,
+		"groepen": _vooraf_groepen.size(),
+		"duur_ms": (int(_vooraf_meting[1]) - int(_vooraf_meting[0])) / 1000.0 if int(_vooraf_meting[1]) > 0 else -1.0,
+		"langste_stap_ms": int(_vooraf_meting[2]) / 1000.0}
 
 
 ## Een billboard met een geleverde textuur (`e` = {tex, cols, rows}): een vierkant
@@ -284,7 +553,7 @@ static func schot(ouder: Node3D, loop: Vector3, doel: Vector3, kanon: bool, duur
 	# De kogel uit assets/textures/bullet/ (musket*, cannon*, van de studio) als
 	# hij er is: de musketkogel een billboard, de kanonskogel een streep langs de
 	# vliegrichting. Anders het bolletje en de uitgerekte bol van daarvoor.
-	var kogel := _kies_geleverd("bullet", "cannon" if kanon else "musket", 1.6, 256 if kanon else 128, true, not kanon)
+	var kogel := _kies(K_KOGEL_KANON if kanon else K_KOGEL_MUSKET)
 	var proj: Node3D = null
 	if not kogel.is_empty():
 		if kanon:
@@ -583,7 +852,7 @@ static func pankruit(ouder: Node3D, slot: Vector3) -> void:
 	var sterkte: float = PawnView.fx("pan_flits", 1.0)
 	if sterkte <= 0.0 or ouder == null:
 		return
-	var e := _kies_geleverd("flash", "flits", 1.5, 256, true, true)
+	var e := _kies(K_FLITS)
 	if not e.is_empty():
 		# de geleverde flits, klein en warm
 		_flits_beeld(ouder, e, slot, 0.13 * sterkte, Color(1.0, 0.86, 0.55))
@@ -637,7 +906,7 @@ static func _gloeiend(ouder: Node3D, loop: Vector3, v: Vector3, duur: float, gro
 	var vloer := 0.07   # net boven het bord (de tegels liggen op 0,05)
 	# een geleverd propje (assets/textures/sparks/propje*): dezelfde boog, het
 	# plaatje doven van zijn eigen kleur naar donkerrood, een vel speelt af
-	var e := _kies_geleverd("sparks", "propje", 2.0, 128, true, true)
+	var e := _kies(K_PROPJE)
 	if not e.is_empty():
 		var bm := _beeld(ouder, e)
 		var bmat := bm.material_override as StandardMaterial3D
@@ -702,7 +971,7 @@ static var _krater_tex: Texture2D = null
 ## hem wat donkerder (aarde bij een inslag).
 static func _stofpluk(ouder: Node3D, van: Vector3, naar: Vector3, m0: float, m1: float, duur: float,
 		alfa: float, vol: float, trans: int, donker: float = 0.0) -> void:
-	var e := _kies_geleverd("dust", "stof", 2.3, 256, true, true)
+	var e := _kies(K_STOF)
 	if e.is_empty():
 		_rookpluk(ouder, van, naar, m0, m1, duur, alfa, vol, trans, 6, "white_smoke", STOF_KLEUR.darkened(donker))
 	else:
@@ -784,7 +1053,7 @@ static func inslag_aarde(ouder: Node3D, pos: Vector3, richting: Vector3) -> void
 ## ook decal zijn") vliegt dat plaatje, een vel tolt.
 static func _kluit(ouder: Node3D, start: Vector3, v: Vector3, maat: float) -> void:
 	var r := _r()
-	var e := _kies_geleverd("debris", "kluit", 0.0, 128, true, true)
+	var e := _kies(K_KLUIT)
 	if not e.is_empty():
 		_vliegend(ouder, e, start, v, maat * 2.6, r.randf_range(1.5, 3.0))
 		return
@@ -829,7 +1098,7 @@ static func krater(ouder: Node3D, pos: Vector3) -> void:
 	vlak.size = Vector2.ONE * 0.9 * sterkte
 	mi.mesh = vlak
 	var mat := StandardMaterial3D.new()
-	var geleverd := _kies_geleverd("decals", "krater", 0.0, 512)
+	var geleverd := _kies(K_KRATER)
 	mat.albedo_texture = geleverd.tex if not geleverd.is_empty() else _krater_textuur()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.roughness = 1.0
@@ -897,7 +1166,7 @@ static func vonken(ouder: Node3D, pos: Vector3, kracht: float, materiaal: String
 		# De globale trekkingen in dezelfde volgorde als altijd (uispel); de keuze
 		# van een geleverde vonk (assets/textures/sparks/vonk*) uit de eigen rng.
 		var r := randf_range(0.02, 0.05)
-		var ev := _kies_geleverd("sparks", "vonk", 2.0, 128, true, true)
+		var ev := _kies(K_VONK)
 		var spark: MeshInstance3D
 		var mat: StandardMaterial3D
 		if not ev.is_empty():
@@ -979,7 +1248,7 @@ static func inslag_hout(ouder: Node3D, pos: Vector3, kracht: float, richting: Ve
 ## Een korte witte flits op het inslagpunt (metaal: de kogel ketst op het kuras).
 ## Met een geleverde flits (assets/textures/flash/flits*) dat plaatje.
 static func _flits(ouder: Node3D, pos: Vector3, straal: float) -> void:
-	var e := _kies_geleverd("flash", "flits", 1.5, 256, true, true)
+	var e := _kies(K_FLITS)
 	if not e.is_empty():
 		_flits_beeld(ouder, e, pos, straal * 2.4, Color.WHITE)
 		return
@@ -1025,7 +1294,7 @@ static func _flits_beeld(ouder: Node3D, e: Dictionary, pos: Vector3, maat: float
 ## (assets/textures/debris/splinter*) vliegt dat plaatje, een vel tolt.
 static func _splinter(ouder: Node3D, start: Vector3, v: Vector3, lengte: float) -> void:
 	var r := _r()
-	var e := _kies_geleverd("debris", "splinter", 0.0, 128, true, true)
+	var e := _kies(K_SPLINTER)
 	if not e.is_empty():
 		_vliegend(ouder, e, start, v, lengte * 1.5, r.randf_range(2.0, 4.0))
 		return
@@ -1290,7 +1559,7 @@ static var _vlam_beeld_shader: Shader = null
 ## Een vlam-quad met de vuur-shader, de voet op `voet`, `hoog` hoog; met een
 ## geleverd vlam-plaatje (de studio) die in plaats van de shader-vlam.
 static func _vlam(ouder: Node3D, voet: Vector3, hoog: float) -> MeshInstance3D:
-	var geleverd := _kies_geleverd("flame", "vlam", 0.0, 512)
+	var geleverd := _kies(K_VLAM)
 	if not geleverd.is_empty():
 		return _vlam_beeld(ouder, voet, hoog, geleverd)
 	if _vuur_shader == null:
@@ -1480,7 +1749,7 @@ static func _vuurbal(ouder: Node3D, pos: Vector3, maat: float, vertraging: float
 ## schokgolf*) ligt die eronder als decal die meegroeit en vervaagt.
 static func _stofring(ouder: Node3D, grond: Vector3, straal: float) -> void:
 	var r := _r()
-	var golf := _kies_geleverd("decals", "schokgolf", 0.0, 512)
+	var golf := _kies(K_SCHOKGOLF)
 	if not golf.is_empty():
 		var mi := MeshInstance3D.new()
 		var vlak := QuadMesh.new()

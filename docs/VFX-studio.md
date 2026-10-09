@@ -189,7 +189,16 @@ Godot, daarna de concept-webpagina.
    en een bloednevel-reeks). **Gebouwd (6 oktober):**
    - `VFX._geleverde`: een lader voor alles wat de studio levert, met de eigen
      rng; maakt elk bestand een keer klaar (maat, rooster, bijsnijden, zwart
-     doorzichtig, mipmaps).
+     doorzichtig, mipmaps). **Sinds 9 oktober vooraf** (Max: "even freezed
+     bij schieten kanon impact"): dat klaarmaken kost per bestand 20-180 ms
+     pixelwerk in GDScript en gebeurde pas bij het eerste gebruik, dus het
+     eerste kanonschot stond ~450 ms stil en de inslag nog eens ~320 ms.
+     `VFX.voorbereiden` (vanuit game.gd en de tuners) doet het nu zodra het bord
+     er staat: laden op de achtergrond, pixelwerk op een werkthread, een paar
+     ms per frame op de hoofdthread. Een geleverd onderdeel vraag je dus met
+     een `K_`-sleutel uit vfx.gd (`_kies(K_STOF)`), en elke sleutel staat in
+     `VOORAF`; anders hapert hij weer bij zijn eerste keer. Meten:
+     `-- hapercheck` (met venster).
    - Krater uit `decals/`, stof uit `dust/` (groter en zachter dan het plaatje,
      anders lijken het stickertjes), vlammen op het bord uit `flame/` met een
      eigen shader die golft en flakkert, het wielspoor bijgesneden tot de

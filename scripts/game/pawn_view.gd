@@ -188,31 +188,15 @@ static func _blood_texture(prefix: String = "") -> Texture2D:
 ## een vel (blood_mist1_4x3.png, een reeks uit de VFX-studio, 6 oktober) speelt
 ## de nevel af. Zelfde keuze en evenveel trekjes als voorheen.
 static func _blood_entry(prefix: String = "") -> Dictionary:
-	if not _blood_tex_loaded:
-		_blood_tex_loaded = true
-		var seen: Dictionary = {}
-		var d := DirAccess.open(BLOOD_TEX_DIR)
-		if d != null:
-			for f in d.get_files():
-				var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
-				if not fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"]:
-					continue
-				if seen.has(fname):
-					continue
-				seen[fname] = true
-				if ResourceLoader.exists(BLOOD_TEX_DIR + fname):
-					var tex = load(BLOOD_TEX_DIR + fname)
-					if tex is Texture2D:
-						var naam := fname.get_basename().to_lower()
-						var cols := 1
-						var rows := 1
-						var us := naam.rfind("_")
-						if us >= 0:
-							var grid := naam.substr(us + 1).split("x")
-							if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
-								cols = maxi(int(grid[0]), 1)
-								rows = maxi(int(grid[1]), 1)
-						_blood_textures.append({"name": naam, "tex": tex, "cols": cols, "rows": rows})
+	# VFX.voorbereiden laadt ze vooraf (9 oktober); is hij daar nog mee bezig, dan
+	# maakt hij het nu af, anders laden we ze hier zoals altijd
+	if not _blood_tex_loaded and not VFX.vooraf_nu(BLOOD_TEX_DIR):
+		var paren: Array = []
+		for pad in vfx_bestanden(BLOOD_TEX_DIR):
+			var tex = load(pad)
+			if tex is Texture2D:
+				paren.append([pad, tex])
+		zet_bloed(paren)
 	if _blood_textures.is_empty():
 		return {}
 	var keuze: Array = []
@@ -244,33 +228,14 @@ static var _vfx_cache: Dictionary = {}  # map-pad -> Array van {tex, cols, rows}
 ## smoke texture"). Staat de gevraagde texture er niet, dan valt hij netjes
 ## terug op willekeurig.
 static func _vfx_entry(dir_path: String, boost: float, wens: String = "") -> Dictionary:
-	if not _vfx_cache.has(dir_path):
-		var list: Array = []
-		var seen: Dictionary = {}
-		var d := DirAccess.open(dir_path)
-		if d != null:
-			for f in d.get_files():
-				var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
-				if not fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"]:
-					continue
-				if seen.has(fname):
-					continue
-				seen[fname] = true
-				if ResourceLoader.exists(dir_path + fname):
-					var tex = load(dir_path + fname)
-					if tex is Texture2D:
-						var cols := 1
-						var rows := 1
-						var base := fname.get_basename().to_lower()
-						var us := base.rfind("_")
-						if us >= 0:
-							var grid := base.substr(us + 1).split("x")
-							if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
-								cols = maxi(int(grid[0]), 1)
-								rows = maxi(int(grid[1]), 1)
-						list.append({"tex": _black_to_alpha(tex, boost), "cols": cols,
-							"rows": rows, "naam": base})
-		_vfx_cache[dir_path] = list
+	# vooraf klaargemaakt door VFX.voorbereiden (9 oktober), anders hier
+	if not _vfx_cache.has(dir_path) and not VFX.vooraf_nu(dir_path):
+		var paren: Array = []
+		for pad in vfx_bestanden(dir_path):
+			var tex = load(pad)
+			if tex is Texture2D:
+				paren.append([pad, _black_to_alpha(tex, boost)])
+		zet_vfx_map(dir_path, paren)
 	var list2: Array = _vfx_cache[dir_path]
 	if list2.is_empty():
 		return {}
@@ -345,21 +310,82 @@ static func _black_to_alpha(tex: Texture2D, boost: float = 2.3) -> Texture2D:
 	var img := tex.get_image()
 	if img == null:
 		return tex
+	var out := _zwart_naar_alpha_beeld(img, boost)
+	return ImageTexture.create_from_image(out) if out != null else tex
+
+
+## Het pixelwerk van _black_to_alpha: alleen Image, geen renderer, dus het mag op
+## een werkthread (VFX.voorbereiden). null = het plaatje heeft al alpha, laat de
+## textuur dan zoals hij is. Zet `img` om naar RGBA8.
+static func _zwart_naar_alpha_beeld(img: Image, boost: float) -> Image:
 	img.convert(Image.FORMAT_RGBA8)
 	var data := img.get_data()
 	var n := data.size()
 	var i := 0
 	while i < n:
 		if data[i + 3] < 250:
-			return tex  # heeft al alpha
+			return null  # heeft al alpha
 		i += 4
 	i = 0
 	while i < n:
 		var lum := maxi(data[i], maxi(data[i + 1], data[i + 2]))
 		data[i + 3] = mini(int(float(lum) * boost), 255)
 		i += 4
-	var out := Image.create_from_data(img.get_width(), img.get_height(), false, Image.FORMAT_RGBA8, data)
-	return ImageTexture.create_from_image(out)
+	return Image.create_from_data(img.get_width(), img.get_height(), false, Image.FORMAT_RGBA8, data)
+
+
+## De bestanden die _vfx_entry en _blood_entry uit een map laden, in hun
+## volgorde; VFX.voorbereiden laadt dezelfde lijst vooraf (9 oktober).
+static func vfx_bestanden(dir_path: String) -> Array:
+	var uit: Array = []
+	var seen: Dictionary = {}
+	var d := DirAccess.open(dir_path)
+	if d == null:
+		return uit
+	for f in d.get_files():
+		var fname := String(f).trim_suffix(".import").trim_suffix(".remap")
+		if not fname.get_extension().to_lower() in ["png", "webp", "jpg", "jpeg"]:
+			continue
+		if seen.has(fname):
+			continue
+		seen[fname] = true
+		if ResourceLoader.exists(dir_path + fname):
+			uit.append(dir_path + fname)
+	return uit
+
+
+## Het rooster van een vel uit de naam: rook_4x3 -> (4, 3), anders (1, 1).
+static func _rooster(naam: String) -> Vector2i:
+	var us := naam.rfind("_")
+	if us >= 0:
+		var grid := naam.substr(us + 1).split("x")
+		if grid.size() == 2 and grid[0].is_valid_int() and grid[1].is_valid_int():
+			return Vector2i(maxi(int(grid[0]), 1), maxi(int(grid[1]), 1))
+	return Vector2i.ONE
+
+
+## Rook of vuur klaar ([pad, textuur] in de volgorde van vfx_bestanden), van
+## _vfx_entry zelf of van VFX.voorbereiden. Staat de map er al, dan blijft hij.
+static func zet_vfx_map(dir_path: String, paren: Array) -> void:
+	if _vfx_cache.has(dir_path):
+		return
+	var list: Array = []
+	for p in paren:
+		var base := String(p[0]).get_file().get_basename().to_lower()
+		var r := _rooster(base)
+		list.append({"tex": p[1], "cols": r.x, "rows": r.y, "naam": base})
+	_vfx_cache[dir_path] = list
+
+
+## Het bloed klaar, net als zet_vfx_map.
+static func zet_bloed(paren: Array) -> void:
+	if _blood_tex_loaded:
+		return
+	_blood_tex_loaded = true
+	for p in paren:
+		var naam := String(p[0]).get_file().get_basename().to_lower()
+		var r := _rooster(naam)
+		_blood_textures.append({"name": naam, "tex": p[1], "cols": r.x, "rows": r.y})
 
 
 ## Zwartkruit-rook aan de loop of op de inslag: billboard-flarden die vanuit

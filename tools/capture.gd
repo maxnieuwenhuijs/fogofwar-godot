@@ -4595,6 +4595,145 @@ func _ready() -> void:
 		print("[NAAD] %s: %d fouten, %d acties, koppelrondjes %d" % ["PASS" if nfouten == 0 else "FAIL", nfouten, teller[0], rondjes])
 		get_tree().quit(0 if nfouten == 0 else 1)
 		return
+	elif "hapercheck" in args:
+		# 9 oktober (Max: "er zit een kleine haper in bij schieten, kanon impact,
+		# dan even freezed"): meet de langste frame rond een kanonschot in het
+		# echte spel. Speelt (Leeuw tegen Wolf, seed 777) door tot de mens aan zet
+		# is in de actiefase en laat dan een Leeuw-kanon via _on_action_performed
+		# schieten, dezelfde afhandeling als een echte zet (alleen zonder
+		# staatswijziging): op een vijand die het overleeft, dan nog een keer
+		# (herhaling), dan een dodelijk schot op een ander; daarna een dodelijke
+		# bajonetstoot en een dodelijke charge. Per actie 3,5 s lang elke frame,
+		# plus de start van de partij en het vooraf klaarmaken (VFX.voorbereiden).
+		# Alleen met venster zinvol: headless maakt de renderer geen plaatjes, dus
+		# dan valt het klaarmaken van de texturen weg. `geen_vooraf` erbij = de
+		# nulmeting zonder vooraf klaarmaken.
+		# Gebruik: -- hapercheck [grens in ms, standaard 100] [geen_vooraf]
+		var hc_i := args.find("hapercheck")
+		var hc_grens: float = float(args[hc_i + 1]) \
+			if args.size() > hc_i + 1 and String(args[hc_i + 1]).is_valid_float() else 100.0
+		var hc_vfx: GDScript = load("res://scripts/vfx/vfx.gd")
+		var hc_frames: Array = []        # [ms sinds de start van de meting, duur van de frame in ms]
+		var hc_meet := [true, Time.get_ticks_usec(), Time.get_ticks_usec()]   # meten, start, vorige frame (usec)
+		get_tree().process_frame.connect(func() -> void:
+			if not hc_meet[0]:
+				return
+			var hc_nu := Time.get_ticks_usec()
+			hc_frames.append([(hc_nu - int(hc_meet[1])) / 1000.0, (hc_nu - int(hc_meet[2])) / 1000.0])
+			hc_meet[2] = hc_nu)
+		seed(777)
+		game._human_doctrine = Constants.Doctrine.LEEUW
+		game._ai_doctrine = Constants.Doctrine.WOLF
+		game._start_match(1)
+		var hc_t0 := Time.get_ticks_msec()
+		var hc_vooraf_gemeld := false
+		while not (GameSession.state.phase == Phase.Type.ACTION and GameSession.state.current_player == 1):
+			# het vooraf klaarmaken (VFX.voorbereiden, sinds game._ready): hoe lang,
+			# en de langste frame in die tijd (de start van de partij telt mee)
+			var hc_stand: Dictionary = hc_vfx.vooraf_stand()
+			if not hc_vooraf_gemeld and (not hc_stand.aan or (int(hc_stand.open) == 0 and int(hc_stand.groepen) == 0)):
+				hc_vooraf_gemeld = true
+				print("[HAPER] vooraf klaarmaken: %s, %d taken, klaar %.2f s na de start van het bord, langste stap op de hoofdthread %.1f ms" % [
+					"aan" if hc_stand.aan else "UIT", int(hc_stand.taken), float(hc_stand.duur_ms) / 1000.0,
+					float(hc_stand.langste_stap_ms)])
+			if GameSession.state.phase == Phase.Type.GAME_OVER or Time.get_ticks_msec() - hc_t0 > 180000:
+				print("[HAPER] de mens kwam niet aan zet in de actiefase")
+				get_tree().quit(1)
+				return
+			var hc_st: GameState = GameSession.state
+			if hc_st.phase == Phase.Type.PLACEMENT and not hc_st.placements_done.get(1, false):
+				game._confirm_placement()
+			elif Phase.is_reveal(hc_st.phase) and not hc_st.reveal_acks.get(1, false):
+				game._continue_after_reveal()
+			elif game._timer_active and hc_st.phase != Phase.Type.ACTION:
+				game._timer_left = 0.0
+			await get_tree().create_timer(0.05).timeout
+		# de start van de partij (opstellen, onthullen, koppelen, de eerste zetten
+		# van de bot): langste frames, ter vergelijking met `geen_vooraf`
+		hc_meet[0] = false
+		var hc_start_boven: Array = []
+		var hc_start_max := 0.0
+		for hc_f in hc_frames:
+			hc_start_max = maxf(hc_start_max, float(hc_f[1]))
+			if float(hc_f[1]) > 100.0:
+				hc_start_boven.append("%.0f ms op %.1f s" % [hc_f[1], float(hc_f[0]) / 1000.0])
+		print("[HAPER] start van de partij (%.1f s, %d frames): langste frame %.0f ms; boven 100 ms: %s" % [
+			(Time.get_ticks_usec() - int(hc_meet[1])) / 1000000.0, hc_frames.size(), hc_start_max,
+			", ".join(PackedStringArray(hc_start_boven)) if not hc_start_boven.is_empty() else "geen"])
+		if not hc_vooraf_gemeld:
+			var hc_rest: Dictionary = hc_vfx.vooraf_stand()
+			print("[HAPER] vooraf klaarmaken bij de eerste beurt nog niet klaar: %d van %d taken open, %d groepen" % [
+				int(hc_rest.open), int(hc_rest.taken), int(hc_rest.groepen)])
+		if DisplayServer.get_name() == "headless":
+			print("[HAPER] let op: headless maakt de renderer geen beelden, dus dit meet de texturen niet")
+		game._timer_left = 999.0
+		await get_tree().create_timer(1.0).timeout
+		var hc_schutter: Pawn = null
+		var hc_soldaat: Pawn = null
+		var hc_ruiter: Pawn = null
+		var hc_doelen: Array = []
+		for hc_p in GameSession.state.pawns.values():
+			if hc_p.is_eliminated:
+				continue
+			if hc_p.owner_id == 1 and hc_p.unit_type == Constants.UnitType.ARTILLERY and hc_schutter == null:
+				hc_schutter = hc_p
+			elif hc_p.owner_id == 1 and hc_p.unit_type == Constants.UnitType.INFANTRY and hc_soldaat == null:
+				hc_soldaat = hc_p
+			elif hc_p.owner_id == 1 and hc_p.unit_type == Constants.UnitType.CAVALRY and hc_ruiter == null:
+				hc_ruiter = hc_p
+			elif hc_p.owner_id == 2 and hc_p.unit_type != Constants.UnitType.ARTILLERY:
+				hc_doelen.append(hc_p)
+		if hc_schutter == null or hc_soldaat == null or hc_ruiter == null or hc_doelen.size() < 4:
+			print("[HAPER] geen Leeuw-kanon, -soldaat of -ruiter op het bord, of te weinig doelen")
+			get_tree().quit(1)
+			return
+		var hc_pv: PawnView = game._pawn_views.get(hc_schutter.id)
+		hc_meet[0] = false
+		var hc_fout := 0
+		# ook de andere acties (Max: "bij acties of schieten"): een bajonetstoot en
+		# een charge, allebei dodelijk, elk de eerste keer in deze run
+		var hc_acties: Array = []
+		for hc_s in [["eerste schot", hc_doelen[0], false], ["herhaling", hc_doelen[0], false],
+				["dodelijk schot", hc_doelen[1], true]]:
+			var hc_d: Pawn = hc_s[1]
+			hc_acties.append([hc_s[0], {"type": "shot", "shooter_id": hc_schutter.id, "target_id": hc_d.id},
+				{"defender_pos": hc_d.position, "attacker_from_pos": hc_schutter.position, "damage": 1,
+				"eliminated": hc_s[2]}])
+		hc_acties.append(["bajonet", {"type": "attack", "attacker_id": hc_soldaat.id, "defender_id": hc_doelen[2].id},
+			{"defender_pos": hc_doelen[2].position, "attacker_from_pos": hc_soldaat.position, "damage": 1,
+			"eliminated": true, "forced_move": false, "retaliation": false}])
+		hc_acties.append(["charge", {"type": "charge", "pawn_id": hc_ruiter.id, "defender_id": hc_doelen[3].id},
+			{"charge_from": hc_ruiter.position, "move_target": hc_ruiter.position, "defender_pos": hc_doelen[3].position,
+			"damage": 1, "eliminated": true, "moved": false, "forced_move": false, "retaliation": false}])
+		for hc_s in hc_acties:
+			hc_frames.clear()
+			var hc_start := Time.get_ticks_usec()
+			hc_meet[1] = hc_start
+			hc_meet[2] = hc_start
+			hc_meet[0] = true
+			game._on_action_performed(hc_s[1], hc_s[2])
+			var hc_handler_ms := (Time.get_ticks_usec() - hc_start) / 1000.0
+			await get_tree().create_timer(3.5).timeout
+			hc_meet[0] = false
+			var hc_langst: Array = [0.0, 0.0]
+			var hc_boven: Array = []
+			for hc_f in hc_frames:
+				if float(hc_f[1]) > float(hc_langst[1]):
+					hc_langst = hc_f
+				if float(hc_f[1]) > 50.0:
+					hc_boven.append("%.0f ms op %.2f s" % [hc_f[1], float(hc_f[0]) / 1000.0])
+			var hc_ok: bool = float(hc_langst[1]) <= hc_grens
+			if not hc_ok:
+				hc_fout += 1
+			print("[HAPER] %-14s langste frame %.0f ms op %.2f s na de actie (%d frames, afhandeling zelf %.0f ms); boven 50 ms: %s (%s)" % [
+				hc_s[0], hc_langst[1], float(hc_langst[0]) / 1000.0, hc_frames.size(), hc_handler_ms,
+				", ".join(PackedStringArray(hc_boven)) if not hc_boven.is_empty() else "geen",
+				"PASS" if hc_ok else "FAIL"])
+		print("[HAPER] %s: grens %.0f ms, kanon %s, schot-moment %.2f s" % ["PASS" if hc_fout == 0 else "FAIL",
+			hc_grens, String(hc_pv._model_path).get_file() if hc_pv != null else "?",
+			hc_pv.kanon_schot_moment() if hc_pv != null else 0.0])
+		get_tree().quit(0 if hc_fout == 0 else 1)
+		return
 	elif "uispel" in args:
 		# F4.3a — nulmeting op game.gd-niveau: een volledige partij vs-AI waarin
 		# de MENS uitsluitend via het bestaande timeout-pad speelt (auto-define,
@@ -4609,6 +4748,26 @@ func _ready() -> void:
 		game._ai_doctrine = Constants.Doctrine.WOLF
 		var acties := [0]
 		GameSession.action_performed.connect(func(_a: Dictionary, _r: Dictionary) -> void: acties[0] += 1)
+		# `haper` (9 oktober): met venster elke frame boven 50 ms loggen, met de
+		# laatste actie erbij (de haper-meting in een echte partij; zie ook
+		# -- hapercheck). Raakt de partij zelf niet.
+		var ui_haper: bool = "haper" in args
+		var ui_log: Array = []                       # [s sinds de start, frame ms, laatste actie, ms sinds die actie]
+		var ui_laatste: Array = ["start", Time.get_ticks_usec()]
+		var ui_vorige: Array = [Time.get_ticks_usec(), Time.get_ticks_usec()]   # vorige frame, start
+		var ui_mens: Array = [0.0]   # ms rekenwerk van de "mens" in deze frame (telt niet mee)
+		if ui_haper:
+			GameSession.action_performed.connect(func(a: Dictionary, _r: Dictionary) -> void:
+				ui_laatste[0] = String(a.get("type", "")) + ("/" + String(a.sub) if a.has("sub") else "")
+				ui_laatste[1] = Time.get_ticks_usec())
+			get_tree().process_frame.connect(func() -> void:
+				var ui_nu := Time.get_ticks_usec()
+				var ui_ms := (ui_nu - int(ui_vorige[0])) / 1000.0 - float(ui_mens[0])
+				ui_mens[0] = 0.0
+				ui_vorige[0] = ui_nu
+				if ui_ms > 50.0:
+					ui_log.append([(ui_nu - int(ui_vorige[1])) / 1000000.0, ui_ms, ui_laatste[0],
+						(ui_nu - int(ui_laatste[1])) / 1000.0]))
 		game._start_match(1)
 		var t0 := Time.get_ticks_msec()
 		var afgekapt := false
@@ -4625,20 +4784,40 @@ func _ready() -> void:
 				game._continue_after_reveal()
 				stil_sinds = Time.get_ticks_msec()
 			elif game._timer_active:
-				# De echte timeout-route: _process ziet 0 en vuurt _on_phase_timeout.
-				game._timer_left = 0.0
+				if ui_haper:
+					# Wat _process bij 0 doet, maar gemeten: het rekenwerk van de
+					# "mens" (een greedy zet, auto-koppelen) zou een echte speler niet
+					# doen, dus dat telt niet mee als haper van het spel.
+					game._timer_active = false
+					var ui_t := Time.get_ticks_usec()
+					game._on_phase_timeout()
+					ui_mens[0] = float(ui_mens[0]) + (Time.get_ticks_usec() - ui_t) / 1000.0
+				else:
+					# De echte timeout-route: _process ziet 0 en vuurt _on_phase_timeout.
+					game._timer_left = 0.0
 				stil_sinds = Time.get_ticks_msec()
 			elif Time.get_ticks_msec() - stil_sinds > 3000 and st.current_player == 1:
 				if st.phase == Phase.Type.ACTION or Phase.is_linking(st.phase):
 					# Vangnet: de mens is aan zet zonder lopende klok (bv. een
 					# open wolf-stap). Zelfde pad als een timeout.
+					var ui_t2 := Time.get_ticks_usec()
 					game._on_phase_timeout()
+					ui_mens[0] = float(ui_mens[0]) + (Time.get_ticks_usec() - ui_t2) / 1000.0
 					stil_sinds = Time.get_ticks_msec()
 			await get_tree().create_timer(0.05).timeout
 		var us: GameState = GameSession.state
 		print("[UISPEL] seed=%d winner=%d acties=%d cyclus=%d afgekapt=%s duur=%ds zobrist=%s" % [
 			ui_seed, us.winner, acties[0], us.cycle, str(afgekapt),
 			int((Time.get_ticks_msec() - t0) / 1000), Zobrist.state_hash(us)])
+		if ui_haper:
+			var ui_100 := 0
+			for ui_f in ui_log:
+				ui_100 += 1 if float(ui_f[1]) > 100.0 else 0
+			print("[HAPER] partij: %d frames boven 50 ms, waarvan %d boven 100 ms" % [ui_log.size(), ui_100])
+			var ui_top: Array = ui_log.duplicate()
+			ui_top.sort_custom(func(a: Array, b: Array) -> bool: return float(a[1]) > float(b[1]))
+			for ui_f in ui_top.slice(0, 20):
+				print("[HAPER]   %4.0f ms op %6.1f s, %5.0f ms na %s" % [ui_f[1], ui_f[0], ui_f[3], ui_f[2]])
 		get_tree().quit(1 if afgekapt else 0)
 		return
 	elif "play" in args:
