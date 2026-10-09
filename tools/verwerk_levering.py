@@ -377,9 +377,6 @@ def main():
     p.add_argument("--godot", default=os.environ.get("GODOT_PATH", GODOT_STANDAARD))
     p.add_argument("--geen-controles", action="store_true",
                    help="niet importeren en niet controleren na afloop")
-    p.add_argument("--alleen-jassen", action="store_true",
-                   help="een model dat er al staat niet opnieuw bouwen, alleen de jassen erop "
-                        "(de texture-koppelaar, 9 oktober)")
     a = p.parse_args()
 
     if not os.path.isdir(a.map):
@@ -399,7 +396,7 @@ def main():
         if blend:
             wat.append("model uit .blend")
         if kleuren:
-            waarvoor = "wapenjas" if wapen else "jas"
+            waarvoor = ("kanonjas" if soort == "artillery" else "wapenjas") if wapen else "jas"
             wat.append(f"{len(kleuren)} {waarvoor}" + ("" if team is None else f" ({team})"))
         merk = "" if (team or not kleuren) else "   LET OP: team onbekend, jas blijft liggen"
         if soort == "bewoner":
@@ -426,8 +423,6 @@ def main():
             naam = f"{factie}/{soort}_{arch}"
             doel, basis, plan = stappen(blend or "", factie, soort, arch, a.uit)
         os.makedirs(doel, exist_ok=True)
-        if blend and a.alleen_jassen and os.path.exists(basis):
-            blend = None  # het model staat er al; alleen de jassen erop
         if blend:
             mislukt = None
             for stap, args in plan:
