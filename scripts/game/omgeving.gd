@@ -180,6 +180,16 @@ func bouw(camera: Camera3D, ui_laag: CanvasLayer) -> void:
 ## Welke facties er spelen (game.gd roept dit bij de start van een potje en
 ## als de keuzes online binnenkomen): de bewoners van jouw factie komen in
 ## het kamp vooraan, die van de ander aan de overkant, factieloze altijd.
+## Alle props alvast op de achtergrond laden (9 oktober): het diorama wordt bij
+## de start van een potje opnieuw opgebouwd (geloot, met de facties), en elke
+## prop die dan nog niet in het geheugen zat, kwam van schijf (~200 ms in de
+## startframe). Het menu geeft ruim de tijd; game.gd roept dit voor de eerste
+## opbouw. Samen ~16 MB.
+static func props_vooraf() -> void:
+	for naam in Bestandsindex.alles(PROPS_DIR, ".glb"):
+		PawnView.vraag_vooraf(Bestandsindex.vind(PROPS_DIR, String(naam)))
+
+
 func zet_facties(eigen: int, ander: int, eigen_team: String = "") -> void:
 	var team := eigen_team if eigen_team != "" else _team_eigen
 	var ander_team := "blue" if team == "red" else "red"
@@ -793,7 +803,7 @@ func _bouw_glb_prop(naam: String, pos: Vector3, schaal: float, draai: float, rea
 	var pad := Bestandsindex.vind(PROPS_DIR, naam + ".glb")
 	if pad == "" or not ResourceLoader.exists(pad):
 		return
-	var ps: PackedScene = load(pad)
+	var ps: PackedScene = PawnView.laad_model(pad)   # bewaard: een nieuwe opbouw laadt hem niet opnieuw
 	if ps == null:
 		return
 	var inst: Node3D = ps.instantiate() as Node3D
@@ -822,7 +832,7 @@ func _bouw_bijl_stronk(pos: Vector3) -> void:
 	var pad := Bestandsindex.vind(PROPS_DIR, "prop_axe.glb")
 	var bijl: Node3D = null
 	if pad != "" and ResourceLoader.exists(pad):
-		var ps: PackedScene = load(pad)
+		var ps: PackedScene = PawnView.laad_model(pad)
 		if ps != null:
 			bijl = ps.instantiate() as Node3D
 	var reacties: Array = [_reageer_bijl, _reageer_bijl_hak, _reageer_bijl_valt]
@@ -1147,7 +1157,9 @@ func _glb_prop(naam: String, pos: Vector3, draai: float, team: String, geluid: A
 	var pad := _prop_glb(naam, team)
 	if pad == "":
 		return null
-	var ps: PackedScene = load(pad)
+	# bewaard (PawnView.laad_model, 9 oktober): het diorama wordt bij de start van
+	# elk potje opnieuw opgebouwd, en laadde elke prop dan weer van schijf
+	var ps: PackedScene = PawnView.laad_model(pad)
 	if ps == null:
 		return null
 	var inst: Node3D = ps.instantiate() as Node3D

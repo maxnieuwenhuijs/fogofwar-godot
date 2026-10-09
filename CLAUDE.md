@@ -1553,7 +1553,30 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   om los te koppelen houdt het script tot het afsluiten vast ("resources still
   in use"), dus een eenmalige koppeling (`CONNECT_ONE_SHOT`) die zich elk frame
   opnieuw inplant; en `print` kost in de console-wrapper ~15 ms per regel, dus
-  nooit meten met prints in tijdkritische code.
+  nooit meten met prints in tijdkritische code. **Dezelfde dag, de rest (Max:
+  "dat is prima" op de beurtwissels en de start):** de ResourceLoader laat een
+  scene los zodra niemand ernaar verwijst, en een pion bewaart alleen zijn
+  kopie, dus ELKE modelwissel (koppelen naar een archetype en terug) laadde het
+  glb opnieuw van schijf: ~100 ms, koud 150-180 ms, vastgehouden 2-4 ms
+  (`-- wisselcheck [factie]`). Nu `PawnView.laad_model(pad)`: een vaste cache
+  (modellen, props in de hand, diorama-props en bewoners; samen ~75 MB aan
+  bestanden), geleegd in game.gd `_exit_tree`; `PawnView.model_pad` is de ene
+  zoekregel voor het modelbestand. Vooraf op de achtergrond
+  (`load_threaded_request`, `PawnView.vraag_vooraf`): alle props bij `_ready`
+  (`Omgeving.props_vooraf`, de start bouwt het diorama opnieuw), je eigen
+  factie bij de factiekeuze en beide facties zodra ze bekend zijn
+  (`PawnView.modellen_vooraf` in `_omgeving_facties`). En de HP-balkjes van
+  ALLE pionnen werden bij elke verse spawn opnieuw gebouwd (56 nodes per pion,
+  ~45 ms): `_build_health_bars(false)` bouwt alleen de nieuwe. Gemeten in een
+  hele partij (`-- uispel 777 haper`): 9 frames boven 50 ms werden er 4 (en 6
+  boven 100 ms werd er 1); de start 900 -> ~640 ms, met menutijd ervoor (vlag
+  `menu`) ~530 ms; een cyclusstart 205 -> 61 ms; in de hapercheck bajonet en
+  charge 56-75 -> 12-20 ms. Wat er van de start over is, is het neerzetten zelf
+  (~3 ms per pion, 42 pionnen, plus de props). **Uitzoeken waar een haper
+  zit:** tijdelijke omhulsels om functies (hernoem naar `<naam>_echt`, het
+  omhulsel telt de tijd op in `Engine.get_meta("prof")`, geen prints), dan
+  toont `-- uispel 777 haper` per lange frame de grootste posten; daarna het
+  omhulsel er weer uit en met `cmp` controleren dat het bestand exact terug is.
 - Model-tuner nakijken: `-- tunercheck` (welk model het spel per factie en
   archetype vindt, welke modellen nog GEEN gibs hebben, of de tuner-scene
   opbouwt, en of de afstelling een rondje opslaan-en-teruglezen byte-identiek

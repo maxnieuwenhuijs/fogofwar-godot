@@ -4595,6 +4595,49 @@ func _ready() -> void:
 		print("[NAAD] %s: %d fouten, %d acties, koppelrondjes %d" % ["PASS" if nfouten == 0 else "FAIL", nfouten, teller[0], rondjes])
 		get_tree().quit(0 if nfouten == 0 else 1)
 		return
+	elif "wisselcheck" in args:
+		# 9 oktober (de hapers bij een beurtwissel): wat kost een modelwissel
+		# (set_character naar een ander archetype, zoals bij het koppelen)? Per
+		# factie en type de vijf archetypes drie keer doorlopen: koud, nog eens
+		# (houdt de ResourceLoader het model vast?) en met de modellen in de hand.
+		# Gebruik: -- wisselcheck [factie] (met venster: team-jas en auto-fit echt)
+		var wc_fac: int = Constants.Doctrine.MUIS
+		var wc_namen := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
+		for wc_n in wc_namen:
+			if wc_n in args:
+				wc_fac = wc_namen[wc_n]
+		var wc_kaarten := {"base": null, "spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1]}
+		var wc_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		game._overlay.hide()
+		for wc_type in [Constants.UnitType.INFANTRY, Constants.UnitType.CAVALRY]:
+			var wc_pv: PawnView = wc_scene.instantiate()
+			wc_pv.team = Constants.Team.RED
+			game._board.add_child(wc_pv)
+			wc_pv.set_unit_type(wc_type)
+			wc_pv.position = game.tile_position(5, 5) + Vector3(0.0, 0.05, 0.0)
+			var wc_vast: Array = []
+			for wc_ronde in ["koud", "nog eens", "vastgehouden"]:
+				if wc_ronde == "vastgehouden":
+					for wc_arch in wc_kaarten:
+						wc_pv.set_character(wc_fac, wc_type, null if wc_kaarten[wc_arch] == null else Card.new(0, 0, 0,
+							int(wc_kaarten[wc_arch][0]), int(wc_kaarten[wc_arch][1]), int(wc_kaarten[wc_arch][2])))
+						wc_vast.append(load(wc_pv._model_path))
+				var wc_tijden: Array = []
+				for wc_arch in ["spd", "hp", "atk", "mix", "base"]:
+					var wc_k = wc_kaarten[wc_arch]
+					var wc_t := Time.get_ticks_usec()
+					wc_pv.set_character(wc_fac, wc_type, null if wc_k == null else Card.new(0, 0, 0,
+						int(wc_k[0]), int(wc_k[1]), int(wc_k[2])))
+					wc_tijden.append("%s %.0f" % [wc_arch, (Time.get_ticks_usec() - wc_t) / 1000.0])
+					await get_tree().process_frame
+				print("[WISSEL] %s %s %-12s %s ms" % [Constants.doctrine_folder(wc_fac),
+					"infanterie" if wc_type == Constants.UnitType.INFANTRY else "cavalerie", wc_ronde,
+					", ".join(PackedStringArray(wc_tijden))])
+			wc_pv.queue_free()
+		get_tree().quit(0)
+		return
 	elif "hapercheck" in args:
 		# 9 oktober (Max: "er zit een kleine haper in bij schieten, kanon impact,
 		# dan even freezed"): meet de langste frame rond een kanonschot in het
@@ -4760,14 +4803,39 @@ func _ready() -> void:
 			GameSession.action_performed.connect(func(a: Dictionary, _r: Dictionary) -> void:
 				ui_laatste[0] = String(a.get("type", "")) + ("/" + String(a.sub) if a.has("sub") else "")
 				ui_laatste[1] = Time.get_ticks_usec())
+			GameSession.phase_changed.connect(func(nieuw: int, _oud: int) -> void:
+				ui_laatste[0] = "fase " + String(Phase.Type.find_key(nieuw))
+				ui_laatste[1] = Time.get_ticks_usec())
+			GameSession.turn_changed.connect(func(p: int) -> void:
+				ui_laatste[0] = "beurt speler %d" % p
+				ui_laatste[1] = Time.get_ticks_usec())
+			GameSession.cycle_started.connect(func(c: int) -> void:
+				ui_laatste[0] = "cyclus %d begint" % c
+				ui_laatste[1] = Time.get_ticks_usec())
+			GameSession.cards_revealed_event.connect(func(_a: Dictionary, _b: Dictionary, _w: int) -> void:
+				ui_laatste[0] = "kaarten onthuld"
+				ui_laatste[1] = Time.get_ticks_usec())
 			get_tree().process_frame.connect(func() -> void:
 				var ui_nu := Time.get_ticks_usec()
 				var ui_ms := (ui_nu - int(ui_vorige[0])) / 1000.0 - float(ui_mens[0])
 				ui_mens[0] = 0.0
 				ui_vorige[0] = ui_nu
+				# tijdelijke meetpunten (Engine-meta "prof": naam -> [usec, keer]) in
+				# deze frame, als iemand die erin heeft gezet
+				var ui_prof: Dictionary = Engine.get_meta("prof", {})
+				if not ui_prof.is_empty():
+					Engine.set_meta("prof", {})
 				if ui_ms > 50.0:
 					ui_log.append([(ui_nu - int(ui_vorige[1])) / 1000000.0, ui_ms, ui_laatste[0],
-						(ui_nu - int(ui_laatste[1])) / 1000.0]))
+						(ui_nu - int(ui_laatste[1])) / 1000.0, String(Phase.Type.find_key(GameSession.state.phase)),
+						ui_prof]))
+		if ui_haper and "menu" in args:
+			# zoals een echte start: eerst je factie kiezen (je modellen laden dan
+			# al) en nog even in het menu staan (de props laden sinds _ready)
+			PawnView.modellen_vooraf([game._human_doctrine])
+			await get_tree().create_timer(4.0).timeout
+			seed(ui_seed)   # wat er in het menu uit de globale rng kwam, telt niet mee
+			ui_vorige[1] = Time.get_ticks_usec()
 		game._start_match(1)
 		var t0 := Time.get_ticks_msec()
 		var afgekapt := false
@@ -4817,7 +4885,14 @@ func _ready() -> void:
 			var ui_top: Array = ui_log.duplicate()
 			ui_top.sort_custom(func(a: Array, b: Array) -> bool: return float(a[1]) > float(b[1]))
 			for ui_f in ui_top.slice(0, 20):
-				print("[HAPER]   %4.0f ms op %6.1f s, %5.0f ms na %s" % [ui_f[1], ui_f[0], ui_f[3], ui_f[2]])
+				var ui_posten: Array = []
+				var ui_p: Dictionary = ui_f[5]
+				var ui_namen: Array = ui_p.keys()
+				ui_namen.sort_custom(func(a: String, b: String) -> bool: return int(ui_p[a][0]) > int(ui_p[b][0]))
+				for ui_n in ui_namen.slice(0, 10):
+					ui_posten.append("%s %.0f ms/%dx" % [ui_n, int(ui_p[ui_n][0]) / 1000.0, int(ui_p[ui_n][1])])
+				print("[HAPER]   %4.0f ms op %6.1f s, %5.0f ms na %s (fase nu %s)%s" % [ui_f[1], ui_f[0], ui_f[3], ui_f[2], ui_f[4],
+					"" if ui_posten.is_empty() else " | " + ", ".join(PackedStringArray(ui_posten))])
 		get_tree().quit(1 if afgekapt else 0)
 		return
 	elif "play" in args:

@@ -117,7 +117,7 @@ func laad(n: String) -> bool:
 	if pad == "" or not ResourceLoader.exists(pad):
 		push_warning("Bewoner %s: geen %s.glb gevonden" % [n, modelnaam])
 		return false
-	var ps: PackedScene = load(pad)
+	var ps: PackedScene = PawnView.laad_model(pad)   # bewaard bij een nieuwe opbouw van het diorama
 	if ps == null:
 		return false
 	_model = ps.instantiate() as Node3D

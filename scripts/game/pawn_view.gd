@@ -3699,6 +3699,25 @@ static func prop_for(rol: String, fac: String) -> Dictionary:
 	return {"file": "", "key": ""}
 
 
+## Het modelbestand voor factie, type en archetype; leeg = geen model (dan het
+## geometrische stuk). Zoekvolgorde (Max, 29 juli -- de nieuwe export is de
+## leidraad): eerst de korte naam, dan de naam zoals de exportpijplijn hem levert
+## (<type>_<archetype>_<factie>.glb), dan terugval op base. Alleen
+## BESTANDSNAMEN: Bestandsindex zoekt ze op onder de factie-map, in welke submap
+## ze ook liggen (infanterie/, wapens/, ...). Zo kan de indeling veranderen
+## zonder dat het spel eraan hoeft (Max, 30 juli). set_character en
+## modellen_vooraf gebruiken allebei deze ene regel.
+static func model_pad(doctrine: int, unit_type: int, arch: String) -> String:
+	var fac: String = Constants.doctrine_folder(doctrine)
+	var tname: String = Constants.unit_type_file(unit_type)
+	for naam in ["%s_%s.glb" % [tname, arch], "%s_%s_%s.glb" % [tname, arch, fac],
+			"%s_base.glb" % tname, "%s_base_%s.glb" % [tname, fac]]:
+		var gevonden := Bestandsindex.vind(MODELS_DIR + fac, String(naam))
+		if gevonden != "" and ResourceLoader.exists(gevonden):
+			return gevonden
+	return ""
+
+
 func set_character(doctrine: int, unit_type: int, card) -> void:
 	if _model != null:
 		return
@@ -3729,27 +3748,14 @@ func set_character(doctrine: int, unit_type: int, card) -> void:
 	_doctrine = doctrine
 	_archetype = arch
 	var fac: String = Constants.doctrine_folder(doctrine)
-	var tname: String = Constants.unit_type_file(unit_type)
-	# Zoekvolgorde (Max, 29 juli -- de nieuwe export is de leidraad): eerst de
-	# korte naam, dan de naam zoals de exportpijplijn hem levert
-	# (<type>_<archetype>_<factie>.glb), dan terugval op base.
-	# Alleen BESTANDSNAMEN: Bestandsindex zoekt ze op onder de factie-map, in
-	# welke submap ze ook liggen (infanterie/, wapens/, ...). Zo kan de indeling
-	# veranderen zonder dat het spel eraan hoeft (Max, 30 juli).
-	var candidates: Array = []
-	for naam in ["%s_%s.glb" % [tname, arch], "%s_%s_%s.glb" % [tname, arch, fac],
-			"%s_base.glb" % tname, "%s_base_%s.glb" % [tname, fac]]:
-		var gevonden := Bestandsindex.vind(MODELS_DIR + fac, String(naam))
-		if gevonden != "":
-			candidates.append(gevonden)
-	for path in candidates:
-		if ResourceLoader.exists(path):
-			_tune_key = "%s/%s" % [fac, String(path).get_file().get_basename()]
-			_model_path = path
-			_preload_gib_assets(path)  # gib-glb + gore alvast op de achtergrond laden
-			_swap_piece(load(path), true)  # auto-fit: schaal/grond/180°
-			_attach_weapon(fac)
-			return
+	var path := model_pad(doctrine, unit_type, arch)
+	if path != "":
+		_tune_key = "%s/%s" % [fac, path.get_file().get_basename()]
+		_model_path = path
+		_preload_gib_assets(path)  # gib-glb + gore alvast op de achtergrond laden
+		_swap_piece(laad_model(path), true)  # auto-fit: schaal/grond/180°
+		_attach_weapon(fac)
+		return
 	# Nog geen model-bestand: geometrisch stuk + archetype-silhouet.
 	if _piece == null:
 		var scene: PackedScene = PIECE_SCENES.get(unit_type)
@@ -4023,7 +4029,7 @@ func _attach_weapon(fac: String) -> void:
 	var att := BoneAttachment3D.new()
 	skel.add_child(att)
 	att.bone_idx = bone
-	var prop: Node3D = (load(path) as PackedScene).instantiate()
+	var prop: Node3D = laad_model(path).instantiate()
 	att.add_child(prop)
 	# Auto-schaal: langste as van de prop → ~0.55 wereld-unit (musketlengte),
 	# gecorrigeerd voor alle ouder-schalen (skelet/auto-fit).
@@ -4333,6 +4339,63 @@ func _auto_fit_model(root: Node3D) -> void:
 ## (dus het neutrale basismodel = default). Zo één geanimeerd model, per team
 ## een andere jas.
 static var _team_tex_cache: Dictionary = {}
+
+
+## Geladen modellen en props (pad -> PackedScene), 9 oktober (Max: "een kleine
+## haper bij acties"). De ResourceLoader laat een scene los zodra niemand er nog
+## naar verwijst, en een pion bewaart alleen zijn kopie: elke modelwissel
+## (koppelen naar een archetype en terug) laadde het glb dus opnieuw van schijf,
+## ~100 ms per wissel, en bij de start elke pion van hetzelfde type opnieuw. In
+## het geheugen gehouden kost een wissel 2-4 ms (`-- wisselcheck`). Begrensd door
+## het aantal modelbestanden (samen ~60 MB); game.gd leegt hem als het bord sluit.
+static var _model_cache: Dictionary = {}
+static var _model_vooraf: Dictionary = {}   # pad -> true: op de achtergrond aangevraagd (modellen_vooraf)
+
+
+static func laad_model(path: String) -> PackedScene:
+	var s: PackedScene = _model_cache.get(path)
+	if s == null:
+		if _model_vooraf.has(path):
+			_model_vooraf.erase(path)
+			s = ResourceLoader.load_threaded_get(path) as PackedScene   # wacht alleen als hij nog laadt
+		if s == null:
+			s = load(path) as PackedScene
+		if s != null:
+			_model_cache[path] = s
+	return s
+
+
+## Alle modellen en de props van de dragers (vaandel, trom) van de facties in
+## dit potje alvast op de achtergrond laden (9 oktober): de eerste keer dat een
+## pion naar een archetype wisselt (bij het koppelen) kwam het glb anders pas dan
+## van schijf, 150-180 ms. laad_model pakt ze daarna op. game.gd roept dit zodra
+## de facties bekend zijn.
+static func modellen_vooraf(doctrines: Array) -> void:
+	for doc in doctrines:
+		for tp in [Constants.UnitType.INFANTRY, Constants.UnitType.CAVALRY, Constants.UnitType.ARTILLERY]:
+			for arch in ["base", "spd", "hp", "atk", "mix"]:
+				vraag_vooraf(model_pad(int(doc), tp, arch))
+		var fac: String = Constants.doctrine_folder(int(doc))
+		for rol in ["flag", "drum"]:
+			vraag_vooraf(String(prop_for(rol, fac)["file"]))
+
+
+## Een model of prop op de achtergrond laten laden; laad_model pakt hem op.
+static func vraag_vooraf(pad: String) -> void:
+	if pad == "" or _model_cache.has(pad) or _model_vooraf.has(pad):
+		return
+	if ResourceLoader.load_threaded_request(pad) == OK:
+		_model_vooraf[pad] = true
+
+
+static func leeg_model_cache() -> void:
+	# wat al op de achtergrond binnen is, ophalen (anders blijft het in de lader
+	# hangen); wat nog laadt, pakt een volgend potje weer op
+	for pad in _model_vooraf.keys():
+		if ResourceLoader.load_threaded_get_status(pad) != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			ResourceLoader.load_threaded_get(pad)
+	_model_vooraf.clear()
+	_model_cache.clear()
 
 
 ## Laad de gib-assets (gibs-glb + gore-textures) alvast op de ACHTERGROND

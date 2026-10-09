@@ -1,5 +1,38 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- Modellen in het geheugen: geen haper bij koppelen, spawnen en de start
+
+Max ("dat is prima") op de twee hapers die na de schot-fix over waren: de
+beurtwissels/faseovergangen (80-220 ms) en de start van het potje (~0,9 s).
+
+- **Uitgezocht met tijdelijke omhulsels** om 27 functies in game.gd en
+  PawnView (tijd optellen in `Engine.get_meta("prof")`, geen prints; daarna
+  eruit, `cmp` gelijk). `-- uispel 777 haper` toont per lange frame de
+  grootste posten. Overal dezelfde dader: `_refresh_all` -> `set_character`
+  bij een modelwissel, en die laadde het glb opnieuw van schijf.
+- **Waarom:** de ResourceLoader laat een scene los zodra niemand ernaar
+  verwijst, en een pion bewaart alleen zijn kopie. `-- wisselcheck [factie]`
+  (nieuw): een wissel koud 150-180 ms, nog eens ~100 ms, met het model
+  vastgehouden 2-4 ms.
+- **Fix:** `PawnView.laad_model` (vaste cache voor modellen, props in de hand,
+  diorama-props en bewoners; leeg in game.gd `_exit_tree`), `PawnView.model_pad`
+  (de zoekregel, ook voor vooraf laden), vooraf op de achtergrond: alle props bij
+  `_ready` (`Omgeving.props_vooraf`), je factie bij de keuze, beide facties in
+  `_omgeving_facties` (`PawnView.modellen_vooraf`). En `_build_health_bars(false)`
+  bij een verse spawn: alleen de nieuwe balken (was ~45 ms voor alle 56 nodes per
+  pion).
+- **Gemeten (een hele partij, het rekenwerk van de nagebootste mens eraf):** 9
+  frames boven 50 ms -> 4, boven 100 ms 6 -> 1; de start 900 -> ~640 ms, met
+  menutijd ervoor (vlag `menu`: 4 s, zoals een speler die kiest) ~530 ms; een
+  cyclusstart 205 -> 61 ms; de koppel-beurtwissels ~85 -> onder de 50 ms
+  (wat er nog staat is het automatisch koppelen van de nagebootste mens).
+  Hapercheck: bajonet 56-66 -> 12 ms, charge 57-75 -> 20 ms. Over: het
+  neerzetten zelf bij de start (~3 ms per pion plus de props).
+- **Checks:** hapercheck PASS; `uispel 777` = `e14d7f70` (ook met en zonder
+  menu); herstelcheck 777 en 4242 wolf 0 verschillen; resumecheck 777 1 0
+  verschillen; omgevingcheck, spelcheck, kanoncheck, vfxcheck PASS; tunercheck 0
+  fouten; `-- play` 13 gelekte objecten bij het afsluiten (gelijk aan voorheen).
+
 ## 9 oktober -- Geen haper meer bij het eerste schot
 
 Max: "er zit wel een kleine haper in bij acties of schieten, dan even freezed

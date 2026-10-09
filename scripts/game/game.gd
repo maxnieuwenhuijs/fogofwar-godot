@@ -152,6 +152,7 @@ func _ready() -> void:
 	for node in [_camera, _sun_light, _spot_light, _rim_light]:
 		if node != null:
 			(node as Node3D).reparent(_kijk_pivot, true)
+	Omgeving.props_vooraf()   # alle props op de achtergrond: de start van het potje bouwt het diorama opnieuw
 	_setup_omgeving()
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
 	_index_tiles()
@@ -341,6 +342,7 @@ func _exit_tree() -> void:
 	if _ai_thread != null and _ai_thread.is_started():
 		_ai_thread.wait_to_finish()
 		_ai_thread = null
+	PawnView.leeg_model_cache()   # de modellen van dit potje hoeven niet in de hub te blijven
 
 
 func _show_difficulty_menu() -> void:
@@ -868,6 +870,8 @@ func _on_doctrine_choice(index: int) -> void:
 	if _factie_keuze != null:
 		_factie_keuze.sluit()
 	_human_doctrine = Constants.DOCTRINE_DATA.keys()[index]
+	# jouw modellen alvast laden terwijl je de tegenstander kiest
+	PawnView.modellen_vooraf([_human_doctrine])
 	if session.is_online():
 		# F4.3g: online is de keuze een blinde actie in de engine (F4.0); de
 		# ander kiest zelf, de server loot niets.
@@ -944,6 +948,9 @@ func _start_match(difficulty: int) -> void:
 ## keuzes bekend zijn: bij de start van een potje, als ze online binnenkomen
 ## en bij een herstart vanaf de staat.
 func _omgeving_facties() -> void:
+	# de modellen van beide facties alvast op de achtergrond laden: de eerste
+	# wissel naar een archetype (bij het koppelen) kwam anders pas dan van schijf
+	PawnView.modellen_vooraf([_human_doctrine, _ai_doctrine])
 	if _omgeving != null:
 		# Het diorama (11 september) volgt uit de windrichting, die per potje
 		# geloot is (online uit het match-id, dus beide stoelen hetzelfde).
@@ -1782,7 +1789,7 @@ func _sync_new_pawn_views() -> void:
 		vers.append(_pawn_views[pawn.id])
 	if vers.is_empty():
 		return
-	_build_health_bars()  # herbouwt alle balken, incl. de nieuwe pionnen
+	_build_health_bars(false)  # alleen balken voor de nieuwe pionnen
 	# Poef-reveal (besluit Max, 27 juli): verse spawns verschijnen één voor
 	# één op het bord vóórdat de define-hand opent — alleen mid-match
 	# (cyclus 2+); de opstellingsfase bouwt gewoon in stilte.
@@ -1997,13 +2004,20 @@ func _factie_bonus_van(doctrine: Dictionary) -> Array:
 	return [int(doctrine.get("hp_bonus", 0)), int(doctrine.get("speed_bonus", 0)), 0]
 
 
-func _build_health_bars() -> void:
+## `alles` false (9 oktober): alleen de pionnen die nog geen balk hebben. Bij
+## elke verse spawn alles weggooien en opnieuw bouwen kostte ~45 ms (56 nodes
+## per pion, ook voor de gevallen); de balken lezen hun stand toch elk frame
+## uit de staat (_update_health_bars).
+func _build_health_bars(alles: bool = true) -> void:
 	if _hp_layer == null:
 		return
-	for child in _hp_layer.get_children():
-		child.free()
-	_hp_bars.clear()
+	if alles:
+		for child in _hp_layer.get_children():
+			child.free()
+		_hp_bars.clear()
 	for pawn in session.state.pawns.values():
+		if _hp_bars.has(pawn.id):
+			continue
 		var holder := Control.new()
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		holder.visible = false
