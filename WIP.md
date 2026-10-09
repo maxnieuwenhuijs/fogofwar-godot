@@ -1,5 +1,31 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- Texture-koppelaar in het paneel
+
+Max: "zet ook in de paneel zet in map en ontdek etc texture koppelaar".
+
+- **`tools/texture_koppelaar.py`**: png's van de retexture-dienst bij het
+  juiste model zetten. Ontdek: model op de uuid in de bestandsnaam (uit de
+  uploads naast de blend, de bestaande jassen en het gebouwde model), anders op
+  de UV's (alleen met alfa; dekking en raak boven de 90%); team uit red/blue in
+  de naam, een rood/blauw-paar op kleur, of de bestaande jas / het origineel
+  (dan "GOK"). Zet in map: `<model>/red|blue`, `<model>/weapon/red|blue`, wat
+  er lag naar `results/koppelaar_backup/`; `--in-het-spel` daarna per model
+  `verwerk_levering.py --alleen-jassen` (nieuwe vlag: niet opnieuw bouwen).
+- **Proeven:** de echte cavalerie-atk-jassen plat in een map (rood met " (1)"):
+  lijf rood/blauw als paar goed, het wapen goed via de blauwe jas die er al
+  lag (de eerste versie gokte het op zijn eigen kleur verkeerd: metaal en hout
+  zijn van zichzelf roodachtig). Een rood getinte bediener-jas ging naar alle
+  vijf de `canon_*/red`; een naamloze kanonjas met alfa vond het hp-kanon op
+  de UV's (99,1% gedekt, 99,2% raak). Twee fouten onderweg gerepareerd: de
+  kleurbalans telde alleen verzadigde pixels (die selectie schuift mee met de
+  tint, een roder plaatje kwam blauwer uit) en een plat plaatje zonder alfa
+  "paste" op elk model; nu zonder drempel en de UV-weg alleen met alfa.
+- **Paneel:** kader "Texture-koppelaar" met "Ontdek (alleen kijken)" en "Zet
+  in map (en in het spel)" (Ja = meteen het spel in, Nee = alleen de map);
+  onthoudt zijn eigen map (begint in Downloads). Opmaak nagekeken met een
+  plaatje van het formulier buiten beeld.
+
 ## 9 oktober -- De vijf Leeuw-kanonnen in het spel
 
 Max: "bekijk de nieuwe kanonnen van Lion ... kijk of alle animaties dezelfde

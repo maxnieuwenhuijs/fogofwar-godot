@@ -349,9 +349,27 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
 - **Paneel** (Max' knoppen, herbouw 28-07 in gewone taal): `"FogOfWar
   Paneel.bat"` → TRAINING-NACHT (pijplijn), Bots laten leren, Bots laten
   spelen (meting), Bekijk het rapport, Map in het spel zetten, Model
-  klaarmaken voor retexture, STOP alles. Meet-gereedschap voor
+  klaarmaken voor retexture, Texture-koppelaar (Ontdek / Zet in map), STOP
+  alles. Meet-gereedschap voor
   Claude (fuzz, L1-test, losse L2-matrix, 4.1-training via train_ai.bat)
   draait alleen nog via de CLI.
+- **Texture-koppelaar (9 oktober, Max: "zet ook in de paneel zet in map en
+  ontdek etc texture koppelaar"):** `python tools/texture_koppelaar.py <map
+  met png's> [--droogloop] [--in-het-spel] [--team red|blue]`, paneelkader
+  "Texture-koppelaar" met "Ontdek (alleen kijken)" en "Zet in map (en in het
+  spel)". De png's van de retexture-dienst (Tripo-namen met de mesh-uuid)
+  krijgen een model en een deel: eerst op de uuid (uit de uploads naast de
+  blend, de jassen die er al liggen en het gebouwde model; een uuid in
+  meerdere modellen = allemaal, zo krijgt de leeuw-bediener alle vijf de
+  kanonnen), anders op de UV's (alleen met echte alfa: dekking EN raak boven
+  de 90%). Team: red/blue in de naam, anders een rood/blauw-paar op kleur,
+  anders de jas die er al ligt of het origineel uit de glb (dan "GOK").
+  Zet in map: naar `<model>/red|blue` of `<model>/weapon/red|blue` in de
+  leveringsmap, wat daar lag eerst naar `results/koppelaar_backup/<tijd>/`;
+  `--in-het-spel` draait daarna per model `verwerk_levering.py
+  --alleen-jassen` (nieuw: een model dat er al staat niet opnieuw bouwen,
+  alleen de jassen met de UV-controle). Lange Tripo-namen: paden boven de 240
+  tekens krijgen het `\\?\`-voorvoegsel.
 - **Een levering in het spel zetten** (7 september): `python
   tools/verwerk_levering.py <map> [--droogloop]`, of de paneelknop "Map in het
   spel zetten" (vraagt om een map, toont eerst de droogloop). Voor een map met

@@ -34,7 +34,10 @@ lion/canon_atk"` (of de paneelknop "Map in het spel zetten"). Een mapnaam met
 minimaal verschil maar toch"). De uploads voor de retexture-dienst maakt
 `python tools/maak_retexture.py "assets/new upload folder/lion"` (paneelknop
 "Model klaarmaken voor retexture"): `lion_artillery_<arch>.glb` = de bediener,
-`lion_artillery_<arch>_wapen.glb` = het kanon.
+`lion_artillery_<arch>_wapen.glb` = het kanon. Wat terugkomt zet de
+Texture-koppelaar (paneel, of `python tools/texture_koppelaar.py <map>`) op
+zijn plek: een bediener-jas gaat naar alle vijf de kanonnen, een kanonjas naar
+zijn eigen kanon, rood of blauw; met "Ja" meteen het spel in.
 
 **In het spel** (`PawnView`, blok "Artillerie: kanon + bediener"): de vuur-clip
 speelt, de kogel, de vlam, de knal en de treffer wachten op het schot-moment

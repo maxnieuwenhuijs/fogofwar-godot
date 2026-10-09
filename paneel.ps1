@@ -44,7 +44,7 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = "Fog of War"
 # Nooit hoger dan het scherm; wat er niet op past, scrolt (25 september: er
 # kwam een kader bij voor de campagnebots).
-$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1338, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
+$form.Size = New-Object System.Drawing.Size(490, [Math]::Min(1466, [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height - 10))
 $form.AutoScroll = $true
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
@@ -596,16 +596,109 @@ $btnRetexture.Add_Click({
         "De twee .glb-bestanden komen NAAST je .blend te staan, in de map die je " +
         "zojuist koos: het lijf en het wapen apart, want die hebben elk hun eigen " +
         "UV-atlas." + [Environment]::NewLine + [Environment]::NewLine +
-        "De png die je terugkrijgt zet je in de kleurmap (red of blue) naast die " +
-        "blend. Claude meet daarna of hij past.",
+        "De png's die je terugkrijgt zet de Texture-koppelaar (hieronder) in de " +
+        "juiste kleurmap naast die blend; daarna meet het spel of ze passen.",
         "Fog of War") | Out-Null
 })
 $kadModellen.Controls.Add($btnRetexture)
 
+# --- 7b. Texture-koppelaar (9 oktober, Max: "zet ook in de paneel zet in map en
+# ontdek etc texture koppelaar"). De png's die terugkomen van de
+# retexture-dienst: welk model, lijf of wapen (bij een kanon: de bediener of het
+# kanon), rood of blauw? "Ontdek" kijkt alleen; "Zet in map" zet ze in de juiste
+# map van de levering (<model>\red, \blue, \weapon\red, \weapon\blue) en op
+# verzoek meteen het spel in, zonder het model opnieuw te bouwen. Zie
+# tools/texture_koppelaar.py. Eigen geheugen voor de map: die staat meestal in
+# Downloads, niet in de leveringsinbox.
+$TexturenGeheugen = Join-Path $repo "results\laatste_texturenmap.txt"
+function Kies-Pngmap {
+    $kiezer = New-Object System.Windows.Forms.FolderBrowserDialog
+    $kiezer.Description = "Kies de map met de png's van de retexture-dienst (bijvoorbeeld Downloads)"
+    $start = Join-Path $env:USERPROFILE "Downloads"
+    if (Test-Path $TexturenGeheugen) {
+        $laatst = Get-Content $TexturenGeheugen -TotalCount 1
+        if ($laatst -and (Test-Path $laatst)) { $start = $laatst }
+    }
+    if (Test-Path $start) { $kiezer.SelectedPath = $start }
+    if ($kiezer.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return $null }
+    New-Item -ItemType Directory -Force (Split-Path $TexturenGeheugen) | Out-Null
+    Set-Content -Path $TexturenGeheugen -Value $kiezer.SelectedPath -Encoding utf8
+    return $kiezer.SelectedPath
+}
+# Ontdekken kost geen Blender en verplaatst niets: de uitslag komt in
+# results\koppelaar_plan.txt en de eerste regels in een venster.
+function Koppel-Ontdek([string]$map) {
+    $plan = Join-Path $repo "results\koppelaar_plan.txt"
+    New-Item -ItemType Directory -Force (Split-Path $plan) | Out-Null
+    $opdracht = "python tools/texture_koppelaar.py --droogloop '" + $map + "'"
+    Start-Process powershell -WorkingDirectory $repo -WindowStyle Hidden -Wait `
+        -RedirectStandardOutput $plan `
+        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $opdracht)
+    $regels = @()
+    if (Test-Path $plan) { $regels = @(Get-Content $plan) }
+    if ($regels.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            "Kon die map niet lezen. Staat Python op deze machine?", "Fog of War") | Out-Null
+        return $null
+    }
+    $tekst = ($regels | Select-Object -First 30) -join [Environment]::NewLine
+    if ($regels.Count -gt 30) {
+        $tekst += [Environment]::NewLine + "... (het hele overzicht staat in results\koppelaar_plan.txt)"
+    }
+    return $tekst
+}
+$kadKoppel = Maak-Kader "Texture-koppelaar" 1032 122
+Maak-Uitleg $kadKoppel "Png's van de retexture-dienst: welk model, lijf of wapen, rood of blauw."
+$null = Maak-Knop $kadKoppel "Ontdek (alleen kijken)" {
+    $map = Kies-Pngmap
+    if (-not $map) { return }
+    $tekst = Koppel-Ontdek $map
+    if (-not $tekst) { return }
+    [System.Windows.Forms.MessageBox]::Show(
+        $tekst + [Environment]::NewLine + [Environment]::NewLine +
+        "Er is niets verplaatst. 'Zet in map' zet ze echt op hun plek.",
+        "Fog of War") | Out-Null
+}
+$btnZetInMap = New-Object System.Windows.Forms.Button
+$btnZetInMap.Text = "Zet in map (en in het spel)"
+$btnZetInMap.Location = New-Object System.Drawing.Point(210, 42)
+$btnZetInMap.Size = New-Object System.Drawing.Size(203, 34)
+$btnZetInMap.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$btnZetInMap.Add_Click({
+    $map = Kies-Pngmap
+    if (-not $map) { return }
+    $tekst = Koppel-Ontdek $map
+    if (-not $tekst) { return }
+    $antwoord = [System.Windows.Forms.MessageBox]::Show(
+        $tekst + [Environment]::NewLine + [Environment]::NewLine +
+        "Ja = in de juiste map EN meteen de jassen in het spel (met de UV-controle, " +
+        "zonder het model opnieuw te bouwen)." + [Environment]::NewLine +
+        "Nee = alleen in de juiste map; daarna kan het met 'Map in het spel zetten'." +
+        [Environment]::NewLine + [Environment]::NewLine +
+        "Wat er al in die mappen lag gaat eerst naar results\koppelaar_backup. " +
+        "Staat er GOK bij het team, kijk dan even of rood en blauw kloppen.",
+        "Fog of War", [System.Windows.Forms.MessageBoxButtons]::YesNoCancel,
+        [System.Windows.Forms.MessageBoxIcon]::Question)
+    if ($antwoord -eq [System.Windows.Forms.DialogResult]::Cancel) { return }
+    $extra = ""
+    if ($antwoord -eq [System.Windows.Forms.DialogResult]::Yes) { $extra = " --in-het-spel" }
+    $opdracht = "python tools/texture_koppelaar.py" + $extra + " '" + $map + "'"
+    Start-Process powershell -WorkingDirectory $repo -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", $opdracht)
+})
+$kadKoppel.Controls.Add($btnZetInMap)
+$lblKoppelHint = New-Object System.Windows.Forms.Label
+$lblKoppelHint.Text = "Herkent het model aan de uuid (of de UV's), het team aan red/blue of de kleur. Een bediener gaat naar elk kanon met die leeuw."
+$lblKoppelHint.Location = New-Object System.Drawing.Point(12, 82)
+$lblKoppelHint.Size = New-Object System.Drawing.Size(400, 28)
+$lblKoppelHint.Font = New-Object System.Drawing.Font("Segoe UI", 8)
+$lblKoppelHint.ForeColor = [System.Drawing.Color]::DimGray
+$kadKoppel.Controls.Add($lblKoppelHint)
+
 # --- 8. Campagnebots: hoe de bots handelen in het campagnemenu (F7.2,
 # docs/F7-campagnetrainer.md). Eerst duels meten (de data van het orakel),
 # dan trainen op dat orakel. De trainer schrijft data/campagne_verstand.json.
-$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 1032 166
+$kadCampagne = Maak-Kader "Campagnebots (raad, donaties, ruil)" 1160 166
 Maak-Uitleg $kadCampagne "Eerst duels meten (orakel), dan trainen. Niet naast een training."
 $numCampMeet = Maak-Getal $kadCampagne 205 60 5 600 "minuten"
 $null = Maak-Knop $kadCampagne "Campagne-duels meten" {
@@ -674,7 +767,7 @@ $kadCampagne.Controls.Add($numPunten)
 $kadCampagne.Controls.Add($lblPunten)
 
 # --- 9. Alles stoppen.
-$kadStop = Maak-Kader "Noodrem" 1204 86
+$kadStop = Maak-Kader "Noodrem" 1332 86
 Maak-Uitleg $kadStop "Stopt elke lopende run. Trainingsvoortgang blijft bewaard."
 $btnStop = Maak-Knop $kadStop "STOP alles" {
     $n = Aantal-Godots
