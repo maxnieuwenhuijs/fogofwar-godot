@@ -3241,8 +3241,26 @@ func _ready() -> void:
 				if rt != null and rt.get_image() != null:
 					rt.get_image().save_png("res://_shot_spel_richt.png")
 			sp.laat_los(scherm)
-			# tik 3: kracht vast, werpen (een tik naast de prop telt ook)
-			sp.klik(scherm + Vector2(400.0, 300.0))
+			# tik 3: kracht vast, werpen (een tik naast de prop telt ook, maar niet
+			# op het bord of in de veilige rand eromheen: die zijn van het spel,
+			# 9 oktober; dus van het bord af, voorbij de prop)
+			# een lege plek zoeken: van het bord af, geen prop eronder, buiten de rand
+			var sp_bord: Vector2 = sp_cam.unproject_position(sp.to_global(Omgeving.CENTRUM))
+			var sp_weg: Vector2 = (scherm - sp_bord).normalized()
+			var sp_vrij: Vector2 = scherm
+			var sp_gevonden := false
+			for sp_r in [140.0, 200.0, 260.0, 320.0]:
+				for sp_a in [0.0, 30.0, -30.0, 60.0, -60.0, 90.0, -90.0]:
+					var sp_pt: Vector2 = scherm + sp_weg.rotated(deg_to_rad(sp_a)) * sp_r
+					var sp_g = sp.klikpunt_op_bord(sp_pt)
+					if sp.prop_onder(sp_pt).is_empty() and sp_g != null and not Omgeving.in_veilige_rand(sp_g) \
+							and get_viewport().get_visible_rect().has_point(sp_pt):
+						sp_vrij = sp_pt
+						sp_gevonden = true
+						break
+				if sp_gevonden:
+					break
+			sp.klik(sp_vrij)
 			await get_tree().process_frame
 			if sp._spel.richt_bezig():
 				print("[SPEL] FOUT: %s: na tik 3 loopt het richten nog" % soort)
@@ -3270,6 +3288,25 @@ func _ready() -> void:
 			if score < int(doel[2]):
 				print("[SPEL] FOUT: %s score %d, verwacht minstens %d" % [soort, score, int(doel[2])])
 				sp_fouten += 1
+		# De veilige rand (9 oktober): een tik op het bord tijdens het richten gaat
+		# naar het spel en stopt het richten.
+		sp.zet_diorama(1)
+		await get_tree().process_frame
+		for p in sp._props:
+			if String(p.get("spel", "")) != "kegelen":
+				continue
+			var vr_n: Node3D = p.node
+			sp.klik(sp_cam.unproject_position(vr_n.to_global(p.get("midden", Vector3(0.0, float(p.hoogte) * 0.5, 0.0)))))
+			await get_tree().process_frame
+			var vr_richt: bool = sp._spel.richt_bezig()
+			var vr_pak: bool = sp.klik(sp_cam.unproject_position(sp.to_global(Omgeving.CENTRUM)))
+			var vr_ok: bool = vr_richt and not vr_pak and not sp._spel.richt_bezig()
+			if not vr_ok:
+				sp_fouten += 1
+			print("[SPEL] tik op het bord tijdens het richten: richten liep %s, klik naar een prop %s, richten gestopt %s (%s)" % [
+				"ja" if vr_richt else "NEE", "JA" if vr_pak else "nee", "ja" if not sp._spel.richt_bezig() else "NEE",
+				"PASS" if vr_ok else "FAIL"])
+			break
 		print("[SPEL] " + ("PASS" if sp_fouten == 0 else "FAIL (%d fouten)" % sp_fouten))
 		var sp_tex := get_viewport().get_texture()
 		if sp_tex != null and sp_tex.get_image() != null:
@@ -3872,6 +3909,33 @@ func _ready() -> void:
 				if og._props.size() < 8:
 					print("[OMGEVING] FOUT: diorama %d heeft maar %d props" % [di, og._props.size()])
 					og_fouten += 1
+				# De veilige rand (9 oktober): niets klikbaars binnen het bord plus
+				# veilige_rand, en een klik op de randvakken, de plank of net
+				# daarbuiten gaat nooit naar een prop.
+				for og_v in og.verschoven:
+					print("[OMGEVING]    uit de rand geschoven: %s %.2f vak (%.2f, %.2f), staat nu op (%.1f, %.1f)" % [og_v.naam,
+						(og_v.schuif as Vector3).length(), (og_v.schuif as Vector3).x, (og_v.schuif as Vector3).z,
+						(og_v.waar as Vector3).x, (og_v.waar as Vector3).z])
+				var og_rand: Array = og.props_in_rand()
+				for og_x in og_rand:
+					print("[OMGEVING] FOUT: %s steekt nog in de veilige rand" % og_x.naam)
+				og_fouten += og_rand.size()
+				var og_gevangen := 0
+				var og_punten := 0
+				for og_k in range(0, 11):
+					for og_af in [0.0, -0.55, -0.8, -1.3]:   # randvak, op de plank, net naast de plank, bijna de grens
+						# op het bord op bordhoogte, ernaast op het gras
+						var og_y: float = 0.05 if og_af > -0.6 else Omgeving.GROND_Y
+						for og_pt in [Vector3(og_k, og_y, og_af), Vector3(og_k, og_y, 10.0 - og_af),
+								Vector3(og_af, og_y, og_k), Vector3(10.0 - og_af, og_y, og_k)]:
+							og_punten += 1
+							if og.klik(og_cam.unproject_position(og.to_global(og_pt))):
+								og_gevangen += 1
+								if og_gevangen <= 3:
+									print("[OMGEVING] FOUT: een klik op bordpunt (%.1f, %.1f) ging naar een prop" % [og_pt.x, og_pt.z])
+				og_fouten += og_gevangen
+				print("[OMGEVING]    veilige rand %.2f vak: %d klikken langs het bord, %d naar een prop" % [
+					Omgeving.veilige_rand(), og_punten, og_gevangen])
 				if dingers < 3:
 					print("[OMGEVING] FOUT: diorama %d heeft maar %d tik-dingen (minstens 3)" % [di, dingers])
 					og_fouten += 1

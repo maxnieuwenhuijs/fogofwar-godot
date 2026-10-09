@@ -249,12 +249,96 @@ func _process(delta: float) -> void:
 	_spel.process(delta)
 
 
-## Klik op een prop? Kiest de dichtstbijzijnde binnen KLIK_STRAAL schermpixels
-## (zelfde principe als game._pick_coord voor de tegels). Waar = geconsumeerd.
-func klik(screen_pos: Vector2) -> bool:
-	if _camera == null or not visible or _props_root == null or not _props_root.visible:
-		return false
+## De veilige rand (9 oktober, Max: "zorg dat er wel een veilig stuk rand om
+## het bord zit waar geen klikbare omgeving-dingen zoals de kikker in het
+## meertje water niet in de weg zitten"). Het bord plus `veilige_rand` vak
+## rondom, gemeten vanaf de buitenkant van de buitenste vakken (de plank van het
+## bord loopt tot 0,55), is van het spel: een klik daar gaat nooit naar een prop
+## of een mini-spel, en bij het bouwen schuift elke klikbare prop die erin steekt
+## net genoeg naar buiten. Standaard 0,9: dezelfde marge die de ballen en kogels
+## van de mini-spellen al aanhouden (Spelletjes.BORD_MARGE). Knop `veilige_rand`.
+const VEILIGE_RAND := 0.9
+const BORD_RAND_MIN := -0.5
+const BORD_RAND_MAX := 10.5
+
+
+static func veilige_rand() -> float:
+	return PawnView.fx("veilige_rand", VEILIGE_RAND)
+
+
+## Ligt dit punt (bordruimte) op het bord of in de veilige rand eromheen?
+static func in_veilige_rand(p: Vector3) -> bool:
+	var r := veilige_rand()
+	return p.x > BORD_RAND_MIN - r and p.x < BORD_RAND_MAX + r \
+		and p.z > BORD_RAND_MIN - r and p.z < BORD_RAND_MAX + r
+
+
+## Waar raakt een klik de grond, in bordruimte? null als de straal hem mist. Op
+## de hoogte van het gras (GROND_Y) en niet op die van het bord: de props staan
+## op het gras, en op bordhoogte schoof het punt van een prop aan de overkant
+## een kwart vak het bord in (de stenen op de kade waren niet meer te raken).
+## Een klik op een randvak komt op het gras er net achter uit, ruim binnen de rand.
+func klikpunt_op_bord(screen_pos: Vector2) -> Variant:
+	if _camera == null:
+		return null
+	var vlak := Plane(global_transform.basis.y.normalized(), to_global(Vector3(0.0, GROND_Y, 0.0)))
+	var raak = vlak.intersects_ray(_camera.project_ray_origin(screen_pos), _camera.project_ray_normal(screen_pos))
+	return to_local(raak) if raak != null else null
+
+
+## Elk stuk onder Props (een prop, of een bewoner) dat in de veilige rand steekt,
+## met de kleinste verschuiving die het vrij zet: [{node, naam, schuif}].
+func props_in_rand() -> Array:
+	var uit: Array = []
+	if _props_root == null:
+		return uit
+	var r := veilige_rand()
+	var lo := BORD_RAND_MIN - r
+	var hi := BORD_RAND_MAX + r
+	var stukken: Array = []
+	for kind in _props_root.get_children():
+		if kind == _bewoners_root:
+			stukken.append_array(kind.get_children())
+		else:
+			stukken.append(kind)
+	for s in stukken:
+		var n := s as Node3D
+		if n == null or not n.visible:
+			continue
+		var box := _aabb_van(n)
+		if box.size.length() < 0.0001:
+			continue
+		var b: AABB = n.transform * box
+		if n.get_parent() == _bewoners_root and _bewoners_root != null:
+			b = _bewoners_root.transform * b
+		if b.end.x <= lo or b.position.x >= hi or b.end.z <= lo or b.position.z >= hi:
+			continue
+		# de vier kanten: hoeveel moet hij naar voren, achteren, links of rechts
+		var keuzes := [[hi - b.position.z, Vector3(0, 0, 1)], [b.end.z - lo, Vector3(0, 0, -1)],
+			[hi - b.position.x, Vector3(1, 0, 0)], [b.end.x - lo, Vector3(-1, 0, 0)]]
+		keuzes.sort_custom(func(a, c) -> bool: return float(a[0]) < float(c[0]))
+		uit.append({"node": n, "naam": String(n.name), "schuif": (keuzes[0][1] as Vector3) * (float(keuzes[0][0]) + 0.05)})
+	return uit
+
+
+## Wat er bij het laatste bouwen uit de rand geschoven is ([{naam, schuif}]),
+## voor omgevingcheck.
+var verschoven: Array = []
+
+
+func _houd_rand_vrij() -> void:
+	for x in props_in_rand():
+		(x.node as Node3D).position += x.schuif
+		verschoven.append({"naam": x.naam, "schuif": x.schuif, "waar": (x.node as Node3D).position})
+
+
+## Welke prop ligt er onder de vinger? De dichtstbijzijnde binnen KLIK_STRAAL
+## schermpixels (of zijn omvang), zonder er iets mee te doen; {} als er geen is.
+## Los van de veilige rand: die regelt `klik`.
+func prop_onder(screen_pos: Vector2) -> Dictionary:
 	var beste: Dictionary = {}
+	if _camera == null:
+		return beste
 	var beste_d := 1e9
 	for p in _props:
 		var n: Node3D = p.node
@@ -268,6 +352,23 @@ func klik(screen_pos: Vector2) -> bool:
 		if d < straal and d < beste_d:
 			beste = p
 			beste_d = d
+	return beste
+
+
+## Klik op een prop? Kiest de dichtstbijzijnde binnen KLIK_STRAAL schermpixels
+## (zelfde principe als game._pick_coord voor de tegels). Waar = geconsumeerd.
+func klik(screen_pos: Vector2) -> bool:
+	if _camera == null or not visible or _props_root == null or not _props_root.visible:
+		return false
+	# Op het bord of in de veilige rand eromheen: altijd van het spel (9
+	# oktober). Wordt er net gericht (een mini-spel), dan stopt dat: tik 2 en 3
+	# doe je naast het bord of op de prop zelf.
+	var op_bord = klikpunt_op_bord(screen_pos)
+	if op_bord != null and in_veilige_rand(op_bord):
+		if _spel.richt_bezig():
+			_spel.breek_af()
+		return false
+	var beste := prop_onder(screen_pos)
 	if beste.is_empty():
 		# geen prop onder de vinger: loopt er een richten (16 september, drie
 		# tikken), dan is dit tik 2 (richting vast) of tik 3 (kracht vast, werp)
@@ -963,6 +1064,7 @@ func _bouw_props() -> void:
 		_props_root.remove_child(kind)
 		kind.queue_free()
 	_props.clear()
+	verschoven.clear()
 	_spel.reset()
 	_rivier_node = null
 	_bewoners.clear()
@@ -993,8 +1095,10 @@ func _bouw_props() -> void:
 			"water":
 				_bouw_water()
 	_bouw_extra_props()
+	_houd_rand_vrij()       # niets klikbaars in de veilige rand om het bord (9 oktober)
 	_spel.koppel_doelen()   # elk kanon kijkt naar zijn kruitvaten
 	_bouw_bewoners()
+	_houd_rand_vrij()       # en de bewoners (en een kanon dat net gedraaid is) ook niet
 
 
 ## Het team van het kamp waar deze positie ligt (vooraan = eigen).

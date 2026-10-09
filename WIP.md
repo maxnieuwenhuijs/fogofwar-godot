@@ -1,5 +1,25 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- Veilige rand om het bord (geen props in de weg)
+
+Max: "zorg dat er wel een veilig stuk rand om het bord zit waar geen klikbare
+omgeving-dingen zoals de kikker in het meertje water niet in de weg zitten".
+
+- **Klikken:** `Omgeving.klik` geeft een klik op het bord of binnen 0,9 vak
+  eromheen (knop `veilige_rand`) nooit aan een prop. Het klikpunt wordt op het
+  gras berekend: op bordhoogte schoof het voor een prop aan de overkant een
+  kwart vak het bord in en waren de stenen op de kade niet meer te raken.
+  Loopt er een richten (mini-spel), dan stopt dat bij een bordtik.
+- **Plaatsen:** `_bouw_props` schuift wat in de rand steekt naar buiten: de
+  plas met de kikker in acht van de twaalf diorama's (0,46 tot 1,26 vak naar
+  achteren), in de Rivierhaven de stenen (0,07), de hengel (0,19) en een
+  touwrol (0,31), in Egypte de grote piramide aan de overkant (0,16).
+- **Checks:** omgevingcheck PASS (per diorama niets in de rand, 176 klikken
+  langs het bord waarvan 0 naar een prop, alle props nog raak); spelcheck PASS
+  (de check zoekt voor tik 3 nu een lege plek naast het bord; nieuwe stap: een
+  bordtik stopt het richten). `Omgeving.prop_onder(pos)` is de keuze uit
+  `klik` zonder actie.
+
 ## 9 oktober -- Kanon geraakt: kantelen en de bediener schrikt
 
 Max: "zitten er ook kanon inslag en hit en stukgaan kanonnen", daarna "doe maar

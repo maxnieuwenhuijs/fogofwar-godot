@@ -635,6 +635,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   daarna elke reactie van elke prop een keer, en klikt zes keer snel op de
   eerste prop (alle zes raak, combo minstens 4); script-fouten vangt de grep
   op `SCRIPT ERROR`.
+- **Veilige rand om het bord (9 oktober, Max: "zorg dat er wel een veilig
+  stuk rand om het bord zit waar geen klikbare omgeving-dingen zoals de kikker
+  in het meertje water niet in de weg zitten").** Het bord plus
+  `Omgeving.veilige_rand()` (knop `veilige_rand`, 0,9 vak vanaf de buitenste
+  vakken = 0,35 voorbij de plank, gelijk aan `Spelletjes.BORD_MARGE`) is van
+  het spel: `Omgeving.klik` rekent het klikpunt op het GRAS (`GROND_Y`; op
+  bordhoogte schoof het punt van een prop aan de overkant het bord in) en
+  geeft daar nooit een prop; een lopend richten van een mini-spel stopt dan
+  (tik 2 en 3 naast het bord of op de prop). `_bouw_props` schuift elke prop
+  of bewoner die erin steekt net genoeg naar buiten (`props_in_rand`,
+  `verschoven`): de plas met de kikker in acht diorama's (0,46-1,26 vak), in
+  de Rivierhaven de stenen, de hengel en een touwrol. `prop_onder(pos)` = welke
+  prop er onder de vinger ligt, zonder te klikken. omgevingcheck: per diorama
+  niets in de rand en 176 klikken langs het bord (randvak, plank, net ernaast)
+  waarvan 0 naar een prop; spelcheck: een bordtik stopt het richten.
 - **Vijf mini-games in het diorama (12 september, Max: "bedenk 5
   spelletjes... heel low key, een tap of een klik inhouden"):**
   `scripts/game/spelletjes.gd` (`Spelletjes`, aangemaakt in
