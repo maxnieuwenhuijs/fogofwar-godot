@@ -1,5 +1,20 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- Kanon geraakt: kantelen en de bediener schrikt
+
+Max: "zitten er ook kanon inslag en hit en stukgaan kanonnen", daarna "doe maar
+ja". Inslag en kapotgaan zaten er al; bij een treffer die hij overleeft deed
+alleen het wankelen (stagger) en de splinters iets (de witte flits werkt alleen
+op het oude blokje, ook bij de infanterie-modellen, en de blends hebben geen
+hit-clip). Nu `PawnView.kanon_geraakt` vanuit `stagger`: het kanon kantelt weg
+van de klap en wipt (gedeelde tween met de terugslag, `_stuk_schok`), en de
+bediener schrikt: borst (`mixamorig_Spine2`) en kop een draai weg van de klap,
+per frame na `mixer_applied`, snel erin en rustig eruit. Vijf knoppen op de tab
+Kanon (alle kanonnen en per model) en een testknop "geraakt" naast "test
+schot". `kanoncheck lion` PASS met de nieuwe stap "geraakt" (met venster piek
+6,1 graden, daarna afwijking 0; headless haalt maar ~2 beelden per seconde,
+dus daar mist de meting de piek) en `_shot_kanon_geraakt.png`.
+
 ## 9 oktober -- Kanonnen via dezelfde knoppen (texture-koppelaar teruggedraaid)
 
 Max over het kader "Texture-koppelaar" met twee nieuwe knoppen: "nee dit is

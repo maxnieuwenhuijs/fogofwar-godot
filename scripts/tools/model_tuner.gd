@@ -102,6 +102,12 @@ const FX_DEFS: Array = [
 	{"cat": "kanon", "key": "kanon_max_lengte", "label": "kanon max lengte (vak)", "min": 0.5, "max": 3.0, "step": 0.01, "def": 1.4},
 	{"cat": "kanon", "key": "kanon_gibs_kracht", "label": "uit elkaar: kracht", "min": 0.5, "max": 3.0, "step": 0.01, "def": 1.4},
 	{"cat": "kanon", "key": "kanon_bediener_bloed", "label": "bloedwolk bediener", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.6},
+	# Geraakt maar heel: het kanon kantelt en wipt, de bediener schrikt.
+	{"cat": "kanon", "key": "kanon_geraakt_kanteling", "label": "geraakt: kanteling (graden)", "min": -30.0, "max": 30.0, "step": 0.5, "def": 7.0},
+	{"cat": "kanon", "key": "kanon_geraakt_wip", "label": "geraakt: wip (vak)", "min": 0.0, "max": 0.5, "step": 0.005, "def": 0.04},
+	{"cat": "kanon", "key": "kanon_geraakt_duur", "label": "geraakt: duur (s)", "min": 0.05, "max": 2.0, "step": 0.01, "def": 0.35},
+	{"cat": "kanon", "key": "kanon_schrik", "label": "bediener schrikt (graden)", "min": 0.0, "max": 60.0, "step": 0.5, "def": 14.0},
+	{"cat": "kanon", "key": "kanon_schrik_duur", "label": "schrik: duur (s)", "min": 0.05, "max": 2.0, "step": 0.01, "def": 0.5},
 ]
 
 ## Dezelfde kanon-knoppen voor ALLEEN het model in de tuner (model_tuning
@@ -113,6 +119,11 @@ const KANON_MODEL_KNOPPEN: Array = [
 	["kanteling", "kanteling (graden)", -20.0, 20.0, 0.5],
 	["terugslag_in", "heen (s)", 0.01, 1.0, 0.01],
 	["terugslag_uit", "terug (s)", 0.01, 3.0, 0.01],
+	["geraakt_kanteling", "geraakt: kanteling", -30.0, 30.0, 0.5],
+	["geraakt_wip", "wip", 0.0, 0.5, 0.005],
+	["geraakt_duur", "duur", 0.05, 2.0, 0.01],
+	["schrik", "schrik (graden)", 0.0, 60.0, 0.5],
+	["schrik_duur", "duur", 0.05, 2.0, 0.01],
 ]
 var _kanon_spins: Dictionary = {}      # korte sleutel -> SpinBox (alleen dit model)
 var _kanon_vm_spins: Dictionary = {}   # vuurmond "x"/"y"/"z", gespiegeld met de rij op In de hand
@@ -2174,6 +2185,11 @@ func _bouw_kanon_tab(tab: VBoxContainer) -> void:
 	test.tooltip_text = "Zoals in het spel: de bediener ontsteekt, op het schot-moment knal, vlam, kogel en terugslag."
 	test.pressed.connect(_on_kanon_test)
 	rijt.add_child(test)
+	var geraakt := Button.new()
+	geraakt.text = "geraakt"
+	geraakt.tooltip_text = "Een treffer die hij overleeft: het kanon kantelt en wipt, de bediener schrikt."
+	geraakt.pressed.connect(_on_kanon_geraakt)
+	rijt.add_child(geraakt)
 	var gib1 := Button.new()
 	gib1.text = "uit elkaar (kanontreffer)"
 	gib1.pressed.connect(_on_gib_test.bind(1.4, "shot"))
@@ -2280,6 +2296,17 @@ func _kanon_gib_aantal() -> int:
 	var n := s.find_children("*", "MeshInstance3D", true, false).size()
 	s.free()
 	return n
+
+
+## Geraakt, zoals in het spel bij een treffer die hij overleeft (game.gd
+## _hit_feedback): wankelen, een hit-clip als het model die heeft, en bij een
+## kanon de kanteling en de schrik van de bediener. De klap komt van links voor.
+func _on_kanon_geraakt() -> void:
+	_interrupt_previews(false, true)
+	if _pawn == null or not is_instance_valid(_pawn):
+		return
+	_pawn.play_hit()
+	_pawn.stagger(Vector3(0.6, 0.0, 1.0).normalized())
 
 
 ## Test schot, zoals in het spel: de vuur-clip (bediener ontsteekt), op het

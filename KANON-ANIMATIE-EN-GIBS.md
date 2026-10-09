@@ -46,7 +46,11 @@ het punt van de loop zelf. De bediener staat bij elk kanon even hoog
 `kanon_max_lengte`. Bij de dood spat het ALTIJD uit elkaar, ook van een
 musketkogel of een sabel (Max: "net als de man zelf"): kanondelen met de
 kanonjas en zonder bloed, de bediener met vlees, bloed en een kreet, plus de
-ontploffing van `VFX.kanon_kapot`.
+ontploffing van `VFX.kanon_kapot`. Geraakt maar heel: het stuk wankelt
+(stagger), houtsplinters, en sinds 9 oktober kantelt het kanon weg van de klap
+en wipt even op, terwijl de bediener schrikt (bovenlijf weg van de klap, kop
+draait mee; per frame na de animatie, dus geen clip nodig). Zet je een
+hit-animatie op de bediener in de blends, dan speelt die er onder.
 
 **Tunen:** Model-tuner, tab **Kanon**. Bovenin voor alle kanonnen
 (`effects_tuning.json`, `kanon_*`): schot-moment (-1 = uit de clip),

@@ -391,7 +391,9 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   dat moment, vuurmond zonder afstelling = het punt van de loop, de bediener
   overal even hoog (`kanon_bediener_hoogte` 0,6), jas op de bediener en
   kanonjas op het kanon, en bij ELKE dood uiteenspatten (kanondelen zonder
-  bloed, de bediener met vlees en een kreet; niet doormidden). Tunen: tab
+  bloed, de bediener met vlees en een kreet; niet doormidden). Geraakt maar
+  heel (`stagger` -> `kanon_geraakt`): het kanon kantelt weg van de klap en
+  wipt, de bediener schrikt (borst en kop gedraaid na `mixer_applied`). Tunen: tab
   Kanon in de Model-tuner (alle kanonnen in effects_tuning `kanon_*`, per model
   in model_tuning `"kanon"`). Check: `-- kanoncheck [factie]`.
 - **Een hele blend-inbox bouwen** (7 september, alleen CLI -- de paneelknoppen

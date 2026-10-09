@@ -1242,6 +1242,35 @@ func _ready() -> void:
 			kc_tex.get_image().save_png("res://_shot_kanon_vuur.png")
 			print("[KANON] screenshot -> _shot_kanon_vuur.png (%s, %.2f s na de start van de vuur-clip)" % [
 				String(kc_schutter._model_path).get_file(), kc_schutter.kanon_schot_moment() + 0.06])
+		# Geraakt maar heel (9 oktober): het kanon kantelt en wipt, de bediener
+		# schrikt, en daarna staat alles weer precies terug.
+		if kc_views.size() >= 3:
+			var kc_g: PawnView = kc_views[2]
+			var kc_rust: Transform3D = (kc_g._piece as Node3D).transform
+			kc_g.play_hit()
+			kc_g.stagger(Vector3(0.6, 0.0, 1.0).normalized())
+			# de piek van de kanteling over de hele schok (per frame gemeten)
+			var kc_kant := 0.0
+			var kc_schrikt := false
+			var kc_begin := Time.get_ticks_msec()
+			var kc_plaatje := false
+			while Time.get_ticks_msec() - kc_begin < 300:
+				await get_tree().process_frame
+				var kc_t: Transform3D = (kc_g._piece as Node3D).transform
+				kc_kant = maxf(kc_kant, rad_to_deg(kc_t.basis.get_rotation_quaternion().angle_to(kc_rust.basis.get_rotation_quaternion())))
+				kc_schrikt = kc_schrikt or not kc_g._schrik.is_empty()
+				if kc_venster and not kc_plaatje and Time.get_ticks_msec() - kc_begin >= 110:
+					kc_plaatje = true
+					kc_tex.get_image().save_png("res://_shot_kanon_geraakt.png")
+			await get_tree().create_timer(maxf(kc_g.kanon_fx("geraakt_duur", 0.35), kc_g.kanon_fx("schrik_duur", 0.5)) + 0.3).timeout
+			var kc_terug: float = ((kc_g._piece as Node3D).transform.origin - kc_rust.origin).length() \
+				+ (kc_g._piece as Node3D).transform.basis.get_rotation_quaternion().angle_to(kc_rust.basis.get_rotation_quaternion())
+			var kc_ok_g: bool = kc_kant > 1.0 and kc_schrikt and kc_g._schrik.is_empty() and kc_terug < 0.001
+			if not kc_ok_g:
+				kc_fouten += 1
+			print("[KANON] geraakt %s: kanteling %.1f graden, bediener schrikt: %s, daarna terug (afwijking %.4f)%s (%s)" % [
+				String(kc_g._model_path).get_file(), kc_kant, "ja" if kc_schrikt else "NEE", kc_terug,
+				"; screenshot -> _shot_kanon_geraakt.png" if kc_venster else "", "PASS" if kc_ok_g else "FAIL"])
 		# Uit elkaar: een musketdood (0,75) moet een kanon toch helemaal opblazen.
 		if not kc_views.is_empty():
 			var kc_dode: PawnView = kc_views[0]

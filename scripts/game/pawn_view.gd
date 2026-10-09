@@ -971,25 +971,119 @@ var _terugslag_rust: Transform3D = Transform3D.IDENTITY
 ## Op het model (_piece), niet op de pion: die blijft op zijn vak. Knoppen:
 ## terugslag (vak), kanteling (graden), terugslag_in en terugslag_uit (s).
 func kanon_terugslag() -> void:
+	var d := kanon_fx("terugslag", 0.06)
+	var kant := deg_to_rad(kanon_fx("kanteling", 3.0))
+	if d == 0.0 and kant == 0.0:
+		return
+	# De voorkant van een pion is -Z: naar achteren is +Z, en een draai om +X
+	# brengt de neus (de -Z-kant) omhoog.
+	_stuk_schok(Transform3D(Basis(Vector3.RIGHT, kant), Vector3(0.0, 0.0, d)),
+		kanon_fx("terugslag_in", 0.05), kanon_fx("terugslag_uit", 0.4))
+
+
+## Het hele stuk een schok geven en terug laten veren: `schok` wordt in
+## PawnView-ruimte om de voet van het stuk toegepast. Terugslag en geraakt
+## delen deze tween, zodat de een de ander netjes afbreekt.
+func _stuk_schok(schok: Transform3D, heen: float, terug: float) -> void:
 	if _piece == null:
 		return
 	var stuk := _piece as Node3D
 	if _terugslag_tw != null and _terugslag_tw.is_valid():
 		_terugslag_tw.kill()
 		stuk.transform = _terugslag_rust
-	var d := kanon_fx("terugslag", 0.06)
-	var kant := deg_to_rad(kanon_fx("kanteling", 3.0))
-	if d == 0.0 and kant == 0.0:
-		return
 	_terugslag_rust = stuk.transform
-	# De voorkant van een pion is -Z: naar achteren is +Z, en een draai om +X
-	# brengt de neus (de -Z-kant) omhoog.
-	var weg := Transform3D(Basis(Vector3.RIGHT, kant), Vector3(0.0, 0.0, d)) * _terugslag_rust
 	_terugslag_tw = stuk.create_tween()
-	_terugslag_tw.tween_property(stuk, "transform", weg, maxf(kanon_fx("terugslag_in", 0.05), 0.01)) \
+	_terugslag_tw.tween_property(stuk, "transform", schok * _terugslag_rust, maxf(heen, 0.01)) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_terugslag_tw.tween_property(stuk, "transform", _terugslag_rust, maxf(kanon_fx("terugslag_uit", 0.4), 0.01)) \
+	_terugslag_tw.tween_property(stuk, "transform", _terugslag_rust, maxf(terug, 0.01)) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Geraakt maar heel (9 oktober, Max: "zitten er ook kanon inslag en hit en
+## stukgaan kanonnen", "doe maar ja"): het kanon kantelt weg van de klap en wipt
+## even op (bovenop het wankelen van stagger), en de bediener schrikt: zijn
+## bovenlijf buigt weg van de klap en zijn kop draait mee. Knoppen (tab Kanon):
+## geraakt_kanteling (graden), geraakt_wip (vak), geraakt_duur (s), schrik
+## (graden), schrik_duur (s). Een hit-clip in de blends speelt er gewoon onder.
+func kanon_geraakt(world_dir: Vector3) -> void:
+	if not is_kanon_model():
+		return
+	var dir := world_dir
+	dir.y = 0.0
+	dir = dir.normalized() if dir.length() > 0.01 else -global_transform.basis.z
+	var lokaal := (global_transform.basis.inverse() * dir)
+	lokaal.y = 0.0
+	lokaal = lokaal.normalized() if lokaal.length() > 0.01 else Vector3(0.0, 0.0, 1.0)
+	var kant := deg_to_rad(kanon_fx("geraakt_kanteling", 7.0))
+	var wip := kanon_fx("geraakt_wip", 0.04)
+	var duur := maxf(kanon_fx("geraakt_duur", 0.35), 0.05)
+	if kant != 0.0 or wip != 0.0:
+		# een draai om de as dwars op de klap brengt de kant van de klap omhoog
+		_stuk_schok(Transform3D(Basis(Vector3.UP.cross(lokaal).normalized(), kant), Vector3(0.0, wip, 0.0)),
+			duur * 0.25, duur * 0.75)
+	_kanon_schrik_start(dir)
+
+
+var _schrik: Dictionary = {}
+
+
+func _kanon_schrik_start(dir: Vector3) -> void:
+	var hoek := kanon_fx("schrik", 14.0)
+	if hoek == 0.0 or _anim == null:
+		return
+	for sk in _piece.find_children("*", "Skeleton3D", true, false):
+		var s := sk as Skeleton3D
+		if not is_bediener_skelet(s):
+			continue
+		var borst := -1
+		var kop := -1
+		for i in s.get_bone_count():
+			var n := s.get_bone_name(i).to_lower()
+			if n.ends_with("spine2"):
+				borst = i
+			elif n.ends_with("head"):
+				kop = i
+		if borst < 0:
+			return
+		_schrik = {"sk": s, "borst": borst, "kop": kop, "dir": dir, "hoek": hoek,
+			"duur": maxf(kanon_fx("schrik_duur", 0.5), 0.05), "start": Time.get_ticks_msec()}
+		if not _anim.mixer_applied.is_connected(_kanon_schrik_frame):
+			_anim.mixer_applied.connect(_kanon_schrik_frame)
+		return
+
+
+## Per frame, NA de animatie: het bovenlijf (vanaf de borst) een draai weg van
+## de klap, de kop een halve draai om omhoog (hij kijkt weg). Snel erin (een
+## kwart van de duur), rustig eruit.
+func _kanon_schrik_frame() -> void:
+	if _schrik.is_empty():
+		return
+	var s: Skeleton3D = _schrik.sk
+	if not is_instance_valid(s):
+		_schrik = {}
+		return
+	var t := float(Time.get_ticks_msec() - int(_schrik.start)) / 1000.0
+	var duur: float = _schrik.duur
+	if t >= duur:
+		_schrik = {}
+		return
+	var f := t / (duur * 0.25) if t < duur * 0.25 else 1.0 - (t - duur * 0.25) / (duur * 0.75)
+	f = ease(clampf(f, 0.0, 1.0), -1.8)
+	var hoek := deg_to_rad(float(_schrik.hoek)) * f
+	var inv := s.global_transform.basis.orthonormalized().inverse()
+	var as_skelet: Vector3 = (inv * Vector3.UP.cross(_schrik.dir as Vector3)).normalized()
+	_draai_bot(s, int(_schrik.borst), Basis(as_skelet, hoek))
+	if int(_schrik.kop) >= 0:
+		_draai_bot(s, int(_schrik.kop), Basis((inv * Vector3.UP).normalized(), hoek * 0.5))
+
+
+## Draai een bot (met alles eronder) om zijn eigen kop met een draai in
+## skelet-ruimte, bovenop de pose van de animatie.
+static func _draai_bot(s: Skeleton3D, bot: int, draai: Basis) -> void:
+	var ouder := s.get_bone_parent(bot)
+	var p := s.get_bone_global_pose(ouder).basis.orthonormalized() if ouder >= 0 else Basis()
+	var nieuw := p.inverse() * draai * p * Basis(s.get_bone_pose_rotation(bot))
+	s.set_bone_pose_rotation(bot, nieuw.get_rotation_quaternion())
 
 
 ## Het skelet van de bediener herken je aan zijn heup (mixamorig_Hips); het
@@ -1612,6 +1706,8 @@ func stagger(world_dir: Vector3) -> void:
 	var tw := create_tween()
 	tw.tween_property(self, "position", base + dir * 0.16, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(self, "position", base, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# een kanon met bediener kantelt bovendien en de bediener schrikt (9 oktober)
+	kanon_geraakt(dir)
 
 
 ## Dood: mét gibs-bestand valt het lijf ALTIJD uiteen in zijn brokstukken (het
