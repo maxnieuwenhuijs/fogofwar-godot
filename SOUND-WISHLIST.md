@@ -134,6 +134,7 @@ naam wint.
 | `musket_fire` | `musket*.wav` | 3 | Infanterieschot afvuren | ✓ 🎚️ |
 | `musket_echo` | `musket_echo*.wav` | 6 | Naklank van het schot | ✓ |
 | `musket_hit` | `default_musket_hit.wav` | 2-3 | Kogel slaat in | 6 short musket ball impacts on a body in a row, each about 0.3 seconds, wet thud with dust, silence between each, dry close mono, no reverb, no music |
+| `cannon_lontstok` | `cannon_lontstok*.wav` | 3 | Lontstok op het zundgat | synthetisch (tools/maak_kanon_geluiden.py); prompt in de geluid-studio |
 | `cannon_fire` | `cannon_heavy*.wav` | 3 | Kanon afvuren | ✓ |
 | `cannon_air` | `cannon_bal_flies*.wav` | 4 | Kogel door de lucht | ✓ |
 | `cannon_hit` | `cannon_ball_hit.wav` | 2-3 | Kanonskogel inslag | ✓ 🎚️ (nu 1) |
@@ -642,6 +643,7 @@ tijdelijk gedempt · geen ster = nog te maken):
 | `horse_select` ⭐ | 3 | warhorse snorting and shifting, bridle and leather tack jingle, brief |
 | `cannon_select` ⭐ | 3 | heavy cast iron cannon barrel creaking on a wooden carriage, brass fitting clank, short |
 | `cannon_fuse` ⭐ | 2 | cannon fuse hissing and sputtering, black powder wick burning, short |
+| `cannon_lontstok` ⭐ | 3 | gunner pressing a smoldering linstock onto the touch hole of a bronze cannon, light iron tap and a short priming powder fizz, no explosion |
 | `inf_select` ⭐ | 3 | soldier shouldering a wooden musket, canvas and leather strap rustle, short |
 | `deselect` ⭐ | 1 | soft low wooden tap, gentle release, dry |
 | `step` ⭐ | 4 | single boot step on dry earth, leather sole, marching infantry, dry |

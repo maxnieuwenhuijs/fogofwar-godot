@@ -172,6 +172,8 @@ HAND = {
     "cannon_air": ("A cast iron cannonball whistling through the air overhead, a low ominous whoosh passing by. " + SLOT, 1.5, 0.5),
     "cannon_hit": ("A heavy cast iron cannonball slamming into the ground: a deep thud, a burst of dirt and splintering wood. One impact. " + SLOT, 1.5, 0.6),
     "cannon_fuse": ("A short cannon fuse burning and hissing with a sputter of sparks. " + SLOT, 1.5, 0.5),
+    # 9 oktober: de bediener zet de lontstok op het zundgat, vlak voor de sis
+    "cannon_lontstok": ("A gunner presses a smoldering linstock onto the touch hole of a bronze cannon: a light tap of the iron tip on the metal, then a short sharp fizz as the priming powder flashes. No explosion, no boom. " + SLOT, 1.0, 0.6),
     "pawn_block": ("A musket ball thudding into a thick wooden shield, a dull heavy knock, the shot blocked. One impact. " + SLOT, 0.6, 0.6),
     "ricochet": ("A musket ball ricocheting off stone: a sharp bright metallic whine spinning away into the distance. " + SLOT, 1.2, 0.6),
     # melee en terugslag

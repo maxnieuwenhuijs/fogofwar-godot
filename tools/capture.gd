@@ -1120,8 +1120,9 @@ func _ready() -> void:
 		# idle aanwezig en elke clip beweegt BEIDE skeletten (kanon en bediener),
 		# het schot-moment valt binnen de vuur-clip, kanon- en bediener-meshes zijn
 		# gescheiden, de gibs hebben kanon- en lijfdelen, de vuurmond staat voor
-		# het stuk. Dan een musketdood: ook die moet uit elkaar spatten, met vlees
-		# op de bediener en niet op het kanon. Gebruik: -- kanoncheck [factie]
+		# het stuk. De ontsteking: lontstok, dan sis, dan knal, met geluid. Dan
+		# een musketdood: ook die moet uit elkaar spatten, met vlees op de
+		# bediener en niet op het kanon. Gebruik: -- kanoncheck [factie]
 		# (default leeuw; mapnamen als lion mogen ook). Met venster ook
 		# _shot_kanon.png (de vijf op rij 5) en _shot_kanon_gibs.png.
 		var kc_fac: int = Constants.Doctrine.LEEUW
@@ -1221,6 +1222,33 @@ func _ready() -> void:
 				"ja" if kc_pv.kanon_jas() != null else "nog niet", "PASS" if kc_f.is_empty() else "FAIL"])
 			for kc_fout in kc_f:
 				print("[KANON]      FOUT: %s" % kc_fout)
+		# De ontsteking (9 oktober, Max: "doe maar ook lontstok ja"): per kanon
+		# eerst de lontstok op het zundgat, dan de lont-sis, dan de knal, en voor
+		# beide ligt er geluid. Het CSG-stuk heeft geen lontstok.
+		if not kc_views.is_empty():
+			var kc_n_stok: int = Audio.variant_aantal("cannon_lontstok")
+			var kc_n_lont: int = Audio.variant_aantal("cannon_fuse")
+			var kc_ok_o: bool = kc_n_stok > 0 and kc_n_lont > 0
+			var kc_tijden: Array = []
+			for kc_v in kc_views:
+				var kc_o: Dictionary = (kc_v as PawnView).kanon_ontsteking()
+				var kc_w: float = (kc_v as PawnView).kanon_schot_moment()
+				kc_ok_o = kc_ok_o and float(kc_o.lontstok) >= 0.0 and float(kc_o.lontstok) <= float(kc_o.lont) \
+					and float(kc_o.lont) <= kc_w
+				kc_tijden.append("%s %.2f/%.2f/%.2f" % [String((kc_v as PawnView)._model_path).get_file().get_basename().trim_prefix("artillery_"),
+					float(kc_o.lontstok), float(kc_o.lont), kc_w])
+			# een kanon zonder bediener: het CSG-stuk van een factie zonder kanonmodel
+			var kc_csg: PawnView = kc_scene.instantiate()
+			game._board.add_child(kc_csg)
+			kc_csg.set_unit_type(Constants.UnitType.ARTILLERY)
+			var kc_csg_o: Dictionary = kc_csg.kanon_ontsteking()
+			kc_ok_o = kc_ok_o and float(kc_csg_o.lontstok) < 0.0 and float(kc_csg_o.lont) == 0.0
+			kc_csg.queue_free()
+			if not kc_ok_o:
+				kc_fouten += 1
+			print("[KANON] ontsteking (lontstok/sis/knal in s): %s; geluid: lontstok %d, sis %d varianten; zonder bediener geen lontstok: %s (%s)" % [
+				", ".join(PackedStringArray(kc_tijden)), kc_n_stok, kc_n_lont,
+				"ja" if float(kc_csg_o.lontstok) < 0.0 else "NEE", "PASS" if kc_ok_o else "FAIL"])
 		var kc_tex := get_viewport().get_texture()
 		var kc_venster: bool = kc_tex != null and kc_tex.get_image() != null
 		if kc_venster and not kc_views.is_empty():

@@ -949,6 +949,26 @@ func kanon_schot_gemeten() -> float:
 	return t
 
 
+## De ontsteking voor het schot (9 oktober, Max: "doe maar ook lontstok ja"),
+## in seconden vanaf de start van de vuur-clip: eerst raakt de lontstok het
+## zundgat (`cannon_lontstok`), dan sist de lont (`cannon_fuse`), en op het
+## schot-moment de knal. De lontstok telt vanaf de START van de clip, niet
+## terug vanaf het schot: in alle vijf Leeuw-blends komt de hand van de
+## bediener na 0,27-0,33 s bij de stuitkant, terwijl het schot per kanon
+## verschilt (0,80-0,93 s). Knoppen: lontstok (s na de start, per model of
+## voor alle kanonnen, op het vuur-tempo) en kanon_lont_na (de sis, s na de
+## lontstok); geen van beide valt ooit na de knal. Zonder bediener (het
+## CSG-stuk, schot-moment 0) sist de lont met de knal mee en is er geen
+## lontstok (-1): niemand die hem vasthoudt. game.gd en de Model-tuner
+## rekenen allebei hiermee.
+func kanon_ontsteking() -> Dictionary:
+	var wacht := kanon_schot_moment()
+	if wacht <= 0.0:
+		return {"lontstok": -1.0, "lont": 0.0}
+	var stok := minf(kanon_fx("lontstok", 0.28) / maxf(kanon_fx("tempo", 1.0), 0.05), wacht)
+	return {"lontstok": stok, "lont": minf(stok + fx("kanon_lont_na", 0.06), wacht)}
+
+
 ## Vuren: de vuur-clip op het kanon-tempo en op het schot-moment de terugslag
 ## van het hele stuk. De kogel, de vlam en de knal regelt game.gd op hetzelfde
 ## moment (kanon_schot_moment).

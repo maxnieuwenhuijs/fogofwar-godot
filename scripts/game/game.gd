@@ -3361,8 +3361,14 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				action.shooter_id, wacht)
 			# Geluid: afvuren nu, inslag bij aankomst van het projectiel.
 			if shooter_type == Constants.UnitType.ARTILLERY:
-				# lont-sis: met de knal, of bij een bediener even ervoor (knop kanon_lont_voor)
-				Audio.play("cannon_fuse", maxf(0.0, wacht - (PawnView.fx("kanon_lont_voor", 0.6) if wacht > 0.0 else 0.0)))
+				# de ontsteking: bij een bediener eerst de lontstok op het
+				# zundgat, dan de lont-sis; zonder bediener sist hij met de
+				# knal mee (PawnView.kanon_ontsteking, knoppen in tab Kanon)
+				var ontsteking: Dictionary = shooter.kanon_ontsteking() if shooter != null \
+					else {"lontstok": -1.0, "lont": 0.0}
+				if float(ontsteking.lontstok) >= 0.0:
+					Audio.play("cannon_lontstok", float(ontsteking.lontstok))
+				Audio.play("cannon_fuse", float(ontsteking.lont))
 				Audio.play("cannon_fire", wacht)
 				Audio.play("cannon_air", wacht + 0.04)
 				Audio.play("cannon_hit", wacht + travel)

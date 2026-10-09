@@ -393,7 +393,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   kanonjas op het kanon, en bij ELKE dood uiteenspatten (kanondelen zonder
   bloed, de bediener met vlees en een kreet; niet doormidden). Geraakt maar
   heel (`stagger` -> `kanon_geraakt`): het kanon kantelt weg van de klap en
-  wipt, de bediener schrikt (borst en kop gedraaid na `mixer_applied`). Tunen: tab
+  wipt, de bediener schrikt (borst en kop gedraaid na `mixer_applied`). De
+  ontsteking (`PawnView.kanon_ontsteking`, Max: "doe maar ook lontstok ja"):
+  eerst de lontstok op het zundgat (`cannon_lontstok`, knop `lontstok` 0,28 s na
+  de START van de vuur-clip: in alle vijf blends komt de hand na 0,27-0,33 s
+  bij de stuitkant, terwijl het schot per kanon verschilt), dan de lont-sis
+  `kanon_lont_na` (0,06 s) later, nooit na de knal; zonder bediener geen
+  lontstok. Placeholders uit `tools/maak_kanon_geluiden.py` in `sounds/firing/`
+  (manifest `synthetisch.json`), prompt in de geluid-studio. Tunen: tab
   Kanon in de Model-tuner (alle kanonnen in effects_tuning `kanon_*`, per model
   in model_tuning `"kanon"`). Check: `-- kanoncheck [factie]`.
 - **Een hele blend-inbox bouwen** (7 september, alleen CLI -- de paneelknoppen

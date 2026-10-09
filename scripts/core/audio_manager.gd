@@ -204,6 +204,9 @@ const CATEGORY_DB := {
 	"cannon_select": -5.0,
 	"inf_select": -5.0,
 	"cannon_fuse": -4.0,
+	# de lontstok op het zundgat, vlak voor de sis (9 oktober): een tikje en
+	# een fsst, onder de sis en ver onder de knal
+	"cannon_lontstok": -6.0,
 	"deselect": -7.0,
 }
 

@@ -97,7 +97,10 @@ const FX_DEFS: Array = [
 	{"cat": "kanon", "key": "kanon_kanteling", "label": "kanteling (graden)", "min": -20.0, "max": 20.0, "step": 0.5, "def": 3.0},
 	{"cat": "kanon", "key": "kanon_terugslag_in", "label": "terugslag heen (s)", "min": 0.01, "max": 1.0, "step": 0.01, "def": 0.05},
 	{"cat": "kanon", "key": "kanon_terugslag_uit", "label": "terugslag terug (s)", "min": 0.01, "max": 3.0, "step": 0.01, "def": 0.4},
-	{"cat": "kanon", "key": "kanon_lont_voor", "label": "lont-sis voor het schot (s)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.6},
+	# De ontsteking: de lontstok op het zundgat, gerekend vanaf de start van
+	# de vuur-clip, dan de lont-sis (PawnView.kanon_ontsteking).
+	{"cat": "kanon", "key": "kanon_lontstok", "label": "lontstok na de start (s)", "min": 0.0, "max": 3.0, "step": 0.01, "def": 0.28},
+	{"cat": "kanon", "key": "kanon_lont_na", "label": "lont-sis na de lontstok (s)", "min": 0.0, "max": 1.5, "step": 0.01, "def": 0.06},
 	{"cat": "kanon", "key": "kanon_bediener_hoogte", "label": "bediener-hoogte (vak)", "min": 0.2, "max": 1.5, "step": 0.01, "def": 0.6},
 	{"cat": "kanon", "key": "kanon_max_lengte", "label": "kanon max lengte (vak)", "min": 0.5, "max": 3.0, "step": 0.01, "def": 1.4},
 	{"cat": "kanon", "key": "kanon_gibs_kracht", "label": "uit elkaar: kracht", "min": 0.5, "max": 3.0, "step": 0.01, "def": 1.4},
@@ -114,6 +117,7 @@ const FX_DEFS: Array = [
 ## "<factie>/<model>" -> "kanon"): korte sleutel, label, bereik, stap.
 const KANON_MODEL_KNOPPEN: Array = [
 	["schot", "schot-moment (s, -1 = uit de clip)", -1.0, 5.0, 0.01],
+	["lontstok", "lontstok na de start (s)", 0.0, 3.0, 0.01],
 	["tempo", "vuur-tempo", 0.2, 5.0, 0.01],
 	["terugslag", "terugslag (vak)", 0.0, 0.5, 0.005],
 	["kanteling", "kanteling (graden)", -20.0, 20.0, 0.5],
@@ -2281,8 +2285,9 @@ func _kanon_info_bij() -> void:
 	var fit: Dictionary = _pawn.last_fit
 	var jas_b: bool = PawnView.team_texture(_pawn._model_path, _pawn.team) != null
 	var jas_k: bool = _pawn.kanon_jas() != null
-	_kanon_info.text = "%s: schot na %.2f s (uit de clip %.2f s op tempo 1), %s. Schaal %.2f. Jas bediener: %s, kanonjas: %s (%s_cannon_red/blue.png). %d onderdelen in de gibs." % [
-		_pawn._tune_key, _pawn.kanon_schot_moment(), _pawn.kanon_schot_gemeten(),
+	var ontsteking: Dictionary = _pawn.kanon_ontsteking()
+	_kanon_info.text = "%s: lontstok na %.2f s, sis na %.2f s, schot na %.2f s (uit de clip %.2f s op tempo 1), %s. Schaal %.2f. Jas bediener: %s, kanonjas: %s (%s_cannon_red/blue.png). %d onderdelen in de gibs." % [
+		_pawn._tune_key, float(ontsteking.lontstok), float(ontsteking.lont), _pawn.kanon_schot_moment(), _pawn.kanon_schot_gemeten(),
 		("eigen waarden: " + ", ".join(PackedStringArray(eigen.keys()))) if not eigen.is_empty() else "waarden van alle kanonnen",
 		float(fit.get("s", 0.0)), "ja" if jas_b else "nog niet", "ja" if jas_k else "nog niet",
 		_pawn._model_path.get_file().get_basename(), _kanon_gib_aantal()]
@@ -2309,8 +2314,9 @@ func _on_kanon_geraakt() -> void:
 	_pawn.stagger(Vector3(0.6, 0.0, 1.0).normalized())
 
 
-## Test schot, zoals in het spel: de vuur-clip (bediener ontsteekt), op het
-## schot-moment de lont al eerder, dan knal, vlam, kogel, schok en terugslag.
+## Test schot, zoals in het spel: de vuur-clip (bediener ontsteekt), de
+## lontstok en de lont-sis al eerder, op het schot-moment knal, vlam, kogel,
+## schok en terugslag.
 func _on_kanon_test() -> void:
 	_interrupt_previews(false, true)
 	if _pawn == null or not is_instance_valid(_pawn):
@@ -2322,7 +2328,10 @@ func _on_kanon_test() -> void:
 		_pawn._anim.stop()
 	_pawn.play_attack()
 	var wacht := _pawn.kanon_schot_moment()
-	Audio.play("cannon_fuse", maxf(0.0, wacht - PawnView.fx("kanon_lont_voor", 0.6)))
+	var ontsteking := _pawn.kanon_ontsteking()
+	if float(ontsteking.lontstok) >= 0.0:
+		Audio.play("cannon_lontstok", float(ontsteking.lontstok))
+	Audio.play("cannon_fuse", float(ontsteking.lont))
 	var gen := _preview_gen
 	var tw := create_tween()
 	tw.tween_interval(wacht)
@@ -2940,6 +2949,8 @@ func _geluid_rijen() -> Array:
 		rijen.append({"cat": "charge_yell", "wat": "charge"})
 		rijen.append({"cat": "horse_die_" + fac, "wat": "doodskreet (factie)", "terugval": "horse_die"})
 	else:
+		rijen.append({"cat": "cannon_lontstok", "wat": "lontstok op het zundgat"})
+		rijen.append({"cat": "cannon_fuse", "wat": "lont sist"})
 		rijen.append({"cat": "cannon_fire", "wat": "kanon afvuren"})
 		rijen.append({"cat": "cannon_hit", "wat": "inslag"})
 		rijen.append({"cat": "cannon_die_" + fac, "wat": "vernietigd (factie)", "terugval": "cannon_die"})

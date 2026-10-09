@@ -1,5 +1,41 @@
 # Fog of War — Work In Progress & Context
 
+## 9 oktober -- De lontstok: eigen geluid voor de ontsteking van het kanon
+
+Max: "ook studio game sounds voor ontsteken kanon hebben we die al?" (de
+lont-sis `cannon_fuse` lag er, een geluid voor de lontstok niet), daarna "doe
+maar ook lontstok ja".
+
+- **Geluid:** nieuwe categorie `cannon_lontstok` (-6 dB): een tikje van de stok
+  op het brons en een korte fsst van het kruit in het zundgat. Drie
+  synthetische placeholders uit `tools/maak_kanon_geluiden.py` in
+  `sounds/firing/` (manifest `synthetisch.json`), geimporteerd door de
+  wav-importer na te doen (de editor stond open; proef byte-gelijk op
+  `ui_plof` en `canvas_cannon_fuse`). De prompt staat in
+  `maak_geluid_prompts.py` en als rij in `sounds/geluid_studio.json` (alleen
+  die rij erbij gezet, de rest van het bestand niet aangeraakt), plus de
+  wenslijst (sectie 6 en de prompt-tabel): in de studio onder "Algemeen
+  (arsenaal)", met "Vervang synthetisch".
+- **Timing (`PawnView.kanon_ontsteking`):** gemeten in de vijf blends (de
+  vertices aan de rechterhand tegen de stuitkant van de loop): de hand komt na
+  0,27-0,33 s bij de stuitkant, het schot valt per kanon anders (0,80 spd, 0,87
+  hp, 0,93 base/atk/mix). Terugrekenen vanaf het schot, zoals de sis tot nu toe
+  deed, zat bij spd 0,13 s te vroeg. Dus nu vanaf de START van de vuur-clip:
+  lontstok 0,28 s (knop `lontstok`, voor alle kanonnen en per model, op het
+  vuur-tempo), de sis `kanon_lont_na` 0,06 s later, geen van beide ooit na de
+  knal. De oude knop `kanon_lont_voor` (sis, s voor het schot) is weg; zonder
+  bediener (CSG-stuk) sist de lont met de knal mee en is er geen lontstok,
+  precies als voorheen.
+- **Tuner:** tab Kanon twee rijen (alle kanonnen) en "lontstok" per model; de
+  info-regel noemt lontstok, sis en schot; "test schot" speelt de lontstok mee;
+  tab Geluid toont bij artillerie ook lontstok en sis.
+- **Checks:** `kanoncheck lion` PASS met de nieuwe stap "ontsteking" (per kanon
+  lontstok/sis/knal 0,28/0,34/0,80-0,93, geluid 3 + 2 varianten, CSG zonder
+  lontstok); geluidcheck vindt `cannon_lontstok` (3, -6 dB, eigen regel);
+  tunercheck 0 fouten; `uispel 777` = `e14d7f70`, gelijk aan de werkmap voor
+  deze wijziging (de referentie `73b47201` geldt zonder de nog niet gecommitte
+  Wolf-gewichten).
+
 ## 9 oktober -- Veilige rand om het bord (geen props in de weg)
 
 Max: "zorg dat er wel een veilig stuk rand om het bord zit waar geen klikbare

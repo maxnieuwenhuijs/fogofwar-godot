@@ -38,9 +38,12 @@ minimaal verschil maar toch"). De uploads voor de retexture-dienst maakt
 
 **In het spel** (`PawnView`, blok "Artillerie: kanon + bediener"): de vuur-clip
 speelt, de kogel, de vlam, de knal en de treffer wachten op het schot-moment
-(gemeten uit de clip: het laatste frame dat het kanon stilstaat, ~0,9 s), de
-lont-sis begint even eerder, en op het schot-moment slaat het hele stuk terug
-(een duw naar achteren en de neus omhoog). De vuurmond is zonder afstelling
+(gemeten uit de clip: het laatste frame dat het kanon stilstaat, 0,80-0,93 s),
+en op het schot-moment slaat het hele stuk terug (een duw naar achteren en de
+neus omhoog). Daarvoor de ontsteking (`kanon_ontsteking`): de bediener zet de
+lontstok op het zundgat (geluid `cannon_lontstok`, 0,28 s na de start van de
+clip: in alle vijf blends komt zijn hand na 0,27-0,33 s bij de stuitkant) en
+even later sist de lont (`cannon_fuse`); geen van beide valt ooit na de knal. De vuurmond is zonder afstelling
 het punt van de loop zelf. De bediener staat bij elk kanon even hoog
 (`kanon_bediener_hoogte`, 0,6 vak); het kanon houdt zijn eigen maat tot
 `kanon_max_lengte`. Bij de dood spat het ALTIJD uit elkaar, ook van een
@@ -54,8 +57,11 @@ hit-animatie op de bediener in de blends, dan speelt die er onder.
 
 **Tunen:** Model-tuner, tab **Kanon**. Bovenin voor alle kanonnen
 (`effects_tuning.json`, `kanon_*`): schot-moment (-1 = uit de clip),
-vuur-tempo, terugslag, kanteling, terugslag heen/terug, lont-sis, bediener-
-hoogte, max lengte, uit-elkaar-kracht, bloedwolk. Daaronder dezelfde knoppen
+vuur-tempo, terugslag, kanteling, terugslag heen/terug, lontstok (s na de
+start van de vuur-clip) en lont-sis (s na de lontstok), bediener-hoogte, max
+lengte, uit-elkaar-kracht, bloedwolk. Het geluid van de lontstok: in de
+geluid-studio de rij `cannon_lontstok` (tot dan drie synthetische uit
+`tools/maak_kanon_geluiden.py`, "Vervang synthetisch" zet een echte erover). Daaronder dezelfde knoppen
 voor alleen dit kanon (`model_tuning.json` -> `"kanon"`), de vuurmond (gelijk
 aan de rij op In de hand; "vuurmond = punt van de loop" haalt de afstelling
 weer weg), en "test schot" / "uit elkaar". Schaal en plek: tab Model, zoals bij
@@ -64,7 +70,8 @@ elk model.
 **Controle:** `<godot> --headless --path . res://tools/capture.tscn --
 kanoncheck [factie]` (per archetype de clips op beide skeletten, het
 schot-moment, kanon en bediener gescheiden, gibs met kanon- en lijfdelen, de
-vuurmond voor het stuk, dan een musketdood die echt uit elkaar moet spatten;
+vuurmond voor het stuk, de ontsteking per kanon (lontstok, sis, knal in die
+volgorde, met geluid), dan een musketdood die echt uit elkaar moet spatten;
 met venster `_shot_kanon.png`, `_shot_kanon_vuur.png` (een kanon op het
 schot-moment) en `_shot_kanon_gibs.png`). `verwerk_levering.py` draait hem na
 elke kanon-levering.

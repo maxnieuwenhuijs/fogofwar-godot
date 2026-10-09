@@ -60,6 +60,10 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "cannon_lontstok": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "cannon_move": {
    "duur": 7.0,
    "invloed": 0.5
@@ -1225,6 +1229,7 @@
   "cannon_fire": "A single black powder field cannon firing: a deep heavy boom with a sharp initial blast and a low rumbling tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_fuse": "A short cannon fuse burning and hissing with a sputter of sparks. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_hit": "A heavy cast iron cannonball slamming into the ground: a deep thud, a burst of dirt and splintering wood. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cannon_lontstok": "A gunner presses a smoldering linstock onto the touch hole of a bronze cannon: a light tap of the iron tip on the metal, then a short sharp fizz as the priming powder flashes. No explosion, no boom. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_move": "A heavy wooden cannon carriage on iron-rimmed wheels rolls forward one short push over rough ground, the wood creaking. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_select": "A gunner slaps the barrel of an iron cannon once and a rammer is set against the wooden carriage. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_wheel_loose": "A heavy wooden cannon wheel with an iron rim breaks loose, rolls wobbling for a moment and falls flat on packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1534,6 +1539,7 @@
   "cannon_fire": "A single black powder field cannon firing: a deep heavy boom with a sharp initial blast and a low rumbling tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_fuse": "A short cannon fuse burning and hissing with a sputter of sparks. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_hit": "A heavy cast iron cannonball slamming into the ground: a deep thud, a burst of dirt and splintering wood. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cannon_lontstok": "A gunner presses a smoldering linstock onto the touch hole of a bronze cannon: a light tap of the iron tip on the metal, then a short sharp fizz as the priming powder flashes. No explosion, no boom. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_move": "A heavy wooden cannon carriage on iron-rimmed wheels rolls forward one short push over rough ground, the wood creaking. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_select": "A gunner slaps the barrel of an iron cannon once and a rammer is set against the wooden carriage. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_wheel_loose": "A heavy wooden cannon wheel with an iron rim breaks loose, rolls wobbling for a moment and falls flat on packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
