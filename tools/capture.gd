@@ -1227,6 +1227,21 @@ func _ready() -> void:
 			await get_tree().create_timer(1.0).timeout
 			kc_tex.get_image().save_png("res://_shot_kanon.png")
 			print("[KANON] screenshot -> _shot_kanon.png (base, spd, hp, atk, mix op rij 5)")
+			# Vuren zoals in het spel: het laatste kanon ontsteekt, op het
+			# schot-moment vlam, kogel en terugslag; plaatje vlak na het schot.
+			var kc_schutter: PawnView = kc_views[kc_views.size() - 1]
+			kc_schutter.play_attack()
+			await get_tree().create_timer(kc_schutter.kanon_schot_moment()).timeout
+			var kc_voor3: Vector3 = -kc_schutter.global_transform.basis.z
+			kc_voor3.y = 0.0
+			var kc_m: Vector3 = game._board.to_local(kc_schutter.muzzle_world())
+			var kc_doel: Vector3 = game._board.to_local(kc_schutter.muzzle_world() + kc_voor3.normalized() * 4.0)
+			kc_doel.y = 0.55
+			load("res://scripts/vfx/vfx.gd").schot(game._board, kc_m, kc_doel, true, 0.2, Callable())
+			await get_tree().create_timer(0.06).timeout
+			kc_tex.get_image().save_png("res://_shot_kanon_vuur.png")
+			print("[KANON] screenshot -> _shot_kanon_vuur.png (%s, %.2f s na de start van de vuur-clip)" % [
+				String(kc_schutter._model_path).get_file(), kc_schutter.kanon_schot_moment() + 0.06])
 		# Uit elkaar: een musketdood (0,75) moet een kanon toch helemaal opblazen.
 		if not kc_views.is_empty():
 			var kc_dode: PawnView = kc_views[0]

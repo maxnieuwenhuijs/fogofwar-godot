@@ -41,10 +41,18 @@ spat als de kanon geraakt wordt net als de man zelf, met die gibs".
   allebei `73b47201…` (165). In de werkmap geeft hij nu `e14d7f70…` (159):
   dat komen de nog niet gecommitte gewichten van de trainingsnacht van
   8 oktober (`data/ai_weights_f0/2/3/4.json`), niet de kanonnen.
-- **Open:** `-- kanoncheck lion` en een kijkje met venster zodra de editor de
-  vijf glb's geimporteerd heeft (geen `--import` naast de open editor); de
-  jassen komen na de retexture; van het duwen zie je weinig (een rol duurt
-  0,13-0,45 s); geen raak-clip voor de bediener.
+- **kanoncheck lion: PASS**, op geimporteerde glb's in een losse worktree met
+  een eigen kopie van `.godot` (de editor stond open en had nog niet
+  geimporteerd; `--import` naast de open editor doen we niet): alle vijf de
+  clips op beide skeletten, schot na 0,80 (spd, zijn terugslag is 4 frames
+  eerder geanimeerd) tot 0,93 s, gibs 4-8 kanondelen + 11 lijfdelen, bediener
+  0,60 hoog, en de musketdood spat uit elkaar (kanondelen zonder vlees, alle
+  11 lijfdelen met). Met venster: `_shot_kanon.png`, `_shot_kanon_vuur.png`
+  (nieuw: het mix-kanon op het schot-moment) en `_shot_kanon_gibs.png`.
+- **Open:** de editor van Max moet de vijf glb's nog importeren (klik in het
+  venster); de jassen komen na de retexture; van het duwen zie je weinig (een
+  rol duurt 0,13-0,45 s); geen raak-clip voor de bediener; de modellen zijn
+  donker (de Tripo-texturen).
 
 ## 7 oktober -- 4.3.10: het bod kort alleen wie minder kaarten speelt dan de tegenstander
 

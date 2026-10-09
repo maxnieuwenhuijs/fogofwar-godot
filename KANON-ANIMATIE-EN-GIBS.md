@@ -61,8 +61,9 @@ elk model.
 kanoncheck [factie]` (per archetype de clips op beide skeletten, het
 schot-moment, kanon en bediener gescheiden, gibs met kanon- en lijfdelen, de
 vuurmond voor het stuk, dan een musketdood die echt uit elkaar moet spatten;
-met venster `_shot_kanon.png` en `_shot_kanon_gibs.png`). `verwerk_levering.py`
-draait hem na elke kanon-levering.
+met venster `_shot_kanon.png`, `_shot_kanon_vuur.png` (een kanon op het
+schot-moment) en `_shot_kanon_gibs.png`). `verwerk_levering.py` draait hem na
+elke kanon-levering.
 
 ---
 
