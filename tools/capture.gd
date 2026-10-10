@@ -987,6 +987,65 @@ func _ready() -> void:
 		print("[IDLE] %s: %d fout(en)" % ["PASS" if ic_fouten == 0 else "FAIL", ic_fouten])
 		get_tree().quit(0 if ic_fouten == 0 else 1)
 		return
+	elif "ritcheck" in args:
+		# 10 oktober (Max: "nu hoor je bij verplaatsen van de big bro 1x een
+		# dreun, kan je dat een paar stappen van maken, getimed op de
+		# animatie?"). Per factie en archetype de big bro zoals de Model-tuner:
+		# (1) waar in elke loop-clip een voet neerkomt (PawnView.loop_contacten,
+		# eigen rekenwerk door de botketen) en of dat rekenwerk klopt met de
+		# pose die de AnimationPlayer zelf neerzet; (2) een rit van 1 tot 4
+		# vakken: minstens twee stappen, de eerste net na het vertrek, de
+		# laatste rond de aankomst, en op elk stap-moment staat de speler (echt
+		# vooruitgespoeld) op een neerkomende voet; (3) de stappen trekken niets
+		# uit de globale rng. Gebruik: -- ritcheck [factie] (default alle zes).
+		var ri_namen := _met_mapnamen({"varken": Constants.Doctrine.MENS, "muis": Constants.Doctrine.MUIS,
+			"leeuw": Constants.Doctrine.LEEUW, "beer": Constants.Doctrine.BEER,
+			"wolf": Constants.Doctrine.WOLF, "krokodil": Constants.Doctrine.VOS})
+		var ri_facties: Array = []
+		for ri_n in ri_namen:
+			if ri_n in args and not ri_facties.has(ri_namen[ri_n]):
+				ri_facties.append(ri_namen[ri_n])
+		if ri_facties.is_empty():
+			ri_facties = [Constants.Doctrine.MENS, Constants.Doctrine.MUIS, Constants.Doctrine.LEEUW,
+				Constants.Doctrine.BEER, Constants.Doctrine.WOLF, Constants.Doctrine.VOS]
+		var ri_kaarten := {"base": null, "spd": [1, 3, 1], "hp": [3, 1, 1], "atk": [1, 1, 3], "mix": [2, 2, 1]}
+		var ri_scene: PackedScene = load("res://scenes/game/pawn_view.tscn")
+		var ri_fouten := 0
+		var ri_modellen := 0
+		var ri_gezien := {}
+		for ri_fac in ri_facties:
+			for ri_arch in ["base", "spd", "hp", "atk", "mix"]:
+				var ri_pv: PawnView = ri_scene.instantiate()
+				ri_pv.team = Constants.Team.RED
+				add_child(ri_pv)
+				ri_pv.set_unit_type(Constants.UnitType.CAVALRY)
+				var ri_st = ri_kaarten[ri_arch]
+				var ri_card = null
+				if ri_st != null:
+					ri_card = Card.new(0, 0, 0, int(ri_st[0]), int(ri_st[1]), int(ri_st[2]))
+				ri_pv.set_character(ri_fac, Constants.UnitType.CAVALRY, ri_card)
+				await get_tree().process_frame
+				await get_tree().process_frame
+				var ri_pad := String(ri_pv._model_path)
+				if ri_pad == "" or ri_pv._anim == null or ri_gezien.has(ri_pad):
+					ri_pv.queue_free()
+					continue
+				ri_gezien[ri_pad] = true
+				ri_modellen += 1
+				ri_fouten += _ritcheck_model(ri_pv, "%s/%s" % [Constants.doctrine_name(ri_fac).to_lower(), ri_pad.get_file().get_basename()])
+				ri_pv.queue_free()
+		# (3) de stappen kiezen variant en toon uit een eigen rng
+		seed(4242)
+		var ri_voor := randi()
+		seed(4242)
+		Audio.play_rit_stappen("step", [0.05, 0.15, 0.25], -8.0)
+		var ri_na := randi()
+		var ri_rng_ok := ri_voor == ri_na
+		print("[RIT] globale rng ongemoeid door de rit-stappen: %s" % ri_rng_ok)
+		var ri_ok := ri_fouten == 0 and ri_modellen > 0 and ri_rng_ok
+		print("[RIT] %d modellen, %d fouten: %s" % [ri_modellen, ri_fouten, "PASS" if ri_ok else "FAIL"])
+		get_tree().quit(0 if ri_ok else 1)
+		return
 	elif "richtingcheck" in args:
 		# 18 september (Max: "voor infantry attack pig klopt de orientatie niet").
 		# Per type en archetype een PawnView zoals de Model-tuner, en meten waar de
@@ -4209,6 +4268,10 @@ func _ready() -> void:
 		# sprong-stoot ("charge"-clip) bij aankomst.
 		var mc_charge_ok: bool = await _meleecheck_charge(game, st3)
 		mc_alles_ok = mc_alles_ok and mc_charge_ok
+		# Vierde (10 oktober): de gewone rit van de big bro, zware stappen op
+		# zijn voeten (game._animate_move -> PawnView.rit_stappen).
+		var mc_rit_ok: bool = await _meleecheck_rit(game, st3)
+		mc_alles_ok = mc_alles_ok and mc_rit_ok
 		print("[MELEE] " + ("PASS" if mc_alles_ok else "FAIL"))
 		get_tree().quit(0 if mc_alles_ok else 1)
 		return
@@ -5661,6 +5724,104 @@ func _met_mapnamen(namen: Dictionary) -> Dictionary:
 ## Richtingcheck: voet -> teen (links en rechts gemiddeld), heup -> nek en de
 ## op-as, in wereldruimte, uit het skelet van het stuk. Leeg als er geen
 ## voet- en teenbotten zijn.
+## -- ritcheck voor een model: de voeten in elke loop-clip en vier ritten.
+## Geeft het aantal fouten.
+func _ritcheck_model(pv: PawnView, label: String) -> int:
+	var fouten := 0
+	var skel: Skeleton3D = null
+	for s in pv._piece.find_children("*", "Skeleton3D", true, false):
+		if not PawnView.voet_botten(s).is_empty():
+			skel = s
+			break
+	var walks: Array = pv._variants_of(pv.anim_walk)
+	if skel == null or walks.is_empty():
+		print("[RIT] %s: geen skelet met voeten of geen loop-clip" % label)
+		return 1
+	var voeten: Array = PawnView.voet_botten(skel)
+	for clip in walks:
+		var a: Animation = pv._anim.get_animation(clip)
+		var c: Array = pv.loop_contacten(clip)
+		# (1) het eigen rekenwerk tegen de pose die de speler neerzet
+		var sporen: Dictionary = PawnView.bot_sporen(skel, a)
+		var verschil := 0.0
+		var laag := INF
+		var hoog := -INF
+		pv._anim.play(clip, 0.0, 1.0)
+		for i in 16:
+			var t := a.length * float(i) / 16.0
+			pv._anim.seek(t, true)
+			for v in voeten:
+				var echt: float = (skel.global_transform * skel.get_bone_global_pose(v).origin).y - skel.global_position.y
+				var eigen: float = PawnView.bot_hoogte(skel, a, sporen, v, t)
+				verschil = maxf(verschil, absf(echt - eigen))
+				laag = minf(laag, eigen)
+				hoog = maxf(hoog, eigen)
+		var slag := hoog - laag
+		if "kurven" in OS.get_cmdline_user_args():
+			# diagnose: per voet de hoogte over de clip (0 = laagst, 9 = hoogst)
+			for v in voeten:
+				var regel := ""
+				for i in 46:
+					var hv: float = PawnView.bot_hoogte(skel, a, sporen, v, a.length * float(i) / 46.0)
+					regel += str(clampi(int((hv - laag) / maxf(slag, 1e-6) * 9.99), 0, 9))
+				print("[RIT]    %s %-18s %s" % [String(clip).get_file(), skel.get_bone_name(v), regel])
+		var rekenwerk_ok := slag > 0.0 and verschil <= maxf(0.01 * slag, 1e-4)
+		# elke landing is echt: een voet staat dan in de onderste helft van zijn
+		# slag en kwam van hoger (een kwart cyclus eerder minstens 30% hoger)
+		var voeten_ok := c.size() >= 2
+		for ct in c:
+			var echt_geland := false
+			for v in voeten:
+				var v_laag := INF
+				var v_hoog := -INF
+				for i in 48:
+					var hv: float = PawnView.bot_hoogte(skel, a, sporen, v, a.length * float(i) / 48.0)
+					v_laag = minf(v_laag, hv)
+					v_hoog = maxf(v_hoog, hv)
+				var nu: float = PawnView.bot_hoogte(skel, a, sporen, v, float(ct))
+				var eerder: float = PawnView.bot_hoogte(skel, a, sporen, v, fposmod(float(ct) - a.length * 0.25, a.length))
+				if nu <= v_laag + 0.5 * (v_hoog - v_laag) and eerder >= nu + 0.3 * (v_hoog - v_laag):
+					echt_geland = true
+			voeten_ok = voeten_ok and echt_geland
+		print("[RIT] %s %s (%.2f s): voeten landen op %s s; eigen rekenwerk tegen de speler %.5f (slag %.3f): %s" % [
+			label, String(clip).get_file(), a.length, str(c.map(func(x): return snappedf(float(x), 0.01))),
+			verschil, slag, "ok" if rekenwerk_ok and voeten_ok else "FOUT"])
+		if not (rekenwerk_ok and voeten_ok):
+			fouten += 1
+	# (2) ritten van 1 tot 4 vakken, zoals game._animate_move ze speelt
+	var regels: Array = []
+	for dist in [1, 2, 3, 4]:
+		var dur := clampf(0.13 * float(dist), 0.13, 0.45)
+		pv.play_idle()
+		pv._anim.advance(0.5)
+		pv.play_walk(PawnView.RIT_BLEND)
+		var tijden: Array = pv.rit_stappen(dur)
+		var clip := String(pv._anim.current_animation)
+		var c: Array = pv.loop_contacten(clip)
+		var lengte: float = pv._anim.get_animation(clip).length
+		var tempo: float = pv._anim.get_playing_speed()
+		# echt vooruitspoelen: waar staat de speler op elk stap-moment?
+		var t_nu := 0.0
+		var naast := 0.0
+		for t in tijden:
+			pv._anim.advance(float(t) - t_nu)
+			t_nu = float(t)
+			var pos: float = pv._anim.current_animation_position
+			var d := INF
+			for ct in c:
+				d = minf(d, absf(fposmod(pos - float(ct) + lengte * 0.5, lengte) - lengte * 0.5))
+			naast = maxf(naast, d)
+		var ok := tijden.size() >= 2 and absf(float(tijden[0]) - PawnView.RIT_EERSTE) < 0.005 \
+			and float(tijden[tijden.size() - 1]) >= dur * 0.6 and float(tijden[tijden.size() - 1]) <= dur + 0.05 \
+			and naast < 0.01
+		regels.append("%d vak (%.2f s): tempo %.1f, stappen op %s%s" % [dist, dur, tempo,
+			str(tijden.map(func(x): return snappedf(float(x), 0.01))), "" if ok else " FOUT (naast een voet %.3f)" % naast])
+		if not ok:
+			fouten += 1
+	print("[RIT] %s ritten: %s" % [label, "; ".join(regels)])
+	return fouten
+
+
 func _rc_meet(pv: PawnView) -> Dictionary:
 	if pv._piece == null:
 		return {}
@@ -6493,6 +6654,100 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 			stootte, t_sprong >= 0.0 and absf(t_sprong - float(tl.get("sprong_start", 0.0))) < 0.15, afstand_landing < 0.25, doel_voor_klap, not doel_na_klap])
 	return ok
 
+
+
+## De rit van de big bro (10 oktober, Max: "nu hoor je bij verplaatsen van de
+## big bro 1x een dreun, kan je dat een paar stappen van maken, getimed op de
+## animatie? en mag qua volume wel wat zachter"). Alleen beeld en geluid: drie
+## vakken heen en terug via game._animate_move. Tijdens de rit loopt de
+## loop-clip versneld, de stappen vallen op zijn voeten (eerste na
+## RIT_EERSTE, laatste rond de aankomst) met rit_stap_db erbij, daarna staat
+## hij weer in idle op gewone snelheid; een infanterist en de knop op 0 houden
+## de stap per vakje.
+func _meleecheck_rit(game, st3: GameState) -> bool:
+	var ruiter: Pawn = null
+	var soldaat: Pawn = null
+	for pawn in st3.pawns.values():
+		if pawn.is_eliminated or pawn.owner_id != 1 or not game._pawn_views.has(pawn.id):
+			continue
+		if ruiter == null and pawn.unit_type == Constants.UnitType.CAVALRY:
+			ruiter = pawn
+		elif soldaat == null and pawn.unit_type == Constants.UnitType.INFANTRY:
+			soldaat = pawn
+	if ruiter == null or soldaat == null:
+		print("[MELEE][rit] geen levende ruiter en soldaat van speler 1")
+		return false
+	var rv: PawnView = game._pawn_views[ruiter.id]
+	var van: Vector2i = ruiter.position
+	var naar: Vector2i = van + (Vector2i(0, -3) if van.y >= 5 else Vector2i(0, 3))
+	await get_tree().create_timer(0.3).timeout
+	Audio.laatste_rit_stappen = []
+	game._animate_move(ruiter.id, van, naar)
+	var stappen: Array = Audio.laatste_rit_stappen.duplicate()
+	var clip_rit := String(rv.huidige_clip())
+	var tempo_rit: float = rv._anim.get_playing_speed() if rv._anim != null else 0.0
+	var dur := clampf(0.13 * 3.0, 0.13, 0.45)
+	if "film" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
+		# met venster: een strook van de rit rond de ruiter (_shot_rit.png),
+		# om te zien hoe de versnelde loop-clip oogt
+		var beelden: Array = []
+		var t_film := 0.0
+		while t_film < dur + 0.25:
+			await RenderingServer.frame_post_draw
+			var img: Image = get_viewport().get_texture().get_image()
+			var p: Vector2 = get_viewport().get_camera_3d().unproject_position(rv.global_position + Vector3(0.0, 0.35, 0.0))
+			var r := Rect2i(Vector2i(p) - Vector2i(110, 130), Vector2i(220, 220)).intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+			beelden.append(img.get_region(r))
+			t_film += get_process_delta_time()
+		var strook := Image.create(220 * mini(beelden.size(), 12), 220, false, Image.FORMAT_RGBA8)
+		var stap_b := maxf(float(beelden.size()) / 12.0, 1.0)
+		for i in mini(beelden.size(), 12):
+			var b: Image = beelden[int(float(i) * stap_b)]
+			b.convert(Image.FORMAT_RGBA8)
+			strook.blit_rect(b, Rect2i(Vector2i.ZERO, b.get_size()), Vector2i(220 * i, 0))
+		strook.save_png("res://_shot_rit.png")
+		print("[MELEE][rit] filmstrook: %d beelden, 12 in _shot_rit.png" % beelden.size())
+	await get_tree().create_timer(0.8).timeout
+	var clip_na := String(rv.huidige_clip())
+	var tempo_na: float = rv._anim.get_playing_speed() if rv._anim != null else 0.0
+	game._animate_move(ruiter.id, naar, van)
+	await get_tree().create_timer(0.8).timeout
+	var db_verwacht: float = PawnView.fx("rit_stap_db", -8.0)
+	var ok := stappen.size() >= 3 and absf(float(stappen[0]) - PawnView.RIT_EERSTE) < 0.005 \
+		and absf(float(stappen[stappen.size() - 1]) - dur) < 0.06 \
+		and clip_rit.begins_with("walk") and tempo_rit > 2.0 \
+		and clip_na.begins_with("idle") and absf(tempo_na - 1.0) < 0.01 \
+		and absf(Audio.laatste_rit_db - db_verwacht) < 0.001
+	print("[MELEE][rit] 3 vakken (%.2f s): stappen op %s s, %+.1f dB; tijdens de rit %s op %.1fx, daarna %s op %.1fx" % [
+		dur, str(stappen.map(func(x): return snappedf(float(x), 0.01))), Audio.laatste_rit_db, clip_rit, tempo_rit,
+		clip_na, tempo_na])
+	# de infanterie houdt de stap per vakje
+	Audio.laatste_rit_stappen = []
+	var sv: Vector2i = soldaat.position
+	var sn: Vector2i = sv + (Vector2i(0, -1) if sv.y >= 5 else Vector2i(0, 1))
+	game._animate_move(soldaat.id, sv, sn)
+	var soldaat_stil: bool = Audio.laatste_rit_stappen.is_empty()
+	await get_tree().create_timer(0.4).timeout
+	game._animate_move(soldaat.id, sn, sv)
+	await get_tree().create_timer(0.4).timeout
+	# en met de knop op 0 ook de big bro
+	PawnView.fx("rit_stappen", 1.0)
+	var oud = PawnView._fx.get("rit_stappen")
+	PawnView._fx["rit_stappen"] = 0.0
+	game._animate_move(ruiter.id, van, naar)
+	var knop_uit: bool = Audio.laatste_rit_stappen.is_empty()
+	await get_tree().create_timer(0.6).timeout
+	game._animate_move(ruiter.id, naar, van)
+	await get_tree().create_timer(0.6).timeout
+	if oud == null:
+		PawnView._fx.erase("rit_stappen")
+	else:
+		PawnView._fx["rit_stappen"] = oud
+	print("[MELEE][rit] infanterie zonder rit-stappen: %s; knop rit_stappen 0: geen rit-stappen: %s" % [soldaat_stil, knop_uit])
+	ok = ok and soldaat_stil and knop_uit
+	if not ok:
+		print("[MELEE][rit] FAIL")
+	return ok
 
 
 ## F4.3e -- sessie die alleen een (herbouwde) staat heeft: wat een client na

@@ -235,6 +235,10 @@ var stappen_stil: bool = false
 ## De momenten (s na de aanroep) van de laatste reeks charge-stappen, voor de checks.
 var laatste_charge_stappen: Array = []
 var _charge_rng: RandomNumberGenerator = null
+## Idem voor de laatste rit van een big bro (play_rit_stappen), met het extra volume.
+var laatste_rit_stappen: Array = []
+var laatste_rit_db: float = 0.0
+var _rit_rng: RandomNumberGenerator = null
 
 var _music_player: AudioStreamPlayer    # muzieklaag (in-game bed)
 var _ambient_player: AudioStreamPlayer  # ambience-laag (wind/veld)
@@ -414,14 +418,16 @@ func _bewaar_volumes() -> void:
 ## Speel een geluid uit een categorie.
 ## variant < 0 = willekeurige variant; anders die exacte index (cyclisch).
 ## pitch <= 0 = subtiele random pitch; anders die exacte pitch_scale.
-func play(category: String, delay: float = 0.0, variant: int = -1, pitch: float = 0.0) -> void:
+## extra_db = zachter of harder dan de categorie (de rit-stappen van de big bro).
+func play(category: String, delay: float = 0.0, variant: int = -1, pitch: float = 0.0,
+		extra_db: float = 0.0) -> void:
 	if not enabled:
 		return
 	if delay > 0.0:
 		# Autoload zit in de tree, dus deze timer loopt ook los van de scene.
-		get_tree().create_timer(delay).timeout.connect(_play_now.bind(category, variant, pitch))
+		get_tree().create_timer(delay).timeout.connect(_play_now.bind(category, variant, pitch, extra_db))
 	else:
-		_play_now(category, variant, pitch)
+		_play_now(category, variant, pitch, extra_db)
 
 
 ## Factie-variant met terugval (SOUND-WISHLIST 7b, besluit Max 28 juli):
@@ -786,7 +792,7 @@ func basis_vertraging(category: String) -> float:
 	return 0.0
 
 
-func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
+func _play_now(category: String, variant: int = -1, pitch: float = 0.0, extra_db: float = 0.0) -> void:
 	var variants: Array = _streams.get(category, [])
 	if variants.is_empty() and category.begins_with("val_"):
 		variants = _streams.get("val_prop", [])   # generiek kletter-geluid
@@ -796,7 +802,7 @@ func _play_now(category: String, variant: int = -1, pitch: float = 0.0) -> void:
 	_next = (_next + 1) % _pool.size()
 	var idx: int = (variant % variants.size()) if variant >= 0 else (randi() % variants.size())
 	player.stream = variants[idx]
-	player.volume_db = master_db + mix_db(category) + volume_correctie(category)
+	player.volume_db = master_db + mix_db(category) + volume_correctie(category) + extra_db
 	player.pitch_scale = pitch if pitch > 0.0 else randf_range(0.96, 1.04)
 	player.play()
 
@@ -851,6 +857,28 @@ func play_charge_stappen(category: String, eind: float, snelst: float = 0.07, tr
 		var f := float(i) / float(maxi(tijden.size() - 1, 1))   # 0 de eerste, 1 de laatste
 		play(category, float(tijden[i]), (start + i) % count, _charge_rng.randf_range(0.95, 1.01) + 0.1 * f)
 	laatste_charge_stappen = tijden
+	return tijden.size()
+
+
+## De stappen van een rit van de big bro (10 oktober, Max: "nu hoor je bij
+## verplaatsen van de big bro 1x een dreun, kan je dat een paar stappen van
+## maken, getimed op de animatie? en mag qua volume wel wat zachter"): een
+## zware stap op elk moment in `tijden` (s vanaf nu: waar zijn voeten neerkomen,
+## uit PawnView.rit_stappen), `extra_db` zachter dan de categorie. Variant en
+## toon uit een eigen rng. Geeft het aantal stappen.
+func play_rit_stappen(category: String, tijden: Array, extra_db: float = 0.0) -> int:
+	laatste_rit_stappen = []
+	var count: int = _streams.get(category, []).size()
+	if not enabled or stappen_stil or tijden.is_empty() or count == 0:
+		return 0
+	if _rit_rng == null:
+		_rit_rng = RandomNumberGenerator.new()
+		_rit_rng.seed = 10102026
+	var start := _rit_rng.randi() % count
+	for i in tijden.size():
+		play(category, float(tijden[i]), (start + i) % count, _rit_rng.randf_range(0.93, 1.05), extra_db)
+	laatste_rit_stappen = tijden.duplicate()
+	laatste_rit_db = extra_db
 	return tijden.size()
 
 

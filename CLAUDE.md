@@ -1042,6 +1042,32 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (alle vier in het sfeer-paneel). De stap per vakje van de rit zwijgt dan
   (`Audio.stappen_stil` rond `_animate_move`). `-- meleecheck` meet de reeks
   (bij de muis 0,00 / 0,14 / 0,25 / 0,34 / 0,41 s).
+  **De gewone rit van de big bro (10 oktober, Max: "nu hoor je bij verplaatsen
+  van de big bro 1x een dreun, kan je dat een paar stappen van maken, getimed
+  op de animatie? en mag qua volume wel wat zachter"):** een rit duurt 0,13 s
+  per vak (hooguit 0,45 s) en de loop-clip 1,38 s voor twee stappen, dus er
+  viel hooguit een voet neer en je hoorde een dreun per vak. Nu start
+  `_animate_move` de loop-clip met een korte overgang (`PawnView.RIT_BLEND`
+  0,06 s) en laat `PawnView.rit_stappen(dur)` hem zo snel lopen (4,6-6,9x)
+  dat er om de `rit_stap_cadans` (0,12 s) een voet neerkomt, de eerste 0,03 s
+  na het vertrek en de laatste rond de aankomst (1 vak 2 stappen, 4 vakken
+  5); `Audio.play_rit_stappen` speelt op precies die momenten `cav_move` van
+  de factie (terugval `step`), `rit_stap_db` (-8 dB) zachter dan de charge,
+  variant en toon uit een eigen rng; play_idle zet het tempo daarna terug.
+  Waar een voet neerkomt meet `PawnView.loop_contacten` per clip uit de
+  botten (LeftFoot/RightFoot door de keten gerekend, `bot_hoogte`): een
+  landing is waar de val van een opgetilde voet (boven 65% van zijn slag)
+  stopt, in de onderste helft; een "onder 20%"-drempel telde bij de Leeuw een
+  halve cyclus te laat (een staande voet zakt nog door) en een nawippende
+  voet dubbel. Zonder meetbare voeten (CSG-stuk) een stap per vak, net als
+  de infanterie. Knoppen `rit_stappen` (0 = een per vak), `rit_stap_cadans`,
+  `rit_stap_db` in het sfeer-paneel. Checks: `-- ritcheck [factie] [kurven]`
+  (per big bro-model het eigen rekenwerk tegen de pose die de
+  AnimationPlayer neerzet, elke landing echt, ritten van 1-4 vakken echt
+  vooruitgespoeld met elke stap op een landende voet, de globale rng
+  ongemoeid; `kurven` tekent de voethoogte per clip) en `-- meleecheck`
+  (scenario rit in het echte spel, plus infanterie en de knop op 0; met
+  venster en `film` een strook `_shot_rit.png`).
 - **Zwaai en klap per wapen (17 september, Max: "update de sounds ook voor
   slashing sounds en zwaard-impactgeluiden per factie of type wapen").**
   Elke melee-aanval (bajonetstoot en charge) speelt drie lagen:

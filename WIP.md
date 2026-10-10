@@ -1,5 +1,45 @@
 # Fog of War — Work In Progress & Context
 
+## 10 oktober -- De rit van de big bro: een paar stappen op zijn voeten, zachter
+
+Max: "nu hoor je bij verplaatsen van de big bro 1x een dreun, klopt dat? kan
+je dat een paar stappen van maken, getimed op de animatie? en mag qua volume
+wel wat zachter".
+
+- **Waarom een dreun:** de rit speelt sinds de paarden-opruiming (nog
+  ongecommit in de werkmap) een `cav_move` per vak, in 0,13 s per vak; de
+  muis-opname piekt op -2 dB (de infanteriestap op -27 tot -41) en de
+  loop-clip (1,38 s voor twee stappen) liet in die tijd hooguit een voet
+  neerkomen: hij gleed.
+- **Nu:** `PawnView.loop_contacten` meet per loop-clip waar een voet landt
+  (de botketen naar LeftFoot/RightFoot uit de clip-tracks; een landing = de
+  val van een opgetilde voet stopt), `rit_stappen(dur)` laat de clip tijdens
+  de rit 4,6-6,9x lopen zodat er om de 0,12 s een voet neerkomt en geeft die
+  momenten, `Audio.play_rit_stappen` speelt daar `cav_move` met -8 dB
+  (`play`/`_play_now` kregen een `extra_db`). 1 vak 2 stappen, 2 vakken 3, 3
+  vakken 4, 4 vakken 5. Knoppen `rit_stappen`, `rit_stap_cadans`,
+  `rit_stap_db` in het sfeer-paneel. De charge (rush) blijft zoals hij was,
+  ook in volume.
+- **Twee meetfouten onderweg:** "onder 20% van de slag" telde bij de Leeuw de
+  landing een halve cyclus te laat (een staande voet zakt nog langzaam
+  door), en een voet die na het neerzetten even opwipt telde dubbel (walk2
+  van muis en Leeuw). Nu op de val zelf, met "opgetild = boven 65%".
+- **Checks:** `-- ritcheck` (nieuw) 15 modellen (varken, muis, leeuw; beer,
+  wolf en krokodil hebben nog geen big bro-model) PASS: eigen rekenwerk tegen
+  de AnimationPlayer 0,00000, elke landing echt, elke stap op een landende
+  voet, globale rng ongemoeid. `-- meleecheck` scenario rit PASS (stappen op
+  0,03 / 0,15 / 0,27 / 0,39 s, walk op 5,7x, daarna idle op 1,0x; infanterie
+  en knop 0 zonder rit-stappen). **Wankel, en niet van deze stap:** het
+  infanterie-scenario van meleecheck faalt als melee2 geloot wordt (vertrek
+  1,25 s tegen een ondergrens van 1,275): de check rekent zijn verwachting uit
+  voordat de clip gekozen is, en de afstelling per clip verschilt; met melee1
+  1,30 s en PASS.
+- **Commit:** alleen deze stap. De paarden-opruiming van 18 september
+  (`cav_move`/`cav_select`/`retaliation_cav`, `beweeg_categorie`, de
+  horse-regels uit de BANK) staat nog altijd ongecommit in de werkmap; de
+  commit bevat de HEAD-versie van `_animate_move` met de rit erin (daar nog
+  `horse_move` voor een big bro zonder voeten).
+
 ## 9 oktober -- Modellen in het geheugen: geen haper bij koppelen, spawnen en de start
 
 Max ("dat is prima") op de twee hapers die na de schot-fix over waren: de

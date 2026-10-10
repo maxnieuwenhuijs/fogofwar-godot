@@ -887,8 +887,10 @@ func _idle_process(delta: float) -> void:
 	_idle_afwijk_tot = _idle_tijd + _anim.get_animation(keuze).length
 
 
-func play_walk() -> void:
-	_play_variant(anim_walk, true)
+## `blend` = de overgang vanuit de vorige houding (s); een rit van de big bro
+## neemt een korte (RIT_BLEND), anders is zijn eerste stap nog idle.
+func play_walk(blend: float = 0.2) -> void:
+	_play_variant(anim_walk, true, 1.0, false, blend)
 
 
 func play_attack() -> void:
@@ -1487,6 +1489,194 @@ func charge_tijdlijn(rij_dist: int) -> Dictionary:
 		"afzet": afzet}
 
 
+# --- De stappen van een rit (10 oktober) -------------------------------------
+#
+# Max (10 oktober): "nu hoor je bij verplaatsen van de big bro 1x een dreun,
+# kan je dat een paar stappen van maken, getimed op de animatie? en mag qua
+# volume wel wat zachter". Een rit duurt 0,13 s per vak (hooguit 0,45 s) en
+# de loop-clip (bij de Leeuw 1,38 s voor twee stappen) liet in die tijd
+# hooguit een voet neerkomen: de big bro gleed over het bord met een dreun
+# per vak. Nu loopt de loop-clip tijdens zijn rit zo snel dat er om de
+# `rit_stap_cadans` een voet neerkomt, de eerste net na het vertrek en de
+# laatste rond de aankomst, en geeft `rit_stappen` de momenten waarop dat in
+# de clip gebeurt; game.gd speelt daar de zware stap. Wanneer een voet
+# neerkomt meten we aan de voeten zelf (`loop_contacten`).
+const RIT_BLEND := 0.06       # de overgang van idle naar lopen bij een rit (s)
+const RIT_EERSTE := 0.03      # de eerste voet, s na het vertrek
+const RIT_MAX_TEMPO := 8.0    # hooguit zoveel keer de gewone loopsnelheid
+static var _loop_contact_cache: Dictionary = {}
+
+
+## Wanneer komt in deze loop-clip een voet neer (clip-tijd in s, oplopend)? De
+## hoogte van de botten die op LeftFoot en RightFoot eindigen, door de keten
+## gerekend uit de tracks van de clip (zonder track de rusthouding); een voet
+## landt als hij onder 20% van zijn slag zakt. Per model en clip gecached;
+## leeg zonder skelet, voeten of slag.
+func loop_contacten(clip: String) -> Array:
+	if _anim == null or _piece == null or not _anim.has_animation(clip):
+		return []
+	var sleutel := "%s|%s" % [_model_path, clip]
+	if _loop_contact_cache.has(sleutel):
+		return _loop_contact_cache[sleutel]
+	var uit: Array = []
+	for s in _piece.find_children("*", "Skeleton3D", true, false):
+		uit = _meet_contacten(s as Skeleton3D, _anim.get_animation(clip))
+		if not uit.is_empty():
+			break
+	_loop_contact_cache[sleutel] = uit
+	return uit
+
+
+## De voeten van dit skelet (botten die op leftfoot/rightfoot eindigen).
+static func voet_botten(skel: Skeleton3D) -> Array:
+	var uit: Array = []
+	for b in skel.get_bone_count():
+		var n := String(skel.get_bone_name(b)).to_lower()
+		if n.ends_with("leftfoot") or n.ends_with("rightfoot"):
+			uit.append(b)
+	return uit
+
+
+## Hoogte (in de ruimte boven het skelet) van een bot op clip-tijd `tijd`,
+## gerekend uit de tracks van `a`; `sporen` uit `bot_sporen`.
+static func bot_hoogte(skel: Skeleton3D, a: Animation, sporen: Dictionary, bot: int, tijd: float) -> float:
+	var keten: Array = []
+	var b := bot
+	while b >= 0:
+		keten.push_front(b)
+		b = skel.get_bone_parent(b)
+	var xf := Transform3D()
+	for kb in keten:
+		var spoor: Array = sporen.get(kb, [-1, -1, -1])
+		var rust: Transform3D = skel.get_bone_rest(kb)
+		var p: Vector3 = a.position_track_interpolate(spoor[0], tijd) if spoor[0] >= 0 else rust.origin
+		var r: Quaternion = a.rotation_track_interpolate(spoor[1], tijd) if spoor[1] >= 0 \
+			else rust.basis.get_rotation_quaternion()
+		var sc: Vector3 = a.scale_track_interpolate(spoor[2], tijd) if spoor[2] >= 0 else rust.basis.get_scale()
+		xf = xf * Transform3D(Basis(r) * Basis.from_scale(sc), p)
+	var basis: Basis = skel.global_transform.basis if skel.is_inside_tree() else Basis()
+	return (basis * xf.origin).y
+
+
+## Per bot de tracks van de clip: bot -> [positie, rotatie, schaal] (-1 = geen).
+static func bot_sporen(skel: Skeleton3D, a: Animation) -> Dictionary:
+	var sporen: Dictionary = {}
+	var soorten := [Animation.TYPE_POSITION_3D, Animation.TYPE_ROTATION_3D, Animation.TYPE_SCALE_3D]
+	for t in a.get_track_count():
+		var plek := soorten.find(a.track_get_type(t))
+		if plek < 0:
+			continue
+		var bot := skel.find_bone(String(a.track_get_path(t).get_concatenated_subnames()))
+		if bot < 0:
+			continue
+		if not sporen.has(bot):
+			sporen[bot] = [-1, -1, -1]
+		sporen[bot][plek] = t
+	return sporen
+
+
+static func _meet_contacten(skel: Skeleton3D, a: Animation) -> Array:
+	if a == null or a.length <= 0.0:
+		return []
+	var sporen := bot_sporen(skel, a)
+	var stappen := maxi(48, int(a.length * 60.0))
+	var uit: Array = []
+	for voet in voet_botten(skel):
+		var h := PackedFloat32Array()
+		for i in stappen:
+			h.append(bot_hoogte(skel, a, sporen, voet, a.length * float(i) / float(stappen)))
+		var laag: float = h[0]
+		var hoog: float = h[0]
+		for v in h:
+			laag = minf(laag, v)
+			hoog = maxf(hoog, v)
+		if hoog - laag < 1e-4:
+			continue
+		# Landen = waar de val van de voet stopt: de voet was opgetild (boven 65%
+		# van zijn slag), viel flink (minstens de helft van zijn snelste
+		# val), en nu zakt de valsnelheid onder 15% terwijl hij in de onderste
+		# helft zit. Niet "onder een drempel": bij de Leeuw zakt een staande
+		# voet nog langzaam door en telde de landing een halve cyclus te laat;
+		# en een voet die na het neerzetten even opwipt en weer zakt (walk2 van
+		# muis en Leeuw) is niet opgetild en telt dus niet. Rond vanaf de top.
+		var val := PackedFloat32Array()
+		var snelst := 0.0
+		for i in stappen:
+			val.append((h[(i - 2 + stappen) % stappen] - h[(i + 2) % stappen]) * 0.25)
+			snelst = maxf(snelst, val[i])
+		if snelst <= 0.0:
+			continue
+		var helft := laag + 0.5 * (hoog - laag)
+		var hoog_genoeg := laag + 0.65 * (hoog - laag)
+		var top := maxi(h.find(hoog), 0)
+		var opgetild := true
+		var valt := false
+		for j in range(1, stappen + 1):
+			var i := (top + j) % stappen
+			if h[i] > hoog_genoeg:
+				opgetild = true
+			if not valt:
+				valt = opgetild and val[i] >= 0.5 * snelst
+			elif val[i] <= 0.15 * snelst and h[i] <= helft:
+				var vorige: float = val[(i - 1 + stappen) % stappen]
+				var f := (vorige - 0.15 * snelst) / maxf(vorige - val[i], 1e-9)
+				uit.append(fposmod(a.length * (float(i) - 1.0 + clampf(f, 0.0, 1.0)) / float(stappen), a.length))
+				valt = false
+				opgetild = false
+	uit.sort()
+	# twee landingen vlak na elkaar (de voeten raken samen de grond) zijn een stap
+	var samen: Array = []
+	for t in uit:
+		if samen.is_empty() or float(t) - float(samen[samen.size() - 1]) >= a.length * 0.1:
+			samen.append(t)
+	if samen.size() > 1 and float(samen[0]) + a.length - float(samen[samen.size() - 1]) < a.length * 0.1:
+		samen.pop_back()
+	return samen
+
+
+## Laat de loop-clip zo lopen dat er tijdens een rit van `dur` s om de
+## `rit_stap_cadans` een voet neerkomt (de eerste op RIT_EERSTE, de laatste
+## rond de aankomst) en geef die momenten (s vanaf nu, oplopend). Na
+## play_walk(); leeg als er geen loop-clip met meetbare voeten speelt (dan
+## houdt game.gd een stap per vak). De clip begint bij de voet die vanaf de
+## stand van nu het eerst komt, en play_idle() aan het eind zet het tempo
+## weer gewoon.
+func rit_stappen(dur: float) -> Array:
+	if _anim == null or dur <= 0.0:
+		return []
+	var clip := String(_anim.current_animation)
+	if clip == "" or not _variants_of(anim_walk).has(clip):
+		return []
+	var c: Array = loop_contacten(clip)
+	if c.size() < 2:
+		return []
+	var lengte: float = _anim.get_animation(clip).length
+	var eerste := minf(RIT_EERSTE, dur * 0.5)
+	var cadans := maxf(fx("rit_stap_cadans", 0.12), 0.03)
+	var n := clampi(roundi((dur - eerste) / cadans) + 1, 2, 12)
+	var tussen := maxf((dur - eerste) / float(n - 1), 0.01)
+	var tempo := clampf(lengte / float(c.size()) / tussen, 0.5, RIT_MAX_TEMPO)
+	var nu := fposmod(_anim.current_animation_position, lengte)
+	var k := 0
+	var dichtst := INF
+	for i in c.size():
+		var vooruit := fposmod(float(c[i]) - nu, lengte)
+		if vooruit < dichtst:
+			dichtst = vooruit
+			k = i
+	# dezelfde clip opnieuw: houdt de overgang vanuit idle, zet het tempo
+	_anim.play(clip, RIT_BLEND, tempo)
+	_anim.seek(fposmod(float(c[k]) - eerste * tempo, lengte), true)
+	var tijden: Array = []
+	for j in 64:
+		var clip_t := float(c[(k + j) % c.size()]) + lengte * float((k + j) / c.size())
+		var t := eerste + (clip_t - float(c[k])) / tempo
+		if t > dur + 0.3 * tussen:
+			break
+		tijden.append(t)
+	return tijden
+
+
 func play_die() -> void:
 	_play_variant(anim_die, false, 1.0, true)
 
@@ -1509,7 +1699,7 @@ func play_hit() -> void:
 ## willekeurig punt in de clip, zodat 22 muizen nooit synchroon ademen
 ## of in de maat marcheren.
 func _play_variant(base: String, desync: bool = false, speed: float = 1.0,
-		herstart: bool = false) -> void:
+		herstart: bool = false, blend: float = 0.2) -> void:
 	if _anim == null:
 		return
 	var variants := _variants_of(base)
@@ -1536,7 +1726,7 @@ func _play_variant(base: String, desync: bool = false, speed: float = 1.0,
 			_anim.seek(0.0, true)
 			_last_clip_len = _anim.get_animation(full).length / maxf(speed, 0.01)
 		return
-	_anim.play(full, 0.2, speed)  # korte crossfade tussen houdingen
+	_anim.play(full, blend, speed)  # korte crossfade tussen houdingen
 	_last_clip_len = _anim.get_animation(full).length / maxf(speed, 0.01)
 	if desync:
 		_anim.seek(randf() * _anim.get_animation(full).length, false)

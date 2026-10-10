@@ -3785,6 +3785,9 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "charge_stap_snelst", "label": "charge-stappen: kortste tussenpoos, bij de afzet (s)", "min": 0.03, "max": 0.3, "step": 0.005, "def": 0.07},
 	{"key": "charge_stap_traagst", "label": "charge-stappen: langste tussenpoos, aan het begin (s)", "min": 0.05, "max": 0.8, "step": 0.01, "def": 0.3},
 	{"key": "charge_stap_groei", "label": "charge-stappen: versnelling (tussenpoos x per stap naar achteren)", "min": 1.0, "max": 1.8, "step": 0.01, "def": 1.25},
+	{"key": "rit_stappen", "label": "rit van de big bro: stappen op zijn voeten (0 = een per vak)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "rit_stap_cadans", "label": "rit-stappen: tijd tussen twee voeten (s; korter = meer stappen, sneller lopen)", "min": 0.05, "max": 0.3, "step": 0.005, "def": 0.12},
+	{"key": "rit_stap_db", "label": "rit-stappen: volume tegenover de charge-stap (dB)", "min": -24.0, "max": 6.0, "step": 0.5, "def": -8.0},
 ]
 
 
@@ -4198,11 +4201,15 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush:
 	if pv == null:
 		return
 	pv.face_dir(to_coord - from_coord)
+	var mover: Pawn = session.state.pawns.get(pawn_id)
+	# de big bro loopt zijn rit op zijn eigen voeten (10 oktober, zie onder)
+	var big_bro_rit: bool = not rush and mover != null and PawnView.fx("rit_stappen", 1.0) > 0.0 \
+		and mover.unit_type == Constants.UnitType.CAVALRY
 	# rush (26 aug): de cavalerie-charge rijdt aan op de run-clip.
 	if rush:
 		pv.play_rush()
 	else:
-		pv.play_walk()
+		pv.play_walk(PawnView.RIT_BLEND if big_bro_rit else 0.2)
 	var start := tile_position(from_coord.x, from_coord.y) + Vector3(0.0, PAWN_Y, 0.0)
 	var end := tile_position(to_coord.x, to_coord.y) + Vector3(0.0, PAWN_Y, 0.0)
 	pv.position = start
@@ -4214,9 +4221,18 @@ func _animate_move(pawn_id: int, from_coord: Vector2i, to_coord: Vector2i, rush:
 	# Beweeggeluid afhankelijk van het eenheidstype. Cavalerie: één galop-clip
 	# per beweging (bevat zelf al meerdere hoefslagen). Infanterie/artillerie:
 	# één klap per gelopen vakje (losse voetstappen / wielrollen).
-	var mover: Pawn = session.state.pawns.get(pawn_id)
 	_spawn_footprints(start, end, dur, mover)
-	if mover != null and mover.unit_type == Constants.UnitType.CAVALRY:
+	# De big bro (10 oktober, Max: "nu hoor je bij verplaatsen van de big bro 1x
+	# een dreun, kan je dat een paar stappen van maken, getimed op de animatie?
+	# en mag qua volume wel wat zachter"): zijn loop-clip loopt de rit zo dat er
+	# een paar voeten neerkomen (PawnView.rit_stappen), en op elk daarvan valt
+	# een zware stap, `rit_stap_db` zachter dan die van de charge. Knoppen
+	# rit_stap* in het sfeer-paneel. Zonder meetbare voeten een stap per vak.
+	var rit: Array = pv.rit_stappen(dur) if big_bro_rit else []
+	if not rit.is_empty():
+		Audio.play_rit_stappen(Audio.effectieve_categorie("cav_move", session.state.doctrine_of(mover.owner_id),
+			"step", pv.archetype()), rit, PawnView.fx("rit_stap_db", -8.0))
+	elif mover != null and mover.unit_type == Constants.UnitType.CAVALRY:
 		Audio.play("horse_move")
 	else:
 		var move_sfx := "cannon_move" if (mover != null and mover.unit_type == Constants.UnitType.ARTILLERY) else "step"
