@@ -1198,7 +1198,16 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   het openen van de pagina (`/api/opruimen`) gaat elke take weg die niet
   met Gebruiken in het spel is gezet; gebruikte blijven staan als
   geheugensteun. `results/geluid_studio/` draagt een `.gdignore`, anders
-  importeert de open editor elke take.
+  importeert de open editor elke take. **Sfeer en details (13 oktober, Max:
+  "van geritsel van uniforms tot ambient sounds en echos"):** SOUND-WISHLIST
+  secties 12-18 (67 categorieen: uitrusting en uniform, stemmen zonder
+  woorden, details na de klap, spelmomenten die stil waren zoals honger, buit,
+  aura en sps, een sfeerlaag per diorama, accenten in de verte, weer) zijn in
+  de studio elk een eigen sectie (`wishlist_rijen`: een kop vanaf `## 12.`
+  wordt een studio-sectie). Prompts uit `maak_geluid_prompts.py --nieuw`
+  (alleen wat nog niet in de studio staat; raakt geen prompt, duur of
+  standaard aan; `VER` voor geluiden uit de verte). Het spel speelt ze nog
+  niet af: eerst opnemen, dan inbouwen.
 - **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
   "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
   het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het
@@ -1549,7 +1558,12 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   verlengd. Knoppen `slash_*` (sterkte, duur 0,22, dikte 0,08, lengte, start
   0,2 s voor en na 0,35 s na de klap, gloed, teamkleur); bij de varkens valt de
   zwaai grotendeels NA het raakmoment. Tuner-recepten `slash` en
-  `charge_slash`, groep "Zwaai en klap".
+  `charge_slash`, groep "Zwaai en klap". **Wensen van 13 oktober** (35, met
+  concept-prompt): rijen in de bestaande groepen (rokende loop, kruitnevel,
+  stofpufjes op de rit-stappen, bloeddruppels, vaandel dat neerdwarrelt,
+  parade-vonk, ...) en drie nieuwe secties in VFX-WISHLIST (Leven op het bord,
+  Spelmomenten, Weer en licht); de studio maakt van een onbekende sectie een
+  eigen groep. In de notitie staat welk geluid erbij hoort.
 - **Geen haper bij het eerste schot (9 oktober, Max: "even freezed bij schieten,
   kanon impact").** Rook, vuur, bloed en elke geleverde VFX-textuur werden pas
   klaargemaakt als een effect ze voor het eerst vroeg (pixelwerk in GDScript,

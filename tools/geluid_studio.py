@@ -109,11 +109,21 @@ def schrijf_sleutel(k):
 # ------------------------------------------------------------------ overzicht
 
 def wishlist_rijen():
-    """Elke tabelrij met een `categorie` vooraan: categorie -> {cellen}."""
+    """Elke tabelrij met een `categorie` vooraan: categorie -> {cellen}. Een
+    rij onder een kop vanaf "## 12." krijgt die kop als eigen sectie in de
+    studio (13 oktober, de sfeer- en detailwensen), de rest valt onder
+    "Algemeen (arsenaal)"."""
     uit = {}
     if not os.path.exists("SOUND-WISHLIST.md"):
         return uit
+    kop = ""
     for regel in io.open("SOUND-WISHLIST.md", encoding="utf-8"):
+        m_kop = re.match(r"^##\s+(\d+)\.\s+(.+?)\s*$", regel)
+        if m_kop:
+            kop = m_kop.group(2) if int(m_kop.group(1)) >= 12 else ""
+            continue
+        if regel.startswith("## "):
+            kop = ""
         if not regel.startswith("|"):
             continue
         cellen = [c.strip() for c in regel.strip().strip("|").split("|")]
@@ -133,7 +143,7 @@ def wishlist_rijen():
             if nums and len(c) <= 6:
                 gewenst = max(int(x) for x in nums)
                 break
-        r = uit.setdefault(cat, {"waarvoor": "", "prompt": "", "gewenst": 0})
+        r = uit.setdefault(cat, {"waarvoor": "", "prompt": "", "gewenst": 0, "sectie": kop})
         if not r["prompt"] and prompt:
             r["prompt"] = prompt
         if not r["gewenst"] and gewenst:
@@ -392,7 +402,7 @@ def overzicht(alleen=None):
         for r in tracker.bouw_props(soort):
             voeg(sectie, r["categorie"], r["waarvoor"], r["hoe"], r["prompt"], r["gewenst"])
     for cat, w in wl.items():
-        voeg("Algemeen (arsenaal)", cat, w["waarvoor"], "", w["prompt"], w["gewenst"])
+        voeg(w.get("sectie") or "Algemeen (arsenaal)", cat, w["waarvoor"], "", w["prompt"], w["gewenst"])
     # categorieen die wel bestanden hebben maar nergens beschreven staan
     bank_cats = {}
     for f, c in bank().items():

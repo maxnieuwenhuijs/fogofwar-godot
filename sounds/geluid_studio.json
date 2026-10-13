@@ -1,10 +1,38 @@
 {
  "instellingen": {
+  "aarde_regen": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
   "ambient_field": {
    "duur": 20.0,
    "invloed": 0.3
   },
+  "aura_trom": {
+   "duur": 7.0,
+   "invloed": 0.7
+  },
+  "aura_vaandel": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "bajonet_op": {
+   "duur": 7.0,
+   "invloed": 0.7
+  },
+  "beurtlicht_aan": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "bevel_roep": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "bewoner_snurken": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "bloed_drup": {
    "duur": 7.0,
    "invloed": 0.5
   },
@@ -15,6 +43,14 @@
   "body_hit_floor": {
    "duur": 7.0,
    "invloed": 0.6
+  },
+  "buit_trom": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "buit_vaandel": {
+   "duur": 2.5,
+   "invloed": 0.5
   },
   "cannon_air": {
    "duur": 7.0,
@@ -46,6 +82,10 @@
   },
   "cannon_die_wolf": {
    "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cannon_echo": {
+   "duur": 4.0,
    "invloed": 0.5
   },
   "cannon_fire": {
@@ -440,7 +480,39 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "dood_zucht": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "gib_plets": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "harnas_kraak": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "haven_dreig": {
+   "duur": 3.0,
+   "invloed": 0.5
+  },
+  "haven_juich": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
   "haven_score": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "hijg": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "honger_maag": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje": {
    "duur": 7.0,
    "invloed": 0.5
   },
@@ -764,6 +836,34 @@
    "duur": 7.0,
    "invloed": 0.7
   },
+  "juich_klein": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "kanon_terugloop": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "kanon_wissen": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "kogel_rol": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "kogel_zip": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "kruit_pan": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "laadstok": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "link_snap": {
    "duur": 7.0,
    "invloed": 0.7
@@ -812,6 +912,10 @@
    "duur": 7.0,
    "invloed": 0.7
   },
+  "metaal_tinkel": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
   "music_battle": {
    "duur": 20.0,
    "invloed": 0.3
@@ -836,6 +940,18 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "musket_schouder": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "oor_suis": {
+   "duur": 3.0,
+   "invloed": 0.5
+  },
+  "patroon_bijt": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "pawn_block": {
    "duur": 7.0,
    "invloed": 0.6
@@ -843,6 +959,10 @@
   "phase_change": {
    "duur": 7.0,
    "invloed": 0.5
+  },
+  "pijn_kreun": {
+   "duur": 7.0,
+   "invloed": 0.6
   },
   "place_pawn": {
    "duur": 7.0,
@@ -1052,6 +1172,66 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "sabel_trek": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "schrik": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "sfeer_alpenpas": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_boerenerf": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_bosrand": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_dorpsrand": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_egypte": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_kampvuur": {
+   "duur": 15.0,
+   "invloed": 0.4
+  },
+  "sfeer_kapelruine": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_marktplein": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_na_de_slag": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_rivierhaven": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_waterloo": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_weidekamp": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
+  "sfeer_winterkamp": {
+   "duur": 25.0,
+   "invloed": 0.3
+  },
   "slash_bajonet": {
    "duur": 7.0,
    "invloed": 0.7
@@ -1069,6 +1249,18 @@
    "invloed": 0.7
   },
   "spawn_sound": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "splinter_regen": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "sps_onthul": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "sps_tel": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -1109,6 +1301,10 @@
    "invloed": 0.6
   },
   "timer_warning": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "trom_tik": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -1164,6 +1360,14 @@
    "duur": 7.0,
    "invloed": 0.7
   },
+  "uitrusting_rammel": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "uniform_ritsel": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "val_canteen": {
    "duur": 7.0,
    "invloed": 0.5
@@ -1200,6 +1404,66 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "ver_bijl": {
+   "duur": 3.5,
+   "invloed": 0.5
+  },
+  "ver_donder": {
+   "duur": 5.0,
+   "invloed": 0.5
+  },
+  "ver_hond": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "ver_hoorn": {
+   "duur": 3.0,
+   "invloed": 0.5
+  },
+  "ver_kamp": {
+   "duur": 6.0,
+   "invloed": 0.4
+  },
+  "ver_kanon": {
+   "duur": 4.0,
+   "invloed": 0.5
+  },
+  "ver_klok": {
+   "duur": 6.0,
+   "invloed": 0.5
+  },
+  "ver_kraai": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "ver_trom": {
+   "duur": 6.0,
+   "invloed": 0.4
+  },
+  "ver_vogels": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "vlag_wapper": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "vlieg_zoem": {
+   "duur": 8.0,
+   "invloed": 0.4
+  },
+  "weer_onweer": {
+   "duur": 5.0,
+   "invloed": 0.5
+  },
+  "weer_regen": {
+   "duur": 20.0,
+   "invloed": 0.3
+  },
+  "weer_wind_vlaag": {
+   "duur": 3.0,
+   "invloed": 0.5
+  },
   "win_fanfare": {
    "duur": 3.0,
    "invloed": 0.5
@@ -1208,16 +1472,29 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "wrak_knetter": {
+   "duur": 10.0,
+   "invloed": 0.4
+  },
   "your_turn": {
    "duur": 7.0,
    "invloed": 0.6
   }
  },
  "prompts": {
+  "aarde_regen": "Clods of earth and small stones raining down onto the ground after an explosion, a short pattering shower that thins out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ambient_field": "Ambient sound of an open field near an army camp: light wind in grass, distant birds, a far-off drum, calm, looping.",
+  "aura_trom": "A single firm stroke on a military snare drum, crisp, with a short rattle of the snare wires. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "aura_vaandel": "A cloth banner unfurling with a sudden snap in the wind. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bajonet_op": "A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "beurtlicht_aan": "A soft warm shimmer of tiny brass bells, a gentle glowing chime that rises and fades. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep": "A small animal officer gives one short sharp barking command, no words, just a single clipped call. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bewoner_snurken": "A man snoring twice, soft and comical. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bloed_drup": "A few drops of blood dripping onto dry earth, tiny soft wet taps. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "blood_splash": "A small wet blood splatter hitting the ground, quick and light. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "body_hit_floor": "A body in a wool uniform falling and hitting packed earth, a dull heavy thump with a small rattle of gear. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "buit_trom": "A captured military drum set down hard on a wooden table with a hollow boom, followed by a few coins clinking. Close-up, dry studio recording, no reverb, no music.",
+  "buit_vaandel": "A captured regimental banner snapping in the wind, followed by a short triumphant roll on a military snare drum. Close-up, dry studio recording, no reverb, no music.",
   "cannon_air": "A cast iron cannonball whistling through the air overhead, a low ominous whoosh passing by. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die": "A wooden field cannon smashed to pieces: oak splinters, iron fittings snap and clatter, a wheel falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die_bear": "A wooden field cannon smashed to pieces: the carriage of frost-covered iron and fur-wrapped timber cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1226,6 +1503,7 @@
   "cannon_die_mouse": "A wooden field cannon smashed to pieces: the carriage of pale worn wood with plain soldier's iron cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die_pig": "A wooden field cannon smashed to pieces: the carriage of dark oak with heavy copper fittings cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die_wolf": "A wooden field cannon smashed to pieces: the carriage of patched scrap iron and mismatched salvaged wood cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cannon_echo": "The rolling echo of a cannon shot rumbling away through a wide valley like distant thunder. No initial boom, only the long tail. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
   "cannon_fire": "A single black powder field cannon firing: a deep heavy boom with a sharp initial blast and a low rumbling tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_fuse": "A short cannon fuse burning and hissing with a sputter of sparks. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_hit": "A heavy cast iron cannonball slamming into the ground: a deep thud, a burst of dirt and splintering wood. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1324,7 +1602,15 @@
   "charge_yell": "A short battle cry of man charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht": "The very last breath of a fallen small animal, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "gib_plets": "A small wet chunk falling onto packed earth, a soft heavy plop. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "harnas_kraak": "A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "haven_dreig": "A slow low war drum beating like a heartbeat, four heavy thumps, ominous and tense. Close-up, dry studio recording, no reverb, no music.",
+  "haven_juich": "A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
   "haven_score": "A ship's brass bell rung twice in a harbor, bright and clean. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg": "A small animal soldier panting hard for a moment after a fight, a few quick short breaths. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "honger_maag": "An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje": "A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_armor": "A musket ball striking a steel breastplate, a hard bright metallic clank with a short ring. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_bone": "A sharp bone crack under a heavy blow, a short dry snap muffled by cloth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_dirt": "A musket ball slamming into packed dirt, a dull thud with a spray of soil and small pebbles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1405,6 +1691,13 @@
   "inf_kanon_die_wolf_spd": "A small skinny fox is hit by a cannonball: one loud, very short burst as it yelps, cut off instantly. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_select": "A soldier snaps to attention: a stamped boot on earth and the rattle of a leather cartridge box. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "initiative": "A single crisp stroke on a small military snare drum. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein": "A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kanon_terugloop": "A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. No shot, only the recoil. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kanon_wissen": "A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kogel_rol": "A heavy iron cannonball rolling over packed earth and slowly coming to a stop, a low grinding rumble. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kogel_zip": "A musket ball zipping past close by: a short sharp whizz that comes and goes in a fraction of a second. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kruit_pan": "Priming a flintlock: a pinch of black powder poured into the pan with a tiny sandy hiss, then the steel frizzen snapped shut with a small click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "laadstok": "A steel ramrod slid down the barrel of a flintlock musket, tapped twice at the bottom and drawn out again with a thin metallic scrape. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "link_snap": "A wooden game piece snapped firmly into a wooden slot, a crisp satisfying click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "lose_sting": "A short descending minor chord on solemn brass and a low drum hit, a defeated sting.",
   "melee_kill": "A bayonet driven into a body: a wet heavy punch with a short scrape of steel. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1417,14 +1710,19 @@
   "melee_survive_bijl": "A heavy axe blow blocked by a steel breastplate: a dull heavy clank and the wooden handle rattling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "melee_survive_lans": "A lance point glancing off steel armor, a scraping metallic slide ending in a tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "melee_survive_sabel": "Two cavalry sabres clashing once, a bright ringing steel clang, the blow blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "metaal_tinkel": "Small iron fittings and bolts bouncing and tinkling on hard ground after a cannon breaks apart. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "music_battle": "A tense 18th century battle march on drums and brass, steady tempo, dramatic, looping, no vocals.",
   "music_menu": "A calm 18th century military camp theme on fife and snare drum, slow march, soft and looping, no vocals.",
   "musket_cock": "The hammer of a flintlock musket being cocked, a crisp metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "musket_echo": "The distant rolling echo of a musket shot fading across open fields, no initial crack, only the tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "musket_fire": "A single musket shot fired",
   "musket_hit": "A musket ball striking a body at close range: a wet heavy thud with a small spray of dust. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "musket_schouder": "A soldier snaps a wooden musket onto his shoulder: a firm slap of a hand on the wooden stock and a small rattle of the iron sling swivel. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "oor_suis": "A high thin ringing in the ears after a nearby explosion, starting loud and slowly fading away, with everything else muffled. No explosion, no music.",
+  "patroon_bijt": "A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "pawn_block": "A musket ball thudding into a thick wooden shield, a dull heavy knock, the shot blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "phase_change": "A short trumpet signal of two rising notes, an 18th century army bugle, clean and short. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun": "A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_pawn": "A wooden game piece set down firmly on a wooden board, a solid short knock. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_undo": "A wooden game piece lifted quickly off a wooden board, a light short scrape and tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_aambeeld": "A blacksmith's hammer striking an iron anvil once, a bright ringing clang with a long metallic tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1477,11 +1775,29 @@
   "retaliation_cav": "A large beast lashes back: a heavy paw strikes with a thud and a short angry snarl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "reveal": "A short military snare drum roll building for a second and ending on one firm hit. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ricochet": "A musket ball ricocheting off stone: a sharp bright metallic whine spinning away into the distance. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sabel_trek": "A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik": "A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sfeer_alpenpas": "Ambience of a high mountain pass: a strong cold wind, cowbells far down in the valley, an eagle crying once, loose stones trickling. Continuous, no music.",
+  "sfeer_boerenerf": "Ambience of a farmyard next to a battlefield: chickens clucking far off, a cow lowing once in the distance, wind through a wooden barn, a creaking gate. Calm, continuous, no music.",
+  "sfeer_bosrand": "Ambience at the edge of a forest: leaves rustling in the wind, a woodpecker tapping far away, songbirds, branches creaking. Calm, continuous, no music.",
+  "sfeer_dorpsrand": "Ambience at the edge of a small village: the slow creak of windmill sails turning, birds on rooftops, a dog far away, a light breeze. Calm, continuous, no music.",
+  "sfeer_egypte": "Ambience of a desert army camp in Egypt in 1798: a dry hot wind, sand hissing over dunes, palm leaves rattling, a camel groaning far away. Continuous, no music.",
+  "sfeer_kampvuur": "A small campfire burning steadily close by: soft crackles, pops and the hiss of a damp log. Continuous, no music.",
+  "sfeer_kapelruine": "Ambience of a ruined stone chapel on a hill: a hollow wind moaning through broken windows, crows, a loose bell ringing very faintly in the wind. Continuous, no music.",
+  "sfeer_marktplein": "Ambience of a town market square heard from a distance: the muffled bustle of a crowd without words, cart wheels on cobblestones, a fountain splashing, pigeons. Continuous, no music.",
+  "sfeer_na_de_slag": "Ambience of a field just after a battle: smoldering fires crackling softly, crows cawing in the distance, a lonely wind, faint groans far away, an eerie stillness. Continuous, no music.",
+  "sfeer_rivierhaven": "Ambience of a small river harbor: water lapping against a wooden jetty, a moored boat knocking softly, gulls in the distance, ropes creaking. Calm, continuous, no music.",
+  "sfeer_waterloo": "Ambience of a farm near Waterloo before a battle: a grey drizzle on a farmhouse roof, distant drums of many regiments, a wet wind, a dog barking once. Continuous, no music.",
+  "sfeer_weidekamp": "Ambience of a quiet army camp in a summer meadow: wind in tall grass, crickets, distant birds, the low murmur of a camp far away, a tent flap now and then. Calm, continuous, no music.",
+  "sfeer_winterkamp": "Ambience of a winter army camp in deep snow: a cold howling wind, snow hissing over the ground, a campfire crackling nearby, ice creaking. Continuous, no music.",
   "slash_bajonet": "A musket with a fixed bayonet thrust forward fast, one very short whoosh with a hint of cloth rustling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "slash_bijl": "A heavy battle axe swung through the air, one deep wide whoosh with the weight of the iron head. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "slash_lans": "A long wooden lance thrust quickly through the air, one thin fast whistle. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "slash_sabel": "A cavalry sabre swung fast through the air, one sharp thin steel whoosh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "spawn_sound": "A puff of dust and a soft thump as a wooden game piece lands on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "splinter_regen": "Small pieces of broken wood clattering down onto hard ground after a crash, a light rattling shower. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sps_onthul": "A hand slapped flat onto an oak table with a sharp smack, the game decided. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sps_tel": "Three quick knocks of a fist on an oak table, counting down: knock, knock, knock. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step": "A single footstep of a leather army boot on dry packed earth, marching infantry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_bear": "A single footstep of the small clawed paw of a raccoon, with a little scuff on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_crocodile": "A single footstep of the scaly foot of a lizard slapping and dragging a little on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1492,6 +1808,7 @@
   "timer_tick": "A single tick of an antique pocket watch. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_timeout": "A small bell on a desk struck once, a clear short ding. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_warning": "A fast series of ticks from an antique pocket watch, urgent, for one second. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "trom_tik": "A drummer idly taps the wooden rim of a small military snare drum twice with a drumstick, soft and light. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_back": "A soft wooden panel sliding shut with a gentle tap at the end. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_blad": "A page of thick old parchment turned over in a leather-bound book, a soft short rustle that swells and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_click": "A single soft wooden button press, a muted tap on oak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1505,6 +1822,8 @@
   "ui_stempel": "A wooden hand stamp pressed firmly onto parchment with a little sealing wax, a dull solid thud with a short papery slap. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_tel": "A tiny brass counter bead clicking against another on an old abacus, a very short bright little tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_toggle": "A small wooden latch flipping over with a light double click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "uitrusting_rammel": "A soldier starts to march: the short rattle of a leather cartridge box, a tin canteen and a bayonet scabbard bumping against his hip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "uniform_ritsel": "A soldier in a thick wool uniform turns around quickly: a short soft rustle of wool cloth and a faint creak of a leather belt. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_canteen": "A small wooden keg dropped onto the ground, a hollow thump and a short roll. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_drum": "A small military snare drum dropped onto the ground: a hollow thump and a short rattle of the snare wires. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_flag": "A wooden flagpole with a cloth banner falling over onto the ground: the pole knocks, the cloth flaps and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1514,8 +1833,24 @@
   "val_musket": "A wooden musket with iron fittings dropped onto packed earth: the stock knocks, the metal rattles, it settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_prop": "A small wooden object dropped onto hard ground, a short clatter and it comes to rest. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_sapper": "A heavy axe dropped onto the ground: the iron head thuds and the wooden handle knocks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ver_bijl": "Someone chopping wood far away, three slow dull axe blows on a log. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_donder": "Thunder rumbling far away beyond the hills, a long low roll. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_hond": "A dog barking twice far away. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_hoorn": "A brass bugle call sounding far away, one short signal of a few notes. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_kamp": "The muffled sounds of a busy army camp in the distance: a pot clanging, a hammer on a tent peg, a laugh without words. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_kanon": "A single cannon shot from another battle far away, a deep dull thud rolling across the hills. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_klok": "A village church bell striking three times far away. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_kraai": "A crow cawing twice from a tree a little way off. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ver_trom": "A military drum march heard far away across the fields, a few bars of steady snare and bass drum, slowly fading. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_vogels": "A flock of small birds taking off together from a nearby tree, a flurry of wings and chirps. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "vlag_wapper": "A cloth regimental banner on a wooden pole flapping and snapping in a gust of wind for a moment. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "vlieg_zoem": "A few flies buzzing lazily in the warm air, circling close by, soft and continuous. No music.",
+  "weer_onweer": "A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music.",
+  "weer_regen": "Steady light rain falling on grass and on a wooden table, soft pattering drops, continuous. No thunder, no music.",
+  "weer_wind_vlaag": "A single strong gust of wind sweeping across open grass, rising and falling away. Outdoors, no music.",
   "win_fanfare": "A short triumphant brass fanfare of trumpets and horns, a rising three-note flourish, 18th century military style.",
   "wolf_step": "A single fast padded paw step of a wolf on dry earth, claws ticking. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "wrak_knetter": "The burning wreck of a wooden cannon carriage: steady crackling and popping of a small wood fire with a soft roar, continuous. No music.",
   "your_turn": "A single short bright bugle note announcing a turn. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them."
  },
  "standaard": {
@@ -1524,10 +1859,19 @@
   "model": "eleven_text_to_sound_v2"
  },
  "uit_generator": {
+  "aarde_regen": "Clods of earth and small stones raining down onto the ground after an explosion, a short pattering shower that thins out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ambient_field": "Ambient sound of an open field near an army camp: light wind in grass, distant birds, a far-off drum, calm, looping.",
+  "aura_trom": "A single firm stroke on a military snare drum, crisp, with a short rattle of the snare wires. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "aura_vaandel": "A cloth banner unfurling with a sudden snap in the wind. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bajonet_op": "A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "beurtlicht_aan": "A soft warm shimmer of tiny brass bells, a gentle glowing chime that rises and fades. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep": "A small animal officer gives one short sharp barking command, no words, just a single clipped call. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bewoner_snurken": "A man snoring twice, soft and comical. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bloed_drup": "A few drops of blood dripping onto dry earth, tiny soft wet taps. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "blood_splash": "A small wet blood splatter hitting the ground, quick and light. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "body_hit_floor": "A body in a wool uniform falling and hitting packed earth, a dull heavy thump with a small rattle of gear. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "buit_trom": "A captured military drum set down hard on a wooden table with a hollow boom, followed by a few coins clinking. Close-up, dry studio recording, no reverb, no music.",
+  "buit_vaandel": "A captured regimental banner snapping in the wind, followed by a short triumphant roll on a military snare drum. Close-up, dry studio recording, no reverb, no music.",
   "cannon_air": "A cast iron cannonball whistling through the air overhead, a low ominous whoosh passing by. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die": "A wooden field cannon smashed to pieces: oak splinters, iron fittings snap and clatter, a wheel falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die_bear": "A wooden field cannon smashed to pieces: the carriage of frost-covered iron and fur-wrapped timber cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1536,6 +1880,7 @@
   "cannon_die_mouse": "A wooden field cannon smashed to pieces: the carriage of pale worn wood with plain soldier's iron cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die_pig": "A wooden field cannon smashed to pieces: the carriage of dark oak with heavy copper fittings cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_die_wolf": "A wooden field cannon smashed to pieces: the carriage of patched scrap iron and mismatched salvaged wood cracks and splinters, the fittings snap and clatter, a wheel wobbles and falls over. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cannon_echo": "The rolling echo of a cannon shot rumbling away through a wide valley like distant thunder. No initial boom, only the long tail. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
   "cannon_fire": "A single black powder field cannon firing: a deep heavy boom with a sharp initial blast and a low rumbling tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_fuse": "A short cannon fuse burning and hissing with a sputter of sparks. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cannon_hit": "A heavy cast iron cannonball slamming into the ground: a deep thud, a burst of dirt and splintering wood. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1634,7 +1979,15 @@
   "charge_yell": "A short battle cry of animals charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht": "The very last breath of a fallen small animal, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "gib_plets": "A small wet chunk falling onto packed earth, a soft heavy plop. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "harnas_kraak": "A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "haven_dreig": "A slow low war drum beating like a heartbeat, four heavy thumps, ominous and tense. Close-up, dry studio recording, no reverb, no music.",
+  "haven_juich": "A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
   "haven_score": "A ship's brass bell rung twice in a harbor, bright and clean. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg": "A small animal soldier panting hard for a moment after a fight, a few quick short breaths. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "honger_maag": "An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje": "A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_armor": "A musket ball striking a steel breastplate, a hard bright metallic clank with a short ring. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_bone": "A sharp bone crack under a heavy blow, a short dry snap muffled by cloth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_dirt": "A musket ball slamming into packed dirt, a dull thud with a spray of soil and small pebbles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1715,6 +2068,13 @@
   "inf_kanon_die_wolf_spd": "A small skinny fox is hit by a cannonball: one loud, very short burst as it yelps, cut off instantly. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_select": "A soldier snaps to attention: a stamped boot on earth and the rattle of a leather cartridge box. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "initiative": "A single crisp stroke on a small military snare drum. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein": "A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kanon_terugloop": "A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. No shot, only the recoil. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kanon_wissen": "A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kogel_rol": "A heavy iron cannonball rolling over packed earth and slowly coming to a stop, a low grinding rumble. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kogel_zip": "A musket ball zipping past close by: a short sharp whizz that comes and goes in a fraction of a second. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "kruit_pan": "Priming a flintlock: a pinch of black powder poured into the pan with a tiny sandy hiss, then the steel frizzen snapped shut with a small click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "laadstok": "A steel ramrod slid down the barrel of a flintlock musket, tapped twice at the bottom and drawn out again with a thin metallic scrape. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "link_snap": "A wooden game piece snapped firmly into a wooden slot, a crisp satisfying click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "lose_sting": "A short descending minor chord on solemn brass and a low drum hit, a defeated sting.",
   "melee_kill": "A bayonet driven into a body: a wet heavy punch with a short scrape of steel. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1727,14 +2087,19 @@
   "melee_survive_bijl": "A heavy axe blow blocked by a steel breastplate: a dull heavy clank and the wooden handle rattling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "melee_survive_lans": "A lance point glancing off steel armor, a scraping metallic slide ending in a tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "melee_survive_sabel": "Two cavalry sabres clashing once, a bright ringing steel clang, the blow blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "metaal_tinkel": "Small iron fittings and bolts bouncing and tinkling on hard ground after a cannon breaks apart. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "music_battle": "A tense 18th century battle march on drums and brass, steady tempo, dramatic, looping, no vocals.",
   "music_menu": "A calm 18th century military camp theme on fife and snare drum, slow march, soft and looping, no vocals.",
   "musket_cock": "The hammer of a flintlock musket being cocked, a crisp metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "musket_echo": "The distant rolling echo of a musket shot fading across open fields, no initial crack, only the tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "musket_fire": "A single flintlock musket shot fired at close range: the sharp crack of black powder with a short puff of the pan. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "musket_hit": "A musket ball striking a body at close range: a wet heavy thud with a small spray of dust. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "musket_schouder": "A soldier snaps a wooden musket onto his shoulder: a firm slap of a hand on the wooden stock and a small rattle of the iron sling swivel. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "oor_suis": "A high thin ringing in the ears after a nearby explosion, starting loud and slowly fading away, with everything else muffled. No explosion, no music.",
+  "patroon_bijt": "A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "pawn_block": "A musket ball thudding into a thick wooden shield, a dull heavy knock, the shot blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "phase_change": "A short trumpet signal of two rising notes, an 18th century army bugle, clean and short. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun": "A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_pawn": "A wooden game piece set down firmly on a wooden board, a solid short knock. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_undo": "A wooden game piece lifted quickly off a wooden board, a light short scrape and tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_aambeeld": "A blacksmith's hammer striking an iron anvil once, a bright ringing clang with a long metallic tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1787,11 +2152,29 @@
   "retaliation_cav": "A large beast lashes back: a heavy paw strikes with a thud and a short angry snarl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "reveal": "A short military snare drum roll building for a second and ending on one firm hit. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ricochet": "A musket ball ricocheting off stone: a sharp bright metallic whine spinning away into the distance. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sabel_trek": "A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik": "A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sfeer_alpenpas": "Ambience of a high mountain pass: a strong cold wind, cowbells far down in the valley, an eagle crying once, loose stones trickling. Continuous, no music.",
+  "sfeer_boerenerf": "Ambience of a farmyard next to a battlefield: chickens clucking far off, a cow lowing once in the distance, wind through a wooden barn, a creaking gate. Calm, continuous, no music.",
+  "sfeer_bosrand": "Ambience at the edge of a forest: leaves rustling in the wind, a woodpecker tapping far away, songbirds, branches creaking. Calm, continuous, no music.",
+  "sfeer_dorpsrand": "Ambience at the edge of a small village: the slow creak of windmill sails turning, birds on rooftops, a dog far away, a light breeze. Calm, continuous, no music.",
+  "sfeer_egypte": "Ambience of a desert army camp in Egypt in 1798: a dry hot wind, sand hissing over dunes, palm leaves rattling, a camel groaning far away. Continuous, no music.",
+  "sfeer_kampvuur": "A small campfire burning steadily close by: soft crackles, pops and the hiss of a damp log. Continuous, no music.",
+  "sfeer_kapelruine": "Ambience of a ruined stone chapel on a hill: a hollow wind moaning through broken windows, crows, a loose bell ringing very faintly in the wind. Continuous, no music.",
+  "sfeer_marktplein": "Ambience of a town market square heard from a distance: the muffled bustle of a crowd without words, cart wheels on cobblestones, a fountain splashing, pigeons. Continuous, no music.",
+  "sfeer_na_de_slag": "Ambience of a field just after a battle: smoldering fires crackling softly, crows cawing in the distance, a lonely wind, faint groans far away, an eerie stillness. Continuous, no music.",
+  "sfeer_rivierhaven": "Ambience of a small river harbor: water lapping against a wooden jetty, a moored boat knocking softly, gulls in the distance, ropes creaking. Calm, continuous, no music.",
+  "sfeer_waterloo": "Ambience of a farm near Waterloo before a battle: a grey drizzle on a farmhouse roof, distant drums of many regiments, a wet wind, a dog barking once. Continuous, no music.",
+  "sfeer_weidekamp": "Ambience of a quiet army camp in a summer meadow: wind in tall grass, crickets, distant birds, the low murmur of a camp far away, a tent flap now and then. Calm, continuous, no music.",
+  "sfeer_winterkamp": "Ambience of a winter army camp in deep snow: a cold howling wind, snow hissing over the ground, a campfire crackling nearby, ice creaking. Continuous, no music.",
   "slash_bajonet": "A musket with a fixed bayonet thrust forward fast, one very short whoosh with a hint of cloth rustling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "slash_bijl": "A heavy battle axe swung through the air, one deep wide whoosh with the weight of the iron head. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "slash_lans": "A long wooden lance thrust quickly through the air, one thin fast whistle. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "slash_sabel": "A cavalry sabre swung fast through the air, one sharp thin steel whoosh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "spawn_sound": "A puff of dust and a soft thump as a wooden game piece lands on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "splinter_regen": "Small pieces of broken wood clattering down onto hard ground after a crash, a light rattling shower. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sps_onthul": "A hand slapped flat onto an oak table with a sharp smack, the game decided. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "sps_tel": "Three quick knocks of a fist on an oak table, counting down: knock, knock, knock. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step": "A single footstep of a leather army boot on dry packed earth, marching infantry. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_bear": "A single footstep of the small clawed paw of a raccoon, with a little scuff on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "step_crocodile": "A single footstep of the scaly foot of a lizard slapping and dragging a little on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1802,6 +2185,7 @@
   "timer_tick": "A single tick of an antique pocket watch. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_timeout": "A small bell on a desk struck once, a clear short ding. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "timer_warning": "A fast series of ticks from an antique pocket watch, urgent, for one second. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "trom_tik": "A drummer idly taps the wooden rim of a small military snare drum twice with a drumstick, soft and light. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_back": "A soft wooden panel sliding shut with a gentle tap at the end. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_blad": "A page of thick old parchment turned over in a leather-bound book, a soft short rustle that swells and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_click": "A single soft wooden button press, a muted tap on oak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1815,6 +2199,8 @@
   "ui_stempel": "A wooden hand stamp pressed firmly onto parchment with a little sealing wax, a dull solid thud with a short papery slap. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_tel": "A tiny brass counter bead clicking against another on an old abacus, a very short bright little tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ui_toggle": "A small wooden latch flipping over with a light double click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "uitrusting_rammel": "A soldier starts to march: the short rattle of a leather cartridge box, a tin canteen and a bayonet scabbard bumping against his hip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "uniform_ritsel": "A soldier in a thick wool uniform turns around quickly: a short soft rustle of wool cloth and a faint creak of a leather belt. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_canteen": "A small wooden keg dropped onto the ground, a hollow thump and a short roll. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_drum": "A small military snare drum dropped onto the ground: a hollow thump and a short rattle of the snare wires. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_flag": "A wooden flagpole with a cloth banner falling over onto the ground: the pole knocks, the cloth flaps and settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1824,8 +2210,24 @@
   "val_musket": "A wooden musket with iron fittings dropped onto packed earth: the stock knocks, the metal rattles, it settles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_prop": "A small wooden object dropped onto hard ground, a short clatter and it comes to rest. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "val_sapper": "A heavy axe dropped onto the ground: the iron head thuds and the wooden handle knocks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ver_bijl": "Someone chopping wood far away, three slow dull axe blows on a log. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_donder": "Thunder rumbling far away beyond the hills, a long low roll. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_hond": "A dog barking twice far away. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_hoorn": "A brass bugle call sounding far away, one short signal of a few notes. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_kamp": "The muffled sounds of a busy army camp in the distance: a pot clanging, a hammer on a tent peg, a laugh without words. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_kanon": "A single cannon shot from another battle far away, a deep dull thud rolling across the hills. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_klok": "A village church bell striking three times far away. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_kraai": "A crow cawing twice from a tree a little way off. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "ver_trom": "A military drum march heard far away across the fields, a few bars of steady snare and bass drum, slowly fading. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "ver_vogels": "A flock of small birds taking off together from a nearby tree, a flurry of wings and chirps. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "vlag_wapper": "A cloth regimental banner on a wooden pole flapping and snapping in a gust of wind for a moment. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "vlieg_zoem": "A few flies buzzing lazily in the warm air, circling close by, soft and continuous. No music.",
+  "weer_onweer": "A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music.",
+  "weer_regen": "Steady light rain falling on grass and on a wooden table, soft pattering drops, continuous. No thunder, no music.",
+  "weer_wind_vlaag": "A single strong gust of wind sweeping across open grass, rising and falling away. Outdoors, no music.",
   "win_fanfare": "A short triumphant brass fanfare of trumpets and horns, a rising three-note flourish, 18th century military style.",
   "wolf_step": "A single fast padded paw step of a wolf on dry earth, claws ticking. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "wrak_knetter": "The burning wreck of a wooden cannon carriage: steady crackling and popping of a small wood fire with a soft roar, continuous. No music.",
   "your_turn": "A single short bright bugle note announcing a turn. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them."
  }
 }

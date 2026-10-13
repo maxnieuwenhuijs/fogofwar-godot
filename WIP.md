@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 13 oktober -- Sfeer en details: 67 geluiden en 35 VFX-wensen in de studio's
+
+Max: "wat zijn nog meer geluid en of vfx details die de game nog meer tot
+leven brengen. Bekijk alles en zet in de studios. van geritsel van uniforms tot
+ambient sounds en echos of kleine puffs of smoke geen idee noem het op".
+
+- **Eerst gekeken wat er is:** elk geluid dat het spel afspeelt (BANK, de
+  `Audio.play`-aanroepen, alles in `sounds/`) en elk effect uit de catalogus.
+  Stil zijn nu: de honger, de buit, de twee aura's, steen-papier-schaar, het
+  beurtlicht, de wind; er is geen uitrusting-foley, geen stem buiten de
+  doodskreet, een sfeerlaag (`ambient_field`) voor alle twaalf diorama's.
+- **Geluid (SOUND-WISHLIST secties 12-18, 67 categorieen):** uitrusting en
+  uniform (13: uniform, patroontas, harnas, laadstok, kruit op de pan, bajonet
+  op, sabel trekken, vlag, trom-tikje, kanon wissen en teruglopen), troepen die
+  leven (8: hijgen, pijnkreun, idle-geluidje, juichen, schrik, bevel, laatste
+  zucht, haven-gejuich), gevecht na de klap (11: kogel-zip, kanon-echo,
+  aarde- en splinterregen, natinkelen, uitrollende kogel, gibs, bloeddruppels,
+  vliegen, brandend wrak, oorsuizen), spelmomenten (9), een sfeerlaag per
+  diorama plus het kampvuur (13), accenten in de verte (10) en weer (3). Elk
+  met een natuurlijke prompt in `maak_geluid_prompts.py` (geluiden uit de
+  verte met `VER` in plaats van "close-up, dry"); `--nieuw` zette alleen die 67
+  in `sounds/geluid_studio.json`, de 303 bestaande bleven byte-gelijk. In de
+  studio elk een eigen sectie (`wishlist_rijen` leest de kop vanaf `## 12.`).
+- **VFX (35 wensen in VFX-WISHLIST):** 14 rijen in de bestaande groepen
+  (rokende loop, kruitnevel, patroonpapiertje, smeulende lontstok, stofpufjes
+  op de rit-stappen, stof bij neerzetten en bij een vallend lijk, opwaaiend
+  gras, bloeddruppels, opdrogende plas, neerdwarrelend vaandel, wegrollende
+  trom, parade-vonk, klapster) en drie nieuwe secties: Leven op het bord (8),
+  Spelmomenten (7), Weer en licht (6). Elke rij met een Engelse
+  concept-prompt; in de notitie staat het geluid dat erbij hoort.
+- **Nog niet in het spel:** alles hierboven is een wens. Opnemen in de studio
+  kan nu; inbouwen is per moment een `Audio.play` of een effect, als Max zegt
+  welke hij wil.
+- **Checks:** geluid-studio `--overzicht` 363 categorieen, 0 zonder prompt, de
+  zeven nieuwe secties met 67 rijen; VFX-studio `--overzicht` en `--proef` PASS
+  (0 fouten), de drie nieuwe groepen met 21 wensen. Geen spelcode geraakt.
+
 ## 10 oktober -- De rit van de big bro: een paar stappen op zijn voeten, zachter
 
 Max: "nu hoor je bij verplaatsen van de big bro 1x een dreun, klopt dat? kan

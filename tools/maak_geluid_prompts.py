@@ -4,6 +4,7 @@ Max: "verbeter echt alle prompts, nu komt er alleen maar bagger uit, gebruik
 echt natuurlijke termen").
 
     python tools/maak_geluid_prompts.py [--droogloop]
+    python tools/maak_geluid_prompts.py --nieuw   (alleen wat nog niet in de studio staat)
 
 Schrijft de prompts en de instellingen (duur, prompt-invloed) per categorie
 in `sounds/geluid_studio.json`, het bestand dat de geluid-studio leest. Een
@@ -88,6 +89,9 @@ STAP_CAV = {
 FACTIES = ["mouse", "pig", "lion", "bear", "wolf", "crocodile"]
 
 SLOT = "Close-up, dry studio recording, no reverb, no music."
+# geluiden uit de verte (13 oktober): juist WEL de ruimte erin, anders klinkt
+# een kanon achter de heuvels als een kanon op tafel
+VER = "Heard from far away across open fields, soft and muffled, natural outdoor echo, no music."
 # Meerdere takes in een clip (18 september, Max: "doe weer multiple, geluid
 # duur dan op 7 of zo, en dan met die knip op stiltes"): de beschrijving
 # blijft een geluid, de reeks-zin erachter vraagt om vijf uitvoeringen met
@@ -303,7 +307,89 @@ HAND = {
     "prop_zand": ("Dry sand sliding down a slope, a soft hiss of grains. " + SLOT, 1.0, 0.6),
     "prop_schot": ("A single flintlock musket shot with a short crack and a soft echo. " + SLOT, 1.2, 0.6),
     "bewoner_snurken": ("A man snoring twice, soft and comical. " + SLOT, 1.5, 0.5),
+
+    # ---- 13 oktober: sfeer en details (SOUND-WISHLIST secties 12-18; Max: "wat
+    # zijn nog meer geluid en vfx details die de game nog meer tot leven
+    # brengen... van geritsel van uniforms tot ambient sounds en echos")
+    # 12. uitrusting en uniform
+    "uniform_ritsel": ("A soldier in a thick wool uniform turns around quickly: a short soft rustle of wool cloth and a faint creak of a leather belt. " + SLOT, 0.6, 0.6),
+    "uitrusting_rammel": ("A soldier starts to march: the short rattle of a leather cartridge box, a tin canteen and a bayonet scabbard bumping against his hip. " + SLOT, 0.7, 0.6),
+    "harnas_kraak": ("A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. " + SLOT, 0.8, 0.6),
+    "musket_schouder": ("A soldier snaps a wooden musket onto his shoulder: a firm slap of a hand on the wooden stock and a small rattle of the iron sling swivel. " + SLOT, 0.6, 0.6),
+    "laadstok": ("A steel ramrod slid down the barrel of a flintlock musket, tapped twice at the bottom and drawn out again with a thin metallic scrape. " + SLOT, 1.2, 0.6),
+    "patroon_bijt": ("A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. " + SLOT, 0.5, 0.6),
+    "kruit_pan": ("Priming a flintlock: a pinch of black powder poured into the pan with a tiny sandy hiss, then the steel frizzen snapped shut with a small click. " + SLOT, 0.8, 0.6),
+    "bajonet_op": ("A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. " + SLOT, 0.6, 0.7),
+    "sabel_trek": ("A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. " + SLOT, 0.9, 0.6),
+    "vlag_wapper": ("A cloth regimental banner on a wooden pole flapping and snapping in a gust of wind for a moment. " + SLOT, 1.5, 0.5),
+    "trom_tik": ("A drummer idly taps the wooden rim of a small military snare drum twice with a drumstick, soft and light. " + SLOT, 0.6, 0.6),
+    "kanon_wissen": ("A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. " + SLOT, 1.5, 0.5),
+    "kanon_terugloop": ("A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. No shot, only the recoil. " + SLOT, 1.5, 0.5),
+    # 13. troepen die leven (per factie later ook <categorie>_<factie>)
+    "hijg": ("A small animal soldier panting hard for a moment after a fight, a few quick short breaths. " + SLOT, 1.0, 0.5),
+    "pijn_kreun": ("A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. " + SLOT, 0.6, 0.6),
+    "idle_geluidje": ("A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. " + SLOT, 0.8, 0.5),
+    "juich_klein": ("A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. " + SLOT, 1.0, 0.5),
+    "schrik": ("A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. " + SLOT, 0.5, 0.6),
+    "bevel_roep": ("A small animal officer gives one short sharp barking command, no words, just a single clipped call. " + SLOT, 0.6, 0.6),
+    "dood_zucht": ("The very last breath of a fallen small animal, a soft weak exhale that fades out. " + SLOT, 1.0, 0.5),
+    "haven_juich": ("A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy. " + VER, 2.5, 0.5),
+    # 14. gevecht: de details na de klap
+    "kogel_zip": ("A musket ball zipping past close by: a short sharp whizz that comes and goes in a fraction of a second. " + SLOT, 0.5, 0.6),
+    "cannon_echo": ("The rolling echo of a cannon shot rumbling away through a wide valley like distant thunder. No initial boom, only the long tail. " + VER, 4.0, 0.5),
+    "aarde_regen": ("Clods of earth and small stones raining down onto the ground after an explosion, a short pattering shower that thins out. " + SLOT, 1.5, 0.5),
+    "splinter_regen": ("Small pieces of broken wood clattering down onto hard ground after a crash, a light rattling shower. " + SLOT, 1.2, 0.5),
+    "metaal_tinkel": ("Small iron fittings and bolts bouncing and tinkling on hard ground after a cannon breaks apart. " + SLOT, 1.2, 0.5),
+    "kogel_rol": ("A heavy iron cannonball rolling over packed earth and slowly coming to a stop, a low grinding rumble. " + SLOT, 2.0, 0.5),
+    "gib_plets": ("A small wet chunk falling onto packed earth, a soft heavy plop. " + SLOT, 0.5, 0.6),
+    "bloed_drup": ("A few drops of blood dripping onto dry earth, tiny soft wet taps. " + SLOT, 0.8, 0.5),
+    "vlieg_zoem": ("A few flies buzzing lazily in the warm air, circling close by, soft and continuous. No music.", 8.0, 0.4),
+    "wrak_knetter": ("The burning wreck of a wooden cannon carriage: steady crackling and popping of a small wood fire with a soft roar, continuous. No music.", 10.0, 0.4),
+    "oor_suis": ("A high thin ringing in the ears after a nearby explosion, starting loud and slowly fading away, with everything else muffled. No explosion, no music.", 3.0, 0.5),
+    # 15. spelmomenten die nu stil zijn
+    "honger_maag": ("An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. " + SLOT, 1.8, 0.5),
+    "buit_vaandel": ("A captured regimental banner snapping in the wind, followed by a short triumphant roll on a military snare drum. " + SLOT, 2.5, 0.5),
+    "buit_trom": ("A captured military drum set down hard on a wooden table with a hollow boom, followed by a few coins clinking. " + SLOT, 2.5, 0.5),
+    "aura_trom": ("A single firm stroke on a military snare drum, crisp, with a short rattle of the snare wires. " + SLOT, 0.6, 0.7),
+    "aura_vaandel": ("A cloth banner unfurling with a sudden snap in the wind. " + SLOT, 0.8, 0.6),
+    "sps_tel": ("Three quick knocks of a fist on an oak table, counting down: knock, knock, knock. " + SLOT, 1.5, 0.6),
+    "sps_onthul": ("A hand slapped flat onto an oak table with a sharp smack, the game decided. " + SLOT, 0.5, 0.6),
+    "haven_dreig": ("A slow low war drum beating like a heartbeat, four heavy thumps, ominous and tense. " + SLOT, 3.0, 0.5),
+    "beurtlicht_aan": ("A soft warm shimmer of tiny brass bells, a gentle glowing chime that rises and fades. " + SLOT, 1.2, 0.5),
+    # 16. sfeer per diorama: lange lagen onder het spel
+    "sfeer_weidekamp": ("Ambience of a quiet army camp in a summer meadow: wind in tall grass, crickets, distant birds, the low murmur of a camp far away, a tent flap now and then. Calm, continuous, no music.", 25.0, 0.3),
+    "sfeer_boerenerf": ("Ambience of a farmyard next to a battlefield: chickens clucking far off, a cow lowing once in the distance, wind through a wooden barn, a creaking gate. Calm, continuous, no music.", 25.0, 0.3),
+    "sfeer_dorpsrand": ("Ambience at the edge of a small village: the slow creak of windmill sails turning, birds on rooftops, a dog far away, a light breeze. Calm, continuous, no music.", 25.0, 0.3),
+    "sfeer_na_de_slag": ("Ambience of a field just after a battle: smoldering fires crackling softly, crows cawing in the distance, a lonely wind, faint groans far away, an eerie stillness. Continuous, no music.", 25.0, 0.3),
+    "sfeer_winterkamp": ("Ambience of a winter army camp in deep snow: a cold howling wind, snow hissing over the ground, a campfire crackling nearby, ice creaking. Continuous, no music.", 25.0, 0.3),
+    "sfeer_rivierhaven": ("Ambience of a small river harbor: water lapping against a wooden jetty, a moored boat knocking softly, gulls in the distance, ropes creaking. Calm, continuous, no music.", 25.0, 0.3),
+    "sfeer_bosrand": ("Ambience at the edge of a forest: leaves rustling in the wind, a woodpecker tapping far away, songbirds, branches creaking. Calm, continuous, no music.", 25.0, 0.3),
+    "sfeer_kapelruine": ("Ambience of a ruined stone chapel on a hill: a hollow wind moaning through broken windows, crows, a loose bell ringing very faintly in the wind. Continuous, no music.", 25.0, 0.3),
+    "sfeer_marktplein": ("Ambience of a town market square heard from a distance: the muffled bustle of a crowd without words, cart wheels on cobblestones, a fountain splashing, pigeons. Continuous, no music.", 25.0, 0.3),
+    "sfeer_egypte": ("Ambience of a desert army camp in Egypt in 1798: a dry hot wind, sand hissing over dunes, palm leaves rattling, a camel groaning far away. Continuous, no music.", 25.0, 0.3),
+    "sfeer_alpenpas": ("Ambience of a high mountain pass: a strong cold wind, cowbells far down in the valley, an eagle crying once, loose stones trickling. Continuous, no music.", 25.0, 0.3),
+    "sfeer_waterloo": ("Ambience of a farm near Waterloo before a battle: a grey drizzle on a farmhouse roof, distant drums of many regiments, a wet wind, a dog barking once. Continuous, no music.", 25.0, 0.3),
+    "sfeer_kampvuur": ("A small campfire burning steadily close by: soft crackles, pops and the hiss of a damp log. Continuous, no music.", 15.0, 0.4),
+    # 17. accenten in de verte (los, af en toe een)
+    "ver_kanon": ("A single cannon shot from another battle far away, a deep dull thud rolling across the hills. " + VER, 4.0, 0.5),
+    "ver_trom": ("A military drum march heard far away across the fields, a few bars of steady snare and bass drum, slowly fading. " + VER, 6.0, 0.4),
+    "ver_klok": ("A village church bell striking three times far away. " + VER, 6.0, 0.5),
+    "ver_hond": ("A dog barking twice far away. " + VER, 2.0, 0.5),
+    "ver_bijl": ("Someone chopping wood far away, three slow dull axe blows on a log. " + VER, 3.5, 0.5),
+    "ver_hoorn": ("A brass bugle call sounding far away, one short signal of a few notes. " + VER, 3.0, 0.5),
+    "ver_vogels": ("A flock of small birds taking off together from a nearby tree, a flurry of wings and chirps. " + VER, 2.5, 0.5),
+    "ver_kraai": ("A crow cawing twice from a tree a little way off. " + VER, 1.5, 0.5),
+    "ver_kamp": ("The muffled sounds of a busy army camp in the distance: a pot clanging, a hammer on a tent peg, a laugh without words. " + VER, 6.0, 0.4),
+    "ver_donder": ("Thunder rumbling far away beyond the hills, a long low roll. " + VER, 5.0, 0.5),
+    # 18. weer en echo
+    "weer_regen": ("Steady light rain falling on grass and on a wooden table, soft pattering drops, continuous. No thunder, no music.", 20.0, 0.3),
+    "weer_wind_vlaag": ("A single strong gust of wind sweeping across open grass, rising and falling away. Outdoors, no music.", 3.0, 0.5),
+    "weer_onweer": ("A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music.", 5.0, 0.5),
 }
+# lange lagen, lange staarten en verre geluiden: een take per generatie, eigen duur
+GEEN_REEKS |= {"haven_juich", "cannon_echo", "vlieg_zoem", "wrak_knetter", "oor_suis", "buit_vaandel",
+               "buit_trom", "haven_dreig"}
+GEEN_REEKS |= {c for c in HAND if c.startswith(("sfeer_", "weer_")) or (c.startswith("ver_") and c != "ver_kraai")}
 
 
 def main():
@@ -311,6 +397,8 @@ def main():
     ap.add_argument("--droogloop", action="store_true")
     ap.add_argument("--overschrijf", action="store_true", help="ook prompts die in de studio zijn aangepast vervangen")
     ap.add_argument("--kreten", action="store_true", help="alleen de kreten (sterven, kanon) opnieuw zetten, ook als ze in de studio zijn aangepast")
+    ap.add_argument("--nieuw", action="store_true",
+                    help="alleen categorieen die nog niet in de studio staan; raakt niets aan wat er al is (ook niet de duur)")
     a = ap.parse_args()
     prompts, inst = kreten()
     kreet_cats = set(prompts) | {"inf_die", "cav_die", "cav_kanon_die"}
@@ -332,6 +420,9 @@ def main():
     eigen = studio.setdefault("uit_generator", {})   # wat de generator schreef: zo zien we later wat Max zelf wijzigde
     nieuw = behouden = 0
     for cat, p in prompts.items():
+        if a.nieuw and (cat in oud_p or cat in oud_i):
+            behouden += 1
+            continue
         if not a.overschrijf and not (a.kreten and cat in kreet_cats) and cat in oud_p and oud_p[cat] != eigen.get(cat):
             behouden += 1
             continue
@@ -339,8 +430,11 @@ def main():
         oud_i[cat] = dict(inst[cat])
         eigen[cat] = p
         nieuw += 1
-    studio.setdefault("standaard", {}).update({"duur": 0.0, "invloed": 0.6, "model": "eleven_text_to_sound_v2"})
-    print("%d prompts gezet, %d handmatig aangepaste bewaard (--overschrijf zet ook die)" % (nieuw, behouden))
+    if a.nieuw:
+        print("%d nieuwe categorieen gezet, %d stonden al in de studio (niet aangeraakt)" % (nieuw, behouden))
+    else:
+        studio.setdefault("standaard", {}).update({"duur": 0.0, "invloed": 0.6, "model": "eleven_text_to_sound_v2"})
+        print("%d prompts gezet, %d handmatig aangepaste bewaard (--overschrijf zet ook die)" % (nieuw, behouden))
     if a.droogloop:
         for cat in sorted(prompts)[:5]:
             print(" ", cat, "->", prompts[cat][:90])

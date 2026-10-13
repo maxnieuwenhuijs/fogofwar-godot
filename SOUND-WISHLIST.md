@@ -589,6 +589,135 @@ de clip (`geluid_moment`). Afspraak: `bewoner_<wat hij doet>.wav`, bv.
 `bewoner_hakken.wav` (bijl in hout, kort), `bewoner_oefenen.wav` (geweerkolf
 op hout). Zo deelt een varken-houthakker en een muis-houthakker een geluid.
 
+---
+
+## Sfeer en details: wat het bord nog meer tot leven brengt (13 oktober)
+
+Max: "wat zijn nog meer geluid en of vfx details die de game nog meer tot leven
+brengen. Bekijk alles en zet in de studios. van geritsel van uniforms tot
+ambient sounds en echos of kleine puffs of smoke". De secties 12 tot en met 18
+hieronder zijn **wensen**: ze staan in de geluid-studio (elk als eigen sectie,
+met een prompt in `sounds/geluid_studio.json` uit `tools/maak_geluid_prompts.py`),
+maar het spel speelt ze nog niet af. Eerst opnemen en kiezen, daarna inbouwen
+(een `Audio.play` op het moment uit de kolom "Wanneer"). Stemmen mogen later per
+factie (`pijn_kreun_mouse`, `hijg_bear`), net als de kreten. De VFX die erbij
+horen staan in VFX-WISHLIST.md, secties 8 tot en met 10.
+
+## 12. Uitrusting en uniform
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `uniform_ritsel` | 4 | Pion draait zich om of wordt geselecteerd (onder inf_select) | A soldier in a thick wool uniform turns around quickly: a short soft rustle of wool cloth and a faint creak of a leather belt. |
+| `uitrusting_rammel` | 4 | Eerste stap van een infanterist: patroontas, veldfles, schede | A soldier starts to march: the short rattle of a leather cartridge box, a tin canteen and a bayonet scabbard bumping against his hip. |
+| `harnas_kraak` | 3 | Big bro geselecteerd of in beweging: leer en gespen | A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. |
+| `musket_schouder` | 3 | Na het koppelen (de ready-clip): musket naar de schouder | A soldier snaps a wooden musket onto his shoulder: a firm slap of a hand on the wooden stock and a small rattle of the iron sling swivel. |
+| `laadstok` | 3 | Na een schot, zachtjes: de laadstok in de loop (herladen) | A steel ramrod slid down the barrel of a flintlock musket, tapped twice at the bottom and drawn out again with a thin metallic scrape. |
+| `patroon_bijt` | 2 | Herladen: een papieren patroon afbijten | A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. |
+| `kruit_pan` | 2 | Vlak voor het schot: kruit op de pan, pan dicht | Priming a flintlock: a pinch of black powder poured into the pan with a tiny sandy hiss, then the steel frizzen snapped shut with a small click. |
+| `bajonet_op` | 2 | Voor een bajonetstoot: de bajonet klikt op de loop | A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. |
+| `sabel_trek` | 3 | Big bro trekt zijn sabel voor een charge | A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. |
+| `vlag_wapper` | 3 | Vaandel wappert in de wind (af en toe, harder bij een vlaag) | A cloth regimental banner on a wooden pole flapping and snapping in a gust of wind for a moment. |
+| `trom_tik` | 3 | De tamboer tikt in rust zacht op de rand van zijn trom | A drummer idly taps the wooden rim of a small military snare drum twice with a drumstick, soft and light. |
+| `kanon_wissen` | 2 | Na een kanonschot: de natte wisser sist in de hete loop | A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. |
+| `kanon_terugloop` | 2 | Kanonschot: het affuit rolt terug op zijn wielen | A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. |
+
+## 13. Troepen die leven (stemmen zonder woorden)
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `hijg` | 3 | Na een melee of een charge: even hijgen | A small animal soldier panting hard for a moment after a fight, a few quick short breaths. |
+| `pijn_kreun` | 4 | Geraakt maar overleeft: een korte kreun | A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. |
+| `idle_geluidje` | 4 | Een pion in een afwijkende idle: snuif, geeuw, kuchje | A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. |
+| `juich_klein` | 3 | Een vijand valt: een paar eigen pionnen juichen kort | A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. |
+| `schrik` | 3 | Een kameraad sneuvelt vlak naast je: een korte schrik | A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. |
+| `bevel_roep` | 3 | Pion geselecteerd: een korte bevelende roep, geen woorden | A small animal officer gives one short sharp barking command, no words, just a single clipped call. |
+| `dood_zucht` | 2 | Na de val: de laatste uitademing, heel zacht | The very last breath of a fallen small animal, a soft weak exhale that fades out. |
+| `haven_juich` | 2 | Een pion bereikt de haven: gejuich uit het eigen kamp | A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy, heard from across the field. |
+
+## 14. Gevecht: de details na de klap
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `kogel_zip` | 4 | De musketkogel zoeft langs tijdens zijn vlucht | A musket ball zipping past close by: a short sharp whizz that comes and goes in a fraction of a second. |
+| `cannon_echo` | 3 | Na een kanonschot: rollende donder door het dal | The rolling echo of a cannon shot rumbling away through a wide valley like distant thunder, no initial boom, only the long tail. |
+| `aarde_regen` | 3 | Na een kanonsinslag: kluiten en gruis die neerkomen | Clods of earth and small stones raining down onto the ground after an explosion, a short pattering shower that thins out. |
+| `splinter_regen` | 2 | Na een kanon dat kapotgaat: houtsplinters die neerkletteren | Small pieces of broken wood clattering down onto hard ground after a crash, a light rattling shower. |
+| `metaal_tinkel` | 2 | Na een kanon dat kapotgaat: beslag dat natinkelt | Small iron fittings and bolts bouncing and tinkling on hard ground after a cannon breaks apart. |
+| `kogel_rol` | 2 | De kanonskogel rolt na de inslag uit | A heavy iron cannonball rolling over packed earth and slowly coming to a stop, a low grinding rumble. |
+| `gib_plets` | 4 | Een brokstuk van de gibs komt neer | A small wet chunk falling onto packed earth, a soft heavy plop. |
+| `bloed_drup` | 3 | Een gewonde pion bloedt na terwijl hij loopt | A few drops of blood dripping onto dry earth, tiny soft wet taps. |
+| `vlieg_zoem` | 2 | Boven de gesneuvelden, zodra de lijken donker worden (zacht) | A few flies buzzing lazily in the warm air, circling close by, soft and continuous. |
+| `wrak_knetter` | 2 | Het brandende wrak van een kanon (laag zolang het brandt) | The burning wreck of a wooden cannon carriage: steady crackling and popping of a small wood fire with a soft roar, continuous. |
+| `oor_suis` | 1 | Een kanonsinslag vlakbij: kort een piep in je oren | A high thin ringing in the ears after a nearby explosion, starting loud and slowly fading away, with everything else muffled. |
+
+## 15. Spelmomenten die nu stil zijn
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `honger_maag` | 2 | De honger neemt een pion (vanaf cyclus 10) | An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. |
+| `buit_vaandel` | 2 | Het vaandel van de vijand is buit (+2 versterkingspunten) | A captured regimental banner snapping in the wind, followed by a short triumphant roll on a military snare drum. |
+| `buit_trom` | 2 | De trom van de vijand is buit (+4 CP) | A captured military drum set down hard on a wooden table with a hollow boom, followed by a few coins clinking. |
+| `aura_trom` | 3 | Een pion gebruikt het stamina-punt van de trom | A single firm stroke on a military snare drum, crisp, with a short rattle of the snare wires. |
+| `aura_vaandel` | 2 | Een pion stapt in het blok om het vaandel (+1 attack) | A cloth banner unfurling with a sudden snap in the wind. |
+| `sps_tel` | 3 | Steen-papier-schaar: het aftellen | Three quick knocks of a fist on an oak table, counting down: knock, knock, knock. |
+| `sps_onthul` | 2 | Steen-papier-schaar: de handen liggen open | A hand slapped flat onto an oak table with a sharp smack, the game decided. |
+| `haven_dreig` | 1 | Een vijand staat een of twee stappen van jouw haven | A slow low war drum beating like a heartbeat, four heavy thumps, ominous and tense. |
+| `beurtlicht_aan` | 2 | De laatste pionnen krijgen hun lichtstraal | A soft warm shimmer of tiny brass bells, a gentle glowing chime that rises and fades. |
+
+## 16. Sfeer per diorama (lange lagen onder het spel)
+
+Een laag per diorama (25 s, een take per generatie; het spel kan hem laten
+herhalen of na afloop een andere variant kiezen, net als `ambient_field`), plus
+het kampvuur dat zacht klinkt zolang het in beeld brandt.
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `sfeer_weidekamp` | 2 | Diorama Weidekamp | Ambience of a quiet army camp in a summer meadow: wind in tall grass, crickets, distant birds, the low murmur of a camp far away, a tent flap now and then. Calm, continuous, no music. |
+| `sfeer_boerenerf` | 2 | Diorama Boerenerf | Ambience of a farmyard next to a battlefield: chickens clucking far off, a cow lowing once in the distance, wind through a wooden barn, a creaking gate. Calm, continuous, no music. |
+| `sfeer_dorpsrand` | 2 | Diorama Dorpsrand met molen | Ambience at the edge of a small village: the slow creak of windmill sails turning, birds on rooftops, a dog far away, a light breeze. Calm, continuous, no music. |
+| `sfeer_na_de_slag` | 2 | Diorama Na de slag | Ambience of a field just after a battle: smoldering fires crackling softly, crows cawing in the distance, a lonely wind, faint groans far away, an eerie stillness. Continuous, no music. |
+| `sfeer_winterkamp` | 2 | Diorama Winterkamp | Ambience of a winter army camp in deep snow: a cold howling wind, snow hissing over the ground, a campfire crackling nearby, ice creaking. Continuous, no music. |
+| `sfeer_rivierhaven` | 2 | Diorama Rivierhaven | Ambience of a small river harbor: water lapping against a wooden jetty, a moored boat knocking softly, gulls in the distance, ropes creaking. Calm, continuous, no music. |
+| `sfeer_bosrand` | 2 | Diorama Bosrand | Ambience at the edge of a forest: leaves rustling in the wind, a woodpecker tapping far away, songbirds, branches creaking. Calm, continuous, no music. |
+| `sfeer_kapelruine` | 2 | Diorama Kapelruine | Ambience of a ruined stone chapel on a hill: a hollow wind moaning through broken windows, crows, a loose bell ringing very faintly in the wind. Continuous, no music. |
+| `sfeer_marktplein` | 2 | Diorama Marktplein | Ambience of a town market square heard from a distance: the muffled bustle of a crowd without words, cart wheels on cobblestones, a fountain splashing, pigeons. Continuous, no music. |
+| `sfeer_egypte` | 2 | Diorama Egypte 1798 | Ambience of a desert army camp in Egypt in 1798: a dry hot wind, sand hissing over dunes, palm leaves rattling, a camel groaning far away. Continuous, no music. |
+| `sfeer_alpenpas` | 2 | Diorama Alpenpas | Ambience of a high mountain pass: a strong cold wind, cowbells far down in the valley, an eagle crying once, loose stones trickling. Continuous, no music. |
+| `sfeer_waterloo` | 2 | Diorama Hoeve van Waterloo | Ambience of a farm near Waterloo before a battle: a grey drizzle on a farmhouse roof, distant drums of many regiments, a wet wind, a dog barking once. Continuous, no music. |
+| `sfeer_kampvuur` | 2 | Zacht bij het kampvuur in het kamp, zolang het brandt | A small campfire burning steadily close by: soft crackles, pops and the hiss of a damp log. Continuous, no music. |
+
+## 17. Accenten in de verte (los, af en toe een)
+
+Om de 20 tot 60 seconden een, zacht en willekeurig links of rechts; zo leeft
+de wereld om het bord zonder dat je het merkt. Per diorama een eigen mengsel
+(geen kerkklok in Egypte, wel in de Kapelruine).
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `ver_kanon` | 3 | Een andere slag, ver weg | A single cannon shot from another battle far away, a deep dull thud rolling across the hills, heard from far away. |
+| `ver_trom` | 2 | Een ander regiment marcheert in de verte | A military drum march heard far away across the fields, a few bars of steady snare and bass drum, slowly fading. |
+| `ver_klok` | 2 | Een dorpskerk slaat (Dorpsrand, Kapelruine, Marktplein) | A village church bell striking three times far away. |
+| `ver_hond` | 3 | Een hond blaft in de verte | A dog barking twice far away, soft and muffled, natural outdoor echo. |
+| `ver_bijl` | 2 | Iemand hakt hout in de verte | Someone chopping wood far away, three slow dull axe blows on a log. |
+| `ver_hoorn` | 2 | Een signaalhoorn in de verte | A brass bugle call sounding far away, one short signal of a few notes. |
+| `ver_vogels` | 3 | Een zwerm vogels vliegt op | A flock of small birds taking off together from a nearby tree, a flurry of wings and chirps. |
+| `ver_kraai` | 3 | Een kraai in een boom verderop | A crow cawing twice from a tree a little way off. |
+| `ver_kamp` | 2 | Het kamp achter je: pannen, een hamer, gelach | The muffled sounds of a busy army camp in the distance: a pot clanging, a hammer on a tent peg, a laugh without words. |
+| `ver_donder` | 2 | Onweer achter de heuvels | Thunder rumbling far away beyond the hills, a long low roll. |
+
+## 18. Weer en echo
+
+| Categorie | Var. | Wanneer | Prompt (EN) |
+|---|---|---|---|
+| `weer_regen` | 2 | Een potje met regen (laag, samen met de regen-VFX) | Steady light rain falling on grass and on a wooden table, soft pattering drops, continuous. No thunder, no music. |
+| `weer_wind_vlaag` | 3 | Een windvlaag: de vlaggen wapperen even harder | A single strong gust of wind sweeping across open grass, rising and falling away. Outdoors, no music. |
+| `weer_onweer` | 2 | Onweer dichtbij, met de bliksem-VFX | A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music. |
+
+**Echo zonder opname:** een galm per diorama (lang in de Alpenpas en de
+Kapelruine, kort in het Bosrand, droog op het Marktplein) kan ook als
+effect op de geluidsbus, zonder bestanden; `musket_echo` en `cannon_echo`
+blijven de staart die je bewust hoort.
+
 ## ElevenLabs SFX-prompts (kopieer-klaar)
 
 Voor **ElevenLabs → Sound Effects**. Tips die de kwaliteit sterk verhogen:
