@@ -1200,11 +1200,16 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   geheugensteun. `results/geluid_studio/` draagt een `.gdignore`, anders
   importeert de open editor elke take. **Sfeer en details (13 oktober, Max:
   "van geritsel van uniforms tot ambient sounds en echos"):** SOUND-WISHLIST
-  secties 12-18 (67 categorieen: uitrusting en uniform, stemmen zonder
-  woorden, details na de klap, spelmomenten die stil waren zoals honger, buit,
-  aura en sps, een sfeerlaag per diorama, accenten in de verte, weer) zijn in
-  de studio elk een eigen sectie (`wishlist_rijen`: een kop vanaf `## 12.`
-  wordt een studio-sectie). Prompts uit `maak_geluid_prompts.py --nieuw`
+  secties 12-18 (58 categorieen: uitrusting en uniform, details na de klap,
+  spelmomenten die stil waren zoals buit, aura en sps, een sfeerlaag per
+  diorama, accenten in de verte, weer) zijn in de studio elk een eigen sectie
+  (`wishlist_rijen`: een kop vanaf `## 12.` wordt een studio-sectie). De
+  stemmen zijn PER FACTIE (Max: "de idle pijn kreun etc moeten toch factie
+  based zijn"): `STEMMEN` in `maak_geluid_prompts.py`, 9 voor het kleine
+  broertje (`pijn_kreun_<factie>`, hijgen, idle, juichen, schrik, bevel,
+  laatste zucht, haven-gejuich, honger) en 5 voor de big bro
+  (`cav_pijn_kreun_<factie>`, ...), dier en geluid uit `STEM_INF`/`STEM_CAV`;
+  de studio zet ze onder de factie-sectie. Prompts uit `maak_geluid_prompts.py --nieuw`
   (alleen wat nog niet in de studio staat; raakt geen prompt, duur of
   standaard aan; `VER` voor geluiden uit de verte). Het spel speelt ze nog
   niet af: eerst opnemen, dan inbouwen.

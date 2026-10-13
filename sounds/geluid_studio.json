@@ -24,7 +24,27 @@
    "duur": 7.0,
    "invloed": 0.5
   },
-  "bevel_roep": {
+  "bevel_roep_bear": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "bevel_roep_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "bevel_roep_lion": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "bevel_roep_mouse": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "bevel_roep_pig": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "bevel_roep_wolf": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -284,6 +304,102 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "cav_dood_zucht_bear": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_dood_zucht_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_dood_zucht_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_dood_zucht_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_dood_zucht_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_dood_zucht_wolf": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_hijg_bear": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_hijg_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_hijg_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_hijg_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_hijg_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_hijg_wolf": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_honger_maag_bear": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "cav_honger_maag_crocodile": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "cav_honger_maag_lion": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "cav_honger_maag_mouse": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "cav_honger_maag_pig": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "cav_honger_maag_wolf": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "cav_idle_geluidje_bear": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_idle_geluidje_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_idle_geluidje_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_idle_geluidje_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_idle_geluidje_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "cav_idle_geluidje_wolf": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
   "cav_kanon_die": {
    "duur": 7.0,
    "invloed": 0.6
@@ -460,6 +576,30 @@
    "duur": 7.0,
    "invloed": 0.6
   },
+  "cav_pijn_kreun_bear": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_pijn_kreun_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_pijn_kreun_lion": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_pijn_kreun_mouse": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_pijn_kreun_pig": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "cav_pijn_kreun_wolf": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
   "cav_select": {
    "duur": 7.0,
    "invloed": 0.5
@@ -480,7 +620,27 @@
    "duur": 7.0,
    "invloed": 0.6
   },
-  "dood_zucht": {
+  "dood_zucht_bear": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "dood_zucht_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "dood_zucht_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "dood_zucht_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "dood_zucht_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "dood_zucht_wolf": {
    "duur": 7.0,
    "invloed": 0.5
   },
@@ -496,7 +656,27 @@
    "duur": 3.0,
    "invloed": 0.5
   },
-  "haven_juich": {
+  "haven_juich_bear": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "haven_juich_crocodile": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "haven_juich_lion": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "haven_juich_mouse": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "haven_juich_pig": {
+   "duur": 2.5,
+   "invloed": 0.5
+  },
+  "haven_juich_wolf": {
    "duur": 2.5,
    "invloed": 0.5
   },
@@ -504,15 +684,75 @@
    "duur": 7.0,
    "invloed": 0.5
   },
-  "hijg": {
+  "hijg_bear": {
    "duur": 7.0,
    "invloed": 0.5
   },
-  "honger_maag": {
+  "hijg_crocodile": {
    "duur": 7.0,
    "invloed": 0.5
   },
-  "idle_geluidje": {
+  "hijg_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "hijg_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "hijg_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "hijg_wolf": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "honger_maag_bear": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "honger_maag_crocodile": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "honger_maag_lion": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "honger_maag_mouse": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "honger_maag_pig": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "honger_maag_wolf": {
+   "duur": 2.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje_bear": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "idle_geluidje_wolf": {
    "duur": 7.0,
    "invloed": 0.5
   },
@@ -836,7 +1076,27 @@
    "duur": 7.0,
    "invloed": 0.7
   },
-  "juich_klein": {
+  "juich_klein_bear": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "juich_klein_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "juich_klein_lion": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "juich_klein_mouse": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "juich_klein_pig": {
+   "duur": 7.0,
+   "invloed": 0.5
+  },
+  "juich_klein_wolf": {
    "duur": 7.0,
    "invloed": 0.5
   },
@@ -960,7 +1220,27 @@
    "duur": 7.0,
    "invloed": 0.5
   },
-  "pijn_kreun": {
+  "pijn_kreun_bear": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "pijn_kreun_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "pijn_kreun_lion": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "pijn_kreun_mouse": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "pijn_kreun_pig": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "pijn_kreun_wolf": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -1176,7 +1456,27 @@
    "duur": 7.0,
    "invloed": 0.6
   },
-  "schrik": {
+  "schrik_bear": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "schrik_crocodile": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "schrik_lion": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "schrik_mouse": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "schrik_pig": {
+   "duur": 7.0,
+   "invloed": 0.6
+  },
+  "schrik_wolf": {
    "duur": 7.0,
    "invloed": 0.6
   },
@@ -1488,7 +1788,12 @@
   "aura_vaandel": "A cloth banner unfurling with a sudden snap in the wind. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bajonet_op": "A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "beurtlicht_aan": "A soft warm shimmer of tiny brass bells, a gentle glowing chime that rises and fades. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "bevel_roep": "A small animal officer gives one short sharp barking command, no words, just a single clipped call. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_bear": "A raccoon officer gives one short sharp command, no words, a single clipped chitter. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_crocodile": "A lizard officer gives one short sharp command, no words, a single clipped hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_lion": "A young cheetah officer gives one short sharp command, no words, a single clipped chirp. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_mouse": "A mouse officer gives one short sharp command, no words, a single clipped squeak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_pig": "A young pig officer gives one short sharp command, no words, a single clipped squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_wolf": "A fox officer gives one short sharp command, no words, a single clipped yip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bewoner_snurken": "A man snoring twice, soft and comical. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bloed_drup": "A few drops of blood dripping onto dry earth, tiny soft wet taps. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "blood_splash": "A small wet blood splatter hitting the ground, quick and light. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1553,6 +1858,30 @@
   "cav_die_wolf_hp": "A big heavy wolf wearing a steel breastplate is wounded in battle and dies: one loud, very short burst as it yelps and growls in pain, cut off as its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_wolf_mix": "A wolf is wounded in battle and dies: one loud, very short burst as it yelps and growls in pain, cut off as its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_wolf_spd": "A small skinny wolf is wounded in battle and dies: one loud, very short burst as it yelps and growls in pain, cut off as its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_bear": "The last heavy breath of a grizzly bear that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_crocodile": "The last heavy breath of a crocodile that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_lion": "The last heavy breath of a lion that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_mouse": "The last heavy breath of a rat that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_pig": "The last heavy breath of a wild boar that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_wolf": "The last heavy breath of a wolf that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_bear": "A grizzly bear panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_crocodile": "A crocodile panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_lion": "A lion panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_mouse": "A rat panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_pig": "A wild boar panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_wolf": "A wolf panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_honger_maag_bear": "A grizzly bear is starving: a deep growling stomach and one weak, tired growl. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_crocodile": "A crocodile is starving: a deep growling stomach and one weak, tired hiss. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_lion": "A lion is starving: a deep growling stomach and one weak, tired growl. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_mouse": "A rat is starving: a deep growling stomach and one weak, tired squeal. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_pig": "A wild boar is starving: a deep growling stomach and one weak, tired grunt. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_wolf": "A wolf is starving: a deep growling stomach and one weak, tired snarl. Close-up, dry studio recording, no reverb, no music.",
+  "cav_idle_geluidje_bear": "A grizzly bear waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_crocodile": "A crocodile waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_lion": "A lion waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_mouse": "A rat waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_pig": "A wild boar waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_wolf": "A wolf waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_kanon_die": "A large animal is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_kanon_die_bear": "A grizzly bear is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_kanon_die_bear_atk": "A huge strong grizzly bear is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1597,20 +1926,51 @@
   "cav_move_mouse": "A single heavy footstep, deep bass",
   "cav_move_pig": "A single heavy footstep of the heavy hoof of a wild boar on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_wolf": "A single heavy footstep of the heavy paw of a huge wolf, claws digging in on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_bear": "A grizzly bear is hit but stays on its feet: one short angry, pained growl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_crocodile": "A crocodile is hit but stays on its feet: one short angry, pained hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_lion": "A lion is hit but stays on its feet: one short angry, pained growl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_mouse": "A rat is hit but stays on its feet: one short angry, pained squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_pig": "A wild boar is hit but stays on its feet: one short angry, pained grunt. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_wolf": "A wolf is hit but stays on its feet: one short angry, pained snarl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_select": "A large beast snorts once and shifts its weight, harness leather creaking, a buckle jingling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "charge_rumble": "fast and heavy running footsteps of a large animal charging at full speed over packed earth, getting faster. No voice. Close-up, dry studio recording, no reverb, no music.",
   "charge_yell": "A short battle cry of man charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "dood_zucht": "The very last breath of a fallen small animal, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_bear": "The very last breath of a fallen raccoon, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_crocodile": "The very last breath of a fallen lizard, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_lion": "The very last breath of a fallen young cheetah, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_mouse": "The very last breath of a fallen mouse, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_pig": "The very last breath of a fallen young pig, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_wolf": "The very last breath of a fallen fox, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "gib_plets": "A small wet chunk falling onto packed earth, a soft heavy plop. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "harnas_kraak": "A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "haven_dreig": "A slow low war drum beating like a heartbeat, four heavy thumps, ominous and tense. Close-up, dry studio recording, no reverb, no music.",
-  "haven_juich": "A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_bear": "A group of raccoon soldiers cheering together as a comrade reaches the goal, a short burst of joyful chitters. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_crocodile": "A group of lizard soldiers cheering together as a comrade reaches the goal, a short burst of joyful hisses. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_lion": "A group of young cheetah soldiers cheering together as a comrade reaches the goal, a short burst of joyful chirps. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_mouse": "A group of mouse soldiers cheering together as a comrade reaches the goal, a short burst of joyful squeaks. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_pig": "A group of young pig soldiers cheering together as a comrade reaches the goal, a short burst of joyful squeals. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_wolf": "A group of fox soldiers cheering together as a comrade reaches the goal, a short burst of joyful yips. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
   "haven_score": "A ship's brass bell rung twice in a harbor, bright and clean. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "hijg": "A small animal soldier panting hard for a moment after a fight, a few quick short breaths. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "honger_maag": "An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "idle_geluidje": "A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_bear": "A raccoon soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_crocodile": "A lizard soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_lion": "A young cheetah soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_mouse": "A mouse soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_pig": "A young pig soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_wolf": "A fox soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "honger_maag_bear": "A starving raccoon soldier: its empty stomach growls loudly and it gives one weak, tired chitter. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_crocodile": "A starving lizard soldier: its empty stomach growls loudly and it gives one weak, tired hiss. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_lion": "A starving young cheetah soldier: its empty stomach growls loudly and it gives one weak, tired chirp. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_mouse": "A starving mouse soldier: its empty stomach growls loudly and it gives one weak, tired squeak. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_pig": "A starving young pig soldier: its empty stomach growls loudly and it gives one weak, tired squeal. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_wolf": "A starving fox soldier: its empty stomach growls loudly and it gives one weak, tired yip. Close-up, dry studio recording, no reverb, no music.",
+  "idle_geluidje_bear": "A raccoon soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little chitter. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_crocodile": "A lizard soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_lion": "A young cheetah soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little chirp. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_mouse": "A mouse soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little squeak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_pig": "A young pig soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_wolf": "A fox soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little yip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_armor": "A musket ball striking a steel breastplate, a hard bright metallic clank with a short ring. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_bone": "A sharp bone crack under a heavy blow, a short dry snap muffled by cloth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_dirt": "A musket ball slamming into packed dirt, a dull thud with a spray of soil and small pebbles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1691,7 +2051,12 @@
   "inf_kanon_die_wolf_spd": "A small skinny fox is hit by a cannonball: one loud, very short burst as it yelps, cut off instantly. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_select": "A soldier snaps to attention: a stamped boot on earth and the rattle of a leather cartridge box. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "initiative": "A single crisp stroke on a small military snare drum. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "juich_klein": "A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_bear": "A few raccoon soldiers cheer together for a moment, quick happy chitters of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_crocodile": "A few lizard soldiers cheer together for a moment, quick happy hisses of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_lion": "A few young cheetah soldiers cheer together for a moment, quick happy chirps of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_mouse": "A few mouse soldiers cheer together for a moment, quick happy squeaks of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_pig": "A few young pig soldiers cheer together for a moment, quick happy squeals of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_wolf": "A few fox soldiers cheer together for a moment, quick happy yips of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "kanon_terugloop": "A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. No shot, only the recoil. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "kanon_wissen": "A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "kogel_rol": "A heavy iron cannonball rolling over packed earth and slowly coming to a stop, a low grinding rumble. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1722,7 +2087,12 @@
   "patroon_bijt": "A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "pawn_block": "A musket ball thudding into a thick wooden shield, a dull heavy knock, the shot blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "phase_change": "A short trumpet signal of two rising notes, an 18th century army bugle, clean and short. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "pijn_kreun": "A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_bear": "A raccoon soldier is hit but stays on its feet: one short pained chitter, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_crocodile": "A lizard soldier is hit but stays on its feet: one short pained hiss, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_lion": "A young cheetah soldier is hit but stays on its feet: one short pained chirp, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_mouse": "A mouse soldier is hit but stays on its feet: one short pained squeak, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_pig": "A young pig soldier is hit but stays on its feet: one short pained squeal, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_wolf": "A fox soldier is hit but stays on its feet: one short pained yip, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_pawn": "A wooden game piece set down firmly on a wooden board, a solid short knock. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_undo": "A wooden game piece lifted quickly off a wooden board, a light short scrape and tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_aambeeld": "A blacksmith's hammer striking an iron anvil once, a bright ringing clang with a long metallic tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1776,7 +2146,12 @@
   "reveal": "A short military snare drum roll building for a second and ending on one firm hit. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ricochet": "A musket ball ricocheting off stone: a sharp bright metallic whine spinning away into the distance. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "sabel_trek": "A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "schrik": "A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_bear": "A raccoon soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny chitter. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_crocodile": "A lizard soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_lion": "A young cheetah soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny chirp. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_mouse": "A mouse soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny squeak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_pig": "A young pig soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_wolf": "A fox soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny yip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "sfeer_alpenpas": "Ambience of a high mountain pass: a strong cold wind, cowbells far down in the valley, an eagle crying once, loose stones trickling. Continuous, no music.",
   "sfeer_boerenerf": "Ambience of a farmyard next to a battlefield: chickens clucking far off, a cow lowing once in the distance, wind through a wooden barn, a creaking gate. Calm, continuous, no music.",
   "sfeer_bosrand": "Ambience at the edge of a forest: leaves rustling in the wind, a woodpecker tapping far away, songbirds, branches creaking. Calm, continuous, no music.",
@@ -1865,7 +2240,12 @@
   "aura_vaandel": "A cloth banner unfurling with a sudden snap in the wind. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bajonet_op": "A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "beurtlicht_aan": "A soft warm shimmer of tiny brass bells, a gentle glowing chime that rises and fades. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "bevel_roep": "A small animal officer gives one short sharp barking command, no words, just a single clipped call. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_bear": "A raccoon officer gives one short sharp command, no words, a single clipped chitter. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_crocodile": "A lizard officer gives one short sharp command, no words, a single clipped hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_lion": "A young cheetah officer gives one short sharp command, no words, a single clipped chirp. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_mouse": "A mouse officer gives one short sharp command, no words, a single clipped squeak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_pig": "A young pig officer gives one short sharp command, no words, a single clipped squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "bevel_roep_wolf": "A fox officer gives one short sharp command, no words, a single clipped yip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bewoner_snurken": "A man snoring twice, soft and comical. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "bloed_drup": "A few drops of blood dripping onto dry earth, tiny soft wet taps. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "blood_splash": "A small wet blood splatter hitting the ground, quick and light. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1930,6 +2310,30 @@
   "cav_die_wolf_hp": "A big heavy wolf wearing a steel breastplate is wounded in battle and dies: one loud, very short burst as it yelps and growls in pain, cut off as its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_wolf_mix": "A wolf is wounded in battle and dies: one loud, very short burst as it yelps and growls in pain, cut off as its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_die_wolf_spd": "A small skinny wolf is wounded in battle and dies: one loud, very short burst as it yelps and growls in pain, cut off as its heavy body falls onto the ground. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_bear": "The last heavy breath of a grizzly bear that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_crocodile": "The last heavy breath of a crocodile that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_lion": "The last heavy breath of a lion that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_mouse": "The last heavy breath of a rat that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_pig": "The last heavy breath of a wild boar that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_dood_zucht_wolf": "The last heavy breath of a wolf that has fallen, a long deep exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_bear": "A grizzly bear panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_crocodile": "A crocodile panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_lion": "A lion panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_mouse": "A rat panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_pig": "A wild boar panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_hijg_wolf": "A wolf panting heavily after a charge: deep rough breaths and a snort. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_honger_maag_bear": "A grizzly bear is starving: a deep growling stomach and one weak, tired growl. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_crocodile": "A crocodile is starving: a deep growling stomach and one weak, tired hiss. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_lion": "A lion is starving: a deep growling stomach and one weak, tired growl. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_mouse": "A rat is starving: a deep growling stomach and one weak, tired squeal. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_pig": "A wild boar is starving: a deep growling stomach and one weak, tired grunt. Close-up, dry studio recording, no reverb, no music.",
+  "cav_honger_maag_wolf": "A wolf is starving: a deep growling stomach and one weak, tired snarl. Close-up, dry studio recording, no reverb, no music.",
+  "cav_idle_geluidje_bear": "A grizzly bear waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_crocodile": "A crocodile waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_lion": "A lion waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_mouse": "A rat waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_pig": "A wild boar waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_idle_geluidje_wolf": "A wolf waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_kanon_die": "A large animal is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_kanon_die_bear": "A grizzly bear is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_kanon_die_bear_atk": "A huge strong grizzly bear is hit by a cannonball: one loud, very short burst as it roars, cut off instantly as it goes down. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -1974,20 +2378,51 @@
   "cav_move_mouse": "A single heavy footstep of the heavy scurrying paw of a big rat on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_pig": "A single heavy footstep of the heavy hoof of a wild boar on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_move_wolf": "A single heavy footstep of the heavy paw of a huge wolf, claws digging in on dry packed earth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_bear": "A grizzly bear is hit but stays on its feet: one short angry, pained growl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_crocodile": "A crocodile is hit but stays on its feet: one short angry, pained hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_lion": "A lion is hit but stays on its feet: one short angry, pained growl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_mouse": "A rat is hit but stays on its feet: one short angry, pained squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_pig": "A wild boar is hit but stays on its feet: one short angry, pained grunt. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "cav_pijn_kreun_wolf": "A wolf is hit but stays on its feet: one short angry, pained snarl. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cav_select": "A large beast snorts once and shifts its weight, harness leather creaking, a buckle jingling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "charge_rumble": "The heavy pounding footsteps of a large animal charging at full speed over packed earth, getting faster, the ground trembling and rumbling under the weight. No voice. Close-up, dry studio recording, no reverb, no music.",
   "charge_yell": "A short battle cry of animals charging into an attack, snarling and roaring over pounding feet. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "cycle_start": "A single deep hit on a large regimental bass drum with a short natural decay. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "deselect": "A soft muted tap of a wooden game piece being set down on a wooden board. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "dood_zucht": "The very last breath of a fallen small animal, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_bear": "The very last breath of a fallen raccoon, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_crocodile": "The very last breath of a fallen lizard, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_lion": "The very last breath of a fallen young cheetah, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_mouse": "The very last breath of a fallen mouse, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_pig": "The very last breath of a fallen young pig, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "dood_zucht_wolf": "The very last breath of a fallen fox, a soft weak exhale that fades out. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "gib_plets": "A small wet chunk falling onto packed earth, a soft heavy plop. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "harnas_kraak": "A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "haven_dreig": "A slow low war drum beating like a heartbeat, four heavy thumps, ominous and tense. Close-up, dry studio recording, no reverb, no music.",
-  "haven_juich": "A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_bear": "A group of raccoon soldiers cheering together as a comrade reaches the goal, a short burst of joyful chitters. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_crocodile": "A group of lizard soldiers cheering together as a comrade reaches the goal, a short burst of joyful hisses. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_lion": "A group of young cheetah soldiers cheering together as a comrade reaches the goal, a short burst of joyful chirps. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_mouse": "A group of mouse soldiers cheering together as a comrade reaches the goal, a short burst of joyful squeaks. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_pig": "A group of young pig soldiers cheering together as a comrade reaches the goal, a short burst of joyful squeals. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
+  "haven_juich_wolf": "A group of fox soldiers cheering together as a comrade reaches the goal, a short burst of joyful yips. Heard from far away across open fields, soft and muffled, natural outdoor echo, no music.",
   "haven_score": "A ship's brass bell rung twice in a harbor, bright and clean. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "hijg": "A small animal soldier panting hard for a moment after a fight, a few quick short breaths. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "honger_maag": "An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "idle_geluidje": "A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_bear": "A raccoon soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_crocodile": "A lizard soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_lion": "A young cheetah soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_mouse": "A mouse soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_pig": "A young pig soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "hijg_wolf": "A fox soldier panting hard after a fight: a few quick short breaths through its snout. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "honger_maag_bear": "A starving raccoon soldier: its empty stomach growls loudly and it gives one weak, tired chitter. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_crocodile": "A starving lizard soldier: its empty stomach growls loudly and it gives one weak, tired hiss. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_lion": "A starving young cheetah soldier: its empty stomach growls loudly and it gives one weak, tired chirp. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_mouse": "A starving mouse soldier: its empty stomach growls loudly and it gives one weak, tired squeak. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_pig": "A starving young pig soldier: its empty stomach growls loudly and it gives one weak, tired squeal. Close-up, dry studio recording, no reverb, no music.",
+  "honger_maag_wolf": "A starving fox soldier: its empty stomach growls loudly and it gives one weak, tired yip. Close-up, dry studio recording, no reverb, no music.",
+  "idle_geluidje_bear": "A raccoon soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little chitter. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_crocodile": "A lizard soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_lion": "A young cheetah soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little chirp. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_mouse": "A mouse soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little squeak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_pig": "A young pig soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "idle_geluidje_wolf": "A fox soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little yip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_armor": "A musket ball striking a steel breastplate, a hard bright metallic clank with a short ring. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_bone": "A sharp bone crack under a heavy blow, a short dry snap muffled by cloth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "impact_dirt": "A musket ball slamming into packed dirt, a dull thud with a spray of soil and small pebbles. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -2068,7 +2503,12 @@
   "inf_kanon_die_wolf_spd": "A small skinny fox is hit by a cannonball: one loud, very short burst as it yelps, cut off instantly. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "inf_select": "A soldier snaps to attention: a stamped boot on earth and the rattle of a leather cartridge box. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "initiative": "A single crisp stroke on a small military snare drum. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "juich_klein": "A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_bear": "A few raccoon soldiers cheer together for a moment, quick happy chitters of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_crocodile": "A few lizard soldiers cheer together for a moment, quick happy hisses of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_lion": "A few young cheetah soldiers cheer together for a moment, quick happy chirps of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_mouse": "A few mouse soldiers cheer together for a moment, quick happy squeaks of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_pig": "A few young pig soldiers cheer together for a moment, quick happy squeals of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "juich_klein_wolf": "A few fox soldiers cheer together for a moment, quick happy yips of triumph. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "kanon_terugloop": "A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. No shot, only the recoil. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "kanon_wissen": "A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "kogel_rol": "A heavy iron cannonball rolling over packed earth and slowly coming to a stop, a low grinding rumble. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -2099,7 +2539,12 @@
   "patroon_bijt": "A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "pawn_block": "A musket ball thudding into a thick wooden shield, a dull heavy knock, the shot blocked. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "phase_change": "A short trumpet signal of two rising notes, an 18th century army bugle, clean and short. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "pijn_kreun": "A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_bear": "A raccoon soldier is hit but stays on its feet: one short pained chitter, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_crocodile": "A lizard soldier is hit but stays on its feet: one short pained hiss, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_lion": "A young cheetah soldier is hit but stays on its feet: one short pained chirp, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_mouse": "A mouse soldier is hit but stays on its feet: one short pained squeak, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_pig": "A young pig soldier is hit but stays on its feet: one short pained squeal, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "pijn_kreun_wolf": "A fox soldier is hit but stays on its feet: one short pained yip, cut off through clenched teeth. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_pawn": "A wooden game piece set down firmly on a wooden board, a solid short knock. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "place_undo": "A wooden game piece lifted quickly off a wooden board, a light short scrape and tick. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "prop_aambeeld": "A blacksmith's hammer striking an iron anvil once, a bright ringing clang with a long metallic tail. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
@@ -2153,7 +2598,12 @@
   "reveal": "A short military snare drum roll building for a second and ending on one firm hit. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "ricochet": "A musket ball ricocheting off stone: a sharp bright metallic whine spinning away into the distance. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "sabel_trek": "A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
-  "schrik": "A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_bear": "A raccoon soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny chitter. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_crocodile": "A lizard soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny hiss. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_lion": "A young cheetah soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny chirp. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_mouse": "A mouse soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny squeak. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_pig": "A young pig soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny squeal. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
+  "schrik_wolf": "A fox soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny yip. Close-up, dry studio recording, no reverb, no music. Play it five times in a row, each one slightly different, with a clear pause of silence between them.",
   "sfeer_alpenpas": "Ambience of a high mountain pass: a strong cold wind, cowbells far down in the valley, an eagle crying once, loose stones trickling. Continuous, no music.",
   "sfeer_boerenerf": "Ambience of a farmyard next to a battlefield: chickens clucking far off, a cow lowing once in the distance, wind through a wooden barn, a creaking gate. Calm, continuous, no music.",
   "sfeer_bosrand": "Ambience at the edge of a forest: leaves rustling in the wind, a woodpecker tapping far away, songbirds, branches creaking. Calm, continuous, no music.",

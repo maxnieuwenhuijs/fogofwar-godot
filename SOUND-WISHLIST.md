@@ -599,9 +599,9 @@ ambient sounds en echos of kleine puffs of smoke". De secties 12 tot en met 18
 hieronder zijn **wensen**: ze staan in de geluid-studio (elk als eigen sectie,
 met een prompt in `sounds/geluid_studio.json` uit `tools/maak_geluid_prompts.py`),
 maar het spel speelt ze nog niet af. Eerst opnemen en kiezen, daarna inbouwen
-(een `Audio.play` op het moment uit de kolom "Wanneer"). Stemmen mogen later per
-factie (`pijn_kreun_mouse`, `hijg_bear`), net als de kreten. De VFX die erbij
-horen staan in VFX-WISHLIST.md, secties 8 tot en met 10.
+(een `Audio.play` op het moment uit de kolom "Wanneer"). De stemmen (sectie
+13, ook de honger) zijn per factie en staan in de studio onder de factie. De
+VFX die erbij horen staan in VFX-WISHLIST.md, secties 8 tot en met 10.
 
 ## 12. Uitrusting en uniform
 
@@ -621,18 +621,33 @@ horen staan in VFX-WISHLIST.md, secties 8 tot en met 10.
 | `kanon_wissen` | 2 | Na een kanonschot: de natte wisser sist in de hete loop | A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. |
 | `kanon_terugloop` | 2 | Kanonschot: het affuit rolt terug op zijn wielen | A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. |
 
-## 13. Troepen die leven (stemmen zonder woorden)
+## 13. Troepen die leven (stemmen zonder woorden, PER FACTIE)
 
-| Categorie | Var. | Wanneer | Prompt (EN) |
-|---|---|---|---|
-| `hijg` | 3 | Na een melee of een charge: even hijgen | A small animal soldier panting hard for a moment after a fight, a few quick short breaths. |
-| `pijn_kreun` | 4 | Geraakt maar overleeft: een korte kreun | A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. |
-| `idle_geluidje` | 4 | Een pion in een afwijkende idle: snuif, geeuw, kuchje | A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. |
-| `juich_klein` | 3 | Een vijand valt: een paar eigen pionnen juichen kort | A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. |
-| `schrik` | 3 | Een kameraad sneuvelt vlak naast je: een korte schrik | A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. |
-| `bevel_roep` | 3 | Pion geselecteerd: een korte bevelende roep, geen woorden | A small animal officer gives one short sharp barking command, no words, just a single clipped call. |
-| `dood_zucht` | 2 | Na de val: de laatste uitademing, heel zacht | The very last breath of a fallen small animal, a soft weak exhale that fades out. |
-| `haven_juich` | 2 | Een pion bereikt de haven: gejuich uit het eigen kamp | A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy, heard from across the field. |
+Max (13 oktober): "de idle pijn kreun etc moeten toch factie based zijn". Ja:
+een muis piept, een beer-wasbeer kettert, een krokodil-hagedis sist. Elke stem
+is dus per factie, net als de kreten, en het kleine broertje (infanterie) en
+de big bro (cavalerie) hebben elk hun eigen dierentaal. In de geluid-studio
+staan ze onder **Factie: Muis**, **Factie: Varken**, enzovoort; de prompts
+komen uit `STEMMEN` in `tools/maak_geluid_prompts.py` (dier en geluid per
+factie in `STEM_INF` en `STEM_CAV`: muis/rat, jong varken/everzwijn, jonge
+cheeta/leeuw, wasbeer/grizzly, vos/wolf, hagedis/krokodil).
+
+| Categorie (x 6 facties) | Var. | Wanneer |
+|---|---|---|
+| `hijg_<factie>` | 3 | Na een melee of een charge: even hijgen |
+| `pijn_kreun_<factie>` | 3 | Geraakt maar overleeft: een korte kreun |
+| `idle_geluidje_<factie>` | 3 | Een pion in een afwijkende idle: snuif, geeuw, kuchje |
+| `juich_klein_<factie>` | 3 | Een vijand valt: een paar eigen pionnen juichen kort |
+| `schrik_<factie>` | 3 | Een kameraad sneuvelt vlak naast je: een korte schrik |
+| `bevel_roep_<factie>` | 3 | Pion geselecteerd: een korte roep, geen woorden |
+| `dood_zucht_<factie>` | 3 | Na de val: de laatste uitademing, heel zacht |
+| `haven_juich_<factie>` | 3 | Een pion bereikt de haven: gejuich uit het eigen kamp |
+| `honger_maag_<factie>` | 3 | De honger neemt een pion (vanaf cyclus 10) |
+| `cav_hijg_<factie>` | 3 | Big bro na een charge: zwaar hijgen en snuiven |
+| `cav_pijn_kreun_<factie>` | 3 | Big bro geraakt maar overleeft |
+| `cav_idle_geluidje_<factie>` | 3 | Big bro in rust: een diepe snuif, een grom |
+| `cav_dood_zucht_<factie>` | 3 | Big bro na de val: een lange diepe uitademing |
+| `cav_honger_maag_<factie>` | 3 | De honger neemt een big bro |
 
 ## 14. Gevecht: de details na de klap
 
@@ -654,7 +669,6 @@ horen staan in VFX-WISHLIST.md, secties 8 tot en met 10.
 
 | Categorie | Var. | Wanneer | Prompt (EN) |
 |---|---|---|---|
-| `honger_maag` | 2 | De honger neemt een pion (vanaf cyclus 10) | An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. |
 | `buit_vaandel` | 2 | Het vaandel van de vijand is buit (+2 versterkingspunten) | A captured regimental banner snapping in the wind, followed by a short triumphant roll on a military snare drum. |
 | `buit_trom` | 2 | De trom van de vijand is buit (+4 CP) | A captured military drum set down hard on a wooden table with a hollow boom, followed by a few coins clinking. |
 | `aura_trom` | 3 | Een pion gebruikt het stamina-punt van de trom | A single firm stroke on a military snare drum, crisp, with a short rattle of the snare wires. |

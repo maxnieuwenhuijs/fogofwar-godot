@@ -36,6 +36,16 @@ ambient sounds en echos of kleine puffs of smoke geen idee noem het op".
 - **Checks:** geluid-studio `--overzicht` 363 categorieen, 0 zonder prompt, de
   zeven nieuwe secties met 67 rijen; VFX-studio `--overzicht` en `--proef` PASS
   (0 fouten), de drie nieuwe groepen met 21 wensen. Geen spelcode geraakt.
+- **Dezelfde dag, stemmen per factie** (Max: "de idle pijn kreun etc moeten
+  toch factie based zijn"): de negen algemene stemmen ("a small animal
+  soldier") zijn eruit; `STEMMEN` in `maak_geluid_prompts.py` bouwt ze per
+  factie in de eigen dierentaal (muis piept, jong varken krijst, jonge cheeta
+  tjirpt, wasbeer kettert, vos keft, hagedis sist; de big bro als rat,
+  everzwijn, leeuw, grizzly, wolf, krokodil): 9 voor het kleine broertje plus
+  5 voor de big bro, 84 rijen, in de studio onder elke factie-sectie (doelmap
+  `sounds/factions/<factie>/`). Max had voor de algemene `idle_geluidje` en
+  `pijn_kreun` al takes gemaakt maar niets gebruikt; die zijn vluchtig.
+  `--overzicht` 438 categorieen, 0 zonder prompt.
 
 ## 10 oktober -- De rit van de big bro: een paar stappen op zijn voeten, zachter
 

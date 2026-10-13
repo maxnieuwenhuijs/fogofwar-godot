@@ -61,6 +61,7 @@ WORTEL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(WORTEL)
 sys.path.insert(0, os.path.join(WORTEL, "tools"))
 import bouw_geluid_tracker as tracker  # noqa: E402
+import maak_geluid_prompts as prompt_bron  # noqa: E402  (STEMMEN: de stemmen per factie)
 
 STUDIO_JSON = os.path.join("sounds", "geluid_studio.json")
 TAKES_DIR = os.path.join("results", "geluid_studio")
@@ -375,6 +376,7 @@ def overzicht(alleen=None):
         })
 
     facties, _, _ = tracker.bouw()
+    comps = tracker.actieve_comps()
     for f in facties:
         sectie = "Factie: " + f["naam"]
         for r in f["rijen"]:
@@ -398,6 +400,16 @@ def overzicht(alleen=None):
                      wl.get("cav_die_%s_%s" % (fk, a), {}).get("prompt", ""), 2)
                 voeg(sectie, "cav_kanon_die_%s_%s" % (fk, a), "Big bro geraakt door een kanon, model %s" % a, "",
                      wl.get("cav_kanon_die_%s_%s" % (fk, a), {}).get("prompt", ""), 2)
+        # de stemmen buiten de doodskreet (13 oktober, Max: "de idle pijn kreun
+        # etc moeten toch factie based zijn"): kleine broertje en big bro elk in
+        # hun eigen dierentaal; de big bro alleen als de factie ruiters heeft
+        comp = comps.get(f["naam"], [])
+        heeft_cav = not comp or int(comp[1]) > 0
+        for cat, label, uitleg, _sj, _d, _i, _r, big in prompt_bron.STEMMEN:
+            if big and not heeft_cav:
+                continue
+            naam_cat = "%s_%s" % (cat, f["sleutel"])
+            voeg(sectie, naam_cat, label, uitleg, wl.get(naam_cat, {}).get("prompt", ""), 3)
     for soort, sectie in (("props", "Diorama-props"), ("wapens", "Wapens: zwaai en klap")):
         for r in tracker.bouw_props(soort):
             voeg(sectie, r["categorie"], r["waarvoor"], r["hoe"], r["prompt"], r["gewenst"])

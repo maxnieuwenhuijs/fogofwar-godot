@@ -325,15 +325,7 @@ HAND = {
     "trom_tik": ("A drummer idly taps the wooden rim of a small military snare drum twice with a drumstick, soft and light. " + SLOT, 0.6, 0.6),
     "kanon_wissen": ("A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. " + SLOT, 1.5, 0.5),
     "kanon_terugloop": ("A field cannon recoiling after a shot: its wooden carriage on iron-rimmed wheels rolls backwards a short way over packed earth, creaking, and comes to a stop. No shot, only the recoil. " + SLOT, 1.5, 0.5),
-    # 13. troepen die leven (per factie later ook <categorie>_<factie>)
-    "hijg": ("A small animal soldier panting hard for a moment after a fight, a few quick short breaths. " + SLOT, 1.0, 0.5),
-    "pijn_kreun": ("A small animal soldier hit but still standing: a short pained grunt through clenched teeth, cut off. " + SLOT, 0.6, 0.6),
-    "idle_geluidje": ("A small animal soldier waiting in line makes one small idle sound: a sniff, a short yawn or a little throat clearing. " + SLOT, 0.8, 0.5),
-    "juich_klein": ("A few small animal soldiers give a short cheer together, a quick happy yelp of triumph. " + SLOT, 1.0, 0.5),
-    "schrik": ("A small animal soldier gasps in shock as a comrade falls next to him, one short startled breath. " + SLOT, 0.5, 0.6),
-    "bevel_roep": ("A small animal officer gives one short sharp barking command, no words, just a single clipped call. " + SLOT, 0.6, 0.6),
-    "dood_zucht": ("The very last breath of a fallen small animal, a soft weak exhale that fades out. " + SLOT, 1.0, 0.5),
-    "haven_juich": ("A group of small animal soldiers cheering together as a comrade reaches the goal, a short burst of joy. " + VER, 2.5, 0.5),
+    # 13. troepen die leven: per factie, zie STEMMEN (onder HAND)
     # 14. gevecht: de details na de klap
     "kogel_zip": ("A musket ball zipping past close by: a short sharp whizz that comes and goes in a fraction of a second. " + SLOT, 0.5, 0.6),
     "cannon_echo": ("The rolling echo of a cannon shot rumbling away through a wide valley like distant thunder. No initial boom, only the long tail. " + VER, 4.0, 0.5),
@@ -347,7 +339,6 @@ HAND = {
     "wrak_knetter": ("The burning wreck of a wooden cannon carriage: steady crackling and popping of a small wood fire with a soft roar, continuous. No music.", 10.0, 0.4),
     "oor_suis": ("A high thin ringing in the ears after a nearby explosion, starting loud and slowly fading away, with everything else muffled. No explosion, no music.", 3.0, 0.5),
     # 15. spelmomenten die nu stil zijn
-    "honger_maag": ("An empty stomach growling loudly, a long hungry rumble, followed by a weak tired sigh. " + SLOT, 1.8, 0.5),
     "buit_vaandel": ("A captured regimental banner snapping in the wind, followed by a short triumphant roll on a military snare drum. " + SLOT, 2.5, 0.5),
     "buit_trom": ("A captured military drum set down hard on a wooden table with a hollow boom, followed by a few coins clinking. " + SLOT, 2.5, 0.5),
     "aura_trom": ("A single firm stroke on a military snare drum, crisp, with a short rattle of the snare wires. " + SLOT, 0.6, 0.7),
@@ -387,9 +378,80 @@ HAND = {
     "weer_onweer": ("A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music.", 5.0, 0.5),
 }
 # lange lagen, lange staarten en verre geluiden: een take per generatie, eigen duur
-GEEN_REEKS |= {"haven_juich", "cannon_echo", "vlieg_zoem", "wrak_knetter", "oor_suis", "buit_vaandel",
+GEEN_REEKS |= {"cannon_echo", "vlieg_zoem", "wrak_knetter", "oor_suis", "buit_vaandel",
                "buit_trom", "haven_dreig"}
 GEEN_REEKS |= {c for c in HAND if c.startswith(("sfeer_", "weer_")) or (c.startswith("ver_") and c != "ver_kraai")}
+
+# ---- 13 oktober: stemmen per factie (Max: "de idle pijn kreun etc moeten toch
+# factie based zijn"). Net als de kreten: het kleine broertje (infanterie) en de
+# big bro (cavalerie) elk in hun eigen dierentaal. Categorie `<stem>_<factie>`,
+# de big bro `cav_<stem>_<factie>`; in de studio onder de factie.
+# dier, eigen geluid (enkelvoud, meervoud)
+STEM_INF = {
+    "mouse": ("mouse", "squeak", "squeaks"),
+    "pig": ("young pig", "squeal", "squeals"),
+    "lion": ("young cheetah", "chirp", "chirps"),
+    "bear": ("raccoon", "chitter", "chitters"),
+    "wolf": ("fox", "yip", "yips"),
+    "crocodile": ("lizard", "hiss", "hisses"),
+}
+# het grote dier en zijn geluid
+STEM_CAV = {
+    "mouse": ("a rat", "squeal"),
+    "pig": ("a wild boar", "grunt"),
+    "lion": ("a lion", "growl"),
+    "bear": ("a grizzly bear", "growl"),
+    "wolf": ("a wolf", "snarl"),
+    "crocodile": ("a crocodile", "hiss"),
+}
+# (categorie, label, uitleg, sjabloon, duur, invloed, reeks, big bro)
+STEMMEN = [
+    ("hijg", "Hijgt na een gevecht", "Na een melee of een charge, even.",
+     "A {dier} soldier panting hard after a fight: a few quick short breaths through its snout. ", 1.0, 0.5, True, False),
+    ("pijn_kreun", "Geraakt, overleeft", "Een korte kreun als hij een treffer overleeft.",
+     "A {dier} soldier is hit but stays on its feet: one short pained {geluid}, cut off through clenched teeth. ", 0.6, 0.6, True, False),
+    ("idle_geluidje", "Geluidje in rust", "Bij een afwijkende idle: een snuif, een geeuw, een kuchje.",
+     "A {dier} soldier waiting in line makes one small idle sound: a sniff, a short yawn or a soft little {geluid}. ", 0.8, 0.5, True, False),
+    ("juich_klein", "Juicht kort", "Een vijand valt: een paar eigen pionnen juichen.",
+     "A few {dier} soldiers cheer together for a moment, quick happy {geluiden} of triumph. ", 1.0, 0.5, True, False),
+    ("schrik", "Schrikt", "Een kameraad sneuvelt vlak naast hem.",
+     "A {dier} soldier is startled as a comrade falls beside it: one short shocked gasp with a tiny {geluid}. ", 0.5, 0.6, True, False),
+    ("bevel_roep", "Bevel", "Pion geselecteerd: een korte roep, geen woorden.",
+     "A {dier} officer gives one short sharp command, no words, a single clipped {geluid}. ", 0.6, 0.6, True, False),
+    ("dood_zucht", "Laatste zucht", "Na de val, heel zacht.",
+     "The very last breath of a fallen {dier}, a soft weak exhale that fades out. ", 1.0, 0.5, True, False),
+    ("haven_juich", "Gejuich bij de haven", "Een pion haalt de haven: het eigen kamp juicht.",
+     "A group of {dier} soldiers cheering together as a comrade reaches the goal, a short burst of joyful {geluiden}. ", 2.5, 0.5, False, False),
+    ("honger_maag", "Honger", "De honger neemt hem (vanaf cyclus 10).",
+     "A starving {dier} soldier: its empty stomach growls loudly and it gives one weak, tired {geluid}. ", 2.0, 0.5, False, False),
+    ("cav_hijg", "Big bro hijgt", "Na een charge.",
+     "{Dier} panting heavily after a charge: deep rough breaths and a snort. ", 1.2, 0.5, True, True),
+    ("cav_pijn_kreun", "Big bro geraakt, overleeft", "Een korte kreun als de big bro een treffer overleeft.",
+     "{Dier} is hit but stays on its feet: one short angry, pained {geluid}. ", 0.8, 0.6, True, True),
+    ("cav_idle_geluidje", "Big bro in rust", "Een diepe snuif, een grom, een zucht.",
+     "{Dier} waiting calmly makes one small sound: a deep snort, a low rumble or a short huff. ", 1.0, 0.5, True, True),
+    ("cav_dood_zucht", "Big bro: laatste zucht", "Na de val, zacht.",
+     "The last heavy breath of {dier} that has fallen, a long deep exhale that fades out. ", 1.5, 0.5, True, True),
+    ("cav_honger_maag", "Big bro honger", "De honger neemt de big bro.",
+     "{Dier} is starving: a deep growling stomach and one weak, tired {geluid}. ", 2.0, 0.5, False, True),
+]
+GEEN_REEKS |= {"%s_%s" % (st[0], f) for st in STEMMEN if not st[6] for f in STEM_INF}
+
+
+def stemmen():
+    p, i = {}, {}
+    for f in STEM_INF:
+        dier, geluid, geluiden = STEM_INF[f]
+        groot, groot_geluid = STEM_CAV[f]
+        for cat, _l, _u, sjabloon, duur, invloed, _reeks, big in STEMMEN:
+            if big:
+                tekst = sjabloon.format(Dier=groot[0].upper() + groot[1:], dier=groot, geluid=groot_geluid)
+            else:
+                tekst = sjabloon.format(dier=dier, geluid=geluid, geluiden=geluiden)
+            tekst += VER if cat == "haven_juich" else SLOT
+            p["%s_%s" % (cat, f)] = tekst
+            i["%s_%s" % (cat, f)] = {"duur": duur, "invloed": invloed}
+    return p, i
 
 
 def main():
@@ -406,6 +468,9 @@ def main():
     for cat, (p, duur, invloed) in HAND.items():
         prompts[cat] = p
         inst[cat] = {"duur": duur, "invloed": invloed}
+    st_p, st_i = stemmen()
+    prompts.update(st_p)
+    inst.update(st_i)
     for cat in list(prompts):
         if cat in GEEN_REEKS:
             continue
