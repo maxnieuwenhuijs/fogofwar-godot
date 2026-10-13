@@ -1,5 +1,31 @@
 # Fog of War — Work In Progress & Context
 
+## 13 oktober -- Geluid-studio: een echte opname ruimt de placeholders op
+
+Max: "doe ook dat als er al een synthetisch geluid inzit dat ik dan als ik een
+nieuwe toevoeg dat alle synthetische dan weggaan voor dat type sound".
+
+- **Studio:** `gebruik()` ruimt na het wegschrijven elke synthetische
+  placeholder van die categorie op (wav, .import, regel in `synthetisch.json`);
+  bij "Vervang synthetisch" blijft de overschreven naam staan en gaat de rest
+  weg. De toast zegt hoeveel en welke. Logica in `tools/synth_geluid.py`
+  (`categorie_van` zoals `Audio._vind_losse_bestanden`, `bestanden`,
+  `heeft_echte_opname`, `ruim_op`); gaten in de nummering zijn geen probleem,
+  het spel groepeert op de naam zonder `_N`.
+- **Generators:** `maak_prop_geluiden.py` en `maak_wapen_geluiden.py` bouwden
+  het manifest vanaf nul en overschreven ALLES, ook een echte opname op
+  dezelfde naam; kanon en UI sloegen alleen die ene naam over. Nu slaan alle
+  vier een categorie met een echte opname helemaal over, en prop/wapen houden
+  het oude manifest voor wat er nog ligt. Proef naar een tijdelijke map: 10
+  prop- en 7 wapencategorieen van Max overgeslagen (prop_bel, prop_vuur,
+  prop_boot, melee_kill_sabel, ...), die hadden anders zijn opnames gewist.
+- **Nu al gemengd?** Geen enkele categorie heeft nog een echte opname naast
+  een placeholder (Max had ze al zelf weggehaald), dus niets met
+  terugwerkende kracht.
+- **Checks:** proef in een nep-projectmap (Gebruiken, Vervang synthetisch,
+  een tweede opname naast een echte): 13 punten PASS, de echte `sounds/`
+  onaangeraakt.
+
 ## 13 oktober -- Sfeer en details: 67 geluiden en 35 VFX-wensen in de studio's
 
 Max: "wat zijn nog meer geluid en of vfx details die de game nog meer tot

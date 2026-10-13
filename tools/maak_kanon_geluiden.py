@@ -28,6 +28,8 @@ import sys
 
 import numpy as np
 
+import synth_geluid  # noqa: E402  (13 oktober: categorieen met een echte opname overslaan)
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from maak_prop_geluiden import SR, t_as, env, ruis, band, sinus, partialen, klik, schrijf  # noqa: E402
 
@@ -74,6 +76,11 @@ def main():
     totaal = 0
     overgeslagen = []
     for cat, (recept, n) in RECEPTEN.items():
+        # al een echte opname van dit geluid (13 oktober): niets maken, anders
+        # komen de placeholders terug die de geluid-studio net opruimde
+        if synth_geluid.heeft_echte_opname(cat):
+            overgeslagen.append(cat)
+            continue
         for i in range(n):
             naam = cat + ("" if i == 0 else "_%d" % (i + 1)) + ".wav"
             pad = os.path.join(args.uit, naam)

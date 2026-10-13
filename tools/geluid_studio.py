@@ -27,8 +27,11 @@ Een lokale webpagina (alleen op deze machine, http://127.0.0.1:8765):
   in `sounds/props/`, wapens in `sounds/melee/`, de rest in `sounds/studio/`).
   "Vervang synthetisch" overschrijft de eerste synthetische placeholder van
   die categorie (een echte opname op dezelfde naam wint, zie
-  `synthetisch.json`). Daarna "Importeer in Godot" (kan niet zolang de
-  editor open staat) of gewoon het project openen.
+  `synthetisch.json`). Beide ruimen daarna ELKE synthetische placeholder van
+  die categorie op, met .import en manifestregel (13 oktober,
+  `tools/synth_geluid.py`), zodat het spel niet meer tussen echt en nep
+  loot. Daarna "Importeer in Godot" (kan niet zolang de editor open staat)
+  of gewoon het project openen.
 * De API-sleutel komt uit `ELEVENLABS_API_KEY` of uit het veld bovenaan; die
   wordt bewaard in `%LOCALAPPDATA%\\FogOfWar\\elevenlabs.key`, nooit in de
   repo.
@@ -62,6 +65,7 @@ os.chdir(WORTEL)
 sys.path.insert(0, os.path.join(WORTEL, "tools"))
 import bouw_geluid_tracker as tracker  # noqa: E402
 import maak_geluid_prompts as prompt_bron  # noqa: E402  (STEMMEN: de stemmen per factie)
+import synth_geluid  # noqa: E402  (placeholders opruimen na Gebruiken)
 
 STUDIO_JSON = os.path.join("sounds", "geluid_studio.json")
 TAKES_DIR = os.path.join("results", "geluid_studio")
@@ -551,7 +555,11 @@ def genereer(cat, prompt, duur, invloed, model, knippen=True):
 
 
 def gebruik(cat, take, vervang_synth=False):
-    """Een take als echte opname in sounds/ zetten. Geeft het doelpad."""
+    """Een take als echte opname in sounds/ zetten. Daarna gaan ALLE
+    synthetische placeholders van die categorie weg (13 oktober, Max: "als er
+    al een synthetisch geluid inzit dat ik dan als ik een nieuwe toevoeg dat
+    alle synthetische dan weggaan voor dat type sound"), met hun .import en
+    hun regel in het manifest. Geeft {doel, synth_weg}."""
     take = os.path.normpath(take)
     if not take.startswith(os.path.normpath(TAKES_DIR)) or not os.path.exists(take):
         raise RuntimeError("Onbekende take: %s" % take)
@@ -581,7 +589,8 @@ def gebruik(cat, take, vervang_synth=False):
             json.dump(meta, f, indent=1, ensure_ascii=False)
     except (OSError, ValueError):
         pass
-    return doel.replace("\\", "/")
+    weg = synth_geluid.ruim_op(cat, behalve=[doel], wortel=os.getcwd())
+    return {"doel": doel.replace("\\", "/"), "synth_weg": weg}
 
 
 def verwijder_bestand(pad):
@@ -787,7 +796,7 @@ function rijHtml(r){
  let takes='';
  for(const g of r.takes){const gb=g.gebruikt||{};
   takes+='<div class="groep"><div class="klein">'+esc(g.tijd)+' &middot; invloed '+g.invloed+(g.duur?' &middot; '+g.duur+' s':'')+(g.seconden?' &middot; clip '+g.seconden+' s':'')+' &middot; <span title="'+esc(g.prompt)+'">'+esc((g.prompt||'').slice(0,80))+(g.prompt&&g.prompt.length>80?'...':'')+'</span>'+(g.melding?' <span class="melding">'+esc(g.melding)+'</span>':'')+'</div>';
-  g.takes.forEach((t,i)=>{const u=gb[t];takes+='<div class="take'+(u?' gebruikt':'')+'">'+speler(t)+'<span>take '+(i+1)+'</span>'+(u?'<span class="badge b-gebruikt">in het spel: '+esc(naam(u))+'</span>':'<button class="prim klein" onclick="gebruik(this,\''+esc(r.categorie)+'\',\''+esc(t)+'\',false)">Gebruiken</button>'+(r.synth.length?'<button class="klein" onclick="gebruik(this,\''+esc(r.categorie)+'\',\''+esc(t)+'\',true)" title="overschrijft de eerste synthetische placeholder">Vervang synthetisch</button>':''))+'<button class="klein" onclick="weg(\''+esc(r.categorie)+'\',\''+esc(t)+'\')">weg</button></div>'});
+  g.takes.forEach((t,i)=>{const u=gb[t];takes+='<div class="take'+(u?' gebruikt':'')+'">'+speler(t)+'<span>take '+(i+1)+'</span>'+(u?'<span class="badge b-gebruikt">in het spel: '+esc(naam(u))+'</span>':'<button class="prim klein" onclick="gebruik(this,\''+esc(r.categorie)+'\',\''+esc(t)+'\',false)" title="zet hem in het spel; de synthetische placeholders van dit geluid gaan weg">Gebruiken</button>'+(r.synth.length?'<button class="klein" onclick="gebruik(this,\''+esc(r.categorie)+'\',\''+esc(t)+'\',true)" title="overschrijft de eerste synthetische placeholder en ruimt de rest op">Vervang synthetisch</button>':''))+'<button class="klein" onclick="weg(\''+esc(r.categorie)+'\',\''+esc(t)+'\')">weg</button></div>'});
   takes+='</div>'}
  if(r.takes.length)takes+='<div><button class="klein" onclick="allesWeg(\''+esc(r.categorie)+'\')">alle takes van deze categorie weg</button></div>';
  return '<div><div class="cat">'+esc(r.categorie)+'</div><div>'+esc(r.waarvoor)+'</div><div class="klein">'+esc(r.uitleg)+'</div><div style="margin:4px 0">'+badges+'</div>'+best+'<div class="klein">&rarr; '+esc(r.doelmap)+'/</div></div>'
@@ -842,7 +851,7 @@ async function genereer(c,n){await bewaarPrompt(c);const duur=document.getElemen
   catch(e){bezigUit(d);toast(e.message,'fout');break}
   bezigUit(d)}
  await ververs(c,true);if(tot)toast(tot+' take(s) voor '+c+' klaar, luister en kies');}
-async function gebruik(btn,c,t,v){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';try{const j=await api('/api/gebruik',{categorie:c,take:t,vervang:v});toast('opgeslagen als '+j.doel+' (nog importeren in Godot)');await ververs(c,true)}catch(e){toast(e.message,'fout');btn.disabled=false;btn.textContent=v?'Vervang synthetisch':'Gebruiken'}}
+async function gebruik(btn,c,t,v){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';try{const j=await api('/api/gebruik',{categorie:c,take:t,vervang:v});toast('opgeslagen als '+j.doel+(j.synth_weg&&j.synth_weg.length?'; '+j.synth_weg.length+' synthetische weg ('+j.synth_weg.join(', ')+')':'')+' (nog importeren in Godot)');await ververs(c,true)}catch(e){toast(e.message,'fout');btn.disabled=false;btn.textContent=v?'Vervang synthetisch':'Gebruiken'}}
 async function bestandWeg(c,p){if(!confirm(naam(p)+' uit het spel halen? (git kan hem terughalen)'))return;try{const j=await api('/api/bestand_weg',{pad:p});toast(naam(p)+' verwijderd'+(j.melding?' - '+j.melding:''),j.melding?'info':'');await ververs(c,true)}catch(e){toast(e.message,'fout')}}
 async function weg(c,t){try{await api('/api/weg',{take:t});await ververs(c)}catch(e){toast(e.message,'fout')}}
 async function allesWeg(c){if(!confirm('Alle takes van '+c+' weggooien (wat al in het spel staat blijft)?'))return;try{await api('/api/takes_weg',{categorie:c});await ververs(c)}catch(e){toast(e.message,'fout')}}
@@ -1004,7 +1013,7 @@ class Handler(BaseHTTPRequestHandler):
                         pass
             return {"ok": True}
         if pad == "/api/gebruik":
-            return {"doel": gebruik(str(b.get("categorie", "")), str(b.get("take", "")), bool(b.get("vervang")))}
+            return gebruik(str(b.get("categorie", "")), str(b.get("take", "")), bool(b.get("vervang")))
         if pad == "/api/bestand_weg":
             return {"melding": verwijder_bestand(str(b.get("pad", "")))}
         if pad == "/api/weg":

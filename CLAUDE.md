@@ -1198,7 +1198,14 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   het openen van de pagina (`/api/opruimen`) gaat elke take weg die niet
   met Gebruiken in het spel is gezet; gebruikte blijven staan als
   geheugensteun. `results/geluid_studio/` draagt een `.gdignore`, anders
-  importeert de open editor elke take. **Sfeer en details (13 oktober, Max:
+  importeert de open editor elke take. **Echt verdringt synthetisch (13
+  oktober, Max: "als ik een nieuwe toevoeg dat alle synthetische dan weggaan
+  voor dat type sound"):** na "Gebruiken" of "Vervang synthetisch" gaat elke
+  placeholder van die categorie weg, met .import en manifestregel
+  (`tools/synth_geluid.py`: `ruim_op`, `heeft_echte_opname`; een placeholder =
+  sha1 in de `synthetisch.json` naast hem), en de vier generators
+  (`maak_prop/wapen/kanon/ui_geluiden.py`) slaan een categorie met een echte
+  opname over (prop en wapen overschreven er daarvoor zelfs een). **Sfeer en details (13 oktober, Max:
   "van geritsel van uniforms tot ambient sounds en echos"):** SOUND-WISHLIST
   secties 12-18 (58 categorieen: uitrusting en uniform, details na de klap,
   spelmomenten die stil waren zoals buit, aura en sps, een sfeerlaag per

@@ -28,6 +28,8 @@ import sys
 
 import numpy as np
 
+import synth_geluid  # noqa: E402  (13 oktober: categorieen met een echte opname overslaan)
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from maak_prop_geluiden import SR, t_as, env, ruis, band, sinus, partialen, klik, schrijf  # noqa: E402
 
@@ -191,8 +193,21 @@ def main():
     args = ap.parse_args()
     os.makedirs(args.uit, exist_ok=True)
     totaal = 0
+    # het oude manifest houden voor wat er nog ligt (een overgeslagen
+    # categorie houdt zo zijn placeholders herkenbaar)
     manifest = {}
+    try:
+        with open(os.path.join(args.uit, "synthetisch.json"), encoding="utf-8") as f:
+            manifest = {k: v for k, v in json.load(f).items() if os.path.exists(os.path.join(args.uit, k))}
+    except (OSError, ValueError):
+        pass
+    overgeslagen = []
     for cat, (recept, n) in RECEPTEN.items():
+        # al een echte opname van dit geluid (13 oktober): niets maken, anders
+        # komen de placeholders terug die de geluid-studio net opruimde
+        if synth_geluid.heeft_echte_opname(cat):
+            overgeslagen.append(cat)
+            continue
         for i in range(n):
             zaad = args.seed * 1000 + sum(ord(c) for c in cat) * 7 + i
             rng = np.random.default_rng(zaad)
@@ -206,6 +221,8 @@ def main():
         json.dump(manifest, f, indent=1, sort_keys=True)
     grootte = sum(os.path.getsize(os.path.join(args.uit, f)) for f in os.listdir(args.uit) if f.endswith(".wav"))
     print("%d bestanden in %s (%.2f MB), %d categorieen, manifest synthetisch.json" % (totaal, args.uit, grootte / 1e6, len(RECEPTEN)))
+    if overgeslagen:
+        print("al een echte opname, overgeslagen: %s" % ", ".join(overgeslagen))
 
 
 if __name__ == "__main__":
