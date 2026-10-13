@@ -1,5 +1,35 @@
 # Fog of War — Work In Progress & Context
 
+## 13 oktober -- Geluid-studio: stereo goed gelezen, geen stille takes meer
+
+Max: "heel vaak hoor ik geen geluid als ik iets genereer".
+
+- **Gemeten** (alle 218 takes): 14 vrijwel stil (piek onder -30 dB), 12 heel
+  zacht. Drie oorzaken: (1) een korte duur (0,2-0,5 s, door Max in de studio
+  gezet) met "five times in a row" in de prompt gaf vrijwel stilte (buit_trom
+  -46 dB); (2) de knip op stiltes sneed staartjes los die 25 dB onder de rest
+  lagen (aura_vaandel); (3) zachte geluiden kwamen zacht binnen
+  (uniform_ritsel -31 tot -40 dB) en waren in de lijst niet te horen.
+- **En een grotere:** ElevenLabs stuurt stereo, de studio las mono. Elke
+  meta had `seconden` = 2 x `duur`; bij ui_hover lijken de om-en-om-samples
+  als links en rechts 0,995 op elkaar, buursamples binnen een kanaal 0,18.
+  Alles wat sinds 18 september uit de studio kwam speelde op halve snelheid,
+  een octaaf te laag en twee keer zo lang.
+- **Fix in `tools/geluid_studio.py`:** `kanalen_van`, `als_kanalen`, takes in
+  stereo, `normaliseer` op -1 dB (hooguit +40), stil en staartjes weg met een
+  melding, geen reeks onder 3 s. `--herstel-stereo` herschreef 464 bestanden
+  (191 opnames in sounds/ en de takes; dezelfde samples, juiste snelheid;
+  reserve in `results/geluid_studio_reserve/20261013_143240`); de studio doet
+  dat voortaan bij elke start voor wat een oude studio nog schreef. Een
+  tweede run doet niets.
+- **Niet gecommit:** de herstelde opnames zelf (Max' eigen geluiden, die
+  stonden al ongecommit in de werkmap). De open editor importeert ze opnieuw.
+- **Checks:** proef met een nep-ElevenLabs (vijf piepjes in stereo: vijf
+  takes, stereo, 7 s, elk 0,48 s, -1 dB, staartje weg, korte duur zonder
+  reeks, stilte geeft een melding; herstel van een oude take op een oneven
+  knip: stereo, juiste lengte, links en rechts kloppen; tweede keer niets):
+  11 punten PASS. Placeholder-proef PASS, `--overzicht` 438 categorieen.
+
 ## 13 oktober -- Leven op het bord: alle nieuwe geluiden in het spel
 
 Max: "en deze geluiden komen ook allemaal in het spel nu?" (nee, alleen in de

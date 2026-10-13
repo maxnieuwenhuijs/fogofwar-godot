@@ -1205,7 +1205,21 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`tools/synth_geluid.py`: `ruim_op`, `heeft_echte_opname`; een placeholder =
   sha1 in de `synthetisch.json` naast hem), en de vier generators
   (`maak_prop/wapen/kanon/ui_geluiden.py`) slaan een categorie met een echte
-  opname over (prop en wapen overschreven er daarvoor zelfs een). **Sfeer en details (13 oktober, Max:
+  opname over (prop en wapen overschreven er daarvoor zelfs een). **Stereo en
+  stilte (13 oktober, Max: "heel vaak hoor ik geen geluid als ik iets
+  genereer"):** ElevenLabs stuurt de pcm in STEREO (links en rechts om en
+  om); de studio las dat tot die dag als mono, dus elke take speelde op halve
+  snelheid, een octaaf te laag en twee keer zo lang (7 s gevraagd = 14 s).
+  Nu `kanalen_van` (de lengte tegen de gevraagde duur, anders de correlatie
+  links/rechts), takes in stereo, elke take op `PIEK_DB` (-1 dB), weg wat
+  onder `STIL_DB` (-45) of `STAART_DB` (20 dB onder de luidste take van de
+  clip) ligt, met een melding als er niets overblijft; en onder
+  `REEKS_MIN_DUUR` (3 s) haalt `genereer` de "five times in a row"-zin uit de
+  prompt (een halve seconde voor vijf geluiden gaf vooral stilte).
+  `--herstel-stereo [--droog]` (en elke start van de studio) zet oude takes
+  (meta zonder `kanalen`) en elke opname in sounds/ met dezelfde inhoud recht,
+  met een reservekopie in `results/geluid_studio_reserve/<tijd>/`
+  (`.gdignore`); op 13 oktober 191 opnames. **Sfeer en details (13 oktober, Max:
   "van geritsel van uniforms tot ambient sounds en echos"):** SOUND-WISHLIST
   secties 12-18 (58 categorieen: uitrusting en uniform, details na de klap,
   spelmomenten die stil waren zoals buit, aura en sps, een sfeerlaag per

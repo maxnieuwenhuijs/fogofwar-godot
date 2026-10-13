@@ -505,16 +505,79 @@ def knip_op_stilte(x, sr):
 
 
 def schrijf_wav(pad, x, sr):
+    """x: (n,) mono of (n, 2) stereo, -1..1."""
     x = np.clip(x, -1.0, 1.0)
     n = min(len(x), int(sr * 0.005))
     if n > 0:
-        x[:n] *= np.linspace(0.0, 1.0, n)
-        x[-n:] *= np.linspace(1.0, 0.0, n)
+        hel = np.linspace(0.0, 1.0, n)
+        if x.ndim == 2:
+            hel = hel[:, None]
+        x[:n] *= hel
+        x[-n:] *= hel[::-1]
     with wave.open(pad, "wb") as w:
-        w.setnchannels(1)
+        w.setnchannels(1 if x.ndim == 1 else x.shape[1])
         w.setsampwidth(2)
         w.setframerate(sr)
         w.writeframes((x * 32767).astype(np.int16).tobytes())
+
+
+# ---- 13 oktober (Max: "heel vaak hoor ik geen geluid als ik iets genereer") --
+# 1. ElevenLabs stuurt de pcm van een geluid in STEREO (links en rechts om en
+#    om). De studio las dat als mono: elke take speelde op halve snelheid, een
+#    octaaf te laag en twee keer zo lang (7 s gevraagd werd 14 s). Nu twee
+#    kanalen, en `herstel_stereo` zet de oude bestanden recht.
+# 2. Een take die (bijna) stil is gaat weg, en elke take komt op een vaste piek
+#    (PIEK_DB), zodat een zacht geritsel niet onhoorbaar in de lijst staat.
+# 3. Een korte duur met "vijf keer achter elkaar" in de prompt gaf vooral
+#    stilte (0,5 s voor vijf geluiden): onder REEKS_MIN_DUUR vragen we er een.
+PIEK_DB = -1.0           # elke take normaliseren op deze piek
+STIL_DB = -45.0          # piek eronder: stilte, weg (gemeten: de stille takes lagen op -43 tot -46)
+STAART_DB = 20.0         # zoveel zachter dan de luidste take van dezelfde clip: een staartje, weg
+REEKS_MIN_DUUR = 3.0     # korter: niet om een reeks vragen
+
+
+def kanalen_van(x, sr, duur):
+    """1 of 2 kanalen in een kale pcm-clip? Met een gevraagde duur: de lengte
+    (stereo is twee keer zo lang); zonder: lijken de om-en-om-samples als
+    links en rechts sterker op elkaar dan buursamples binnen een kanaal?"""
+    try:
+        d = float(duur or 0)
+    except ValueError:
+        d = 0.0
+    if d > 0 and len(x) > 0:
+        return 2 if len(x) / float(sr * max(d, 0.5)) > 1.5 else 1
+    if len(x) < 2000:
+        return 2
+    y = x[: (len(x) - 1) // 2 * 2]
+    beste = max(abs(np.corrcoef(y[s::2][: len(y) // 2 - 1], y[s + 1::2][: len(y) // 2 - 1])[0, 1]) for s in (0, 1))
+    buren = abs(np.corrcoef(y[0:-2:2], y[2::2])[0, 1])
+    return 2 if beste >= buren else 1
+
+
+def als_kanalen(x, k):
+    """Kale samples naar (n,) of (n, k)."""
+    if k == 1:
+        return x
+    n = len(x) // k * k
+    return x[:n].reshape(-1, k)
+
+
+def mono(x):
+    return x if x.ndim == 1 else x.mean(axis=1)
+
+
+def piek_db(x):
+    p = float(np.max(np.abs(x))) if len(x) else 0.0
+    return 20.0 * np.log10(p + 1e-12)
+
+
+def normaliseer(x):
+    """Op PIEK_DB, hooguit +40 dB erbij."""
+    p = float(np.max(np.abs(x))) if len(x) else 0.0
+    if p <= 0.0:
+        return x
+    winst = min(10 ** (PIEK_DB / 20.0) / p, 100.0)
+    return x * winst
 
 
 def takes_map():
@@ -527,6 +590,14 @@ def takes_map():
 
 
 def genereer(cat, prompt, duur, invloed, model, knippen=True):
+    try:
+        kort = 0.0 < float(duur or 0) < REEKS_MIN_DUUR
+    except ValueError:
+        kort = False
+    if kort and prompt_bron.REEKS.strip() in prompt:
+        # vijf geluiden in een halve seconde: ElevenLabs gaf dan vooral stilte
+        prompt = prompt.replace(prompt_bron.REEKS.strip(), "").strip()
+        knippen = False
     data, formaat = elevenlabs(prompt, duur, invloed, model)
     takes_map()
     map_ = os.path.join(TAKES_DIR, cat)
@@ -536,13 +607,27 @@ def genereer(cat, prompt, duur, invloed, model, knippen=True):
             "tijd": stempel, "formaat": formaat, "takes": [], "melding": ""}
     if formaat.startswith("pcm"):
         sr = int(formaat.split("_")[1])
-        x = np.frombuffer(data, dtype="<i2").astype(np.float32) / 32768.0
-        stukken = knip_op_stilte(x, sr) if knippen else [(0, len(x))]
-        for i, (a, b) in enumerate(stukken):
-            pad = os.path.join(map_, "%s_%d.wav" % (stempel, i + 1))
-            schrijf_wav(pad, x[a:b].copy(), sr)
+        ruw = np.frombuffer(data, dtype="<i2").astype(np.float32) / 32768.0
+        k = kanalen_van(ruw, sr, duur)
+        x = als_kanalen(ruw, k)
+        stukken = knip_op_stilte(mono(x), sr) if knippen else [(0, len(x))]
+        luidst = max((piek_db(x[a:b]) for a, b in stukken), default=-120.0)
+        stil = 0
+        for a, b in stukken:
+            p = piek_db(x[a:b])
+            if p < STIL_DB or p < luidst - STAART_DB:
+                stil += 1
+                continue
+            pad = os.path.join(map_, "%s_%d.wav" % (stempel, len(meta["takes"]) + 1))
+            schrijf_wav(pad, normaliseer(x[a:b].copy()), sr)
             meta["takes"].append(pad.replace("\\", "/"))
         meta["seconden"] = round(len(x) / sr, 2)
+        meta["kanalen"] = k
+        if not meta["takes"]:
+            meta["melding"] = ("ElevenLabs gaf (bijna) alleen stilte terug. Probeer het nog eens, of zet de duur "
+                               "wat hoger.")
+        elif stil:
+            meta["melding"] = "%d stil stukje%s weggelaten." % (stil, "" if stil == 1 else "s")
     else:
         pad = os.path.join(map_, "%s_1.mp3" % stempel)
         open(pad, "wb").write(data)
@@ -1050,12 +1135,105 @@ def vrije_poort(start):
     raise RuntimeError("geen vrije poort vanaf %d" % start)
 
 
+def _naar_stereo(pad):
+    """Een oude take of opname (mono-wav met stereo erin, links en rechts om en
+    om) als echte stereo herschrijven: dezelfde samples, de juiste snelheid.
+    De uitlijning (welke sample links is) volgt uit de knip; we nemen die
+    waarbij links en rechts het meest op elkaar lijken."""
+    with wave.open(pad) as w:
+        if w.getnchannels() != 1 or w.getsampwidth() != 2:
+            return False
+        sr = w.getframerate()
+        y = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(np.float64)
+    if len(y) < 4:
+        return False
+    beste, start = -2.0, 0
+    for s in (0, 1):
+        n = (len(y) - s) // 2
+        if n < 2:
+            continue
+        l, r = y[s:s + 2 * n:2], y[s + 1:s + 2 * n:2]
+        c = np.corrcoef(l, r)[0, 1] if np.std(l) > 0 and np.std(r) > 0 else 0.0
+        if c > beste:
+            beste, start = c, s
+    n = (len(y) - start) // 2
+    st = np.stack([y[start:start + 2 * n:2], y[start + 1:start + 2 * n:2]], axis=1)
+    with wave.open(pad, "wb") as w:
+        w.setnchannels(2)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes(np.clip(st, -32768, 32767).astype("<i2").tobytes())
+    return True
+
+
+def herstel_stereo(droog=False):
+    """De takes van voor 13 oktober (hun meta kent geen `kanalen`) en elke
+    opname in sounds/ met precies dezelfde inhoud als zo'n take: als stereo
+    herschrijven. De opnames gaan eerst als reservekopie naar
+    results/geluid_studio_reserve/<tijd>/. Een tweede run doet niets meer:
+    herstelde bestanden hebben twee kanalen."""
+    oude_takes = []
+    oude_metas = []
+    for mp in glob.glob(os.path.join(TAKES_DIR, "*", "*.json")):
+        try:
+            meta = json.load(io.open(mp, encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if "kanalen" in meta or not str(meta.get("formaat", "")).startswith("pcm"):
+            continue
+        oude_metas.append((mp, meta))
+        oude_takes += [t for t in meta.get("takes", []) if os.path.exists(t)]
+    hashes = {}
+    for t in oude_takes:
+        hashes.setdefault(hashlib.sha1(open(t, "rb").read()).hexdigest(), t)
+    opnames = []
+    for pad in glob.glob(os.path.join("sounds", "**", "*.wav"), recursive=True):
+        if hashlib.sha1(open(pad, "rb").read()).hexdigest() in hashes:
+            opnames.append(pad)
+    uit = {"takes": len(oude_takes), "opnames": len(opnames), "hersteld": 0, "reserve": ""}
+    if droog:
+        uit["voorbeeld"] = sorted(p.replace("\\", "/") for p in opnames)[:10]
+        return uit
+    wortel_reserve = os.path.join("results", "geluid_studio_reserve")
+    reserve = os.path.join(wortel_reserve, time.strftime("%Y%m%d_%H%M%S"))
+    os.makedirs(wortel_reserve, exist_ok=True)
+    open(os.path.join(wortel_reserve, ".gdignore"), "a").close()   # de open editor importeert hier niets
+    for pad in opnames:
+        doel = os.path.join(reserve, pad)
+        os.makedirs(os.path.dirname(doel), exist_ok=True)
+        with open(pad, "rb") as f_in, open(doel, "wb") as f_uit:
+            f_uit.write(f_in.read())
+    uit["reserve"] = reserve.replace("\\", "/")
+    for pad in opnames + oude_takes:
+        if _naar_stereo(pad):
+            uit["hersteld"] += 1
+    for mp, meta in oude_metas:
+        meta["kanalen"] = 2
+        meta["hersteld"] = "13 oktober: was als mono gelezen"
+        with io.open(mp, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=1, ensure_ascii=False)
+    return uit
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--poort", type=int, default=8765)
     ap.add_argument("--geen-browser", action="store_true")
     ap.add_argument("--overzicht", action="store_true", help="alleen het overzicht als json printen (voor een check)")
+    ap.add_argument("--herstel-stereo", action="store_true",
+                    help="de takes en opnames van voor 13 oktober (stereo als mono gelezen) rechtzetten")
+    ap.add_argument("--droog", action="store_true", help="met --herstel-stereo: alleen tellen")
     a = ap.parse_args()
+    if a.herstel_stereo:
+        print(json.dumps(herstel_stereo(a.droog), indent=1, ensure_ascii=False))
+        return
+    if not a.overzicht:
+        # wat een studio van voor 13 oktober nog als mono wegschreef (stereo om
+        # en om) meteen rechtzetten; een tweede keer doet het niets
+        h = herstel_stereo()
+        if h["hersteld"]:
+            print("geluid-studio: %d oude takes en opnames als stereo hersteld (reserve in %s)" % (
+                h["hersteld"], h["reserve"]))
     if a.overzicht:
         o = overzicht()
         print(json.dumps({"categorieen": len(o["rijen"]),
