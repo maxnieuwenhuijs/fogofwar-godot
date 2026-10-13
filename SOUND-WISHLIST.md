@@ -596,26 +596,30 @@ op hout). Zo deelt een varken-houthakker en een muis-houthakker een geluid.
 Max: "wat zijn nog meer geluid en of vfx details die de game nog meer tot leven
 brengen. Bekijk alles en zet in de studios. van geritsel van uniforms tot
 ambient sounds en echos of kleine puffs of smoke". De secties 12 tot en met 18
-hieronder zijn **wensen**: ze staan in de geluid-studio (elk als eigen sectie,
-met een prompt in `sounds/geluid_studio.json` uit `tools/maak_geluid_prompts.py`),
-maar het spel speelt ze nog niet af. Eerst opnemen en kiezen, daarna inbouwen
-(een `Audio.play` op het moment uit de kolom "Wanneer"). De stemmen (sectie
-13, ook de honger) zijn per factie en staan in de studio onder de factie. De
-VFX die erbij horen staan in VFX-WISHLIST.md, secties 8 tot en met 10.
+hieronder staan in de geluid-studio (elk als eigen sectie, met een prompt in
+`sounds/geluid_studio.json` uit `tools/maak_geluid_prompts.py`) en zijn sinds
+dezelfde dag **ingebouwd** (`scripts/game/levend_geluid.gd`): elk klinkt op
+zijn moment uit de kolom "Wanneer" zodra er een opname ligt, en zwijgt tot
+dan. Druk in de studio op Gebruiken en je hoort hem bij de volgende start.
+De stemmen (sectie 13, ook de honger) zijn per factie en staan in de studio
+onder de factie. Knoppen in het sfeer-paneel (L): `leven_geluid` (0 = alles
+uit), `leven_accenten`, `leven_stemmen`, `oor_suis_kans`, `weer_regen_kans`.
+Check: `-- levencheck`. De VFX die erbij horen staan in VFX-WISHLIST.md,
+secties 8 tot en met 10 (nog wensen).
 
 ## 12. Uitrusting en uniform
 
 | Categorie | Var. | Wanneer | Prompt (EN) |
 |---|---|---|---|
-| `uniform_ritsel` | 4 | Pion draait zich om of wordt geselecteerd (onder inf_select) | A soldier in a thick wool uniform turns around quickly: a short soft rustle of wool cloth and a faint creak of a leather belt. |
+| `uniform_ritsel` | 4 | Een infanterist wordt geselecteerd (onder inf_select) | A soldier in a thick wool uniform turns around quickly: a short soft rustle of wool cloth and a faint creak of a leather belt. |
 | `uitrusting_rammel` | 4 | Eerste stap van een infanterist: patroontas, veldfles, schede | A soldier starts to march: the short rattle of a leather cartridge box, a tin canteen and a bayonet scabbard bumping against his hip. |
 | `harnas_kraak` | 3 | Big bro geselecteerd of in beweging: leer en gespen | A large animal shifts under a heavy leather harness: thick leather creaks and an iron buckle clinks once. |
 | `musket_schouder` | 3 | Na het koppelen (de ready-clip): musket naar de schouder | A soldier snaps a wooden musket onto his shoulder: a firm slap of a hand on the wooden stock and a small rattle of the iron sling swivel. |
-| `laadstok` | 3 | Na een schot, zachtjes: de laadstok in de loop (herladen) | A steel ramrod slid down the barrel of a flintlock musket, tapped twice at the bottom and drawn out again with a thin metallic scrape. |
-| `patroon_bijt` | 2 | Herladen: een papieren patroon afbijten | A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. |
-| `kruit_pan` | 2 | Vlak voor het schot: kruit op de pan, pan dicht | Priming a flintlock: a pinch of black powder poured into the pan with a tiny sandy hiss, then the steel frizzen snapped shut with a small click. |
-| `bajonet_op` | 2 | Voor een bajonetstoot: de bajonet klikt op de loop | A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. |
-| `sabel_trek` | 3 | Big bro trekt zijn sabel voor een charge | A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. |
+| `laadstok` | 3 | Herladen na een schot (2,0 s erna): de laadstok in de loop | A steel ramrod slid down the barrel of a flintlock musket, tapped twice at the bottom and drawn out again with a thin metallic scrape. |
+| `patroon_bijt` | 2 | Herladen na een schot (1,0 s erna): patroon afbijten | A soldier tears open a paper cartridge with his teeth: a short dry rip of paper and a few grains of powder spilling. |
+| `kruit_pan` | 2 | Herladen na een schot (1,5 s erna): kruit op de pan | Priming a flintlock: a pinch of black powder poured into the pan with a tiny sandy hiss, then the steel frizzen snapped shut with a small click. |
+| `bajonet_op` | 2 | Bajonetstoot: de bajonet klikt vast, net voor de stoot | A steel bayonet slid onto the muzzle of a musket and twisted until it locks with a firm metallic click. |
+| `sabel_trek` | 3 | Big bro met een sabel valt aan: de sabel uit de schede | A heavy cavalry sabre drawn quickly from a steel scabbard: a bright ringing scrape of steel that ends in a short whoosh. |
 | `vlag_wapper` | 3 | Vaandel wappert in de wind (af en toe, harder bij een vlaag) | A cloth regimental banner on a wooden pole flapping and snapping in a gust of wind for a moment. |
 | `trom_tik` | 3 | De tamboer tikt in rust zacht op de rand van zijn trom | A drummer idly taps the wooden rim of a small military snare drum twice with a drumstick, soft and light. |
 | `kanon_wissen` | 2 | Na een kanonschot: de natte wisser sist in de hete loop | A wet sponge on a long pole pushed into a hot cannon barrel after firing: a hiss of steam and a soft scrubbing swish. |
@@ -723,9 +727,9 @@ de wereld om het bord zonder dat je het merkt. Per diorama een eigen mengsel
 
 | Categorie | Var. | Wanneer | Prompt (EN) |
 |---|---|---|---|
-| `weer_regen` | 2 | Een potje met regen (laag, samen met de regen-VFX) | Steady light rain falling on grass and on a wooden table, soft pattering drops, continuous. No thunder, no music. |
+| `weer_regen` | 2 | Regen (knop weer_regen_kans, op 0 tot de regen-VFX er is) | Steady light rain falling on grass and on a wooden table, soft pattering drops, continuous. No thunder, no music. |
 | `weer_wind_vlaag` | 3 | Een windvlaag: de vlaggen wapperen even harder | A single strong gust of wind sweeping across open grass, rising and falling away. Outdoors, no music. |
-| `weer_onweer` | 2 | Onweer dichtbij, met de bliksem-VFX | A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music. |
+| `weer_onweer` | 2 | Onweer dichtbij, alleen als het regent | A close thunderclap: a sharp crack followed by a long heavy rumble that rolls away. Outdoors, no music. |
 
 **Echo zonder opname:** een galm per diorama (lang in de Alpenpas en de
 Kapelruine, kort in het Bosrand, droog op het Marktplein) kan ook als

@@ -1,5 +1,42 @@
 # Fog of War — Work In Progress & Context
 
+## 13 oktober -- Leven op het bord: alle nieuwe geluiden in het spel
+
+Max: "en deze geluiden komen ook allemaal in het spel nu?" (nee, alleen in de
+studio), dan op het voorstel om ze in te bouwen: "helemaal goed".
+
+- **`scripts/game/levend_geluid.gd`** (via preload, `game._levend`): elke
+  categorie uit SOUND-WISHLIST 12-18 en elke stem per factie heeft nu zijn
+  moment, en klinkt zodra er een opname ligt (`Audio.play_detail`/`play_stem`
+  geven false zonder opname). Haakjes in game.gd: `bij_actie` bovenaan
+  `_on_action_performed`, `bij_melee` in de bajonet- en charge-tak,
+  `bij_schot` na het schotgeluid, `bij_treffer` naast `blood_splash`,
+  `bij_dood` bovenaan `_death_sound`, `haven` in `_check_haven_score`,
+  `bij_selectie` na de selectiegeluiden, `beurtlicht` en `verdwenen` (de
+  honger: een pion die zonder gevecht uit beeld gaat vanaf de
+  honger-cyclus) in `_refresh_all`, `sps` in `_sync_sps`. PawnView:
+  `musket_schouder` in `play_ready`, het idle-geluidje bij een afwijkende idle.
+  Zelf in `_process`: sfeerlaag per diorama, kampvuur- en regenlus, accenten
+  in de verte (per diorama een lijst, gemiddeld om de 40 s), vlag, trom,
+  vliegen boven 3+ lijken, windvlagen, onweer bij regen, dreiging bij je haven.
+- **Audio:** `play_detail`, `play_stem` (streng per factie), `heeft`,
+  `zet_sfeer` (start `ambient_field` alleen opnieuw als er een sfeerlaag
+  speelde), `zet_lus`/`lus_categorie`, `_laag_db`; `_music_variants` leent
+  een sfeerlaag uit `_streams`; `_start_layer` kiest bij zo'n laag met de
+  eigen rng (de lagen van 25 s lopen midden in een potje af). 60 niveaus in
+  CATEGORY_DB. De regen staat op kans 0 (`weer_regen_kans`): zonder regen-VFX
+  zou je regen horen bij droog weer.
+- **Knoppen** in het sfeer-paneel: `leven_geluid`, `leven_accenten`,
+  `leven_stemmen`, `oor_suis_kans`, `weer_regen_kans`.
+- **Checks:** `-- levencheck` (nieuw) 24 punten PASS: zonder opname stil, elk
+  moment met nep-opnames, de big bro met eigen stem, de beer leent de muis
+  niet, een echte zet en een echte bajonetstoot door game.gd, sfeerlaag en
+  kampvuur bij het diorama, accenten uit de lijst van het diorama, de globale
+  rng ongemoeid, de knop op 0 stil. `uispel 777` `e14d7f70` ongewijzigd.
+- **Commit:** game.gd en audio_manager.gd als HEAD-versie plus deze haakjes
+  (scratchpad `leven_patch.py head`); het paardenwerk van 18 september blijft
+  ongecommit in de werkmap.
+
 ## 13 oktober -- Geluid-studio: een echte opname ruimt de placeholders op
 
 Max: "doe ook dat als er al een synthetisch geluid inzit dat ik dan als ik een

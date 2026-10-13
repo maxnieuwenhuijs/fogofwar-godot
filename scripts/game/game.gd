@@ -15,6 +15,8 @@ const ONTHUL_SCHERM_SCRIPT := preload("res://scripts/ui/match/onthul_scherm.gd")
 ## UI-beweging (30 september): inkom en microinteracties, een module voor de
 ## hele UI (scripts/ui/ui_beweging.gd, via preload).
 const BEWEGING := preload("res://scripts/ui/ui_beweging.gd")
+# Leven op het bord (13 oktober): de geluiden uit de geluid-studio op hun moment
+const LEVEND_GELUID := preload("res://scripts/game/levend_geluid.gd")
 ## De effecten van het bord (6 oktober, docs/VFX-studio.md): schot, vuurmond,
 ## vonken en schadegetal op een plek, zodat de VFX-tuner dezelfde code afspeelt.
 const VFX := preload("res://scripts/vfx/vfx.gd")
@@ -35,6 +37,7 @@ const VLUCHT_DUUR := 0.34   # de kaart die na het loslaten langs de pijl naar de
 
 var _board: Node3D
 var _omgeving: Omgeving = null   # het diorama om het bord (gras, wolken, klik-props)
+var _levend: Node = null   # leven op het bord: geluid (scripts/game/levend_geluid.gd)
 var _camera: Camera3D
 var _instructions = null  # InstructionsScreen (uitleg-tab, altijd via "?" te openen)
 var _human_auto_ai = null # greedy zet-kiezer voor de mens bij beurt-timeout
@@ -155,6 +158,10 @@ func _ready() -> void:
 	Omgeving.props_vooraf()   # alle props op de achtergrond: de start van het potje bouwt het diorama opnieuw
 	_setup_omgeving()
 	Audio.play_ambient("ambient_field")  # veld-ambience onder menu én spel
+	# leven op het bord (13 oktober): sfeerlaag per diorama, accenten, stemmen
+	_levend = LEVEND_GELUID.new()
+	_levend.game = self
+	add_child(_levend)
 	_index_tiles()
 	_connect_session_signals()
 	_card_hand.define_confirmed.connect(_on_define_confirmed)
@@ -2171,12 +2178,17 @@ func _refresh_all() -> void:
 		if vanaf > 0 and nog.size() <= vanaf:
 			for pid in nog:
 				beurt_licht[pid] = true
+	if _levend != null:
+		_levend.beurtlicht(beurt_licht.size())
 	for pid in _pawn_views:
 		var pv: PawnView = _pawn_views[pid]
 		var pawn: Pawn = state.pawns.get(pid)
 		if pawn == null or pawn.is_eliminated:
 			# Ragdoll bezig? Laat 'm staan; _kill_view ruimt hem op na de animatie.
 			if not _dying_views.has(pid):
+				# zonder gevecht weg terwijl hij nog te zien was: de honger (13 oktober)
+				if pv.visible and pawn != null and _levend != null:
+					_levend.verdwenen(pawn)
 				pv.visible = false
 			continue
 		pv.visible = true
@@ -2510,6 +2522,8 @@ func _sync_sps() -> void:
 			func(_i: int) -> void: _continue_after_reveal(), session)
 	_onthul_scherm.toon_sps(modus, int(st.sps_keuzes.get(_human_id, -1)), st.sps_vorige,
 		st.sps_poging, _human_id, _player_name, _kies_sps)
+	if _levend != null:
+		_levend.sps(modus, int(st.sps_poging))
 	if modus == "kies" and _sps_verstuurd == st.sps_poging:
 		for b in _onthul_scherm._sps_knoppen:
 			(b as Button).disabled = true   # al gekozen, het antwoord is onderweg
@@ -3140,6 +3154,8 @@ func _check_haven_score(pawn_id: int, coord: Vector2i) -> void:
 		return
 	if Rules.is_haven_for_player(coord, pawn.owner_id) and Rules.check_win(session.state) == -1:
 		Audio.play("haven_score", 0.25)
+		if _levend != null:
+			_levend.haven(pawn)
 
 
 ## Terugslag-geluid: als de terugslaande verdediger een paard is, hoor je het
@@ -3207,6 +3223,8 @@ func _impact_laag(target_id: int, damage: int, gedood: bool, delay: float,
 
 
 func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
+	if _levend != null:
+		_levend.bij_dood(pawn_id, delay, kanon)
 	var pawn: Pawn = session.state.pawns.get(pawn_id)
 	if pawn == null:
 		return
@@ -3281,6 +3299,8 @@ func _death_sound(pawn_id: int, delay: float, kanon: bool = false) -> void:
 
 
 func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
+	if _levend != null:
+		_levend.bij_actie(action, result)
 	_selected_pawn_id = -1
 	_valid_moves = []
 	_valid_attacks = []
@@ -3332,6 +3352,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 			# aanvaller, met zijn factie erbij als die een eigen opname heeft.
 			_melee_geluid(action.attacker_id, attacker, result.get("eliminated", false),
 				maxf(hit_del - 0.12, 0.0))
+			if _levend != null:
+				_levend.bij_melee(action.attacker_id, hit_del, result.get("attacker_eliminated", false))
 			if attacker != null:
 				attacker.zwaaispoor(maxf(hit_del - 0.12, 0.0))   # het lint achter de bajonet (6 oktober)
 			_impact_laag(action.defender_id, int(result.get("damage", 0)),
@@ -3393,6 +3415,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				Audio.play("musket_fire")
 				Audio.play("musket_echo", 0.18)
 				Audio.play("musket_hit", travel)
+			if _levend != null:
+				_levend.bij_schot(action.shooter_id, shooter_type, wacht, travel)
 			_impact_laag(action.target_id, int(result.get("damage", 0)),
 				result.get("eliminated", false), wacht + travel)
 			var shot_strength := 1.4 if shooter_type == Constants.UnitType.ARTILLERY else 0.75
@@ -3473,6 +3497,8 @@ func _on_action_performed(action: Dictionary, result: Dictionary) -> void:
 				var klap_del: float = tijdlijn.klap_del
 				# sabel, lans of bijl van deze ruiter (17 september)
 				_melee_geluid(action.pawn_id, cav, result.get("eliminated", false), klap_del)
+				if _levend != null:
+					_levend.bij_melee(action.pawn_id, klap_del, result.get("attacker_eliminated", false))
 				if cav != null:
 					cav.zwaaispoor(klap_del)   # het lint achter sabel, lans of bijl (6 oktober)
 				_impact_laag(action.defender_id, int(result.get("damage", 0)),
@@ -3788,6 +3814,11 @@ const AMBIANCE_DEFS: Array = [
 	{"key": "rit_stappen", "label": "rit van de big bro: stappen op zijn voeten (0 = een per vak)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
 	{"key": "rit_stap_cadans", "label": "rit-stappen: tijd tussen twee voeten (s; korter = meer stappen, sneller lopen)", "min": 0.05, "max": 0.3, "step": 0.005, "def": 0.12},
 	{"key": "rit_stap_db", "label": "rit-stappen: volume tegenover de charge-stap (dB)", "min": -24.0, "max": 6.0, "step": 0.5, "def": -8.0},
+	{"key": "leven_geluid", "label": "leven op het bord: geluid (stemmen, sfeer, details; 0 = uit)", "min": 0.0, "max": 1.0, "step": 1.0, "def": 1.0},
+	{"key": "leven_accenten", "label": "accenten in de verte: gemiddeld om de zoveel seconden (0 = geen)", "min": 0.0, "max": 180.0, "step": 1.0, "def": 40.0},
+	{"key": "leven_stemmen", "label": "stemmen: kans op juichen, schrikken en een bevelroep", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.5},
+	{"key": "oor_suis_kans", "label": "oorsuizen bij een kanonskill (kans)", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.25},
+	{"key": "weer_regen_kans", "label": "regen: kans per potje (geluid; de regen-VFX is nog een wens)", "min": 0.0, "max": 1.0, "step": 0.05, "def": 0.0},
 ]
 
 
@@ -4106,6 +4137,8 @@ func _hit_feedback(pawn_id: int, coord: Vector2i, damage: int, delay: float = 0.
 				pv.play_wound(world_dir)  # spetters + druppels: gewond maar staand
 		if bloedt:
 			Audio.play("blood_splash")
+			if _levend != null:
+				_levend.bij_treffer(pawn_id)
 	if damage > 0:
 		_spawn_damage_float(coord, "-%d" % damage)
 
@@ -4495,6 +4528,8 @@ func _select_pawn(pawn_id: int) -> void:
 			Audio.play("horse_select")
 		Constants.UnitType.ARTILLERY:
 			Audio.play("cannon_select")
+	if _levend != null:
+		_levend.bij_selectie(pawn)
 	var move_paths: Dictionary = Rules.get_valid_move_paths(state, pawn_id)
 	_valid_moves = move_paths.keys()
 	_highlight_move_tiles(move_paths)

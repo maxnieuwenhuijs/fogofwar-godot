@@ -1218,8 +1218,27 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (`cav_pijn_kreun_<factie>`, ...), dier en geluid uit `STEM_INF`/`STEM_CAV`;
   de studio zet ze onder de factie-sectie. Prompts uit `maak_geluid_prompts.py --nieuw`
   (alleen wat nog niet in de studio staat; raakt geen prompt, duur of
-  standaard aan; `VER` voor geluiden uit de verte). Het spel speelt ze nog
-  niet af: eerst opnemen, dan inbouwen.
+  standaard aan; `VER` voor geluiden uit de verte). **Ingebouwd (13 oktober,
+  Max: "helemaal goed"):** `scripts/game/levend_geluid.gd` (via preload,
+  `game._levend`) speelt elk op zijn moment ZODRA er een opname ligt (anders
+  stil): game.gd roept `bij_actie` (bovenaan `_on_action_performed`: rammel,
+  harnas, bloeddruppels, aura's), `bij_melee` (bajonet vast, sabel trekken,
+  hijgen), `bij_schot` (kogel-zip en herladen; kanon: terugloop, echo, aarde,
+  uitrollende kogel, wisser), `bij_treffer` (pijnkreun), `bij_dood`
+  (zucht, gibs, oorsuizen, buit, juichen en schrikken van de anderen),
+  `bij_selectie`, `haven`, `verdwenen` (de honger, in `_refresh_all`),
+  `beurtlicht` en `sps`; PawnView doet het musket naar de schouder
+  (`play_ready`) en het idle-geluidje (`_idle_process`). `_process` zelf: de
+  sfeerlaag per diorama (`Audio.zet_sfeer`, valt terug op `ambient_field`),
+  het kampvuur en de regen als lus (`Audio.zet_lus`), accenten in de verte
+  (per diorama een lijst), vlag, trom, vliegen bij 3+ lijken, windvlagen,
+  onweer bij regen, en de dreiging bij je haven. Audio: `play_detail` en
+  `play_stem` (variant en toon uit een EIGEN rng; stemmen streng
+  `<stem>_<factie>`, nooit de muis lenen), niveaus in CATEGORY_DB. Knoppen
+  `leven_geluid`, `leven_accenten`, `leven_stemmen`, `oor_suis_kans`,
+  `weer_regen_kans` (0 tot de regen-VFX er is). Check: `-- levencheck`
+  (nep-opnames: elk moment, per factie, sfeer, accenten, een echte zet en
+  bajonetstoot, de globale rng ongemoeid).
 - **Stat-blokjes tot 9 en de factie-bonus op de kaart (16 september, Max:
   "de blokjes moeten kloppen, met CP en bonus kun je 6 of 7 krijgen"; "bij
   het definieren al op de kaart wat de +1 is, bijv muis stamina").** Het

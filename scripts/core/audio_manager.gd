@@ -208,6 +208,67 @@ const CATEGORY_DB := {
 	# een fsst, onder de sis en ver onder de knal
 	"cannon_lontstok": -6.0,
 	"deselect": -7.0,
+	# --- Leven op het bord (13 oktober; scripts/game/levend_geluid.gd). Stil
+	# zolang er geen opname ligt. Stemmen per factie erven van de naam zonder
+	# factie (pijn_kreun_bear -> pijn_kreun_mouse -> pijn_kreun).
+	"uniform_ritsel": -13.0,
+	"uitrusting_rammel": -13.0,
+	"harnas_kraak": -11.0,
+	"musket_schouder": -11.0,
+	"laadstok": -15.0,
+	"patroon_bijt": -16.0,
+	"kruit_pan": -16.0,
+	"bajonet_op": -11.0,
+	"sabel_trek": -8.0,
+	"vlag_wapper": -15.0,
+	"trom_tik": -15.0,
+	"kanon_wissen": -13.0,
+	"kanon_terugloop": -9.0,
+	"hijg": -12.0,
+	"pijn_kreun": -8.0,
+	"idle_geluidje": -16.0,
+	"juich_klein": -12.0,
+	"schrik": -12.0,
+	"bevel_roep": -12.0,
+	"dood_zucht": -14.0,
+	"haven_juich": -8.0,
+	"honger_maag": -8.0,
+	"cav_hijg": -10.0,
+	"cav_pijn_kreun": -7.0,
+	"cav_idle_geluidje": -15.0,
+	"cav_dood_zucht": -12.0,
+	"cav_honger_maag": -8.0,
+	"kogel_zip": -12.0,
+	"cannon_echo": -8.0,
+	"aarde_regen": -10.0,
+	"splinter_regen": -10.0,
+	"metaal_tinkel": -12.0,
+	"kogel_rol": -12.0,
+	"gib_plets": -10.0,
+	"bloed_drup": -18.0,
+	"vlieg_zoem": -22.0,
+	"wrak_knetter": -16.0,
+	"oor_suis": -14.0,
+	"buit_vaandel": -6.0,
+	"buit_trom": -6.0,
+	"aura_trom": -10.0,
+	"aura_vaandel": -10.0,
+	"sps_tel": -8.0,
+	"sps_onthul": -6.0,
+	"haven_dreig": -8.0,
+	"beurtlicht_aan": -12.0,
+	"ver_kanon": -12.0,
+	"ver_trom": -14.0,
+	"ver_klok": -14.0,
+	"ver_hond": -14.0,
+	"ver_bijl": -14.0,
+	"ver_hoorn": -14.0,
+	"ver_vogels": -13.0,
+	"ver_kraai": -13.0,
+	"ver_kamp": -15.0,
+	"ver_donder": -10.0,
+	"weer_wind_vlaag": -15.0,
+	"weer_onweer": -9.0,
 }
 
 ## Muziek/ambience: lange loops in res://music/ (QOA-gecomprimeerde WAV).
@@ -371,7 +432,7 @@ func pas_lagen_toe() -> void:
 	if _music_player != null:
 		_music_player.volume_db = master_db + float(MUSIC_DB.get(_music_cat, -16.0))
 	if _ambient_player != null:
-		_ambient_player.volume_db = master_db + float(MUSIC_DB.get(_ambient_cat, -16.0))
+		_ambient_player.volume_db = master_db + _laag_db(_ambient_cat)
 
 
 func _zet_fader(bus: String, lineair: float) -> void:
@@ -860,6 +921,103 @@ func play_charge_stappen(category: String, eind: float, snelst: float = 0.07, tr
 	return tijden.size()
 
 
+# --- Leven op het bord (13 oktober) ------------------------------------------
+# De geluiden die het bord levend maken (SOUND-WISHLIST secties 12-18 en de
+# stemmen per factie; de momenten staan in scripts/game/levend_geluid.gd). Alles
+# met een EIGEN rng (variant en toon): de globale is van de partij (-- uispel).
+# Zonder opname klinkt er niets; zodra er een ligt, klinkt hij.
+var _detail_rng: RandomNumberGenerator = null
+var _lussen: Dictionary = {}   # naam -> {speler, cat, db}: kampvuur, regen
+
+
+func _drng() -> RandomNumberGenerator:
+	if _detail_rng == null:
+		_detail_rng = RandomNumberGenerator.new()
+		_detail_rng.seed = 13102026
+	return _detail_rng
+
+
+## Ligt er een opname van deze categorie?
+func heeft(category: String) -> bool:
+	return not (_streams.get(category, []) as Array).is_empty()
+
+
+## Een detailgeluid, variant en toon uit de eigen rng. false = geen opname.
+func play_detail(category: String, delay: float = 0.0, extra_db: float = 0.0) -> bool:
+	var n: int = (_streams.get(category, []) as Array).size()
+	if not enabled or n == 0:
+		return false
+	var r := _drng()
+	play(category, maxf(delay, 0.0), r.randi() % n, r.randf_range(0.95, 1.05), extra_db)
+	return true
+
+
+## Een stem van een factie: <stem>_<factie> (de big bro: cav_<stem>_<factie>).
+## Streng per factie (Max: "moeten toch factie based zijn"): een beer leent
+## nooit de piep van de muis, zonder eigen opname zwijgt hij.
+func play_stem(category: String, doctrine: int, delay: float = 0.0, extra_db: float = 0.0) -> bool:
+	return play_detail("%s_%s" % [category, Constants.doctrine_folder(doctrine)], delay, extra_db)
+
+
+## De sfeerlaag van een diorama: sfeer_<diorama> als die opname er ligt, anders
+## het oude ambient_field (die lange lagen staan in music/).
+func zet_sfeer(diorama_sleutel: String) -> void:
+	var cat := "sfeer_" + diorama_sleutel
+	if heeft(cat):
+		play_ambient(cat)
+	elif _ambient_cat != "ambient_field":
+		# alleen terug als er een sfeerlaag speelde: ambient_field opnieuw
+		# starten trekt uit de globale rng (_start_layer)
+		play_ambient("ambient_field")
+
+
+func _laag_db(category: String) -> float:
+	return float(MUSIC_DB.get(category, -20.0 if category.begins_with("sfeer_") else -16.0))
+
+
+## Een lus op de omgevingsbus naast de sfeerlaag (het kampvuur, de regen):
+## een variant, en na afloop een volgende. Lege categorie of geen opname = stil.
+func zet_lus(naam: String, category: String, db: float = -18.0) -> void:
+	var l: Dictionary = _lussen.get(naam, {})
+	if category == "" or not heeft(category):
+		if not l.is_empty():
+			(l.speler as AudioStreamPlayer).stop()
+			l.cat = ""
+		return
+	if not l.is_empty() and String(l.cat) == category and (l.speler as AudioStreamPlayer).playing:
+		return
+	if l.is_empty():
+		var p := AudioStreamPlayer.new()
+		p.bus = BUS_OMGEVING
+		add_child(p)
+		l = {"speler": p, "cat": "", "db": db}
+		_lussen[naam] = l
+		p.finished.connect(_lus_verder.bind(naam))
+	l.cat = category
+	l.db = db
+	_lus_verder(naam)
+
+
+func _lus_verder(naam: String) -> void:
+	var l: Dictionary = _lussen.get(naam, {})
+	if l.is_empty() or String(l.cat) == "":
+		return
+	var v: Array = _streams.get(String(l.cat), [])
+	if v.is_empty():
+		return
+	var p: AudioStreamPlayer = l.speler
+	p.stream = v[_drng().randi() % v.size()]
+	p.volume_db = master_db + float(l.db)
+	p.stream_paused = not enabled
+	p.play()
+
+
+## Speelt deze lus nu (voor de checks)?
+func lus_categorie(naam: String) -> String:
+	var l: Dictionary = _lussen.get(naam, {})
+	return "" if l.is_empty() else String(l.cat)
+
+
 ## De stappen van een rit van de big bro (10 oktober, Max: "nu hoor je bij
 ## verplaatsen van de big bro 1x een dreun, kan je dat een paar stappen van
 ## maken, getimed op de animatie? en mag qua volume wel wat zachter"): een
@@ -892,6 +1050,8 @@ func set_enabled(on: bool) -> void:
 		_music_player.stream_paused = not on
 	if _ambient_player != null:
 		_ambient_player.stream_paused = not on
+	for l in _lussen.values():
+		(l.speler as AudioStreamPlayer).stream_paused = not on
 
 
 # --- Muziek & ambience (lange loops) -----------------------------------------
@@ -927,8 +1087,11 @@ func _start_layer(player: AudioStreamPlayer, category: String) -> void:
 	var variants: Array = _music_variants(category)
 	if variants.is_empty():
 		return
-	player.stream = variants[randi() % variants.size()]
-	player.volume_db = master_db + float(MUSIC_DB.get(category, -16.0))
+	# een sfeerlaag uit de studio (13 oktober) kiest met een eigen rng: de
+	# globale is van de partij, en een laag van 25 s loopt midden in een potje af
+	var idx: int = (_drng().randi() if not MUSIC_BANK.has(category) else randi()) % variants.size()
+	player.stream = variants[idx]
+	player.volume_db = master_db + _laag_db(category)
 	player.stream_paused = not enabled
 	player.play()
 
@@ -940,6 +1103,9 @@ func _loop_layer(player: AudioStreamPlayer, category: String) -> void:
 
 
 func _music_variants(category: String) -> Array:
+	# een sfeerlaag uit de geluid-studio (13 oktober) ligt onder sounds/, niet in music/
+	if not MUSIC_BANK.has(category):
+		return _streams.get(category, [])
 	if not _music_streams.has(category):
 		var loaded: Array = []
 		for filename in MUSIC_BANK.get(category, []):

@@ -4209,6 +4209,21 @@ func _ready() -> void:
 			vtex.get_image().save_png("res://_shot_vosview.png")
 		get_tree().quit(0 if vosview_ok else 1)
 		return
+	elif "levencheck" in args:
+		# `-- levencheck` (13 oktober): leven op het bord, de geluiden uit de
+		# geluid-studio op hun moment (scripts/game/levend_geluid.gd). Er liggen
+		# nog geen opnames, dus de check zet nep-opnames in Audio en kijkt dan
+		# wat er klinkt: zonder opname niets, met opname het juiste geluid op
+		# het juiste moment, de stemmen streng per factie, de sfeerlaag en het
+		# kampvuur bij het diorama, accenten, een echte zet en een echte
+		# bajonetstoot door game.gd, en de globale rng blijft ongemoeid.
+		game._human_doctrine = Constants.Doctrine.MUIS
+		game._ai_doctrine = Constants.Doctrine.MUIS
+		await _naar_actiefase(game)
+		var lc_ok: bool = await _levencheck(game, GameSession.state)
+		print("[LEVEN] " + ("PASS" if lc_ok else "FAIL"))
+		get_tree().quit(0 if lc_ok else 1)
+		return
 	elif "meleecheck" in args:
 		# `-- meleecheck` — de bajonet-choreografie METEN in het echte spel
 		# (Max, 30 juli: "laat het popje op de tegel staan, laat de tegenstander
@@ -6654,6 +6669,217 @@ func _meleecheck_charge(game, st3: GameState) -> bool:
 			stootte, t_sprong >= 0.0 and absf(t_sprong - float(tl.get("sprong_start", 0.0))) < 0.15, afstand_landing < 0.25, doel_voor_klap, not doel_na_klap])
 	return ok
 
+
+
+## Speel een vers potje door tot de actiefase (de mens definieert en koppelt
+## zelf, zoals in -- meleecheck).
+func _naar_actiefase(game) -> void:
+	var hand: CardHand = game.get_node("UI/CardHand")
+	var stappen := 0
+	while GameSession.state.phase != Phase.Type.ACTION \
+			and GameSession.state.phase != Phase.Type.GAME_OVER and stappen < 700:
+		stappen += 1
+		var st: GameState = GameSession.state
+		if st.phase == Phase.Type.PRE_GAME:
+			game._start_match(1)
+		elif st.phase == Phase.Type.PLACEMENT:
+			game._confirm_placement()
+		elif Phase.is_reveal(st.phase):
+			game._continue_after_reveal()
+		elif Phase.is_define(st.phase) and st.cards_defined[1].size() == 0:
+			var bud: int = int(GameSession.state.doctrine_data_of(1).budget)
+			for c in hand.get_card_views():
+				c.data.hp = 1
+				c.data.stamina = mini(bud - 2, 3)
+				c.data.attack = bud - 1 - mini(bud - 2, 3)
+				c._refresh()
+			hand._on_confirm_pressed()
+		elif Phase.is_linking(st.phase) and st.current_player == 1:
+			for i in st.cards_revealed[1].size():
+				if not st.cards_revealed[1][i].is_linked():
+					game._on_link_card_picked(i)
+					break
+			for pawn in st.pawns.values():
+				if pawn.owner_id == 1 and not pawn.is_eliminated \
+						and pawn.linked_card_id == -1 and game._pawn_has_room(pawn):
+					game._on_link_pawn_clicked(pawn.id)
+					break
+		await get_tree().create_timer(0.04).timeout
+
+
+## -- levencheck: de geluiden van levend_geluid.gd met nep-opnames.
+func _levencheck(game, st: GameState) -> bool:
+	var lv = game._levend
+	if lv == null:
+		print("[LEVEN] FOUT: game.gd heeft geen levend-geluid-module")
+		return false
+	var fouten := 0
+	var teller: Array = [0]   # lambda's vangen een int als kopie
+	var nep := AudioStreamWAV.new()
+	nep.format = AudioStreamWAV.FORMAT_16_BITS
+	nep.mix_rate = 22050
+	nep.data = PackedByteArray()
+	nep.data.resize(400)
+	var inf: Pawn = null
+	var cav: Pawn = null
+	var art: Pawn = null
+	for p in st.pawns.values():
+		if p.is_eliminated or p.owner_id != 1:
+			continue
+		if p.unit_type == Constants.UnitType.INFANTRY and inf == null and String(p.rol) == "":
+			inf = p
+		elif p.unit_type == Constants.UnitType.CAVALRY and cav == null:
+			cav = p
+		elif p.unit_type == Constants.UnitType.ARTILLERY and art == null:
+			art = p
+	var nieuw := func(fn: Callable) -> Array:
+		var voor: int = lv.laatste.size()
+		fn.call()
+		return lv.laatste.slice(voor).map(func(x): return String(x[0]))
+	var meet := func(naam: String, fn: Callable, verwacht: Array, verboden: Array = []) -> void:
+		var kreeg: Array = nieuw.call(fn)
+		var mist: Array = verwacht.filter(func(c): return not kreeg.has(c))
+		var teveel: Array = verboden.filter(func(c): return kreeg.has(c))
+		var ok: bool = mist.is_empty() and teveel.is_empty()
+		print("[LEVEN] %s %s: %s%s" % ["ok  " if ok else "FOUT", naam, ", ".join(kreeg) if not kreeg.is_empty() else "(stil)",
+			"" if mist.is_empty() else "  mist: " + ", ".join(mist)])
+		if not ok:
+			teller[0] += 1
+	# 1. zonder opname: niets
+	meet.call("zonder opname zwijgt alles", func() -> void:
+		lv.bij_treffer(inf.id)
+		lv.bij_dood(inf.id, 0.1, true)
+		lv.bij_schot(inf.id, Constants.UnitType.INFANTRY, 0.0, 0.3), [], ["pijn_kreun_mouse", "dood_zucht_mouse", "laadstok"])
+	# 2. nep-opnames erin
+	var cats: Array = ["uniform_ritsel", "uitrusting_rammel", "harnas_kraak", "musket_schouder", "laadstok", "patroon_bijt",
+		"kruit_pan", "bajonet_op", "sabel_trek", "vlag_wapper", "trom_tik", "kanon_wissen", "kanon_terugloop", "kogel_zip",
+		"cannon_echo", "aarde_regen", "splinter_regen", "metaal_tinkel", "kogel_rol", "gib_plets", "bloed_drup", "vlieg_zoem",
+		"wrak_knetter", "oor_suis", "buit_vaandel", "buit_trom", "aura_trom", "aura_vaandel", "sps_tel", "sps_onthul",
+		"haven_dreig", "beurtlicht_aan", "weer_wind_vlaag", "weer_onweer", "sfeer_kampvuur", "weer_regen"]
+	cats.append_array(["ver_kanon", "ver_trom", "ver_klok", "ver_hond", "ver_bijl", "ver_hoorn", "ver_vogels",
+		"ver_kraai", "ver_kamp", "ver_donder"])
+	for stem in ["hijg", "pijn_kreun", "idle_geluidje", "juich_klein", "schrik", "bevel_roep", "dood_zucht", "haven_juich",
+			"honger_maag", "cav_hijg", "cav_pijn_kreun", "cav_idle_geluidje", "cav_dood_zucht", "cav_honger_maag"]:
+		cats.append(stem + "_mouse")
+	var sleutel: String = String(lv.DIORAMA_SLEUTEL[game._omgeving.diorama_index() - 1])
+	cats.append("sfeer_" + sleutel)
+	for c in cats:
+		Audio._streams[c] = [nep]
+	# 3. de momenten, rechtstreeks
+	meet.call("bajonet: klikt vast, hijgt na", func() -> void: lv.bij_melee(inf.id, 0.5, false), ["bajonet_op", "hijg_mouse"])
+	meet.call("big bro: hijgt na (sabel alleen als hij er een draagt)", func() -> void: lv.bij_melee(cav.id, 0.8, false), ["cav_hijg_mouse"])
+	meet.call("wie sneuvelt hijgt niet", func() -> void: lv.bij_melee(inf.id, 0.5, true), ["bajonet_op"], ["hijg_mouse"])
+	meet.call("musketschot: kogel-zip en herladen", func() -> void: lv.bij_schot(inf.id, Constants.UnitType.INFANTRY, 0.0, 0.3),
+		["kogel_zip", "patroon_bijt", "kruit_pan", "laadstok"])
+	meet.call("kanonschot: terugloop, echo, aarde, kogel rolt, wisser", func() -> void:
+		lv.bij_schot(art.id if art != null else inf.id, Constants.UnitType.ARTILLERY, 0.9, 0.4),
+		["kanon_terugloop", "cannon_echo", "aarde_regen", "kogel_rol", "kanon_wissen"])
+	meet.call("treffer overleefd: pijnkreun per factie", func() -> void: lv.bij_treffer(inf.id), ["pijn_kreun_mouse"])
+	meet.call("big bro geraakt: eigen kreun", func() -> void: lv.bij_treffer(cav.id), ["cav_pijn_kreun_mouse"], ["pijn_kreun_mouse"])
+	meet.call("dood door een kanon: zucht en gibs", func() -> void: lv.bij_dood(inf.id, 0.2, true), ["dood_zucht_mouse", "gib_plets"])
+	meet.call("selectie: uniform", func() -> void: lv.bij_selectie(inf), ["uniform_ritsel"])
+	meet.call("selectie big bro: harnas", func() -> void: lv.bij_selectie(cav), ["harnas_kraak"], ["uniform_ritsel"])
+	meet.call("haven: het kamp juicht", func() -> void: lv.haven(inf), ["haven_juich_mouse"])
+	meet.call("beurtlicht gaat aan (een keer)", func() -> void:
+		lv.beurtlicht(0)
+		lv.beurtlicht(2)
+		lv.beurtlicht(3), ["beurtlicht_aan"])
+	var sps_n: Array = nieuw.call(func() -> void:
+		lv.sps("kies", 7)
+		lv.sps("kies", 7)
+		lv.sps("uitslag", 7))
+	var sps_ok: bool = sps_n == ["sps_tel", "sps_onthul"]
+	print("[LEVEN] %s steen-papier-schaar: %s" % ["ok  " if sps_ok else "FOUT", ", ".join(sps_n)])
+	fouten += 0 if sps_ok else 1
+	var cyclus_oud: int = st.cycle
+	var vanaf: int = int(st.rules.honger_vanaf_cyclus)
+	st.cycle = maxi(vanaf, 1) - 1
+	meet.call("verdwijnen voor de honger-cyclus: stil", func() -> void: lv.verdwenen(inf), [], ["honger_maag_mouse"])
+	st.cycle = maxi(vanaf, 1)
+	meet.call("de honger neemt hem", func() -> void: lv.verdwenen(inf), ["honger_maag_mouse"])
+	meet.call("de honger neemt een big bro", func() -> void: lv.verdwenen(cav), ["cav_honger_maag_mouse"])
+	st.cycle = cyclus_oud
+	# 4. streng per factie: de beer leent nooit de piep van de muis
+	var beer_stem: bool = Audio.play_stem("pijn_kreun", Constants.Doctrine.BEER)
+	print("[LEVEN] %s een beer zonder eigen opname zwijgt: %s" % ["ok  " if not beer_stem else "FOUT", not beer_stem])
+	fouten += 1 if beer_stem else 0
+	# 5. een echte zet en een echte bajonetstoot door game.gd
+	st.current_player = 1
+	var zet_pion: Pawn = null
+	var zet_doel := Vector2i(-1, -1)
+	for p in st.pawns.values():
+		if p.owner_id == 1 and not p.is_eliminated and p.unit_type == Constants.UnitType.INFANTRY:
+			p.is_active = true
+			p.remaining_stamina = maxi(p.remaining_stamina, 2)
+			var paden: Dictionary = Rules.get_valid_move_paths(st, p.id)
+			if not paden.is_empty():
+				zet_pion = p
+				zet_doel = paden.keys()[0]
+				break
+	if zet_pion != null:
+		meet.call("echte zet door game.gd: uitrusting rammelt", func() -> void:
+			GameSession.submit_move(1, zet_pion.id, zet_doel), ["uitrusting_rammel"])
+	else:
+		print("[LEVEN] FOUT: geen infanterist met een zet gevonden")
+		fouten += 1
+	await get_tree().create_timer(0.5).timeout
+	var voor_melee: int = lv.laatste.size()
+	await _meleecheck_scenario(game, st, Constants.UnitType.INFANTRY, "infanterie")
+	var melee_n: Array = lv.laatste.slice(voor_melee).map(func(x): return String(x[0]))
+	var melee_ok: bool = melee_n.has("bajonet_op") and melee_n.has("dood_zucht_mouse")
+	print("[LEVEN] %s echte bajonetstoot door game.gd: %s" % ["ok  " if melee_ok else "FOUT", ", ".join(melee_n)])
+	fouten += 0 if melee_ok else 1
+	# 6. de sfeerlaag en het kampvuur bij het diorama
+	lv._diorama = -1
+	await get_tree().create_timer(0.7).timeout
+	var bed_ok: bool = String(Audio._ambient_cat) == "sfeer_" + sleutel
+	var vuur_verwacht: bool = lv._heeft_kampvuur(game._omgeving.diorama_index())
+	var vuur_ok: bool = (Audio.lus_categorie("kampvuur") == "sfeer_kampvuur") == vuur_verwacht
+	print("[LEVEN] %s sfeerlaag bij %s: %s; kampvuur %s (diorama heeft er %s)" % [
+		"ok  " if bed_ok and vuur_ok else "FOUT", game._omgeving.diorama_naam(), Audio._ambient_cat,
+		Audio.lus_categorie("kampvuur"), "een" if vuur_verwacht else "geen"])
+	fouten += 0 if bed_ok and vuur_ok else 1
+	# 7. accenten in de verte (knop kort gezet)
+	var oud_acc = PawnView._fx.get("leven_accenten")
+	PawnView._fx["leven_accenten"] = 0.6
+	lv._t_accent = 0.0
+	var voor_acc: int = lv.laatste.size()
+	await get_tree().create_timer(1.5).timeout
+	var acc: Array = lv.laatste.slice(voor_acc).map(func(x): return String(x[0])).filter(func(c): return String(c).begins_with("ver_"))
+	var acc_lijst: Array = lv.ACCENTEN_PER.get(sleutel, lv.ACCENTEN)
+	var acc_ok: bool = not acc.is_empty() and acc.all(func(c): return acc_lijst.has(c))
+	print("[LEVEN] %s accenten in de verte (%s): %s" % ["ok  " if acc_ok else "FOUT", sleutel, ", ".join(acc)])
+	fouten += 0 if acc_ok else 1
+	if oud_acc == null:
+		PawnView._fx.erase("leven_accenten")
+	else:
+		PawnView._fx["leven_accenten"] = oud_acc
+	# 8. de globale rng blijft ongemoeid
+	seed(4242)
+	var r1 := randi()
+	seed(4242)
+	lv.bij_melee(inf.id, 0.5, false)
+	lv.bij_schot(inf.id, Constants.UnitType.INFANTRY, 0.0, 0.3)
+	lv.bij_dood(inf.id, 0.2, true)
+	lv.bij_selectie(inf)
+	lv._speel_accent()
+	Audio.zet_lus("regen", "weer_regen", -18.0)
+	var rng_ok: bool = randi() == r1
+	print("[LEVEN] %s globale rng ongemoeid: %s" % ["ok  " if rng_ok else "FOUT", rng_ok])
+	fouten += 0 if rng_ok else 1
+	# 9. de knop leven_geluid op 0: alles uit
+	var oud_aan = PawnView._fx.get("leven_geluid")
+	PawnView._fx["leven_geluid"] = 0.0
+	meet.call("knop leven_geluid 0: stil", func() -> void:
+		lv.bij_treffer(inf.id)
+		lv.bij_selectie(inf), [], ["pijn_kreun_mouse", "uniform_ritsel"])
+	if oud_aan == null:
+		PawnView._fx.erase("leven_geluid")
+	else:
+		PawnView._fx["leven_geluid"] = oud_aan
+	fouten += int(teller[0])
+	print("[LEVEN] %d fouten" % fouten)
+	return fouten == 0
 
 
 ## De rit van de big bro (10 oktober, Max: "nu hoor je bij verplaatsen van de

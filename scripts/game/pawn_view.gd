@@ -885,6 +885,11 @@ func _idle_process(delta: float) -> void:
 	_idle_afwijkers += 1
 	_anim.play(keuze, 0.35, 1.0)
 	_idle_afwijk_tot = _idle_tijd + _anim.get_animation(keuze).length
+	# een snuif, geeuw of kuchje in zijn eigen dierentaal (13 oktober, leven
+	# op het bord; stil zonder opname van deze factie)
+	if visible and _unit_type != Constants.UnitType.ARTILLERY and fx("leven_geluid", 1.0) > 0.0:
+		Audio.play_stem("cav_idle_geluidje" if _unit_type == Constants.UnitType.CAVALRY else "idle_geluidje",
+			_doctrine, 0.3)
 
 
 ## `blend` = de overgang vanuit de vorige houding (s); een rit van de big bro
@@ -1687,6 +1692,10 @@ func play_die() -> void:
 ## pion omhoog hopt. Heeft het model de clip niet, dan gebeurt er niets.
 func play_ready() -> void:
 	_play_variant("ready", false, 1.0, true)
+	# het musket gaat naar de schouder (13 oktober, leven op het bord; stil
+	# zonder opname). Vaandel en trom dragen geen musket.
+	if _unit_type == Constants.UnitType.INFANTRY and _rol == "" and fx("leven_geluid", 1.0) > 0.0:
+		Audio.play_detail("musket_schouder", 0.12)
 
 
 func play_hit() -> void:
