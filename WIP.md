@@ -1,5 +1,45 @@
 # Fog of War — Work In Progress & Context
 
+## 21 oktober -- Strategy mode: zelf je leger kopen, ook als campagne
+
+Max: "voeg toe een gamemode: ongeacht factie heeft ieder leger een Budget voor
+het gevecht, een speler mag dan helemaal zelf kiezen hoe hij deze vult ...
+Noem dit Strategy mode. En ook dit kan je dan in een campagne modus doen."
+
+- **Engine** (config-gated, `RulesConfig.strategie`, besluit B21, spec in
+  spelregels-v4.2.md Deel B): budget 30, soldaat 1 / big bro 2 / kanon 3,
+  1 tot 22 pionnen; neutrale facties (geen perks, 3 kaarten van 7, geen
+  budget_bonus); reserve en CP gelijk; elk stuk te koop. De opstelling IS de
+  keuze (PLACE, blind); daarna `GameState.leger`. Standaard-opstelling voor
+  elk leger (`default_placement(speler, leger)`, ook 8 kanonnen; voor de
+  facties ongewijzigd). legal_actions biedt vier voorbeeldlegers; bots kopen
+  in de verhouding van hun factie (`AIController.kies_leger`).
+- **Campagne**: `CRules.strategie` (in de save), gelijke start (15 punten,
+  start_cp), duels zonder comp_override, geen orakel. `SoloDriver.new(...,
+  p_strategie)`.
+- **UI**: SOLO > Strategy mode > 1v1-duel of Campagne. Factiekeuze toont alleen
+  het uiterlijk. In de opstelfase eerst de legerbouwer (min/plus per type,
+  punten en pionnen, vier snelle keuzes, LEGER KLAAR), dan het opstelmenu met
+  "leger aanpassen". Hub: factiekeuze en spelregels in Strategy-taal, het
+  hervatscherm noemt de modus. 26 nieuwe teksten (EN/NL), vertalingen
+  opnieuw gebouwd.
+- **Defaults die ik koos** (Max kan ze zo wijzigen in `STRATEGIE_DEFAULTS`):
+  budget 30 (gemiddeld de factielegers, 24-36), standaardleger [16, 4, 2],
+  reserve = budget x 0,5, ongebruikte punten vervallen (niet naar de reserve:
+  dan lekt het in de campagne als buit), geen maximum per type. Online werkt
+  de engine mee (de regels reizen met de match), maar er is nog geen knop in
+  de lobby.
+- **Checks:** `StrategieTests` 18 tests (244 asserts, ook drie volle partijen
+  L1/L2, 8 fuzz-partijen en een complete Strategy-campagne), golden
+  `strategie_leger`, `-- strategiecheck` (menu, bouwer, handmatig, potje,
+  campagne, hub) PASS, regressiegroepen groen.
+- **uispel 777:** deze werkmap geeft `e14d7f70…` (159 acties, cyclus 4), ook
+  met mijn wijzigingen teruggezet: het verschil met de referentie `73b47201…`
+  komt uit ander ongecommit werk in de map (trainingsgewichten
+  `data/ai_weights_f*.json`, audio), niet uit Strategy mode.
+- **Niet gemeten:** de balans van de modus (B18). Meten:
+  `.\arena.ps1 -Config arena/arena_configs/strategie_l2.json -Procs 8 -Naam strategie`.
+
 ## 13 oktober -- Geluid-studio: stereo goed gelezen, geen stille takes meer
 
 Max: "heel vaak hoor ik geen geluid als ik iets genereer".

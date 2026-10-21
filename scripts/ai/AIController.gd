@@ -329,6 +329,8 @@ func _gen_card(pref_hp: float, pref_stam: float, pref_atk: float, budget: int = 
 ## front/center-gewichten; het schaarste type kiest eerst de beste vakken.
 func choose_placement(state: GameState) -> Array:
 	var comp: Array = state.doctrine_data_of(player_id).comp
+	if state.rules.strategie_actief() and not state.leger.has(player_id):
+		comp = kies_leger(state)   # Strategy mode: eerst het leger kopen
 	var rows: Array = Constants.get_start_rows_for_player(player_id)  # [achter, voor]
 	var slots: Array = []
 	for row_i in 2:
@@ -369,6 +371,26 @@ func choose_placement(state: GameState) -> Array:
 	# voor de mens zijn "vul automatisch"-knop.
 	_wijs_dragers_aan(state, placements)
 	return placements
+
+
+## Strategy mode: welk leger koopt de bot van zijn budget? Leerbaar via
+## `leger_cav` en `leger_art` (het deel van het budget voor ruiters en
+## kanonnen; de rest wordt infanterie). Zonder die gewichten de smaak van zijn
+## eigen factie: de verhouding van haar gewone leger (`comp_factie`), dus een
+## Wolf koopt veel ruiters en een Muis veel lijven. Geen regel, alleen smaak.
+## Deterministisch, en altijd binnen het budget en op het bord.
+func kies_leger(state: GameState) -> Array:
+	var data: Dictionary = state.doctrine_data_of(player_id)
+	var factie: Array = data.get("comp_factie", data.get("comp", [1, 0, 0]))
+	var totaal: float = float(maxi(1, state.leger_kosten(factie)))
+	var cav: float = float(weights.get("leger_cav",
+		float(int(factie[1]) * state.stuk_kosten(Constants.UnitType.CAVALRY)) / totaal))
+	var art: float = float(weights.get("leger_art",
+		float(int(factie[2]) * state.stuk_kosten(Constants.UnitType.ARTILLERY)) / totaal))
+	var leger: Array = state.leger_uit_verdeling(cav, art)
+	if not state.leger_geldig(leger):
+		leger = (state.rules.strategie.get("standaard", [1, 0, 0]) as Array).duplicate()
+	return leger
 
 
 ## C15, leerbaar: de dragers krijgen de infanterievakken met de hoogste

@@ -1,5 +1,30 @@
 # Spelregels — CHANGELOG
 
+## Strategy mode: 21 oktober 2026 (een nieuwe speelmodus, het gewone spel ongewijzigd)
+
+*Max, 21 oktober: "voeg toe een gamemode: ongeacht factie heeft ieder leger een
+Budget voor het gevecht ... Noem dit Strategy mode. En ook dit kan je dan in een
+campagne modus doen."*
+
+**Wat er bij komt.** Het regelblok `strategie` (spelregels-v4.2.md Deel B,
+"Strategy mode"): je koopt je leger in de opstelfase uit 30 punten (soldaat 1,
+big bro 2, kanon 3, hooguit 22 pionnen), elke factie speelt als allrounder
+zonder perks met 3 kaarten van 7, reserve en CP voor iedereen gelijk, elk stuk
+te koop. Ook als campagne (`CRules.strategie`).
+
+**Geen regelversie.** Zonder blok is alles byte-gelijk: `RulesConfig.to_dict`,
+het snapshot en de view noemen de modus en het leger alleen als ze er zijn.
+Alle bestaande goldens en `golden_sims.json` ongewijzigd; `uispel 777` gaf in
+dezelfde werkmap met en zonder deze wijziging dezelfde digest. De standaard-
+opstelling kan nu meer dan drie kanonnen kwijt (verder vooraan, dan achteraan);
+voor de facties (hooguit drie) is hij gelijk gebleven.
+
+**Gevolgen.** Nieuwe golden `strategie_leger` (een kanonnenleger tegen een
+ruiterleger, drie kaarten voor de Muis, een koppeling zonder +1 stamina). De
+engine is veranderd, dus een nieuwe core-hash: server en client samen
+uitrollen. Balans van de modus niet gemeten (B18); meten kan met
+`arena/arena_configs/strategie_l2.json`.
+
 ## 4.3.10: 7 oktober 2026 (het bod kort alleen wie minder kaarten speelt dan de tegenstander)
 
 *Besluit Max, 7 oktober, na de review van 4.3.9: "ja doe maar".*

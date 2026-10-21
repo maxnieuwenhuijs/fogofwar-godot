@@ -252,8 +252,11 @@ func _toon_hervat_keuze(oud_driver: SoloDriver) -> void:
 	var naam := _naamplaat(String(mijn.get("naam", "?")), 13)
 	naam.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	binnen.add_child(naam)
-	var uitleg := HubAssets.tekst(tr("HUB_RESUME_INFO") % [oud_driver.c.ronde,
-		Constants.doctrine_display_name(int(mijn.get("doctrine", 0)))], _px(11), HubAssets.INKT)
+	var info: String = tr("HUB_RESUME_INFO") % [oud_driver.c.ronde,
+		Constants.doctrine_display_name(int(mijn.get("doctrine", 0)))]
+	if oud_driver.c.rules.strategie_actief():
+		info += " " + tr("HUB_RESUME_STRAT")
+	var uitleg := HubAssets.tekst(info, _px(11), HubAssets.INKT)
 	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	binnen.add_child(uitleg)
@@ -373,7 +376,11 @@ func _cascade() -> void:
 ## voor de hele campagne. De kaartdata komt uit de actieve regeltabel (C17).
 ## 27 september: in de stijl van de hub (frame, titelplaat).
 func _toon_factie_keuze() -> void:
-	var kolom := _keuze_scherm(tr("HUB_FACTION_TITLE"), "FactieKeuze", tr("HUB_FACTION_EXPLAIN"))
+	# Strategy mode (21 oktober): de factie is alleen je uiterlijk; je leger koop
+	# je in elk duel zelf.
+	var strategie: bool = CampaignBridge.strategie and not _oefenen
+	var kolom := _keuze_scherm(tr("HUB_FACTION_TITLE"), "FactieKeuze",
+		tr("HUB_FACTION_EXPLAIN_STRAT") if strategie else tr("HUB_FACTION_EXPLAIN"))
 	var laag := _keuze_laag
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -386,7 +393,7 @@ func _toon_factie_keuze() -> void:
 	scroll.add_child(lijst)
 	var tabel: RulesConfig = CRules.actieve_tabel()
 	for doctrine in Constants.DOCTRINE_DATA:
-		var kaart := UiFactieKaart.new(int(doctrine), tabel.doctrine_data(int(doctrine)))
+		var kaart := UiFactieKaart.new(int(doctrine), tabel.doctrine_data(int(doctrine)), true, strategie)
 		kaart.name = "Factie_%d" % int(doctrine)
 		kaart.pressed.connect(_kies_factie.bind(int(doctrine), laag))
 		lijst.add_child(kaart)
@@ -405,7 +412,7 @@ func _toon_factie_keuze() -> void:
 func _kies_factie(doctrine: int, keuze_scherm: Control) -> void:
 	_sluit_keuze(keuze_scherm)
 	driver = SoloDriver.new(int(Time.get_unix_time_from_system()) % 900000,
-		mens_id, 16, "" if _oefenen else SAVE_PAD, doctrine)
+		mens_id, 16, "" if _oefenen else SAVE_PAD, doctrine, CampaignBridge.strategie and not _oefenen)
 	_start()
 
 

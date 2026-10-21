@@ -11,6 +11,11 @@ var driver: SoloDriver = null
 ## schaalt de AI van jouw bord-tegenstander in campagne-duels.
 var campagne_moeilijkheid: int = 1
 
+## Strategy mode (21 oktober): het menu vraagt om een NIEUWE campagne in
+## Strategy mode. Een hervatte campagne houdt haar eigen modus (bevroren in de
+## save, CRules.strategie); dit telt alleen bij de factiekeuze.
+var strategie: bool = false
+
 var duel_actief: bool = false
 var _ctx: Dictionary = {}  # {idx, a, b, cp_a, cp_b} — a = de mens = bord-P1
 

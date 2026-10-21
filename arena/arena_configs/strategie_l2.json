@@ -1,0 +1,15 @@
+{
+ "_uitleg": "Strategy mode (21 oktober): elke factie dezelfde allrounder, het leger kiest elke bot zelf uit het budget (in de smaak van zijn factie, AIController.kies_leger). De matrix meet dus welke legersmaak wint, niet welke factie.",
+ "matchups": "all",
+ "games_per_matchup": 3,
+ "agents": {
+  "p1": "l2",
+  "p2": "l2"
+ },
+ "base_seed": 93000,
+ "max_steps": 2500,
+ "track_repetitions": true,
+ "rules": "res://arena/arena_configs/rules_v42_campaign.json",
+ "strategie": {},
+ "tie_break_loting": true
+}

@@ -12,6 +12,8 @@ const HUD_BALK_SCRIPT := preload("res://scripts/ui/match/hud_balk.gd")
 const FACTIE_KEUZE_SCRIPT := preload("res://scripts/ui/match/factie_keuze_scherm.gd")
 const EINDE_SCHERM_SCRIPT := preload("res://scripts/ui/match/einde_scherm.gd")
 const ONTHUL_SCHERM_SCRIPT := preload("res://scripts/ui/match/onthul_scherm.gd")
+## Strategy mode (21 oktober): het scherm waarop je je leger koopt.
+const LEGER_BOUWER_SCRIPT := preload("res://scripts/ui/match/leger_bouwer.gd")
 ## UI-beweging (30 september): inkom en microinteracties, een module voor de
 ## hele UI (scripts/ui/ui_beweging.gd, via preload).
 const BEWEGING := preload("res://scripts/ui/ui_beweging.gd")
@@ -66,6 +68,15 @@ var _placement_ghost_type: int = -1
 var _human_doctrine: int = Constants.Doctrine.MENS
 var _ai_doctrine: int = Constants.Doctrine.MENS
 var _campaign_mode: bool = true  # elk potje is een v4.2-duel (CP + versterkingen)
+## Strategy mode (21 oktober, Max): het volgende losse potje speelt in Strategy
+## mode (gekozen in het menu; het hoofdmenu zet hem terug). Tijdens een potje
+## beslist de staat (rules.strategie), niet deze vlag: ook campagne-duels en
+## online partijen dragen hem in hun regels.
+var _strategie: bool = false
+## Het leger dat de mens in de legerbouwer koos, [inf, cav, art]; leeg = nog
+## niet gekozen (dan opent de opstelfase eerst de legerbouwer).
+var _leger_keuze: Array = []
+var _leger_bouwer = null
 var _hovered_pawn_id: int = -1
 var _hp_layer: Control = null
 var _hp_bars: Dictionary = {}        # pawn_id -> {holder, blocks}
@@ -178,6 +189,8 @@ func _ready() -> void:
 	$UI.add_child(_koppel_pijl)
 	_factie_keuze = FACTIE_KEUZE_SCRIPT.new()  # direct boven de overlay, onder uitleg en knoppen
 	$UI.add_child(_factie_keuze)
+	_leger_bouwer = LEGER_BOUWER_SCRIPT.new()  # Strategy mode: ook boven de overlay
+	$UI.add_child(_leger_bouwer)
 	_instructions = INSTRUCTIONS_SCRIPT.new()
 	$UI.add_child(_instructions)
 	_build_help_button()
@@ -357,6 +370,7 @@ func _show_difficulty_menu() -> void:
 	_clear_highlights()
 	_top_label.text = tr("MENU_TITLE")
 	_prompt_label.text = ""
+	_strategie = false   # het hoofdmenu is de neutrale stand: Strategy mode kies je onder SOLO
 	# Hoofdmenu-herstructurering (besluit Max, 27 juli): vier simpele knoppen.
 	# SOLO -> 1v1 of Campagne -> dan pas de moeilijkheid; AI Trainer is uit
 	# het menu, Model-tuner zit onder Instellingen.
@@ -558,16 +572,38 @@ func _online_hervatten() -> void:
 
 
 func _show_solo_menu() -> void:
+	_strategie = false
 	_overlay.show_choice(tr("MENU_SOLO"), tr("MENU_SOLO_BODY"),
-		[tr("MENU_SOLO_1V1"), tr("MENU_SOLO_CAMPAIGN"), tr("MENU_BACK")],
+		[tr("MENU_SOLO_1V1"), tr("MENU_SOLO_CAMPAIGN"), tr("MENU_SOLO_STRATEGY"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i == 0:
 				_show_1v1_difficulty()
 			elif i == 1:
 				_show_campagne_difficulty()
+			elif i == 2:
+				_show_strategie_menu()
 			else:
 				_show_difficulty_menu(),
-		Color.WHITE, false, ["act-melee", "score", ""])
+		Color.WHITE, false, ["act-melee", "score", "phase-setup", ""])
+
+
+## Strategy mode (21 oktober, Max: "Noem dit Strategy mode. En ook dit kan je
+## dan in een campagne modus doen"): een los duel of een hele campagne, waarin
+## elke factie dezelfde allrounder is en je je leger zelf koopt.
+func _show_strategie_menu() -> void:
+	var blok: Dictionary = RulesConfig.normaliseer_strategie({})
+	_overlay.show_choice(tr("MENU_STRATEGY_TITLE"), tr("MENU_STRATEGY_BODY") % int(blok.budget),
+		[tr("MENU_SOLO_1V1"), tr("MENU_SOLO_CAMPAIGN"), tr("MENU_BACK")],
+		func(i: int) -> void:
+			if i == 0:
+				_strategie = true
+				_show_1v1_difficulty()
+			elif i == 1:
+				_strategie = true
+				_show_campagne_difficulty()
+			else:
+				_show_solo_menu(),
+		Color.WHITE, false, ["act-melee", "score", ""], "phase-setup")
 
 
 func _show_1v1_difficulty() -> void:
@@ -575,7 +611,10 @@ func _show_1v1_difficulty() -> void:
 		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_DIFF_ULTRA"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i >= 4:
-				_show_solo_menu()
+				if _strategie:
+					_show_strategie_menu()
+				else:
+					_show_solo_menu()
 			else:
 				ai_difficulty = i
 				_show_doctrine_menu())
@@ -587,9 +626,13 @@ func _show_campagne_difficulty() -> void:
 		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i >= 3:
-				_show_solo_menu()
+				if _strategie:
+					_show_strategie_menu()
+				else:
+					_show_solo_menu()
 				return
 			CampaignBridge.campagne_moeilijkheid = i
+			CampaignBridge.strategie = _strategie   # een nieuwe campagne in Strategy mode
 			get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"))
 
 
@@ -868,6 +911,10 @@ func _show_doctrine_menu() -> void:
 	# en de arena (CRules.actieve_tabel()). Index = positie in
 	# Constants.DOCTRINE_DATA.keys(), zoals het oude overlay-menu.
 	_overlay.hide()
+	if _strategie:
+		# Strategy mode: de factie is alleen nog je uiterlijk (je 3D-modellen).
+		_factie_keuze.open(tr("MENU_DOCTRINE_TITLE"), tr("STRAT_DOCTRINE_UITLEG"), false, _on_doctrine_choice, true)
+		return
 	_factie_keuze.open(tr("MENU_DOCTRINE_TITLE"), tr("HUD_UI_DOCTRINE_UITLEG"), false, _on_doctrine_choice)
 
 
@@ -896,7 +943,7 @@ func _on_doctrine_choice(index: int) -> void:
 func _show_opponent_menu() -> void:
 	# 0 = verrassing, 1.. = positie in Constants.DOCTRINE_DATA.keys() + 1.
 	_overlay.hide()
-	_factie_keuze.open(tr("MENU_OPP_TITLE"), tr("MENU_OPP_BODY"), true, _on_opponent_choice)
+	_factie_keuze.open(tr("MENU_OPP_TITLE"), tr("MENU_OPP_BODY"), true, _on_opponent_choice, _strategie)
 
 
 func _on_opponent_choice(index: int) -> void:
@@ -930,6 +977,9 @@ func _start_match(difficulty: int) -> void:
 	_dying_views.clear()
 	_advance_holds.clear()
 	_beurt_licht_uit()   # de oude pionnen staan er tot de opstelling nog
+	_leger_keuze = []    # Strategy mode: elk potje koop je je leger opnieuw
+	if _leger_bouwer != null:
+		_leger_bouwer.sluit()
 	_clear_debris(true)  # slagveld van de vorige partij ruimen
 	_clear_footprints()
 	Audio.play_music("music_battle")  # zacht marcherend bed onder de partij
@@ -984,6 +1034,10 @@ func _potje_regels() -> RulesConfig:
 	var facties := CRules.facties_uit_bestand()
 	if not facties.is_empty():
 		regels.doctrines = facties
+	if _strategie:
+		# Strategy mode: dezelfde economie (C17), maar elke factie de neutrale
+		# allrounder en het leger koop je zelf (RulesConfig.STRATEGIE_DEFAULTS).
+		regels.strategie = RulesConfig.normaliseer_strategie({})
 	return regels
 
 
@@ -1048,6 +1102,9 @@ func _orient_camera_for(player_id: int) -> void:
 ## Vrije opstelling (v4.1 §2.2). Nu: standaard-opstelling bevestigen;
 ## een sleep-UI voor eigen opstellingen is een latere uitbreiding.
 func _show_placement_overlay() -> void:
+	if _is_strategie():
+		_show_strategie_opstelling()
+		return
 	var body := "\n".join([
 		tr("PHASE_PLACEMENT_REVEAL_HEADER"),
 		tr("PHASE_PLACEMENT_YOU") % [Constants.doctrine_display_name(_human_doctrine), Constants.doctrine_pro(_human_doctrine)],
@@ -1060,6 +1117,56 @@ func _show_placement_overlay() -> void:
 	_update_hud(tr("PHASE_PLACEMENT"))
 	_overlay.show_choice(tr("PHASE_PLACEMENT"), body, [tr("PHASE_PLACEMENT_MANUAL"), tr("PHASE_PLACEMENT_STANDARD"), tr("MENU_RULES_OPTION")],
 		_on_placement_menu_choice, Color.WHITE, true, ["phase-setup", "check", "hidden"], "phase-setup")
+
+
+## Strategy mode staat aan in dit potje (de staat beslist; zie _strategie).
+func _is_strategie() -> bool:
+	return session != null and session.state != null and session.state.rules.strategie_actief()
+
+
+## Het leger waarmee de mens opstelt: in Strategy mode zijn keuze uit de
+## legerbouwer, anders het leger van zijn factie.
+func _mijn_leger() -> Array:
+	if _is_strategie() and _leger_keuze.size() == 3:
+		return _leger_keuze
+	return session.state.doctrine_data_of(_human_id).comp
+
+
+## Strategy mode in de opstelfase: eerst je leger kopen (de legerbouwer), dan
+## pas zelf of standaard opstellen. Zelfde knoppen als altijd, plus "leger
+## aanpassen" terug naar de bouwer.
+func _show_strategie_opstelling() -> void:
+	if _leger_keuze.size() != 3:
+		_overlay.hide()
+		_update_hud(tr("STRAT_BUILD_HUD"))
+		_leger_bouwer.open(session.state, _human_id, [], func(leger: Array) -> void:
+			_leger_keuze = leger
+			_show_strategie_opstelling())
+		return
+	var st: GameState = session.state
+	var body := "\n".join([
+		tr("STRAT_PLACEMENT_ARMY") % [int(_leger_keuze[0]), int(_leger_keuze[1]), int(_leger_keuze[2]),
+			st.leger_kosten(_leger_keuze), int(st.rules.strategie.get("budget", 0))],
+		tr("STRAT_PLACEMENT_NO_PERKS"),
+		"",
+		tr("PHASE_PLACEMENT_MANUAL_HINT"),
+		tr("PHASE_PLACEMENT_DEFAULT_HINT"),
+		tr("PHASE_PLACEMENT_GOAL"),
+	])
+	_update_hud(tr("PHASE_PLACEMENT"))
+	_overlay.show_choice(tr("PHASE_PLACEMENT"), body,
+		[tr("PHASE_PLACEMENT_MANUAL"), tr("PHASE_PLACEMENT_STANDARD"), tr("STRAT_PLACEMENT_CHANGE"), tr("MENU_RULES_OPTION")],
+		func(i: int) -> void:
+			if i == 2:
+				_overlay.hide()
+				_leger_bouwer.open(session.state, _human_id, _leger_keuze, func(leger: Array) -> void:
+					_leger_keuze = leger
+					_show_strategie_opstelling())
+			elif i == 3:
+				_show_rules_overlay(func() -> void: _show_strategie_opstelling())
+			else:
+				_on_placement_menu_choice(i),
+		Color.WHITE, true, ["phase-setup", "check", "pool", "hidden"], "phase-setup")
 
 
 func _on_placement_menu_choice(index: int) -> void:
@@ -1077,7 +1184,7 @@ func _on_placement_menu_choice(index: int) -> void:
 ## de infanterie vult daarna automatisch aan (voorste rij, centrum eerst).
 func _begin_manual_placement() -> void:
 	_overlay.hide()
-	var comp: Array = session.state.doctrine_data_of(_human_id).comp
+	var comp: Array = _mijn_leger()
 	var order: Array = [
 		{"type": Constants.UnitType.ARTILLERY, "count": int(comp[2])},
 		{"type": Constants.UnitType.CAVALRY, "count": int(comp[1])},
@@ -1225,7 +1332,7 @@ func _spawn_placement_preview(unit_type: int, coord: Vector2i) -> void:
 
 func _finish_manual_placement() -> void:
 	# Infanterie vult de open vakken aan: voorste rij eerst, centrum naar buiten.
-	var comp: Array = session.state.doctrine_data_of(_human_id).comp
+	var comp: Array = _mijn_leger()
 	# BUG-FIX (Max, 30 juli: "de hover highlight dat een ring gloeit is niet
 	# meer"). Sinds C15 plaats je zelf vaandeldragers en tamboers, en dat zijn
 	# ook INFANTERIE. Zonder deze aftrek vulde de code er nog comp[0] bij, kwam
@@ -1272,7 +1379,13 @@ func _confirm_placement() -> void:
 	_overlay.hide()
 	if _ai != null:  # F4.3c: online stelt de tegenstander zichzelf op
 		session.submit_placement(_ai_id, _ai.choose_placement(session.state))
-	session.submit_default_placement(_human_id)
+	if _is_strategie():
+		# Strategy mode: de standaard-opstelling van het leger dat je kocht
+		# (nog niet gekocht, bv. bij een timeout: het standaardleger).
+		_leger_bouwer.sluit()
+		session.submit_placement(_human_id, session.state.default_placement(_human_id, _leger_keuze))
+	else:
+		session.submit_default_placement(_human_id)
 	_build_pawn_views()
 	_refresh_all()
 	if _ai == null and session.state.phase == Phase.Type.PLACEMENT:

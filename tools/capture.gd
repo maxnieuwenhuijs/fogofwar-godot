@@ -114,6 +114,16 @@ func _ready() -> void:
 		get_tree().quit(0 if klaar_fouten == 0 else 1)
 		return
 
+	if "strategiecheck" in OS.get_cmdline_user_args():
+		# Strategy mode (21 oktober): menu, legerbouwer, opstellen, een partij,
+		# het campagne-duel en de hub (tools/strategie_check.gd).
+		# `-- strategiecheck [menu|bouwer|handmatig|potje|campagne|hub]`.
+		var sargs := OS.get_cmdline_user_args()
+		var sfasen: Array = sargs.slice(sargs.find("strategiecheck") + 1)
+		var strat_fouten: int = await preload("res://tools/strategie_check.gd").run(self, sfasen)
+		get_tree().quit(0 if strat_fouten == 0 else 1)
+		return
+
 	if "vfxcheck" in OS.get_cmdline_user_args():
 		# VFX-studio (6 oktober, docs/VFX-studio.md): de catalogus klopt en de
 		# VFX-tuner speelt elk effect af. Headless en met venster.
@@ -2587,7 +2597,12 @@ func _ready() -> void:
 		get_tree().quit(0 if uitkomst.ok else 1)
 		return
 	elif "makegoldens" in args:
-		_make_goldens()
+		# `-- makegoldens alleen=strategie` schrijft alleen die ene golden (de
+		# rest blijft byte-gelijk staan, ook hun tijdstempel).
+		if "alleen=strategie" in args:
+			_golden_strategie("res://tests/golden_replays/")
+		else:
+			_make_goldens()
 		get_tree().quit()
 		return
 	elif "sim" in args:
@@ -6156,6 +6171,7 @@ func _make_goldens() -> void:
 	_golden_sps(dir)
 	_golden_bod_per_hand(dir)
 	_golden_bod_meer_kaarten(dir)
+	_golden_strategie(dir)
 	print("[GOLDENS] klaar")
 
 
@@ -6310,6 +6326,42 @@ func _golden_cp_inzet(dir: String) -> void:
 		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 2}]), 1],
 		[Actions.make_define_cards([{"hp": b - 2, "stamina": 1, "attack": 1}]), 2],
 	])
+
+
+func _golden_strategie(dir: String) -> void:
+	# Strategy mode (21 oktober): Muis tegen Wolf, elk koopt een eigen leger in
+	# de opstelling (een kanonnenleger tegen een ruiterleger, allebei 30 punten),
+	# dan drie kaarten van budget 7 voor allebei (de Muis heeft er normaal vijf
+	# van budget 5), de reveal (P1 heeft meer aanval) en een koppeling: de
+	# muis-soldaat krijgt GEEN +1 stamina (geen factie-perk).
+	var s := GameState.new()
+	s.rules = RulesConfig.from_dict({"campaign": {}, "strategie": {}})
+	s.doctrines[1] = Constants.Doctrine.MUIS
+	s.doctrines[2] = Constants.Doctrine.WOLF
+	s.phase = Phase.Type.PLACEMENT
+	s.init_pools()
+	var p1: Array = s.default_placement(1, [6, 0, 8])
+	var p2: Array = s.default_placement(2, [14, 8, 0])
+	var k1 := {"hp": 2, "stamina": 2, "attack": 3}
+	var k2 := {"hp": 3, "stamina": 2, "attack": 2}
+	# De eerste soldaat van P1: de kanonnen staan als eerste in de opstelling.
+	var soldaat: int = 0
+	for i in p1.size():
+		if int(p1[i].type) == Constants.UnitType.INFANTRY:
+			soldaat = i
+			break
+	_golden_opnemen(dir + "strategie_leger.json", s, [
+		[Actions.make_place(p1), 1],
+		[Actions.make_place(p2), 2],
+		[Actions.make_define_cards([k1, k1, k1]), 1],
+		[Actions.make_define_cards([k2, k2, k2]), 2],
+		[Actions.make_ack_reveal(), 1],
+		[Actions.make_ack_reveal(), 2],
+		[Actions.make_link(0, soldaat), 1],
+	])
+	var pion: Pawn = s.pawns[soldaat]
+	print("[GOLDENS] strategie: leger %s / %s, soldaat %d stamina %d (kaart 2: geen perk)" % [
+		str(s.leger.get(1)), str(s.leger.get(2)), soldaat, pion.max_stamina])
 
 
 func _golden_sps(dir: String) -> void:

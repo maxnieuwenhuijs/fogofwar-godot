@@ -47,6 +47,19 @@ static func doctrine_data_uit_view(view: Dictionary, player_id: int) -> Dictiona
 	var regels = view.get("rules", null)
 	if not (regels is Dictionary):
 		return base
+	# Strategy mode: de neutrale allrounder met het gekozen leger uit de view.
+	var strat = (regels as Dictionary).get("strategie", null)
+	if strat is Dictionary:
+		var factie: Dictionary = _factie_uit_regels(base, regels, doctrine)
+		var d: Dictionary = RulesConfig.strategie_data(factie, RulesConfig.normaliseer_strategie(strat))
+		var gekozen = (view.get("leger", {}) as Dictionary).get(str(player_id), null)
+		if gekozen is Array and (gekozen as Array).size() == 3:
+			d.comp = [int(gekozen[0]), int(gekozen[1]), int(gekozen[2])]
+		return d
+	return _factie_uit_regels(base, regels, doctrine)
+
+
+static func _factie_uit_regels(base: Dictionary, regels: Dictionary, doctrine: int) -> Dictionary:
 	var docs = (regels as Dictionary).get("doctrines", null)
 	if not (docs is Dictionary) or (docs as Dictionary).is_empty():
 		return base
@@ -74,6 +87,9 @@ static func reconstruct_state(view: Dictionary) -> GameState:
 	s.rules = RulesConfig.from_dict(view.rules)
 	for key in view.doctrines:
 		s.doctrines[int(String(key))] = int(view.doctrines[key])
+	for key in view.get("leger", {}):   # Strategy mode: het gekozen leger
+		var l: Array = view.leger[key]
+		s.leger[int(String(key))] = [int(l[0]), int(l[1]), int(l[2])]
 	# Kaarten eerst (voor de puntschatting en de referentie-herstelling).
 	var max_card_id: int = -1
 	for key in view.cards:

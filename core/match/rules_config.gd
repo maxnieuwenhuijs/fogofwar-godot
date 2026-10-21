@@ -80,6 +80,89 @@ var doctrines: Dictionary = {}
 # --- v4.2-campagneblok (F2); null = v4.1-gedrag ---
 var campaign = null
 
+# --- Strategy mode (21 oktober, Max: "ongeacht factie heeft ieder leger een
+# Budget voor het gevecht, een speler mag dan helemaal zelf kiezen hoe hij deze
+# vult ... Je ziet wel nog je 3d modellen van de factie maar verder geen
+# speciale regels"); null = uit, en dan speelt alles byte-identiek als ervoor.
+# Aan: elke factie is dezelfde allrounder (geen perks, dezelfde kaarten), en je
+# koopt je veldleger zelf uit `budget` in de opstelfase: de opstelling IS de
+# keuze, dus blind net als het opstellen zelf. Prijs per stuk = de spawn-kosten
+# van het campagneblok (een prijslijst voor leger en versterkingen). Zie
+# STRATEGIE_DEFAULTS en docs/spelregels-v4.2.md Deel B "Strategy mode".
+var strategie = null
+
+## De knoppen van Strategy mode. Een blok in een config (ook {}) zet de modus
+## aan; ontbrekende knoppen krijgen deze waarden.
+const STRATEGIE_DEFAULTS := {
+	"budget": 30,               # legerpunten voor het veldleger (soldaat 1, big bro 2, kanon 3)
+	"kaarten": 3,               # kaarten per ronde, voor elke factie gelijk (de Varken-waarde)
+	"kaartbudget": 7,           # punten per kaart, idem
+	"standaard": [16, 4, 2],    # het leger van wie niet kiest (en van de standaard-opstelling): 30 punten, 22 pionnen
+	"reserve_factor": 0.5,      # versterkingen = budget x dit (x potje_factor), voor iedereen gelijk
+}
+
+## De perk-velden van een factie en hun neutrale stand (de Varken, de
+## allrounder). In Strategy mode staan ze voor elke factie zo.
+const NEUTRALE_PERKS := {
+	"move_through_own": false, "hp_bonus": 0, "speed_max": 0, "speed_bonus": 0,
+	"wolf_step": false, "hidden_link": false,
+	"art_range_bonus": 0, "cav_speed_bonus": 0, "cav_jump_infantry": false,
+}
+
+
+func strategie_actief() -> bool:
+	return strategie is Dictionary
+
+
+## Een strategie-blok normaliseren (JSON-floats terug naar int, ontbrekende
+## knoppen erbij). Ook voor de campagnelaag (CRules) en de arena.
+static func normaliseer_strategie(blok) -> Dictionary:
+	var uit: Dictionary = {}
+	var bron: Dictionary = blok if blok is Dictionary else {}
+	for k in STRATEGIE_DEFAULTS:
+		var dv = STRATEGIE_DEFAULTS[k]
+		var v = bron.get(k, dv)
+		if dv is float:
+			uit[k] = float(v)
+		elif dv is int:
+			uit[k] = int(v)
+		else:
+			uit[k] = _diep_int(v)
+	var std: Array = uit["standaard"] if uit["standaard"] is Array else []
+	if std.size() != 3:
+		push_error("RulesConfig: strategie.standaard moet [inf, cav, art] zijn, teruggezet")
+		uit["standaard"] = (STRATEGIE_DEFAULTS["standaard"] as Array).duplicate()
+		std = uit["standaard"]
+	# Past het standaardleger niet in het budget (of niet op het bord), dan
+	# loopt elke partij vast op een standaard-opstelling die de engine weigert.
+	# Dan een leger uit hetzelfde budget, in de verhouding van de standaard.
+	var prijs: Dictionary = CAMPAIGN_DEFAULTS["spawn_kosten"]
+	var kost: int = int(std[0]) * int(prijs.inf) + int(std[1]) * int(prijs.cav) + int(std[2]) * int(prijs.art)
+	var n: int = int(std[0]) + int(std[1]) + int(std[2])
+	if kost > int(uit["budget"]) or n < 1 or n > Constants.PAWNS_PER_PLAYER:
+		var budget: int = maxi(1, int(uit["budget"]))
+		var art: int = int(floor(budget * 0.2 / float(prijs.art)))
+		var cav: int = int(floor(budget * 0.27 / float(prijs.cav)))
+		var inf: int = mini(Constants.PAWNS_PER_PLAYER - art - cav, (budget - art * int(prijs.art) - cav * int(prijs.cav)) / int(prijs.inf))
+		uit["standaard"] = [maxi(1 if art + cav == 0 else 0, inf), cav, art]
+	return uit
+
+
+## Factie-data zoals Strategy mode hem ziet: naam, map en uiterlijk van de
+## factie, maar de perks neutraal en kaarten en kaartbudget voor iedereen
+## gelijk. `comp` is het standaardleger; het gekozen leger zet GameState er per
+## speler overheen. `comp_factie` bewaart de samenstelling van de factie zelf,
+## alleen als smaak voor de bots (AIController.kies_leger).
+static func strategie_data(base: Dictionary, blok: Dictionary) -> Dictionary:
+	var d: Dictionary = base.duplicate()
+	for k in NEUTRALE_PERKS:
+		d[k] = NEUTRALE_PERKS[k]
+	d["cards"] = int(blok.get("kaarten", STRATEGIE_DEFAULTS["kaarten"]))
+	d["budget"] = int(blok.get("kaartbudget", STRATEGIE_DEFAULTS["kaartbudget"]))
+	d["comp_factie"] = base.get("comp", [0, 0, 0])
+	d["comp"] = (blok.get("standaard", STRATEGIE_DEFAULTS["standaard"]) as Array).duplicate()
+	return d
+
 ## Defaults van het campaign-blok, exact de F2.1-besluiten (D1-D14; zie
 ## docs/spelregels-v4.2.md Deel B). Activering van het blok bumpt
 ## rules_version naar 4.3.10 (4.3.9 met initiatief_deler "hand", 4.3.8 met
@@ -205,8 +288,40 @@ func retaliation_for(unit_type: int) -> int:
 	return 0
 
 
-## Doctrine-data met eventuele config-override eroverheen.
+## Doctrine-data met eventuele config-override eroverheen. Onder Strategy mode
+## daarna de neutrale allrounder (strategie_data), gecachet per factie: de
+## config is per match onveranderlijk en dit draait in hete lussen (Rules).
 func doctrine_data(doctrine: int) -> Dictionary:
+	if strategie is Dictionary:
+		var tabel: Dictionary = _strategie_tabel()
+		if tabel.has(doctrine):
+			return tabel[doctrine]
+		return strategie_data(_factie_data(doctrine), strategie)
+	return _factie_data(doctrine)
+
+
+## De neutrale tabel voor alle facties tegelijk opgebouwd en pas daarna
+## toegewezen (de bot-thread en het scherm lezen hem allebei). Opnieuw als
+## iemand `strategie` of `doctrines` vervangt (_potje_regels zet de facties na
+## het laden). Alleen-lezen voor aanroepers, net als cached_dict.
+var _strategie_cache: Dictionary = {}
+var _sc_strat = null
+var _sc_docs = null
+
+
+func _strategie_tabel() -> Dictionary:
+	if is_same(_sc_strat, strategie) and is_same(_sc_docs, doctrines):
+		return _strategie_cache
+	var tabel: Dictionary = {}
+	for doc in Constants.DOCTRINE_DATA:
+		tabel[int(doc)] = strategie_data(_factie_data(int(doc)), strategie)
+	_strategie_cache = tabel
+	_sc_strat = strategie
+	_sc_docs = doctrines
+	return tabel
+
+
+func _factie_data(doctrine: int) -> Dictionary:
 	var base: Dictionary = Constants.doctrine_data(doctrine)
 	if doctrines.is_empty():
 		return base
@@ -230,6 +345,15 @@ func cached_dict() -> Dictionary:
 
 
 func to_dict() -> Dictionary:
+	var uit := _to_dict_basis()
+	# Strategy mode alleen als hij aan staat: zo blijft elk bestaand snapshot
+	# (goldens, saves, replays, uispel) byte- en hash-identiek.
+	if strategie is Dictionary:
+		uit["strategie"] = (strategie as Dictionary).duplicate(true)
+	return uit
+
+
+func _to_dict_basis() -> Dictionary:
 	return {
 		"rules_version": rules_version,
 		"rounds_per_cycle": rounds_per_cycle,
@@ -399,6 +523,8 @@ static func from_dict(d: Dictionary) -> RulesConfig:
 					c.rules_version = "4.3.8" if bool(blok.get("initiatief_sps", true)) else "4.3.7"
 	else:
 		c.campaign = null
+	var strat = d.get("strategie", null)
+	c.strategie = normaliseer_strategie(strat) if strat is Dictionary else null
 	return c
 
 

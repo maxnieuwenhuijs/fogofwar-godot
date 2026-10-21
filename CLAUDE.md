@@ -166,6 +166,30 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   schakelaar `initiatief_per_hand` van 4.3.9 wordt nog gelezen. Tests
   `RulesTests.test_bod_*`, goldens `bod_per_hand` en `bod_meer_kaarten`. Spec:
   spelregels-v4.2.md Deel B "4.3.10", besluit B20.
+- **Strategy mode (21 oktober, besluit B21; Max: "ongeacht factie heeft ieder
+  leger een Budget voor het gevecht ... Noem dit Strategy mode. En ook dit kan
+  je dan in een campagne modus doen").** Regelblok `strategie` (top-level naast
+  `campaign`, null = uit en byte-gelijk; knoppen `RulesConfig.
+  STRATEGIE_DEFAULTS`): je koopt je leger in de opstelfase uit `budget` 30
+  (soldaat 1, big bro 2, kanon 3 = `campaign.spawn_kosten`; 1 tot 22 pionnen;
+  wat je niet uitgeeft vervalt), elke factie is de allrounder zonder perks
+  (`NEUTRALE_PERKS`) met 3 kaarten van 7, geen `budget_bonus`, reserve
+  floor(budget x 0,5) x potje_factor en CP cp_start x potje_factor voor
+  iedereen, elk stuk te koop (`kent_type`). Geen nieuwe fase of actie: PLACE
+  draagt de samenstelling (blind, want opstellen is blind), daarna
+  `GameState.leger` (snapshot en view alleen als er een is). Lees het leger
+  dus via `doctrine_data_of(...).comp`, nooit via de factie. Campagne:
+  `CRules.strategie` (bevroren in de save), gelijke start, duels zonder
+  `comp_override` (`SoloDriver.duel_regels(..., strategie)`), geen orakel.
+  Bots: `AIController.kies_leger` (verhouding van hun factie, gewichten
+  `leger_cav`/`leger_art`). UI: SOLO > Strategy mode > 1v1 of Campagne
+  (`game._strategie`, `CampaignBridge.strategie`), factiekeuze met alleen het
+  uiterlijk, de legerbouwer (`scripts/ui/match/leger_bouwer.gd`, via preload)
+  voor het opstelmenu, plus "leger aanpassen". Checks: `StrategieTests`, golden
+  `strategie_leger` (`-- makegoldens alleen=strategie`), `-- strategiecheck
+  [menu|bouwer|handmatig|potje|campagne|hub]`, `--fuzz N seed --strategie`
+  (arena.tscn), meten met `arena/arena_configs/strategie_l2.json`. Spec:
+  spelregels-v4.2.md Deel B "Strategy mode".
 - **De stat heet STAMINA, niet speed (Max, 17 september: "het is belangrijk,
   de term is stamina niet speed, dat moet overal goed worden meegenomen").**
   Elke tekst die de speler ziet (kaart, HUD, onthulscherm, uitleg,

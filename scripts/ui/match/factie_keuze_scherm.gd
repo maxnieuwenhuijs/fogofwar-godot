@@ -36,6 +36,7 @@ var _scroll: ScrollContainer
 var _lijst: VBoxContainer
 var _cb: Callable = Callable()
 var _met_verrassing: bool = false
+var _alleen_uiterlijk: bool = false   # Strategy mode: de factie is alleen het uiterlijk
 var _achtergrond: PanelContainer = null
 
 ## UI-beweging (30 september): de inkom van de lijst (scripts/ui/ui_beweging.gd).
@@ -88,11 +89,13 @@ func _init() -> void:
 
 
 ## Toon het scherm; bij een tik cb.call(index) en het scherm verbergt zich.
-func open(titel: String, uitleg: String, met_verrassing: bool, cb: Callable) -> void:
+## alleen_uiterlijk: Strategy mode (de kaarten tonen geen factieregels).
+func open(titel: String, uitleg: String, met_verrassing: bool, cb: Callable, alleen_uiterlijk: bool = false) -> void:
 	_titel.text = titel
 	_uitleg.text = uitleg
 	_uitleg.visible = uitleg != ""
 	_met_verrassing = met_verrassing
+	_alleen_uiterlijk = alleen_uiterlijk
 	_cb = cb
 	var vers := not visible
 	var vervangt := Beweging.vervangt()
@@ -139,7 +142,7 @@ func _bouw_lijst() -> void:
 	var sleutels: Array = Constants.DOCTRINE_DATA.keys()
 	for i in sleutels.size():
 		var doctrine: int = sleutels[i]
-		var kaart := UiFactieKaart.new(doctrine, tabel.doctrine_data(doctrine), true)
+		var kaart := UiFactieKaart.new(doctrine, tabel.doctrine_data(doctrine), true, _alleen_uiterlijk)
 		var index := offset + i
 		kaart.pressed.connect(func() -> void: _kies(index))
 		_lijst.add_child(kaart)

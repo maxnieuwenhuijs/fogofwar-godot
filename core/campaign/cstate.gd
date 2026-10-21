@@ -61,6 +61,12 @@ func setup(namen_doctrines: Array, p_rules: CRules = null) -> void:
 			"status": "actief",
 			"testament_af": false,
 		}
+		if rules.strategie_actief():
+			# Strategy mode: iedereen dezelfde versterkingen (budget x
+			# reserve_factor, geboekt als punten van 1) en dezelfde CP; geen
+			# factiebonus. Het veldleger kiest elke speler per duel zelf.
+			_boek("start", i, GameState.strategie_reserve_voor(rules.strategie), 0, 0, rules.start_cp, 0)
+			continue
 		# C17: via de campagneregels, niet rechtstreeks uit Constants. Zonder
 		# doctrines-blok is dit hetzelfde getal; mét blok telt de startvoorraad
 		# hetzelfde leger als de duels opstellen.

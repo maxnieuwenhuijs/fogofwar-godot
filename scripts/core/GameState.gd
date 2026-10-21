@@ -84,6 +84,12 @@ var cp: Dictionary = {}
 var cp_bets: Dictionary = {}
 var cp_bet_done: Dictionary = {}
 
+## Strategy mode (rules.strategie): het zelfgekozen veldleger per speler,
+## [inf, cav, art], vastgelegd zodra zijn opstelling binnen is (de opstelling IS
+## de keuze). Leeg = nog niet gekozen of geen Strategy mode; doctrine_data_of
+## geeft dan het standaardleger van de modus.
+var leger: Dictionary = {}
+
 var winner: int = -1
 ## V0 (3 augustus): HOE het duel eindigde. De campagnelaag leidde dat tot nu toe
 ## af uit de eindstaat, en een opgave was daaraan niet te zien: die boekte als
@@ -116,6 +122,14 @@ func doctrine_data_of(player_id: int) -> Dictionary:
 	# Config-overrides (rules.doctrines) gaan bovenop DOCTRINE_DATA;
 	# zonder overrides is dit het snelle pad (geen merge).
 	var data: Dictionary = rules.doctrine_data(doctrine_of(player_id))
+	# Strategy mode: het zelfgekozen leger (de campagne geeft hier geen
+	# comp_override mee: het leger kies je per duel zelf).
+	if rules.strategie_actief():
+		if leger.has(player_id):
+			data = data.duplicate()
+			var l: Array = leger[player_id]
+			data.comp = [int(l[0]), int(l[1]), int(l[2])]
+		return data
 	# F3/C7 — per-speler startleger uit de campagnelaag (arm = kleiner starten).
 	if rules.campaign_actief():
 		var override = rules.campaign.get("comp_override", null)
@@ -151,7 +165,8 @@ func init_pools() -> void:
 			# C17: zelfde bron als de campagne (start-CP + budget-bonus), en met
 			# dezelfde potje_factor geschaald.
 			var basis_cp: int = int(rules.campaign.get("cp_start", 6))
-			basis_cp += int(_budget_bonus_van(pid).get("cp", 0))
+			if not rules.strategie_actief():   # Strategy mode: geen factiebonus
+				basis_cp += int(_budget_bonus_van(pid).get("cp", 0))
 			cp[pid] = int(round(basis_cp * float(rules.campaign.get("potje_factor", 1.0))))
 	for player_id in [Constants.PLAYER_1, Constants.PLAYER_2]:
 		if punten_model():
@@ -164,7 +179,7 @@ func init_pools() -> void:
 			var vast: int = int(rules.campaign.get("punten_start", 0))
 			var per_factie = rules.campaign.get("punten_start_factie", {})
 			var sleutel := str(int(doctrines.get(player_id, 0)))
-			if per_factie is Dictionary and per_factie.has(sleutel):
+			if per_factie is Dictionary and per_factie.has(sleutel) and not rules.strategie_actief():
 				vast = int(per_factie[sleutel])
 			elif vast <= 0:
 				vast = campagne_startreserve(player_id)
@@ -221,6 +236,11 @@ func spawn_kosten(unit_type: int) -> int:
 func campagne_startreserve(player_id: int) -> int:
 	if not rules.campaign_actief():
 		return 0
+	if rules.strategie_actief():
+		# Strategy mode: voor iedereen hetzelfde, uit het legerbudget (niet uit
+		# het gekozen leger, dat staat bij de start nog niet vast) en zonder
+		# factiebonus.
+		return int(round(strategie_reserve_punten() * float(rules.campaign.get("potje_factor", 1.0))))
 	var factor: float = float(rules.campaign.get("start_poolfactor", 0.5))
 	var comp: Array = doctrine_data_of(player_id).comp
 	var punten: int = 0
@@ -228,6 +248,77 @@ func campagne_startreserve(player_id: int) -> int:
 		punten += int(floor(comp[t] * factor)) * spawn_kosten(t)
 	punten += int(_budget_bonus_van(player_id).get("pt", 0))
 	return int(round(punten * float(rules.campaign.get("potje_factor", 1.0))))
+
+
+## Strategy mode: de versterkingspunten van een volle campagne-start (budget x
+## reserve_factor, afgerond omlaag), voor potje_factor. Dezelfde formule als
+## CState.setup in een Strategy-campagne.
+func strategie_reserve_punten() -> int:
+	return strategie_reserve_voor(rules.strategie)
+
+
+static func strategie_reserve_voor(blok: Dictionary) -> int:
+	return int(floor(float(blok.get("budget", 0)) * float(blok.get("reserve_factor", 0.5))))
+
+
+## Strategy mode: de prijs van een stuk voor het veldleger. Dezelfde
+## prijslijst als de versterkingen (campaign.spawn_kosten); zonder campagneblok
+## de standaard van dat blok.
+func stuk_kosten(unit_type: int) -> int:
+	var kosten = RulesConfig.CAMPAIGN_DEFAULTS["spawn_kosten"]
+	if rules.campaign_actief():
+		kosten = rules.campaign.get("spawn_kosten", kosten)
+	return int((kosten as Dictionary).get(["inf", "cav", "art"][unit_type], 1))
+
+
+## Wat een leger [inf, cav, art] kost in legerpunten.
+func leger_kosten(comp: Array) -> int:
+	var som: int = 0
+	for t in 3:
+		som += int(comp[t]) * stuk_kosten(t)
+	return som
+
+
+## Past dit leger in Strategy mode (binnen het budget, op het bord, minstens
+## een pion, geen negatieve aantallen)?
+func leger_geldig(comp: Array) -> bool:
+	if comp.size() != 3:
+		return false
+	var n: int = 0
+	for t in 3:
+		if int(comp[t]) < 0:
+			return false
+		n += int(comp[t])
+	if n < 1 or n > Constants.PAWNS_PER_PLAYER:
+		return false
+	return leger_kosten(comp) <= int(rules.strategie.get("budget", 0))
+
+
+## Een leger uit een verdeling van het budget: `cav` en `art` zijn het deel
+## van het budget voor ruiters en kanonnen, de rest wordt infanterie (tot het
+## bord vol is). Voor de standaard-opties van de bots en de legal_actions.
+func leger_uit_verdeling(cav: float, art: float) -> Array:
+	var budget: int = int(rules.strategie.get("budget", 0))
+	cav = clampf(cav, 0.0, 1.0)
+	art = clampf(art, 0.0, 1.0)
+	if cav + art > 1.0:   # meer dan het hele budget gevraagd: naar verhouding
+		var som: float = cav + art
+		cav /= som
+		art /= som
+	var n_art: int = int(floor(budget * art / float(stuk_kosten(Constants.UnitType.ARTILLERY))))
+	var n_cav: int = int(floor(budget * cav / float(stuk_kosten(Constants.UnitType.CAVALRY))))
+	n_art = mini(n_art, Constants.PAWNS_PER_PLAYER)
+	n_cav = mini(n_cav, Constants.PAWNS_PER_PLAYER - n_art)
+	while n_art > 0 and leger_kosten([0, n_cav, n_art]) > budget:
+		n_art -= 1
+	while n_cav > 0 and leger_kosten([0, n_cav, n_art]) > budget:
+		n_cav -= 1
+	var rest: int = budget - leger_kosten([0, n_cav, n_art])
+	var n_inf: int = mini(Constants.PAWNS_PER_PLAYER - n_cav - n_art,
+		rest / stuk_kosten(Constants.UnitType.INFANTRY))
+	if n_inf + n_cav + n_art == 0:
+		n_inf = 1   # een leger heeft minstens een pion
+	return [n_inf, n_cav, n_art]
 
 
 ## Budget-bonus van deze factie uit het campaign-blok ({"pt": x, "cp": y}).
@@ -261,6 +352,8 @@ func pool_total(player_id: int) -> int:
 ## artillerie -- ineens een kanon kopen. Je koopt alleen wat je doctrine
 ## kent; het punten-model bepaalt hoevéél, niet wát.)
 func kent_type(player_id: int, unit_type: int) -> bool:
+	if rules.strategie_actief():
+		return unit_type >= 0 and unit_type <= Constants.UnitType.ARTILLERY   # Strategy mode: elk stuk is te koop
 	var comp: Array = doctrine_data_of(player_id).comp
 	return unit_type >= 0 and unit_type < comp.size() and int(comp[unit_type]) > 0
 
@@ -305,6 +398,13 @@ func apply_placement(player_id: int, placements: Array) -> void:
 		var pion := _spawn_pawn(player_id, entry.pos, int(entry.type))
 		pion.rol = String(entry.get("rol", ""))
 	placements_done[player_id] = true
+	# Strategy mode: de opstelling IS de legerkeuze; vanaf nu rekent alles
+	# (doctrine_data_of, de aanvul-spawn, het battlereport) met dit leger.
+	if rules.strategie_actief():
+		var telling: Array = [0, 0, 0]
+		for entry in placements:
+			telling[int(entry.type)] += 1
+		leger[player_id] = telling
 
 ## Verwijder de pionnen van één speler weer (her-opstellen tijdens de PLACEMENT-fase).
 func clear_placement(player_id: int) -> void:
@@ -357,15 +457,19 @@ func _rollen_over_opstelling(placements: Array) -> void:
 		plek += stap
 
 
-func default_placement(player_id: int) -> Array:
-	var comp: Array = doctrine_data_of(player_id).comp
+## `comp_keuze` (Strategy mode): stel dit leger op in plaats van dat van de
+## factie of de modus. Werkt voor elk leger dat op twee rijen past: wat niet op
+## de eerste plek past schuift door naar een vrij vak (bij de facties gebeurt
+## dat nooit, dus daar blijft de opstelling exact zoals hij was).
+func default_placement(player_id: int, comp_keuze: Array = []) -> Array:
+	var comp: Array = comp_keuze if comp_keuze.size() == 3 else doctrine_data_of(player_id).comp
 	var rows: Array = Constants.get_start_rows_for_player(player_id)
 	var back_row: int = rows[0]
 	var front_row: int = rows[1]
 	var placements: Array = []
 
 	# Volgordes: centrum-uit voor infanterie, flanken-eerst voor artillerie/cavalerie.
-	var art_slots: Array = [0, 10, 5]
+	var art_slots: Array = [0, 10, 5, 2, 8, 3, 7, 1, 9, 4, 6]
 	var center_out: Array = [5, 4, 6, 3, 7, 2, 8, 1, 9, 0, 10]
 	var edges_in: Array = [0, 10, 1, 9, 2, 8, 3, 7, 4, 6, 5]
 
@@ -378,6 +482,14 @@ func default_placement(player_id: int) -> Array:
 			break
 		placements.append({"type": Constants.UnitType.ARTILLERY, "pos": Vector2i(x, front_row)})
 		front_used[x] = true
+		art_left -= 1
+	for x in edges_in:   # meer kanonnen dan de voorste rij: dan ook achteraan
+		if art_left <= 0:
+			break
+		if back_used.has(x):
+			continue
+		placements.append({"type": Constants.UnitType.ARTILLERY, "pos": Vector2i(x, back_row)})
+		back_used[x] = true
 		art_left -= 1
 
 	var inf_left: int = comp[0]
@@ -458,6 +570,8 @@ func is_valid_placement(player_id: int, placements: Array) -> bool:
 			return false
 		if int(rollen.get("drum", 0)) > int(rules.campaign.get("tamboers_max", 1)):
 			return false
+	if rules.strategie_actief():
+		return leger_geldig(counts)   # Strategy mode: elk leger binnen het budget
 	return counts[0] == comp[0] and counts[1] == comp[1] and counts[2] == comp[2]
 
 
@@ -585,6 +699,7 @@ func clone() -> GameState:
 	copy.cp = cp.duplicate()
 	copy.cp_bets = cp_bets.duplicate()
 	copy.cp_bet_done = cp_bet_done.duplicate()
+	copy.leger = leger.duplicate(true)
 	copy._next_pawn_id = _next_pawn_id
 	copy._next_card_id = _next_card_id
 	copy.board = []

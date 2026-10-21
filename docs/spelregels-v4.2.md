@@ -607,3 +607,64 @@ meer, dan is het het gemiddelde per kaart (4.1/4.3.8).
 - Implementatie: `Rules.compute_bid(..., deler)`, `Rules.bod_modus`,
   `Rules.bod_deler`, `Rules.compute_initiative`.
 
+
+## Strategy mode (21 oktober 2026, een eigen speelmodus)
+
+*Max, 21 oktober: "ongeacht factie heeft ieder leger een Budget voor het
+gevecht, een speler mag dan helemaal zelf kiezen hoe hij deze vult. Dus zoveel
+kanonnen zoveel mannen zoveel cav etc. Ieder stuk is een aantal punten waard en
+thats it. ... Je ziet wel nog je 3d modellen van de factie maar verder geen
+speciale regels. Noem dit Strategy mode. En ook dit kan je dan in een campagne
+modus doen."*
+
+Aan met het regelblok `strategie` (top-level in de RulesConfig, naast
+`campaign`; null = uit, en dan speelt alles byte-gelijk aan 4.3.10). Geen
+regelversie: het is een modus, geen wijziging van het spel. Alles wat niet
+hieronder staat (de economie van C17, honger, buit, aura, CP, het bod,
+steen-papier-schaar) geldt ongewijzigd.
+
+- **Je koopt je leger zelf.** `strategie.budget` (30) legerpunten; soldaat 1,
+  big bro 2, kanon 3: dezelfde prijslijst als de versterkingen
+  (`campaign.spawn_kosten`). Elk leger mag, zolang het binnen het budget blijft
+  en op het bord past: 1 tot 22 pionnen, de twee thuisrijen. Wat je niet
+  uitgeeft vervalt (22 soldaten kosten 22 punten, en dan is het bord vol).
+- **De opstelling is de keuze.** Er is geen nieuwe fase of actie: PLACE draagt
+  de samenstelling en de validator controleert budget en bordruimte in plaats
+  van de factie-samenstelling. Opstellen is blind (de view verbergt de pionnen
+  van de ander in PLACEMENT), dus de legerkeuze ook. Na de opstelling ligt het
+  leger vast (`GameState.leger`; in snapshot en view alleen als er een is, het
+  leger van de ander pas na de opstelfase).
+- **Geen factieregels.** Elke factie is de allrounder: geen perks
+  (`RulesConfig.NEUTRALE_PERKS`: niet door eigen pionnen, geen +HP, geen
+  stamina-plafond of -bonus, geen Wolf-stap, geen schutkleur, geen extra
+  dracht, geen ruiter-sprong), `strategie.kaarten` (3) kaarten van
+  `strategie.kaartbudget` (7) punten per ronde, en geen startcompensatie
+  (`budget_bonus`). Een factie is alleen nog het uiterlijk: modellen, geluiden,
+  bewoners in het diorama.
+- **Elk stuk is te koop.** Ook een Muis of Beer koopt kanonnen, in het leger en
+  als versterking (`kent_type`); zonder eigen kanonmodel staat er het
+  geometrische kanon.
+- **Reserve en CP voor iedereen gelijk.** Versterkingen = floor(budget x
+  `strategie.reserve_factor` 0,5) x `potje_factor`; CP = `cp_start` x
+  `potje_factor`. Een los potje (v42_default): 5 punten en 4 CP.
+- **Het standaardleger** `strategie.standaard` [16, 4, 2] (30 punten, 22
+  pionnen) staat er voor wie niet kiest (een timeout in de opstelfase, of de
+  standaard-opstelling zonder keuze). Past het niet in een kleiner budget, dan
+  rekent de engine een leger uit hetzelfde budget.
+- **Campagne in Strategy mode.** `CRules.strategie`, bevroren in de save. Elke
+  speler start met dezelfde voorraad (floor(budget x reserve_factor) = 15
+  versterkingspunten en `start_cp`), zonder factiebonus. Elk duel krijgt het
+  blok mee en geen startopstelling (`comp_override`): beide kanten kopen hun
+  leger in het duel zelf; de reserve komt zoals altijd uit het campagnebezit.
+  De bots raadplegen geen factie-orakel (dat kent alleen de gewone duels).
+- **Bots** kopen een leger in de verhouding van het gewone leger van hun factie
+  (de Wolf veel big bro's, de Muis veel soldaten en geen kanonnen):
+  `AIController.kies_leger`, leerbaar met de gewichten `leger_cav` en
+  `leger_art` (deel van het budget). L1 neemt het standaardleger;
+  `legal_actions` biedt daarnaast tot vier voorbeeldlegers (`Validator.
+  strategie_legers`).
+- Knoppen: `RulesConfig.STRATEGIE_DEFAULTS` (budget, kaarten, kaartbudget,
+  standaard, reserve_factor). Implementatie: `RulesConfig.strategie_data`
+  (via `doctrine_data`), `GameState.leger`, `leger_geldig`, `leger_kosten`,
+  `leger_uit_verdeling`, `default_placement(speler, leger)`,
+  `is_valid_placement`, `campagne_startreserve`.

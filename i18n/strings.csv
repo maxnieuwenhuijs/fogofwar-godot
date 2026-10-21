@@ -657,3 +657,29 @@ HUB_READY_SEARCH_N,%d places are looking for a new player,%d plekken zoeken een 
 HUB_DUEL_STARTS_IN,Your duel starts in %d s,Je duel begint over %d s
 HUB_DUEL_INTRO_TITLE,ROUND %d,RONDE %d
 HUB_DUEL_INTRO_SKIP,Tap to start right away,Tik om meteen te beginnen
+MENU_SOLO_STRATEGY,Strategy mode,Strategy mode
+MENU_STRATEGY_TITLE,STRATEGY MODE,STRATEGY MODE
+MENU_STRATEGY_BODY,"Every faction plays by the same rules. You buy your own army from %d points: soldier 1, big bro 2, cannon 3. Your faction is only your look.","Elke factie speelt met dezelfde regels. Je koopt je eigen leger van %d punten: soldaat 1, big bro 2, kanon 3. Je factie is alleen je uiterlijk."
+STRAT_DOCTRINE_UITLEG,Strategy mode: only your look (your 3D models). No faction rules; you buy your army yourself.,Strategy mode: alleen je uiterlijk (je 3D-modellen). Geen factieregels; je leger koop je zelf.
+STRAT_FACTION_LOOK,"Only the look: no faction rules, you buy your army yourself.","Alleen het uiterlijk: geen factieregels, je leger koop je zelf."
+STRAT_BUILD_TITLE,BUILD YOUR ARMY,STEL JE LEGER SAMEN
+STRAT_BUILD_BODY,Budget %d points. What you do not spend is lost. At most %d pawns (two rows of eleven).,Budget %d punten. Wat je niet uitgeeft vervalt. Hooguit %d pionnen (twee rijen van elf).
+STRAT_TYPE_INF,Soldier,Soldaat
+STRAT_TYPE_CAV,Big bro,Big bro
+STRAT_TYPE_ART,Cannon,Kanon
+STRAT_TYPE_PRICE,%s (%d pt),%s (%d pt)
+STRAT_BUILD_POINTS,Points %d/%d,Punten %d/%d
+STRAT_BUILD_PAWNS,Pawns %d/%d,Pionnen %d/%d
+STRAT_BUILD_RESERVE,"Plus in reserve: %d reinforcement points, CP %d","Daarnaast in reserve: %d versterkingspunten, CP %d"
+STRAT_PRESET_STANDARD,Standard,Standaard
+STRAT_PRESET_INF,Many soldiers,Veel soldaten
+STRAT_PRESET_CAV,Many big bros,Veel big bro's
+STRAT_PRESET_ART,Many cannons,Veel kanonnen
+STRAT_BUILD_READY,ARMY READY,LEGER KLAAR
+STRAT_BUILD_HUD,Strategy mode: buy your army,Strategy mode: koop je leger
+STRAT_PLACEMENT_ARMY,"Your army: %d soldiers, %d big bros, %d cannons (%d/%d points).","Je leger: %d soldaten, %d big bro's, %d kanonnen (%d/%d punten)."
+STRAT_PLACEMENT_NO_PERKS,"Strategy mode: no faction rules, the same cards for everyone. Your opponent's army stays hidden until you have both deployed.","Strategy mode: geen factieregels, voor iedereen dezelfde kaarten. Het leger van de ander blijft verborgen tot jullie allebei hebben opgesteld."
+STRAT_PLACEMENT_CHANGE,Change army,Leger aanpassen
+HUB_FACTION_EXPLAIN_STRAT,Strategy mode: your faction is only your look. You buy your army in every duel.,Strategy mode: je factie is alleen je uiterlijk. Je leger koop je in elk duel zelf.
+HUB_RESUME_STRAT,(Strategy mode),(Strategy mode)
+HUB_RULE_LEGER_STRAT,Each duel you buy your army: %d points,Elk duel koop je je leger: %d punten

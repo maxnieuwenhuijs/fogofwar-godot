@@ -16,7 +16,10 @@ var portret: UiPortret
 var _rand: Panel
 
 
-func _init(p_doctrine: int, data: Dictionary, toon_procon: bool = true) -> void:
+## alleen_uiterlijk (Strategy mode, 21 oktober): de factie is dan alleen nog je
+## uiterlijk. Geen kaarten, leger of pro/con (die gelden niet), wel portret en
+## naam, met een regel dat het leger je zelf koopt.
+func _init(p_doctrine: int, data: Dictionary, toon_procon: bool = true, alleen_uiterlijk: bool = false) -> void:
 	doctrine = p_doctrine
 	theme_type_variation = "KnopGroot"
 	text = ""
@@ -50,6 +53,15 @@ func _init(p_doctrine: int, data: Dictionary, toon_procon: bool = true) -> void:
 	naam.text = Constants.doctrine_display_name(doctrine).to_upper()
 	naam.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	kolom.add_child(naam)
+	if alleen_uiterlijk:
+		var uiterlijk := Label.new()
+		uiterlijk.theme_type_variation = "LabelInktZacht"
+		uiterlijk.text = tr("STRAT_FACTION_LOOK")
+		uiterlijk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		uiterlijk.add_theme_font_size_override("font_size", 20)
+		uiterlijk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		kolom.add_child(uiterlijk)
+		toon_procon = false
 	var comp: Array = data.get("comp", [0, 0, 0])
 	var feiten := HBoxContainer.new()
 	feiten.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -63,7 +75,10 @@ func _init(p_doctrine: int, data: Dictionary, toon_procon: bool = true) -> void:
 		var eenheid := UiIcoonTekst.new(String(tp[0]), str(int(tp[1])), 26, UiAssets.INKT)
 		eenheid.label.add_theme_font_size_override("font_size", 20)
 		feiten.add_child(eenheid)
-	kolom.add_child(feiten)
+	if not alleen_uiterlijk:
+		kolom.add_child(feiten)
+	else:
+		feiten.free()
 	if toon_procon:
 		var pro := Label.new()
 		pro.theme_type_variation = "LabelInkt"

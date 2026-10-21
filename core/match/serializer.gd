@@ -110,6 +110,13 @@ static func state_to_dict(state: GameState) -> Dictionary:
 		for pid in state.sps_keuzes:
 			keuzes_d[str(pid)] = int(state.sps_keuzes[pid])
 		out["sps_keuzes"] = keuzes_d
+	# Strategy mode: het gekozen leger, alleen als er een is (anders byte-gelijk).
+	if not state.leger.is_empty():
+		var leger_d: Dictionary = {}
+		for pid in state.leger:
+			var l: Array = state.leger[pid]
+			leger_d[str(pid)] = [int(l[0]), int(l[1]), int(l[2])]
+		out["leger"] = leger_d
 	return out
 
 
@@ -200,4 +207,7 @@ static func state_from_dict(d: Dictionary) -> GameState:
 			s.sps_vorige[int(String(k))] = int(sps_d.vorige[k])
 	for k in d.get("sps_keuzes", {}):
 		s.sps_keuzes[int(String(k))] = int(d.sps_keuzes[k])
+	for k in d.get("leger", {}):
+		var l: Array = d.leger[k]
+		s.leger[int(String(k))] = [int(l[0]), int(l[1]), int(l[2])]
 	return s

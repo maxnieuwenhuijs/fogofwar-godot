@@ -87,6 +87,17 @@ var duel_spawn_totaal_max: int = 15
 # Leeg blok = precies het gedrag van voor 3 augustus, byte-identiek.
 var doctrines: Dictionary = {}
 
+## Strategy mode (21 oktober): leeg = uit (de gewone campagne). Aan = het
+## genormaliseerde strategie-blok van RulesConfig (budget, kaarten, ...). Dan
+## start elke speler met dezelfde voorraad (CState.setup: geen factiebonus) en
+## kiest hij in elk duel zijn leger zelf uit het budget; de duels krijgen dit
+## blok mee (SoloDriver.duel_rules_voor). Bevroren in de save, net als de facties.
+var strategie: Dictionary = {}
+
+func strategie_actief() -> bool:
+	return not strategie.is_empty()
+
+
 ## Het regels-bestand waaruit campagne, trainer, arena en ijk-sims allemaal
 ## hun facties halen (C17: EEN regelset). Alleen de doctrines-sleutel wordt
 ## overgenomen; de rest van dat bestand bevat meet-instellingen zoals de
@@ -136,7 +147,7 @@ func doctrine_data(doctrine: int) -> Dictionary:
 
 
 func to_dict() -> Dictionary:
-	return {
+	var uit := {
 		"team_size": team_size,
 		"duels_per_ronde_max": duels_per_ronde_max,
 		"ronde1_loting": ronde1_loting,
@@ -156,6 +167,10 @@ func to_dict() -> Dictionary:
 		"duel_spawn_totaal_max": duel_spawn_totaal_max,
 		"doctrines": doctrines.duplicate(true),
 	}
+	# Alleen als hij aan staat: elke gewone save blijft byte-gelijk.
+	if not strategie.is_empty():
+		uit["strategie"] = strategie.duplicate(true)
+	return uit
 
 
 static func from_dict(d: Dictionary) -> CRules:
@@ -193,6 +208,8 @@ static func from_dict(d: Dictionary) -> CRules:
 	# sleutel-normalisatie en de float-naar-int-omzetting.
 	var docs = d.get("doctrines", {})
 	c.doctrines = RulesConfig.from_dict({"doctrines": docs}).doctrines if docs is Dictionary else {}
+	var strat = d.get("strategie", null)
+	c.strategie = RulesConfig.normaliseer_strategie(strat) if strat is Dictionary else {}
 	return c
 
 

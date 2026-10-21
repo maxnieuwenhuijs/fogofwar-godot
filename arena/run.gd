@@ -101,6 +101,14 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		if (rules.stat_bonus as Dictionary).is_empty() and not (echt.stat_bonus as Dictionary).is_empty():
 			rules.stat_bonus = echt.stat_bonus.duplicate(true)
 			print("[ARENA] stat_bonus uit %s (het regels-bestand droeg er geen)" % CRules.REGELS_BESTAND)
+	# Strategy mode (21 oktober): "strategie": {} (of met knoppen) in de config
+	# speelt elke partij in die modus; de facties zijn dan alleen het uiterlijk
+	# en de smaak van de bots (AIController.kies_leger).
+	if config.has("strategie"):
+		if rules == null:
+			rules = RulesConfig.defaults()
+		rules.strategie = RulesConfig.normaliseer_strategie(config.strategie)
+		print("[ARENA] Strategy mode: %s" % JSON.stringify(rules.strategie))
 	var max_steps := int(config.get("max_steps", 1500))
 	var per := int(config.get("games_per_matchup", 5))
 	var base_seed := int(config.get("base_seed", 1000))
@@ -123,6 +131,7 @@ func run_arena(config: Dictionary, out_map: String, seed_offset: int) -> Diction
 		"basis_hp": (rules.basis_hp if rules != null else {}),
 		"stat_minimum": (rules.stat_minimum if rules != null else {}),
 		"stat_bonus": (rules.stat_bonus if rules != null else {}),
+		"strategie": (rules.strategie if rules != null else null),
 	}))
 	# L4 neuraal (22 september): "beslis_log": true schrijft naast games.jsonl
 	# een beslissingen.bin met per actiefase-keuze alle kandidaten (Kenmerken)
@@ -233,7 +242,9 @@ func _fuzz(args: PackedStringArray) -> void:
 	if args.size() > i + 2 and not String(args[i + 2]).begins_with("--"):
 		seed_val = int(args[i + 2])
 	var t0 := Time.get_ticks_msec()
-	var uitkomst: Dictionary = ArenaFuzz.run(games, seed_val, "res://results/fuzz", selftest)
+	# `--strategie` (21 oktober): dezelfde invarianten in Strategy mode.
+	var uitkomst: Dictionary = ArenaFuzz.run(games, seed_val, "res://results/fuzz", selftest,
+		args.has("--strategie"))
 	var duur := (Time.get_ticks_msec() - t0) / 1000.0
 	if selftest:
 		var gevangen: bool = uitkomst.violations > 0

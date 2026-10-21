@@ -100,7 +100,10 @@ var n_spelers: int = 16
 
 ## p_mens_doctrine: de gekozen factie van de mens — vast voor de HELE campagne
 ## (besluit Max, 27 juli). -1 = de oude round-robin-toewijzing (headless/tests).
-func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosave_pad: String = "", p_mens_doctrine: int = -1) -> void:
+## p_strategie (21 oktober): een campagne in Strategy mode (RulesConfig
+## STRATEGIE_DEFAULTS); de facties zijn dan alleen nog het uiterlijk.
+func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosave_pad: String = "", p_mens_doctrine: int = -1,
+		p_strategie: bool = false) -> void:
 	mens_id = p_mens_id
 	n_spelers = p_n_spelers
 	clog.autosave_pad = autosave_pad
@@ -123,6 +126,8 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosa
 	# bestand is dit een lege dict en verandert er niets.
 	var campagne_regels := CRules.new()
 	campagne_regels.doctrines = CRules.facties_uit_bestand()
+	if p_strategie:
+		campagne_regels.strategie = RulesConfig.normaliseer_strategie({})
 	c.setup(lijst, campagne_regels)
 	c.nominatie_team = c.kleinste_team()
 	clog.setup(c, {"seed": seed_val})
@@ -137,7 +142,9 @@ func _init(seed_val: int = 1, p_mens_id: int = -1, p_n_spelers: int = 16, autosa
 		agent.verstand = CampaignAgent.laad_verstand()
 		agents[i] = agent
 	var met_verstand: bool = not (agents[0] as CampaignAgent).verstand.is_empty()
-	if met_verstand and FileAccess.file_exists(_OrakelScript.STANDAARD):
+	# Strategy mode: het orakel kent alleen de gewone factie-duels, en die
+	# speelt deze campagne niet; zonder orakel schatten de bots elk duel op 0,5.
+	if met_verstand and not c.rules.strategie_actief() and FileAccess.file_exists(_OrakelScript.STANDAARD):
 		zet_orakel_voor_bots(_OrakelScript.laad())
 
 
@@ -157,6 +164,8 @@ static func hervat(pad: String, p_mens_id: int = -1) -> SoloDriver:
 	if not bool(uitkomst.ok):
 		return null
 	driver.c = uitkomst.cstate
+	if driver.c.rules.strategie_actief():
+		driver.zet_orakel_voor_bots(null)   # Strategy mode: geen factie-orakel (zie _init)
 	driver.clog.meta = m
 	driver.clog.entries = data.entries.duplicate(true)
 	driver.clog.autosave_pad = pad
@@ -730,16 +739,30 @@ func duel_rules_voor(a: int, b: int, p_honger_vanaf: int = -1) -> RulesConfig:
 		pool_a = {"inf": int(bezit_a.inf) - start_a[0], "cav": int(bezit_a.cav) - start_a[1], "art": int(bezit_a.art) - start_a[2]}
 		pool_b = {"inf": int(bezit_b.inf) - start_b[0], "cav": int(bezit_b.cav) - start_b[1], "art": int(bezit_b.art) - start_b[2]}
 	return duel_regels(c.rules.doctrines, start_a, start_b, pool_a, pool_b, c.cp_van(a), c.cp_van(b),
-		duel_honger_vanaf if p_honger_vanaf < 0 else p_honger_vanaf)
+		duel_honger_vanaf if p_honger_vanaf < 0 else p_honger_vanaf, c.rules.strategie)
 
 
 ## De duel-config uit losse onderdelen (F7.1a): dezelfde voor de campagne
 ## (duel_rules_voor) en de datarun van de campagne-arena, zodat het orakel
 ## meet wat de campagne speelt. start = de opstelling op het bord, pool = de
 ## reserve die mee het veld op kan, cp = het CP-saldo van elke kant.
+##
+## strategie (21 oktober): het strategie-blok van een Strategy-campagne; leeg =
+## de gewone campagne. Dan geen startopstelling (comp_override): het leger kiest
+## elke kant in het duel zelf uit het budget.
 static func duel_regels(doctrines: Dictionary, start_a: Array, start_b: Array, pool_a: Dictionary,
-		pool_b: Dictionary, cp_a: int, cp_b: int, honger_vanaf: int) -> RulesConfig:
-	return RulesConfig.from_dict({"honger_vanaf_cyclus": honger_vanaf,
+		pool_b: Dictionary, cp_a: int, cp_b: int, honger_vanaf: int, strategie: Dictionary = {}) -> RulesConfig:
+	if not strategie.is_empty():
+		var d: Dictionary = _duel_dict(doctrines, start_a, start_b, pool_a, pool_b, cp_a, cp_b, honger_vanaf)
+		(d.campaign as Dictionary).erase("comp_override")
+		d["strategie"] = strategie.duplicate(true)
+		return RulesConfig.from_dict(d)
+	return RulesConfig.from_dict(_duel_dict(doctrines, start_a, start_b, pool_a, pool_b, cp_a, cp_b, honger_vanaf))
+
+
+static func _duel_dict(doctrines: Dictionary, start_a: Array, start_b: Array, pool_a: Dictionary,
+		pool_b: Dictionary, cp_a: int, cp_b: int, honger_vanaf: int) -> Dictionary:
+	return {"honger_vanaf_cyclus": honger_vanaf,
 		"basis_hp": {"cav": 2},  # C12: bigbro altijd minstens 2 HP, kaart erbovenop
 		"stat_bonus": {"cav": {"attack": 2}},  # 4.3.7: bigbro +2 attack bovenop de kaart (4.3.6 gaf ook +2 stamina: havenrace; 4.3.5: minstens 2/2)
 		# C17: de facties van DEZE campagne mee het bord op. Zonder dit blok
@@ -751,7 +774,7 @@ static func duel_regels(doctrines: Dictionary, start_a: Array, start_b: Array, p
 		"comp_override": {"1": start_a, "2": start_b},
 		"pools": {"1": pool_a, "2": pool_b},
 		"cp": {"1": cp_a, "2": cp_b},
-	}})
+	}}
 
 
 ## De reinforcements die dit duel mee het veld op kunnen: per type het bezit,

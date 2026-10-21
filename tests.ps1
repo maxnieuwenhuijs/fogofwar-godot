@@ -15,6 +15,7 @@ $groepen = @(
     "SoloTests|1/3",
     "SoloTests|2/3",
     "CampaignTests",
+    "StrategieTests",
     "FuzzTests",
     "AgentTests,V42AgentTests,AITests",
     "GoldenReplayTests,DeterminismTests,SerializerTests",

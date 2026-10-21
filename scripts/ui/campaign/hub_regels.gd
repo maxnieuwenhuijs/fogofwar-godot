@@ -71,7 +71,11 @@ func bouw() -> VBoxContainer:
 	_regel(k, "ui:alive", tr("HUB_RULE_ALLEEN_LEVENDEN"))
 
 	k = _kaart(lijst, "Duel", "hub:Inbattle_icon", tr("HUB_RULE_DUEL_KOP"))
-	_regel(k, "hub:Battle_report_team_full", tr("HUB_RULE_LEGER"))
+	if _r.strategie_actief():
+		# Strategy mode (21 oktober): het leger koop je per duel zelf.
+		_regel(k, "hub:Battle_report_team_full", tr("HUB_RULE_LEGER_STRAT") % int(_r.strategie.get("budget", 0)))
+	else:
+		_regel(k, "hub:Battle_report_team_full", tr("HUB_RULE_LEGER"))
 	_regel(k, "ui:spawn", tr("HUB_RULE_MEE") % _r.duel_spawn_totaal_max)
 	_waarden(k, "", tr("HUB_RULE_VAANDEL"), [["hub:Donation_icon", "+%d" % int(_d.get("buit_vaandel_pt", 0))]])
 	_waarden(k, "", tr("HUB_RULE_TROM"), [["ui:cp", "+%d" % int(_d.get("buit_tamboer_cp", 0))]])

@@ -21,7 +21,9 @@ extends RefCounted
 
 
 ## Draai een fuzz-run. Retourneert {games, violations, repro_paden}.
-static func run(games: int, base_seed: int, out_dir: String, sabotage: bool = false) -> Dictionary:
+## strategie (21 oktober): elke partij in Strategy mode (de L0-bots kiezen dan
+## willekeurig uit de voorbeeldlegers van legal_actions).
+static func run(games: int, base_seed: int, out_dir: String, sabotage: bool = false, strategie: bool = false) -> Dictionary:
 	var doctrines: Array = Constants.DOCTRINE_DATA.keys()
 	var violations: int = 0
 	var repro_paden: Array = []
@@ -38,6 +40,8 @@ static func run(games: int, base_seed: int, out_dir: String, sabotage: bool = fa
 		# klaar en de partij eindigt altijd echt (haven of eliminatie) in plaats
 		# van op de noodstop, die onder V0 een harde fout is.
 		rules.honger_vanaf_cyclus = 8
+		if strategie:
+			rules.strategie = RulesConfig.normaliseer_strategie({})
 		var d1: int = doctrines[(seed_val * 7) % doctrines.size()]
 		var d2: int = doctrines[(seed_val * 13 + 2) % doctrines.size()]
 		var runner := AgentRunner.new(AgentL0.new(), AgentL0.new(), d1, d2, seed_val, rules)

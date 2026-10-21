@@ -534,6 +534,11 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 		Phase.Type.PLACEMENT:
 			if not state.placements_done.get(player_id, false):
 				out.append(Actions.make_place(state.default_placement(player_id)))
+				# Strategy mode: ook een paar andere legers (niet exhaustief, net
+				# als de define): veel lijven, veel ruiters, veel kanonnen.
+				if state.rules.strategie_actief():
+					for leger in strategie_legers(state):
+						out.append(Actions.make_place(state.default_placement(player_id, leger)))
 			return out
 	if state.phase == Phase.Type.CYCLE_SPAWN:
 		if not state.spawn_done.get(player_id, false):
@@ -602,6 +607,19 @@ static func legal_actions(state: GameState, player_id: int) -> Array:
 		if pawn.unit_type == Constants.UnitType.CAVALRY:
 			out.append_array(_enumerate_charges(state, pawn, costs))
 	return out
+
+
+## Strategy mode: voorbeeldlegers naast het standaardleger, elk binnen het
+## budget en op het bord; dubbele en ongeldige vallen weg. Deterministisch.
+static func strategie_legers(state: GameState) -> Array:
+	var std: Array = state.rules.strategie.get("standaard", [])
+	var uit: Array = []
+	for verdeling in [[0.0, 0.0], [0.55, 0.0], [0.0, 0.5], [0.4, 0.4]]:
+		var leger: Array = state.leger_uit_verdeling(float(verdeling[0]), float(verdeling[1]))
+		if not state.leger_geldig(leger) or str(leger) == str(std) or uit.has(leger):
+			continue
+		uit.append(leger)
+	return uit
 
 
 ## Charges: per bereikbaar eindvak (en de eigen positie) elke aangrenzende

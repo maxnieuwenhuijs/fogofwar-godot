@@ -111,7 +111,7 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 	var clocks_d: Dictionary = {}
 	for pid in state.clocks:
 		clocks_d[str(pid)] = {"bank_ms": int((state.clocks[pid] as Dictionary).get("bank_ms", 0))}
-	return {
+	var uit := {
 		"viewer": player_id,
 		"phase": state.phase,
 		"cycle": state.cycle,
@@ -172,6 +172,23 @@ static func for_player(state: GameState, player_id: int, redacted: bool = true) 
 		"own_sps_keuze": int(state.sps_keuzes.get(player_id, -1)),
 		"enemy_sps_gekozen": state.sps_keuzes.has(enemy),
 	}
+	# Strategy mode: het gekozen leger. Het eigen altijd; dat van de ander pas
+	# na de opstelfase, want het opstellen (en dus het kiezen) is blind. Daarna
+	# staat het toch op het bord. Alleen als er een leger is: zonder Strategy
+	# mode blijft de view byte-gelijk (de geseede sps-keuze hasht hem).
+	if not state.leger.is_empty():
+		uit["leger"] = _leger_d(state, player_id, blind_placement)
+	return uit
+
+
+static func _leger_d(state: GameState, player_id: int, blind: bool) -> Dictionary:
+	var uit: Dictionary = {}
+	for pid in state.leger:
+		if int(pid) != player_id and blind:
+			continue
+		var l: Array = state.leger[pid]
+		uit[str(pid)] = [int(l[0]), int(l[1]), int(l[2])]
+	return uit
 
 
 static func _sps_vorige_d(state: GameState) -> Dictionary:
