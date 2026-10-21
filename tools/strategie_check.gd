@@ -20,11 +20,16 @@ extends RefCounted
 ##             boekt terug in de campagne.
 ##  hub        de hub van een Strategy-campagne: de factiekeuze toont alleen het
 ##             uiterlijk en de spelregels zeggen dat je je leger koopt.
+##  online     de online-weg van game.gd (RemoteSession op een loopback met een
+##             bot, zonder server): de modus komt uit de regels van de match
+##             (ook zonder de menuvlag), de factiekeuze en de legerbouwer
+##             volgen, je leger gaat over de draad en de bot stelt het zijne op.
+##             Tegen de echte server: `-- lobbycheck [url] strategie`.
 ##
 ## Raakt de echte save niet: de campagne en de hub draaien zonder autosave.
 ## Exit 1 bij een fout; de grep op "SCRIPT ERROR" hoort erbij.
 
-const FASEN := ["menu", "bouwer", "handmatig", "potje", "campagne", "hub"]
+const FASEN := ["menu", "bouwer", "handmatig", "potje", "campagne", "hub", "online"]
 const GAME := "res://scenes/game/game.tscn"
 const HUB := "res://scripts/ui/campaign/campaign_hub.gd"
 
@@ -51,6 +56,8 @@ static func run(host: Node, fasen: Array = []) -> int:
 				await _campagne()
 			"hub":
 				await _hub()
+			"online":
+				await _online()
 			_:
 				_fouten += 1
 				print("[STRAT] onbekende fase: %s (bekend: %s)" % [fase, ", ".join(FASEN)])
@@ -294,6 +301,46 @@ static func _campagne() -> void:
 	var p: Dictionary = driver.c.pool_van(0)
 	_ok(int(p.inf) >= 0 and int(p.cav) >= 0 and int(p.art) >= 0, "geen negatieve voorraad na het duel")
 	CampaignBridge.driver = null
+	await _weg(game)
+
+
+# --- online: de online-weg van game.gd op een loopback --------------------------
+
+static func _online() -> void:
+	print("[STRAT] fase online")
+	var game: Node = await _nieuw_bord()
+	game.set("_strategie", true)
+	game._start_oefenpotje(Constants.PLAYER_1)
+	# De regels van de match zijn nu gebouwd; vanaf hier mag niets meer op de
+	# menuvlag leunen (wie online meedoet heeft hem ook niet).
+	game.set("_strategie", false)
+	var keuze = game.get("_factie_keuze")
+	var t0 := Time.get_ticks_msec()
+	while not keuze.visible and Time.get_ticks_msec() - t0 < 8000:
+		await _host.get_tree().process_frame
+	var sessie = game.get("session")
+	_ok(sessie != null and sessie.is_online(), "het potje loopt via de online-weg")
+	_ok(sessie.state.rules.strategie_actief(), "de regels van de match dragen Strategy mode")
+	_ok(keuze.visible and bool(keuze.get("_alleen_uiterlijk")), "de factiekeuze toont alleen het uiterlijk (uit de regels)")
+	game._on_doctrine_choice(Constants.DOCTRINE_DATA.keys().find(Constants.Doctrine.MUIS))
+	var bouwer = game.get("_leger_bouwer")
+	t0 = Time.get_ticks_msec()
+	while not bouwer.visible and Time.get_ticks_msec() - t0 < 8000:
+		await _host.get_tree().process_frame
+	_ok(sessie.state.phase == Phase.Type.PLACEMENT and bouwer.visible, "de opstelfase opent met de legerbouwer")
+	bouwer.leger = [12, 0, 6]
+	bouwer._ververs()
+	bouwer.find_child("LegerKlaar", true, false).pressed.emit()
+	await _wacht(0.05)
+	game.get("_overlay")._pick(1)   # standaard opstelling
+	t0 = Time.get_ticks_msec()
+	while sessie.state.phase == Phase.Type.PLACEMENT and Time.get_ticks_msec() - t0 < 8000:
+		await _host.get_tree().process_frame
+	var st: GameState = sessie.state
+	_ok(st.phase != Phase.Type.PLACEMENT, "beide kanten opgesteld (fase %s)" % String(Phase.Type.find_key(st.phase)))
+	_ok(st.leger.get(1) == [12, 0, 6] and _telling(st, 1) == [12, 0, 6], "je leger ging over de draad (%s)" % str(st.leger.get(1)))
+	var bot: Array = st.leger.get(2, [])
+	_ok(st.leger_geldig(bot) and _telling(st, 2) == bot, "de bot stelde een eigen leger op: %s" % str(bot))
 	await _weg(game)
 
 

@@ -185,9 +185,13 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `leger_cav`/`leger_art`). UI: SOLO > Strategy mode > 1v1 of Campagne
   (`game._strategie`, `CampaignBridge.strategie`), factiekeuze met alleen het
   uiterlijk, de legerbouwer (`scripts/ui/match/leger_bouwer.gd`, via preload)
-  voor het opstelmenu, plus "leger aanpassen". Checks: `StrategieTests`, golden
+  voor het opstelmenu, plus "leger aanpassen". Online: lobby > "Nieuwe match
+  (Strategy mode)" (`_online_nieuwe_match(true)`); wie meedoet krijgt de modus
+  uit de regels van de match (`_is_strategie()`, niet de menuvlag); server en
+  worker geven het blok gewoon door. Checks: `StrategieTests`, golden
   `strategie_leger` (`-- makegoldens alleen=strategie`), `-- strategiecheck
-  [menu|bouwer|handmatig|potje|campagne|hub]`, `--fuzz N seed --strategie`
+  [menu|bouwer|handmatig|potje|campagne|hub|online]`, `-- lobbycheck [url]
+  strategie` (18 stappen tegen de dev-server), `--fuzz N seed --strategie`
   (arena.tscn), meten met `arena/arena_configs/strategie_l2.json`. Spec:
   spelregels-v4.2.md Deel B "Strategy mode".
 - **De stat heet STAMINA, niet speed (Max, 17 september: "het is belangrijk,

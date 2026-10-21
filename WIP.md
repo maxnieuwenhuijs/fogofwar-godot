@@ -1,5 +1,23 @@
 # Fog of War — Work In Progress & Context
 
+## 21 oktober (2) -- Strategy mode ook online
+
+Max: "zet Strategy mode ook als keuze bij een nieuwe online match".
+
+- Lobby (MULTIPLAYER > Online): "Nieuwe match (Strategy mode)" naast "Nieuwe
+  match"; het wachtscherm zegt het erbij. De modus reist in de regels van de
+  match mee, dus wie meedoet hoeft niets te kiezen: de factiekeuze en de
+  legerbouwer volgen `_is_strategie()` (de staat), niet de menuvlag. Server en
+  worker ongewijzigd (rules_config gaat er ongezien doorheen).
+- Checks: `-- strategiecheck online` (de online-weg van game.gd op een
+  loopback, de menuvlag expres uit) PASS; tegen de dev-server (lokale MySQL +
+  `tsx src/index.ts`, daarna weer gestopt) `-- lobbycheck <url> strategie`
+  18/18 (wachtscherm, regels bij B, factiekeuze, legerbouwer, blind: B ziet het
+  leger van A pas na de opstelling, daarna zien beide elkaars leger), de
+  gewone `lobbycheck` 10/10 en `nettest` 13/13; resumecheck 4242 2 0
+  verschillen.
+- Uitrollen naar de droplet blijft nodig (nieuwe core-hash sinds e5088f1).
+
 ## 21 oktober -- Strategy mode: zelf je leger kopen, ook als campagne
 
 Max: "voeg toe een gamemode: ongeacht factie heeft ieder leger een Budget voor
@@ -26,9 +44,8 @@ Noem dit Strategy mode. En ook dit kan je dan in een campagne modus doen."
 - **Defaults die ik koos** (Max kan ze zo wijzigen in `STRATEGIE_DEFAULTS`):
   budget 30 (gemiddeld de factielegers, 24-36), standaardleger [16, 4, 2],
   reserve = budget x 0,5, ongebruikte punten vervallen (niet naar de reserve:
-  dan lekt het in de campagne als buit), geen maximum per type. Online werkt
-  de engine mee (de regels reizen met de match), maar er is nog geen knop in
-  de lobby.
+  dan lekt het in de campagne als buit), geen maximum per type. Online: zie
+  "21 oktober (2)" hierboven.
 - **Checks:** `StrategieTests` 18 tests (244 asserts, ook drie volle partijen
   L1/L2, 8 fuzz-partijen en een complete Strategy-campagne), golden
   `strategie_leger`, `-- strategiecheck` (menu, bouwer, handmatig, potje,

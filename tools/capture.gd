@@ -2984,10 +2984,12 @@ func _ready() -> void:
 		# F4.3i — de lobby van game.gd tegen de ECHTE backend: A maakt via de
 		# lobby-code een match, B (een tweede client) doet mee, A's wachtscherm
 		# ziet dat en start de partij; beide kiezen blind, A stelt op.
-		# Gebruik: -- lobbycheck [http://127.0.0.1:8787]   (server: npm run dev)
+		# Gebruik: -- lobbycheck [http://127.0.0.1:8787] [strategie]   (server: npm run dev)
+		# `strategie` (21 oktober): de match in Strategy mode, met de legerbouwer
+		# en een blinde legerkeuze over de echte server.
 		var li := args.find("lobbycheck")
-		var l_url: String = String(args[li + 1]) if args.size() > li + 1 else "http://127.0.0.1:8787"
-		var l_ok: bool = await _lobbycheck(game, l_url)
+		var l_url: String = String(args[li + 1]) if args.size() > li + 1 and String(args[li + 1]).begins_with("http") else "http://127.0.0.1:8787"
+		var l_ok: bool = await _lobbycheck(game, l_url, "strategie" in args)
 		get_tree().quit(0 if l_ok else 1)
 		return
 	elif "nettest" in args:
@@ -7297,7 +7299,7 @@ func _wacht_tot(cond: Callable, sec: float = 15.0) -> bool:
 	return cond.call()
 
 
-func _lobbycheck(game: Node, url: String) -> bool:
+func _lobbycheck(game: Node, url: String, strategie: bool = false) -> bool:
 	var teller: Array = [0, 0]
 	var meld := func(naam: String, ok: bool, extra: String = "") -> void:
 		teller[0] += 1
@@ -7313,11 +7315,13 @@ func _lobbycheck(game: Node, url: String) -> bool:
 	meld.call("lobby: verbonden, keuzes in beeld", ok, String(overlay._title.text))
 	if not ok:
 		return false
-	overlay._pick(0)  # Nieuwe match
+	overlay._pick(1 if strategie else 0)  # Nieuwe match (of in Strategy mode)
 	ok = await _wacht_tot(func() -> bool: return OnlineBridge.match_id != "" and overlay.visible and String(overlay._title.text) == game.tr("MENU_ONLINE_WAIT_TITLE"))
 	meld.call("nieuwe match, wachtscherm met match-id", ok, OnlineBridge.match_id)
 	if not ok:
 		return false
+	if strategie:
+		meld.call("wachtscherm noemt Strategy mode", String(overlay._body.text).contains(game.tr("MENU_ONLINE_WAIT_STRAT")))
 	var match_id: String = OnlineBridge.match_id
 	# B = een tweede client, direct op het transport.
 	var idB := Identiteit.laad("lobby_B")
@@ -7336,6 +7340,8 @@ func _lobbycheck(game: Node, url: String) -> bool:
 	sB.start(func(k): bak.append({"ok": k}))
 	a = await _wacht_op(bak)
 	meld.call("sessie B verbonden", bool(a.ok))
+	if strategie:
+		meld.call("B krijgt de regels met Strategy mode", sB.state.rules.strategie_actief())
 	# A's wachtscherm pollt elke 2 s en start dan de partij: het keuze-menu.
 	# Sinds de UI-assetpack (merge 5d4a18e) is dat het factie-keuzescherm
 	# (game._factie_keuze), niet meer het overlay-menu.
@@ -7344,19 +7350,50 @@ func _lobbycheck(game: Node, url: String) -> bool:
 	meld.call("A ziet dat B meedoet en krijgt het factie-menu", ok, "mens=%d" % game._human_id)
 	if not ok:
 		return false
+	if strategie:
+		meld.call("het factie-menu toont alleen het uiterlijk", bool(keuzescherm._alleen_uiterlijk))
 	var keuze: int = Constants.DOCTRINE_DATA.keys().find(Constants.Doctrine.MUIS)
 	game._on_doctrine_choice(maxi(keuze, 0))
 	sB.submit_choose_doctrine(2, Constants.Doctrine.WOLF)
 	ok = await _wacht_tot(func() -> bool: return game.session.state.phase == Phase.Type.PLACEMENT and sB.state.phase == Phase.Type.PLACEMENT)
 	meld.call("beide keuzes binnen, beide in PLACEMENT", ok, "seqA=%d seqB=%d" % [game.session.seq, sB.seq])
-	ok = await _wacht_tot(func() -> bool: return overlay.visible and String(overlay._title.text) == game.tr("PHASE_PLACEMENT"))
-	meld.call("A krijgt de opstel-overlay", ok)
-	game._confirm_placement()
+	if strategie:
+		# Strategy mode: eerst de legerbouwer, dan pas het opstelmenu.
+		var bouwer = game._leger_bouwer
+		ok = await _wacht_tot(func() -> bool: return bouwer.visible)
+		meld.call("A krijgt de legerbouwer", ok)
+		bouwer.leger = [12, 0, 6]
+		bouwer._ververs()
+		bouwer.find_child("LegerKlaar", true, false).pressed.emit()
+		ok = await _wacht_tot(func() -> bool: return overlay.visible and String(overlay._title.text) == game.tr("PHASE_PLACEMENT"))
+		meld.call("na LEGER KLAAR het opstelmenu", ok)
+		overlay._pick(1)   # standaard opstelling met dat leger
+	else:
+		ok = await _wacht_tot(func() -> bool: return overlay.visible and String(overlay._title.text) == game.tr("PHASE_PLACEMENT"))
+		meld.call("A krijgt de opstel-overlay", ok)
+		game._confirm_placement()
 	ok = await _wacht_tot(func() -> bool: return bool(sB.state.placements_done.get(1, false)))
 	meld.call("B ziet dat A opstelde", ok)
+	if strategie:
+		meld.call("B ziet het leger van A nog niet (blind)", not sB.state.leger.has(1) and _sb_pionnen(sB, 1) == 0)
+		sB.submit_placement(2, sB.state.default_placement(2, [14, 8, 0]))
+		ok = await _wacht_tot(func() -> bool: return game.session.state.phase != Phase.Type.PLACEMENT and sB.state.phase != Phase.Type.PLACEMENT)
+		meld.call("beide legers opgesteld, de partij loopt", ok)
+		meld.call("A ziet het leger van B", game.session.state.leger.get(2) == [14, 8, 0], str(game.session.state.leger.get(2)))
+		meld.call("B ziet het leger van A", sB.state.leger.get(1) == [12, 0, 6] and _sb_pionnen(sB, 1) == 18,
+			str(sB.state.leger.get(1)))
 	meld.call("hervat-id staat in identity.cfg", OnlineBridge.identiteit.laatste_match_id == match_id)
 	print("[LOBBY] %s: %d stappen, %d fouten, match %s" % ["PASS" if teller[1] == 0 else "FAIL", teller[0], teller[1], match_id])
 	return teller[1] == 0
+
+
+## lobbycheck strategie: hoeveel levende pionnen van `speler` deze sessie ziet.
+func _sb_pionnen(sessie, speler: int) -> int:
+	var n := 0
+	for p in sessie.state.pawns.values():
+		if p.owner_id == speler and not p.is_eliminated:
+			n += 1
+	return n
 
 
 ## koppelcheck: een eigen (speler 1), levende, nog ongekoppelde pion, of -1.

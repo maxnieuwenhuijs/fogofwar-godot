@@ -435,7 +435,10 @@ func _show_online_lobby() -> void:
 
 func _show_online_keuzes() -> void:
 	var id: Identiteit = OnlineBridge.laad_identiteit()
-	var opties: Array = [tr("MENU_ONLINE_NEW"), tr("MENU_ONLINE_JOIN")]
+	# Strategy mode (21 oktober, Max: "zet Strategy mode ook als keuze bij een
+	# nieuwe online match"): de maker kiest de modus; hij reist in de regels van
+	# de match mee, dus wie meedoet speelt hem vanzelf (geen eigen keuze nodig).
+	var opties: Array = [tr("MENU_ONLINE_NEW"), tr("MENU_ONLINE_NEW_STRAT"), tr("MENU_ONLINE_JOIN")]
 	var hervat: bool = id.laatste_match_id != ""
 	if hervat:
 		opties.append(tr("MENU_ONLINE_RESUME"))
@@ -445,10 +448,12 @@ func _show_online_keuzes() -> void:
 		tr("MENU_ONLINE_BODY") % [id.naam, id.server_url], opties,
 		func(i: int) -> void:
 			if i == 0:
-				_online_nieuwe_match()
+				_online_nieuwe_match(false)
 			elif i == 1:
+				_online_nieuwe_match(true)
+			elif i == 2:
 				_online_meedoen()
-			elif hervat and i == 2:
+			elif hervat and i == 3:
 				_online_hervatten()
 			else:
 				_show_multi_menu(),
@@ -460,7 +465,8 @@ func _online_fout(fout: String, terug: Callable) -> void:
 		func(_i: int) -> void: terug.call())
 
 
-func _online_nieuwe_match() -> void:
+func _online_nieuwe_match(strategie: bool = false) -> void:
+	_strategie = strategie   # _potje_regels zet dan het strategie-blok in de regels van de match
 	OnlineBridge.nieuwe_match(_potje_regels(), func(a: Dictionary) -> void:
 		if not bool(a.get("ok", false)):
 			_online_fout(String(a.get("fout", "?")), func() -> void: _show_online_keuzes())
@@ -472,7 +478,10 @@ func _online_nieuwe_match() -> void:
 ## De match-id groot in beeld (met kopieerknop) tot de ander meedoet.
 func _wacht_op_tegenstander() -> void:
 	var id: String = OnlineBridge.match_id
-	_overlay.show_choice(tr("MENU_ONLINE_WAIT_TITLE"), tr("MENU_ONLINE_WAIT_BODY") % id,
+	var wacht_tekst: String = tr("MENU_ONLINE_WAIT_BODY") % id
+	if _strategie:
+		wacht_tekst += "\n" + tr("MENU_ONLINE_WAIT_STRAT")
+	_overlay.show_choice(tr("MENU_ONLINE_WAIT_TITLE"), wacht_tekst,
 		[tr("MENU_ONLINE_COPY"), tr("MENU_ONLINE_CANCEL")],
 		func(i: int) -> void:
 			if i == 0:
@@ -911,8 +920,9 @@ func _show_doctrine_menu() -> void:
 	# en de arena (CRules.actieve_tabel()). Index = positie in
 	# Constants.DOCTRINE_DATA.keys(), zoals het oude overlay-menu.
 	_overlay.hide()
-	if _strategie:
+	if _strategie or _is_strategie():
 		# Strategy mode: de factie is alleen nog je uiterlijk (je 3D-modellen).
+		# _is_strategie: online komt de modus uit de regels van de match.
 		_factie_keuze.open(tr("MENU_DOCTRINE_TITLE"), tr("STRAT_DOCTRINE_UITLEG"), false, _on_doctrine_choice, true)
 		return
 	_factie_keuze.open(tr("MENU_DOCTRINE_TITLE"), tr("HUD_UI_DOCTRINE_UITLEG"), false, _on_doctrine_choice)

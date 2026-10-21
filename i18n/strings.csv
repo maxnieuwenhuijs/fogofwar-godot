@@ -683,3 +683,5 @@ STRAT_PLACEMENT_CHANGE,Change army,Leger aanpassen
 HUB_FACTION_EXPLAIN_STRAT,Strategy mode: your faction is only your look. You buy your army in every duel.,Strategy mode: je factie is alleen je uiterlijk. Je leger koop je in elk duel zelf.
 HUB_RESUME_STRAT,(Strategy mode),(Strategy mode)
 HUB_RULE_LEGER_STRAT,Each duel you buy your army: %d points,Elk duel koop je je leger: %d punten
+MENU_ONLINE_NEW_STRAT,New match (Strategy mode),Nieuwe match (Strategy mode)
+MENU_ONLINE_WAIT_STRAT,This match plays in Strategy mode: you both buy your own army.,Deze match speelt in Strategy mode: jullie kopen allebei je eigen leger.
