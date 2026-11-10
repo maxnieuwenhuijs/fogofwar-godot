@@ -206,8 +206,12 @@ const KNOPPEN_DONKER := ["rood", "rond", "vierkant"]
 # --- Panelen (pdf pagina 7): naam -> [bestand, marge_x, marge_y] --------------
 const PANELEN := {
 	"balk": ["Frame_1.png", 56, 52],
-	"veldtafel": ["Frame_2.png", 54, 54],
-	"papier": ["Frame_3.png", 54, 54],
+	# 10 november: het lichte perkament met beslag uit de levering van milestone
+	# 3 (match_hud/box/Player_box.png) in plaats van Frame_2 en Frame_3 met het
+	# zware beslag. Zo zien de factiekeuze, de legerbouwer, het onthulscherm,
+	# het grootboek en de uitleg eruit als de menu's en het inzet-scherm.
+	"veldtafel": ["Player_box.png", 44, 44],
+	"papier": ["Player_box.png", 44, 44],
 	"naamplaat": ["Card_top.png", 40, 20],
 	"specs": ["Card_specs_holder.png", 16, 16],
 	"specs_naam": ["Card_specs_name_holder.png", 10, 6],
@@ -462,6 +466,7 @@ static func embleem_rect(doctrine: int, grootte: float) -> TextureRect:
 ##     KnopBreed     button_2, breed perkament (hoofdknoppen)
 ##     KnopKleinBreed button_4
 ##     KnopRood      button_5, rood (gevaar: opgeven, aanvallen)
+##     KnopBevestig  groen, de hoofdknop van een scherm ("klaar")
 ##     KnopRond      button_6, ronde icoonknop (VIERKANT houden)
 ##     KnopVierkant  button_7, vierkante icoonknop
 ##     KnopPlus / KnopMin   de kleine +/- knopjes van de kaart
@@ -512,6 +517,70 @@ static func _zet_knop(t: Theme, type: String, variant: String, basis: String = "
 	t.set_color("icon_hover_pressed_color", type, tekst)
 	t.set_color("icon_focus_color", type, tekst)
 	t.set_color("icon_disabled_color", type, gedimd)
+
+
+## De donkere plaat uit de levering van milestone 4 (lobby/buttons/
+## quick_chat_button_*): sinds 10 november de gewone knop van elk scherm, met
+## ivoren letters. Ontbreekt het plaatje, dan blijft de oude knop staan.
+## `plaat`/`plaat_druk`/`mx`/`my`: een andere plaat in dezelfde opzet, bv. de
+## groene van "klaar" (KnopBevestig).
+static func _zet_knop_donker(t: Theme, type: String, basis: String = "",
+		plaat: String = "quick_chat_button_default.png", plaat_druk: String = "quick_chat_button_pressed.png",
+		mx: int = 34, my: int = 30) -> bool:
+	var normaal_tex := textuur(plaat)
+	if normaal_tex == null:
+		return false
+	var druk_tex := textuur(plaat_druk)
+	if basis != "":
+		t.set_type_variation(type, basis)
+	var normaal := _negen_patch(normaal_tex, mx, my, 28, 12)
+	var hover := _negen_patch(normaal_tex, mx, my, 28, 12)
+	hover.modulate_color = Color(1.12, 1.08, 1.0)
+	var ingedrukt := _negen_patch(druk_tex if druk_tex != null else normaal_tex, mx, my, 28, 12)
+	var uit := _negen_patch(normaal_tex, mx, my, 28, 12)
+	uit.modulate_color = Color(0.75, 0.72, 0.68, 0.7)
+	t.set_stylebox("normal", type, normaal)
+	t.set_stylebox("hover", type, hover)
+	t.set_stylebox("pressed", type, ingedrukt)
+	t.set_stylebox("hover_pressed", type, ingedrukt)
+	t.set_stylebox("disabled", type, uit)
+	t.set_stylebox("focus", type, StyleBoxEmpty.new())
+	var gedimd := Color(WARM_IVOOR, 0.45)
+	for kleur in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color",
+			"font_focus_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color",
+			"icon_hover_pressed_color", "icon_focus_color"]:
+		t.set_color(kleur, type, WARM_IVOOR)
+	t.set_color("font_disabled_color", type, gedimd)
+	t.set_color("icon_disabled_color", type, gedimd)
+	return true
+
+
+## De grote kaartknop (factiekaart) op het lichte perkament met beslag: de
+## teksten erop blijven inkt.
+static func _zet_knop_perkament(t: Theme, type: String, basis: String) -> bool:
+	var tex := textuur("Player_box.png")
+	if tex == null:
+		return false
+	t.set_type_variation(type, basis)
+	var normaal := _negen_patch(tex, 44, 44, 40, 34)
+	var hover := _negen_patch(tex, 44, 44, 40, 34)
+	hover.modulate_color = Color(1.06, 1.05, 1.0)
+	var ingedrukt := _negen_patch(tex, 44, 44, 40, 34)
+	ingedrukt.modulate_color = Color(0.86, 0.82, 0.74)
+	var uit := _negen_patch(tex, 44, 44, 40, 34)
+	uit.modulate_color = Color(0.8, 0.78, 0.74, 0.7)
+	t.set_stylebox("normal", type, normaal)
+	t.set_stylebox("hover", type, hover)
+	t.set_stylebox("pressed", type, ingedrukt)
+	t.set_stylebox("hover_pressed", type, ingedrukt)
+	t.set_stylebox("disabled", type, uit)
+	t.set_stylebox("focus", type, StyleBoxEmpty.new())
+	for kleur in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color",
+			"font_focus_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color",
+			"icon_hover_pressed_color", "icon_focus_color"]:
+		t.set_color(kleur, type, INKT)
+	t.set_color("font_disabled_color", type, Color(INKT, 0.45))
+	return true
 
 
 ## De +/- knopjes van de kaart: hele texture als stylebox, geen tekst.
@@ -574,6 +643,17 @@ static func _bouw_thema() -> Theme:
 	_zet_kaartknop(t, "KnopMin", "min")
 	_zet_knop(t, "OptionButton", "klein")
 	_zet_knop(t, "MenuButton", "klein")
+	# 10 november: de stijl van milestone 3 + 4 over de oude heen. De gewone
+	# knoppen worden de donkere plaat met ivoren letters, de grote kaartknop
+	# het lichte perkament (rood, rond, vierkant en de +/- blijven).
+	_zet_knop_donker(t, "Button")
+	_zet_knop_donker(t, "KnopBreed", "Button")
+	_zet_knop_donker(t, "KnopKleinBreed", "Button")
+	_zet_knop_donker(t, "OptionButton")
+	_zet_knop_donker(t, "MenuButton")
+	_zet_knop_perkament(t, "KnopGroot", "Button")
+	# de groene hoofdknop ("klaar", "leger klaar"), zoals op het inzet-scherm
+	_zet_knop_donker(t, "KnopBevestig", "Button", "Ready_box_default.png", "Ready_box_pressed.png", 26, 26)
 	# Vinkjes: de lakzegels
 	for type in ["CheckBox", "CheckButton"]:
 		var aan := textuur("button_check_on.png")

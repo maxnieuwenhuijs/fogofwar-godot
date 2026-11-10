@@ -88,6 +88,59 @@ Standen: Instellingen > Animaties (normaal / rustig / uit, in
 het sfeer-paneel. Controle: `-- inkomcheck [fase]`; kijken: `-- inkomfilm
 <map> [menu|kaarten|hub|loting|intro|knop]` (met venster).
 
+## Milestone 3 + 4: Match HUD, lobby, ghost mode, meldingen (10 november)
+
+De tweede levering van de ontwerper (pdf "Fog of war UI Match Multiplayer
+Notification" + `UI_Assets_Milestone_3.zip`, 135 png's) staat in eigen mappen:
+
+```
+assets/ui/
+  match_hud/    box, buttons, icons (+ hidden_states, interaction_states,
+                target_markers), ornaments, eigen/ (afgeleid, zie hieronder)
+  lobby/        bg, box, buttons, icons, ornaments
+  ghost/        box, icons
+  notificatie/  box, button, icons
+  entry/        box, buttons
+```
+
+Erin zetten: `python tools/verwerk_ui_m3.py <zip of map> [--droogloop]` (niet
+met de editor open: het script importeert twee keer, de tweede keer met
+mipmaps aan). De mapnamen worden kleine letters met underscores, de
+bestandsnamen blijven die van de ontwerper (spaties worden `_`, de apostrof in
+`Can't_Act` vervalt). Zes bestanden die byte-gelijk zijn aan een bestand uit
+MATCH HUD worden overgeslagen; het script zegt welke.
+
+**Deze plaatjes gaan op PAD, niet op naam**: `scripts/ui/ui_pack.gd` (via
+`const Pack := preload(...)`), bv. `Pack.tex("match_hud/icons/Charge")`,
+`Pack.plaat(...)`, `Pack.icoon(...)`, `Pack.patch(...)`, `Pack.knop(...)`,
+`Pack.portret(...)`. De namen botsen onderling (drie keer `Player_box_1`) en
+met de eerste pack (`hp.png`, `attack.png`, `move.png`), dus zoeken op naam kan
+hier niet. `Pack.VERWACHT` is de lijst van wat er moet liggen; `-- hudcheck
+assets` telt hem na.
+
+`match_hud/eigen/Move_order_vierkant.png` is AFGELEID door het script: de
+blauwe rand van de loop-ruit, rechtgezet tot een vierkant dat op de tegel
+past, zonder de voetstappen (die legt het spel er los en heel licht op).
+
+Wie wat gebruikt:
+
+| Onderdeel | Code | Check |
+|---|---|---|
+| Bovenbalk (vaandels met portret, rondebalk met klok, voorraadbalk, "?" en opgeven, aanwijsregel) | `scripts/ui/match/match_hud.gd` | `-- hudcheck boven`, `klok` |
+| Pionpaneel onderaan (type, factie, rol, HP en stamina als nu/vol, attack) | `scripts/ui/match/pion_paneel.gd` | `-- hudcheck paneel` |
+| Markeringen op het bord (ruit per soort actie, de loop-tegel een vierkant) | `scripts/game/bord_markeringen.gd` | `-- hudcheck markeringen` |
+| "?"-zegel en rol-iconen onder de pionnen | `game._zegel_op_label` | `-- vosview` |
+| CP-bod en versterkingen in een scherm met plus en min | `scripts/ui/match/inzet_scherm.gd` | `-- hudcheck schermen` |
+| Alle pop-up-menu's van het bord (donkere platen met icoon, "terug" als tekstknop) | `scripts/ui/overlay.gd` (`ICOON_PER_SLEUTEL`) | `-- hudcheck menu` |
+| De multiplayer-lobby met 16 stoelen (oefenversie, nagespeelde spelers) | `scripts/ui/lobby/lobby_scherm.gd` + `scripts/game/lobby_sim.gd` | `-- hudcheck lobby` |
+| Ghost mode in de campaign hub | `campaign_hub.gd` (blok "Ghost mode") + `widgets/ui_slot.gd` | `-- shot campaign_hub 42 ghost` |
+
+Nog niet gebruikt (liggen klaar): het entry screen, de chatknoppen van de
+lobby, de meldingsbanners en de push-iconen, de premove-iconen (Planning, Queued,
+Executing, Lapsed, Cancelled, Replaced), de actieknoppen-balk (bewust niet:
+Max wilde die niet) en de iconen Spent_hp, Spent_stamina en Aura_bonus (het
+tweede blad van het pionpaneel verviel).
+
 ## Wat er (nog) niet in zit
 
 - **Acht iconen uit de spec** zijn niet geleverd: vote, nomination, donation,

@@ -198,13 +198,13 @@ END_BACK_TO_CAMPAIGN,Back to the campaign,Terug naar de campagne
 END_BODY,The game is over.,Het spel is afgelopen.
 END_NEW_GAME,New game,Nieuw spel
 HUD_PAWN_CANNOT_ACT,That pawn cannot act,Die pion kan niet handelen
-HUD_HINT_MOVE,green = move,groen = beweeg
-HUD_HINT_INF_SHOT,", red = melee, orange = shot (range 2, damage %d)",", rood = melee, oranje = schot (afstand 2, schade %d)"
-HUD_HINT_INF_NO_SHOT,", red = melee (Attack 1: shooting not possible)",", rood = melee (Aanval 1: schieten kan niet)"
-HUD_HINT_CAV,", red = charge (move + attack in one)",", rood = charge (bewegen + aanval in één)"
-HUD_HINT_ART_NO_TARGET," (1 step), orange = firing lane (range %d) — no target in sight"," (1 stap), oranje = vuurlijn (dracht %d) — geen doelwit in zicht"
-HUD_HINT_ART," (1 step), orange = fire (range %d)"," (1 stap), oranje = vuur (dracht %d)"
-HUD_SELECTED,%s selected — %s (stamina %d),%s gekozen — %s (stamina %d)
+HUD_HINT_MOVE,blue = move,blauw = lopen
+HUD_HINT_INF_SHOT,", red = melee, gold = shot (damage %d)",", rood = melee, goud = schot (schade %d)"
+HUD_HINT_INF_NO_SHOT,", red = melee (no shot at attack 1)",", rood = melee (geen schot bij aanval 1)"
+HUD_HINT_CAV,", red = melee, green = charge",", rood = melee, groen = charge"
+HUD_HINT_ART_NO_TARGET," (1 step), orange = firing lane (range %d), no target"," (1 stap), oranje = vuurlijn (dracht %d), geen doel"
+HUD_HINT_ART," (1 step), orange = firing lane (range %d), gold = target"," (1 stap), oranje = vuurlijn (dracht %d), goud = doel"
+HUD_SELECTED,%s: %s (stamina %d),%s: %s (stamina %d)
 HUD_COUNT_RESERVE,    [color=#bbbbbb]Reserve %d · CP %d[/color],    [color=#bbbbbb]Reserve %d · CP %d[/color]
 PHASE_PLACEMENT,Deployment,Opstelling
 PHASE_DEFINE,Define,Definitie
@@ -415,9 +415,7 @@ MENU_MULTI_PRACTICE_BOT,Practice bot,Oefenbot
 MENU_MULTI_NO_CONNECTION,No connection with the match.,Geen verbinding met de partij.
 MENU_MULTI_ONLINE_TITLE,Play online,Online spelen
 MENU_ONLINE_CONNECTING,Connecting to the server...,Verbinden met de server...
-MENU_ONLINE_BODY,"You play as %s on %s.
-Create a new match and hand the match id to your opponent, or join with theirs.","Je speelt als %s op %s.
-Maak een nieuwe match en geef de match-id aan je tegenstander, of doe mee met die van de ander."
+MENU_ONLINE_BODY,You play as %s on %s.,Je speelt als %s op %s.
 MENU_ONLINE_NEW,New match,Nieuwe match
 MENU_ONLINE_JOIN,Join with a match id,Meedoen met een match-id
 MENU_ONLINE_JOIN_HINT,Paste your opponent's match id:,Plak de match-id van je tegenstander:
@@ -651,7 +649,7 @@ HUB_READY_OUT_BODY,You did not press READY in time. Your place goes to another p
 HUB_READY_PRACTICE_TITLE,PRACTICE,OEFENEN
 HUB_READY_PRACTICE_END,"Everyone is ready: here the online campaign will begin. The campaign itself comes with the server; the other players here were stand-ins.","Iedereen is klaar: hier begint straks de online campagne. De campagne zelf komt met de server; de andere spelers waren hier nagespeeld."
 HUB_READY_AGAIN,AGAIN,NOG EEN KEER
-MENU_MULTI_CAMPAIGN_PRACTICE,Practice: start of an online campaign,Oefenen: start van een online campagne
+MENU_MULTI_CAMPAIGN_PRACTICE,Practice: campaign lobby,Oefenen: campagne-lobby
 HUB_READY_SEARCH_ONE,One place is looking for a new player,Een plek zoekt een nieuwe speler
 HUB_READY_SEARCH_N,%d places are looking for a new player,%d plekken zoeken een nieuwe speler
 HUB_DUEL_STARTS_IN,Your duel starts in %d s,Je duel begint over %d s
@@ -685,3 +683,50 @@ HUB_RESUME_STRAT,(Strategy mode),(Strategy mode)
 HUB_RULE_LEGER_STRAT,Each duel you buy your army: %d points,Elk duel koop je je leger: %d punten
 MENU_ONLINE_NEW_STRAT,New match (Strategy mode),Nieuwe match (Strategy mode)
 MENU_ONLINE_WAIT_STRAT,This match plays in Strategy mode: you both buy your own army.,Deze match speelt in Strategy mode: jullie kopen allebei je eigen leger.
+HUD_TURN_YOU,Your turn,Jouw beurt
+HUD_TURN_OPPONENT,Opponent's turn,Beurt tegenstander
+HUD_CYCLE_ROUND,Cycle %d · Round %d,Cyclus %d · Ronde %d
+HUD_CHIP_HP,HP,HP
+HUD_CHIP_STAMINA,STAMINA,STAMINA
+HUD_CHIP_ATTACK,ATTACK,AANVAL
+HUD_ROLE_FLAG,Flag Bearer,Vaandeldrager
+HUD_ROLE_DRUM,Drummer,Tamboer
+HUD_PAWN_NO_CARD,No card,Geen kaart
+HUB_GHOST_TITLE,YOU HAVE FALLEN,JE BENT GEVALLEN
+HUB_GHOST_SEALED,SEALED FOR THE DEAD,VERZEGELD VOOR DE DODEN
+HUB_GHOST_SEALED_BODY,You can no longer view or participate in your team's council decisions.,Je ziet de besluiten van de raad van je team niet meer en doet er niet meer aan mee.
+HUB_GHOST_STAKE_TEAM,Team victory,Teamzege
+HUB_GHOST_STAKE_THANKS,Champion's Thanks,Dank van de kampioen
+HUB_GHOST_WATCHING,You are watching until the champion is crowned.,Je kijkt mee tot de kampioen gekroond is.
+PHASE_SPAWN_TILE_0,Soldier,Soldaat
+PHASE_SPAWN_TILE_1,Cavalry,Ruiter
+PHASE_SPAWN_TILE_2,Cannon,Kanon
+PHASE_SPAWN_TILE_COST,%d pt,%d pt
+INZET_CP_TITLE,Bet CP,CP inzetten
+INZET_CP_SUB,+1 card budget per CP,+1 kaartbudget per CP
+INZET_SPAWN_SUB,%d more this cycle,nog %d deze cyclus
+INZET_KLAAR,READY,KLAAR
+INZET_CHIP_CP,CP,CP
+INZET_CHIP_PUNTEN,REINFORCEMENTS,VERSTERKINGEN
+LOBBY_TITLE,Multiplayer Lobby,Multiplayer-lobby
+LOBBY_SUB,Campaign · 16 seats,Campagne · 16 stoelen
+LOBBY_CODE,Lobby code,Lobbycode
+LOBBY_LIVE,Live,Live
+LOBBY_PACE,Pace,Tempo
+LOBBY_PRACTICE,Practice,Oefenen
+LOBBY_NO_LADDER,No ladder,Geen ranglijst
+LOBBY_HOST,HOST: %s,HOST: %s
+LOBBY_HOST_TAG,Host,Host
+LOBBY_YOU,You,Jij
+LOBBY_STATUS_FILL,%d / 16 players · starts in %s or when full,%d / 16 spelers · start over %s of als hij vol is
+LOBBY_STATUS_START,Starting in %d,Start over %d
+LOBBY_TEAM_BLUE,BLUE TEAM,TEAM BLAUW
+LOBBY_TEAM_RED,RED TEAM,TEAM ROOD
+LOBBY_WAITING,Waiting ...,Wachten ...
+LOBBY_STATE,STATE: %s,STAND: %s
+LOBBY_STATE_FILLING,Filling,Vullen
+LOBBY_STATE_STARTING,Starting,Start
+LOBBY_LEAVE,LEAVE,WEG
+LOBBY_READY,READY,KLAAR
+LOBBY_NOT_READY,NOT READY,NIET KLAAR
+LOBBY_START,START NOW,START NU

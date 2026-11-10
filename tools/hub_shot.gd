@@ -15,6 +15,10 @@ extends RefCounted
 ## klaar_online (oefenen met nagespeelde spelers: jij klaar, een ander te laat
 ## en eruit, het zoeken loopt), klaar_eruit (jij te laat: TE LAAT). Alle andere
 ## modi slaan de klaarmelding over (klaar_overslaan) en tonen meteen de hub.
+## Ghost mode (10 november): ghost (jij bent gevallen, de raad van ronde 3
+## loopt: schedelvlag, rode titel, het donkere paneel met wat er nog te
+## winnen valt, de quick-chat in grijs) en ghost_chat (het chat-tabblad,
+## verzegeld). De bots staan in die modi stil (niet_doorwerken).
 ## Elke modus met "_nl" erachter (regels_nl) speelt in het Nederlands; de
 ## taalkeuze van de speler blijft ongemoeid.
 ## Met orakel=<pad> (een duel_orakel.json) spoelt de campagne in seconden
@@ -100,6 +104,8 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 	hub.mens_id = 0
 	var klaar_modus: bool = modus in ["loting", "klaar", "klaar_online", "klaar_eruit"]
 	hub.set("klaar_overslaan", not klaar_modus)
+	if modus.begins_with("ghost"):
+		hub.set("niet_doorwerken", true)
 	if modus in ["klaar_online", "klaar_eruit"]:
 		hub.set("_oefenen", true)
 		hub.set("km_sim_seed", 7)
@@ -142,8 +148,10 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 		if tl.get_child_count() <= tl_voor and not bool(hub.get("_bezig")):
 			fouten += 1
 			print("[SHOT] quick chat kwam niet in de tijdlijn")
+	if modus.begins_with("ghost"):
+		fouten += _ghost_checks(hub, driver)
 	match modus:
-		"chat":
+		"chat", "ghost_chat":
 			(hub.find_child("TabChat", true, false) as Button).pressed.emit()
 		"popup":
 			(hub.find_child("QC_Meer", true, false) as Button).pressed.emit()
@@ -175,13 +183,61 @@ static func run(host: Node, seed_val: int, modus: String, orakel_pad: String) ->
 			hub.call("_toon_lader", _eerste_vijand(driver))
 	await host.get_tree().create_timer(0.8).timeout
 	# F6.0: wat er aan het eind moet staan.
-	var eind_node := {"einde": "JouwPunten", "punten": "Punten", "dank": "DankKiezer"}
+	var eind_node := {"einde": "JouwPunten", "punten": "Punten", "dank": "DankKiezer",
+		"ghost": "GhostPaneel", "ghost_chat": "ChatVerzegeld"}
 	if eind_node.has(modus) and hub.find_child(String(eind_node[modus]), true, false) == null:
 		fouten += 1
 		print("[SHOT] %s ontbreekt" % eind_node[modus])
 	if modus == "regels":
 		return await _regels(host, hub, fouten)
 	return await _bewaar(host, modus, fouten)
+
+
+## Ghost mode: wat er moet staan als je gevallen bent en de campagne nog loopt.
+static func _ghost_checks(hub: Control, driver: SoloDriver) -> int:
+	var fouten := 0
+	var titel: Label = hub.find_child("Titel", true, false)
+	if titel == null or titel.text != hub.tr("HUB_GHOST_TITLE"):
+		fouten += 1
+		print("[SHOT] ghost: de titel zegt niet dat je gevallen bent (%s)" % (titel.text if titel != null else "geen titel"))
+	var vlag: Control = hub.find_child("Vlag", true, false)
+	var dood: Control = vlag.get_node_or_null("Dood") if vlag != null else null
+	var doek: Control = vlag.get_node_or_null("Doek") if vlag != null else null
+	if dood == null or not dood.visible or doek == null or doek.visible:
+		fouten += 1
+		print("[SHOT] ghost: de schedelvlag hangt er niet")
+	var paneel: Control = hub.find_child("GhostPaneel", true, false)
+	var inzet: Control = hub.find_child("GhostInzet", true, false)
+	if paneel == null or inzet == null or inzet.get_child_count() != 3:
+		fouten += 1
+		print("[SHOT] ghost: het paneel met de drie vakjes ontbreekt")
+	else:
+		var punten: Array = []
+		for vak in inzet.get_children():
+			var l: Label = vak.find_child("Punten", true, false)
+			punten.append(l.text if l != null else "?")
+		if punten != ["+20", "+10", "+5"]:
+			fouten += 1
+			print("[SHOT] ghost: de inzet klopt niet met de puntentabel (%s)" % [punten])
+	for i in 3:
+		var b: Button = hub.find_child("QC_%d" % i, true, false)
+		if b == null or not b.disabled or not bool(b.get_meta("ghost_stijl", false)):
+			fouten += 1
+			print("[SHOT] ghost: quick-chat-knop %d staat niet uit in grijs" % i)
+	var tab: Button = hub.find_child("TabChat", true, false)
+	var slot: Control = tab.get_node_or_null("Slot") if tab != null else null
+	if slot == null or not slot.visible:
+		fouten += 1
+		print("[SHOT] ghost: geen slot op de CHAT-tab")
+	# niets dat de campagne verandert: geen stem-, klaar- of nalaat-knop
+	for naam in ["StemKnop", "KlaarKnop", "NalatenKnop", "SpeelDuelKnop"]:
+		if hub.find_child(naam, true, false) != null:
+			fouten += 1
+			print("[SHOT] ghost: %s staat er nog (een geest verandert niets)" % naam)
+	if driver.wacht_op_mens():
+		fouten += 1
+		print("[SHOT] ghost: de campagne wacht op een gevallen speler")
+	return fouten
 
 
 ## De klaarmelding voor de start: de paren, KLAAR, en bij oefenen de klok die
@@ -274,7 +330,8 @@ static func _nieuwe_driver(seed_val: int, orakel_pad: String) -> SoloDriver:
 static func _spoel_door(driver: SoloDriver, modus: String) -> void:
 	var doel := {"raad": CState.Fase.NOMINATIE, "donatie": CState.Fase.DONATIE,
 		"rapport": CState.Fase.NOMINATIE, "lid": CState.Fase.NOMINATIE,
-		"doel": CState.Fase.NOMINATIE, "testament": CState.Fase.DONATIE}
+		"doel": CState.Fase.NOMINATIE, "testament": CState.Fase.DONATIE,
+		"ghost": CState.Fase.NOMINATIE, "ghost_chat": CState.Fase.NOMINATIE}
 	if not doel.has(modus) and not (modus in ["burgeroorlog", "einde", "punten", "dank"]):
 		return
 	var guard := 0
@@ -293,6 +350,15 @@ static func _spoel_door(driver: SoloDriver, modus: String) -> void:
 					c.pending_testamenten.append(0)
 				c.fase = CState.Fase.TESTAMENT
 				c._boek("fixture", 0, 6, 2, 1, 6, 0)
+				break
+			if modus.begins_with("ghost") and c.fase == CState.Fase.NOMINATIE:
+				# Voor het plaatje: de mens is gevallen, zijn testament is geschreven
+				# (aan een teamgenoot), en de raad van zijn team loopt zonder hem.
+				c.spelers[0].status = "uitgevallen"
+				c.pending_testamenten.erase(0)
+				for sid in c.actieve_leden(int(c.spelers[0].team)):
+					c.testament_naar[0] = [int(sid)]
+					break
 				break
 			if c.fase == CState.Fase.NOMINATIE and c.nominatie_stemmen.is_empty():
 				c.spelers[0].status = "actief"

@@ -301,14 +301,14 @@ static func _knoppen() -> void:
 		if not (k as Node).has_meta("ub_knop"):
 			zonder += 1
 	_ok(knoppen.size() >= 5 and zonder == 0, "haakje op elke knop (%d knoppen, %d zonder)" % [knoppen.size(), zonder])
-	var help: Button = null
-	var sfeer: Button = null
-	for k in ui.get_children():
-		if k is Button and (k as Button).theme_type_variation == "KnopRond":
-			help = k
-		elif k is Button and (k as Button).theme_type_variation == "KnopVierkant" and sfeer == null:
-			sfeer = k
-	_ok(help != null and sfeer != null, "hoekknoppen gevonden")
+	# de twee knoppen van de Match HUD (10 november: "?" en opgeven; de
+	# oude knoppenkolom met de sfeer-knop is weg)
+	var hud = game.get("_hud_balk")
+	var help: Button = hud._knop_help if hud != null else null
+	var sfeer: Button = hud._knop_opgeven if hud != null else null
+	if sfeer != null:
+		sfeer.visible = true   # in het menu staat opgeven niet in beeld; de proef heeft een zichtbare knop nodig
+	_ok(help != null and sfeer != null and ui.is_ancestor_of(help), "hoekknoppen gevonden")
 	if help == null or sfeer == null:
 		game.queue_free()
 		return
@@ -517,16 +517,13 @@ static func _schermen() -> void:
 	_ok(schuiven == 4 and _gelijk(paneel.scale, Vector2.ONE) and is_equal_approx(paneel.modulate.a, 1.0),
 		"geluidspaneel: 4 schuiven meteen, daarna in rust")
 	paneel.visible = false
-	# 7. de hoekknoppen ploften in en houden hun alpha 0,9
-	var help: Control = null
-	var sfeer: Control = null
-	for k in game.get_node("UI").get_children():
-		if k is Button and (k as Button).theme_type_variation == "KnopRond":
-			help = k
-		elif k is Button and (k as Button).theme_type_variation == "KnopVierkant" and sfeer == null:
-			sfeer = k
-	_ok(help != null and _gelijk(help.scale, Vector2.ONE) and sfeer != null and is_equal_approx(sfeer.modulate.a, 0.9),
-		"hoekknoppen in rust, sfeer-knop houdt alpha 0,9")
+	# 7. de twee knoppen van de Match HUD ploften in en staan in rust
+	var hud = game.get("_hud_balk")
+	var help: Control = hud._knop_help if hud != null else null
+	var opgeven: Control = hud._knop_opgeven if hud != null else null
+	_ok(help != null and _gelijk(help.scale, Vector2.ONE) and is_equal_approx(help.modulate.a, 1.0)
+		and opgeven != null and _gelijk(opgeven.scale, Vector2.ONE) and is_equal_approx(opgeven.modulate.a, 1.0),
+		"hoekknoppen van de HUD in rust")
 	game.queue_free()
 	await _wacht(0.2)
 

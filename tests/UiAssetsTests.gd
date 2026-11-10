@@ -110,7 +110,11 @@ func test_thema_bouwt_met_alle_varianten() -> void:
 
 func test_knoptekst_inkt_op_perkament_ivoor_op_donker() -> void:
 	var t := UiAssets.thema()
-	assert_eq(t.get_color("font_color", "Button"), UiAssets.INKT)
+	# 10 november: de gewone knop is de donkere plaat van milestone 4 (ivoren
+	# letters); de grote kaartknop ligt op licht perkament en houdt inkt.
+	assert_eq(t.get_color("font_color", "Button"), UiAssets.WARM_IVOOR)
+	assert_eq(t.get_color("font_color", "KnopBreed"), UiAssets.WARM_IVOOR)
+	assert_eq(t.get_color("font_color", "KnopGroot"), UiAssets.INKT)
 	assert_eq(t.get_color("font_color", "KnopRood"), UiAssets.WARM_IVOOR)
 	assert_eq(t.get_color("font_color", "KnopRond"), UiAssets.WARM_IVOOR)
 

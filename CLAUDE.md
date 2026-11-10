@@ -512,6 +512,15 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   (lagen, props, klik per prop raak, bordmidden niet raak, bewoners volgen
   de facties, alles behalve de kraai na 5,5 s weer vrij; met venster
   `_shot_omgeving.png`), plus `-- play` voor het beeld.
+- **Grondtexturen opnieuw (10 november, Max: "wat nog echt heel lelijk is, is
+  de grondtextuur van de diorama's").** `tools/maak_omgeving_texturen.py` maakt
+  rustige, fijne texturen in plaats van wazige vlekken: egaal gras met
+  sprietjes, kasseien en rotsscheuren uit een naadloze Voronoi (44 keien per
+  tegel van 12 vakken), zand met ribbels, zachte sneeuw, modder zonder
+  strepen, bosgrond met blad. Weinig contrast: bord en props moeten opvallen.
+  Vlekkenlaag en wolkenschaduw zijn lichter. Zelfde namen en maten;
+  omgeving.gd ongewijzigd. Kijken: `-- dioramashots`, `-- play muis
+  fx:diorama=<n>`.
 - **Bewoners: geanimeerde poppetjes in het diorama (8 september, Max: "een
   peasant_mouse die bij hout hakt als je op hem drukt").**
   `scripts/game/bewoner.gd` (`Bewoner`) laadt een glb met clips uit
@@ -1329,6 +1338,69 @@ B1-B17) en `WIP.md` (per-stap-logboek) voor de actuele stand.**
   `fogofwar-assets/UI_assets_pack/Emblems/<dier>_nobg.png`:
   `python tools/verwerk_emblemen.py` knipt en schaalt ze naar
   `assets/ui/emblems/<Naam>.png` (500 px), daarna `--import` en `-- uicheck`.
+- **Match HUD, markeringen en ghost mode (10 november, ontwerp milestone 3 + 4:
+  pdf "Fog of war UI Match Multiplayer Notification" + `UI_Assets_Milestone_3.zip`,
+  het antwoord op `docs/design/brief-m3-m4/`).** De 129 plaatjes staan in
+  `assets/ui/{match_hud,lobby,ghost,notificatie,entry}/` (erin zetten: `python
+  tools/verwerk_ui_m3.py <zip> [--droogloop]`, niet met de editor open) en gaan
+  op PAD via `scripts/ui/ui_pack.gd` (preload als `Pack`: `tex`, `plaat`,
+  `icoon`, `patch`, `knop`, `portret`; de namen botsen onderling en met de
+  eerste pack, dus niet op naam). **Bovenbalk** `scripts/ui/match/match_hud.gd`
+  (vervangt de balk van 3 september; `hud_balk.gd` levert alleen nog statische
+  helpers): jij links in je eigen kleur met portret, rondebalk met de klok
+  (mm:ss, rood in de laatste 5 s), voorraadbalk (per kant levend,
+  versterkingspunten, CP; van de ander "?"), "?" en opgeven (GEEN sfeer-knop meer; toets L blijft voorlopig als
+  debug-ingang maar moet er voor een release uit), de aanwijsregel
+  (het oude `$UI/PromptLabel`) in een strook. Hij leest elke frame uit de
+  staat; TopLabel en CountLabel bestaan nog en worden gevuld maar zijn
+  onzichtbaar (render_digest leest de topbalk). **Pionpaneel**
+  `pion_paneel.gd`: bij een geselecteerde pion type, factie, rol en drie
+  chips HP nu/vol, stamina nu/vol, attack. **Markeringen**
+  `scripts/game/bord_markeringen.gd`: per soort actie de ruit van de
+  ontwerper plat op de tegel (melee, charge, schot, vuurlijn, Wolf-stap,
+  opstelling), een doel draagt het icoon ook boven zijn hoofd; de loop-tegel
+  is een blauw VIERKANT met de voetstappen op 20% en het kostengetal (de rand
+  is afgeleid door het script: `match_hud/eigen/Move_order_vierkant.png`).
+  Knop `markeringen` (fx, 0 = de oude plakken); `game._highlights` houdt
+  dezelfde vakken. Het "?" van een gedekte pion en de rol-tekens zijn iconen
+  van de ontwerper OP de oude labels (`game._zegel_op_label`; vosview leest
+  de labels). **Inzet-scherm** `scripts/ui/match/inzet_scherm.gd`: CP-bod en
+  versterkingen in een scherm met plus en min, bovenaan je totaal als nu/vol
+  (CP 3/4, versterkingen 5/6) (in de versterkingsfase beide,
+  `_voor_cp` onthoudt het bod voor ronde 1; anders alleen de CP-rij), sluit
+  zichzelf als het moment voorbij is, `render_digest` blok `inzet` (en de
+  prompt telt niet mee zolang het open staat, net als bij de overlay). Het
+  draagt de stijl van de legerbouwer (Max: "die stijl is goed"): dezelfde
+  rij (icoon, naam met prijs, `KnopMin`, `LabelCijfer`, `KnopPlus`) en de
+  groene `KnopBevestig` met vinkje; houd de twee schermen gelijk. **Thema**: sinds
+  10 november zijn `PaneelVeldtafel`/`PaneelPapier` het lichte perkament met
+  beslag en is de gewone knop (ook `KnopBreed`, `KnopKleinBreed`) de donkere
+  plaat met ivoren letters (`UiAssets._zet_knop_donker`); `KnopGroot` is licht
+  perkament met inkt. Zet dus geen inktkleur op een gewone knop. **Menu's**:
+  alle pop-up-menu's van het bord (`scripts/ui/overlay.gd`) in dezelfde stijl:
+  perkament met beslag, donkere platen met een gouden icoon
+  (`Overlay.ICOON_PER_SLEUTEL`, op de vertaalsleutel van de tekst), "terug" een
+  kleine tekstknop, geen lange uitleg. **Ghost
+  mode** in `campaign_hub.gd` (blok "Ghost mode", `_is_ghost`): rode titel op
+  de plaat met de vlaggen, schedelvlag, slot op CHAT (`widgets/ui_slot.gd`),
+  donker paneel met de inzet uit de puntentabel, quick-chat in grijs;
+  testament, burgeroorlog en eindscherm houden hun perkament. **Bovenbalken laag
+  houden** (Max: "op alle schermen mag die top bar echt minder pixels
+  innemen"): bord 256 px voor de drie rijen (`match_hud.TOP_HOOGTE` 260),
+  lobby 112 + 104 + 76, hub titel 56 en statusbalk 46 eenheden; maak ze niet
+  weer hoger. **Wat Max NIET
+  wilde** (niet opnieuw voorstellen): de actiebalk Move/Melee/Shot/Charge/Undo,
+  het tweede blad "spent" van het pionpaneel, en schermen met veel tekst
+  ("less is more": een icoon, een naam, plus en min). **Lobby** (oefenversie):
+  `scripts/ui/lobby/lobby_scherm.gd` tekent de 16 stoelen uit het ontwerp,
+  `scripts/game/lobby_sim.gd` speelt de andere spelers na (eigen rng, tijd van
+  buiten; na 45 s, vol of START NU worden lege stoelen gemerkte bots); onder
+  MULTIPLAYER > "Oefenen: campagne-lobby", daarna de bestaande oefen-start.
+  Nog niet gebouwd: de echte lobby en het entry screen (F5.1), chat in de
+  lobby, meldingsbanners, premove.
+  Checks: `-- hudcheck [menu|lobby|assets|boven|paneel|klok|schermen|markeringen]`
+  (tools/hud_check.gd, headless en met venster: `_shot_hud*.png`), `-- shot
+  campaign_hub 42 ghost|ghost_chat` (de hub krijgt dan `niet_doorwerken`).
 - **UI-assetpack nakijken: `-- uicheck`** (statusbord van de UI-assets onder
   `assets/ui/`: elk icoon-id uit `docs/design/UI-SPEC-EN.md` met zijn bestand,
   de zes emblemen, de kaartdelen, elke knop- en paneelstijl met 9-patch-marge,

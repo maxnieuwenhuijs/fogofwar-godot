@@ -9,6 +9,19 @@ const AUTO_AI_SCRIPT := preload("res://scripts/ai/AIMedium.gd")  # timeout-zet v
 ## klassencache (--import) de class_names HudBalk / FactieKeuzeScherm /
 ## EindeScherm kent.
 const HUD_BALK_SCRIPT := preload("res://scripts/ui/match/hud_balk.gd")
+## De Match HUD van 10 november (ontwerp milestone 3): bovenbalk met portretten,
+## klok en voorraad, en het pionpaneel onderaan. hud_balk.gd levert alleen nog
+## de statische helpers (telregel, compacte knop, spawn-iconen).
+const MATCH_HUD_SCRIPT := preload("res://scripts/ui/match/match_hud.gd")
+## De markeringen op het bord uit hetzelfde ontwerp (ruiten per soort actie).
+const MARKERING := preload("res://scripts/game/bord_markeringen.gd")
+const UI_PACK := preload("res://scripts/ui/ui_pack.gd")
+## Het inzet-scherm: CP-bod en versterkingen in een scherm met plus en min.
+const INZET_SCHERM := preload("res://scripts/ui/match/inzet_scherm.gd")
+## De multiplayer-lobby uit het ontwerp (16 stoelen), voorlopig als oefenversie
+## met nagespeelde spelers (lobby_sim.gd); de echte komt met F5.1.
+const LOBBY_SCHERM := preload("res://scripts/ui/lobby/lobby_scherm.gd")
+const LOBBY_SIM := preload("res://scripts/game/lobby_sim.gd")
 const FACTIE_KEUZE_SCRIPT := preload("res://scripts/ui/match/factie_keuze_scherm.gd")
 const EINDE_SCHERM_SCRIPT := preload("res://scripts/ui/match/einde_scherm.gd")
 const ONTHUL_SCHERM_SCRIPT := preload("res://scripts/ui/match/onthul_scherm.gd")
@@ -131,7 +144,12 @@ var _cp_bet_keuze: int = 0                 # F4.3g: online reist de inzet in de 
 ## UI-assetpack (3 september): de perkamenten HUD-balk achter de drie labels
 ## (scripts/ui/match/hud_balk.gd) en het factie-keuzescherm (regimentskaarten,
 ## scripts/ui/match/factie_keuze_scherm.gd), in _ready direct boven de overlay.
-var _hud_balk: HUD_BALK_SCRIPT = null
+var _hud_balk = null   # de Match HUD (match_hud.gd)
+var _inzet = null      # het inzet-scherm (inzet_scherm.gd): CP-bod en versterkingen
+var _lobby = null      # de oefen-lobby (lobby_scherm.gd), pas gebouwd als hij opent
+## De CP-inzet voor ronde 1 die je op het inzet-scherm van de versterkingen
+## al koos (-1 = niet gekozen): de definieerfase opent dan meteen de kaarten.
+var _voor_cp: int = -1
 var _factie_keuze: FACTIE_KEUZE_SCRIPT = null
 ## Het onthulscherm (beide handen als echte kaarten, scripts/ui/match/
 ## onthul_scherm.gd): lazy in _on_cards_revealed, direct boven de overlay.
@@ -183,6 +201,8 @@ func _ready() -> void:
 	_overlay = OVERLAY_SCENE.instantiate()
 	$UI.add_child(_overlay)
 	_overlay.hide()
+	_inzet = INZET_SCHERM.new()
+	$UI.add_child(_inzet)
 	# De sleep-pijl bovenop alles in de UI-laag (vangt nooit invoer).
 	_koppel_pijl = KoppelPijl.new()
 	_koppel_pijl.name = "KoppelPijl"
@@ -193,10 +213,11 @@ func _ready() -> void:
 	$UI.add_child(_leger_bouwer)
 	_instructions = INSTRUCTIONS_SCRIPT.new()
 	$UI.add_child(_instructions)
-	_build_help_button()
 	_bouw_context_knop()
-	_hud_balk = HUD_BALK_SCRIPT.new()
-	_hud_balk.bouw_in($UI, _top_label, _prompt_label, _count_label)
+	# De Match HUD bouwt zelf "?" en opgeven (boven de overlay en de uitleg) en
+	# zet de contextknop in zijn stijl.
+	_hud_balk = MATCH_HUD_SCRIPT.new()
+	_hud_balk.bouw_in($UI, _top_label, _prompt_label, _count_label, self)
 	_hp_layer = Control.new()
 	_hp_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hp_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -287,10 +308,13 @@ func _on_phase_timeout() -> void:
 		if session.state.rules.campaign_actief() and not _card_hand.visible:
 			# CP-bod-overlay stond nog open: zonder inzet door naar de waaier.
 			_overlay.hide()
+			_inzet.sluit()
 			_open_define_hand(int(session.state.cp_bets.get(_human_id, 0)))
 		_card_hand._on_confirm_pressed()  # auto-bevestig (altijd geldig)
 	elif ph == Phase.Type.CYCLE_SPAWN and not session.state.spawn_done.get(_human_id, false):
 		_overlay.hide()
+		_inzet.sluit()
+		_voor_cp = -1
 		_update_hud(tr("HUD_TIMEOUT_SPAWN"))
 		session.submit_spawn(_human_id, Validator.aanvul_spawn_actie(session.state, _human_id).spawns)
 		if _ai == null and session.state.phase == Phase.Type.CYCLE_SPAWN:
@@ -376,7 +400,7 @@ func _show_difficulty_menu() -> void:
 	# het menu, Model-tuner zit onder Instellingen.
 	_overlay.show_choice(
 		tr("MENU_MAIN_TITLE"),
-		tr("MENU_MAIN_BODY"),
+		"",
 		[tr("MENU_SOLO"), tr("MENU_MULTI"), tr("MENU_RULES_OPTION"), tr("MENU_SETTINGS")],
 		_on_hoofdmenu_choice,
 		Color.WHITE, false, ["act-melee", "", "hidden", ""],
@@ -399,7 +423,7 @@ func _on_hoofdmenu_choice(index: int) -> void:
 ## 30 september: de start van een online campagne oefenen (de loting en de
 ## klaarmelding met nagespeelde spelers; de campagne zelf komt met F5).
 func _show_multi_menu() -> void:
-	_overlay.show_choice(tr("MENU_MULTI"), tr("MENU_MULTI_BODY"),
+	_overlay.show_choice(tr("MENU_MULTI"), "",
 		[tr("MENU_MULTI_PRACTICE_RED"), tr("MENU_MULTI_PRACTICE_BLUE"), tr("MENU_MULTI_ONLINE"),
 			tr("MENU_MULTI_CAMPAIGN_PRACTICE"), tr("MENU_BACK")],
 		func(i: int) -> void:
@@ -410,10 +434,26 @@ func _show_multi_menu() -> void:
 			elif i == 2:
 				_show_online_lobby()
 			elif i == 3:
-				CampaignBridge.klaar_oefenen = true
-				get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn")
+				_open_oefen_lobby()
 			else:
 				_show_difficulty_menu())
+
+
+## Oefenen: de lobby van een online campagne (10 november). Zestien stoelen,
+## de andere spelers nagespeeld; begint hij, dan volgt de oefen-start van de
+## campagne (de loting en de klaarmelding, zoals deze keuze al deed).
+func _open_oefen_lobby() -> void:
+	_overlay.hide()
+	if _lobby == null:
+		_lobby = LOBBY_SCHERM.new()
+		$UI.add_child(_lobby)
+		# boven de overlay, onder de uitleg en de twee HUD-knoppen
+		$UI.move_child(_lobby, _instructions.get_index())
+	_lobby.open(LOBBY_SIM.new(int(Time.get_ticks_usec() & 0x7fffffff), tr("LOBBY_YOU"), _human_doctrine),
+		func() -> void:
+			CampaignBridge.klaar_oefenen = true
+			get_tree().change_scene_to_file("res://scenes/campaign/campaign.tscn"),
+		func() -> void: _show_multi_menu())
 
 
 # --- Online lobby (F4.3i) --------------------------------------------------------
@@ -582,7 +622,7 @@ func _online_hervatten() -> void:
 
 func _show_solo_menu() -> void:
 	_strategie = false
-	_overlay.show_choice(tr("MENU_SOLO"), tr("MENU_SOLO_BODY"),
+	_overlay.show_choice(tr("MENU_SOLO"), "",
 		[tr("MENU_SOLO_1V1"), tr("MENU_SOLO_CAMPAIGN"), tr("MENU_SOLO_STRATEGY"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i == 0:
@@ -616,7 +656,7 @@ func _show_strategie_menu() -> void:
 
 
 func _show_1v1_difficulty() -> void:
-	_overlay.show_choice(tr("MENU_DIFF_TITLE"), tr("MENU_DIFF_BODY"),
+	_overlay.show_choice(tr("MENU_DIFF_TITLE"), "",
 		[tr("MENU_DIFF_EASY"), tr("MENU_DIFF_MEDIUM"), tr("MENU_DIFF_HARD"), tr("MENU_DIFF_ULTRA"), tr("MENU_BACK")],
 		func(i: int) -> void:
 			if i >= 4:
@@ -767,74 +807,9 @@ func _show_rules_overlay(back: Callable) -> void:
 	_instructions.open(back)
 
 
-## "?"-knop rechtsboven: uitleg altijd beschikbaar, ook midden in een potje.
-## Pauzeert de fase-timer zolang het scherm open staat.
-func _build_help_button() -> void:
-	# UI-assetpack: de knoppenkolom staat NAAST de HUD-balk (x 976..1064).
-	var help := Button.new()
-	help.text = tr("HUD_BTN_HELP")
-	help.theme_type_variation = "KnopRond"
-	help.custom_minimum_size = Vector2(88, 88)
-	help.add_theme_font_size_override("font_size", 40)
-	help.focus_mode = Control.FOCUS_NONE
-	help.anchors_preset = Control.PRESET_TOP_RIGHT
-	help.anchor_left = 1.0
-	help.anchor_right = 1.0
-	help.offset_left = -104.0
-	help.offset_right = -16.0
-	help.offset_top = 12.0
-	help.offset_bottom = 100.0
-	help.pressed.connect(_on_help_pressed)
-	$UI.add_child(help)
-	# "sfeer"-knopje eronder: opent het sfeer-paneel (zelfde als toets L).
-	var sfeer := Button.new()
-	sfeer.text = tr("HUD_BTN_AMBIANCE")
-	sfeer.theme_type_variation = "KnopVierkant"
-	HUD_BALK_SCRIPT.compacte_knop(sfeer, "vierkant", Vector2(88, 88), Vector2i(2, 4))
-	sfeer.add_theme_font_size_override("font_size", 16)
-	sfeer.focus_mode = Control.FOCUS_NONE
-	sfeer.anchors_preset = Control.PRESET_TOP_RIGHT
-	sfeer.anchor_left = 1.0
-	sfeer.anchor_right = 1.0
-	sfeer.offset_left = -104.0
-	sfeer.offset_right = -16.0
-	sfeer.offset_top = 108.0
-	sfeer.offset_bottom = 196.0
-	sfeer.modulate = Color(1.0, 1.0, 1.0, 0.9)
-	sfeer.pressed.connect(_toggle_ambiance_panel)
-	$UI.add_child(sfeer)
-	# F0.8: opgeven-knop (RESIGN bestaat sinds F0.4c), onder de sfeer-knop.
-	var geef_op := Button.new()
-	# Alleen het witte-vlag-icoon: tekst van 14 px over het rode vlak was
-	# onleesbaar; de bevestigingsdialoog legt uit wat de knop doet.
-	geef_op.text = ""
-	geef_op.tooltip_text = tr("HUD_BTN_RESIGN")
-	# Dezelfde vierkante plaat als de sfeer-knop (de rode 9-patch is een breed
-	# rechthoek en verwringt op 88x88); het gevaar zit in de rode vlag.
-	geef_op.theme_type_variation = "KnopVierkant"
-	HUD_BALK_SCRIPT.compacte_knop(geef_op, "vierkant", Vector2(88, 88))
-	geef_op.icon = UiAssets.icoon("forfeit")
-	for staat in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
-		geef_op.add_theme_color_override(staat, UiAssets.DIEP_ROOD)
-	geef_op.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	geef_op.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
-	geef_op.expand_icon = false
-	geef_op.add_theme_constant_override("icon_max_width", 44)
-	geef_op.focus_mode = Control.FOCUS_NONE
-	geef_op.anchors_preset = Control.PRESET_TOP_RIGHT
-	geef_op.anchor_left = 1.0
-	geef_op.anchor_right = 1.0
-	geef_op.offset_left = -104.0
-	geef_op.offset_right = -16.0
-	geef_op.offset_top = 204.0
-	geef_op.offset_bottom = 292.0
-	geef_op.modulate = Color(1.0, 1.0, 1.0, 0.9)
-	geef_op.pressed.connect(_on_resign_pressed)
-	$UI.add_child(geef_op)
-	# UI-beweging: de knoppenkolom ploft na elkaar in (de rust-alpha 0,9 blijft).
-	BEWEGING.plof(help, 0.05, BEWEGING.POP_VAN, true, Vector2(0.5, 0.5), true)   # een plof voor de kolom
-	BEWEGING.plof(sfeer, 0.10)
-	BEWEGING.plof(geef_op, 0.15)
+## "?" en opgeven zitten sinds 10 november in de Match HUD (match_hud.gd,
+## _bouw_knoppen); het sfeer-paneel opent met toets L of het lipje dat een
+## debug-build onder die knoppen toont.
 
 
 var _opgeef_dialoog: ConfirmationDialog = null
@@ -1251,7 +1226,7 @@ func _refresh_placement_ui() -> void:
 	var step: Dictionary = _placement_current()
 	if step.is_empty():
 		return
-	_highlight_tiles(_placement_free_tiles(), Color(0.4, 0.9, 0.9), 0.35)
+	_highlight_tiles(_placement_free_tiles(), Color(0.4, 0.9, 0.9), 0.35, "opstelling")
 	_update_placement_ghost_type()
 	var type_name := tr("HUD_PLACE_TYPE_CANNONS") if int(step.type) == Constants.UnitType.ARTILLERY else tr("HUD_PLACE_TYPE_HORSES")
 	match String(step.get("rol", "")):
@@ -1669,6 +1644,11 @@ func render_digest() -> Dictionary:
 			"modus": _card_hand.phase if _card_hand.visible else -1,
 			"aantal": _card_hand.get_card_views().size() if _card_hand.visible else 0,
 		},
+		# 10 november: het inzet-scherm (CP-bod en versterkingen) is geen overlay meer
+		"inzet": {
+			"zichtbaar": _inzet != null and _inzet.visible,
+			"delen": (_inzet.delen as Array).duplicate() if (_inzet != null and _inzet.visible) else [],
+		},
 		"overlay": {
 			"zichtbaar": overlay_zichtbaar,
 			"titel": String(_overlay._title.text) if overlay_zichtbaar else "",
@@ -1681,7 +1661,8 @@ func render_digest() -> Dictionary:
 			"sps": _onthul_scherm.sps_modus if (_onthul_scherm != null and _onthul_scherm.visible) else "",
 			"knoppen": _onthul_scherm.sps_knoppen_aan() if _onthul_scherm != null else 0,
 		},
-		"prompt": "" if overlay_zichtbaar else _prompt_label.text,
+		# een open keuzescherm (de overlay of het inzet-scherm) dekt de aanwijsregel af
+		"prompt": "" if (overlay_zichtbaar or (_inzet != null and _inzet.visible)) else _prompt_label.text,
 		"topbalk": _top_label.text,
 		"wolf": {"modus": _wolf_step_mode, "tegels": tegels},
 		"highlights": highlights,
@@ -1972,6 +1953,24 @@ const HP_COLOR_ATTACK := Color(0.98, 0.56, 0.3)
 ## trom-icoon, en een letter met een dikke rand leest op deze maat prima. Zodra
 ## de assets er zijn is dit een TextureRect.
 const ROL_TEKEN := {"flag": "\u2691", "drum": "\u266A"}
+## 10 november (ontwerp milestone 3): het rol-teken is het icoon van de
+## ontwerper; het label met het teken blijft de drager (en de terugval).
+const ROL_ICOON := {"flag": "match_hud/icons/Flag_bearer", "drum": "match_hud/icons/Drummer"}
+
+
+## Hangt een icoon van de ontwerper op een label van de stat-blokjes en maakt
+## de letter zelf onzichtbaar. Het label blijft bestaan en houdt zijn tekst
+## en zichtbaarheid: de checks (vosview, render_digest) lezen die.
+## `midden` = waar het midden van het icoon komt, gerekend vanaf het label.
+func _zegel_op_label(lbl: Label, naam: String, maat: float, midden: Vector2) -> void:
+	if not UI_PACK.bestaat(naam):
+		return
+	lbl.add_theme_color_override("font_color", Color(0, 0, 0, 0))
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0))
+	var zegel := UI_PACK.icoon(naam, maat)
+	zegel.name = "Zegel"
+	zegel.position = midden - Vector2(maat, maat) * 0.5
+	lbl.add_child(zegel)
 ## Aura-kleur per TEAM en rol (8 september, Max: "geef de teams hun eigen
 ## kleur invloed-area"). Binnen een team is het vaandel de lichte, warme
 ## tint en de trom de diepe tint, zodat je op het bord in een oogopslag ziet
@@ -2007,7 +2006,13 @@ func _werk_rol_iconen_bij(state: GameState, total_w: float, total_h: float) -> v
 			lbl.visible = false
 			continue
 		lbl.text = String(ROL_TEKEN[rol])
-		lbl.add_theme_color_override("font_color", rol_kleur(rol, pawn.owner_id))
+		var rol_zegel := lbl.get_node_or_null("Zegel") as TextureRect
+		if rol_zegel != null:
+			# het icoon van de ontwerper (vlag of trom) in de aura-kleur van het team
+			rol_zegel.texture = UI_PACK.tex(String(ROL_ICOON[rol]))
+			rol_zegel.modulate = rol_kleur(rol, pawn.owner_id)
+		else:
+			lbl.add_theme_color_override("font_color", rol_kleur(rol, pawn.owner_id))
 		lbl.visible = true
 		# Onder de blokjes, gecentreerd op de kolom-breedte.
 		lbl.position = Vector2(total_w * 0.5 - 5.0, total_h + 1.0)
@@ -2187,6 +2192,8 @@ func _build_health_bars(alles: bool = true) -> void:
 		qlabel.add_theme_constant_override("outline_size", 5)
 		qlabel.position = Vector2(HP_COLS * (HP_BLOCK_SIZE + HP_BLOCK_GAP) * 0.5 - 6.0, -4.0)   # x volgt per frame de breedte
 		holder.add_child(qlabel)
+		# het "?"-zegel van de ontwerper (Hidden unit) in plaats van de letter
+		_zegel_op_label(qlabel, "match_hud/icons/hidden_states/Hidden_unit", 46.0, Vector2(6.0, 12.0))
 		# Rol-icoon (C15 / 4.3.2): vaandeldrager of tamboer, net onder de
 		# HP-blokjes. Ook op VIJANDELIJKE pionnen -- sinds 4.3.2 levert elke
 		# drager buit op, dus je moet er gericht op kunnen jagen. De rol zit al
@@ -2199,6 +2206,7 @@ func _build_health_bars(alles: bool = true) -> void:
 		rol_lbl.add_theme_color_override("font_outline_color", Color(UiAssets.INKT, 0.95))
 		rol_lbl.add_theme_constant_override("outline_size", 4)
 		holder.add_child(rol_lbl)
+		_zegel_op_label(rol_lbl, String(ROL_ICOON["flag"]), 22.0, Vector2(5.0, 11.0))
 		_hp_layer.add_child(holder)
 		_hp_bars[pawn.id] = {"holder": holder, "blocks": blocks, "qlabel": qlabel,
 			"rol": rol_lbl, "randen": randen}
@@ -2367,23 +2375,22 @@ func _beurt_licht_uit() -> void:
 # --- v4.2 (F2.6): CP-bod, versterkingen en de kanon-taal ----------------------
 
 ## Blinde CP-inzet (D1): elke CP maakt 1 kaart deze ronde budget+1.
+## 10 november: het inzet-scherm (plus en min) in plaats van een lijst keuzes
+## (Max: "less is more"). De uitkomst gaat langs _on_cp_choice, net als altijd.
 func _show_cp_overlay() -> void:
 	var st: GameState = session.state
 	var saldo: int = int(st.cp.get(_human_id, 0))
 	var maximaal: int = mini(saldo, Validator.expected_define_count(st, _human_id))
-	var opties: Array = []
-	var iconen: Array = []
-	for n in maximaal + 1:
-		opties.append(tr("MENU_CP_NONE") if n == 0 else tr("MENU_CP_OPTION") % [n, n])
-		iconen.append("" if n == 0 else "cp")
-	_overlay.show_choice(
-		tr("MENU_CP_TITLE") % saldo,
-		tr("MENU_CP_BODY"),
-		opties, _on_cp_choice, Color.WHITE, true, iconen, "cp")
+	_inzet.open({"cp": {"saldo": saldo, "max": maximaal}},
+		func(cp: int, _keuze: Array) -> void: _on_cp_choice(cp),
+		func() -> bool:
+			var nu: GameState = session.state
+			return nu != null and Phase.is_define(nu.phase) and nu.cards_defined.get(_human_id, []).size() == 0)
 
 
 func _on_cp_choice(index: int) -> void:
 	_overlay.hide()
+	_inzet.sluit()
 	if _ai == null:
 		# F4.3g/F4.2b: online reist de inzet in de define mee (één rij, geen
 		# verklappende losse inzet); onthouden tot de waaier bevestigd is.
@@ -2428,60 +2435,36 @@ func _open_define_hand(bonus: int) -> void:
 var _spawn_keuze: Array = []
 
 
+## 10 november: het inzet-scherm. Per type dat je factie kent een rij met
+## plus en min; staat er CP en begint hierna ronde 1, dan staat het CP-bod
+## van die ronde er meteen boven (een scherm in plaats van twee na elkaar).
 func _show_spawn_overlay() -> void:
 	var st: GameState = session.state
 	var kosten: Array = [st.spawn_kosten(0), st.spawn_kosten(1), st.spawn_kosten(2)]
-	var besteed := 0
-	var telling: Array = [0, 0, 0]
-	for t in _spawn_keuze:
-		besteed += kosten[t]
-		telling[int(t)] += 1
-	var punten_over: int = st.pool_total(_human_id) - besteed
 	var cap: int = mini(mini(int(st.rules.campaign.get("spawn_max", 3)), st.spawns_over(_human_id)),
 		Validator.vrije_spawn_vakken(st, _human_id).size())
-	var body := "
-".join([
-		tr("PHASE_SPAWN_POINTS") % [punten_over, telling[0], telling[1], telling[2]],
-		tr("PHASE_SPAWN_INFO") % [cap, st.spawns_over(_human_id)],
-		tr("PHASE_SPAWN_BLIND"),
-	])
-	var opties: Array = []
-	var acties: Array = []
-	if _spawn_keuze.size() < cap:
-		for t in 3:
-			# Alleen types die je doctrine kent (Muis heeft geen artillerie).
-			if not st.kent_type(_human_id, t):
-				continue
-			if punten_over >= kosten[t]:
-				opties.append(tr("PHASE_SPAWN_BUY_%d" % t) % kosten[t])
-				acties.append(t)
-	opties.append(tr("PHASE_SPAWN_CONFIRM") % _spawn_keuze.size())
-	acties.append("bevestig")
-	if not _spawn_keuze.is_empty():
-		opties.append(tr("PHASE_SPAWN_RESET"))
-		acties.append("reset")
-	_spawn_acties = acties
-	_overlay.show_choice(tr("PHASE_SPAWN_TITLE"), body, opties, _on_spawn_choice, Color.WHITE, true,
-		acties.map(Callable(HUD_BALK_SCRIPT, "spawn_icoon")), "spawn")
+	var types: Array = []
+	for t in 3:
+		# Alleen types die je doctrine kent (Muis heeft geen artillerie).
+		if st.kent_type(_human_id, t):
+			types.append(t)
+	var opties: Dictionary = {"spawn": {"punten": st.pool_total(_human_id), "cap": cap, "kosten": kosten, "types": types}}
+	var saldo: int = int(st.cp.get(_human_id, 0))
+	var cp_max: int = mini(saldo, Validator.expected_define_count(st, _human_id))
+	if st.rules.campaign_actief() and cp_max > 0:
+		opties["cp"] = {"saldo": saldo, "max": cp_max}
+	_inzet.open(opties, _on_inzet_klaar,
+		func() -> bool:
+			var nu: GameState = session.state
+			return nu != null and nu.phase == Phase.Type.CYCLE_SPAWN and not nu.spawn_done.get(_human_id, false))
 
 
-var _spawn_acties: Array = []
-
-
-func _on_spawn_choice(index: int) -> void:
-	_overlay.hide()
-	if index < 0 or index >= _spawn_acties.size():
-		return
-	var actie = _spawn_acties[index]
-	if actie is int:
-		_spawn_keuze.append(int(actie))
-		_show_spawn_overlay()
-		return
-	if String(actie) == "reset":
-		_spawn_keuze = []
-		_show_spawn_overlay()
-		return
-	# Bevestigen: vakken toewijzen in haven-prioriteitsvolgorde.
+## KLAAR op het inzet-scherm van de versterkingen: de gekozen types krijgen
+## hun vak in haven-prioriteitsvolgorde, en de CP-inzet (als die erbij stond)
+## wacht tot de definieerfase van ronde 1 opent.
+func _on_inzet_klaar(cp: int, keuze: Array) -> void:
+	_voor_cp = cp if (_inzet.delen as Array).has("cp") else -1
+	_spawn_keuze = keuze
 	var st: GameState = session.state
 	var vrij: Array = Validator.vrije_spawn_vakken(st, _human_id)
 	var inzet: Array = []
@@ -3119,9 +3102,17 @@ func _open_define_fase() -> void:
 			and int(st_def.cp.get(_human_id, 0)) > 0 \
 			and Validator.expected_define_count(st_def, _human_id) > 0:
 		_card_hand.visible = false  # de koppel-waaier van de vorige ronde weg
-		_show_cp_overlay()
+		if _voor_cp >= 0 and st_def.round_number <= 1:
+			# al gekozen op het inzet-scherm van de versterkingen: meteen de kaarten
+			var gekozen: int = mini(_voor_cp, mini(int(st_def.cp.get(_human_id, 0)),
+				Validator.expected_define_count(st_def, _human_id)))
+			_voor_cp = -1
+			_on_cp_choice(gekozen)
+		else:
+			_show_cp_overlay()
 	else:
 		_open_define_hand(int(st_def.cp_bets.get(_human_id, 0)))
+	_voor_cp = -1
 	_start_phase_timer(PHASE_TIME_LIMIT)
 
 
@@ -3256,7 +3247,7 @@ func _on_wolf_step_pending(pawn_id: int) -> void:
 			if Constants.is_on_board(neighbor) and state.is_tile_empty(neighbor):
 				_wolf_step_tiles.append(neighbor)
 	_clear_highlights()
-	_highlight_tiles(_wolf_step_tiles, Color(0.4, 0.9, 0.9))
+	_highlight_tiles(_wolf_step_tiles, Color(0.4, 0.9, 0.9), 0.55, "wolfstap")
 	_update_hud(tr("HUD_WOLF_STEP"))
 
 
@@ -4656,6 +4647,9 @@ func _select_pawn(pawn_id: int) -> void:
 	var move_paths: Dictionary = Rules.get_valid_move_paths(state, pawn_id)
 	_valid_moves = move_paths.keys()
 	_highlight_move_tiles(move_paths)
+	# de gekozen pion zelf: de blauwe gestreepte ruit onder zijn voeten
+	if _markeringen_aan() and MARKERING.kent("geselecteerd"):
+		_highlight_tiles([pawn.position], Color(0.45, 0.75, 1.0), 0.4, "geselecteerd")
 	# Melee (rood), schoten (oranje) en cavalerie-charges (rood, verderop).
 	_valid_attacks = Rules.get_valid_melee_targets(state, pawn_id)
 	_valid_shots = Rules.get_valid_shot_targets(state, pawn_id)
@@ -4663,6 +4657,7 @@ func _select_pawn(pawn_id: int) -> void:
 	if pawn.unit_type == Constants.UnitType.CAVALRY:
 		_valid_charges = _compute_charge_targets(state, pawn_id, move_paths)
 	var melee_positions: Array = []
+	var charge_positions: Array = []
 	for aid in _valid_attacks:
 		var enemy: Pawn = state.pawns.get(aid)
 		if enemy != null:
@@ -4670,8 +4665,9 @@ func _select_pawn(pawn_id: int) -> void:
 	for aid in _valid_charges.keys():
 		var enemy2: Pawn = state.pawns.get(aid)
 		if enemy2 != null:
-			melee_positions.append(enemy2.position)
-	_highlight_tiles(melee_positions, Color(0.95, 0.25, 0.25))
+			charge_positions.append(enemy2.position)
+	_highlight_tiles(melee_positions, Color(0.95, 0.25, 0.25), 0.55, "melee")
+	_highlight_tiles(charge_positions, Color(0.95, 0.25, 0.25), 0.55, "charge")
 	# Vuurlijnen zichtbaar maken: vaag oranje = binnen dracht (vrije lijn),
 	# vol oranje = raakbaar doelwit.
 	var lane_tiles: Array = []
@@ -4683,8 +4679,8 @@ func _select_pawn(pawn_id: int) -> void:
 	for lane_pos in Rules.get_shot_range_tiles(state, pawn_id):
 		if not shot_positions.has(lane_pos):
 			lane_tiles.append(lane_pos)
-	_highlight_tiles(lane_tiles, Color(1.0, 0.72, 0.2), 0.18)
-	_highlight_tiles(shot_positions, Color(1.0, 0.72, 0.2))
+	_highlight_tiles(lane_tiles, Color(1.0, 0.72, 0.2), 0.18, "vuurlijn")
+	_highlight_tiles(shot_positions, Color(1.0, 0.72, 0.2), 0.55, "schot")
 	_refresh_all()
 	var hint := tr("HUD_HINT_MOVE")
 	match pawn.unit_type:
@@ -4825,9 +4821,38 @@ func _pick_move_tile(screen_pos: Vector2) -> Vector2i:
 # --- Highlights --------------------------------------------------------------
 
 ## Groene bewegings-tiles met daarop klein de stamina-kosten (pad-lengte).
+## De markeringen van het ontwerp van 10 november (bord_markeringen.gd): een
+## ruit per soort actie in plaats van een gekleurde plak. Knop `markeringen`
+## (effects_tuning.json / fx:markeringen=0) zet de oude plakken terug.
+func _markeringen_aan() -> bool:
+	return PawnView.fx("markeringen", 1.0) > 0.5
+
+
+## Een markering van deze soort op een vak; false als de soort er niet is
+## (dan tekent de aanroeper de oude plak).
+func _zet_markering(coord: Vector2i, soort: String, kosten: int = 0) -> bool:
+	if soort == "" or not _markeringen_aan():
+		return false
+	var bezet: bool = false
+	if session != null and session.state != null:
+		for p in session.state.pawns.values():
+			if not p.is_eliminated and p.position == coord:
+				bezet = true
+				break
+	var m: Node3D = MARKERING.maak(soort, _camera, bezet, kosten)
+	if m == null:
+		return false
+	m.position = tile_position(coord.x, coord.y) + Vector3(0.0, MARKERING.HOOGTE, 0.0)
+	_board.add_child(m)
+	_highlights.append(m)
+	return true
+
+
 func _highlight_move_tiles(move_paths: Dictionary) -> void:
 	for coord in move_paths:
 		var cost: int = (move_paths[coord] as Array).size()
+		if _zet_markering(coord, "loop", cost):
+			continue
 		var box := CSGBox3D.new()
 		box.size = Vector3(0.9, 0.06, 0.9)
 		var mat := StandardMaterial3D.new()
@@ -4853,8 +4878,10 @@ func _highlight_move_tiles(move_paths: Dictionary) -> void:
 		_highlights.append(box)
 
 
-func _highlight_tiles(coords: Array, color: Color, alpha: float = 0.55) -> void:
+func _highlight_tiles(coords: Array, color: Color, alpha: float = 0.55, soort: String = "") -> void:
 	for coord in coords:
+		if _zet_markering(coord, soort):
+			continue
 		var box := CSGBox3D.new()
 		box.size = Vector3(0.9, 0.06, 0.9)
 		var mat := StandardMaterial3D.new()

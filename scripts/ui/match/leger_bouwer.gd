@@ -114,7 +114,7 @@ func _init() -> void:
 	kolom.add_child(snel)
 	_klaar = Button.new()
 	_klaar.name = "LegerKlaar"
-	_klaar.theme_type_variation = "KnopBreed"
+	_klaar.theme_type_variation = "KnopBevestig"   # groen, zoals KLAAR op het inzet-scherm
 	_klaar.text = tr("STRAT_BUILD_READY")
 	_klaar.custom_minimum_size = Vector2(600, 96)
 	_klaar.add_theme_font_size_override("font_size", 28)

@@ -30,6 +30,14 @@ const Beweging := preload("res://scripts/ui/ui_beweging.gd")
 ## F6.0 (29 september): uitslag en punten (docs/F6-punten-masterplan.md).
 const _Uitslag := preload("res://core/campaign/uitslag.gd")
 const _Punten := preload("res://core/campaign/puntentabel.gd")
+## Ghost mode (10 november, ontwerp milestone 4): de onderdelen uit
+## assets/ui/ghost/ en het getekende slotje.
+const _Pack := preload("res://scripts/ui/ui_pack.gd")
+const _Slot := preload("res://scripts/ui/widgets/ui_slot.gd")
+const GHOST_ROOD := Color("#8E2A1E")
+const GHOST_TEKST := Color("#D9CDB4")
+const GHOST_ZACHT := Color("#A79C87")
+const GHOST_GOUD := Color("#E6C987")
 ## Het icoon van een puntenregel en van een badge ("hub:" of "ui:").
 const PUNT_ICOON := {
 	"uitgespeeld": "hub:Phase_icon", "team": "hub:Battle_report_team_full", "roem": "ui:score",
@@ -92,6 +100,10 @@ const KM_STAP := 0.42            # tussen twee paren in de onthulling
 const KM_START_PAUZE := 1.3      # "DE CAMPAGNE BEGINT" staat zo lang in beeld
 const KM_ROOD_LICHT := Color("#E9A38F")  # eruit: rood dat op het donkere hout leesbaar blijft
 var klaar_overslaan: bool = false  # de screenshot-fixture en checks: meteen de hub
+var niet_doorwerken: bool = false  # de fixture: de bots spelen niet door (de stand blijft staan)
+var _titel_plaat: TextureRect = null   # Title_frame, of in ghost mode de plaat met de rode vlaggen
+var _kader: PanelContainer = null      # het kader om het fasepaneel (perkament, of donker als je gevallen bent)
+var _kader_donker: int = -1            # -1 = nog niet gezet
 var km_sim_seed: int = -1        # oefenen: -1 = elke keer anders, anders vast (plaatjes, checks)
 var _oefenen: bool = false       # oefenen: de start van een online campagne, met nagespeelde spelers
 var _km = null                   # Klaarmelding
@@ -569,6 +581,8 @@ func _bouw_layout() -> void:
 	kader.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Phase_chat_frame_VERS2",
 		Vector2(34, 34), Vector4(_u(16), _u(12), _u(16), _u(12))))
 	_plaats(kader, 0, paneel_top, 564, paneel_onder - paneel_top)
+	_kader = kader
+	_kader_donker = -1
 	var binnen := VBoxContainer.new()
 	binnen.add_theme_constant_override("separation", _px(6))
 	kader.add_child(binnen)
@@ -600,20 +614,25 @@ func _bouw_layout() -> void:
 
 ## Titelbalk + statusbalk + de factievlag die er overheen hangt.
 func _bouw_titel() -> void:
-	_plaats(HubAssets.plaat("frames_box/Title_frame"), 0, 0, 564, 78)
-	_titel = HubAssets.tekst(tr("HUB_TITLE"), _px(17), HubAssets.INKT, true)
+	# 10 november (Max: "op alle schermen mag die top bar echt minder pixels
+	# innemen"): titel 56 hoog (was 78) en de statusbalk 46 (was 64); de
+	# kolommen eronder kregen die ruimte (TOP_KOLOM).
+	_titel_plaat = HubAssets.plaat("frames_box/Title_frame")
+	_plaats(_titel_plaat, 0, 0, 564, 56)
+	_titel = HubAssets.tekst(tr("HUB_TITLE"), _px(15), HubAssets.INKT, true)
 	_titel.name = "Titel"
 	_titel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_plaats(_titel, 120, 12, 324, 30)
-	_header = HubAssets.tekst("", _px(9), HubAssets.INKT, true)
+	_titel.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_plaats(_titel, 100, 5, 364, 26)
+	_header = HubAssets.tekst("", _px(8.5), HubAssets.INKT, true)
 	_header.name = "Header"
 	_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_plaats(_header, 120, 44, 324, 18)
+	_plaats(_header, 100, 31, 364, 16)
 	var help := _rond_knop("Info_icon", "HelpKnop")
-	_plaats(help, 458, 18, 40, 40)
+	_plaats(help, 474, 11, 34, 34)
 	help.pressed.connect(_toon_regels)
 	var instel := _rond_knop("Settings_icon", "InstellingenKnop")
-	_plaats(instel, 506, 18, 40, 40)
+	_plaats(instel, 514, 11, 34, 34)
 	instel.pressed.connect(_toon_instellingen)
 	# Statusbalk: soldaten, ruiters, kanonnen, CP, roem; tik = grootboek.
 	var balk := Button.new()
@@ -623,14 +642,14 @@ func _bouw_titel() -> void:
 	balk.focus_mode = Control.FOCUS_NONE
 	for staat in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
 		balk.add_theme_stylebox_override(staat, StyleBoxEmpty.new())
-	_plaats(balk, 0, 76, 564, 64)
+	_plaats(balk, 0, 54, 564, 46)
 	var plaat := HubAssets.plaat("frames_box/Status_bar")
 	plaat.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	balk.add_child(plaat)
 	var rij := HBoxContainer.new()
 	rij.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rij.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	rij.offset_left = _u(110)
+	rij.offset_left = _u(92)
 	rij.offset_right = -_u(18)
 	balk.add_child(rij)
 	for spec in [["inf", "Donation_icon", ""], ["cav", "", "unit-cavalry"], ["art", "", "unit-artillery"],
@@ -642,12 +661,12 @@ func _bouw_titel() -> void:
 		vak.add_theme_constant_override("separation", _px(6))
 		var ic: TextureRect
 		if String(spec[1]) != "":
-			ic = HubAssets.icoon(String(spec[1]), _u(28), HubAssets.INKT)
+			ic = HubAssets.icoon(String(spec[1]), _u(21), HubAssets.INKT)
 		else:
-			ic = UiAssets.icoon_rect(String(spec[2]), _u(28), HubAssets.INKT)
+			ic = UiAssets.icoon_rect(String(spec[2]), _u(21), HubAssets.INKT)
 		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		vak.add_child(ic)
-		var getal := HubAssets.tekst("", _px(15), HubAssets.INKT, true)
+		var getal := HubAssets.tekst("", _px(13), HubAssets.INKT, true)
 		getal.name = "Status_" + String(spec[0])
 		getal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		vak.add_child(getal)
@@ -655,7 +674,7 @@ func _bouw_titel() -> void:
 		rij.add_child(vak)
 	balk.pressed.connect(_toon_grootboek)
 	_vlag = _bouw_vlag()
-	_plaats(_vlag, 26, 0, 80, 86)
+	_plaats(_vlag, 22, 0, 62, 66)
 
 
 ## De vlag linksboven: het vaandel met de poot (Wolf) of de gravure van je factie.
@@ -664,6 +683,7 @@ func _bouw_vlag() -> Control:
 	vlag.name = "Vlag"
 	vlag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var doek := HubAssets.plaat("frames_box/Flag_frame")
+	doek.name = "Doek"
 	doek.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vlag.add_child(doek)
 	var doctrine: int = int(driver.c.spelers.get(mens_id, {}).get("doctrine", 0))
@@ -677,11 +697,21 @@ func _bouw_vlag() -> Control:
 		teken.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		teken.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		teken.material = HubAssets.silhouet(HubAssets.IVOOR)
+	teken.name = "Teken"
 	teken.anchor_left = 0.2
 	teken.anchor_right = 0.8
 	teken.anchor_top = 0.12
 	teken.anchor_bottom = 0.7
 	vlag.add_child(teken)
+	# Ghost mode: het grijze vaandel met de schedel, zolang je gevallen bent.
+	var dood := _Pack.plaat("ghost/box/Dead_flag")
+	dood.name = "Dood"
+	dood.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	dood.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dood.offset_top = -_u(2)
+	dood.offset_bottom = _u(6)
+	dood.visible = false
+	vlag.add_child(dood)
 	return vlag
 
 
@@ -713,7 +743,7 @@ func _rond_knop(icoon: String, naam: String, geluid: String = "ui_click") -> But
 
 ## De drie kolommen: jouw team (blauw), de tijdlijn en de vijand (rood).
 func _bouw_kolommen(onder: float) -> void:
-	var top := 144.0
+	var top := 104.0   # was 144: de titel en de statusbalk zijn 40 eenheden lager
 	var h := onder - top
 	for spec in [["column/Team_column", 0.0, "TeamLinks", tr("HUB_TEAM_YOURS")],
 			["column/Enemy_column", 430.0, "TeamRechts", tr("HUB_COL_ENEMY")]]:
@@ -911,6 +941,7 @@ func _ververs_quick_chat() -> void:
 		return
 	var dood := _mens_dood()
 	_qc_label.text = tr("HUB_QC_VERZEGELD") if dood else tr("HUB_QUICK_CHAT")
+	_zet_qc_stijl(dood)
 	var context := _qc_context()
 	for i in _qc_knoppen.size():
 		var b: Button = _qc_knoppen[i]
@@ -929,10 +960,197 @@ func _ververs_quick_chat() -> void:
 func _mens_dood() -> bool:
 	return String(driver.c.spelers.get(mens_id, {}).get("status", "actief")) != "actief"
 
+
+# --- Ghost mode (10 november, ontwerp milestone 4) -----------------------------------
+#
+# Wie gevallen is kijkt mee tot de kampioen gekroond is. De regel in een zin
+# (ontwerpbrief): een geest ziet wat het andere team ziet. Wat openbaar is
+# blijft (kolommen, tijdlijn, slagrapporten, de paren), de geheimen van het
+# eigen team zijn verzegeld (chat, quick chat, de raad en de donaties), en
+# hij kan niets meer veranderen. In beeld: de titel "JE BENT GEVALLEN" op de
+# plaat met de rode vlaggen, de schedelvlag, een slot op CHAT, een donker
+# fasepaneel met wat er voor hem nog te winnen valt, en de quick-chat-balk in
+# grijs metaal. Het testament (dat hij nog moet schrijven) en het eindscherm
+# houden hun gewone perkament.
+
+## Kijk je als geest? Gevallen, en de campagne loopt nog.
+func _is_ghost() -> bool:
+	return _mens_dood() and driver.c.fase != CState.Fase.KLAAR
+
+
+## Titel, titelplaat en vlag in de stand van nu (elke _ververs; alleen zetten).
+func _zet_ghost_kop() -> void:
+	var ghost := _is_ghost()
+	if ghost:
+		_titel.text = tr("HUB_GHOST_TITLE")
+	_titel.add_theme_color_override("font_color", GHOST_ROOD if ghost else HubAssets.INKT)
+	if _titel_plaat != null:
+		_titel_plaat.texture = _Pack.tex("ghost/box/Ghost_mode_holder") if ghost else HubAssets.tex("frames_box/Title_frame")
+	if _vlag != null:
+		for naam in ["Doek", "Teken"]:
+			var deel := _vlag.get_node_or_null(naam) as Control
+			if deel != null:
+				deel.visible = not ghost
+		var dood := _vlag.get_node_or_null("Dood") as Control
+		if dood != null:
+			dood.visible = ghost
+
+
+## Het kader om het fasepaneel: perkament, of het donkere blok van ghost mode.
+func _zet_kader(donker: bool) -> void:
+	if _kader == null or _kader_donker == int(donker):
+		return
+	_kader_donker = int(donker)
+	var inhoud := Vector4(_u(16), _u(12), _u(16), _u(12))
+	if donker:
+		_kader.add_theme_stylebox_override("panel", _Pack.patch("ghost/box/Blocked_box", Vector2(34, 34), inhoud))
+	else:
+		_kader.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Phase_chat_frame_VERS2",
+			Vector2(34, 34), inhoud))
+
+
+## De quick-chat-balk in grijs metaal als je gevallen bent (de knoppen staan
+## dan toch al uit), anders het gewone perkament.
+func _zet_qc_stijl(dood: bool) -> void:
+	var houder := _qc_label.get_parent() as PanelContainer
+	if houder != null and bool(houder.get_meta("ghost_stijl", false)) != dood:
+		houder.set_meta("ghost_stijl", dood)
+		if dood:
+			var plaat := _Pack.patch("ghost/box/Button_blocked", Vector2.ZERO)
+			plaat.modulate_color = Color(0.5, 0.5, 0.52)
+			houder.add_theme_stylebox_override("panel", plaat)
+		else:
+			houder.add_theme_stylebox_override("panel", HubAssets.patch("frames_box/Holder_quickchat", Vector2(30, 30)))
+	for b in _qc_knoppen:
+		var knop: Button = b
+		if bool(knop.get_meta("ghost_stijl", false)) == dood:
+			continue
+		knop.set_meta("ghost_stijl", dood)
+		if dood:
+			# het hele plaatje uitgerekt (de boutjes passen niet als 9-patch in 40 hoog)
+			var sb := _Pack.patch("ghost/box/Button_blocked", Vector2.ZERO, Vector4(_u(8), 0, _u(8), 0))
+			sb.modulate_color = Color(0.62, 0.62, 0.64)
+			for staat in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+				knop.add_theme_stylebox_override(staat, sb)
+			knop.add_theme_color_override("font_disabled_color", Color(0.95, 0.94, 0.9, 0.9))
+			knop.add_theme_color_override("icon_disabled_color", Color(0.95, 0.94, 0.9, 0.9))
+		else:
+			HubAssets.knop(knop, "buttons/Small_button_quickchat", Vector2(30, 30), Vector4(_u(6), 0, _u(6), 0))
+			knop.remove_theme_color_override("icon_disabled_color")
+
+
+## De CHAT-tab met een slot erop (ghost mode): het grijze vlak uit het ontwerp.
+func _zet_chat_tab_slot(aan: bool) -> void:
+	var slot := _tab_chat.get_node_or_null("Slot") as Control
+	if not aan:
+		if slot != null:
+			slot.visible = false
+		return
+	_Pack.knop(_tab_chat, "ghost/box/Chat_box_blocked", "", "", HubAssets.IVOOR, Vector2(22, 22))
+	for staat in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		var sb := _tab_chat.get_theme_stylebox(staat) as StyleBoxTexture
+		if sb != null:
+			sb.content_margin_left = _u(10)
+			sb.content_margin_right = _u(26)
+	if slot == null:
+		slot = _Slot.new()
+		slot.name = "Slot"
+		slot.kleur = HubAssets.IVOOR
+		slot.anchor_left = 1.0
+		slot.anchor_right = 1.0
+		slot.anchor_top = 0.5
+		slot.anchor_bottom = 0.5
+		slot.offset_left = -_u(84)
+		slot.offset_right = -_u(70)
+		slot.offset_top = -_u(9)
+		slot.offset_bottom = _u(8)
+		_tab_chat.add_child(slot)
+	slot.visible = true
+
+
+## Een van de drie vakjes "wat er nog te winnen valt" in het ghost-paneel.
+func _ghost_inzet(icoon: TextureRect, label: String, punten: int, dof: bool) -> PanelContainer:
+	var vak := PanelContainer.new()
+	vak.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vak.add_theme_stylebox_override("panel", _Pack.patch("ghost/box/Ghost_Stake_box", Vector2(20, 20),
+		Vector4(_u(8), _u(5), _u(8), _u(5))))
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(8))
+	vak.add_child(rij)
+	icoon.custom_minimum_size = Vector2(_u(24), _u(24))
+	icoon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icoon.modulate = GHOST_GOUD
+	rij.add_child(icoon)
+	var kolom := VBoxContainer.new()
+	kolom.add_theme_constant_override("separation", -_px(1))
+	rij.add_child(kolom)
+	var naam := HubAssets.tekst(label, _px(8), GHOST_TEKST, true)
+	naam.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(naam)
+	var getal := HubAssets.tekst("+%d" % punten, _px(11), GHOST_GOUD, true)
+	getal.name = "Punten"
+	getal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kolom.add_child(getal)
+	if dof:
+		vak.modulate = Color(1, 1, 1, 0.45)
+	return vak
+
+
+## Het fasepaneel van een geest: het slot, de verzegeling, en de drie dingen
+## die hij nog kan verdienen (docs/F6-punten-masterplan.md: teamzege, de dank
+## van de kampioen, koningsmaker). Koningsmaker is dof als hij niets naliet.
+func _paneel_ghost(c: CState) -> void:
+	var blok := VBoxContainer.new()
+	blok.name = "GhostPaneel"
+	blok.alignment = BoxContainer.ALIGNMENT_CENTER
+	blok.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	blok.add_theme_constant_override("separation", _px(3))
+	_paneel.add_child(blok)
+	var slot_rij := CenterContainer.new()
+	var slot := _Slot.new()
+	slot.kleur = GHOST_ZACHT
+	slot.custom_minimum_size = Vector2(_u(14), _u(17))
+	slot_rij.add_child(slot)
+	blok.add_child(slot_rij)
+	var kop := HubAssets.tekst(tr("HUB_GHOST_SEALED"), _px(10), GHOST_ZACHT, true)
+	kop.name = "GhostKop"
+	kop.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	blok.add_child(kop)
+	var uitleg := HubAssets.tekst(tr("HUB_GHOST_SEALED_BODY"), _px(8), GHOST_TEKST)
+	uitleg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	uitleg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	blok.add_child(uitleg)
+	var ruimte := Control.new()
+	ruimte.custom_minimum_size = Vector2(0, _u(6))
+	blok.add_child(ruimte)
+	var inzet := HBoxContainer.new()
+	inzet.name = "GhostInzet"
+	inzet.add_theme_constant_override("separation", _px(8))
+	blok.add_child(inzet)
+	var liet_na: bool = not (c.testament_naar.get(mens_id, []) as Array).is_empty()
+	inzet.add_child(_ghost_inzet(_Pack.icoon("ghost/icons/Cup", 0), tr("HUB_GHOST_STAKE_TEAM"),
+		int(_Punten.TABEL.team), false))
+	inzet.add_child(_ghost_inzet(UiAssets.icoon_rect("score", 0), tr("HUB_GHOST_STAKE_THANKS"),
+		int(_Punten.TABEL.dank), false))
+	inzet.add_child(_ghost_inzet(_Pack.icoon("lobby/icons/Players", 0), tr("HUB_PT_KONINGSMAKER"),
+		int(_Punten.TABEL.koningsmaker), not liet_na))
+	# wat er nu gebeurt: de bots spelen door, jij kijkt
+	var rij := HBoxContainer.new()
+	rij.alignment = BoxContainer.ALIGNMENT_CENTER
+	rij.add_theme_constant_override("separation", _px(6))
+	var zandloper := HubAssets.icoon("Phase_icon", _u(12), GHOST_ZACHT)
+	zandloper.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rij.add_child(zandloper)
+	_info_label = HubAssets.tekst(tr("HUB_BOTS_BUSY") if _bezig else tr("HUB_GHOST_WATCHING"), _px(8), GHOST_ZACHT)
+	_info_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rij.add_child(_info_label)
+	blok.add_child(rij)
+
 # --- Doorwerken: bots draaien op een thread tot de mens aan zet is -------------
 
 func _werk_door() -> void:
-	if _bezig or driver.c.fase == CState.Fase.KLAAR or driver.wacht_op_mens():
+	if _bezig or niet_doorwerken or driver.c.fase == CState.Fase.KLAAR or driver.wacht_op_mens():
 		_ververs()
 		return
 	_bezig = true
@@ -1026,6 +1244,7 @@ func _ververs() -> void:
 	_titel.text = tr("HUB_TITLE")
 	if c.fase == CState.Fase.KLAAR and c.winnaar != -1:
 		_titel.text = tr("HUB_CHAMPION") % String(c.spelers[c.winnaar].naam)
+	_zet_ghost_kop()
 	# C11: de voorraad rekent in versterkingspunten (soldaat 1, ruiter 2,
 	# kanon 3; de soldaat-teller kan daardoor negatief staan). De tent toont
 	# het totaal in punten, ruiter en kanon hoeveel er in de voorraad zitten.
@@ -1114,9 +1333,19 @@ func _ververs_teams() -> void:
 			kind.queue_free()
 		var kandidaten := _kandidaten(team)
 		var plekken: Dictionary = _plekken(c, mijn_team) if team == mijn_team else {}
+		# Levenden bovenaan, gevallenen onderaan, elk in stoelvolgorde (Max, 10
+		# november): een kolom heeft 8 schilden en er passen er ruim 5 in beeld,
+		# dus wie je nog kunt kiezen in de raad hoort boven de rand te staan.
+		var levend: Array = []
+		var gevallen: Array = []
 		for sid in c.spelers:
 			if int(c.spelers[sid].team) != team:
 				continue
+			if String(c.spelers[sid].get("status", "actief")) == "actief":
+				levend.append(int(sid))
+			else:
+				gevallen.append(int(sid))
+		for sid in levend + gevallen:
 			houder.add_child(_team_lid(c, int(sid), team == mijn_team, kandidaten, int(plekken.get(int(sid), 0))))
 
 
@@ -1902,7 +2131,13 @@ func _chat_berichten() -> Array:
 
 func _paneel_chat() -> void:
 	if _mens_dood():
-		var zegel := HubAssets.tekst(tr("HUB_CHAT_SEALED"), _px(10), HubAssets.INKT_ZACHT)
+		var ghost_slot := CenterContainer.new()
+		var gs := _Slot.new()
+		gs.kleur = GHOST_ZACHT if _is_ghost() else HubAssets.INKT_ZACHT
+		gs.custom_minimum_size = Vector2(_u(14), _u(17))
+		ghost_slot.add_child(gs)
+		_paneel.add_child(ghost_slot)
+		var zegel := HubAssets.tekst(tr("HUB_CHAT_SEALED"), _px(10), GHOST_TEKST if _is_ghost() else HubAssets.INKT_ZACHT)
 		zegel.name = "ChatVerzegeld"
 		zegel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		zegel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -2149,8 +2384,17 @@ func _bouw_fase_paneel_inhoud() -> void:
 	var berichten := _chat_berichten().size()
 	_zet_tab(_tab_fase, _tab == 0)
 	_zet_tab(_tab_chat, _tab == 1)
+	# Ghost mode: het donkere blok om alles wat verzegeld is (het testament dat
+	# je nog schrijft, de burgeroorlog en het eindscherm houden hun perkament).
+	var ghost := _is_ghost()
+	var ghost_paneel: bool = ghost and not driver.wacht_op_mens() \
+		and driver.c.fase != CState.Fase.BURGEROORLOG
+	_zet_kader(ghost and (_tab == 1 or ghost_paneel))
+	# het slot op CHAT geldt voor wie gevallen is, ook op het eindscherm (de
+	# chat blijft voor hem verzegeld; er stond daar nog "CHAT (22)" zonder slot)
+	_zet_chat_tab_slot(_mens_dood() and _tab != 1)
 	_tab_fase.text = tr("HUB_TAB_PHASE")
-	var ongelezen: int = 0 if _tab == 1 else maxi(0, berichten - _chat_gezien)
+	var ongelezen: int = 0 if (_tab == 1 or _mens_dood()) else maxi(0, berichten - _chat_gezien)
 	_tab_chat.text = tr("HUB_TAB_CHAT") % mini(ongelezen, 99) if ongelezen > 0 else tr("HUB_TAB_CHAT_PLAIN")
 	if _tab == 1:
 		_paneel_chat()
@@ -2159,6 +2403,9 @@ func _bouw_fase_paneel_inhoud() -> void:
 	var c: CState = driver.c
 	if c.fase == CState.Fase.KLAAR:
 		_paneel_einde(c)
+		return
+	if ghost_paneel:
+		_paneel_ghost(c)
 		return
 	if not driver.wacht_op_mens():
 		if c.fase == CState.Fase.BURGEROORLOG:

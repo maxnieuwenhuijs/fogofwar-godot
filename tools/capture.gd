@@ -114,6 +114,16 @@ func _ready() -> void:
 		get_tree().quit(0 if klaar_fouten == 0 else 1)
 		return
 
+	if "hudcheck" in OS.get_cmdline_user_args():
+		# Match HUD (10 november, ontwerp milestone 3): bovenbalk, pionpaneel
+		# en klok in het echte spel (tools/hud_check.gd).
+		# `-- hudcheck [assets|boven|paneel|klok]`.
+		var hargs := OS.get_cmdline_user_args()
+		var hfasen: Array = hargs.slice(hargs.find("hudcheck") + 1)
+		var hud_fouten: int = await preload("res://tools/hud_check.gd").run(self, hfasen)
+		get_tree().quit(0 if hud_fouten == 0 else 1)
+		return
+
 	if "strategiecheck" in OS.get_cmdline_user_args():
 		# Strategy mode (21 oktober): menu, legerbouwer, opstellen, een partij,
 		# het campagne-duel en de hub (tools/strategie_check.gd).
@@ -3528,7 +3538,7 @@ func _ready() -> void:
 			elif Phase.is_reveal(bst.phase):
 				game._continue_after_reveal()
 			elif Phase.is_define(bst.phase) and bst.cards_defined[1].size() == 0 and not bl_hand.visible:
-				if game._overlay.visible:
+				if game._overlay.visible or game._inzet.visible:   # het CP-bod (sinds 10 november het inzet-scherm)
 					game._on_cp_choice(0)
 			elif Phase.is_define(bst.phase) and bst.cards_defined[1].size() == 0:
 				var bbud: int = int(bst.doctrine_data_of(1).budget)
@@ -3761,7 +3771,7 @@ func _ready() -> void:
 			elif Phase.is_reveal(sst.phase):
 				game._continue_after_reveal()
 			elif Phase.is_define(sst.phase) and sst.cards_defined[1].size() == 0 and not sc_hand.visible:
-				if game._overlay.visible:
+				if game._overlay.visible or game._inzet.visible:   # het CP-bod (sinds 10 november het inzet-scherm)
 					game._on_cp_choice(0)
 			elif Phase.is_define(sst.phase) and sst.cards_defined[1].size() == 0:
 				var sbud: int = int(sst.doctrine_data_of(1).budget)

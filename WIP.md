@@ -1,5 +1,276 @@
 # Fog of War — Work In Progress & Context
 
+## 10 november (5) -- Inzet-scherm in de stijl van de legerbouwer
+
+Max, bij het plaatje van de legerbouwer: "legerbouw is ook goed voor in game
+the cp en reinforcements scherm, die stijl is goed". Gelezen als: zet het CP-
+en versterkingenscherm in dezelfde stijl.
+
+- `scripts/ui/match/inzet_scherm.gd` bouwt nu met dezelfde bouwstenen als
+  `leger_bouwer.gd`: `PaneelVeldtafel` (900 breed), een rij van icoon 64, naam
+  (`LabelInkt` 28, de prijs erachter: "Soldaat (1 pt)" via `STRAT_TYPE_PRICE`
+  en `STRAT_TYPE_*`, dus ook "Big bro" in plaats van "Ruiter"), `KnopMin`,
+  cijfer (`LabelCijfer` 44), `KnopPlus` (72 x 72), en de groene `KnopBevestig`
+  met het vinkje (600 x 96). Bovenaan blijft je totaal staan (Max' eerdere
+  wens), nu als vette inktregel "CP 3/4   Versterkingen 5/6" in plaats van
+  de twee donkere chips. Onder de CP-naam het ene regeltje "+1 kaartbudget
+  per CP"; een dunne lijn tussen CP en versterkingen. Geen nieuwe teksten
+  (csv ongemoeid); `PHASE_SPAWN_TILE_*` en `INZET_CHIP_PUNTEN` zijn nu
+  ongebruikt.
+- De api is gelijk (`open`, `sluit`, `druk_cp`, `druk_type`, `druk_klaar`,
+  `stand()` met `totaal_cp`/`totaal_punten` als de kale breuk), game.gd is
+  niet aangeraakt. De versie van voor deze stap staat in de scratchpad
+  (`reserve/inzet_scherm_voor_bouwerstijl.gd`).
+- Checks: `-- hudcheck nl schermen` met venster (`_shot_hud_inzet.png`,
+  `_shot_hud_cp.png`) en de hele hudcheck headless PASS, uispel 777 gelijk
+  (`e14d7f70...`), herstelcheck 777 en resumecheck 777 1 0 verschillen,
+  beurtlicht, koppelcheck, inkomcheck PASS, strategiecheck PASS (384 s:
+  geef hem meer dan 300 s).
+
+## 10 november (4) -- De nieuwe stijl in het thema: grootboek, factiekeuze, legerbouwer, onthulscherm, uitleg
+
+Max: "Ja, die ook" (op de vraag of de schermen in de oude stijl mee moesten).
+
+- De vier schermen (en de uitleg) haalden hun paneel en knoppen al uit het
+  thema, dus de wijziging zit op een plek, `UiAssets._bouw_thema()`:
+  `PaneelVeldtafel` en `PaneelPapier` zijn nu het lichte perkament met beslag
+  (`match_hud/box/Player_box.png`, in `UiAssets.PANELEN`), de gewone knop,
+  `KnopBreed`, `KnopKleinBreed`, `OptionButton` en `MenuButton` zijn de donkere
+  plaat met ivoren letters (`lobby/buttons/quick_chat_button_*`,
+  `_zet_knop_donker`), en `KnopGroot` (de factiekaart) is licht perkament met
+  inkt (`_zet_knop_perkament`). Rood, rond, vierkant en de +/- van de kaart
+  blijven. Ontbreken de nieuwe plaatjes, dan blijft de oude stijl staan.
+- Geldt daarmee voor ELKE knop zonder eigen stijl, ook de bevestigknop van de
+  kaarten, de dialogen en de tuners.
+- `UiAssetsTests.test_knoptekst_inkt_op_perkament_ivoor_op_donker` verwachtte
+  inkt op de gewone knop: aangepast aan de nieuwe afspraak (ivoor; KnopGroot
+  inkt). Bewuste wijziging.
+- Checks: `-- hudcheck` (de menu-fase fotografeert nu ook de factiekeuze en de
+  uitleg en toetst het thema), inkomcheck, uicheck, strategiecheck (met de
+  legerbouwer), klaarcheck, spscheck, uispel gelijk, resumecheck 777, zes
+  hub-shots, en de testgroep UiAssets/Card/GameSession/Klaarmelding/Audio
+  (531 geslaagd, 0 gefaald).
+- **Legerbouwer op een plaatje** (Max: "check!"): `-- hudcheck bouwer` (met
+  venster, `_shot_hud_legerbouwer.png`) opent een Strategy-potje tot in de
+  bouwer en meet dat hij open staat en dat elke knop in beeld valt (0
+  erbuiten). Hij stond al goed in de nieuwe stijl; de hoofdknop "Leger klaar"
+  is nu groen, net als KLAAR op het inzet-scherm: nieuwe thema-variant
+  `KnopBevestig` (`Ready_box_*`, via `_zet_knop_donker` met een andere
+  plaat). Daarna: hudcheck bouwer, strategiecheck, uicheck, inkomcheck PASS,
+  UiAssetsTests 287/0, uispel 777 gelijk (`e14d7f70...`), herstelcheck 777
+  0 verschillen.
+
+## 10 november (3) -- UI-quirks gezocht en hersteld
+
+Max: "zoek naar meer UI quirks". Alle schermen in het Nederlands gefotografeerd
+(`-- hudcheck nl menu boven paneel schermen`, de hub-shots met `_nl`, `--
+define`, `-- link`) en nagelopen op afgekapte tekst, overlap en dubbelingen.
+
+- **Hersteld**: (1) in de oefen-lobby zweefde de "?"-knop van het bord over de
+  infobalk: de twee HUD-knoppen zijn weg zolang de lobby open staat; (2) in de
+  menu's stond de titel dubbel (rondebalk "Fog of War" boven een menu dat ook
+  zo heet) met een losse "?" eronder: voor het potje is er geen rondebalk
+  meer en staat "?" rechtsboven in de hoek; (3) de aanwijsregel bij een
+  gekozen pion zei nog "groen = beweeg, oranje = schot" terwijl lopen blauw
+  en een schot goud is: de teksten HUD_HINT_* en HUD_SELECTED zijn korter en
+  kloppen met de markeringen (blauw = lopen, rood = melee, goud = schot, groen
+  = charge, oranje = vuurlijn), zonder gedachtestreep; (4) op het eindscherm
+  stond voor een gevallen speler nog "CHAT (22)" zonder slot terwijl de chat
+  voor hem verzegeld is: slot en geen teller gelden nu voor wie gevallen is,
+  ook na de kroning.
+- **Gezien, niet aangepast**: het grootboek, de factiekeuze, de legerbouwer en
+  het onthulscherm zijn nog in de oude stijl (zwaar beslag, de knoppen
+  "Sluiten", "Naam" en "Team" zijn wazig opgerekt); op het eindscherm staat
+  de quick-chat-balk voor een gevallen speler grijs ("VERZEGELD"), dat klopt
+  maar is daar overbodig; `_shot_doctrines.png` in de repo-map is een oeroud
+  plaatje (de modus `-- doctrines` schrijft niets meer).
+- Checks daarna: hudcheck (alle fasen, ook `stemmen`), uispel gelijk,
+  inkomcheck, herstelcheck 777 en de hub-shots ghost, einde, raad, dank groen.
+
+## 10 november (2) -- Grondtexturen van de diorama's opnieuw, stemmen nagekeken
+
+Max: "wat nog echt heel lelijk is, is de grondtextuur van de diorama's".
+
+- De oude texturen waren grote wazige vlekken (bruine plekken in het gras,
+  grijze plassen en lange strepen in de modder die op houtnerf leken, een
+  stippenraster als kasseien). `tools/maak_omgeving_texturen.py` maakt ze nu
+  rustig en fijn: gras = een egale wei uit het palet van het bord met een
+  lichte kleurgolf, sprietjes in twee richtingen, plukjes en een paar
+  bloemetjes; kasseien en rotsscheuren uit een naadloze Voronoi (44 keien over
+  de tegel van 12 vakken: een kei is ruim een kwart vak; met 18 was een kei zo
+  groot als een bordvak); zand met ribbels; sneeuw met zachte blauwe
+  schaduw; modder met nattere plekken en klontjes; bosgrond met mos en blad.
+  De grove vlekkenlaag is lichter (0,90..1,0 in plaats van 0,78..1,0) en de
+  wolkenschaduw zachter (dekking maal 0,55). Zelfde bestandsnamen en maten, de
+  code in omgeving.gd is niet aangeraakt. Opnieuw maken: `python
+  tools/maak_omgeving_texturen.py`, dan `--import`.
+- Bekeken met `-- dioramashots` (alle twaalf) en `-- play muis fx:diorama=1`
+  en `=9`; `-- omgevingcheck` PASS. De oude png's staan niet meer in de repo
+  (git heeft ze).
+- Het openingsgeluid (`ui_open`) speelt niet meer bij het allereerste menu na
+  het opstarten (Max: "ik hoor een soort inadem-geluidje steeds bij start, dat
+  hoeft niet"); bij latere schermen nog wel.
+- **Stemmen in de raad** (Max: "hoe werkt het stemmen nu ... is alles goed
+  klikbaar en werkt het"): nieuw `-- hudcheck stemmen` met ECHTE muisklikken
+  (met venster): tik op een kandidaat in je eigen kolom zet jouw strijder met
+  de gouden ring, tik op een kandidaat van de vijand zet het doel, een tik op
+  een niet-kandidaat opent zijn kaartje, STEM staat in beeld en dient in (de
+  raad ging verder). Bevinding: een kolom heeft 8 schilden en er passen er
+  ruim 5 in beeld; in de proef viel 1 van de 4 vijandelijke kandidaten onder
+  de rand (de kolom schuift met een veeg, maar toont geen balk).
+- **Levenden bovenaan** (Max: "Ja, levenden boven"): `_ververs_teams` zet in
+  beide kolommen eerst de levende spelers en dan de gevallenen, elk in
+  stoelvolgorde. In de proef staan nu alle kandidaten zonder schuiven in
+  beeld (4 van 4 aan beide kanten); `-- hudcheck stemmen` toetst de volgorde.
+  Hub-shots (basis, raad, donatie, testament, burgeroorlog, einde, dank,
+  ghost), inkomcheck hub en klaarcheck groen.
+
+## 10 november -- Match HUD, markeringen en ghost mode uit het ontwerp van milestone 3 + 4
+
+Max: "update de UI!" met de pdf "Fog of war UI Match Multiplayer Notification"
+en `UI_Assets_Milestone_3.zip` van de ontwerper (zijn antwoord op de brief van
+30 september, `docs/design/brief-m3-m4/`). Tussendoor bijgestuurd: "die bar
+onder met move melee shot of charge of undo moet eruit", "spent hoeft niet,
+laat gewoon zo zien: stamina 2/3, hp 1/3", "voetstap icon wel vierkant maken en
+die voetstapjes mogen echt heel heel licht, opacity 0.2", "maak de bet CP en
+reinforcements ook in de stijl van het document", en op de eerste versie
+daarvan (tegels met uitleg en chips): "dit is niet mooi en onthoud less is
+more, te veel tekst en te vaag wat is wat. Je kan er ook 1 scherm van maken
+met CP en een plus of min, en daaronder reinforcements -1+ per categorie".
+
+- **Assets**: 129 png's in `assets/ui/{match_hud,lobby,ghost,notificatie,entry}/`
+  via `tools/verwerk_ui_m3.py` (mapnamen genormaliseerd, zes byte-gelijke
+  dubbelen overgeslagen, mipmaps aan). Op PAD via `scripts/ui/ui_pack.gd`
+  (de namen botsen onderling en met de eerste pack). Zie `assets/ui/LEESMIJ.md`.
+- **Bovenbalk** (`scripts/ui/match/match_hud.gd`, vervangt de perkamenten balk
+  van 3 september; `hud_balk.gd` levert alleen nog de statische helpers):
+  jij links in je eigen kleur met het portret van je factie, de rondebalk
+  ("Cyclus 1 · Ronde 3 · Actie", groot "Jouw beurt" / "Beurt tegenstander" of
+  de fasenaam, de klok als mm:ss, rood in de laatste 5 s), de voorraadbalk
+  (per kant levend, versterkingspunten, CP; die van de ander "?"), "?" en
+  opgeven, en de aanwijsregel in een strook die met de tekst meegroeit. De
+  HUD leest elke frame uit de staat; de drie oude labels blijven bestaan
+  (TopLabel en CountLabel onzichtbaar maar gevuld, render_digest leest de
+  topbalk; PromptLabel is de aanwijsregel).
+- **Pionpaneel** (`pion_paneel.gd`): bij een geselecteerde pion in je
+  actiebeurt: portret, type, factie, rol-vaantje, en drie chips HP nu/vol,
+  stamina nu/vol, attack. Geen tweede blad, geen pijl. De contextknop
+  (ongedaan, overslaan, deselecteer) kreeg de donkere plaat met het icoon van
+  de ontwerper en schuift boven het paneel.
+- **Markeringen** (`scripts/game/bord_markeringen.gd`): melee rood, charge
+  groen, schot goud, vuurlijn oranje gestreept, Wolf-stap en opstelling paars,
+  elk de ruit van de ontwerper plat op de tegel en naar de camera gedraaid;
+  een doel draagt hetzelfde icoon ook boven zijn hoofd. De loop-tegel is een
+  blauw VIERKANT op de tegel (de rand van de ruit, rechtgezet door het
+  script) met de voetstappen op 20% en het kostengetal erboven. Onder je
+  gekozen pion de blauwe gestreepte ruit. Knop `markeringen` (fx, 0 = de oude
+  plakken). `game._highlights` houdt dezelfde vakken, dus render_digest is
+  gelijk.
+- **Onder de pionnen**: het "?" van een gedekte pion is het zegel van de
+  ontwerper, de rol-tekens zijn zijn vlag- en trom-icoon in de aura-kleur.
+  De labels blijven de dragers (vosview leest tekst en zichtbaarheid).
+- **Inzet-scherm** (`scripts/ui/match/inzet_scherm.gd`): CP-bod en
+  versterkingen in EEN compact scherm met plus en min, weinig tekst. Bovenaan
+  twee chips met wat je hebt, als nu/vol (CP 3/4, versterkingen 5/6; Max: "en
+  dan bovenaan het kaartje zie je totaal CP en totaal reinforcement"), die
+  meelopen terwijl je kiest. Daaronder per rij een icoon, een naam, een kort
+  regeltje (de prijs) en min, getal, plus; onderaan de groene knop KLAAR. In de versterkingsfase staan beide helften er (het CP-bod van ronde 1
+  meteen erbij: `_voor_cp` onthoudt het, en de definieerfase van ronde 1 opent
+  dan direct de kaarten, na de landing van de versterkingen); voor ronde 2 en
+  3 en in cyclus 1 alleen de CP-rij; zonder CP alleen de versterkingen. Het
+  scherm sluit zichzelf als het moment voorbij is. De uitkomst gaat langs
+  `_on_cp_choice` en `submit_spawn`, net als voorheen; de timeout-paden zijn
+  ongewijzigd. `render_digest` kreeg een blok `inzet`, en de aanwijsregel
+  telt daar niet mee zolang het scherm open staat (net als bij de overlay:
+  zonder dat gaf herstelcheck 12 verschillen). De gewone overlay is niet
+  aangeraakt.
+- **Menu's** (`scripts/ui/overlay.gd`; Max: "ook het huidige pop over menu's
+  en alle opties veel mooier stylen"): elk pop-up-menu van het bord (hoofdmenu,
+  solo, multiplayer, online, moeilijkheid, instellingen, opstelling, einde)
+  heeft nu het perkament met beslag van het inzet-scherm, een dunne lijn onder
+  de titel, en de keuzes als donkere platen met ivoren letters en een gouden
+  icoon. "Terug" en "annuleren" zijn een kleine tekstknop onderaan. Iconen
+  komen vanzelf uit `Overlay.ICOON_PER_SLEUTEL` (op de vertaalsleutel van de
+  tekst; "pack:", "hub:" of een UiAssets-id); een aanroeper die zelf een icoon
+  meegeeft houdt die. De uitlegteksten van hoofdmenu, solo, multiplayer en
+  moeilijkheid zijn weg, die van online is een regel. Werking ongewijzigd
+  (dezelfde Buttons met hun tekst in %Buttons). De factiekeuze, de
+  legerbouwer en het onthulscherm zijn eigen schermen en nog in de oude stijl.
+- **Bovenbalken een derde lager, op alle schermen** (Max: "op alle schermen
+  mag die top bar echt minder pixels innemen, die drie top bars mogen kleiner,
+  ook bij het spel zelf"). Bord: de drie rijen samen 256 px hoog in plaats van
+  390 (vaandels op 60%, rondebalk en voorraadbalk als 9-patch over de volle
+  breedte, kleinere letters en knoppen; `match_hud.TOP_HOOGTE` 260). Lobby: kop
+  112, infobalk 104, statusbalk 76 (was 171, 154, 111), teamvakken 124; de
+  stoelen kregen de ruimte (rij 140 in plaats van 126). Hub: titel 56
+  eenheden (was 78), statusbalk 46 (was 64), vlag en ronde knoppen kleiner; de
+  kolommen beginnen op 104 in plaats van 144. Na deze wijziging: hudcheck,
+  uispel, inkomcheck, klaarcheck, herstelcheck 777 en de hub-shots (basis,
+  raad, donatie, testament, burgeroorlog, einde, ghost) groen.
+- **Lobby** (`scripts/ui/lobby/lobby_scherm.gd` + `scripts/game/lobby_sim.gd`;
+  Max: "Bouw de lobby"): de multiplayer-lobby uit het ontwerp als OEFENVERSIE.
+  Zestien stoelen in twee teams van 8 (nummer, portret, naam, klaar-vinkje),
+  de kop met het vaandel, de infobalk (lobbycode met kopieerknop, tempo,
+  "oefenen, geen ranglijst"), de statusbalk (host; "4 / 16 spelers · start
+  over 0:25 of als hij vol is"), en onderaan WEG, KLAAR of NIET KLAAR en START
+  NU. De naspeler laat 5 tot 9 mensen binnenkomen en klaar melden (eigen rng,
+  tijd van buiten); na 45 s, bij een volle lobby of bij START NU van de host
+  worden de lege stoelen bots, elk gemerkt met het bot-icoon, en telt hij af.
+  Dan volgt de bestaande oefen-start (loting en klaarmelding in de hub). Te
+  vinden onder MULTIPLAYER > "Oefenen: campagne-lobby" (de keuze die eerst
+  meteen naar de klaarmelding ging). Chat, quick chat en instellingen uit het
+  ontwerp staan er nog niet (doen zonder server niets). De echte lobby (join
+  code, quick play, met vrienden: het entry screen) wacht op F5.1.
+- **Ghost mode** in de hub: titel "JE BENT GEVALLEN" in rood op de plaat met
+  de vlaggen, de schedelvlag, een slot op CHAT (zonder teller), het donkere
+  fasepaneel met "verzegeld voor de doden" en wat er nog te winnen valt
+  (teamzege +20, dank +10, koningsmaker +5 uit de puntentabel; koningsmaker dof
+  als je niets naliet), de quick-chat-balk in grijs metaal. Het testament, de
+  burgeroorlog en het eindscherm houden hun perkament. Fixture: `-- shot
+  campaign_hub 42 ghost|ghost_chat` (`niet_doorwerken` zet de bots stil).
+- **Besluiten (default, niet door Max bevestigd)**: de derde teller van de
+  voorraadbalk is LEVENDE pionnen (het ontwerp tekent een lauwerster; een
+  duel kent geen roem); de andere markeringen bleven ruiten; wie op
+  het inzet-scherm van de versterkingen zijn CP voor ronde 1 kiest doet dat
+  VOOR hij de versterkingen van de ander ziet landen (een scherm in plaats van
+  twee; vroeger koos je het bod erna).
+- **De sfeer-knop** staat niet meer in de HUD, ook niet als lipje (Max:
+  "ambiance vlaggetje mag er ook uit"): toets L opent het sfeer-paneel.
+  **Toets L is alleen voor debuggen** en moet er later ook uit (Max: "mag voor
+  nu erin maar moet later wel weg"): voor een release-build de toets en het
+  paneel achter `OS.is_debug_build()` zetten of weghalen.
+- **Niet gebouwd**: de actiebalk (Max wilde hem niet), het tweede blad van het
+  pionpaneel (idem), de lobby met 16 stoelen en het entry screen (wacht op
+  F5.1; de lobby zelf staat er als oefenversie), de meldingsbanners en push-iconen (idem),
+  premove (iconen liggen er; eigen feature). Rye en Roboto Slab SemiBold
+  ontbreken nog steeds: de cijfers staan in Roboto Slab Bold.
+- **Checks**: nieuw `-- hudcheck [assets|boven|paneel|klok|schermen|
+  markeringen]` (tools/hud_check.gd, headless en met venster). uispel 777
+  `e14d7f70…` (159 acties), gelijk aan de nulmeting op deze werkmap met de
+  oude game.gd (zie de notitie van 21 oktober over het verschil met
+  `73b47201…`).
+- **Regressie op de eindstand** (headless): uispel 777 gelijk; herstelcheck
+  777 en `4242 wolf` 0 verschillen; resumecheck `777 1` en `4242 2` 0
+  verschillen; naadcheck, koppelcheck, beurtlicht, vosview, spscheck,
+  klaarcheck, strategiecheck, inkomcheck, uicheck en hudcheck PASS; `-- shot
+  campaign_hub 42` (basis, raad, donatie, testament, einde, ghost,
+  ghost_chat) 0 fouten; de lichte testgroep (Spawn, Cp, Sps, Cannon, Clock,
+  Card, GameSession, RulesConfig, RemoteSession, UiAssets, Audio,
+  Klaarmelding) 1250 geslaagd, 0 gefaald. NIET gedraaid: de zware suites
+  (Solo, Campaign, Strategie, Fuzz, Agent, Golden) en de checks met venster
+  die een muis nodig hebben (`-- define`, `-- sleepcheck`). beurtlicht en
+  sleepcheck in capture.gd klikken het CP-bod nu ook weg als het het
+  inzet-scherm is (ze keken alleen naar de oude overlay). Na de menu-stijl
+  nog een keer: uispel gelijk, herstelcheck 777 en resumecheck `4242 2` 0
+  verschillen, inkomcheck, strategiecheck, klaarcheck, naadcheck, spscheck,
+  beurtlicht en hudcheck PASS.
+- Na de lobby: hudcheck (met de fase `lobby`), uispel, inkomcheck, klaarcheck,
+  strategiecheck (menu, bouwer) en naadcheck opnieuw groen.
+- **Nog niet gecommit** (stand einde sessie): game.gd en i18n/strings.* dragen
+  ook ouder niet-gecommit werk van een andere sessie; een commit moet alleen de
+  eigen wijzigingen nemen (HEAD + eigen diff als blob, vertalingen uit een
+  tabel met alleen de eigen rijen).
+
 ## 21 oktober (2) -- Strategy mode ook online
 
 Max: "zet Strategy mode ook als keuze bij een nieuwe online match".
